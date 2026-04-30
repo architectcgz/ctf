@@ -820,6 +820,17 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.practice.Handler.StartContestAWDService,
 	)
+	protected.POST("/contests/:id/awd/services/:sid/instances/restart",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "contest_awd_instance",
+			ResourceIDParam: "sid",
+			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+		}),
+		deps.practice.Handler.RestartContestAWDService,
+	)
 	protected.POST("/challenges/:id/submit",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,

@@ -85,6 +85,7 @@ type AWDServiceInstance struct {
 	ServiceID      int64
 	TeamID         int64
 	AWDChallengeID int64
+	Status         string
 	AccessURL      string
 }
 

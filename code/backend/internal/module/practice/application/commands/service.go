@@ -130,6 +130,96 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
 }
 
+func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
+	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	scope = resolveEffectiveInstanceScope(&model.Challenge{}, scope)
+
+	var instance *model.Instance
+	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
+			return err
+		}
+		existing, err := txRepo.FindScopedRestartableInstance(ctx, userID, challengeID, scope)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		instance = existing
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	if instance == nil {
+		return s.startChallengeWithScope(ctx, userID, challengeID, scope)
+	}
+	if instance.Status == model.InstanceStatusPending || instance.Status == model.InstanceStatusCreating {
+		return instanceRespForScope(instance, scope), nil
+	}
+
+	if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
+		return nil, errcode.ErrServiceUnavailable.WithCause(err)
+	}
+
+	nextStatus := model.InstanceStatusCreating
+	if s.schedulerEnabled() {
+		nextStatus = model.InstanceStatusPending
+	}
+	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
+			return err
+		}
+		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	instance.ContainerID = ""
+	instance.NetworkID = ""
+	instance.RuntimeDetails = ""
+	instance.AccessURL = ""
+	instance.Status = nextStatus
+	instance.DestroyedAt = nil
+	if !s.schedulerEnabled() {
+		chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
+		if err != nil {
+			return nil, err
+		}
+		flag, err := s.buildProvisioningFlag(instance, chal)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
+			return nil, err
+		}
+	}
+	return instanceRespForScope(instance, scope), nil
+}
+
+func restartCleanupRuntimeView(instance *model.Instance) *model.Instance {
+	if instance == nil {
+		return nil
+	}
+	copied := *instance
+	copied.HostPort = 0
+	details, err := model.DecodeInstanceRuntimeDetails(copied.RuntimeDetails)
+	if err != nil {
+		return &copied
+	}
+	for i := range details.Containers {
+		details.Containers[i].HostPort = 0
+	}
+	if raw, err := model.EncodeInstanceRuntimeDetails(details); err == nil {
+		copied.RuntimeDetails = raw
+	}
+	return &copied
+}
+
 func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error) {
 	contest, err := s.repo.FindContestByID(ctx, contestID)
 	if err != nil {

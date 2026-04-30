@@ -19,6 +19,7 @@ const contestApiMocks = vi.hoisted(() => ({
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
   requestContestAWDTargetAccess: vi.fn(),
+  restartContestAWDServiceInstance: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
@@ -72,6 +73,7 @@ describe('ContestDetail', () => {
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
+    contestApiMocks.restartContestAWDServiceInstance.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()

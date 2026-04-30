@@ -24,6 +24,7 @@ type ContestAWDWorkspaceServiceResp struct {
 	ServiceID      int64                `json:"service_id"`
 	AWDChallengeID int64                `json:"awd_challenge_id"`
 	InstanceID     int64                `json:"instance_id,omitempty"`
+	InstanceStatus string               `json:"instance_status,omitempty"`
 	AccessURL      string               `json:"access_url,omitempty"`
 	ServiceStatus  string               `json:"service_status,omitempty"`
 	CheckerType    model.AWDCheckerType `json:"checker_type,omitempty"`

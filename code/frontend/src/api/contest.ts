@@ -386,6 +386,18 @@ export async function startContestAWDServiceInstance(
   return normalizeInstanceData(payload)
 }
 
+export async function restartContestAWDServiceInstance(
+  contestId: string,
+  serviceId: string
+): Promise<InstanceData> {
+  const payload = await request<RawInstanceData>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/instances/restart`,
+    suppressErrorToast: true,
+  })
+  return normalizeInstanceData(payload)
+}
+
 export async function submitContestAWDAttack(
   contestId: string,
   serviceId: string,

@@ -9,6 +9,7 @@ const contestApiMocks = vi.hoisted(() => ({
   getScoreboard: vi.fn(),
   requestContestAWDDefenseSSH: vi.fn(),
   requestContestAWDTargetAccess: vi.fn(),
+  restartContestAWDServiceInstance: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
 }))
@@ -35,6 +36,7 @@ describe('useContestAWDWorkspace', () => {
     contestApiMocks.getScoreboard.mockReset()
     contestApiMocks.requestContestAWDDefenseSSH.mockReset()
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
+    contestApiMocks.restartContestAWDServiceInstance.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     instanceApiMocks.requestInstanceAccess.mockReset()

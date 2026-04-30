@@ -23,9 +23,11 @@ type stubPracticeRepository struct {
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
+	findScopedRestartableInstanceFn        func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
 	countScopedRunningInstancesFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
 	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string) error
 	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
@@ -116,6 +118,13 @@ func (s *stubPracticeRepository) FindScopedExistingInstance(ctx context.Context,
 	return nil, nil
 }
 
+func (s *stubPracticeRepository) FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+	if s.findScopedRestartableInstanceFn != nil {
+		return s.findScopedRestartableInstanceFn(ctx, userID, challengeID, scope)
+	}
+	return s.FindScopedExistingInstance(ctx, userID, challengeID, scope)
+}
+
 func (s *stubPracticeRepository) CountScopedRunningInstances(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
 	if s.countScopedRunningInstancesFn != nil {
 		return s.countScopedRunningInstancesFn(ctx, userID, scope)
@@ -126,6 +135,13 @@ func (s *stubPracticeRepository) CountScopedRunningInstances(ctx context.Context
 func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	if s.refreshInstanceExpiryWithContextFn != nil {
 		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string) error {
+	if s.resetInstanceRuntimeForRestartFn != nil {
+		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status)
 	}
 	return nil
 }

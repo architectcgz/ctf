@@ -5,9 +5,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -166,6 +168,9 @@ func (s *ProxyTicketService) ResolveAWDTargetAccessURL(ctx context.Context, clai
 	}
 	if scope == nil || scope.InstanceID != claims.InstanceID || scope.AttackerTeamID == scope.VictimTeamID {
 		return "", errcode.ErrForbidden
+	}
+	if scope.Status != model.InstanceStatusRunning || strings.TrimSpace(scope.AccessURL) == "" {
+		return "", errcode.ErrServiceUnavailable.WithCause(fmt.Errorf("awd target instance %d status=%s", scope.InstanceID, scope.Status))
 	}
 	return scope.AccessURL, nil
 }

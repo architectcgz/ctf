@@ -54,11 +54,19 @@ func (ctxOnlyPracticeCommandTxRepository) FindScopedExistingInstance(context.Con
 	return nil, nil
 }
 
+func (ctxOnlyPracticeCommandTxRepository) FindScopedRestartableInstance(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+	return nil, nil
+}
+
 func (ctxOnlyPracticeCommandTxRepository) CountScopedRunningInstances(context.Context, int64, practiceports.InstanceScope) (int, error) {
 	return 0, nil
 }
 
 func (ctxOnlyPracticeCommandTxRepository) RefreshInstanceExpiry(context.Context, int64, time.Time) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) ResetInstanceRuntimeForRestart(context.Context, int64, string) error {
 	return nil
 }
 

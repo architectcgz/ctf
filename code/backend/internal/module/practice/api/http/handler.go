@@ -24,6 +24,7 @@ type practiceService interface {
 	StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
+	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
 	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
@@ -100,6 +101,30 @@ func (h *Handler) StartContestAWDService(c *gin.Context) {
 	}
 
 	instance, err := h.service.StartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, instance)
+}
+
+// RestartContestAWDService 重启本队 AWD 服务实例
+// POST /api/v1/contests/:id/awd/services/:sid/instances/restart
+func (h *Handler) RestartContestAWDService(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	instance, err := h.service.RestartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
 	if err != nil {
 		response.FromError(c, err)
 		return

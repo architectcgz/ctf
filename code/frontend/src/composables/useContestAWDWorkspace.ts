@@ -5,6 +5,7 @@ import {
   getScoreboard,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
+  restartContestAWDServiceInstance,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -128,6 +129,25 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     } catch (err) {
       console.error(err)
       toast.error(err instanceof Error ? err.message : '启动服务失败')
+    } finally {
+      startingServiceKey.value = ''
+    }
+  }
+
+  async function restartService(serviceId: string): Promise<void> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || startingServiceKey.value) {
+      return
+    }
+
+    startingServiceKey.value = serviceId
+    try {
+      await restartContestAWDServiceInstance(contestId, serviceId)
+      await refreshAll()
+      toast.success('服务重启请求已提交')
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '重启服务失败')
     } finally {
       startingServiceKey.value = ''
     }
@@ -286,6 +306,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     refreshAll,
     loadWorkspace,
     startService,
+    restartService,
     openService,
     openDefenseSSH,
     openTarget,

@@ -156,7 +156,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 
 func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	now := time.Now()
-	query := r.dbWithContext(ctx).Model(&model.Instance{}).
+	query := r.scopedInstanceQuery(ctx, userID, challengeID, scope).
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
@@ -164,6 +164,39 @@ func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, cha
 			model.InstanceStatusRunning,
 			now,
 		)
+
+	var instance model.Instance
+	if err := query.Order("created_at DESC, id DESC").First(&instance).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
+}
+
+func (r *Repository) FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+	query := r.scopedInstanceQuery(ctx, userID, challengeID, scope).
+		Where("share_scope = ?", scope.ShareScope).
+		Where("status IN ?", []string{
+			model.InstanceStatusPending,
+			model.InstanceStatusCreating,
+			model.InstanceStatusRunning,
+			model.InstanceStatusFailed,
+		})
+
+	var instance model.Instance
+	if err := query.Order("created_at DESC, id DESC").First(&instance).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
+}
+
+func (r *Repository) scopedInstanceQuery(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) *gorm.DB {
+	query := r.dbWithContext(ctx).Model(&model.Instance{})
 	if scope.ServiceID != nil {
 		query = query.Where("service_id = ?", *scope.ServiceID)
 	} else {
@@ -182,15 +215,7 @@ func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, cha
 	default:
 		query = query.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL", userID)
 	}
-
-	var instance model.Instance
-	if err := query.First(&instance).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return &instance, nil
+	return query
 }
 
 func (r *Repository) CountScopedRunningInstances(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
@@ -231,6 +256,58 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 			"expires_at": expiresAt,
 			"updated_at": time.Now(),
 		}).Error
+}
+
+func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string) error {
+	if instanceID <= 0 {
+		return nil
+	}
+
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var instance model.Instance
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("id", "host_port").
+			Where("id = ?", instanceID).
+			First(&instance).Error; err != nil {
+			return err
+		}
+
+		if instance.HostPort > 0 {
+			allocation := &model.PortAllocation{
+				Port:       instance.HostPort,
+				InstanceID: &instance.ID,
+			}
+			if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(allocation).Error; err != nil {
+				return err
+			}
+			var stored model.PortAllocation
+			if err := tx.Where("port = ?", instance.HostPort).First(&stored).Error; err != nil {
+				return err
+			}
+			if stored.InstanceID != nil && *stored.InstanceID != instance.ID {
+				return fmt.Errorf("host port %d is allocated to instance %d", instance.HostPort, *stored.InstanceID)
+			}
+			if stored.InstanceID == nil {
+				if err := tx.Model(&model.PortAllocation{}).
+					Where("port = ?", instance.HostPort).
+					Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now()}).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return tx.Model(&model.Instance{}).
+			Where("id = ?", instanceID).
+			Updates(map[string]any{
+				"container_id":    "",
+				"network_id":      "",
+				"runtime_details": "",
+				"access_url":      "",
+				"status":          status,
+				"destroyed_at":    nil,
+				"updated_at":      time.Now(),
+			}).Error
+	})
 }
 
 func (r *Repository) CreateInstance(ctx context.Context, instance *model.Instance) error {

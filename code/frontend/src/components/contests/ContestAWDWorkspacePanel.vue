@@ -53,7 +53,7 @@ const {
   shouldAutoRefresh,
   lastSyncedAt,
   refreshAll,
-  startService,
+  restartService,
   openService,
   openDefenseSSH,
   openTarget,
@@ -209,6 +209,25 @@ function getServiceStatusLabel(status?: string): string {
 
 function getServiceStatusClass(status?: string): string {
   return `status-badge status-badge--${status || 'pending'}`
+}
+
+function getInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): string {
+  switch (service?.instance_status) {
+    case 'pending':
+      return '重启队列中'
+    case 'creating':
+      return '正在启动'
+    case 'running':
+      return '平台代理已就绪'
+    case 'failed':
+      return '启动失败'
+    default:
+      return service?.instance_id ? '已通过平台代理就绪' : '等待分配实例'
+  }
+}
+
+function canOpenWorkspaceService(service?: ContestAWDWorkspaceServiceData): boolean {
+  return Boolean(service?.instance_id && (!service.instance_status || service.instance_status === 'running'))
 }
 
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
@@ -450,11 +469,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     </span>
                   </div>
                   <div class="asset-meta font-mono text-[10px]">
-                    {{
-                      getWorkspaceService(challenge)?.instance_id
-                        ? '已通过平台代理就绪'
-                        : '等待分配实例'
-                    }}
+                    {{ getInstanceStatusLabel(getWorkspaceService(challenge)) }}
                   </div>
                   <div v-if="getSSHAccess(challenge.awd_service_id)" class="asset-ssh">
                     <div class="asset-ssh__label">SSH DEFENSE</div>
@@ -484,7 +499,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <div class="asset-actions">
                   <button
                     v-if="getWorkspaceService(challenge)?.instance_id"
-                    :disabled="openingServiceKey === getWorkspaceService(challenge)?.instance_id"
+                    :disabled="
+                      !canOpenWorkspaceService(getWorkspaceService(challenge)) ||
+                      openingServiceKey === getWorkspaceService(challenge)?.instance_id
+                    "
                     class="asset-btn"
                     @click="
                       getWorkspaceService(challenge)?.instance_id &&
@@ -495,7 +513,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   </button>
                   <button
                     v-if="getWorkspaceService(challenge)?.instance_id"
-                    :disabled="openingSSHKey === getServiceStartKey(challenge)"
+                    :disabled="
+                      !canOpenWorkspaceService(getWorkspaceService(challenge)) ||
+                      openingSSHKey === getServiceStartKey(challenge)
+                    "
                     class="asset-btn"
                     @click="challenge.awd_service_id && openDefenseSSH(challenge.awd_service_id)"
                   >
@@ -504,7 +525,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
-                    @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
+                    @click="challenge.awd_service_id && restartService(challenge.awd_service_id)"
                   >
                     {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : '重启' }}
                   </button>

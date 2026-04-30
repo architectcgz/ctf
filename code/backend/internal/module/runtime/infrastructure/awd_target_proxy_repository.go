@@ -19,6 +19,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 			inst.id AS instance_id,
 			inst.access_url AS access_url,
 			inst.share_scope AS share_scope,
+			inst.status AS status,
 			co.id AS contest_id,
 			tm.team_id AS attacker_team_id,
 			victim.id AS victim_team_id,
@@ -32,7 +33,12 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", model.AWDRoundStatusRunning).
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, model.ContestModeAWD, []string{model.ContestStatusRunning, model.ContestStatusFrozen}).
 		Where("tm.team_id <> victim.id").
-		Where("inst.status = ? AND inst.access_url <> ''", model.InstanceStatusRunning).
+		Where("inst.status IN ?", []string{
+			model.InstanceStatusPending,
+			model.InstanceStatusCreating,
+			model.InstanceStatusRunning,
+			model.InstanceStatusFailed,
+		}).
 		Order("inst.created_at DESC, inst.id DESC").
 		Limit(1).
 		Scan(&scope).Error

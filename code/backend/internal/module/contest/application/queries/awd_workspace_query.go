@@ -80,11 +80,13 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	targetServiceSeen := make(map[int64]map[int64]struct{})
 	for _, instance := range instances {
 		if instance.TeamID == myTeam.ID {
 			item := ensureAWDWorkspaceService(serviceMap, instance.ServiceID, instance.AWDChallengeID)
 			if item.InstanceID == 0 {
 				item.InstanceID = instance.InstanceID
+				item.InstanceStatus = instance.Status
 			}
 			continue
 		}
@@ -93,10 +95,19 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 		if target == nil {
 			continue
 		}
+		seenServices := targetServiceSeen[instance.TeamID]
+		if seenServices == nil {
+			seenServices = make(map[int64]struct{})
+			targetServiceSeen[instance.TeamID] = seenServices
+		}
+		if _, ok := seenServices[instance.ServiceID]; ok {
+			continue
+		}
+		seenServices[instance.ServiceID] = struct{}{}
 		target.Services = append(target.Services, &dto.ContestAWDWorkspaceTargetServiceResp{
 			ServiceID:      instance.ServiceID,
 			AWDChallengeID: instance.AWDChallengeID,
-			Reachable:      instance.AccessURL != "",
+			Reachable:      instance.Status == model.InstanceStatusRunning && instance.AccessURL != "",
 		})
 	}
 

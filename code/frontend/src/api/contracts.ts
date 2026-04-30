@@ -453,6 +453,7 @@ export interface ContestAWDWorkspaceServiceData {
   service_id?: ID
   awd_challenge_id: ID
   instance_id?: ID
+  instance_status?: InstanceStatus
   access_url?: string
   service_status?: AWDServiceStatus
   checker_type?: AWDCheckerType

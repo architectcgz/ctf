@@ -1500,6 +1500,125 @@ func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 	}
 }
 
+func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
+	t.Parallel()
+
+	teamID := int64(4106)
+	serviceID := int64(7106)
+	contestID := int64(3106)
+	userID := int64(5106)
+	instance := &model.Instance{
+		ID:             9106,
+		UserID:         userID,
+		ContestID:      &contestID,
+		TeamID:         &teamID,
+		ChallengeID:    2106,
+		ServiceID:      &serviceID,
+		HostPort:       32106,
+		ContainerID:    "old-container",
+		NetworkID:      "old-network",
+		RuntimeDetails: `{"containers":[{"id":"old-container"}]}`,
+		ShareScope:     model.InstanceSharingPerTeam,
+		Status:         model.InstanceStatusRunning,
+		AccessURL:      "http://127.0.0.1:32106",
+		Nonce:          "nonce-keep",
+		ExpiresAt:      time.Now().Add(time.Hour),
+		MaxExtends:     2,
+	}
+	var cleanupInstanceID int64
+	var resetStatus string
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
+			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			if gotContestID != contestID || gotServiceID != serviceID {
+				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
+			}
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2106,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":106,"instance_sharing":"per_team"},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: gotContestID,
+				UserID:    gotUserID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			if gotUserID != userID || gotChallengeID != 2106 {
+				t.Fatalf("unexpected scoped lookup: user=%d challenge=%d", gotUserID, gotChallengeID)
+			}
+			if scope.ServiceID == nil || *scope.ServiceID != serviceID || scope.TeamID == nil || *scope.TeamID != teamID || scope.ShareScope != model.InstanceSharingPerTeam {
+				t.Fatalf("unexpected restart scope: %+v", scope)
+			}
+			return instance, nil
+		},
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string) error {
+			if instanceID != instance.ID {
+				t.Fatalf("unexpected reset instance id: %d", instanceID)
+			}
+			resetStatus = status
+			return nil
+		},
+	}
+
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, got *model.Instance) error {
+				cleanupInstanceID = got.ID
+				if got.HostPort != 0 {
+					t.Fatalf("restart cleanup should preserve port allocation, got host_port=%d", got.HostPort)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("RestartContestAWDService() error = %v", err)
+	}
+	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected same pending instance, got %+v", resp)
+	}
+	if cleanupInstanceID != instance.ID {
+		t.Fatalf("expected cleanup for instance %d, got %d", instance.ID, cleanupInstanceID)
+	}
+	if resetStatus != model.InstanceStatusPending {
+		t.Fatalf("expected reset to pending, got %q", resetStatus)
+	}
+	if instance.ServiceID == nil || *instance.ServiceID != serviceID || instance.Nonce != "nonce-keep" || instance.HostPort != 32106 {
+		t.Fatalf("restart should preserve identity fields, got %+v", instance)
+	}
+	if instance.ContainerID != "" || instance.NetworkID != "" || instance.RuntimeDetails != "" || instance.AccessURL != "" {
+		t.Fatalf("restart should clear runtime fields, got %+v", instance)
+	}
+}
+
 func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	t.Parallel()
 

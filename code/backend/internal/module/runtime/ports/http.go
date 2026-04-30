@@ -94,6 +94,7 @@ type AWDTargetProxyScope struct {
 	ServiceID      int64
 	AWDChallengeID int64
 	ShareScope     model.ShareScope
+	Status         string
 	AccessURL      string
 }
 
