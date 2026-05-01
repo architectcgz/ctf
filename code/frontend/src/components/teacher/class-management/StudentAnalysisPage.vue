@@ -159,12 +159,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           class="teacher-topbar"
         >
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="teacher-eyebrow-row">
-              <div class="journal-eyebrow">
-                Student Analysis
-              </div>
-              <span class="teacher-student-chip">@{{ selectedStudent?.username || '未选择' }}</span>
-            </div>
             <h1 class="teacher-title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
@@ -359,26 +353,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
     var(--space-workspace-content-padding, var(--space-7))
     var(--space-workspace-content-padding, var(--space-7)) 0;
   border-left: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
-}
-
-.teacher-eyebrow-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2-5);
-}
-
-.teacher-student-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.85rem;
-  padding: 0 0.75rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: var(--font-size-0-78);
-  font-weight: 600;
-  color: var(--journal-muted);
 }
 
 .workspace-alert {

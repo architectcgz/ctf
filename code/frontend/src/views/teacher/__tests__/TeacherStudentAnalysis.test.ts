@@ -349,6 +349,15 @@ describe('TeacherStudentAnalysis', () => {
     })
   })
 
+  it('学员分析头部应只保留姓名标题，不重复显示英文 eyebrow 和用户名 chip', () => {
+    expect(studentAnalysisPageSource).not.toContain('Student Analysis')
+    expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
+    expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
+    expect(studentAnalysisPageSource).toContain(
+      "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
+    )
+  })
+
   it('应该支持隐藏社区题解', async () => {
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { getStudentRecommendations } from '@/api/teacher'
 import type { RecommendationItem, TeacherStudentItem } from '@/api/contracts'
@@ -10,6 +11,8 @@ const props = defineProps<{
   className?: string
   bare?: boolean
 }>()
+
+const router = useRouter()
 
 interface InterventionCandidate {
   student: TeacherStudentItem
@@ -101,6 +104,23 @@ function getCandidateClass(accent: InterventionCandidate['accent']): string {
   if (accent === 'danger') return 'intervention-item intervention-item--danger'
   if (accent === 'warning') return 'intervention-item intervention-item--warning'
   return 'intervention-item intervention-item--primary'
+}
+
+function getCandidatePriorityLabel(accent: InterventionCandidate['accent']): string {
+  if (accent === 'danger') return '立即跟进'
+  if (accent === 'warning') return '本周关注'
+  return '持续观察'
+}
+
+function openStudent(studentId: string): void {
+  if (!props.className) return
+  router.push({
+    name: 'TeacherStudentAnalysis',
+    params: {
+      className: props.className,
+      studentId,
+    },
+  })
 }
 
 watch(
@@ -196,57 +216,85 @@ watch(
         :key="item.student.id"
         :class="getCandidateClass(item.accent)"
       >
-        <div class="intervention-item__layout">
-          <div class="intervention-item__main">
+        <div class="intervention-item__header">
+          <div class="intervention-item__identity">
             <div class="intervention-item__name-row">
-              <span class="intervention-item__name">{{
+              <button
+                type="button"
+                class="intervention-item__name-button"
+                :aria-label="`${item.student.name || item.student.username}，查看学员分析`"
+                :disabled="!className"
+                @click="openStudent(item.student.id)"
+              >
+                <span class="intervention-item__name">{{
                 item.student.name || item.student.username
-              }}</span>
-              <span class="intervention-item__username">@{{ item.student.username }}</span>
+                }}</span>
+              </button>
+              <span class="intervention-item__priority">
+                {{ getCandidatePriorityLabel(item.accent) }}
+              </span>
             </div>
-            <div class="intervention-item__reason">
-              {{ item.reason }}
-            </div>
-
-            <div
-              v-if="isRecommendationLoading(item.student.id)"
-              class="intervention-item__recommendation intervention-item__recommendation--loading"
-            >
-              正在匹配建议训练题...
-            </div>
-
-            <div
-              v-else-if="getRecommendation(item.student.id)"
-              class="intervention-item__recommendation intervention-item__recommendation--premium"
-            >
-              <div class="intervention-item__recommendation-label">
-                建议训练题
-              </div>
-              <div class="intervention-item__recommendation-body">
-                <div class="recommendation-info">
-                  <div class="intervention-item__recommendation-title">
-                    {{ getRecommendation(item.student.id)?.title }}
-                  </div>
-                  <div class="intervention-item__recommendation-meta">
-                    {{ getRecommendation(item.student.id)?.category }} ·
-                    {{ getRecommendation(item.student.id)?.difficulty }}
-                  </div>
-                </div>
-                <div class="intervention-item__recommendation-reason">
-                  {{ getRecommendation(item.student.id)?.reason }}
-                </div>
-              </div>
+            <div class="intervention-item__summary-row">
+              <span class="intervention-item__signal-inline">
+                {{ item.reason }}
+              </span>
+              <span class="intervention-item__meta-inline intervention-item__meta-inline--username">
+                {{ item.student.username }}
+              </span>
+              <span
+                v-if="item.student.weak_dimension"
+                class="intervention-item__meta-inline"
+              >
+                薄弱项 {{ item.student.weak_dimension }}
+              </span>
             </div>
           </div>
 
           <div class="intervention-item__stats intervention-item__stats--premium">
             <div class="stat-row">
-              <span class="stat-value">{{ item.student.recent_event_count ?? 0 }}</span>
               <span class="stat-label">动作</span>
+              <span class="stat-value">{{ item.student.recent_event_count ?? 0 }}</span>
             </div>
             <div class="stat-row">
-              <span class="stat-value">{{ item.student.solved_count ?? 0 }}</span>
               <span class="stat-label">解题</span>
+              <span class="stat-value">{{ item.student.solved_count ?? 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="intervention-item__main">
+          <div
+            v-if="isRecommendationLoading(item.student.id)"
+            class="intervention-item__recommendation intervention-item__recommendation--loading"
+          >
+            正在匹配建议训练题...
+          </div>
+
+          <div
+            v-else-if="getRecommendation(item.student.id)"
+            class="intervention-item__recommendation intervention-item__recommendation--premium"
+          >
+            <div class="intervention-item__recommendation-heading">
+              <div class="intervention-item__recommendation-label">
+                建议训练题
+              </div>
+              <div class="intervention-item__recommendation-kicker">
+                可直接布置
+              </div>
+            </div>
+            <div class="intervention-item__recommendation-body">
+              <div class="recommendation-info">
+                <div class="intervention-item__recommendation-title">
+                  {{ getRecommendation(item.student.id)?.title }}
+                </div>
+                <div class="intervention-item__recommendation-meta">
+                  {{ getRecommendation(item.student.id)?.category }} ·
+                  {{ getRecommendation(item.student.id)?.difficulty }}
+                </div>
+              </div>
+              <div class="intervention-item__recommendation-reason">
+                {{ getRecommendation(item.student.id)?.reason }}
+              </div>
             </div>
           </div>
         </div>
@@ -265,22 +313,35 @@ watch(
 
 .intervention-item {
   --intervention-accent: var(--panel-accent);
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--intervention-accent) 18%, var(--panel-border));
-  border-left: 4px solid color-mix(in srgb, var(--intervention-accent) 64%, transparent);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--panel-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
-  );
-  padding: var(--space-5) var(--space-6);
-  box-shadow: 0 4px 12px var(--color-shadow-soft);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--intervention-accent) 12%, var(--panel-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--panel-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--panel-surface-subtle) 94%, var(--color-bg-base))
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--intervention-accent) 8%, transparent),
+      transparent 34%
+    );
+  padding: var(--space-4) var(--space-5);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.08),
+    0 10px 22px rgb(15 23 42 / 0.05);
+  transition:
+    border-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.24s ease;
 }
 
 .intervention-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 8px 24px var(--color-shadow-soft);
+  transform: translateY(calc(var(--space-0-5) * -1));
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 0.1),
+    0 14px 28px color-mix(in srgb, var(--intervention-accent) 8%, rgb(15 23 42 / 0.08));
+  border-color: color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));
 }
 
 .intervention-item--primary {
@@ -295,51 +356,124 @@ watch(
   --intervention-accent: var(--color-danger);
 }
 
-.intervention-item__layout {
+.intervention-item__header {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--space-4);
+  align-items: flex-start;
 }
 
+.intervention-item__identity,
 .intervention-item__main {
   min-width: 0;
 }
 
 .intervention-item__name-row {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-2-5);
+  flex-wrap: wrap;
+}
+
+.intervention-item__name-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.intervention-item__name-button:disabled {
+  cursor: default;
+}
+
+.intervention-item__name-button:hover .intervention-item__name,
+.intervention-item__name-button:focus-visible .intervention-item__name {
+  color: color-mix(in srgb, var(--intervention-accent) 78%, var(--panel-ink));
+}
+
+.intervention-item__name-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--intervention-accent) 38%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .intervention-item__name {
-  font-size: var(--font-size-17);
+  font-size: var(--font-size-16);
   font-weight: 800;
+  color: var(--panel-ink);
+  transition: color 0.2s ease;
+}
+
+.intervention-item__priority {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  border-radius: 999px;
+  padding: 0 var(--space-2-5);
+  background: color-mix(in srgb, var(--intervention-accent) 16%, transparent);
+  color: color-mix(in srgb, var(--intervention-accent) 72%, var(--panel-ink));
+  font-size: var(--font-size-12);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.intervention-item__summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1-5);
+  align-items: center;
+}
+
+.intervention-item__signal-inline {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 0 var(--space-2-5);
+  background: color-mix(in srgb, var(--intervention-accent) 10%, transparent);
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--intervention-accent) 76%, var(--panel-ink));
+}
+
+.intervention-item__meta-inline {
+  font-size: var(--font-size-12);
+  color: var(--panel-muted);
+}
+
+.intervention-item__meta-inline--username {
+  font-family: var(--font-family-mono);
   color: var(--panel-ink);
 }
 
-.intervention-item__username {
-  font-size: var(--font-size-13);
-  color: var(--panel-muted);
-}
-
-.intervention-item__reason {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-15);
-  line-height: 1.7;
-  color: var(--panel-muted);
-}
-
 .intervention-item__recommendation--premium {
-  margin-top: var(--space-5);
-  border-top: 1px solid color-mix(in srgb, var(--intervention-accent) 12%, var(--panel-border));
-  padding-top: var(--space-4);
+  margin-top: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--intervention-accent) 14%, var(--panel-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-surface-subtle) 90%, transparent);
+  padding: var(--space-3) var(--space-4);
 }
 
 .intervention-item__recommendation--loading {
   margin-top: var(--space-3);
-  font-size: var(--font-size-13);
-  font-style: italic;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-surface-subtle) 84%, transparent);
+  font-size: var(--font-size-12);
   color: var(--panel-muted);
+}
+
+.intervention-item__recommendation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .intervention-item__recommendation-label {
@@ -350,15 +484,20 @@ watch(
   color: color-mix(in srgb, var(--intervention-accent) 76%, var(--panel-muted));
 }
 
+.intervention-item__recommendation-kicker {
+  font-size: var(--font-size-12);
+  color: var(--panel-muted);
+}
+
 .intervention-item__recommendation-body {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
-  gap: var(--space-5);
+  gap: var(--space-4);
   margin-top: var(--space-2);
 }
 
 .intervention-item__recommendation-title {
-  font-size: var(--font-size-15);
+  font-size: var(--font-size-14);
   font-weight: 800;
   color: var(--panel-ink);
 }
@@ -370,31 +509,27 @@ watch(
 }
 
 .intervention-item__recommendation-reason {
-  font-size: var(--font-size-14);
-  line-height: 1.7;
+  font-size: var(--font-size-13);
+  line-height: 1.6;
   color: var(--panel-muted);
 }
 
 .intervention-item__stats--premium {
   flex-shrink: 0;
-  text-align: right;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-2);
-  padding-left: var(--space-5);
-  border-left: 1px solid var(--panel-divider);
+  gap: var(--space-3);
+  padding-top: var(--space-0-5);
 }
 
 .stat-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: baseline;
+  gap: var(--space-1-5);
 }
 
 .stat-value {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-18);
+  font-size: var(--font-size-15);
   font-weight: 800;
   color: var(--panel-ink);
 }
@@ -408,28 +543,28 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .intervention-item__layout {
+  .intervention-item__header {
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-2-5);
   }
 
   .intervention-item__stats--premium {
-    flex-direction: row;
-    justify-content: flex-start;
-    padding-left: 0;
-    padding-top: var(--space-3);
-    border-left: 0;
-    border-top: 1px solid var(--panel-divider);
-    gap: var(--space-6);
+    width: 100%;
+    padding-top: 0;
   }
 
   .stat-row {
-    align-items: flex-start;
+    flex: 0 0 auto;
   }
 
   .intervention-item__recommendation-body {
     grid-template-columns: 1fr;
     gap: var(--space-3);
+  }
+
+  .intervention-item__recommendation-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>
