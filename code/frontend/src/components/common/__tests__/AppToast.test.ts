@@ -81,7 +81,7 @@ describe('AppToast', () => {
     expect(closeButton.find('.app-toast-close-icon').exists()).toBe(true)
   })
 
-  it('uses a soft accent rail instead of a full-height solid strip', async () => {
+  it('uses a soft tinted glow instead of a vertical accent rail', async () => {
     const wrapper = await mountToast()
     useToast().error('提交失败')
     await nextTick()
@@ -91,9 +91,9 @@ describe('AppToast', () => {
     expect(toastItemStyle).toContain('--app-toast-accent-color: var(--color-danger)')
     expect(appToastSource).toContain('color-mix(in srgb, var(--app-toast-accent-color)')
     expect(appToastSource).not.toContain(':style="{ backgroundColor: toneMeta(item.type).accentColor }"')
-    expect(appToastSource).not.toMatch(
-      /\.app-toast-accent\s*\{[\s\S]*?inset-block:\s*0;[\s\S]*?inset-inline-start:\s*0;/
-    )
+    expect(wrapper.find('.app-toast-accent').exists()).toBe(false)
+    expect(appToastSource).not.toContain('class="app-toast-accent"')
+    expect(appToastSource).not.toContain('.app-toast-accent')
   })
 
   it('avoids layout arbitrary values in the shared toast shell', () => {

@@ -8,8 +8,6 @@
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
     >
-      <div class="app-toast-accent" />
-
       <div class="app-toast-content">
         <div class="app-toast-leading">
           <div
@@ -198,25 +196,9 @@ function toastStyle(type: ToastType): Record<string, string> {
   pointer-events: none;
 }
 
-.app-toast-accent {
-  position: absolute;
-  inset-block: var(--space-3-5);
-  inset-inline-start: var(--space-2);
-  width: var(--space-0-5);
-  border-radius: var(--ui-badge-radius-pill);
-  background: linear-gradient(
-    180deg,
-    transparent,
-    color-mix(in srgb, var(--app-toast-accent-color) 72%, transparent) 28%,
-    var(--app-toast-accent-color) 50%,
-    color-mix(in srgb, var(--app-toast-accent-color) 72%, transparent) 72%,
-    transparent
-  );
-  opacity: 0.82;
-  pointer-events: none;
-}
-
 .app-toast-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
