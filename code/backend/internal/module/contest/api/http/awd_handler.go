@@ -25,7 +25,7 @@ type awdServiceCommandService interface {
 
 type awdQueryService interface {
 	ListRounds(ctx context.Context, contestID int64) ([]contestqry.AWDRoundResult, error)
-	ListServices(ctx context.Context, contestID, roundID int64) ([]*dto.AWDTeamServiceResp, error)
+	ListServices(ctx context.Context, contestID, roundID int64) ([]contestqry.AWDTeamServiceResult, error)
 	ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]contestqry.AWDAttackLogResult, error)
 	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error)
 	GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error)

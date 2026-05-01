@@ -3,12 +3,11 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64) ([]*dto.AWDTeamServiceResp, error) {
+func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64) ([]AWDTeamServiceResult, error) {
 	if _, err := s.ensureAWDRound(ctx, contestID, roundID); err != nil {
 		return nil, err
 	}
@@ -28,14 +27,31 @@ func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64)
 		return nil, err
 	}
 
-	resp := make([]*dto.AWDTeamServiceResp, 0, len(records))
+	resp := make([]AWDTeamServiceResult, 0, len(records))
 	for _, record := range records {
-		recordCopy := record
 		teamName := ""
 		if team := teams[record.TeamID]; team != nil {
 			teamName = team.Name
 		}
-		resp = append(resp, contestdomain.AWDTeamServiceRespFromModel(&recordCopy, teamName, serviceNames[record.ServiceID]))
+		serviceName := serviceNames[record.ServiceID]
+		resp = append(resp, AWDTeamServiceResult{
+			ID:                record.ID,
+			RoundID:           record.RoundID,
+			TeamID:            record.TeamID,
+			TeamName:          teamName,
+			ServiceID:         record.ServiceID,
+			ServiceName:       serviceName,
+			AWDChallengeID:    record.AWDChallengeID,
+			AWDChallengeTitle: serviceName,
+			ServiceStatus:     record.ServiceStatus,
+			CheckResult:       contestdomain.ParseAWDCheckResult(record.CheckResult),
+			CheckerType:       string(record.CheckerType),
+			AttackReceived:    record.AttackReceived,
+			SLAScore:          record.SLAScore,
+			DefenseScore:      record.DefenseScore,
+			AttackScore:       record.AttackScore,
+			UpdatedAt:         record.UpdatedAt,
+		})
 	}
 	return resp, nil
 }
