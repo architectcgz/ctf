@@ -198,6 +198,18 @@ func TestParticipationAnnouncementQueryUsesApplicationResultInsteadOfHTTPDTO(t *
 	}
 }
 
+func TestAdminChallengeQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "challenge_admin_query.go"),
+		filepath.Join("application", "queries", "challenge_admin_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

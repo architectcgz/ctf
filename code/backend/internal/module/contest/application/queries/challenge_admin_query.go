@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID int64) ([]*dto.ContestChallengeResp, error) {
+func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID int64) ([]*ContestChallengeResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -22,13 +21,24 @@ func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID in
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]*dto.ContestChallengeResp, len(challenges))
+	result := make([]*ContestChallengeResult, len(challenges))
 	for i, item := range challenges {
 		challenge, findErr := s.challengeRepo.FindByID(ctx, item.ChallengeID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}
-		result[i] = contestdomain.ContestChallengeRespFromModel(item, challenge)
+		result[i] = &ContestChallengeResult{
+			ID:          item.ID,
+			ContestID:   item.ContestID,
+			ChallengeID: item.ChallengeID,
+			Title:       challenge.Title,
+			Category:    challenge.Category,
+			Difficulty:  challenge.Difficulty,
+			Points:      item.Points,
+			Order:       item.Order,
+			IsVisible:   item.IsVisible,
+			CreatedAt:   item.CreatedAt,
+		}
 	}
 	return result, nil
 }

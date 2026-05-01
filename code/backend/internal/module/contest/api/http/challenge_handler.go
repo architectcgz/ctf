@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type challengeCommandService interface {
@@ -13,7 +15,7 @@ type challengeCommandService interface {
 
 type challengeQueryService interface {
 	GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*dto.ContestChallengeInfo, error)
-	ListAdminChallenges(ctx context.Context, contestID int64) ([]*dto.ContestChallengeResp, error)
+	ListAdminChallenges(ctx context.Context, contestID int64) ([]*contestqry.ContestChallengeResult, error)
 }
 
 type ChallengeHandler struct {
