@@ -49,10 +49,7 @@ func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*AWDT
 	return items
 }
 
-func filterAWDTrafficEvents(items []*AWDTrafficEventResult, req *ListAWDTrafficEventsInput) []*AWDTrafficEventResult {
-	if req == nil {
-		return items
-	}
+func filterAWDTrafficEvents(items []*AWDTrafficEventResult, req ListAWDTrafficEventsInput) []*AWDTrafficEventResult {
 	pathKeyword := strings.ToLower(strings.TrimSpace(req.PathKeyword))
 	filtered := make([]*AWDTrafficEventResult, 0, len(items))
 	for _, item := range items {
