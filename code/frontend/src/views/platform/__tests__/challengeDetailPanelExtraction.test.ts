@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
 import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
+import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
 
 describe('Admin ChallengeDetail panel extraction', () => {
   it('应将题目详情 tab 抽到独立 platform challenge 组件', () => {
@@ -24,5 +25,13 @@ describe('Admin ChallengeDetail panel extraction', () => {
     expect(adminChallengeTopbarPanelSource).toContain('<span class="workspace-overline">Challenge Profile</span>')
     expect(adminChallengeTopbarPanelSource).toContain('拓扑编排')
     expect(adminChallengeTopbarPanelSource).toContain('返回题库')
+  })
+
+  it('题目详情概览应复用 challenge entity 的分类与难度文本单元', () => {
+    expect(adminChallengeProfilePanelSource).toContain("from '@/entities/challenge'")
+    expect(adminChallengeProfilePanelSource).toContain('<ChallengeCategoryText')
+    expect(adminChallengeProfilePanelSource).toContain('<ChallengeDifficultyText')
+    expect(adminChallengeProfilePanelSource).not.toContain('function getCategoryLabel(')
+    expect(adminChallengeProfilePanelSource).not.toContain('function getDifficultyLabel(')
   })
 })

@@ -4,8 +4,8 @@ import { CircleDot, Gauge, Tags, Trophy } from 'lucide-vue-next'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
 import {
-  getChallengeCategoryLabel,
-  getChallengeDifficultyLabel,
+  ChallengeCategoryText,
+  ChallengeDifficultyText,
 } from '@/entities/challenge'
 
 interface Props {
@@ -46,14 +46,6 @@ function updateFlagRegex(event: Event): void {
 
 function updateFlagPrefix(event: Event): void {
   emit('update:flagPrefix', (event.target as HTMLInputElement).value)
-}
-
-function getCategoryLabel(category?: AdminChallengeListItem['category']): string {
-  return category ? getChallengeCategoryLabel(category) : '未分类'
-}
-
-function getDifficultyLabel(difficulty?: AdminChallengeListItem['difficulty']): string {
-  return difficulty ? getChallengeDifficultyLabel(difficulty) : '未设置'
 }
 
 function getStatusLabel(status?: AdminChallengeListItem['status']): string {
@@ -116,7 +108,8 @@ function formatDateTime(value?: string): string {
           <Tags class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ getCategoryLabel(challenge.category) }}
+          <ChallengeCategoryText v-if="challenge.category" :category="challenge.category" />
+          <span v-else>未分类</span>
         </div>
         <div class="journal-note-helper progress-card-hint metric-panel-helper">
           当前题目的所属方向
@@ -128,7 +121,8 @@ function formatDateTime(value?: string): string {
           <Gauge class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ getDifficultyLabel(challenge.difficulty) }}
+          <ChallengeDifficultyText v-if="challenge.difficulty" :difficulty="challenge.difficulty" />
+          <span v-else>未设置</span>
         </div>
         <div class="journal-note-helper progress-card-hint metric-panel-helper">
           学员侧展示的题目难度

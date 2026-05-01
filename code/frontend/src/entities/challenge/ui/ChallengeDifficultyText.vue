@@ -4,6 +4,7 @@ import { getChallengeDifficultyLabel } from '@/entities/challenge/model'
 
 interface Props {
   difficulty: ChallengeDifficulty
+  labelOverrides?: Partial<Record<ChallengeDifficulty, string>>
 }
 
 defineProps<Props>()
@@ -11,7 +12,7 @@ defineProps<Props>()
 
 <template>
   <span class="challenge-difficulty-text">
-    {{ getChallengeDifficultyLabel(difficulty) }}
+    {{ labelOverrides?.[difficulty] ?? getChallengeDifficultyLabel(difficulty) }}
   </span>
 </template>
 

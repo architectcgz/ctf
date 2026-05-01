@@ -19,6 +19,7 @@ import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectory
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengeDifficultyText } from '@/entities/challenge'
 import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
 
 type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''
@@ -139,17 +140,6 @@ function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): stri
 
 function getDeploymentModeLabel(value: AdminAwdChallengeData['deployment_mode']): string {
   return value === 'topology' ? 'Topology' : 'Single'
-}
-
-function getDifficultyLabel(value: AdminAwdChallengeData['difficulty']): string {
-  switch (value) {
-    case 'beginner': return '入门'
-    case 'easy': return '简单'
-    case 'medium': return '中等'
-    case 'hard': return '困难'
-    case 'insane': return '高强度'
-    default: return value
-  }
 }
 
 function getStatusLabel(value: AdminAwdChallengeData['status']): string {
@@ -419,7 +409,11 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   </template>
 
                   <template #cell-difficulty="{ row }">
-                    <span class="awd-challenge-table__difficulty">{{ getDifficultyLabel((row as AdminAwdChallengeData).difficulty) }}</span>
+                    <ChallengeDifficultyText
+                      class="awd-challenge-table__difficulty"
+                      :difficulty="(row as AdminAwdChallengeData).difficulty"
+                      :label-overrides="{ insane: '高强度' }"
+                    />
                   </template>
 
                   <template #cell-readiness_status="{ row }">
