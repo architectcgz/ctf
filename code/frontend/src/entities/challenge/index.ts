@@ -4,3 +4,4 @@ export {
   getChallengeDifficultyColor,
   getChallengeDifficultyLabel,
 } from './model'
+export { ChallengeDirectoryRow } from './ui'

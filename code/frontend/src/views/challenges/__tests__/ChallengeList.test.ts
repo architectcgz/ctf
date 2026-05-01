@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import ChallengeList from '../ChallengeList.vue'
 import challengeListSource from '../ChallengeList.vue?raw'
 import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
+import challengeDirectoryRowSource from '@/entities/challenge/ui/ChallengeDirectoryRow.vue?raw'
 import { getChallenges } from '@/api/challenge'
 
 vi.mock('@/api/challenge', () => ({
@@ -53,7 +54,11 @@ async function mountPage(initialPath = '/challenges') {
   return wrapper
 }
 
-const combinedSource = [challengeListSource, challengeDirectoryPanelSource].join('\n')
+const combinedSource = [
+  challengeListSource,
+  challengeDirectoryPanelSource,
+  challengeDirectoryRowSource,
+].join('\n')
 
 describe('ChallengeList', () => {
   beforeEach(() => {
