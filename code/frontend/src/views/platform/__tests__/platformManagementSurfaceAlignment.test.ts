@@ -21,6 +21,7 @@ import instanceManageHeroPanelSource from '@/components/platform/instance/Instan
 import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
 import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
 import challengeWriteupManagePanelSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
+import challengeProfileSummaryStripSource from '@/entities/challenge/ui/ChallengeProfileSummaryStrip.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditTopbarPanelSource from '@/components/platform/contest/ContestEditTopbarPanel.vue?raw'
 import contestWorkbenchStageTabsSource from '@/components/platform/contest/ContestWorkbenchStageTabs.vue?raw'
@@ -356,13 +357,16 @@ describe('admin management surface alignment', () => {
     expect(adminChallengeProfilePanelSource).toMatch(
       /<div class="workspace-overline">\s*Challenge Profile\s*<\/div>/
     )
-    expect(adminChallengeProfilePanelSource).toContain(
+    expect(adminChallengeProfilePanelSource).toContain("from '@/entities/challenge'")
+    expect(adminChallengeProfilePanelSource).toContain('<ChallengeProfileSummaryStrip')
+    expect(adminChallengeProfilePanelSource).not.toContain('class="challenge-overview-summary')
+    expect(challengeProfileSummaryStripSource).toContain(
       'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(adminChallengeProfilePanelSource).toContain('<Tags class="h-4 w-4" />')
-    expect(adminChallengeProfilePanelSource).toContain('<Gauge class="h-4 w-4" />')
-    expect(adminChallengeProfilePanelSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(adminChallengeProfilePanelSource).toContain('<CircleDot class="h-4 w-4" />')
+    expect(challengeProfileSummaryStripSource).toContain('<Tags class="h-4 w-4" />')
+    expect(challengeProfileSummaryStripSource).toContain('<Gauge class="h-4 w-4" />')
+    expect(challengeProfileSummaryStripSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(challengeProfileSummaryStripSource).toContain('<CircleDot class="h-4 w-4" />')
     expect(adminChallengeProfilePanelSource).toMatch(
       /<h2 class="list-heading__title">\s*基础信息\s*<\/h2>/
     )

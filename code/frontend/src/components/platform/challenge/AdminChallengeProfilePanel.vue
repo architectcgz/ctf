@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { CircleDot, Gauge, Tags, Trophy } from 'lucide-vue-next'
-
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
 import {
-  ChallengeCategoryText,
-  ChallengeDifficultyText,
+  ChallengeProfileSummaryStrip,
 } from '@/entities/challenge'
 
 interface Props {
@@ -101,58 +98,10 @@ function formatDateTime(value?: string): string {
       </p>
     </header>
 
-    <div class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          <span>分类</span>
-          <Tags class="h-4 w-4" />
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          <ChallengeCategoryText v-if="challenge.category" :category="challenge.category" />
-          <span v-else>未分类</span>
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          当前题目的所属方向
-        </div>
-      </article>
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          <span>难度</span>
-          <Gauge class="h-4 w-4" />
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          <ChallengeDifficultyText v-if="challenge.difficulty" :difficulty="challenge.difficulty" />
-          <span v-else>未设置</span>
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          学员侧展示的题目难度
-        </div>
-      </article>
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          <span>分值</span>
-          <Trophy class="h-4 w-4" />
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ challenge.points }}
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          当前题目的基础得分
-        </div>
-      </article>
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          <span>状态</span>
-          <CircleDot class="h-4 w-4" />
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ getStatusLabel(challenge.status) }}
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          当前发布与维护状态
-        </div>
-      </article>
-    </div>
+    <ChallengeProfileSummaryStrip
+      :challenge="challenge"
+      :status-label="getStatusLabel(challenge.status)"
+    />
 
     <section class="workspace-directory-section challenge-section challenge-profile-section">
       <header class="list-heading">
@@ -403,11 +352,6 @@ function formatDateTime(value?: string): string {
 .challenge-detail-header {
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 88%, transparent));
-}
-
-.challenge-overview-summary {
-  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-  --admin-summary-grid-gap: var(--space-3);
 }
 
 .challenge-profile-card {

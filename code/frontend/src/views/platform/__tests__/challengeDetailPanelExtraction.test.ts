@@ -29,9 +29,7 @@ describe('Admin ChallengeDetail panel extraction', () => {
 
   it('题目详情概览应复用 challenge entity 的分类与难度文本单元', () => {
     expect(adminChallengeProfilePanelSource).toContain("from '@/entities/challenge'")
-    expect(adminChallengeProfilePanelSource).toContain('<ChallengeCategoryText')
-    expect(adminChallengeProfilePanelSource).toContain('<ChallengeDifficultyText')
-    expect(adminChallengeProfilePanelSource).not.toContain('function getCategoryLabel(')
-    expect(adminChallengeProfilePanelSource).not.toContain('function getDifficultyLabel(')
+    expect(adminChallengeProfilePanelSource).toContain('<ChallengeProfileSummaryStrip')
+    expect(adminChallengeProfilePanelSource).not.toContain('class="challenge-overview-summary')
   })
 })
