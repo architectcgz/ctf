@@ -34,3 +34,13 @@ type SubmitAttackInput struct {
 	VictimTeamID int64
 	Flag         string
 }
+
+type PreviewCheckerInput struct {
+	AWDChallengeID   int64
+	ServiceID        int64
+	CheckerType      string
+	CheckerConfig    map[string]any
+	AccessURL        string
+	PreviewFlag      string
+	PreviewRequestID string
+}

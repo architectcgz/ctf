@@ -145,3 +145,18 @@ func submitAttackInputFromDTO(req *dto.SubmitAWDAttackReq) contestcmd.SubmitAtta
 		Flag:         req.Flag,
 	}
 }
+
+func previewCheckerInputFromDTO(req *dto.PreviewAWDCheckerReq) contestcmd.PreviewCheckerInput {
+	if req == nil {
+		return contestcmd.PreviewCheckerInput{}
+	}
+	return contestcmd.PreviewCheckerInput{
+		AWDChallengeID:   req.AWDChallengeID,
+		ServiceID:        req.ServiceID,
+		CheckerType:      req.CheckerType,
+		CheckerConfig:    req.CheckerConfig,
+		AccessURL:        req.AccessURL,
+		PreviewFlag:      req.PreviewFlag,
+		PreviewRequestID: req.PreviewRequestID,
+	}
+}

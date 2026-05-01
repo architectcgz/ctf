@@ -744,7 +744,7 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 		t.Fatalf("PreviewChecker method not implemented")
 	}
 
-	reqValue := reflect.New(method.Type().In(2).Elem())
+	reqValue := reflect.New(method.Type().In(2))
 	setReflectedField(t, reqValue.Elem(), "AWDChallengeID", int64(2401))
 	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
 	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
@@ -772,7 +772,7 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	results := method.Call([]reflect.Value{
 		reflect.ValueOf(context.Background()),
 		reflect.ValueOf(int64(24)),
-		reqValue,
+		reqValue.Elem(),
 	})
 
 	if len(results) != 2 {
@@ -887,7 +887,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{
 		CheckerTimeout: time.Second,
 	})
-	preview, err := service.commands.PreviewChecker(context.Background(), contestID, &dto.PreviewAWDCheckerReq{
+	preview, err := service.commands.PreviewChecker(context.Background(), contestID, contestcmd.PreviewCheckerInput{
 		AWDChallengeID: awdChallengeID,
 		CheckerType:    string(model.AWDCheckerTypeTCPStandard),
 		CheckerConfig:  checkerConfig,
@@ -1020,7 +1020,7 @@ func TestAWDServicePreviewCheckerRejectsWhenRedisUnavailable(t *testing.T) {
 		CheckerHealthPath: "/healthz",
 	})
 
-	_, err := service.commands.PreviewChecker(context.Background(), 27, &dto.PreviewAWDCheckerReq{
+	_, err := service.commands.PreviewChecker(context.Background(), 27, contestcmd.PreviewCheckerInput{
 		AWDChallengeID: 2701,
 		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
@@ -1108,7 +1108,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 		nil,
 	)
 
-	resp, err := service.PreviewChecker(context.Background(), 28, &dto.PreviewAWDCheckerReq{
+	resp, err := service.PreviewChecker(context.Background(), 28, contestcmd.PreviewCheckerInput{
 		AWDChallengeID: 2801,
 		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
@@ -1220,7 +1220,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 	service.SetRealtimeBroadcaster(broadcaster)
 
 	ctx := contestcmd.WithAWDPreviewRequester(context.Background(), 9001)
-	_, err = service.PreviewChecker(ctx, 281, &dto.PreviewAWDCheckerReq{
+	_, err = service.PreviewChecker(ctx, 281, contestcmd.PreviewCheckerInput{
 		AWDChallengeID:   2811,
 		CheckerType:      string(model.AWDCheckerTypeHTTPStandard),
 		PreviewRequestID: "preview-progress-1",
@@ -1338,7 +1338,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 		nil,
 	)
 
-	resp, err := service.PreviewChecker(context.Background(), 29, &dto.PreviewAWDCheckerReq{
+	resp, err := service.PreviewChecker(context.Background(), 29, contestcmd.PreviewCheckerInput{
 		AWDChallengeID: 2901,
 		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
@@ -1418,7 +1418,7 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 		t.Fatalf("PreviewChecker method not implemented")
 	}
 
-	reqValue := reflect.New(method.Type().In(2).Elem())
+	reqValue := reflect.New(method.Type().In(2))
 	setReflectedField(t, reqValue.Elem(), "ServiceID", serviceID)
 	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
 	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
@@ -1434,7 +1434,7 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 	results := method.Call([]reflect.Value{
 		reflect.ValueOf(context.Background()),
 		reflect.ValueOf(int64(25)),
-		reqValue,
+		reqValue.Elem(),
 	})
 
 	if len(results) != 2 {
@@ -1549,7 +1549,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		runtimeProbe,
 	)
 
-	resp, err := service.PreviewChecker(context.Background(), 26, &dto.PreviewAWDCheckerReq{
+	resp, err := service.PreviewChecker(context.Background(), 26, contestcmd.PreviewCheckerInput{
 		AWDChallengeID: 2601,
 		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{

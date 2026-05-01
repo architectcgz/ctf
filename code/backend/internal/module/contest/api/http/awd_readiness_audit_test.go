@@ -163,7 +163,7 @@ type stubAWDCommandService struct {
 	createRoundFunc           func(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
 	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
 	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
-	previewCheckerFunc        func(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
+	previewCheckerFunc        func(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)
 }
 
 func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
@@ -187,7 +187,7 @@ func (s stubAWDCommandService) RunRoundChecks(ctx context.Context, contestID, ro
 	return nil, nil
 }
 
-func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error) {
+func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
 	if s.previewCheckerFunc != nil {
 		return s.previewCheckerFunc(ctx, contestID, req)
 	}

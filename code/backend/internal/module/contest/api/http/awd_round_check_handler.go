@@ -55,9 +55,10 @@ func (h *AWDHandler) PreviewChecker(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
+	input := previewCheckerInputFromDTO(&req)
 
 	requestCtx := contestcmd.WithAWDPreviewRequester(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
-	resp, err := h.commands.PreviewChecker(requestCtx, contestID, &req)
+	resp, err := h.commands.PreviewChecker(requestCtx, contestID, input)
 	if err != nil {
 		response.FromError(c, err)
 		return

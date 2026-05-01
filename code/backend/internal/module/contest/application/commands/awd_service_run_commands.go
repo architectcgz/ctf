@@ -64,11 +64,7 @@ func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
 
-func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error) {
-	if req == nil {
-		return nil, errcode.ErrInvalidParams
-	}
-
+func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
 	s.reportAWDPreviewProgress(ctx, contestID, req.PreviewRequestID, "prepare", "准备预览环境", "正在校验当前 Checker 草稿，并准备目标访问上下文。", 0, awdCheckerPreviewAttemptCount, "running", nil)
 
 	contest, err := s.ensureAWDContest(ctx, contestID)
