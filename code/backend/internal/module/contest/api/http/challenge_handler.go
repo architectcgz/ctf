@@ -14,7 +14,7 @@ type challengeCommandService interface {
 }
 
 type challengeQueryService interface {
-	GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*dto.ContestChallengeInfo, error)
+	GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*contestqry.ContestChallengeInfoResult, error)
 	ListAdminChallenges(ctx context.Context, contestID int64) ([]*contestqry.ContestChallengeResult, error)
 }
 

@@ -24,7 +24,7 @@ func (h *ChallengeHandler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, payload)
+	response.Success(c, contestChallengeInfoResultsToDTO(payload))
 }
 
 func contestChallengeResultsToDTO(items []*contestqry.ContestChallengeResult) []*dto.ContestChallengeResp {
@@ -45,6 +45,30 @@ func contestChallengeResultsToDTO(items []*contestqry.ContestChallengeResult) []
 			Order:       item.Order,
 			IsVisible:   item.IsVisible,
 			CreatedAt:   item.CreatedAt,
+		})
+	}
+	return result
+}
+
+func contestChallengeInfoResultsToDTO(items []*contestqry.ContestChallengeInfoResult) []*dto.ContestChallengeInfo {
+	result := make([]*dto.ContestChallengeInfo, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			result = append(result, nil)
+			continue
+		}
+		result = append(result, &dto.ContestChallengeInfo{
+			ID:             item.ID,
+			ChallengeID:    item.ChallengeID,
+			AWDChallengeID: item.AWDChallengeID,
+			AWDServiceID:   item.AWDServiceID,
+			Title:          item.Title,
+			Category:       item.Category,
+			Difficulty:     item.Difficulty,
+			Points:         item.Points,
+			Order:          item.Order,
+			SolvedCount:    item.SolvedCount,
+			IsSolved:       item.IsSolved,
 		})
 	}
 	return result
