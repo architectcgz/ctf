@@ -105,4 +105,41 @@ describe('PlatformChallengeFlagConfigPanel', () => {
     expect(regexPlaceholders.some((placeholder) => placeholder.includes('^flag'))).toBe(true)
     expect(wrapper.find('input[placeholder="例如：flag{demo}"]').exists()).toBe(false)
   })
+
+  it('应在输入字段变更时抛出对应 patch', async () => {
+    const wrapper = mount(PlatformChallengeFlagConfigPanel, {
+      props: {
+        draft: createDraft({
+          flagType: 'dynamic',
+          flagPrefix: '',
+        }),
+      },
+    })
+
+    await wrapper.get('input[placeholder="例如：flag"]').setValue('ctf')
+    expect(wrapper.emitted('update:draft')?.at(-1)).toEqual([{ flagPrefix: 'ctf' }])
+
+    await wrapper.setProps({
+      draft: createDraft({
+        flagType: 'regex',
+        flagPrefix: 'ctf',
+        flagRegex: '',
+      }),
+    })
+    const regexInput = wrapper
+      .findAll('input')
+      .find((node) => (node.attributes('placeholder') || '').includes('^flag'))
+    expect(regexInput).toBeTruthy()
+    await regexInput!.setValue('^flag\\{demo\\}$')
+    expect(wrapper.emitted('update:draft')?.at(-1)).toEqual([{ flagRegex: '^flag\\{demo\\}$' }])
+
+    await wrapper.setProps({
+      draft: createDraft({
+        flagType: 'static',
+        flagValue: '',
+      }),
+    })
+    await wrapper.get('input[placeholder="例如：flag{demo}"]').setValue('flag{value}')
+    expect(wrapper.emitted('update:draft')?.at(-1)).toEqual([{ flagValue: 'flag{value}' }])
+  })
 })
