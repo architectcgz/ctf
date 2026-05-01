@@ -9,25 +9,23 @@
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
     >
       <div class="app-toast-content">
-        <div class="app-toast-leading">
-          <div
-            class="app-toast-icon"
-            :style="toneMeta(item.type).iconWrapStyle"
-          >
-            <component
-              :is="toneMeta(item.type).icon"
-              class="app-toast-type-icon"
-              :style="{ color: toneMeta(item.type).accentColor }"
-            />
-          </div>
+        <div
+          class="app-toast-icon"
+          :style="toneMeta(item.type).iconWrapStyle"
+        >
+          <component
+            :is="toneMeta(item.type).icon"
+            class="app-toast-type-icon"
+            :style="{ color: toneMeta(item.type).accentColor }"
+          />
+        </div>
 
-          <div class="app-toast-copy">
-            <div class="app-toast-title">
-              {{ title(item.type) }}
-            </div>
-            <div class="app-toast-message">
-              {{ item.message }}
-            </div>
+        <div class="app-toast-copy">
+          <div class="app-toast-title">
+            {{ title(item.type) }}
+          </div>
+          <div class="app-toast-message">
+            {{ item.message }}
           </div>
         </div>
 
@@ -199,18 +197,11 @@ function toastStyle(type: ToastType): Record<string, string> {
 .app-toast-content {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: flex-start;
-  justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3-5) var(--space-3-5) var(--space-3-5) var(--space-4-5);
-}
-
-.app-toast-leading {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  gap: var(--space-3);
 }
 
 .app-toast-icon {
@@ -218,6 +209,7 @@ function toastStyle(type: ToastType): Record<string, string> {
   width: var(--ui-control-height-sm);
   height: var(--ui-control-height-sm);
   flex-shrink: 0;
+  align-self: center;
   align-items: center;
   justify-content: center;
   border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);

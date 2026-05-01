@@ -81,6 +81,12 @@ describe('AppToast', () => {
     expect(closeButton.find('.app-toast-close-icon').exists()).toBe(true)
   })
 
+  it('keeps the status icon in a left-centered column', () => {
+    expect(appToastSource).toContain('grid-template-columns: auto minmax(0, 1fr) auto')
+    expect(appToastSource).toContain('align-self: center')
+    expect(appToastSource).not.toContain('app-toast-leading')
+  })
+
   it('uses a soft tinted glow instead of a vertical accent rail', async () => {
     const wrapper = await mountToast()
     useToast().error('提交失败')
