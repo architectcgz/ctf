@@ -131,6 +131,10 @@ describe('ContestAwdConfig', () => {
 
   it('路由页拆分为稳定的 AWD 配置子组件', () => {
     expect(contestAwdConfigSource).toContain(
+      "import { useContestAwdConfigPage } from '@/features/contest-awd-config'"
+    )
+    expect(contestAwdConfigSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestAwdConfigSource).toContain(
       "import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'"
     )
     expect(contestAwdConfigSource).toContain(

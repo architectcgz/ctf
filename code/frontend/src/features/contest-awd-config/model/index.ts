@@ -1,0 +1,1 @@
+export { useContestAwdConfigPage } from './useContestAwdConfigPage'
