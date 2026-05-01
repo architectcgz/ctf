@@ -27,6 +27,8 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(challengeDetailSource).toContain(
       "import { usePlatformChallengeDetailPage } from '@/features/platform-challenge-detail'"
     )
+    expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/model/')
+    expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/ui/')
     expect(challengeDetailSource).toContain('} = usePlatformChallengeDetailPage()')
     expect(challengeDetailSource).not.toContain("from '@/api/admin/authoring'")
     expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
@@ -42,6 +44,8 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(adminChallengeWorkspaceTabsSource).toContain(
       "@update:flag-draft=\"emit('update:flag-draft', $event)\""
     )
+    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform-challenge-detail/model/')
+    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform-challenge-detail/ui/')
     expect(adminChallengeWorkspaceTabsSource).not.toContain(':flag-type="flagType"')
     expect(platformChallengeFlagConfigPanelSource).toContain(
       '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'

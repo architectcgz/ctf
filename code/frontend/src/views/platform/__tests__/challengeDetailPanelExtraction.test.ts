@@ -49,6 +49,8 @@ describe('Admin ChallengeDetail panel extraction', () => {
 
   it('题目详情判题配置应复用 platform challenge detail feature ui', () => {
     expect(adminChallengeProfilePanelSource).toContain("from '@/features/platform-challenge-detail'")
+    expect(adminChallengeProfilePanelSource).not.toContain('@/features/platform-challenge-detail/model/')
+    expect(adminChallengeProfilePanelSource).not.toContain('@/features/platform-challenge-detail/ui/')
     expect(adminChallengeProfilePanelSource).toContain('<PlatformChallengeFlagConfigPanel')
     expect(adminChallengeProfilePanelSource).not.toContain('<section class="journal-panel challenge-flag-panel')
     expect(platformChallengeFlagConfigPanelSource).toContain(
