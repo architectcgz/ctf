@@ -14,6 +14,12 @@ describe('Admin ChallengeDetail workspace extraction', () => {
       "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )
     expect(challengeDetailSource).toContain('<PlatformChallengeDetailWorkspace')
+    expect(challengeDetailSource).not.toContain(
+      "import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'"
+    )
+    expect(challengeDetailSource).not.toContain(
+      "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
+    )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(adminChallengeWorkspaceTabsSource).toContain('aria-label="题目管理视图切换"')
     expect(adminChallengeWorkspaceTabsSource).toContain('admin-challenge-panel-writeup')
