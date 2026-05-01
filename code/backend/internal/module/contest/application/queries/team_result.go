@@ -17,6 +17,20 @@ type TeamResult struct {
 	CreatedAt   time.Time
 }
 
+type TeamMemberResult struct {
+	UserID   int64
+	Username string
+	JoinedAt time.Time
+}
+
+type MyTeamResult struct {
+	ID         int64
+	Name       string
+	InviteCode string
+	CaptainID  int64
+	Members    []*TeamMemberResult
+}
+
 func teamResultFromModel(team *model.Team, memberCount int) *TeamResult {
 	if team == nil {
 		return nil

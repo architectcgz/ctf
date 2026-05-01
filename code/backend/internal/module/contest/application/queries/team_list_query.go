@@ -40,7 +40,7 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*TeamRe
 	return result, nil
 }
 
-func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error) {
+func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (*MyTeamResult, error) {
 	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,11 +54,11 @@ func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (m
 		return nil, err
 	}
 
-	return map[string]any{
-		"id":              teamResp.ID,
-		"name":            teamResp.Name,
-		"invite_code":     teamResp.InviteCode,
-		"captain_user_id": teamResp.CaptainID,
-		"members":         members,
+	return &MyTeamResult{
+		ID:         teamResp.ID,
+		Name:       teamResp.Name,
+		InviteCode: teamResp.InviteCode,
+		CaptainID:  teamResp.CaptainID,
+		Members:    members,
 	}, nil
 }

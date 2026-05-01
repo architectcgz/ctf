@@ -16,8 +16,8 @@ type teamCommandService interface {
 }
 
 type teamQueryService interface {
-	GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error)
-	GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error)
+	GetTeamInfo(ctx context.Context, teamID int64) (*contestqry.TeamResult, []*contestqry.TeamMemberResult, error)
+	GetMyTeam(ctx context.Context, contestID, userID int64) (*contestqry.MyTeamResult, error)
 	ListTeams(ctx context.Context, contestID int64) ([]*contestqry.TeamResult, error)
 }
 

@@ -25,8 +25,8 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"team":    teamResp,
-		"members": members,
+		"team":    teamResultToDTO(teamResp),
+		"members": teamMemberResultsToDTO(members),
 	})
 }
 
@@ -59,26 +59,58 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, team)
+	response.Success(c, myTeamResultToDTO(team))
 }
 
 func teamResultsToDTO(items []*contestqry.TeamResult) []*dto.TeamResp {
 	result := make([]*dto.TeamResp, 0, len(items))
 	for _, item := range items {
+		result = append(result, teamResultToDTO(item))
+	}
+	return result
+}
+
+func teamResultToDTO(item *contestqry.TeamResult) *dto.TeamResp {
+	if item == nil {
+		return nil
+	}
+	return &dto.TeamResp{
+		ID:          item.ID,
+		ContestID:   item.ContestID,
+		Name:        item.Name,
+		CaptainID:   item.CaptainID,
+		InviteCode:  item.InviteCode,
+		MaxMembers:  item.MaxMembers,
+		MemberCount: item.MemberCount,
+		CreatedAt:   item.CreatedAt,
+	}
+}
+
+func teamMemberResultsToDTO(items []*contestqry.TeamMemberResult) []*dto.TeamMemberResp {
+	result := make([]*dto.TeamMemberResp, 0, len(items))
+	for _, item := range items {
 		if item == nil {
 			result = append(result, nil)
 			continue
 		}
-		result = append(result, &dto.TeamResp{
-			ID:          item.ID,
-			ContestID:   item.ContestID,
-			Name:        item.Name,
-			CaptainID:   item.CaptainID,
-			InviteCode:  item.InviteCode,
-			MaxMembers:  item.MaxMembers,
-			MemberCount: item.MemberCount,
-			CreatedAt:   item.CreatedAt,
+		result = append(result, &dto.TeamMemberResp{
+			UserID:   item.UserID,
+			Username: item.Username,
+			JoinedAt: item.JoinedAt,
 		})
 	}
 	return result
+}
+
+func myTeamResultToDTO(item *contestqry.MyTeamResult) gin.H {
+	if item == nil {
+		return nil
+	}
+	return gin.H{
+		"id":              item.ID,
+		"name":            item.Name,
+		"invite_code":     item.InviteCode,
+		"captain_user_id": item.CaptainID,
+		"members":         teamMemberResultsToDTO(item.Members),
+	}
 }

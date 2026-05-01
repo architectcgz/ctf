@@ -215,6 +215,7 @@ func TestTeamListQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 
 	files := []string{
 		filepath.Join("application", "queries", "team_list_query.go"),
+		filepath.Join("application", "queries", "team_info_query.go"),
 		filepath.Join("application", "queries", "team_result.go"),
 	}
 	for _, file := range files {

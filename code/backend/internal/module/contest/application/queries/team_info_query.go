@@ -6,13 +6,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error) {
+func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*TeamResult, []*TeamMemberResult, error) {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -31,10 +29,10 @@ func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamR
 		return nil, nil, err
 	}
 
-	memberResps := make([]*dto.TeamMemberResp, 0, len(members))
+	memberResps := make([]*TeamMemberResult, 0, len(members))
 	for _, member := range members {
 		if user, ok := userMap[member.UserID]; ok {
-			memberResps = append(memberResps, &dto.TeamMemberResp{
+			memberResps = append(memberResps, &TeamMemberResult{
 				UserID:   member.UserID,
 				Username: user.Username,
 				JoinedAt: member.JoinedAt,
@@ -42,7 +40,7 @@ func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamR
 		}
 	}
 
-	return contestdomain.TeamRespFromModel(team, len(members)), memberResps, nil
+	return teamResultFromModel(team, len(members)), memberResps, nil
 }
 
 func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*model.TeamMember) (map[int64]*model.User, error) {
