@@ -4,14 +4,10 @@ import type { Router } from 'vue-router'
 import type {
   AdminChallengeImportPreview,
   AdminChallengePublishRequestData,
-  ChallengeCategory,
-  ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
 import {
-  getChallengeCategoryColor,
   getChallengeCategoryLabel,
-  getChallengeDifficultyColor,
   getChallengeDifficultyLabel,
 } from '@/entities/challenge'
 import type { PlatformChallengeListRow } from './usePlatformChallenges'
@@ -31,28 +27,7 @@ export function useChallengeManagePresentation({
 
   const getCategoryLabel = getChallengeCategoryLabel
 
-  function getCategoryColor(category: ChallengeCategory): string {
-    return getChallengeCategoryColor(category, {
-      web: 'var(--color-cat-web)',
-      pwn: 'var(--color-cat-pwn)',
-      reverse: 'var(--color-cat-reverse)',
-      crypto: 'var(--color-cat-crypto)',
-      misc: 'var(--color-cat-misc)',
-      forensics: 'var(--color-cat-forensics)',
-    })
-  }
-
   const getDifficultyLabel = getChallengeDifficultyLabel
-
-  function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-    return getChallengeDifficultyColor(difficulty, {
-      beginner: 'var(--color-diff-beginner)',
-      easy: 'var(--color-diff-easy)',
-      medium: 'var(--color-diff-medium)',
-      hard: 'var(--color-diff-hard)',
-      insane: 'var(--color-diff-insane)',
-    })
-  }
 
   function getStatusLabel(status: ChallengeStatus): string {
     return { draft: '草稿', published: '已发布', archived: '已归档' }[status]
@@ -138,10 +113,6 @@ export function useChallengeManagePresentation({
 
   return {
     openActionMenuId,
-    getCategoryLabel,
-    getCategoryColor,
-    getDifficultyLabel,
-    getDifficultyColor,
     getStatusLabel,
     getStatusColor,
     getPublishRequestLabel,

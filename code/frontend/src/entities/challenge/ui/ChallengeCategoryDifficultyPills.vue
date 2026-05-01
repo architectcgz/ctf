@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
-import {
-  getChallengeCategoryLabel,
-  getChallengeDifficultyLabel,
-} from '@/entities/challenge/model'
+import ChallengeCategoryPill from './ChallengeCategoryPill.vue'
+import ChallengeDifficultyText from './ChallengeDifficultyText.vue'
 
 interface Props {
   category: ChallengeCategory
@@ -15,11 +13,9 @@ defineProps<Props>()
 
 <template>
   <div class="challenge-pill-row">
-    <span class="challenge-table-pill challenge-table-pill--category">
-      {{ getChallengeCategoryLabel(category) }}
-    </span>
+    <ChallengeCategoryPill :category="category" />
     <span class="challenge-table-pill challenge-table-pill--neutral">
-      {{ getChallengeDifficultyLabel(difficulty) }}
+      <ChallengeDifficultyText :difficulty="difficulty" />
     </span>
   </div>
 </template>
@@ -44,15 +40,8 @@ defineProps<Props>()
   text-transform: uppercase;
 }
 
-.challenge-table-pill--category {
-  background: color-mix(in srgb, var(--workspace-brand) 10%, var(--challenge-page-surface));
-  color: var(--challenge-page-accent);
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, transparent);
-}
-
 .challenge-table-pill--neutral {
   background: color-mix(in srgb, var(--challenge-page-line) 18%, var(--challenge-page-surface));
-  color: var(--challenge-page-muted);
   border: 1px solid color-mix(in srgb, var(--challenge-page-line-strong) 78%, transparent);
 }
 </style>

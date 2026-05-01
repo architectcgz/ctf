@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
+import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 
 describe('ChallengeManage directory extraction', () => {
   it('应将题目目录工作区抽到独立平台组件', () => {
@@ -21,5 +22,13 @@ describe('ChallengeManage directory extraction', () => {
     )
     expect(challengeManageHeroPanelSource).toContain('导入题目')
     expect(challengeManageHeroPanelSource).toContain('题目总量')
+  })
+
+  it('题目管理目录面板应把分类 pill 和难度文本下沉到 challenge entity ui', () => {
+    expect(challengeManageDirectoryPanelSource).toContain("from '@/entities/challenge'")
+    expect(challengeManageDirectoryPanelSource).toContain('<ChallengeCategoryPill')
+    expect(challengeManageDirectoryPanelSource).toContain('<ChallengeDifficultyText')
+    expect(challengeManageDirectoryPanelSource).not.toContain(':get-category-label=')
+    expect(challengeManageDirectoryPanelSource).not.toContain(':get-difficulty-label=')
   })
 })

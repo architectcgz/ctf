@@ -86,8 +86,6 @@ export function useChallengeManagePage() {
 
   const {
     openActionMenuId,
-    getCategoryLabel,
-    getDifficultyLabel,
     closeActionMenu,
     openChallengeDetail,
     openChallengeTopology,
@@ -134,8 +132,6 @@ export function useChallengeManagePage() {
     clearFilters,
     difficultyFilter,
     draftCount,
-    getCategoryLabel,
-    getDifficultyLabel,
     hasActiveFilters,
     hasLoadError,
     keyword,

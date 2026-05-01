@@ -4,6 +4,8 @@ export {
   getChallengeDifficultyColor,
   getChallengeDifficultyLabel,
 } from './model'
-export { ChallengeDirectoryRow } from './ui'
+export { ChallengeCategoryPill } from './ui'
 export { ChallengeCategoryDifficultyPills } from './ui'
+export { ChallengeDirectoryRow } from './ui'
+export { ChallengeDifficultyText } from './ui'
 export { ChallengeMetaStrip } from './ui'

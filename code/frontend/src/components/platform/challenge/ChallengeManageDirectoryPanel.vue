@@ -5,6 +5,10 @@ import type {
   ChallengeStatus,
 } from '@/api/contracts'
 import type { PlatformChallengeListRow } from '@/features/platform-challenges'
+import {
+  ChallengeCategoryPill,
+  ChallengeDifficultyText,
+} from '@/entities/challenge'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -41,8 +45,6 @@ interface Props {
   selectedSortLabel: string
   sortOptions: WorkspaceDirectorySortOption[]
   openActionMenuId: string | null
-  getCategoryLabel: (value: ChallengeCategory) => string
-  getDifficultyLabel: (value: ChallengeDifficulty) => string
 }
 
 defineProps<Props>()
@@ -249,15 +251,11 @@ function updateStatusFilter(event: Event): void {
       </template>
 
       <template #cell-category="{ row }">
-        <span class="challenge-table-pill challenge-table-pill--category">
-          {{ getCategoryLabel((row as PlatformChallengeListRow).category) }}
-        </span>
+        <ChallengeCategoryPill :category="(row as PlatformChallengeListRow).category" />
       </template>
 
       <template #cell-difficulty="{ row }">
-        <span class="challenge-table-difficulty">
-          {{ getDifficultyLabel((row as PlatformChallengeListRow).difficulty) }}
-        </span>
+        <ChallengeDifficultyText :difficulty="(row as PlatformChallengeListRow).difficulty" />
       </template>
 
       <template #cell-points="{ row }">

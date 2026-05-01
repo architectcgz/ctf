@@ -10,8 +10,6 @@ const {
   clearFilters,
   difficultyFilter,
   draftCount,
-  getCategoryLabel,
-  getDifficultyLabel,
   hasActiveFilters,
   hasLoadError,
   keyword,
@@ -71,8 +69,6 @@ const {
             :selected-sort-label="selectedSortLabel"
             :sort-options="sortOptions"
             :open-action-menu-id="openActionMenuId"
-            :get-category-label="getCategoryLabel"
-            :get-difficulty-label="getDifficultyLabel"
             @update:keyword="keyword = $event"
             @update:category-filter="categoryFilter = $event"
             @update:difficulty-filter="difficultyFilter = $event"
