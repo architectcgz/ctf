@@ -256,7 +256,7 @@ func (s *awdServiceForTest) GetRoundSummary(ctx context.Context, contestID, roun
 	return s.queries.GetRoundSummary(ctx, contestID, roundID)
 }
 
-func (s *awdServiceForTest) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error) {
+func (s *awdServiceForTest) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDTrafficSummaryResult, error) {
 	return s.queries.GetTrafficSummary(ctx, contestID, roundID)
 }
 
