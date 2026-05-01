@@ -55,7 +55,7 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, item)
+	response.Success(c, participationProgressResultToDTO(item))
 }
 
 func contestAnnouncementResultsToDTO(items []*contestqry.ContestAnnouncementResult) []*dto.ContestAnnouncementResp {
@@ -70,6 +70,29 @@ func contestAnnouncementResultsToDTO(items []*contestqry.ContestAnnouncementResu
 			Title:     item.Title,
 			Content:   item.Content,
 			CreatedAt: item.CreatedAt,
+		})
+	}
+	return result
+}
+
+func participationProgressResultToDTO(item *contestqry.ParticipationProgressResult) *dto.ContestMyProgressResp {
+	if item == nil {
+		return nil
+	}
+	result := &dto.ContestMyProgressResp{
+		ContestID: item.ContestID,
+		TeamID:    item.TeamID,
+		Solved:    make([]*dto.ContestSolvedProgressItem, 0, len(item.Solved)),
+	}
+	for _, solved := range item.Solved {
+		if solved == nil {
+			result.Solved = append(result.Solved, nil)
+			continue
+		}
+		result.Solved = append(result.Solved, &dto.ContestSolvedProgressItem{
+			ContestChallengeID: solved.ContestChallengeID,
+			SolvedAt:           solved.SolvedAt,
+			PointsEarned:       solved.PointsEarned,
 		})
 	}
 	return result
