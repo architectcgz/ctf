@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
@@ -38,7 +39,7 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 			},
 		},
 		stubAWDReadinessQueryService{
-			getReadinessFunc: func(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error) {
+			getReadinessFunc: func(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error) {
 				readinessCalls++
 				return testAWDReadinessSnapshot(contestID), nil
 			},
@@ -78,7 +79,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 			},
 		},
 		stubAWDQueryService{
-			getReadinessFunc: func(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error) {
+			getReadinessFunc: func(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error) {
 				return testAWDReadinessSnapshot(contestID), nil
 			},
 		},
@@ -148,10 +149,10 @@ func (s stubContestQueryService) ListContests(ctx context.Context, req *dto.List
 }
 
 type stubAWDReadinessQueryService struct {
-	getReadinessFunc func(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error)
+	getReadinessFunc func(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
 }
 
-func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error) {
+func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error) {
 	if s.getReadinessFunc != nil {
 		return s.getReadinessFunc(ctx, contestID)
 	}
@@ -206,7 +207,7 @@ func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID
 }
 
 type stubAWDQueryService struct {
-	getReadinessFunc func(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error)
+	getReadinessFunc func(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
 }
 
 type stubAWDServiceCommandService struct{}
@@ -257,7 +258,7 @@ func (stubAWDQueryService) ListTrafficEvents(ctx context.Context, contestID, rou
 	return nil, nil
 }
 
-func (s stubAWDQueryService) GetReadiness(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error) {
+func (s stubAWDQueryService) GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error) {
 	if s.getReadinessFunc != nil {
 		return s.getReadinessFunc(ctx, contestID)
 	}
@@ -274,19 +275,19 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 	return ctx, recorder
 }
 
-func testAWDReadinessSnapshot(contestID int64) *dto.AWDReadinessResp {
+func testAWDReadinessSnapshot(contestID int64) *contestqry.AWDReadinessResult {
 	lastPreviewAt := time.Unix(1710000000, 0)
 	accessURL := "http://checker.example/internal"
-	return &dto.AWDReadinessResp{
+	return &contestqry.AWDReadinessResult{
 		ContestID:             contestID,
 		Ready:                 false,
 		BlockingCount:         1,
 		GlobalBlockingReasons: []string{contestdomain.AWDReadinessGlobalReasonNoChallenges},
-		Items: []*dto.AWDReadinessItemResp{
+		Items: []contestqry.AWDReadinessItem{
 			{
 				AWDChallengeID:  101,
 				Title:           "calc",
-				CheckerType:     model.AWDCheckerTypeHTTPStandard,
+				CheckerType:     string(model.AWDCheckerTypeHTTPStandard),
 				ValidationState: string(model.AWDCheckerValidationStateFailed),
 				LastPreviewAt:   &lastPreviewAt,
 				LastAccessURL:   &accessURL,

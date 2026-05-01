@@ -3,13 +3,12 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error) {
+func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*AWDReadinessResult, error) {
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -20,22 +19,21 @@ func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*dto.AW
 	}
 
 	summary := contestdomain.BuildAWDReadiness(contestID, mapAWDReadinessChallenges(records))
-	items := make([]*dto.AWDReadinessItemResp, 0, len(summary.Items))
+	items := make([]AWDReadinessItem, 0, len(summary.Items))
 	for _, item := range summary.Items {
-		itemCopy := item
-		items = append(items, &dto.AWDReadinessItemResp{
-			ServiceID:       itemCopy.ServiceID,
-			AWDChallengeID:  itemCopy.AWDChallengeID,
-			Title:           itemCopy.Title,
-			CheckerType:     itemCopy.CheckerType,
-			ValidationState: itemCopy.ValidationState,
-			LastPreviewAt:   itemCopy.LastPreviewAt,
-			LastAccessURL:   itemCopy.LastAccessURL,
-			BlockingReason:  itemCopy.BlockingReason,
+		items = append(items, AWDReadinessItem{
+			ServiceID:       item.ServiceID,
+			AWDChallengeID:  item.AWDChallengeID,
+			Title:           item.Title,
+			CheckerType:     item.CheckerType,
+			ValidationState: item.ValidationState,
+			LastPreviewAt:   item.LastPreviewAt,
+			LastAccessURL:   item.LastAccessURL,
+			BlockingReason:  item.BlockingReason,
 		})
 	}
 
-	return &dto.AWDReadinessResp{
+	return &AWDReadinessResult{
 		ContestID:                summary.ContestID,
 		Ready:                    summary.Ready,
 		TotalChallenges:          summary.TotalChallenges,
@@ -58,9 +56,9 @@ func mapAWDReadinessChallenges(records []contestports.AWDReadinessChallengeRecor
 			ServiceID:         record.ServiceID,
 			AWDChallengeID:    record.AWDChallengeID,
 			Title:             record.Title,
-			CheckerType:       record.CheckerType,
+			CheckerType:       string(record.CheckerType),
 			CheckerConfig:     record.CheckerConfig,
-			ValidationState:   record.ValidationState,
+			ValidationState:   string(record.ValidationState),
 			LastPreviewAt:     record.LastPreviewAt,
 			LastPreviewResult: record.LastPreviewResult,
 		})

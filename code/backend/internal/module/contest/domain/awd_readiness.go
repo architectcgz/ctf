@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
-
-	"ctf-platform/internal/model"
 )
 
 const (
@@ -32,9 +30,9 @@ type AWDReadinessChallenge struct {
 	ServiceID         int64
 	AWDChallengeID    int64
 	Title             string
-	CheckerType       model.AWDCheckerType
+	CheckerType       string
 	CheckerConfig     string
-	ValidationState   model.AWDCheckerValidationState
+	ValidationState   string
 	LastPreviewAt     *time.Time
 	LastPreviewResult string
 }
@@ -43,7 +41,7 @@ type AWDReadinessItem struct {
 	ServiceID       int64
 	AWDChallengeID  int64
 	Title           string
-	CheckerType     model.AWDCheckerType
+	CheckerType     string
 	ValidationState string
 	LastPreviewAt   *time.Time
 	LastAccessURL   *string
@@ -83,8 +81,8 @@ func BuildAWDReadiness(contestID int64, challenges []AWDReadinessChallenge) *AWD
 			ServiceID:       challenge.ServiceID,
 			AWDChallengeID:  challenge.AWDChallengeID,
 			Title:           challenge.Title,
-			CheckerType:     NormalizeAWDCheckerType(string(challenge.CheckerType)),
-			ValidationState: string(NormalizeAWDCheckerValidationState(string(challenge.ValidationState))),
+			CheckerType:     string(NormalizeAWDCheckerType(challenge.CheckerType)),
+			ValidationState: string(NormalizeAWDCheckerValidationState(challenge.ValidationState)),
 			LastPreviewAt:   challenge.LastPreviewAt,
 			LastAccessURL:   extractAWDReadinessAccessURL(challenge.LastPreviewResult),
 		}
@@ -132,20 +130,20 @@ func resolveAWDReadinessBlockingReason(challenge AWDReadinessChallenge) string {
 		return AWDReadinessBlockingReasonInvalidCheckerConfig
 	}
 
-	switch NormalizeAWDCheckerValidationState(string(challenge.ValidationState)) {
-	case model.AWDCheckerValidationStatePassed:
+	switch string(NormalizeAWDCheckerValidationState(challenge.ValidationState)) {
+	case "passed":
 		return ""
-	case model.AWDCheckerValidationStateFailed:
+	case "failed":
 		return AWDReadinessBlockingReasonLastPreviewFailed
-	case model.AWDCheckerValidationStateStale:
+	case "stale":
 		return AWDReadinessBlockingReasonValidationStale
 	default:
 		return AWDReadinessBlockingReasonPendingValidation
 	}
 }
 
-func awdReadinessCheckerMissing(checkerType model.AWDCheckerType, checkerConfig string) bool {
-	normalizedType := NormalizeAWDCheckerType(string(checkerType))
+func awdReadinessCheckerMissing(checkerType string, checkerConfig string) bool {
+	normalizedType := string(NormalizeAWDCheckerType(checkerType))
 	if normalizedType == "" {
 		return true
 	}
@@ -159,7 +157,7 @@ func awdReadinessCheckerMissing(checkerType model.AWDCheckerType, checkerConfig 
 	}
 
 	parsedConfig := ParseAWDCheckerConfig(rawConfig)
-	if normalizedType == model.AWDCheckerTypeHTTPStandard && rawConfig == "{}" {
+	if normalizedType == "http_standard" && rawConfig == "{}" {
 		return true
 	}
 	if rawConfig == "{}" {
@@ -171,8 +169,8 @@ func awdReadinessCheckerMissing(checkerType model.AWDCheckerType, checkerConfig 
 	return false
 }
 
-func awdReadinessCheckerConfigInvalid(checkerType model.AWDCheckerType, checkerConfig string) bool {
-	if NormalizeAWDCheckerType(string(checkerType)) == "" {
+func awdReadinessCheckerConfigInvalid(checkerType string, checkerConfig string) bool {
+	if NormalizeAWDCheckerType(checkerType) == "" {
 		return false
 	}
 

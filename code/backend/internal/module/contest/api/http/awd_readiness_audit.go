@@ -10,33 +10,34 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
 type awdReadinessQueryService interface {
-	GetReadiness(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error)
+	GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
 }
 
-func loadAWDReadinessAuditSnapshot(ctx context.Context, queries awdReadinessQueryService, contestID int64, forceOverride *bool) (*dto.AWDReadinessResp, error) {
+func loadAWDReadinessAuditSnapshot(ctx context.Context, queries awdReadinessQueryService, contestID int64, forceOverride *bool) (*contestqry.AWDReadinessResult, error) {
 	if queries == nil || forceOverride == nil || !*forceOverride {
 		return nil, nil
 	}
 	return queries.GetReadiness(ctx, contestID)
 }
 
-func prepareAWDReadinessGateTrace(ctx context.Context, snapshot *dto.AWDReadinessResp) (context.Context, *contestcmd.AWDReadinessGateTrace) {
+func prepareAWDReadinessGateTrace(ctx context.Context, snapshot *contestqry.AWDReadinessResult) (context.Context, *contestcmd.AWDReadinessGateTrace) {
 	if snapshot == nil {
 		return ctx, nil
 	}
 	return contestcmd.WithAWDReadinessGateTrace(ctx)
 }
 
-func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideReason *string, snapshot *dto.AWDReadinessResp, trace *contestcmd.AWDReadinessGateTrace, err error) {
+func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideReason *string, snapshot *contestqry.AWDReadinessResult, trace *contestcmd.AWDReadinessGateTrace, err error) {
 	if c == nil || snapshot == nil || trace == nil || !trace.Allowed() || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
 		return
 	}
-	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, snapshot, err))
+	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, awdReadinessResultToDTO(snapshot), err))
 }
 
 func shouldPrepareUpdateContestReadinessAudit(contest *dto.ContestResp, req *dto.UpdateContestReq) bool {

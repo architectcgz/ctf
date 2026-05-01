@@ -245,23 +245,14 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 		t.Fatalf("unexpected readiness items: %+v", resp.Items)
 	}
 
-	raw, err := json.Marshal(resp.Items[0])
-	if err != nil {
-		t.Fatalf("marshal readiness item: %v", err)
+	if resp.Items[0].CheckerType != "" {
+		t.Fatalf("expected empty checker type for missing checker item: %+v", resp.Items[0])
 	}
-
-	payload := map[string]any{}
-	if err := json.Unmarshal(raw, &payload); err != nil {
-		t.Fatalf("unmarshal readiness item: %v", err)
+	if resp.Items[0].LastPreviewAt != nil {
+		t.Fatalf("expected nil last preview for missing checker item: %+v", resp.Items[0])
 	}
-	if _, ok := payload["checker_type"]; !ok {
-		t.Fatalf("expected checker_type key in payload: %s", string(raw))
-	}
-	if _, ok := payload["last_preview_at"]; !ok {
-		t.Fatalf("expected last_preview_at key in payload: %s", string(raw))
-	}
-	if _, ok := payload["last_access_url"]; !ok {
-		t.Fatalf("expected last_access_url key in payload: %s", string(raw))
+	if resp.Items[0].LastAccessURL != nil {
+		t.Fatalf("expected nil last access url for missing checker item: %+v", resp.Items[0])
 	}
 }
 
@@ -308,7 +299,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 	if len(resp.Items) != 1 {
 		t.Fatalf("unexpected readiness items: %+v", resp.Items)
 	}
-	if resp.Items[0].CheckerType != model.AWDCheckerTypeHTTPStandard {
+	if resp.Items[0].CheckerType != string(model.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker_type: %+v", resp.Items[0])
 	}
 	if resp.Items[0].Title != "Bank Portal" {
@@ -941,7 +932,7 @@ func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, seed awdReadin
 	)
 }
 
-func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, challengeID int64) string {
+func readinessBlockingReasonByChallenge(items []AWDReadinessItem, challengeID int64) string {
 	for _, item := range items {
 		if item.AWDChallengeID == challengeID {
 			return item.BlockingReason

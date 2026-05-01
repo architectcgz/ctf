@@ -93,9 +93,9 @@ func mapAWDReadinessChallengeRecords(records []contestports.AWDReadinessChalleng
 			ServiceID:         record.ServiceID,
 			AWDChallengeID:    record.AWDChallengeID,
 			Title:             record.Title,
-			CheckerType:       record.CheckerType,
+			CheckerType:       string(record.CheckerType),
 			CheckerConfig:     record.CheckerConfig,
-			ValidationState:   record.ValidationState,
+			ValidationState:   string(record.ValidationState),
 			LastPreviewAt:     record.LastPreviewAt,
 			LastPreviewResult: record.LastPreviewResult,
 		})

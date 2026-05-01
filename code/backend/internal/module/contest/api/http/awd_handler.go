@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type awdCommandService interface {
@@ -29,7 +30,7 @@ type awdQueryService interface {
 	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error)
 	GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error)
 	ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *dto.ListAWDTrafficEventsReq) (*dto.AWDTrafficEventPageResp, error)
-	GetReadiness(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error)
+	GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
 	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error)
 }
 

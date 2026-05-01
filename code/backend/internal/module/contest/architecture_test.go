@@ -84,6 +84,20 @@ func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
+func TestReadinessQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_readiness_query.go"),
+		filepath.Join("application", "queries", "awd_readiness_result.go"),
+		filepath.Join("domain", "awd_readiness.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/model")
+	}
+}
+
 func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

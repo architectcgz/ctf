@@ -2,6 +2,7 @@ package http
 
 import (
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 
@@ -32,7 +33,7 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	var readinessSnapshot *dto.AWDReadinessResp
+	var readinessSnapshot *contestqry.AWDReadinessResult
 	if h.readinessQueries != nil && h.queries != nil {
 		contest, err := h.queries.GetContest(c.Request.Context(), id)
 		if err != nil {
