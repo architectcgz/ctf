@@ -2,7 +2,10 @@
 import type { AdminChallengeListItem } from '@/api/contracts'
 import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'
 import ChallengeWriteupManagePanel from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue'
-import type { PlatformChallengeFlagDraft } from '@/features/platform-challenge-detail'
+import type {
+  PlatformChallengeFlagDraft,
+  PlatformChallengeFlagDraftPatch,
+} from '@/features/platform-challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 
@@ -29,7 +32,7 @@ const emit = defineEmits<{
   keydown: [payload: { event: KeyboardEvent; index: number }]
   downloadAttachment: []
   saveFlagConfig: []
-  'update:flag-draft': [value: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>]
+  'update:flag-draft': [value: PlatformChallengeFlagDraftPatch]
 }>()
 
 function handleSelect(panel: ChallengePanelKey): void {

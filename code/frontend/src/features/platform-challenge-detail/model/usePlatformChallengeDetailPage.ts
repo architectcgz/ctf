@@ -7,7 +7,12 @@ import { downloadAttachment as downloadChallengeAttachment } from '@/api/challen
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
-import { buildChallengeFlagDraftSummary, summarizeChallengeFlagConfig } from './presentation'
+import {
+  applyChallengeFlagDraftPatch,
+  buildChallengeFlagDraftSummary,
+  type ChallengeFlagDraftPatch,
+  summarizeChallengeFlagConfig,
+} from './presentation'
 
 export interface PlatformChallengeFlagDraft {
   flagConfigSummary: string
@@ -19,6 +24,7 @@ export interface PlatformChallengeFlagDraft {
   isSharedInstanceChallenge: boolean
   saving: boolean
 }
+export type PlatformChallengeFlagDraftPatch = ChallengeFlagDraftPatch
 
 export function usePlatformChallengeDetailPage() {
   const route = useRoute()
@@ -198,13 +204,20 @@ export function usePlatformChallengeDetailPage() {
     }
   }
 
-  function updateFlagDraft(
-    patch: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>
-  ): void {
-    if (patch.flagType !== undefined) flagType.value = patch.flagType
-    if (patch.flagValue !== undefined) flagValue.value = patch.flagValue
-    if (patch.flagRegex !== undefined) flagRegex.value = patch.flagRegex
-    if (patch.flagPrefix !== undefined) flagPrefix.value = patch.flagPrefix
+  function updateFlagDraft(patch: PlatformChallengeFlagDraftPatch): void {
+    const nextDraft = applyChallengeFlagDraftPatch(
+      {
+        flagType: flagType.value,
+        flagValue: flagValue.value,
+        flagRegex: flagRegex.value,
+        flagPrefix: flagPrefix.value,
+      },
+      patch
+    )
+    flagType.value = nextDraft.flagType
+    flagValue.value = nextDraft.flagValue
+    flagRegex.value = nextDraft.flagRegex
+    flagPrefix.value = nextDraft.flagPrefix
   }
 
   watch(

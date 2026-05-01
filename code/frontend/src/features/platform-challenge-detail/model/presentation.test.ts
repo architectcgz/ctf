@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildChallengeFlagDraftSummary, summarizeChallengeFlagConfig } from './presentation'
+import {
+  applyChallengeFlagDraftPatch,
+  buildChallengeFlagDraftSummary,
+  summarizeChallengeFlagConfig,
+} from './presentation'
 
 describe('platform challenge detail flag presentation', () => {
   it('应根据配置状态与类型返回判题配置摘要', () => {
@@ -43,5 +47,27 @@ describe('platform challenge detail flag presentation', () => {
         flagRegex: '  ',
       })
     ).toBe('正则匹配 / 未填写')
+  })
+
+  it('应仅用 patch 覆盖指定字段并保留其余草稿值', () => {
+    expect(
+      applyChallengeFlagDraftPatch(
+        {
+          flagType: 'static',
+          flagValue: 'flag{demo}',
+          flagRegex: '^flag',
+          flagPrefix: 'ctf',
+        },
+        {
+          flagType: 'regex',
+          flagRegex: '^ctf',
+        }
+      )
+    ).toEqual({
+      flagType: 'regex',
+      flagValue: 'flag{demo}',
+      flagRegex: '^ctf',
+      flagPrefix: 'ctf',
+    })
   })
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FlagType } from '@/api/contracts'
-import type { PlatformChallengeFlagDraft } from '../model'
+import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
 
 interface Props {
   draft: PlatformChallengeFlagDraft
@@ -9,7 +9,7 @@ interface Props {
 defineProps<Props>()
 
 const emit = defineEmits<{
-  'update:draft': [value: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>]
+  'update:draft': [value: PlatformChallengeFlagDraftPatch]
 }>()
 
 function updateFlagType(event: Event): void {

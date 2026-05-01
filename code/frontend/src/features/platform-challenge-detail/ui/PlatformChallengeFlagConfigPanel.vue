@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PlatformChallengeFlagDraft } from '../model'
+import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
 import PlatformChallengeFlagActionBar from './PlatformChallengeFlagActionBar.vue'
 import PlatformChallengeFlagFieldGrid from './PlatformChallengeFlagFieldGrid.vue'
 import PlatformChallengeFlagNoticeStack from './PlatformChallengeFlagNoticeStack.vue'
@@ -12,7 +12,7 @@ defineProps<Props>()
 
 const emit = defineEmits<{
   save: []
-  'update:draft': [value: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>]
+  'update:draft': [value: PlatformChallengeFlagDraftPatch]
 }>()
 </script>
 

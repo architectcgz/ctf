@@ -9,6 +9,7 @@ import {
 import {
   PlatformChallengeFlagConfigPanel,
   type PlatformChallengeFlagDraft,
+  type PlatformChallengeFlagDraftPatch,
 } from '@/features/platform-challenge-detail'
 
 interface Props {
@@ -22,7 +23,7 @@ defineProps<Props>()
 const emit = defineEmits<{
   'download-attachment': []
   'save-flag-config': []
-  'update:flag-draft': [value: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>]
+  'update:flag-draft': [value: PlatformChallengeFlagDraftPatch]
 }>()
 </script>
 
