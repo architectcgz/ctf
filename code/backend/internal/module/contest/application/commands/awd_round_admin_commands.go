@@ -48,5 +48,5 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return contestdomain.AWDRoundRespFromModel(round), nil
+	return awdRoundRespFromModel(round), nil
 }

@@ -418,6 +418,16 @@ func TestDomainDoesNotOwnContestHTTPResponseMappers(t *testing.T) {
 	}
 }
 
+func TestDomainDoesNotOwnAWDHTTPResponseMappers(t *testing.T) {
+	t.Parallel()
+
+	if _, err := os.Stat(filepath.Join("domain", "awd_response.go")); err == nil {
+		t.Fatalf("domain/awd_response.go should not exist; DTO response mappers belong outside domain")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat domain/awd_response.go: %v", err)
+	}
+}
+
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
 	t.Helper()
 

@@ -1,13 +1,12 @@
-package domain
+package commands
 
 import (
-	"sort"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-func AWDRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
+func awdRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
 	if round == nil {
 		return nil
 	}
@@ -25,7 +24,7 @@ func AWDRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
 	}
 }
 
-func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
+func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
 	if record == nil {
 		return nil
 	}
@@ -37,7 +36,7 @@ func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 		ServiceID:      record.ServiceID,
 		AWDChallengeID: record.AWDChallengeID,
 		ServiceStatus:  record.ServiceStatus,
-		CheckResult:    ParseAWDCheckResult(record.CheckResult),
+		CheckResult:    contestdomain.ParseAWDCheckResult(record.CheckResult),
 		CheckerType:    record.CheckerType,
 		AttackReceived: record.AttackReceived,
 		SLAScore:       record.SLAScore,
@@ -52,7 +51,7 @@ func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 	return resp
 }
 
-func AWDAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *dto.AWDAttackLogResp {
+func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *dto.AWDAttackLogResp {
 	if record == nil {
 		return nil
 	}
@@ -66,19 +65,10 @@ func AWDAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimT
 		ServiceID:      record.ServiceID,
 		AWDChallengeID: record.AWDChallengeID,
 		AttackType:     record.AttackType,
-		Source:         NormalizeAWDAttackSource(record.Source),
+		Source:         contestdomain.NormalizeAWDAttackSource(record.Source),
 		SubmittedFlag:  record.SubmittedFlag,
 		IsSuccess:      record.IsSuccess,
 		ScoreGained:    record.ScoreGained,
 		CreatedAt:      record.CreatedAt,
 	}
-}
-
-func SortAWDSummaryItems(items []*dto.AWDRoundSummaryItem) {
-	sort.Slice(items, func(i, j int) bool {
-		if items[i].TotalScore != items[j].TotalScore {
-			return items[i].TotalScore > items[j].TotalScore
-		}
-		return items[i].TeamID < items[j].TeamID
-	})
 }
