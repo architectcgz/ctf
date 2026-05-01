@@ -94,6 +94,15 @@ describe('ChallengeList', () => {
     expect(wrapper.find('.challenge-row-attempts').text()).toContain('尝试 20 次')
   })
 
+  it('页面应通过 feature model 获取列表状态，不再直接耦合 challenge api 与分页流程', () => {
+    expect(challengeListSource).toContain("useChallengeListPage } from '@/features/challenge-list'")
+    expect(challengeListSource).not.toContain("from '@/api/challenge'")
+    expect(challengeListSource).not.toContain("from '@/composables/usePagination'")
+    expect(challengeListSource).not.toContain('const summaryStats = computed(() => [')
+    expect(challengeListSource).not.toContain('async function syncFilterQuery()')
+    expect(challengeListSource).not.toContain('watch(')
+  })
+
   it('页头标题与说明应接入共享工作区排版类', () => {
     expect(challengeListSource).toMatch(/<div class="workspace-overline">\s*Challenges\s*<\/div>/)
     expect(challengeListSource).toMatch(
