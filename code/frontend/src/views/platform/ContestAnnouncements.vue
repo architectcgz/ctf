@@ -8,7 +8,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import ContestAnnouncementsTopbarPanel from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue'
 import ContestAnnouncementsWorkspacePanel from '@/components/platform/contest/ContestAnnouncementsWorkspacePanel.vue'
-import { useContestAnnouncementManagement } from '@/composables/useContestAnnouncementManagement'
+import { useContestAnnouncementManagement } from '@/features/contest-announcements'
 import { useToast } from '@/composables/useToast'
 import { ApiError } from '@/api/request'
 

@@ -8,7 +8,7 @@ import type {
   AWDTrafficPanelEmits,
   AWDTrafficPanelProps,
 } from '@/components/platform/contest/awdInspector.types'
-import { useAwdTrafficPanel } from '@/composables/useAwdTrafficPanel'
+import { useAwdTrafficPanel } from '@/features/awd-inspector'
 
 const props = defineProps<AWDTrafficPanelProps>()
 const emit = defineEmits<AWDTrafficPanelEmits>()

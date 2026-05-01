@@ -3,7 +3,7 @@ import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'
 import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'
 import ImageDirectoryPanel from '@/components/platform/images/ImageDirectoryPanel.vue'
 import ImageManageHeroPanel from '@/components/platform/images/ImageManageHeroPanel.vue'
-import { useImageManagePage } from '@/composables/useImageManagePage'
+import { useImageManagePage } from '@/features/image-management'
 
 const {
   activeImage,

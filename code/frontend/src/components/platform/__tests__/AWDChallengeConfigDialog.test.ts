@@ -41,9 +41,14 @@ vi.mock('@/api/admin/contests', async () => {
   }
 })
 
-vi.mock('@/composables/useContestAwdPreviewRealtime', () => ({
-  useContestAwdPreviewRealtime: awdPreviewRealtimeMocks.useContestAwdPreviewRealtime,
-}))
+vi.mock('@/features/awd-inspector', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/features/awd-inspector')>('@/features/awd-inspector')
+  return {
+    ...actual,
+    useContestAwdPreviewRealtime: awdPreviewRealtimeMocks.useContestAwdPreviewRealtime,
+  }
+})
 
 import AWDChallengeConfigDialog from '../contest/AWDChallengeConfigDialog.vue'
 

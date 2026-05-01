@@ -4,7 +4,7 @@ import type {
   ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
-import type { PlatformChallengeListRow } from '@/composables/usePlatformChallenges'
+import type { PlatformChallengeListRow } from '@/features/platform-challenges'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'

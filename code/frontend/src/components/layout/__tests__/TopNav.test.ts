@@ -12,7 +12,7 @@ const authMocks = vi.hoisted(() => ({
   logout: vi.fn(),
 }))
 
-vi.mock('@/composables/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => authMocks,
 }))
 

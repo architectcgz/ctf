@@ -9,7 +9,7 @@ import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
 import AWDReadinessSummary from './AWDReadinessSummary.vue'
 import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { usePlatformContestAwd } from '@/composables/usePlatformContestAwd'
+import { usePlatformContestAwd } from '@/features/contest-awd-admin'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'

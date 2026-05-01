@@ -24,11 +24,11 @@ import type {
 } from '@/components/platform/contest/awdInspector.types'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
-import { useAwdInspectorCoreState } from '@/composables/useAwdInspectorCoreState'
-import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerivedData'
-import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
-import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
+import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
+import { useAwdInspectorCoreState } from '@/features/awd-inspector'
+import { useAwdInspectorDerivedData } from '@/features/awd-inspector'
+import { useAwdInspectorExports } from '@/features/awd-inspector'
+import { useAwdInspectorFormatting } from '@/features/awd-inspector'
 
 const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard', hideStudioLink?: boolean }>()
 

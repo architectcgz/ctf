@@ -104,7 +104,7 @@ import { useRoute } from 'vue-router'
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { sanitizeRedirectPath } from '@/router/guards'
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/features/auth'
 
 const { login } = useAuth()
 const { track } = useProbeEasterEggs()

@@ -11,8 +11,8 @@ import type {
 } from '@/api/contracts'
 import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useStudentFilters } from '@/composables/useStudentFilters'
-import { useStudentListQuery } from '@/composables/useStudentListQuery'
+import { useStudentFilters } from '@/features/student-directory'
+import { useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 

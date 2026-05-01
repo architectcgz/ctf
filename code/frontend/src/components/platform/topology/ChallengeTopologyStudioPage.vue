@@ -15,7 +15,7 @@ import {
 import {
   useChallengeTopologyStudioPage,
   type TopologyStudioMode,
-} from '@/composables/useChallengeTopologyStudioPage'
+} from '@/features/challenge-topology-studio'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'

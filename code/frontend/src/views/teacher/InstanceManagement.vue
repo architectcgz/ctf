@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useTeacherInstances } from '@/composables/useTeacherInstances'
+import { useTeacherInstances } from '@/features/teacher-instances'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'

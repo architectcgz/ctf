@@ -8,7 +8,7 @@ import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServic
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
 import contestChallengeEditorDialogSource from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
 import platformUserFormDialogSource from '@/components/platform/user/PlatformUserFormDialog.vue?raw'
-import imageManagePageSource from '@/composables/useImageManagePage.ts?raw'
+import imageManagePageSource from '@/features/image-management/model/useImageManagePage.ts?raw'
 
 describe('duplicate action guard audit', () => {
   it('表单 submit 与按钮 click 共用 handler 时应在本地 owner 上短路 in-flight 状态', () => {

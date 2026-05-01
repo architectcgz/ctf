@@ -198,7 +198,7 @@
 import { Bell, ChevronRight, X } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useNotificationDropdown } from '@/composables/useNotificationDropdown'
+import { useNotificationDropdown } from '@/features/notifications'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { formatDate } from '@/utils/format'
 

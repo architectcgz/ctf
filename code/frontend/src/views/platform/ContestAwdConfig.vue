@@ -53,7 +53,7 @@ import {
   type AWDScriptCheckerDraft,
   type AWDTCPStandardDraft,
 } from '@/components/platform/contest/awdCheckerConfigSupport'
-import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 

@@ -2,7 +2,7 @@
 import AuditActorDetailModal from '@/components/platform/audit/AuditActorDetailModal.vue'
 import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'
 import AuditLogDirectoryPanel from '@/components/platform/audit/AuditLogDirectoryPanel.vue'
-import { useAuditLogPage } from '@/composables/useAuditLogPage'
+import { useAuditLogPage } from '@/features/audit-log'
 
 const {
   activeActorLog,

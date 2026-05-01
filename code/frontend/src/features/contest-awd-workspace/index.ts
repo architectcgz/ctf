@@ -1,0 +1,2 @@
+export { useContestAWDWorkspace } from './model'
+

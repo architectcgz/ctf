@@ -2,7 +2,7 @@
 import { reactive, watch } from 'vue'
 
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
-import type { PlatformUserFormDraft } from '@/composables/usePlatformUsers'
+import type { PlatformUserFormDraft } from '@/features/platform-users'
 import { USER_ROLES } from '@/utils/constants'
 
 const props = defineProps<{

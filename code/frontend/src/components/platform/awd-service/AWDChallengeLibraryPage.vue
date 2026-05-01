@@ -19,7 +19,7 @@ import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectory
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { PlatformAwdChallengeImportUploadResult } from '@/composables/usePlatformAwdChallenges'
+import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
 
 type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''
 type AwdServiceStatusFilter = AdminAwdChallengeData['status'] | ''

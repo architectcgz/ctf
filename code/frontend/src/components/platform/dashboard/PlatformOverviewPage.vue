@@ -11,7 +11,7 @@ import {
 } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
-import { usePlatformOverviewWorkspace } from '@/composables/usePlatformOverviewWorkspace'
+import { usePlatformOverviewWorkspace } from '@/features/platform-overview'
 
 const props = defineProps<{
   dashboard: AdminDashboardData | null

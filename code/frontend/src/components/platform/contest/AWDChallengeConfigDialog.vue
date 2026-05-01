@@ -18,8 +18,8 @@ import {
 import {
   useContestAwdPreviewRealtime,
   type ContestAwdPreviewProgressEvent,
-} from '@/composables/useContestAwdPreviewRealtime'
-import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+} from '@/features/awd-inspector'
+import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
   AWD_HTTP_METHOD_OPTIONS,

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import AwdReviewHeroPanel from '@/components/platform/awd-review/AwdReviewHeroPanel.vue'
 import AwdReviewDirectoryPanel from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue'
-import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
+import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
 
 interface PlatformAwdReviewRow {
   id: string

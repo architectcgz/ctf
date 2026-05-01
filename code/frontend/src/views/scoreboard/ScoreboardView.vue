@@ -7,7 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { ContestStatus } from '@/api/contracts'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
-import { useScoreboardView } from '@/composables/useScoreboardView'
+import { useScoreboardView } from '@/features/scoreboard'
 import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
 
 type ScoreboardPanelKey = 'contest' | 'points'

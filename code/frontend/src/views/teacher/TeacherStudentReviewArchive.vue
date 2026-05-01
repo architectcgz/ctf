@@ -11,7 +11,7 @@ import ReviewArchiveEvidencePanel from '@/components/teacher/review-archive/Revi
 import ReviewArchiveHero from '@/components/teacher/review-archive/ReviewArchiveHero.vue'
 import ReviewArchiveObservationStrip from '@/components/teacher/review-archive/ReviewArchiveObservationStrip.vue'
 import ReviewArchiveReflectionPanel from '@/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue'
-import { useTeacherStudentReviewArchive } from '@/composables/useTeacherStudentReviewArchive'
+import { useTeacherStudentReviewArchive } from '@/features/teacher-student-review-archive'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'

@@ -1,0 +1,2 @@
+export { usePlatformContestAwd } from './usePlatformContestAwd'
+

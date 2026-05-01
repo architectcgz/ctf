@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useTeacherStudentAnalysisPage } from '@/composables/useTeacherStudentAnalysisPage'
+import { useTeacherStudentAnalysisPage } from '@/features/teacher-student-analysis'
 import { useAuthStore } from '@/stores/auth'
 import {
   resolveClassManagementRouteName,

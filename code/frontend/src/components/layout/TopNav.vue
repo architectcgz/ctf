@@ -163,7 +163,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/features/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useTheme } from '@/composables/useTheme'

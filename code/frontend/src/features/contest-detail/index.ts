@@ -1,0 +1,2 @@
+export { useContestDetailPage } from './model'
+

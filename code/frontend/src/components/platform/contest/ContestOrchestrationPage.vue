@@ -17,7 +17,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import type { ContestFieldLocks, ContestFormDraft } from '@/composables/usePlatformContests'
+import type { ContestFieldLocks, ContestFormDraft } from '@/features/platform-contests'
 
 type RequestedContestPanelKey = 'overview' | 'list' | 'create'
 type StatusFilter =

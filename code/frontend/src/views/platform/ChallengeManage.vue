@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ChallengeManageDirectoryPanel from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue'
 import ChallengeManageHeroPanel from '@/components/platform/challenge/ChallengeManageHeroPanel.vue'
-import { useChallengeManagePage } from '@/composables/useChallengeManagePage'
+import { useChallengeManagePage } from '@/features/platform-challenges'
 
 const {
   archivedCount,

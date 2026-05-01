@@ -8,7 +8,7 @@ const awdMockModule = vi.hoisted(() => ({
   state: null as any,
 }))
 
-vi.mock('@/composables/usePlatformContestAwd', async () => {
+vi.mock('@/features/contest-awd-admin', async () => {
   const { ref } = await vi.importActual<typeof import('vue')>('vue')
   awdMockModule.state = {
     rounds: ref([]),

@@ -6,7 +6,7 @@ import PlatformContestFormDialog from '@/components/platform/contest/PlatformCon
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
 import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
-import { usePlatformContests } from '@/composables/usePlatformContests'
+import { usePlatformContests } from '@/features/platform-contests'
 
 const {
   list,

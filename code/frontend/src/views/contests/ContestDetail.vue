@@ -11,7 +11,7 @@ import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnno
 import ContestChallengeWorkspacePanel from '@/components/contests/ContestChallengeWorkspacePanel.vue'
 import ContestOverviewPanel from '@/components/contests/ContestOverviewPanel.vue'
 import ContestTeamPanel from '@/components/contests/ContestTeamPanel.vue'
-import { useContestDetailPage } from '@/composables/useContestDetailPage'
+import { useContestDetailPage } from '@/features/contest-detail'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getContestAccentColor, isStudentVisibleContestStatus } from '@/utils/contest'

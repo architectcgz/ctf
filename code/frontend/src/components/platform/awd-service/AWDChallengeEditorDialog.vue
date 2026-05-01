@@ -2,7 +2,7 @@
 import { reactive, watch } from 'vue'
 
 import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
-import type { PlatformAwdChallengeFormDraft } from '@/composables/usePlatformAwdChallenges'
+import type { PlatformAwdChallengeFormDraft } from '@/features/platform-awd-challenges'
 import type { ChallengeCategory } from '@/api/contracts'
 
 const categoryOptions: Array<{ value: ChallengeCategory; label: string }> = [

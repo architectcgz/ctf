@@ -1,0 +1,2 @@
+export { useImageManagePage } from './model'
+

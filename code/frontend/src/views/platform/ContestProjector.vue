@@ -13,8 +13,8 @@ import {
   getRoundStatusLabel,
 } from '@/components/platform/contest/projector/contestProjectorFormatters'
 import type { ContestProjectorFocusPanel } from '@/components/platform/contest/projector/contestProjectorTypes'
-import { useContestProjectorData } from '@/composables/useContestProjectorData'
-import { useContestProjectorDerived } from '@/composables/useContestProjectorDerived'
+import { useContestProjectorData } from '@/features/contest-projector'
+import { useContestProjectorDerived } from '@/features/contest-projector'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()

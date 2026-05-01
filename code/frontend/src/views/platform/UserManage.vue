@@ -4,7 +4,7 @@ import { onMounted } from 'vue'
 import PlatformUserFormDialog from '@/components/platform/user/PlatformUserFormDialog.vue'
 import UserGovernancePage from '@/components/platform/user/UserGovernancePage.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { usePlatformUsers } from '@/composables/usePlatformUsers'
+import { usePlatformUsers } from '@/features/platform-users'
 
 const {
   list,

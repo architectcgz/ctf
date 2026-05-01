@@ -6,7 +6,7 @@ import { getClasses, getStudentsDirectory } from '@/api/teacher'
 import type { TeacherClassItem } from '@/api/contracts'
 import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'
 import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'
-import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
+import { useStudentDirectoryQuery } from '@/features/student-directory'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()

@@ -8,7 +8,7 @@ const authMocks = vi.hoisted(() => ({
   register: vi.fn(),
 }))
 
-vi.mock('@/composables/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => authMocks,
 }))
 

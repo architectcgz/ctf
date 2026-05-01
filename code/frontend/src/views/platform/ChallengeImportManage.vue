@@ -6,7 +6,7 @@ import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeI
 import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import ChallengeImportUploadResultsPanel from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue'
-import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
+import { useChallengePackageImport } from '@/features/challenge-package-import'
 
 const router = useRouter()
 

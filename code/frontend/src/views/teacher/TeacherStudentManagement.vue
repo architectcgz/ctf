@@ -6,8 +6,8 @@ import { getClasses, getStudentsDirectory } from '@/api/teacher'
 import type { TeacherClassItem } from '@/api/contracts'
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
-import { useStudentFilters } from '@/composables/useStudentFilters'
+import { useStudentDirectoryQuery } from '@/features/student-directory'
+import { useStudentFilters } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import {
   resolveClassManagementRouteName,

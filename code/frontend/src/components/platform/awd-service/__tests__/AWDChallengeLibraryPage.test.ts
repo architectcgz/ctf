@@ -5,7 +5,7 @@ import type {
   AdminAwdChallengeData,
   AdminAwdChallengeImportPreview,
 } from '@/api/contracts'
-import type { PlatformAwdChallengeImportUploadResult } from '@/composables/usePlatformAwdChallenges'
+import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
 
 import AWDChallengeLibraryPage from '../AWDChallengeLibraryPage.vue'
 import awdChallengeLibraryPageSource from '../AWDChallengeLibraryPage.vue?raw'

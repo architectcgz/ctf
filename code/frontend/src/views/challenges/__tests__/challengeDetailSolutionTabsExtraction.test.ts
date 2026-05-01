@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
-import challengeDetailInteractionsSource from '@/composables/useChallengeDetailInteractions.ts?raw'
-import challengeDetailPresentationSource from '@/composables/useChallengeDetailPresentation.ts?raw'
+import challengeDetailInteractionsSource from '@/features/challenge-detail/model/useChallengeDetailInteractions.ts?raw'
+import challengeDetailPresentationSource from '@/features/challenge-detail/model/useChallengeDetailPresentation.ts?raw'
 
 describe('challenge detail solution tabs extraction', () => {
   it('ChallengeDetail 应复用 useTabKeyboardNavigation，且 presentation composable 不再内置题解子标签键盘逻辑', () => {

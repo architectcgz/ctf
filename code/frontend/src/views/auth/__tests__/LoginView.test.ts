@@ -13,7 +13,7 @@ const routeState = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@/composables/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => authMocks,
 }))
 vi.mock('vue-router', () => ({

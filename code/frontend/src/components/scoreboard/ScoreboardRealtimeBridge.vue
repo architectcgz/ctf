@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import { useContestScoreboardRealtime } from '@/composables/useContestScoreboardRealtime'
+import { useContestScoreboardRealtime } from '@/features/scoreboard'
 
 const props = defineProps<{
   contestId: string

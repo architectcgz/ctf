@@ -2,7 +2,7 @@
 import { ArrowRight, FolderKanban, RefreshCcw, Waypoints } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
+import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
 import { formatDate } from '@/utils/format'
 
 const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =

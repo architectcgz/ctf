@@ -23,8 +23,8 @@ import type {
 import { ApiError } from '@/api/request'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import { useContestAwdChallengePicker } from '@/composables/useContestAwdChallengePicker'
-import { useContestChallengePool } from '@/composables/useContestChallengePool'
+import { useContestAwdChallengePicker } from '@/features/contest-workbench'
+import { useContestChallengePool } from '@/features/contest-workbench'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 import {

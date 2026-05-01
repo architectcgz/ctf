@@ -17,7 +17,7 @@ import {
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
-import { useTeacherAwdReviewDetail } from '@/composables/useTeacherAwdReviewDetail'
+import { useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'
 import { formatDate } from '@/utils/format'
 
 const {

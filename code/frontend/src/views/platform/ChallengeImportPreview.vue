@@ -3,7 +3,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ChallengeImportPreviewWorkspacePanel from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue'
-import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
+import { useChallengePackageImport } from '@/features/challenge-package-import'
 
 const route = useRoute()
 const router = useRouter()

@@ -5,7 +5,7 @@ import contestEditSource from '@/views/platform/ContestEdit.vue?raw'
 describe('ContestEdit AWD workspace extraction', () => {
   it('应将 AWD 工作区状态与操作抽到独立 composable', () => {
     expect(contestEditSource).toContain(
-      "import { useContestEditAwdWorkspace } from '@/composables/useContestEditAwdWorkspace'"
+      "import { useContestEditAwdWorkspace } from '@/features/contest-workbench'"
     )
     expect(contestEditSource).toContain('} = useContestEditAwdWorkspace({')
   })

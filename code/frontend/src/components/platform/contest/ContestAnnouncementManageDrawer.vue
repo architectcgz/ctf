@@ -6,7 +6,7 @@ import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
-import { useContestAnnouncementManagement } from '@/composables/useContestAnnouncementManagement'
+import { useContestAnnouncementManagement } from '@/features/contest-announcements'
 
 const props = defineProps<{
   open: boolean

@@ -8,8 +8,8 @@ import type {
   ContestFieldLocks,
   ContestFormDraft,
   PlatformContestStatus,
-} from '@/composables/usePlatformContests'
-import type { ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
+} from '@/features/platform-contests'
+import type { ContestWorkbenchStageKey } from '@/features/contest-workbench'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AWDChallengeConfigPanel from '@/components/platform/contest/AWDChallengeConfigPanel.vue'

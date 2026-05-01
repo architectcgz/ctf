@@ -12,7 +12,7 @@ import type {
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
-import { useTeacherDashboardMetrics } from '@/composables/useTeacherDashboardMetrics'
+import { useTeacherDashboardMetrics } from '@/features/teacher-dashboard'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{

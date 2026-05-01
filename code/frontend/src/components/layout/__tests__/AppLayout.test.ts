@@ -42,9 +42,12 @@ vi.mock('@/api/admin/authoring', async () => {
     ...adminApiMocks,
   }
 })
-vi.mock('@/composables/useNotificationRealtime', async () => {
+vi.mock('@/features/notifications', async () => {
   const { ref } = await vi.importActual<typeof import('vue')>('vue')
+  const actual =
+    await vi.importActual<typeof import('@/features/notifications')>('@/features/notifications')
   return {
+    ...actual,
     useNotificationRealtime: () => ({
       start: vi.fn(),
       status: ref('idle'),

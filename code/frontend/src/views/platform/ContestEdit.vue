@@ -21,13 +21,13 @@ import {
   shouldConfirmContestTermination,
   type PlatformContestStatus,
   type ContestFormDraft,
-} from '@/composables/usePlatformContests'
+} from '@/features/platform-contests'
 import {
   CONTEST_WORKBENCH_STAGE_ORDER,
   useContestWorkbench,
   type ContestWorkbenchStageKey,
-} from '@/composables/useContestWorkbench'
-import { useContestEditAwdWorkspace } from '@/composables/useContestEditAwdWorkspace'
+} from '@/features/contest-workbench'
+import { useContestEditAwdWorkspace } from '@/features/contest-workbench'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'

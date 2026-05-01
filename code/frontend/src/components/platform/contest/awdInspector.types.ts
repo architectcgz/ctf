@@ -10,7 +10,7 @@ import type {
   ContestDetailData,
   ScoreboardRow,
 } from '@/api/contracts'
-import type { AWDTrafficFilters } from '@/composables/useAwdTrafficPanel'
+import type { AWDTrafficFilters } from '@/features/awd-inspector'
 
 export interface AWDRoundInspectorProps {
   contest: ContestDetailData

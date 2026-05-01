@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
+import { useChallengeWriteupEditorPage } from '@/features/challenge-writeup-editor'
 
 const props = withDefaults(
   defineProps<{

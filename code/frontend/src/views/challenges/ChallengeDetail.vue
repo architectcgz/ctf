@@ -153,12 +153,12 @@ import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPane
 import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
 import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
 import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
-import { useChallengeDetailInteractions } from '@/composables/useChallengeDetailInteractions'
 import {
+  useChallengeDetailInteractions,
   useChallengeDetailPresentation,
+  useChallengeInstance,
   type ChallengeSolutionTab,
-} from '@/composables/useChallengeDetailPresentation'
-import { useChallengeInstance } from '@/composables/useChallengeInstance'
+} from '@/features/challenge-detail'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useSanitize } from '@/composables/useSanitize'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'

@@ -93,7 +93,7 @@ describe('PlatformStudentManagement', () => {
       "import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'"
     )
     expect(adminStudentManageSource).toContain("from '@/api/teacher'")
-    expect(adminStudentManageSource).toContain("from '@/composables/useStudentDirectoryQuery'")
+    expect(adminStudentManageSource).toContain("from '@/features/student-directory'")
     expect(adminStudentManageSource).toContain(
       "import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'"
     )

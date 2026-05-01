@@ -5,7 +5,7 @@ import { Edit } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 
 const props = withDefaults(
   defineProps<{

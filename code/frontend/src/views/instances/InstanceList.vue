@@ -10,7 +10,7 @@ import {
   getInstanceWaitingHint,
   isInstanceManualActionAllowed,
   useInstanceListPage,
-} from '@/composables/useInstanceListPage'
+} from '@/features/instance-list'
 
 const {
   loading,

@@ -160,7 +160,7 @@
 import type {
   ChallengeSolutionCard,
   ChallengeSolutionTab,
-} from '@/composables/useChallengeDetailPresentation'
+} from '@/features/challenge-detail'
 
 interface Props {
   challengeSolved: boolean

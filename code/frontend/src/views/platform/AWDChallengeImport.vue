@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 
 import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { usePlatformAwdChallenges } from '@/composables/usePlatformAwdChallenges'
+import { usePlatformAwdChallenges } from '@/features/platform-awd-challenges'
 
 const {
   uploading,

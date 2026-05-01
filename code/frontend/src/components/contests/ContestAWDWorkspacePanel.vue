@@ -17,7 +17,7 @@ import {
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
-import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
+import { useContestAWDWorkspace } from '@/features/contest-awd-workspace'
 import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,

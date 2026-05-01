@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContestWorkbenchSummaryItem } from '@/composables/useContestWorkbench'
+import type { ContestWorkbenchSummaryItem } from '@/features/contest-workbench'
 
 defineProps<{
   items: ContestWorkbenchSummaryItem[]

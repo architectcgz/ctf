@@ -55,7 +55,7 @@ import { RouterView } from 'vue-router'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
 import TopNav from '@/components/layout/TopNav.vue'
-import { useNotificationRealtime } from '@/composables/useNotificationRealtime'
+import { useNotificationRealtime } from '@/features/notifications'
 import { isBackofficeRoute } from '@/utils/backofficeRouteMeta'
 
 const route = useRoute()

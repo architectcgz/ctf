@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
-import type { ContestFieldLocks, ContestFormDraft } from '@/composables/usePlatformContests'
+import type { ContestFieldLocks, ContestFormDraft } from '@/features/platform-contests'
 
 const props = defineProps<{
   open: boolean

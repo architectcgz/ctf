@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContestChallengePoolFilter } from '@/composables/useContestChallengePool'
+import type { ContestChallengePoolFilter } from '@/features/contest-workbench'
 
 defineProps<{
   filterItems: Array<{

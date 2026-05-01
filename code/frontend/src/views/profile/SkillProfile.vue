@@ -3,7 +3,7 @@ import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useSkillProfilePage } from '@/composables/useSkillProfilePage'
+import { useSkillProfilePage } from '@/features/skill-profile'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 

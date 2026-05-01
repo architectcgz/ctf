@@ -94,7 +94,7 @@ import { reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/features/auth'
 
 const { register } = useAuth()
 

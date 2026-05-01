@@ -22,7 +22,7 @@ const actionMocks = vi.hoisted(() => ({
   commitImportPreview: vi.fn(),
 }))
 
-vi.mock('@/composables/usePlatformAwdChallenges', () => ({
+vi.mock('@/features/platform-awd-challenges', () => ({
   usePlatformAwdChallenges: () => ({
     list: ref([
       {
