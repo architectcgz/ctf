@@ -85,3 +85,17 @@ func updateContestChallengeInputFromDTO(req *dto.UpdateContestChallengeReq) cont
 		IsVisible: req.IsVisible,
 	}
 }
+
+func createAWDRoundInputFromDTO(req *dto.CreateAWDRoundReq) contestcmd.CreateAWDRoundInput {
+	if req == nil {
+		return contestcmd.CreateAWDRoundInput{}
+	}
+	return contestcmd.CreateAWDRoundInput{
+		RoundNumber:    req.RoundNumber,
+		Status:         req.Status,
+		AttackScore:    req.AttackScore,
+		DefenseScore:   req.DefenseScore,
+		ForceOverride:  req.ForceOverride,
+		OverrideReason: req.OverrideReason,
+	}
+}

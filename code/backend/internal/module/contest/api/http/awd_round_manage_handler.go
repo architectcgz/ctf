@@ -16,16 +16,17 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
+	input := createAWDRoundInputFromDTO(&req)
 
-	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, req.ForceOverride)
+	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, input.ForceOverride)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
-	resp, err := h.commands.CreateRound(requestCtx, contestID, &req)
-	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionCreateRound, req.OverrideReason, readinessSnapshot, gateTrace, err)
+	resp, err := h.commands.CreateRound(requestCtx, contestID, input)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionCreateRound, input.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return

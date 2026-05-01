@@ -193,7 +193,7 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 	}
 }
 
-func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
+func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
 	return s.commands.CreateRound(ctx, contestID, req)
 }
 
@@ -275,7 +275,7 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	syncAWDContestServiceFixture(t, db, 1, 101, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 0, 0, now)
 	syncAWDContestServiceReadinessFixture(t, db, 1, 101, model.AWDCheckerValidationStatePassed, nil, "")
 
-	round, err := service.CreateRound(context.Background(), 1, &dto.CreateAWDRoundReq{
+	round, err := service.CreateRound(context.Background(), 1, contestcmd.CreateAWDRoundInput{
 		RoundNumber:  1,
 		AttackScore:  intPtr(80),
 		DefenseScore: intPtr(3),
@@ -307,7 +307,7 @@ func TestAWDServiceCreateRoundAppliesDefaultScoreContract(t *testing.T) {
 	syncAWDContestServiceFixture(t, db, 71, 7101, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 1, 2, now)
 	syncAWDContestServiceReadinessFixture(t, db, 71, 7101, model.AWDCheckerValidationStatePassed, nil, "")
 
-	round, err := service.CreateRound(context.Background(), 71, &dto.CreateAWDRoundReq{
+	round, err := service.CreateRound(context.Background(), 71, contestcmd.CreateAWDRoundInput{
 		RoundNumber: 1,
 	})
 	if err != nil {
@@ -329,7 +329,7 @@ func TestAWDServiceCreateRoundRejectsOversizedScores(t *testing.T) {
 	syncAWDContestServiceFixture(t, db, 72, 7201, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 1, 2, now)
 	syncAWDContestServiceReadinessFixture(t, db, 72, 7201, model.AWDCheckerValidationStatePassed, nil, "")
 
-	_, err := service.CreateRound(context.Background(), 72, &dto.CreateAWDRoundReq{
+	_, err := service.CreateRound(context.Background(), 72, contestcmd.CreateAWDRoundInput{
 		RoundNumber:  1,
 		AttackScore:  intPtr(101),
 		DefenseScore: intPtr(3),
@@ -541,7 +541,7 @@ func TestAWDServiceCreateRoundBlocksWhenReadinessNotReady(t *testing.T) {
 
 	createAWDContestFixture(t, db, 110, now)
 
-	_, err := service.CreateRound(context.Background(), 110, &dto.CreateAWDRoundReq{
+	_, err := service.CreateRound(context.Background(), 110, contestcmd.CreateAWDRoundInput{
 		RoundNumber: 1,
 	})
 	assertAWDReadinessBlocked(t, err)
@@ -554,7 +554,7 @@ func TestAWDServiceCreateRoundAllowsForceOverrideWithReason(t *testing.T) {
 
 	createAWDContestFixture(t, db, 111, now)
 
-	resp, err := service.CreateRound(context.Background(), 111, &dto.CreateAWDRoundReq{
+	resp, err := service.CreateRound(context.Background(), 111, contestcmd.CreateAWDRoundInput{
 		RoundNumber:    1,
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("teacher drill"),
@@ -576,7 +576,7 @@ func TestAWDServiceCreateRoundRejectsBlankOverrideReason(t *testing.T) {
 
 	createAWDContestFixture(t, db, 112, now)
 
-	_, err := service.CreateRound(context.Background(), 112, &dto.CreateAWDRoundReq{
+	_, err := service.CreateRound(context.Background(), 112, contestcmd.CreateAWDRoundInput{
 		RoundNumber:    1,
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("   "),

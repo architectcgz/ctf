@@ -160,13 +160,13 @@ func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestI
 }
 
 type stubAWDCommandService struct {
-	createRoundFunc           func(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error)
+	createRoundFunc           func(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
 	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error)
 	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
 	previewCheckerFunc        func(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
 }
 
-func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
+func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
 	if s.createRoundFunc != nil {
 		return s.createRoundFunc(ctx, contestID, req)
 	}

@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type awdCommandService interface {
-	CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error)
+	CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
 	RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error)
 	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
 	PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
