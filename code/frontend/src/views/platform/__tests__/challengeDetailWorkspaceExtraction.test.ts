@@ -18,4 +18,16 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(adminChallengeWorkspaceTabsSource).toMatch(/\.challenge-panel\s*\{[\s\S]*padding-top:\s*0;/s)
     expect(adminChallengeWorkspaceTabsSource).not.toContain('padding-top: var(--space-6);')
   })
+
+  it('应将题目详情加载与 Flag 配置流程下沉到 feature model', () => {
+    expect(challengeDetailSource).toContain(
+      "import { usePlatformChallengeDetailPage } from '@/features/platform-challenge-detail'"
+    )
+    expect(challengeDetailSource).toContain('} = usePlatformChallengeDetailPage()')
+    expect(challengeDetailSource).not.toContain("from '@/api/admin/authoring'")
+    expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
+    expect(challengeDetailSource).not.toContain('async function saveFlagConfig()')
+    expect(challengeDetailSource).not.toContain('async function loadChallenge(')
+    expect(challengeDetailSource).not.toContain('function summarizeFlagConfig(')
+  })
 })
