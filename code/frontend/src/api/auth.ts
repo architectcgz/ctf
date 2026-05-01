@@ -1,4 +1,4 @@
-import { request, type RequestConfig } from './request'
+import { request } from './request'
 
 import type { AuthUser } from '@/stores/auth'
 import type { WsTicketData } from '@/api/contracts'
@@ -31,11 +31,10 @@ export async function logout(): Promise<void> {
   await request<void>({ method: 'POST', url: '/auth/logout' })
 }
 
-export async function getProfile(config?: Pick<RequestConfig, 'suppressErrorToast'>): Promise<AuthUser> {
+export async function getProfile(): Promise<AuthUser> {
   const payload = await request<Omit<AuthUser, 'id'> & { id: string | number }>({
     method: 'GET',
     url: '/auth/profile',
-    suppressErrorToast: config?.suppressErrorToast,
   })
   return {
     ...payload,

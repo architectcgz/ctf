@@ -7,7 +7,7 @@ import {
   recommendChallengeWriteup,
   saveChallengeWriteup,
   unrecommendChallengeWriteup,
-} from '@/api/admin'
+} from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,
   AdminChallengeWriteupData,

@@ -1,7 +1,12 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ArrowDownWideNarrow, Calendar, SortAsc } from 'lucide-vue-next'
 
-import { createImage, deleteImage, getImages, type AdminImagePayload } from '@/api/admin'
+import {
+  createImage,
+  deleteImage,
+  getImages,
+  type AdminImagePayload,
+} from '@/api/admin/authoring'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
 import type { WorkspaceDirectorySortOption } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'

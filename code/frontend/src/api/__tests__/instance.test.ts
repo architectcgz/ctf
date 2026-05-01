@@ -16,7 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import { createInstance } from '@/api/challenge'
-import { destroyInstance, getMyInstances } from '@/api/instance'
+import { destroyInstance, getMyInstances, requestInstanceAccess } from '@/api/instance'
 
 describe('instance api contract', () => {
   beforeEach(() => {
@@ -87,7 +87,6 @@ describe('instance api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
       url: '/challenges/3/instances',
-      suppressErrorToast: true,
     })
     expect(result).toEqual({
       id: '5',
@@ -102,7 +101,7 @@ describe('instance api contract', () => {
     })
   })
 
-  it('应该在销毁实例时关闭全局错误提示，交给调用方处理', async () => {
+  it('销毁实例时应保持 API 契约简洁', async () => {
     requestMock.mockResolvedValue(undefined)
 
     await destroyInstance('inst-9')
@@ -110,7 +109,19 @@ describe('instance api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'DELETE',
       url: '/instances/inst-9',
-      suppressErrorToast: true,
+    })
+  })
+
+  it('请求实例访问入口时应保持 API 契约简洁', async () => {
+    requestMock.mockResolvedValue({
+      access_url: 'http://instance.ready.test',
+    })
+
+    await requestInstanceAccess('inst-9')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/instances/inst-9/access',
     })
   })
 })

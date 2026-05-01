@@ -1,6 +1,7 @@
 import { reactive, ref } from 'vue'
 
-import { getUsers, publishAdminNotification } from '@/api/admin'
+import { publishAdminNotification } from '@/api/admin/platform'
+import { getUsers } from '@/api/admin/users'
 import { getClasses } from '@/api/teacher'
 import { useAbortController } from '@/composables/useAbortController'
 import type {

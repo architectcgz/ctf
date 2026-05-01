@@ -1,4 +1,7 @@
-import type { AdminChallengeTopologyPayload, AdminEnvironmentTemplatePayload } from '@/api/admin'
+import type {
+  AdminChallengeTopologyPayload,
+  AdminEnvironmentTemplatePayload,
+} from '@/api/admin/authoring'
 import type {
   ChallengeTopologyData,
   EnvironmentTemplateData,

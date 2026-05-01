@@ -37,7 +37,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/authoring', () => adminApiMocks)
 
 const combinedSource = [
   challengeManageSource,
@@ -203,12 +203,8 @@ describe('ChallengeManage', () => {
   })
 
   it('筛选排序工具栏和分页应接入共享组件，而不是继续内联实现', () => {
-    expect(combinedSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(combinedSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
-    )
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryPagination.vue'")
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDirectoryPagination')
     expect(combinedSource).not.toContain('<PlatformPaginationControls')

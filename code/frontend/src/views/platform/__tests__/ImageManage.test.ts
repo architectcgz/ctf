@@ -21,7 +21,7 @@ const toastMocks = vi.hoisted(() => ({
 
 const confirmMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/api/admin', () => ({
+vi.mock('@/api/admin/authoring', () => ({
   getImages: getImagesMock,
   createImage: createImageMock,
   deleteImage: deleteImageMock,
@@ -72,7 +72,11 @@ function mountPage() {
   })
 }
 
-const combinedSource = [imageManageSource, imageDirectoryPanelSource, imageManageHeroPanelSource].join('\n')
+const combinedSource = [
+  imageManageSource,
+  imageDirectoryPanelSource,
+  imageManageHeroPanelSource,
+].join('\n')
 
 describe('ImageManage', () => {
   beforeEach(() => {
@@ -117,16 +121,22 @@ describe('ImageManage', () => {
     expect(imageManageHeroPanelSource).toMatch(
       /<div class="workspace-overline">\s*Image Registry\s*<\/div>/
     )
-    expect(imageManageHeroPanelSource).not.toContain('<div class="journal-eyebrow">Image Registry</div>')
+    expect(imageManageHeroPanelSource).not.toContain(
+      '<div class="journal-eyebrow">Image Registry</div>'
+    )
     expect(imageManageHeroPanelSource).not.toContain('镜像总量')
     expect(imageManageHeroPanelSource).not.toContain('当前查询结果的镜像总数')
     expect(imageManageHeroPanelSource).not.toContain('这一页已加载的镜像数量')
   })
 
   it('创建镜像弹窗应改用后台表单原语而不是 Element Plus 表单', () => {
-    expect(imageManageSource).toContain("import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'")
+    expect(imageManageSource).toContain(
+      "import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'"
+    )
     expect(imageManageSource).toContain('<ImageCreateModal')
-    expect(imageCreateModalSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(imageCreateModalSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
     expect(imageCreateModalSource).toContain('<AdminSurfaceModal')
     expect(imageCreateModalSource).not.toContain('<ElForm')
     expect(imageCreateModalSource).not.toContain('<ElFormItem')
@@ -139,9 +149,13 @@ describe('ImageManage', () => {
   })
 
   it('镜像详情弹窗应抽到独立平台组件并保留后台 surface modal', () => {
-    expect(imageManageSource).toContain("import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'")
+    expect(imageManageSource).toContain(
+      "import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'"
+    )
     expect(imageManageSource).toContain('<ImageDetailModal')
-    expect(imageDetailModalSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(imageDetailModalSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
     expect(imageDetailModalSource).toContain('<AdminSurfaceModal')
     expect(imageDetailModalSource).toContain('class="image-detail__grid"')
   })
@@ -245,9 +259,7 @@ describe('ImageManage', () => {
       /<h2 class="list-heading__title image-section-title">\s*镜像列表\s*<\/h2>/
     )
     expect(combinedSource).not.toContain('image-board__hint')
-    expect(combinedSource).toMatch(
-      /\.image-board__head\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
+    expect(combinedSource).toMatch(/\.image-board__head\s*\{[\s\S]*margin-bottom:\s*0;/s)
     expect(combinedSource).toMatch(
       /\.list-heading__title\s*\{[\s\S]*font-size:\s*clamp\(1\.2rem,\s*1rem\s*\+\s*0\.5vw,\s*1\.45rem\);/s
     )

@@ -20,7 +20,12 @@ const toastMocks = vi.hoisted(() => ({
   dismiss: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/platform', () => ({
+  publishAdminNotification: adminApiMocks.publishAdminNotification,
+}))
+vi.mock('@/api/admin/users', () => ({
+  getUsers: adminApiMocks.getUsers,
+}))
 vi.mock('@/api/teacher', () => teacherApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,

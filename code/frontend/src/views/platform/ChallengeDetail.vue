@@ -41,8 +41,8 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { AdminChallengeFlagPayload } from '@/api/admin'
-import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
+import type { AdminChallengeFlagPayload } from '@/api/admin/authoring'
+import { configureChallengeFlag, getChallengeDetail } from '@/api/admin/authoring'
 import { downloadAttachment as downloadChallengeAttachment } from '@/api/challenge'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'

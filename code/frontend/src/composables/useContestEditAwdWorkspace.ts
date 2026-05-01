@@ -3,11 +3,11 @@ import { computed, ref, type Ref } from 'vue'
 import {
   createContestAWDService,
   getContestAWDReadiness,
-  listAdminAwdChallenges,
   listContestAWDServices,
   updateContestAWDService,
   type AdminContestAWDServiceCreatePayload,
-} from '@/api/admin'
+} from '@/api/admin/contests'
+import { listAdminAwdChallenges } from '@/api/admin/awd-authoring'
 import type {
   AdminAwdChallengeData,
   AdminContestChallengeViewData,
@@ -96,7 +96,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
         awdChallengeLinksLoaded.value = true
       } else {
         awdConfigLoadError.value = humanizeRequestError(awdServicesResult.reason, 'AWD 配置同步失败')
-        toast.error(awdConfigLoadError.value)
       }
 
       if (readinessResult.status === 'fulfilled') {
@@ -106,7 +105,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
           readinessResult.reason,
           '赛前检查同步失败'
         )
-        toast.error(awdPreflightLoadError.value)
       }
     } finally {
       loadingAwdStageData.value = false

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getCheatDetection } from '@/api/admin'
+import { getCheatDetection } from '@/api/admin/platform'
 import type { AdminCheatDetectionData } from '@/api/contracts'
 import CheatDetectionWorkspacePanel from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue'
 

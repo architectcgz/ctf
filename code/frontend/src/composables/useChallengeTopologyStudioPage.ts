@@ -11,7 +11,7 @@ import {
   getImages,
   saveChallengeTopology,
   updateEnvironmentTemplate,
-} from '@/api/admin'
+} from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,
   AdminImageListItem,

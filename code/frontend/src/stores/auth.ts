@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     restorePromise = (async () => {
       try {
-        user.value = await getProfile({ suppressErrorToast: true })
+        user.value = await getProfile()
       } catch {
         user.value = null
       } finally {

@@ -86,6 +86,7 @@ async function loadScoreboard(silent = false): Promise<void> {
   }
 
   const token = ++requestToken
+  const hadScoreboard = Boolean(scoreboard.value)
   if (silent) {
     refreshing.value = true
   } else {
@@ -103,9 +104,12 @@ async function loadScoreboard(silent = false): Promise<void> {
     if (token !== requestToken) {
       return
     }
+    if (silent && hadScoreboard) {
+      toast.error('排行榜刷新失败')
+      return
+    }
     scoreboard.value = null
     error.value = true
-    toast.error('排行榜加载失败')
   } finally {
     if (token === requestToken) {
       loading.value = false

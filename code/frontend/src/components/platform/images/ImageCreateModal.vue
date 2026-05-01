@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AdminImagePayload } from '@/api/admin'
+import type { AdminImagePayload } from '@/api/admin/authoring'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 
 const props = defineProps<{

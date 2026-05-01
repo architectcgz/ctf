@@ -4,7 +4,7 @@ import {
   createAdminContestAnnouncement,
   deleteAdminContestAnnouncement,
   getAdminContestAnnouncements,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useToast } from '@/composables/useToast'
@@ -97,7 +97,6 @@ export function useContestAnnouncementManagement(
       const message = humanizeRequestError(error, '公告加载失败，请稍后重试。')
       announcements.value = []
       loadError.value = message
-      toast.error(message)
       return []
     } finally {
       loading.value = false

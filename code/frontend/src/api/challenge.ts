@@ -163,7 +163,6 @@ export async function getChallengeWriteup(id: string): Promise<ChallengeWriteupD
     const payload = await request<RawChallengeWriteupData>({
       method: 'GET',
       url: `/challenges/${encodeURIComponent(id)}/writeup`,
-      suppressErrorToast: true,
     })
     return normalizeChallengeWriteup(payload)
   } catch (error) {
@@ -185,7 +184,6 @@ export async function getMyChallengeWriteupSubmission(
     const payload = await request<RawSubmissionWriteupData | null>({
       method: 'GET',
       url: `/challenges/${encodeURIComponent(id)}/writeup-submissions/me`,
-      suppressErrorToast: true,
     })
     if (!payload) {
       return null
@@ -268,7 +266,6 @@ export async function createInstance(id: string): Promise<InstanceData> {
   >({
     method: 'POST',
     url: `/challenges/${encodeURIComponent(id)}/instances`,
-    suppressErrorToast: true,
   })
   return normalizeInstanceData(payload)
 }

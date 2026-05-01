@@ -16,17 +16,20 @@ const contestMocks = vi.hoisted(() => ({
 }))
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContests: contestMocks.getContests,
-    getChallenges: contestMocks.getChallenges,
     createContest: contestMocks.createContest,
     updateContest: contestMocks.updateContest,
     getContestAWDReadiness: contestMocks.getContestAWDReadiness,
   }
 })
+vi.mock('@/api/admin/authoring', () => ({
+  getChallenges: contestMocks.getChallenges,
+}))
 
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
@@ -154,8 +157,7 @@ describe('ContestManage', () => {
       'awd-start',
       expect.objectContaining({
         status: 'running',
-      }),
-      { suppressErrorToast: true }
+      })
     )
     expect(contestMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-start')
     expect(wrapper.text()).toContain('启动赛事')
@@ -172,8 +174,7 @@ describe('ContestManage', () => {
         status: 'running',
         force_override: true,
         override_reason: 'teacher drill',
-      }),
-      { suppressErrorToast: true }
+      })
     )
   })
 

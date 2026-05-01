@@ -13,8 +13,9 @@ const adminApiMocks = vi.hoisted(() => ({
   getContest: vi.fn(),
 }))
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
@@ -93,7 +94,8 @@ describe('ContestOperations', () => {
           },
           AWDOperationsPanel: {
             props: ['operationPanel', 'runtimeContent'],
-            template: '<div data-testid="awd-ops-panel">{{ operationPanel }}::{{ runtimeContent }}</div>',
+            template:
+              '<div data-testid="awd-ops-panel">{{ operationPanel }}::{{ runtimeContent }}</div>',
           },
         },
       },
@@ -119,7 +121,8 @@ describe('ContestOperations', () => {
           },
           AWDOperationsPanel: {
             props: ['operationPanel', 'runtimeContent'],
-            template: '<div data-testid="awd-ops-panel">{{ operationPanel }}::{{ runtimeContent }}</div>',
+            template:
+              '<div data-testid="awd-ops-panel">{{ operationPanel }}::{{ runtimeContent }}</div>',
           },
         },
       },

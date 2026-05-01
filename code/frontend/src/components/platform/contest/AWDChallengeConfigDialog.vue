@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
-import { runContestAWDCheckerPreview } from '@/api/admin'
+import { runContestAWDCheckerPreview } from '@/api/admin/contests'
 import type {
   AdminAwdChallengeData,
   AdminChallengeListItem,

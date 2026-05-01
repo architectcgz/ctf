@@ -8,7 +8,7 @@ const adminApiMocks = vi.hoisted(() => ({
   listAdminAwdChallenges: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => ({
+vi.mock('@/api/admin/awd-authoring', () => ({
   listAdminAwdChallenges: adminApiMocks.listAdminAwdChallenges,
 }))
 

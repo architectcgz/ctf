@@ -18,7 +18,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/platform', () => adminApiMocks)
 
 describe('PlatformOverview', () => {
   beforeEach(() => {
@@ -91,7 +91,9 @@ describe('PlatformOverview', () => {
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--primary overview-action-main"')
+    expect(adminDashboardPageSource).toContain(
+      'class="ui-btn ui-btn--primary overview-action-main"'
+    )
     expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost overview-anchor-btn"')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
@@ -99,7 +101,9 @@ describe('PlatformOverview', () => {
   })
 
   it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {
-    expect(adminDashboardPageSource).toContain('class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell"')
+    expect(adminDashboardPageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell"'
+    )
     expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')
     expect(adminDashboardPageSource).toContain('class="content-pane overview-content"')
     expect(adminDashboardPageSource).toContain('class="workspace-hero"')
@@ -111,7 +115,9 @@ describe('PlatformOverview', () => {
     expect(adminDashboardPageSource).toContain(
       'class="admin-summary-grid overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(adminDashboardPageSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(adminDashboardPageSource).toContain(
+      'class="journal-note progress-card metric-panel-card"'
+    )
     expect(adminDashboardPageSource).toContain('class="overview-hero-actions"')
     expect(adminDashboardPageSource).toContain('class="overview-action-grid"')
   })

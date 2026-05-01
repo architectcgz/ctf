@@ -132,7 +132,7 @@ describe('teacher api contract', () => {
     })
   })
 
-  it('销毁教师实例时应关闭全局错误提示，交给页面展示具体原因', async () => {
+  it('销毁教师实例时应保持 API 契约简洁', async () => {
     requestMock.mockResolvedValue(undefined)
 
     await destroyTeacherInstance('inst-3')
@@ -140,7 +140,6 @@ describe('teacher api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'DELETE',
       url: '/teacher/instances/inst-3',
-      suppressErrorToast: true,
     })
   })
 

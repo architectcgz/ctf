@@ -23,6 +23,13 @@ const { getContestsMock, getScoreboardMock, getPracticeRankingMock } = vi.hoiste
   getPracticeRankingMock: vi.fn(),
 }))
 
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  warning: vi.fn(),
+  info: vi.fn(),
+}))
+
 const webSocketMocks = vi.hoisted(() => {
   const connect = vi.fn().mockResolvedValue(undefined)
   const disconnect = vi.fn()
@@ -62,11 +69,19 @@ vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
 
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+
 describe('ScoreboardView', () => {
   beforeEach(() => {
     getContestsMock.mockReset()
     getScoreboardMock.mockReset()
     getPracticeRankingMock.mockReset()
+    toastMocks.success.mockReset()
+    toastMocks.error.mockReset()
+    toastMocks.warning.mockReset()
+    toastMocks.info.mockReset()
     webSocketMocks.connect.mockClear()
     webSocketMocks.disconnect.mockClear()
     webSocketMocks.send.mockClear()
@@ -288,6 +303,56 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).toContain('往期竞赛')
     expect(wrapper.text()).toContain('History Masters')
     expect(wrapper.findAll('[data-testid="scoreboard-detail-row"]')).toHaveLength(1)
+  })
+
+  it('排行详情静默刷新失败时应保留旧数据，只弹一次刷新失败提示', async () => {
+    getScoreboardMock
+      .mockResolvedValueOnce({
+        contest: {
+          id: 'contest-running',
+          title: '当前竞赛',
+          status: 'running',
+          started_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+        scoreboard: {
+          list: [
+            {
+              rank: 1,
+              team_id: 'team-running',
+              team_name: 'Current Champions',
+              score: 2450,
+              solved_count: 8,
+              last_submission_at: '2026-03-12T10:15:00Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 20,
+        },
+        frozen: false,
+      })
+      .mockRejectedValueOnce(new Error('refresh failed'))
+
+    const router = await createScoreboardRouter('/scoreboard/contest-running')
+    const wrapper = mount(ScoreboardDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Current Champions')
+
+    await wrapper.get('button.ui-btn--secondary').trigger('click')
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Current Champions')
+    expect(wrapper.text()).not.toContain('排行榜加载失败')
+    expect(toastMocks.error).toHaveBeenCalledWith('排行榜刷新失败')
   })
 
   it('列表页不会为竞赛列表建立实时排行榜连接', async () => {

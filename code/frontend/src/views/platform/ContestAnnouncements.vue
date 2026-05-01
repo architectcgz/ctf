@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getContest } from '@/api/admin'
+import { getContest } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -61,7 +61,6 @@ async function loadPage(): Promise<void> {
     await management.loadAnnouncements()
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛公告加载失败')
-    toast.error(loadError.value)
   } finally {
     loading.value = false
   }

@@ -15,8 +15,9 @@ const adminApiMocks = vi.hoisted(() => ({
   getContests: vi.fn(),
 }))
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContests: adminApiMocks.getContests,
@@ -159,9 +160,13 @@ describe('ContestOperationsHub', () => {
       "import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain('<WorkspaceDataTable')
-    expect(contestOperationsHubWorkspacePanelSource).toContain('class="workspace-directory-list contest-ops-table"')
+    expect(contestOperationsHubWorkspacePanelSource).toContain(
+      'class="workspace-directory-list contest-ops-table"'
+    )
     expect(contestOperationsHubWorkspacePanelSource).toContain('contestTableColumns')
-    expect(contestOperationsHubWorkspacePanelSource).toContain('border-left: 1px solid var(--workspace-table-line);')
+    expect(contestOperationsHubWorkspacePanelSource).toContain(
+      'border-left: 1px solid var(--workspace-table-line);'
+    )
     expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-row"')
     expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-card"')
     expect(contestOperationsHubHeroPanelSource).not.toContain('margin-top: var(--space-5);')

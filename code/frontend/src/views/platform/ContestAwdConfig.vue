@@ -18,7 +18,7 @@ import {
   listContestAWDServices,
   runContestAWDCheckerPreview,
   updateContestAWDService,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import type {
   AdminContestAWDServiceData,
   AWDCheckerPreviewData,
@@ -431,7 +431,6 @@ async function loadPage(initial = false) {
   } catch (error) {
     if (version !== loadVersion) return
     loadError.value = error instanceof Error && error.message.trim() ? error.message : 'AWD 配置加载失败'
-    toast.error(loadError.value)
   } finally {
     if (version === loadVersion) {
       loading.value = false
@@ -483,13 +482,17 @@ async function handleSave() {
   if (saving.value || !selectedService.value || !selectedCheckerType.value || !validateConfig()) return
   saving.value = true
   try {
-    await updateContestAWDService(contestId.value, selectedService.value.id, {
-      checker_type: selectedCheckerType.value,
-      checker_config: buildCurrentCheckerConfig(),
-      awd_sla_score: form.sla_score,
-      awd_defense_score: form.defense_score,
-      ...(canAttachPreviewToken.value ? { awd_checker_preview_token: previewToken.value } : {}),
-    })
+    await updateContestAWDService(
+      contestId.value,
+      selectedService.value.id,
+      {
+        checker_type: selectedCheckerType.value,
+        checker_config: buildCurrentCheckerConfig(),
+        awd_sla_score: form.sla_score,
+        awd_defense_score: form.defense_score,
+        ...(canAttachPreviewToken.value ? { awd_checker_preview_token: previewToken.value } : {}),
+      }
+    )
     toast.success(canAttachPreviewToken.value ? '配置与试跑结果已保存' : '配置已保存')
     await loadPage(false)
   } catch (error) {

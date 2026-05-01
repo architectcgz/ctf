@@ -381,7 +381,6 @@ export async function startContestAWDServiceInstance(
   const payload = await request<RawInstanceData>({
     method: 'POST',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/instances`,
-    suppressErrorToast: true,
   })
   return normalizeInstanceData(payload)
 }
@@ -393,7 +392,6 @@ export async function restartContestAWDServiceInstance(
   const payload = await request<RawInstanceData>({
     method: 'POST',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/instances/restart`,
-    suppressErrorToast: true,
   })
   return normalizeInstanceData(payload)
 }

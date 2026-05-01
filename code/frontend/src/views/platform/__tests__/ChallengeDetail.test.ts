@@ -36,7 +36,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/api/challenge', () => challengeApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
@@ -134,17 +134,29 @@ describe('Admin ChallengeDetail', () => {
 
   it('题目详情页顶部 tab 应复用全局 tab 标准并收紧标题间距', () => {
     expect(challengeDetailSource).toContain('--workspace-topbar-tabs-gap: 0;')
-    expect(challengeDetailSource).toContain('--workspace-tabs-offset-top: var(--workspace-topbar-tabs-gap);')
+    expect(challengeDetailSource).toContain(
+      '--workspace-tabs-offset-top: var(--workspace-topbar-tabs-gap);'
+    )
     expect(challengeDetailSource).toContain('--workspace-tabs-panel-gap: var(--space-2);')
-    expect(challengeDetailSource).toContain('--journal-topbar-padding-bottom: var(--workspace-topbar-tabs-gap);')
-    expect(challengeDetailSource).toContain('--page-top-tabs-margin: 0 calc(var(--space-6) * -1) 0;')
+    expect(challengeDetailSource).toContain(
+      '--journal-topbar-padding-bottom: var(--workspace-topbar-tabs-gap);'
+    )
+    expect(challengeDetailSource).toContain(
+      '--page-top-tabs-margin: 0 calc(var(--space-6) * -1) 0;'
+    )
     expect(challengeDetailSource).toContain('--page-top-tabs-padding: 0 var(--space-6);')
     expect(challengeDetailSource).toContain('--page-top-tab-min-height: 42px;')
-    expect(challengeDetailSource).toContain('--page-top-tab-padding: var(--space-1-5) 0 var(--space-2);')
+    expect(challengeDetailSource).toContain(
+      '--page-top-tab-padding: var(--space-1-5) 0 var(--space-2);'
+    )
     expect(challengeDetailSource).not.toContain('--page-top-tab-min-height: 52px;')
-    expect(challengeDetailSource).not.toContain('--page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);')
+    expect(challengeDetailSource).not.toContain(
+      '--page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);'
+    )
     expect(challengeDetailSource).not.toContain('--journal-topbar-padding-bottom: var(--space-3);')
-    expect(challengeDetailSource).not.toContain('--page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;')
+    expect(challengeDetailSource).not.toContain(
+      '--page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;'
+    )
   })
 
   it('应该根据 query 切到题解管理 tab', async () => {

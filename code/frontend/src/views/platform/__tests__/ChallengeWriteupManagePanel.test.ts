@@ -31,7 +31,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/api/teacher', () => teacherApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
@@ -87,12 +87,16 @@ describe('ChallengeWriteupManagePanel', () => {
 
   it('操作按钮应只保留共享 ui-btn 原语，更多菜单项改由共享 action menu 承接', () => {
     expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--secondary ui-btn--sm"')
+    expect(challengeWriteupManagePanelSource).toContain(
+      'class="ui-btn ui-btn--secondary ui-btn--sm"'
+    )
     expect(challengeWriteupManagePanelSource).toContain(
       "from '@/components/common/menus/CActionMenu.vue'"
     )
     expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item"')
-    expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item c-action-menu__item--danger"')
+    expect(challengeWriteupManagePanelSource).toContain(
+      'class="c-action-menu__item c-action-menu__item--danger"'
+    )
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-outline')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-ghost')
@@ -219,9 +223,9 @@ describe('ChallengeWriteupManagePanel', () => {
     await moreButton.trigger('click')
     await flushPromises()
 
-    const editButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
-      (button) => button.textContent?.trim() === '编辑'
-    )
+    const editButton = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+    ).find((button) => button.textContent?.trim() === '编辑')
     expect(moreButton.attributes('aria-expanded')).toBe('true')
     expect(editButton).toBeTruthy()
 
@@ -278,9 +282,9 @@ describe('ChallengeWriteupManagePanel', () => {
     await wrapper.get('[data-testid="writeup-more-actions"]').trigger('click')
     await flushPromises()
 
-    const deleteButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
-      (button) => button.textContent?.trim() === '删除'
-    )
+    const deleteButton = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+    ).find((button) => button.textContent?.trim() === '删除')
     expect(deleteButton).toBeTruthy()
 
     deleteButton?.click()
@@ -338,9 +342,9 @@ describe('ChallengeWriteupManagePanel', () => {
     await wrapper.get('[data-testid="writeup-more-actions"]').trigger('click')
     await flushPromises()
 
-    const deleteButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
-      (button) => button.textContent?.trim() === '删除'
-    )
+    const deleteButton = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+    ).find((button) => button.textContent?.trim() === '删除')
     expect(deleteButton).toBeTruthy()
 
     deleteButton?.click()

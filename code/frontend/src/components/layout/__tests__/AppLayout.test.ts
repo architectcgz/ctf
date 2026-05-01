@@ -34,8 +34,9 @@ vi.mock('@/api/teacher', async () => {
     ...teacherApiMocks,
   }
 })
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/authoring', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/authoring')>('@/api/admin/authoring')
   return {
     ...actual,
     ...adminApiMocks,
@@ -51,7 +52,12 @@ vi.mock('@/composables/useNotificationRealtime', async () => {
   }
 })
 
-const routeSources = [routerSource, platformRoutesSource, studentRoutesSource, teacherRoutesSource].join('\n')
+const routeSources = [
+  routerSource,
+  platformRoutesSource,
+  studentRoutesSource,
+  teacherRoutesSource,
+].join('\n')
 
 describe('AppLayout workspace shell', () => {
   beforeEach(() => {
@@ -101,7 +107,9 @@ describe('AppLayout workspace shell', () => {
   })
 
   it('suppresses route-level workspace topbars in backoffice mode so pages do not duplicate the global topnav', () => {
-    expect(appLayoutSource).toContain('.workspace-main--backoffice :deep(.workspace-shell > .workspace-topbar)')
+    expect(appLayoutSource).toContain(
+      '.workspace-main--backoffice :deep(.workspace-shell > .workspace-topbar)'
+    )
     expect(appLayoutSource).toContain('display: none;')
   })
 

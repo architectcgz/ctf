@@ -17,7 +17,7 @@ const toastMocks = vi.hoisted(() => ({
   warning: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/contests', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -183,9 +183,7 @@ describe('useContestAnnouncementManagement', () => {
       'contest-1',
       'announcement-1'
     )
-    expect(result.announcements.value).toEqual([
-      expect.objectContaining({ id: 'announcement-2' }),
-    ])
+    expect(result.announcements.value).toEqual([expect.objectContaining({ id: 'announcement-2' })])
     expect(toastMocks.success).toHaveBeenCalledWith('公告已删除')
 
     wrapper.unmount()

@@ -16,61 +16,65 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
+  commitAdminAwdChallengeImport,
   createAdminAwdChallenge,
-  createAdminContestAnnouncement,
-  createAdminContestChallenge,
-  createEnvironmentTemplate,
+  deleteAdminAwdChallenge,
+  listAdminAwdChallengeImports,
+  listAdminAwdChallenges,
+  previewAdminAwdChallengeImport,
+  updateAdminAwdChallenge,
+} from '@/api/admin/awd-authoring'
+import {
+  configureChallengeFlag,
   createChallenge,
   createChallengePublishRequest,
+  createEnvironmentTemplate,
+  deleteChallengeTopology,
+  deleteChallengeWriteup,
+  deleteEnvironmentTemplate,
+  deleteImage,
+  getChallengeDetail,
+  getChallengeTopology,
+  getChallengeWriteup,
+  getChallenges,
+  getEnvironmentTemplates,
+  getImages,
+  getLatestChallengePublishRequest,
+  listChallengeImports,
+  recommendChallengeWriteup,
+  saveChallengeTopology,
+  saveChallengeWriteup,
+  unrecommendChallengeWriteup,
+} from '@/api/admin/authoring'
+import {
+  createAdminContestAnnouncement,
+  createAdminContestChallenge,
   createContest,
-  createContestAWDRound,
-  commitAdminAwdChallengeImport,
-  configureChallengeFlag,
   createContestAWDService,
-  deleteAdminAwdChallenge,
+  createContestAWDRound,
   deleteAdminContestAnnouncement,
   deleteAdminContestChallenge,
   deleteContestAWDService,
-  deleteChallengeTopology,
-  deleteEnvironmentTemplate,
-  deleteImage,
-  deleteChallengeWriteup,
   getAdminContestAnnouncements,
   getAdminContestLiveScoreboard,
-  getChallengeTopology,
-  getChallengeDetail,
-  getLatestChallengePublishRequest,
+  getContestAWDReadiness,
   getContestAWDRoundSummary,
   getContestAWDRoundTrafficSummary,
-  getContestAWDReadiness,
-  getChallengeWriteup,
-  getChallenges,
-  getCheatDetection,
   getContests,
-  getEnvironmentTemplates,
-  getImages,
-  getUsers,
-  listAdminAwdChallengeImports,
-  listAdminAwdChallenges,
-  listChallengeImports,
   listAdminContestChallenges,
   listContestAWDServices,
   listContestAWDRoundAttacks,
   listContestAWDRoundTrafficEvents,
-  publishAdminNotification,
-  recommendChallengeWriteup,
+  runContestAWDCheckerPreview,
   runContestAWDCurrentRoundCheck,
   runContestAWDRoundCheck,
-  saveChallengeTopology,
-  saveChallengeWriteup,
-  unrecommendChallengeWriteup,
+  startContestAWDTeamServiceInstance,
   updateAdminContestChallenge,
-  updateAdminAwdChallenge,
-  updateContestAWDService,
   updateContest,
-  previewAdminAwdChallengeImport,
-} from '@/api/admin'
-import * as adminApi from '@/api/admin'
+  updateContestAWDService,
+} from '@/api/admin/contests'
+import { getCheatDetection, publishAdminNotification } from '@/api/admin/platform'
+import { getUsers } from '@/api/admin/users'
 
 describe('admin contest api contract', () => {
   beforeEach(() => {
@@ -311,7 +315,7 @@ describe('admin contest api contract', () => {
       points: 120,
       order: 2,
       is_visible: true,
-      ...( {
+      ...({
         template_id: 5,
         awd_checker_type: 'http_standard',
         awd_checker_config: {
@@ -320,7 +324,7 @@ describe('admin contest api contract', () => {
         awd_sla_score: 1,
         awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-1',
-      } as Record<string, unknown> ),
+      } as Record<string, unknown>),
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -354,7 +358,7 @@ describe('admin contest api contract', () => {
       points: 150,
       order: 3,
       is_visible: false,
-      ...( {
+      ...({
         template_id: 7,
         awd_checker_type: 'legacy_probe',
         awd_checker_config: {
@@ -363,7 +367,7 @@ describe('admin contest api contract', () => {
         awd_sla_score: 1,
         awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-2',
-      } as Record<string, unknown> ),
+      } as Record<string, unknown>),
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -744,16 +748,7 @@ describe('admin contest api contract', () => {
       preview_token: 'preview-token-9',
     })
 
-    const previewFn = (
-      adminApi as typeof adminApi & {
-        runContestAWDCheckerPreview: (
-          contestId: string,
-          data: Record<string, unknown>
-        ) => Promise<Record<string, unknown>>
-      }
-    ).runContestAWDCheckerPreview
-
-    const result = await previewFn('7', {
+    const result = await runContestAWDCheckerPreview('7', {
       awd_challenge_id: 101,
       checker_type: 'http_standard',
       checker_config: {
@@ -1353,7 +1348,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
       url: '/admin/contests/9/awd/readiness',
-      suppressErrorToast: true,
     })
     expect(result).toEqual({
       contest_id: '9',
@@ -1413,7 +1407,28 @@ describe('admin contest api contract', () => {
         force_override: true,
         override_reason: 'teacher drill',
       },
-      suppressErrorToast: true,
+    })
+  })
+
+  it('应在启动队伍服务实例时把错误展示权交给调用方', async () => {
+    requestMock.mockResolvedValue({
+      team_id: 12,
+      service_id: 99,
+      instance: null,
+    })
+
+    await startContestAWDTeamServiceInstance('7', {
+      team_id: '12',
+      service_id: '99',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/awd/instances',
+      data: {
+        team_id: 12,
+        service_id: 99,
+      },
     })
   })
 
@@ -1444,11 +1459,10 @@ describe('admin contest api contract', () => {
         force_override: true,
         override_reason: 'teacher drill',
       },
-      suppressErrorToast: true,
     })
   })
 
-  it('应该在更新赛事时透传 override 字段并允许关闭错误 toast', async () => {
+  it('应该在更新赛事时透传 override 字段', async () => {
     requestMock.mockResolvedValue({
       id: 9,
       title: '春季赛',
@@ -1462,15 +1476,11 @@ describe('admin contest api contract', () => {
       updated_at: '2026-03-02T00:00:00.000Z',
     })
 
-    await updateContest(
-      '9',
-      {
-        status: 'running',
-        force_override: true,
-        override_reason: 'teacher drill',
-      },
-      { suppressErrorToast: true }
-    )
+    await updateContest('9', {
+      status: 'running',
+      force_override: true,
+      override_reason: 'teacher drill',
+    })
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'PUT',
@@ -1485,11 +1495,10 @@ describe('admin contest api contract', () => {
         force_override: true,
         override_reason: 'teacher drill',
       },
-      suppressErrorToast: true,
     })
   })
 
-  it('不应把所有 running 状态更新默认视为 readiness 静默请求', async () => {
+  it('不应在 running 状态更新时附带额外请求层展示参数', async () => {
     requestMock.mockResolvedValue({
       id: 9,
       title: '春季赛',
@@ -1520,7 +1529,6 @@ describe('admin contest api contract', () => {
         force_override: undefined,
         override_reason: undefined,
       },
-      suppressErrorToast: undefined,
     })
   })
 
@@ -1811,7 +1819,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'GET',
       url: '/authoring/challenges/12/publish-requests/latest',
-      suppressErrorToast: true,
     })
     expect(created).toEqual({
       id: '41',
@@ -2016,7 +2023,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
       url: '/authoring/challenges/11/topology',
-      suppressErrorToast: true,
     })
     expect(result).toEqual({
       id: '15',
@@ -2110,7 +2116,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
       url: '/authoring/challenges/11/writeup',
-      suppressErrorToast: true,
     })
     expect(detail).toEqual({
       id: '5',
@@ -2212,29 +2217,26 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenLastCalledWith({
       method: 'DELETE',
       url: '/authoring/challenges/12/writeup',
-      suppressErrorToast: true,
     })
   })
 
-  it('应该在删除拓扑与环境模板时关闭全局错误提示', async () => {
+  it('应该透传删除拓扑与环境模板请求', async () => {
     requestMock.mockResolvedValue(undefined)
 
     await deleteChallengeTopology('12')
     expect(requestMock).toHaveBeenNthCalledWith(1, {
       method: 'DELETE',
       url: '/authoring/challenges/12/topology',
-      suppressErrorToast: true,
     })
 
     await deleteEnvironmentTemplate('7')
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'DELETE',
       url: '/authoring/environment-templates/7',
-      suppressErrorToast: true,
     })
   })
 
-  it('应该在删除镜像时关闭全局错误提示', async () => {
+  it('应该透传删除镜像请求', async () => {
     requestMock.mockResolvedValue(undefined)
 
     await deleteImage('9')
@@ -2242,7 +2244,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'DELETE',
       url: '/authoring/images/9',
-      suppressErrorToast: true,
     })
   })
 
@@ -2463,7 +2464,6 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenNthCalledWith(3, {
       method: 'DELETE',
       url: '/authoring/awd-challenges/5',
-      suppressErrorToast: true,
     })
   })
 

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
-import { exportContestArchive } from '@/api/admin'
+import { exportContestArchive } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'

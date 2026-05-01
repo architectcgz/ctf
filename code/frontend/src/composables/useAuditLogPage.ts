@@ -2,7 +2,7 @@ import { ArrowDownWideNarrow, Calendar, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getAuditLogs } from '@/api/admin'
+import { getAuditLogs } from '@/api/admin/platform'
 import type { AuditLogItem } from '@/api/contracts'
 import type { WorkspaceDirectorySortOption } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useAbortController } from '@/composables/useAbortController'

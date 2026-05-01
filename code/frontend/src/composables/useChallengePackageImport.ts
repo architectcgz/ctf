@@ -5,7 +5,7 @@ import {
   getChallengeImport,
   listChallengeImports,
   previewChallengeImport,
-} from '@/api/admin'
+} from '@/api/admin/authoring'
 import { ApiError, type ApiValidationIssue } from '@/api/request'
 import type { AdminChallengeImportCommitData, AdminChallengeImportPreview } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'

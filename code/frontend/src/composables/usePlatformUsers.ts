@@ -9,7 +9,7 @@ import {
   updateUser,
   type AdminUserCreatePayload,
   type AdminUserUpdatePayload,
-} from '@/api/admin'
+} from '@/api/admin/users'
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { usePagination } from '@/composables/usePagination'

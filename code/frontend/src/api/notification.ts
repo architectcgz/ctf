@@ -11,5 +11,8 @@ export async function getNotifications(
 }
 
 export async function markAsRead(id: string) {
-  return request<void>({ method: 'PUT', url: `/notifications/${encodeURIComponent(id)}/read` })
+  return request<void>({
+    method: 'PUT',
+    url: `/notifications/${encodeURIComponent(id)}/read`,
+  })
 }

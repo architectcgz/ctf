@@ -6,7 +6,7 @@ import {
   deleteChallenge,
   getChallenges,
   getLatestChallengePublishRequest,
-} from '@/api/admin'
+} from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,
   AdminChallengePublishRequestData,

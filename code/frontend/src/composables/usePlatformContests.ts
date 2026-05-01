@@ -7,7 +7,7 @@ import {
   updateContest,
   type AdminContestCreatePayload,
   type AdminContestUpdatePayload,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import { ApiError } from '@/api/request'
 import type { AWDReadinessData, ContestDetailData, ContestStatus } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -300,8 +300,7 @@ export function usePlatformContests() {
           ...payload,
           force_override: true,
           override_reason: normalizedReason,
-        },
-        { suppressErrorToast: true }
+        }
       )
       await finalizeContestUpdateSuccess()
     } catch (error) {
@@ -342,7 +341,7 @@ export function usePlatformContests() {
         const payload = buildContestUpdatePayload(draft, fieldLocks.value)
         if (shouldGateAWDContestStart(draft.mode, draft.status)) {
           try {
-            await updateContest(editingContestId.value, payload, { suppressErrorToast: true })
+            await updateContest(editingContestId.value, payload)
             await finalizeContestUpdateSuccess()
             return 'edit'
           } catch (error) {

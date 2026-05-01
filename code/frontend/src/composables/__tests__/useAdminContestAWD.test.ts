@@ -37,7 +37,7 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/contests', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -280,7 +280,7 @@ describe('usePlatformContestAwd', () => {
     expect(adminApiMocks.listContestAWDServices).toHaveBeenCalledWith('awd-1')
     expect(composable.challengeLinks.value).toEqual([
       expect.objectContaining({
-        challenge_id: 'challenge-1',
+        challenge_id: 'template-9',
         awd_service_id: 'service-1',
         awd_challenge_id: 'template-9',
         awd_service_display_name: 'Bank Portal',
@@ -333,35 +333,25 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.listContestAWDRoundTrafficEvents).toHaveBeenCalledWith('awd-1', 'round-1', {
-      page: 1,
-      page_size: 20,
-      service_id: '7009',
-      attacker_team_id: undefined,
-      victim_team_id: undefined,
-      challenge_id: undefined,
-      status_group: undefined,
-      path_keyword: undefined,
-    })
+    expect(adminApiMocks.listContestAWDRoundTrafficEvents).toHaveBeenCalledWith(
+      'awd-1',
+      'round-1',
+      {
+        page: 1,
+        page_size: 20,
+        service_id: '7009',
+        attacker_team_id: undefined,
+        victim_team_id: undefined,
+        challenge_id: undefined,
+        status_group: undefined,
+        path_keyword: undefined,
+      }
+    )
 
     wrapper.unmount()
   })
 
   it('合并管理侧 AWD 题目视图时应只信任 service 顶层配置字段', async () => {
-    adminApiMocks.listAdminContestChallenges.mockResolvedValue([
-      {
-        id: 'link-1',
-        contest_id: 'awd-1',
-        challenge_id: 'challenge-1',
-        title: 'Bank Portal',
-        category: 'web',
-        difficulty: 'medium',
-        points: 100,
-        order: 9,
-        is_visible: false,
-        created_at: '2026-04-12T07:50:00.000Z',
-      },
-    ])
     adminApiMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
@@ -401,7 +391,7 @@ describe('usePlatformContestAwd', () => {
 
     expect(composable.challengeLinks.value).toEqual([
       expect.objectContaining({
-        challenge_id: 'challenge-1',
+        challenge_id: 'template-9',
         awd_service_id: 'service-1',
         awd_challenge_id: 'template-9',
         order: 2,
@@ -690,7 +680,7 @@ describe('usePlatformContestAwd', () => {
     const wrapper = mount(Harness)
     await flushPromises()
 
-    await composable.updateChallengeLink('101', {
+    await composable.updateChallengeLink('4', {
       awd_challenge_id: 6,
       points: 150,
       order: 3,

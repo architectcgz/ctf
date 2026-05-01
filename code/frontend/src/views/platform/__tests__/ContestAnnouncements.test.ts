@@ -33,8 +33,9 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
@@ -90,7 +91,9 @@ describe('ContestAnnouncements', () => {
   it('应注册单场公告管理路由', () => {
     expect(routerSource).toContain("path: 'platform/contests/:id/announcements'")
     expect(routerSource).toContain("name: 'ContestAnnouncements'")
-    expect(routerSource).toContain("component: () => import('@/views/platform/ContestAnnouncements.vue')")
+    expect(routerSource).toContain(
+      "component: () => import('@/views/platform/ContestAnnouncements.vue')"
+    )
   })
 
   it('页面应加载竞赛详情和公告列表', async () => {

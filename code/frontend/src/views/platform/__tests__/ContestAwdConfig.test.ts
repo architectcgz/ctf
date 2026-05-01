@@ -30,8 +30,9 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
@@ -99,7 +100,8 @@ function mountPage() {
         AppLoading: { template: '<div><slot /></div>' },
         AppEmpty: {
           props: ['title', 'description'],
-          template: '<div class="app-empty-stub">{{ title }} {{ description }}<slot name="action" /></div>',
+          template:
+            '<div class="app-empty-stub">{{ title }} {{ description }}<slot name="action" /></div>',
         },
       },
     },
@@ -128,10 +130,18 @@ describe('ContestAwdConfig', () => {
   })
 
   it('路由页拆分为稳定的 AWD 配置子组件', () => {
-    expect(contestAwdConfigSource).toContain("import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'")
-    expect(contestAwdConfigSource).toContain("import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'")
-    expect(contestAwdConfigSource).toContain("import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'")
-    expect(contestAwdConfigSource).toContain("import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'")
+    expect(contestAwdConfigSource).toContain(
+      "import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'"
+    )
+    expect(contestAwdConfigSource).toContain(
+      "import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'"
+    )
+    expect(contestAwdConfigSource).toContain(
+      "import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'"
+    )
+    expect(contestAwdConfigSource).toContain(
+      "import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'"
+    )
     expect(contestAwdConfigSource).toContain('<ContestAwdServiceDirectory')
     expect(contestAwdConfigSource).toContain('<ContestAwdDebugStation')
   })
@@ -150,7 +160,10 @@ describe('ContestAwdConfig', () => {
 
     await wrapper.find('input[type="number"]').setValue(3)
     await wrapper.findAll('input[type="number"]')[1].setValue(4)
-    await wrapper.findAll('button').find((button) => button.text().includes('保存配置'))?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('保存配置'))
+      ?.trigger('click')
     await flushPromises()
 
     expect(adminApiMocks.updateContestAWDService).toHaveBeenCalledWith('contest-1', 'service-1', {
@@ -245,9 +258,15 @@ describe('ContestAwdConfig', () => {
     const wrapper = mountPage()
 
     await flushPromises()
-    await wrapper.findAll('button').find((button) => button.text().includes('试跑 Checker'))?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('试跑 Checker'))
+      ?.trigger('click')
     await flushPromises()
-    await wrapper.findAll('button').find((button) => button.text().includes('保存并写入试跑结果'))?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('保存并写入试跑结果'))
+      ?.trigger('click')
     await flushPromises()
 
     expect(adminApiMocks.runContestAWDCheckerPreview).toHaveBeenCalledWith('contest-1', {

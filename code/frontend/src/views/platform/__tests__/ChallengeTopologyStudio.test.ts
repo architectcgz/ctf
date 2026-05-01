@@ -29,7 +29,7 @@ const toastMocks = vi.hoisted(() => ({
 }))
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))

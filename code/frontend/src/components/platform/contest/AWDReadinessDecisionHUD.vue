@@ -41,7 +41,9 @@ const blockingActionLabels = computed(() => {
   if (!props.readiness) return []
   const labels: string[] = []
   const actions = props.readiness.blocking_actions || []
-  if (actions.includes('start_contest')) labels.push('就绪检查')
+  if (actions.includes('start_contest')) labels.push('开赛门禁')
+  if (actions.includes('create_round')) labels.push('轮次创建')
+  if (actions.includes('run_current_round_check')) labels.push('即时巡检')
   return labels
 })
 </script>

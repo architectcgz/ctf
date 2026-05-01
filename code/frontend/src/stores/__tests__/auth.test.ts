@@ -35,7 +35,7 @@ describe('auth store', () => {
     const authStore = useAuthStore()
     await authStore.restore()
 
-    expect(getProfileMock).toHaveBeenCalledWith({ suppressErrorToast: true })
+    expect(getProfileMock).toHaveBeenCalledWith()
     expect(authStore.user).toEqual({ id: '1', username: 'alice', role: 'teacher' })
     expect(authStore.isLoggedIn).toBe(true)
     expect(authStore.sessionRestored).toBe(true)

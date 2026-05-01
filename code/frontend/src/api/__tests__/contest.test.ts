@@ -159,7 +159,6 @@ describe('contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
       url: '/contests/7/awd/services/7009/instances',
-      suppressErrorToast: true,
     })
     expect(result).toEqual({
       id: '22',
@@ -193,7 +192,6 @@ describe('contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
       url: '/contests/7/awd/services/7009/instances/restart',
-      suppressErrorToast: true,
     })
     expect(result.status).toBe('pending')
     expect(result.id).toBe('22')

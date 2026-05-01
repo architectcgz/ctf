@@ -24,14 +24,13 @@ const toastMocks = vi.hoisted(() => ({
   warning: vi.fn(),
 }))
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     listAdminContestChallenges: contestApiMocks.listAdminContestChallenges,
     listContestAWDServices: contestApiMocks.listContestAWDServices,
-    getChallenges: contestApiMocks.getChallenges,
-    listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
     createContestAWDService: contestApiMocks.createContestAWDService,
     createAdminContestChallenge: contestApiMocks.createAdminContestChallenge,
     updateContestAWDService: contestApiMocks.updateContestAWDService,
@@ -40,6 +39,12 @@ vi.mock('@/api/admin', async () => {
     deleteAdminContestChallenge: contestApiMocks.deleteAdminContestChallenge,
   }
 })
+vi.mock('@/api/admin/authoring', () => ({
+  getChallenges: contestApiMocks.getChallenges,
+}))
+vi.mock('@/api/admin/awd-authoring', () => ({
+  listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
+}))
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
@@ -50,7 +55,7 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 }))
 
 function buildChallenge(
-  overrides: Partial<AdminContestChallengeViewData> = {},
+  overrides: Partial<AdminContestChallengeViewData> = {}
 ): AdminContestChallengeViewData {
   return {
     id: 'link-1',
@@ -192,7 +197,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
 
     await flushPromises()
 
-    const titleLink = wrapper.findAllComponents(RouterLinkStub).find((link) => link.text() === 'Web 入门')
+    const titleLink = wrapper
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text() === 'Web 入门')
 
     expect(titleLink?.props('to')).toEqual({
       name: 'PlatformChallengeDetail',
@@ -674,7 +681,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await flushPromises()
 
     expect(contestApiMocks.createContestAWDService).toHaveBeenCalledTimes(2)
-    expect(toastMocks.error).toHaveBeenCalledWith('部分 AWD 题目关联失败：Upload HTTP 题目、IoT TCP 题目')
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      '部分 AWD 题目关联失败：Upload HTTP 题目、IoT TCP 题目'
+    )
     expect(toastMocks.success).not.toHaveBeenCalledWith('题目已保存')
     expect(wrapper.find('.admin-surface-modal-stub').exists()).toBe(true)
   })
@@ -749,14 +758,12 @@ describe('ContestChallengeOrchestrationPanel', () => {
       expect.objectContaining({
         page: 2,
         page_size: 20,
-      }),
+      })
     )
   })
 
   it('应该在 AWD 题目池编辑时同步更新 service 关联题目，并仅更新关系层分值', async () => {
-    contestApiMocks.listAdminContestChallenges.mockResolvedValue([
-      buildChallenge(),
-    ])
+    contestApiMocks.listAdminContestChallenges.mockResolvedValue([buildChallenge()])
     contestApiMocks.listContestAWDServices.mockResolvedValue([
       buildAwdService({
         id: 'service-1',

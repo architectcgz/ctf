@@ -8,7 +8,7 @@ import {
   listContestAWDRoundAttacks,
   listContestAWDRoundServices,
   listContestAWDRounds,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import type {
   AWDAttackLogData,
   AWDRoundData,

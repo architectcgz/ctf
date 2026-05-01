@@ -21,7 +21,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/platform', () => adminApiMocks)
 
 describe('CheatDetection', () => {
   beforeEach(() => {

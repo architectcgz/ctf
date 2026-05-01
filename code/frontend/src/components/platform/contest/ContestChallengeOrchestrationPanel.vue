@@ -10,10 +10,10 @@ import {
   listContestAWDServices,
   deleteContestAWDService,
   deleteAdminContestChallenge,
-  getChallenges,
   updateContestAWDService,
   updateAdminContestChallenge,
-} from '@/api/admin'
+} from '@/api/admin/contests'
+import { getChallenges } from '@/api/admin/authoring'
 import type {
   AdminAwdChallengeData,
   AdminChallengeListItem,
@@ -147,7 +147,6 @@ async function refresh() {
     localLoadError.value = ''
   } catch (error) {
     localLoadError.value = humanizeRequestError(error, '加载失败')
-    toast.error(localLoadError.value)
   } finally {
     loading.value = false
   }
@@ -157,11 +156,13 @@ async function ensureChallengeCatalogLoaded() {
   if (loadingChallengeCatalog.value || challengeCatalog.value.length > 0) return
   loadingChallengeCatalog.value = true
   try {
-    const result = await getChallenges({
-      page: 1,
-      page_size: CHALLENGE_CATALOG_PAGE_SIZE,
-      status: 'published',
-    })
+    const result = await getChallenges(
+      {
+        page: 1,
+        page_size: CHALLENGE_CATALOG_PAGE_SIZE,
+        status: 'published',
+      }
+    )
     challengeCatalog.value = result.list
   } catch (error) {
     toast.error(humanizeRequestError(error, '题库加载失败'))
@@ -303,18 +304,25 @@ async function handleSave(payload: ContestOrchestrationSavePayload) {
         )
       }
     } else if (dialogMode.value === 'create') {
-      await createAdminContestChallenge(props.contestId, {
-        challenge_id: payload.challenge_id!,
-        points: payload.points,
-        order: payload.order,
-        is_visible: payload.is_visible,
-      })
+      await createAdminContestChallenge(
+        props.contestId,
+        {
+          challenge_id: payload.challenge_id!,
+          points: payload.points,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        }
+      )
     } else if (editingChallenge.value) {
-      await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
-        points: payload.points,
-        order: payload.order,
-        is_visible: payload.is_visible,
-      })
+      await updateAdminContestChallenge(
+        props.contestId,
+        editingChallenge.value.challenge_id,
+        {
+          points: payload.points,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        }
+      )
     }
     toast.success('题目已保存')
     closeDialog()

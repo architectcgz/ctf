@@ -18,8 +18,8 @@ const routeState = vi.hoisted(() => ({
   query: {} as Record<string, string>,
 }))
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/users', async () => {
+  const actual = await vi.importActual<typeof import('@/api/admin/users')>('@/api/admin/users')
   return {
     ...actual,
     getUsers: adminApiMocks.getUsers,
@@ -262,13 +262,7 @@ describe('UserManage', () => {
     expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
     expect(wrapper.find('.user-table-accent').exists()).toBe(false)
     const headers = wrapper.findAll('.workspace-data-table__head-cell').map((item) => item.text())
-    expect(headers).toEqual([
-      '用户',
-      '姓名',
-      '角色',
-      '状态',
-      '操作',
-    ])
+    expect(headers).toEqual(['用户', '姓名', '角色', '状态', '操作'])
     expect(wrapper.find('.admin-pagination').exists()).toBe(true)
     const rows = wrapper.findAll('.workspace-data-table__body tr')
     expect(rows[0]?.text()).toContain('alice')
@@ -295,7 +289,9 @@ describe('UserManage', () => {
     expect(userGovernanceSource).toContain('<AdminSurfaceModal')
     expect(userGovernanceSource).toContain('width="40rem"')
     expect(userGovernanceSource).not.toContain('.user-detail-overlay')
-    expect(userGovernanceSource).not.toContain('background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);')
+    expect(userGovernanceSource).not.toContain(
+      'background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);'
+    )
     expect(drawer).not.toBeNull()
     expect(drawer?.textContent).toContain('alice')
     expect(drawer?.textContent).toContain('alice@example.com')
@@ -402,21 +398,13 @@ describe('UserManage', () => {
     expect(overviewPanelSnippet).toMatch(
       /<div class="workspace-overline">\s*User Workspace\s*<\/div>/
     )
-    expect(overviewPanelSnippet).toMatch(
-      /<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
-    )
+    expect(overviewPanelSnippet).toMatch(/<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/)
+    expect(userGovernanceSource).toMatch(/<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/)
     expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
     expect(overviewPanelSnippet).not.toContain('<nav class="top-tabs"')
     expect(importPanelStart).toBeGreaterThan(-1)
-    expect(userGovernanceSource).toMatch(
-      /<div class="workspace-overline">\s*User Import\s*<\/div>/
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
-    )
+    expect(userGovernanceSource).toMatch(/<div class="workspace-overline">\s*User Import\s*<\/div>/)
+    expect(userGovernanceSource).toMatch(/<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/)
     expect(userGovernanceSource).not.toMatch(
       /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
@@ -425,12 +413,8 @@ describe('UserManage', () => {
   it('用户导入流应保留独立导入面板和回执区', () => {
     expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
     expect(userGovernanceSource).toContain('class="workspace-tab-heading user-import-head"')
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
-    )
+    expect(userGovernanceSource).toMatch(/<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/)
+    expect(userGovernanceSource).toMatch(/<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/)
     expect(userGovernanceSource).toContain('id="user-return-overview"')
   })
 

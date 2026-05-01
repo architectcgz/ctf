@@ -20,7 +20,7 @@ import {
   runContestAWDCurrentRoundCheck,
   startContestAWDTeamServiceInstance,
   updateContestAWDService,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import { ApiError } from '@/api/request'
 import type {
   AWDAttackLogData,

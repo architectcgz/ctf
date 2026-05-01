@@ -72,4 +72,52 @@ describe('request cancel handling', () => {
     expect(toastMocks.error).not.toHaveBeenCalled()
     expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
   })
+
+  it('业务错误应由调用方决定如何展示，请求层只返回标准化异常', async () => {
+    axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
+      config: {
+        method: 'post',
+        url: '/local-error',
+      },
+      response: {
+        status: 409,
+        data: {
+          code: 14099,
+          message: '普通冲突',
+          request_id: 'req-local',
+        },
+      },
+    })
+
+    await expect(
+      request({
+        method: 'POST',
+        url: '/local-error',
+      })
+    ).rejects.toMatchObject({
+      message: '普通冲突',
+      code: 14099,
+      status: 409,
+    })
+
+    expect(toastMocks.error).not.toHaveBeenCalled()
+  })
+
+  it('网络错误也不应由请求层直接弹错', async () => {
+    axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
+      config: {
+        method: 'get',
+        url: '/silent-error',
+      },
+    })
+
+    await expect(
+      request({
+        method: 'GET',
+        url: '/silent-error',
+      })
+    ).rejects.toMatchObject({})
+
+    expect(toastMocks.error).not.toHaveBeenCalled()
+  })
 })

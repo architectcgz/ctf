@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getDashboard } from '@/api/admin'
+import { getDashboard } from '@/api/admin/platform'
 import type { AdminDashboardData } from '@/api/contracts'
 import PlatformOverviewPage from '@/components/platform/dashboard/PlatformOverviewPage.vue'
 

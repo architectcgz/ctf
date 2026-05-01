@@ -71,7 +71,10 @@ function normalizeInstanceListItem(item: RawInstanceListItem): InstanceListItem 
 }
 
 export async function getMyInstances(): Promise<InstanceListItem[]> {
-  const payload = await request<RawInstanceListItem[]>({ method: 'GET', url: '/instances' })
+  const payload = await request<RawInstanceListItem[]>({
+    method: 'GET',
+    url: '/instances',
+  })
   return payload.map(normalizeInstanceListItem)
 }
 
@@ -79,7 +82,6 @@ export async function destroyInstance(id: string) {
   return request<void>({
     method: 'DELETE',
     url: `/instances/${encodeURIComponent(id)}`,
-    suppressErrorToast: true,
   })
 }
 

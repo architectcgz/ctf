@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getContest } from '@/api/admin'
+import { getContest } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
 import AWDServiceAlertBanner from '@/components/platform/contest/AWDServiceAlertBanner.vue'

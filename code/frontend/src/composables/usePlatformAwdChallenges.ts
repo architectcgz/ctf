@@ -11,7 +11,7 @@ import {
   updateAdminAwdChallenge,
   type AdminAwdChallengeCreatePayload,
   type AdminAwdChallengeUpdatePayload,
-} from '@/api/admin'
+} from '@/api/admin/awd-authoring'
 import { ApiError } from '@/api/request'
 import type {
   AdminAwdChallengeImportPreview,

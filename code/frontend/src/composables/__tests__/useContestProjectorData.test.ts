@@ -19,7 +19,7 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/admin/contests', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -99,7 +99,10 @@ describe('useContestProjectorData', () => {
     ])
     adminApiMocks.listContestAWDRoundServices.mockResolvedValue([])
     adminApiMocks.listContestAWDRoundAttacks.mockResolvedValue([])
-    adminApiMocks.getContestAWDRoundSummary.mockResolvedValue({ round: buildRound({ id: 'round-2' }), items: [] })
+    adminApiMocks.getContestAWDRoundSummary.mockResolvedValue({
+      round: buildRound({ id: 'round-2' }),
+      items: [],
+    })
     adminApiMocks.getContestAWDRoundTrafficSummary.mockResolvedValue({
       contest_id: 'contest-1',
       round_id: 'round-2',
@@ -125,7 +128,10 @@ describe('useContestProjectorData', () => {
 
     expect(projector.roundAutoFollow.value).toBe(true)
     expect(projector.selectedRoundId.value).toBe('round-2')
-    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith('contest-1', 'round-2')
+    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith(
+      'contest-1',
+      'round-2'
+    )
 
     wrapper.unmount()
   })
@@ -140,7 +146,10 @@ describe('useContestProjectorData', () => {
 
     expect(projector.roundAutoFollow.value).toBe(false)
     expect(projector.selectedRoundId.value).toBe('round-1')
-    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith('contest-1', 'round-1')
+    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith(
+      'contest-1',
+      'round-1'
+    )
 
     wrapper.unmount()
   })
@@ -155,7 +164,10 @@ describe('useContestProjectorData', () => {
 
     expect(projector.roundAutoFollow.value).toBe(true)
     expect(projector.selectedRoundId.value).toBe('round-2')
-    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith('contest-1', 'round-2')
+    expect(adminApiMocks.listContestAWDRoundServices).toHaveBeenLastCalledWith(
+      'contest-1',
+      'round-2'
+    )
 
     wrapper.unmount()
   })

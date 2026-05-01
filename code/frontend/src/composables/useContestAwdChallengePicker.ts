@@ -1,7 +1,7 @@
 import { computed, reactive, watch, type Ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { listAdminAwdChallenges } from '@/api/admin'
+import { listAdminAwdChallenges } from '@/api/admin/awd-authoring'
 import { ApiError } from '@/api/request'
 import { usePagination } from '@/composables/usePagination'
 import type {

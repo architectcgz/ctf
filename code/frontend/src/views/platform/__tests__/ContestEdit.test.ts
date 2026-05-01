@@ -45,17 +45,16 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     getContest: contestApiMocks.getContest,
     updateContest: contestApiMocks.updateContest,
     getContestAWDReadiness: contestApiMocks.getContestAWDReadiness,
-    listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
     listAdminContestChallenges: contestApiMocks.listAdminContestChallenges,
     listContestAWDServices: contestApiMocks.listContestAWDServices,
-    getChallenges: contestApiMocks.getChallenges,
     createContestAWDService: contestApiMocks.createContestAWDService,
     deleteContestAWDService: contestApiMocks.deleteContestAWDService,
     updateContestAWDService: contestApiMocks.updateContestAWDService,
@@ -64,6 +63,12 @@ vi.mock('@/api/admin', async () => {
     deleteAdminContestChallenge: contestApiMocks.deleteAdminContestChallenge,
   }
 })
+vi.mock('@/api/admin/awd-authoring', () => ({
+  listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
+}))
+vi.mock('@/api/admin/authoring', () => ({
+  getChallenges: contestApiMocks.getChallenges,
+}))
 
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
@@ -126,13 +131,20 @@ const ContestChallengeEditorDialogStub = defineComponent({
     const isAwdCreateMode = computed(() => isAwdContest.value && props.mode === 'create')
     const selectableChallenges = computed(() =>
       (props.challengeOptions as Array<{ id: string }>).filter(
-        (item) => props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
+        (item) =>
+          props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
       )
     )
 
     watch(
       () =>
-        [props.open, props.mode, props.draft, selectableChallenges.value, props.awdChallengeOptions] as const,
+        [
+          props.open,
+          props.mode,
+          props.draft,
+          selectableChallenges.value,
+          props.awdChallengeOptions,
+        ] as const,
       ([open]) => {
         if (!open) {
           return
@@ -149,7 +161,8 @@ const ContestChallengeEditorDialogStub = defineComponent({
                 ''
             )
           : ''
-        awdChallengeIds.value = isAwdCreateMode.value && awdChallengeId.value ? [awdChallengeId.value] : []
+        awdChallengeIds.value =
+          isAwdCreateMode.value && awdChallengeId.value ? [awdChallengeId.value] : []
         points.value = String((props.draft as { points?: number } | null)?.points ?? 100)
         order.value = String((props.draft as { order?: number } | null)?.order ?? 0)
         isVisible.value =
@@ -166,7 +179,9 @@ const ContestChallengeEditorDialogStub = defineComponent({
             ? Number(challengeId.value)
             : undefined,
         awd_challenge_id: isAwdContest.value ? Number(awdChallengeId.value) : undefined,
-        awd_challenge_ids: isAwdCreateMode.value ? awdChallengeIds.value.map((id) => Number(id)) : undefined,
+        awd_challenge_ids: isAwdCreateMode.value
+          ? awdChallengeIds.value.map((id) => Number(id))
+          : undefined,
         points: Number(points.value),
         order: Number(order.value),
         is_visible: isVisible.value === 'true',
@@ -278,12 +293,20 @@ const AWDChallengeConfigDialogStub = defineComponent({
 
     const selectableChallenges = computed(() =>
       (props.challengeOptions as Array<{ id: string }>).filter(
-        (item) => props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
+        (item) =>
+          props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
       )
     )
 
     watch(
-      () => [props.open, props.mode, props.draft, selectableChallenges.value, props.awdChallengeOptions] as const,
+      () =>
+        [
+          props.open,
+          props.mode,
+          props.draft,
+          selectableChallenges.value,
+          props.awdChallengeOptions,
+        ] as const,
       ([open]) => {
         if (!open) {
           return
@@ -728,9 +751,9 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('开赛已锁定')
-    expect(wrapper.text()).toContain('就绪检查')
-    expect(wrapper.text()).not.toContain('轮次创建')
-    expect(wrapper.text()).not.toContain('即时巡检')
+    expect(wrapper.text()).toContain('开赛门禁')
+    expect(wrapper.text()).toContain('轮次创建')
+    expect(wrapper.text()).toContain('即时巡检')
     expect(wrapper.text()).toContain('Challenge 101')
     expect(wrapper.text()).toContain('编辑并试跑')
     expect(wrapper.find('#contest-awd-preflight-force-start').exists()).toBe(false)
@@ -764,7 +787,9 @@ describe('ContestEdit', () => {
 
     expect(wrapper.find('#contest-challenge-actions-1').exists()).toBe(false)
     expect(document.body.querySelector('#contest-challenge-open-awd-config-1')).toBeNull()
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('题目编排')
+    expect(
+      getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()
+    ).toContain('题目编排')
   })
 
   it('竞赛编辑页不应渲染轮次运行面板和赛事运维内容', async () => {
@@ -908,7 +933,7 @@ describe('ContestEdit', () => {
       ?.trigger('click')
     await flushPromises()
 
-    expect(toastMocks.error).toHaveBeenCalledWith('refresh failed')
+    expect(toastMocks.error).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('Web 入门')
     expect(wrapper.text()).not.toContain('当前竞赛还没有关联题目')
     expect(wrapper.text()).not.toContain('共 0 道题目')
@@ -916,7 +941,11 @@ describe('ContestEdit', () => {
 
   it('应该在管理页工作台交接时忽略旧运维子页签并落到编辑阶段', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:contest-1', 'challenges')
-    window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations&opsPanel=inspector')
+    window.history.replaceState(
+      {},
+      '',
+      '/platform/contests/contest-1/edit?panel=operations&opsPanel=inspector'
+    )
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -932,7 +961,9 @@ describe('ContestEdit', () => {
 
     expect(wrapper.find('#awd-ops-tab-challenges').exists()).toBe(false)
     expect(wrapper.find('#contest-workbench-stage-tab-operations').exists()).toBe(false)
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
+    expect(
+      getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()
+    ).toContain('AWD 编排')
     expect(wrapper.text()).not.toContain('轮次态势')
   })
 
@@ -1044,8 +1075,9 @@ describe('ContestEdit', () => {
       starts_at: '2026-03-15T09:00:00.000Z',
       ends_at: '2026-03-15T13:00:00.000Z',
     })
-    contestApiMocks.updateContest
-      .mockRejectedValueOnce(new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 }))
+    contestApiMocks.updateContest.mockRejectedValueOnce(
+      new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 })
+    )
 
     const wrapper = mountContestEdit()
 
@@ -1058,6 +1090,10 @@ describe('ContestEdit', () => {
 
     expect(contestApiMocks.getContestAWDReadiness).not.toHaveBeenCalled()
     expect(contestApiMocks.updateContest).toHaveBeenCalledTimes(1)
+    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
+      'contest-1',
+      expect.objectContaining({ status: 'running' })
+    )
     expect(toastMocks.error).toHaveBeenCalledWith('AWD 开赛就绪检查未通过')
     expect(pushMock).not.toHaveBeenCalled()
     expect(wrapper.find('#awd-readiness-override-submit').exists()).toBe(false)
@@ -1172,7 +1208,7 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
     expect(wrapper.find('#awd-challenge-config-create').exists()).toBe(false)
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
@@ -1180,7 +1216,9 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
-    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe(
+      'true'
+    )
     expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
     expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
     expect(wrapper.html()).not.toContain(['contest', 'template', 'option', '999'].join('-'))
@@ -1215,7 +1253,9 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('catalog failed')
-    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe(
+      'true'
+    )
     expect(wrapper.find('#contest-awd-challenge-list').exists()).toBe(true)
   })
 

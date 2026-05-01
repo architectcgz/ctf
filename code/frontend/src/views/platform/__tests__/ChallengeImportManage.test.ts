@@ -21,8 +21,9 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/authoring', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/authoring')>('@/api/admin/authoring')
   return {
     ...actual,
     commitChallengeImport: adminApiMocks.commitChallengeImport,
@@ -100,9 +101,7 @@ describe('ChallengeImportManage', () => {
         warnings: [],
         created_at: '2026-04-06T09:10:00.000Z',
       })
-      .mockRejectedValueOnce(
-        new Error('格式错误')
-      )
+      .mockRejectedValueOnce(new Error('格式错误'))
 
     const wrapper = mount(ChallengeImportManage)
     await flushPromises()

@@ -7,7 +7,6 @@ import NProgress from 'nprogress'
 
 import { useAuthStore } from '@/stores/auth'
 import { mapErrorCode } from '@/utils/errorMap'
-import { useToast } from '@/composables/useToast'
 import { redirectToErrorStatusPage, shouldRedirectToErrorStatusPage } from '@/utils/errorStatusPage'
 
 export interface ApiEnvelope<T> {
@@ -18,9 +17,7 @@ export interface ApiEnvelope<T> {
   errors?: ApiValidationIssue[]
 }
 
-export interface RequestConfig extends AxiosRequestConfig {
-  suppressErrorToast?: boolean
-}
+export interface RequestConfig extends AxiosRequestConfig {}
 
 export interface ApiValidationIssue {
   field: string
@@ -86,17 +83,8 @@ function toApiError(
   })
 }
 
-function getToast() {
-  return useToast()
-}
-
-function shouldToast(config?: AxiosRequestConfig): boolean {
-  return !(config as RequestConfig | undefined)?.suppressErrorToast
-}
-
 instance.interceptors.response.use(
   (response) => {
-    const toast = getToast()
     NProgress.done()
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
@@ -109,16 +97,12 @@ instance.interceptors.response.use(
         envelope.message,
         envelope.errors
       )
-      if (shouldToast(response.config)) {
-        toast.error(apiError.message)
-      }
       return Promise.reject(apiError)
     }
     // Non-envelope response, pass through.
     return response
   },
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
-    const toast = getToast()
     NProgress.done()
     const authStore = useAuthStore()
 
@@ -134,11 +118,17 @@ instance.interceptors.response.use(
       const retryMessage = retryAfter
         ? `请求过于频繁，请 ${retryAfter} 秒后重试`
         : '请求过于频繁，请稍后再试'
-      if (shouldToast(error.config)) {
-        toast.warning(retryMessage)
-      }
       redirectToErrorStatusPage(429, error.config?.url)
-      return Promise.reject(error)
+      return Promise.reject(
+        toApiError(
+          code,
+          error.response?.data?.request_id,
+          status,
+          retryMessage,
+          error.response?.data?.message,
+          error.response?.data?.errors
+        )
+      )
     }
 
     if (status === 401) {
@@ -150,9 +140,6 @@ instance.interceptors.response.use(
         error.response?.data?.message,
         error.response?.data?.errors
       )
-      if (shouldToast(error.config)) {
-        toast.error(unauthorizedError.message)
-      }
       if (shouldRedirectToErrorStatusPage(status, error.config?.url)) {
         authStore.logout()
         redirectToErrorStatusPage(status, error.config?.url)
@@ -170,17 +157,13 @@ instance.interceptors.response.use(
         error.response?.data?.message,
         error.response?.data?.errors
       )
-      if (shouldToast(error.config)) {
-        toast.error(apiError.message)
-      }
       return Promise.reject(apiError)
     }
 
     if (!error.response) {
-      if (shouldToast(error.config)) {
-        toast.error('网络连接失败')
-      }
-      return Promise.reject(error)
+      return Promise.reject(
+        toApiError(undefined, undefined, undefined, '网络连接失败')
+      )
     }
 
     const fallbackMessage =
@@ -193,9 +176,6 @@ instance.interceptors.response.use(
       error.response?.data?.message,
       error.response?.data?.errors
     )
-    if (shouldToast(error.config)) {
-      toast.error(apiError.message)
-    }
     redirectToErrorStatusPage(status, error.config?.url)
     return Promise.reject(apiError)
   }

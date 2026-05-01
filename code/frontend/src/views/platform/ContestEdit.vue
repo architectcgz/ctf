@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   getContest,
   updateContest,
-} from '@/api/admin'
+} from '@/api/admin/contests'
 import type { AdminContestChallengeViewData, ContestDetailData } from '@/api/contracts'
 import ContestEditTopbarPanel from '@/components/platform/contest/ContestEditTopbarPanel.vue'
 import ContestEditWorkspacePanel from '@/components/platform/contest/ContestEditWorkspacePanel.vue'

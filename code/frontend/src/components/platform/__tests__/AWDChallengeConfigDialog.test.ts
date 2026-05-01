@@ -32,8 +32,9 @@ const awdPreviewRealtimeMocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('@/api/admin', async () => {
-  const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
+vi.mock('@/api/admin/contests', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
   return {
     ...actual,
     runContestAWDCheckerPreview: previewMock,

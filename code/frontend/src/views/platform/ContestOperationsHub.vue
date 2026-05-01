@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getContests } from '@/api/admin'
+import { getContests } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import ContestOperationsHubHeroPanel from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue'
 import ContestOperationsHubWorkspacePanel from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue'

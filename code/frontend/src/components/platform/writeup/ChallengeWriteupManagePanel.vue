@@ -3,7 +3,7 @@ import { FileText, MoreHorizontal, Users } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin'
+import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin/authoring'
 import { getTeacherWriteupSubmissions } from '@/api/teacher'
 import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
