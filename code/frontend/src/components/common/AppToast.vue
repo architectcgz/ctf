@@ -1,36 +1,36 @@
 <template>
-  <div class="app-toast-stack fixed right-4 top-4 z-50 flex flex-col gap-3">
+  <div class="app-toast-stack">
     <div
       v-for="item in toasts"
       :key="item.id"
-      :class="['app-toast-item group relative overflow-hidden border px-4 py-3.5']"
+      class="app-toast-item"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
     >
       <div
-        class="pointer-events-none absolute inset-y-0 left-0 w-1.5"
+        class="app-toast-accent"
         :style="{ backgroundColor: toneMeta(item.type).accentColor }"
       />
 
-      <div class="flex items-start justify-between gap-3 pl-2">
-        <div class="flex min-w-0 items-start gap-3">
+      <div class="app-toast-content">
+        <div class="app-toast-leading">
           <div
-            class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+            class="app-toast-icon"
             :style="toneMeta(item.type).iconWrapStyle"
           >
             <component
               :is="toneMeta(item.type).icon"
-              class="h-5 w-5"
+              class="app-toast-type-icon"
               :style="{ color: toneMeta(item.type).accentColor }"
             />
           </div>
 
-          <div class="min-w-0">
-            <div class="text-sm font-semibold leading-5 text-text-primary">
+          <div class="app-toast-copy">
+            <div class="app-toast-title">
               {{ title(item.type) }}
             </div>
-            <div class="mt-1 break-words text-sm leading-6 text-text-primary/92">
+            <div class="app-toast-message">
               {{ item.message }}
             </div>
           </div>
@@ -38,11 +38,13 @@
 
         <button
           type="button"
-          class="app-toast-close shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors hover:text-text-primary"
+          class="app-toast-close"
           :style="toneMeta(item.type).closeStyle"
+          aria-label="关闭提示"
+          title="关闭提示"
           @click="toast.dismiss(item.id)"
         >
-          关闭
+          <X class="app-toast-close-icon" />
         </button>
       </div>
     </div>
@@ -51,7 +53,7 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { AlertTriangle, CheckCircle2, Info, OctagonX } from 'lucide-vue-next'
+import { AlertTriangle, CheckCircle2, Info, OctagonX, X } from 'lucide-vue-next'
 
 import { provideToast, type ToastType, useToast, useToastState } from '@/composables/useToast'
 
@@ -151,22 +153,132 @@ function toneMeta(type: ToastType): ToastToneMeta {
 
 <style scoped>
 .app-toast-stack {
-  width: min(23.75rem, calc(100vw - 2rem));
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(24rem, calc(100vw - (var(--space-4) * 2)));
+  pointer-events: none;
 }
 
 .app-toast-item {
-  border-radius: 1.375rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: var(--ui-dialog-radius);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
-    color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))
+    color-mix(in srgb, var(--color-bg-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
   );
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  box-shadow: 0 var(--space-4-5) var(--space-10) var(--color-shadow-soft);
+  pointer-events: auto;
+}
+
+.app-toast-accent {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--space-1);
+  pointer-events: none;
+}
+
+.app-toast-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-3-5) var(--space-3-5) var(--space-4-5);
+}
+
+.app-toast-leading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.app-toast-icon {
+  display: flex;
+  width: var(--ui-control-height-sm);
+  height: var(--ui-control-height-sm);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  border-radius: var(--ui-control-radius-md);
+}
+
+.app-toast-type-icon {
+  width: var(--space-4-5);
+  height: var(--space-4-5);
+}
+
+.app-toast-copy {
+  min-width: 0;
+}
+
+.app-toast-title {
+  font-size: var(--font-size-14);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.app-toast-message {
+  margin-top: var(--space-1);
+  max-height: min(8rem, calc(100vh - var(--space-12)));
+  overflow: auto;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-14);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-text-primary) 90%, var(--color-text-secondary));
 }
 
 .app-toast-close {
-  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  display: inline-flex;
+  width: var(--ui-control-height-sm);
+  height: var(--ui-control-height-sm);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  border-radius: var(--ui-control-radius-md);
   background: color-mix(in srgb, var(--color-bg-base) 76%, var(--color-bg-surface));
   color: var(--color-text-secondary);
+  transition:
+    border-color var(--ui-motion-fast),
+    background-color var(--ui-motion-fast),
+    color var(--ui-motion-fast);
+}
+
+.app-toast-close:hover {
+  color: var(--color-text-primary);
+}
+
+.app-toast-close:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 54%, transparent);
+  outline-offset: var(--space-0-5);
+}
+
+.app-toast-close-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+@media (max-width: 40rem) {
+  .app-toast-stack {
+    inset-inline: var(--space-3);
+    top: var(--space-3);
+    width: auto;
+  }
+
+  .app-toast-content {
+    padding-inline-end: var(--space-3);
+  }
 }
 </style>

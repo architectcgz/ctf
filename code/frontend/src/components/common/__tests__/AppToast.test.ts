@@ -69,9 +69,23 @@ describe('AppToast', () => {
     expect(style).not.toContain('8, 145, 178')
   })
 
+  it('renders the close control as an accessible icon button', async () => {
+    const wrapper = await mountToast()
+    useToast().warning('环境即将到期')
+    await nextTick()
+
+    const closeButton = wrapper.get('.app-toast-close')
+
+    expect(closeButton.attributes('aria-label')).toBe('关闭提示')
+    expect(closeButton.text()).toBe('')
+    expect(closeButton.find('.app-toast-close-icon').exists()).toBe(true)
+  })
+
   it('avoids layout arbitrary values in the shared toast shell', () => {
     expect(appToastSource).not.toContain('max-w-[calc(100vw-2rem)]')
     expect(appToastSource).not.toContain('w-[380px]')
     expect(appToastSource).not.toContain('rounded-[22px]')
+    expect(appToastSource).not.toContain('right-4')
+    expect(appToastSource).not.toContain('top-4')
   })
 })
