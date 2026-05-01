@@ -2,7 +2,9 @@
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
 import {
+  ChallengeProfileMetaGrid,
   ChallengeProfileSummaryStrip,
+  getChallengeStatusLabel,
 } from '@/entities/challenge'
 
 interface Props {
@@ -44,42 +46,6 @@ function updateFlagRegex(event: Event): void {
 function updateFlagPrefix(event: Event): void {
   emit('update:flagPrefix', (event.target as HTMLInputElement).value)
 }
-
-function getStatusLabel(status?: AdminChallengeListItem['status']): string {
-  switch (status) {
-    case 'published':
-      return '已发布'
-    case 'draft':
-      return '草稿'
-    case 'archived':
-      return '已归档'
-    default:
-      return status || '未设置'
-  }
-}
-
-function getInstanceSharingLabel(mode?: AdminChallengeListItem['instance_sharing']): string {
-  switch (mode) {
-    case 'shared':
-      return '共享实例'
-    case 'per_team':
-      return '队伍隔离'
-    case 'per_user':
-      return '用户隔离'
-    default:
-      return '未设置'
-  }
-}
-
-function formatDateTime(value?: string): string {
-  if (!value) return '未记录'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-  return date.toLocaleString('zh-CN')
-}
 </script>
 
 <template>
@@ -100,7 +66,7 @@ function formatDateTime(value?: string): string {
 
     <ChallengeProfileSummaryStrip
       :challenge="challenge"
-      :status-label="getStatusLabel(challenge.status)"
+      :status-label="getChallengeStatusLabel(challenge.status)"
     />
 
     <section class="workspace-directory-section challenge-section challenge-profile-section">
@@ -115,57 +81,12 @@ function formatDateTime(value?: string): string {
         </div>
       </header>
 
-      <div class="journal-panel challenge-profile-card">
-        <dl class="challenge-meta-grid">
-          <div class="challenge-meta-item">
-            <dt>题目名称</dt>
-            <dd>{{ challenge.title }}</dd>
-          </div>
-          <div class="challenge-meta-item">
-            <dt>Flag 配置</dt>
-            <dd class="challenge-meta-item__mono">
-              {{ flagConfigSummary }}
-            </dd>
-          </div>
-          <div
-            v-if="challenge.image_id"
-            class="challenge-meta-item"
-          >
-            <dt>镜像</dt>
-            <dd class="challenge-meta-item__mono">
-              ID #{{ challenge.image_id }}
-            </dd>
-          </div>
-          <div class="challenge-meta-item">
-            <dt>实例模式</dt>
-            <dd>{{ getInstanceSharingLabel(challenge.instance_sharing) }}</dd>
-          </div>
-          <div class="challenge-meta-item">
-            <dt>创建时间</dt>
-            <dd>{{ formatDateTime(challenge.created_at) }}</dd>
-          </div>
-          <div class="challenge-meta-item">
-            <dt>最近更新</dt>
-            <dd>{{ formatDateTime(challenge.updated_at) }}</dd>
-          </div>
-          <div
-            v-if="challenge.attachment_url"
-            class="challenge-meta-item challenge-meta-item--full challenge-meta-item--action"
-          >
-            <dt>附件</dt>
-            <dd>
-              <button
-                type="button"
-                class="challenge-link challenge-link-button"
-                :disabled="downloadingAttachment"
-                @click="emit('download-attachment')"
-              >
-                {{ downloadingAttachment ? '下载中...' : '下载附件' }}
-              </button>
-            </dd>
-          </div>
-        </dl>
-      </div>
+      <ChallengeProfileMetaGrid
+        :challenge="challenge"
+        :downloading-attachment="downloadingAttachment"
+        :flag-config-summary="flagConfigSummary"
+        @download-attachment="emit('download-attachment')"
+      />
     </section>
 
     <section
@@ -352,81 +273,6 @@ function formatDateTime(value?: string): string {
 .challenge-detail-header {
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 88%, transparent));
-}
-
-.challenge-profile-card {
-  padding: var(--space-5);
-}
-
-.challenge-profile-card .challenge-meta-grid {
-  border-top: 0;
-}
-
-.challenge-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-meta-item {
-  display: grid;
-  gap: var(--space-1-5);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-meta-item:nth-child(odd) {
-  padding-right: var(--space-4);
-}
-
-.challenge-meta-item:nth-child(even) {
-  padding-left: var(--space-4);
-}
-
-.challenge-meta-item dt {
-  font-size: var(--font-size-0-74);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.challenge-meta-item dd {
-  margin: 0;
-  font-size: var(--font-size-0-92);
-  font-weight: 600;
-  color: var(--journal-ink);
-  word-break: break-word;
-}
-
-.challenge-meta-item__mono {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-}
-
-.challenge-meta-item--full {
-  grid-column: 1 / -1;
-  padding-inline: 0;
-}
-
-.challenge-meta-item--action dd {
-  display: flex;
-  align-items: center;
-}
-
-.challenge-link {
-  color: var(--journal-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
-}
-
-.challenge-link-button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
 }
 
 .challenge-section {

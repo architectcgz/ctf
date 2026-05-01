@@ -1,4 +1,9 @@
-import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
+import type {
+  ChallengeCategory,
+  ChallengeDifficulty,
+  ChallengeStatus,
+  InstanceSharing,
+} from '@/api/contracts'
 
 export function getChallengeCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
@@ -51,4 +56,40 @@ export function getChallengeDifficultyColor(
   }
 
   return colorMap[difficulty] ?? defaultColors[difficulty]
+}
+
+export function getChallengeStatusLabel(status?: ChallengeStatus): string {
+  switch (status) {
+    case 'published':
+      return '已发布'
+    case 'draft':
+      return '草稿'
+    case 'archived':
+      return '已归档'
+    default:
+      return status || '未设置'
+  }
+}
+
+export function getChallengeInstanceSharingLabel(mode?: InstanceSharing): string {
+  switch (mode) {
+    case 'shared':
+      return '共享实例'
+    case 'per_team':
+      return '队伍隔离'
+    case 'per_user':
+      return '用户隔离'
+    default:
+      return '未设置'
+  }
+}
+
+export function formatChallengeDateTime(value?: string): string {
+  if (!value) return '未记录'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+  return date.toLocaleString('zh-CN')
 }
