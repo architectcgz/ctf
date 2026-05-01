@@ -22,12 +22,16 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	items, err := h.queries.ListRegistrations(c.Request.Context(), contestID, &query)
+	items, err := h.queries.ListRegistrations(c.Request.Context(), contestID, contestqry.ContestRegistrationQueryInput{
+		Status: query.Status,
+		Page:   query.Page,
+		Size:   query.Size,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, items)
+	response.Success(c, contestRegistrationPageResultToDTO(items))
 }
 
 func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
@@ -93,6 +97,37 @@ func participationProgressResultToDTO(item *contestqry.ParticipationProgressResu
 			ContestChallengeID: solved.ContestChallengeID,
 			SolvedAt:           solved.SolvedAt,
 			PointsEarned:       solved.PointsEarned,
+		})
+	}
+	return result
+}
+
+func contestRegistrationPageResultToDTO(item *contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult]) *dto.PageResult[*dto.ContestRegistrationResp] {
+	if item == nil {
+		return nil
+	}
+	result := &dto.PageResult[*dto.ContestRegistrationResp]{
+		List:  make([]*dto.ContestRegistrationResp, 0, len(item.List)),
+		Total: item.Total,
+		Page:  item.Page,
+		Size:  item.Size,
+	}
+	for _, registration := range item.List {
+		if registration == nil {
+			result.List = append(result.List, nil)
+			continue
+		}
+		result.List = append(result.List, &dto.ContestRegistrationResp{
+			ID:         registration.ID,
+			ContestID:  registration.ContestID,
+			UserID:     registration.UserID,
+			Username:   registration.Username,
+			TeamID:     registration.TeamID,
+			Status:     registration.Status,
+			ReviewedBy: registration.ReviewedBy,
+			ReviewedAt: registration.ReviewedAt,
+			CreatedAt:  registration.CreatedAt,
+			UpdatedAt:  registration.UpdatedAt,
 		})
 	}
 	return result

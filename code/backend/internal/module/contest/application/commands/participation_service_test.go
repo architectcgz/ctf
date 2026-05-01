@@ -282,7 +282,7 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	}
 
 	status := model.ContestRegistrationStatusPending
-	page, err := queryService.ListRegistrations(context.Background(), 30, &dto.ContestRegistrationQuery{
+	page, err := queryService.ListRegistrations(context.Background(), 30, contestqry.ContestRegistrationQueryInput{
 		Status: &status,
 		Page:   1,
 		Size:   10,

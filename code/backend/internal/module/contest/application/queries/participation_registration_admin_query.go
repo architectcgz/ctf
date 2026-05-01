@@ -3,11 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult[*dto.ContestRegistrationResp], error) {
+func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query ContestRegistrationQueryInput) (*RegistrationPageResult[*ContestRegistrationResult], error) {
 	if err := s.ensureContestExists(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -29,9 +28,9 @@ func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]*dto.ContestRegistrationResp, 0, len(rows))
+	items := make([]*ContestRegistrationResult, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, &dto.ContestRegistrationResp{
+		items = append(items, &ContestRegistrationResult{
 			ID:         row.ID,
 			ContestID:  row.ContestID,
 			UserID:     row.UserID,
@@ -45,7 +44,7 @@ func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID 
 		})
 	}
 
-	return &dto.PageResult[*dto.ContestRegistrationResp]{
+	return &RegistrationPageResult[*ContestRegistrationResult]{
 		List:  items,
 		Total: total,
 		Page:  page,

@@ -15,7 +15,7 @@ type participationCommandService interface {
 }
 
 type participationQueryService interface {
-	ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult[*dto.ContestRegistrationResp], error)
+	ListRegistrations(ctx context.Context, contestID int64, query contestqry.ContestRegistrationQueryInput) (*contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult], error)
 	ListAnnouncements(ctx context.Context, contestID int64) ([]*contestqry.ContestAnnouncementResult, error)
 	GetMyProgress(ctx context.Context, contestID, userID int64) (*contestqry.ParticipationProgressResult, error)
 }
