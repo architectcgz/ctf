@@ -2,15 +2,19 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { marked } from 'marked'
 
 import type {
-  ChallengeCategory,
   ChallengeDetailData,
-  ChallengeDifficulty,
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
   SubmissionWriteupData,
   SubmissionWriteupStatus,
   SubmissionWriteupVisibilityStatus,
 } from '@/api/contracts'
+import {
+  getChallengeCategoryColor,
+  getChallengeCategoryLabel,
+  getChallengeDifficultyColor,
+  getChallengeDifficultyLabel,
+} from '@/entities/challenge'
 
 export type ChallengeSolutionTab = 'recommended' | 'community'
 export type ChallengeSubmissionRecordStatus = 'correct' | 'incorrect' | 'pending_review' | 'error'
@@ -228,51 +232,17 @@ export function useChallengeDetailPresentation({
     })
   }
 
-  function getCategoryLabel(category: ChallengeCategory): string {
-    const labels: Record<ChallengeCategory, string> = {
-      web: 'Web',
-      pwn: 'Pwn',
-      reverse: '逆向',
-      crypto: '密码',
-      misc: '杂项',
-      forensics: '取证',
-    }
-    return labels[category]
-  }
-
-  function getCategoryColor(category: ChallengeCategory): string {
-    const colors: Record<ChallengeCategory, string> = {
-      web: 'var(--challenge-tone-web)',
-      pwn: 'var(--challenge-tone-pwn)',
-      reverse: 'var(--challenge-tone-reverse)',
-      crypto: 'var(--challenge-tone-crypto)',
-      misc: 'var(--challenge-tone-misc)',
-      forensics: 'var(--challenge-tone-forensics)',
-    }
-    return colors[category]
-  }
-
-  function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
-    const labels: Record<ChallengeDifficulty, string> = {
-      beginner: '入门',
-      easy: '简单',
-      medium: '中等',
-      hard: '困难',
-      insane: '地狱',
-    }
-    return labels[difficulty]
-  }
-
-  function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-    const colors: Record<ChallengeDifficulty, string> = {
+  const getCategoryLabel = getChallengeCategoryLabel
+  const getCategoryColor = getChallengeCategoryColor
+  const getDifficultyLabel = getChallengeDifficultyLabel
+  const getDifficultyColor = (difficulty: ChallengeDetailData['difficulty']) =>
+    getChallengeDifficultyColor(difficulty, {
       beginner: 'var(--challenge-tone-beginner)',
       easy: 'var(--challenge-tone-easy)',
       medium: 'var(--challenge-tone-medium)',
       hard: 'var(--challenge-tone-hard)',
       insane: 'var(--challenge-tone-insane)',
-    }
-    return colors[difficulty]
-  }
+    })
 
   watch(
     displayedSolutionCards,

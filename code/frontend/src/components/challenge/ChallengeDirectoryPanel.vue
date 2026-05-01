@@ -4,6 +4,12 @@ import { ArrowRight, Search } from 'lucide-vue-next'
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import {
+  getChallengeCategoryColor,
+  getChallengeCategoryLabel,
+  getChallengeDifficultyColor,
+  getChallengeDifficultyLabel,
+} from '@/entities/challenge'
 
 interface Props {
   list: ChallengeListItem[]
@@ -53,51 +59,10 @@ function updateDifficultyFilter(event: Event): void {
   emit('filter-change')
 }
 
-function getCategoryLabel(category: ChallengeCategory): string {
-  const labels: Record<ChallengeCategory, string> = {
-    web: 'Web',
-    pwn: 'Pwn',
-    reverse: '逆向',
-    crypto: '密码',
-    misc: '杂项',
-    forensics: '取证',
-  }
-  return labels[category]
-}
-
-function getCategoryColor(category: ChallengeCategory): string {
-  const map: Record<ChallengeCategory, string> = {
-    web: 'var(--challenge-tone-web)',
-    pwn: 'var(--challenge-tone-pwn)',
-    reverse: 'var(--challenge-tone-reverse)',
-    crypto: 'var(--challenge-tone-crypto)',
-    misc: 'var(--challenge-tone-misc)',
-    forensics: 'var(--challenge-tone-forensics)',
-  }
-  return map[category]
-}
-
-function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
-  const labels: Record<ChallengeDifficulty, string> = {
-    beginner: '入门',
-    easy: '简单',
-    medium: '中等',
-    hard: '困难',
-    insane: '地狱',
-  }
-  return labels[difficulty]
-}
-
-function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-  const map: Record<ChallengeDifficulty, string> = {
-    beginner: 'var(--challenge-diff-beginner)',
-    easy: 'var(--challenge-diff-easy)',
-    medium: 'var(--challenge-diff-medium)',
-    hard: 'var(--challenge-diff-hard)',
-    insane: 'var(--challenge-diff-insane)',
-  }
-  return map[difficulty]
-}
+const getCategoryLabel = getChallengeCategoryLabel
+const getCategoryColor = getChallengeCategoryColor
+const getDifficultyLabel = getChallengeDifficultyLabel
+const getDifficultyColor = getChallengeDifficultyColor
 </script>
 
 <template>

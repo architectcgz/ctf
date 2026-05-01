@@ -103,6 +103,14 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('watch(')
   })
 
+  it('题目目录组件应通过 challenge entity 获取分类与难度展示规则', () => {
+    expect(challengeDirectoryPanelSource).toContain("from '@/entities/challenge'")
+    expect(challengeDirectoryPanelSource).not.toContain('function getCategoryLabel(')
+    expect(challengeDirectoryPanelSource).not.toContain('function getCategoryColor(')
+    expect(challengeDirectoryPanelSource).not.toContain('function getDifficultyLabel(')
+    expect(challengeDirectoryPanelSource).not.toContain('function getDifficultyColor(')
+  })
+
   it('页头标题与说明应接入共享工作区排版类', () => {
     expect(challengeListSource).toMatch(/<div class="workspace-overline">\s*Challenges\s*<\/div>/)
     expect(challengeListSource).toMatch(
