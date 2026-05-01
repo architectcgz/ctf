@@ -2,6 +2,9 @@ package model
 
 import (
 	"encoding/json"
+	"net"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -140,16 +143,19 @@ type InstanceRuntimeNetwork struct {
 	Name      string `json:"name,omitempty"`
 	NetworkID string `json:"network_id,omitempty"`
 	Internal  bool   `json:"internal,omitempty"`
+	Shared    bool   `json:"shared,omitempty"`
 }
 
 type InstanceRuntimeContainer struct {
-	NodeKey         string   `json:"node_key,omitempty"`
-	ContainerID     string   `json:"container_id"`
-	HostPort        int      `json:"host_port,omitempty"`
-	ServicePort     int      `json:"service_port,omitempty"`
-	ServiceProtocol string   `json:"service_protocol,omitempty"`
-	IsEntryPoint    bool     `json:"is_entry_point,omitempty"`
-	NetworkKeys     []string `json:"network_keys,omitempty"`
+	NodeKey         string            `json:"node_key,omitempty"`
+	ContainerID     string            `json:"container_id"`
+	HostPort        int               `json:"host_port,omitempty"`
+	ServicePort     int               `json:"service_port,omitempty"`
+	ServiceProtocol string            `json:"service_protocol,omitempty"`
+	IsEntryPoint    bool              `json:"is_entry_point,omitempty"`
+	NetworkKeys     []string          `json:"network_keys,omitempty"`
+	NetworkAliases  []string          `json:"network_aliases,omitempty"`
+	NetworkIPs      map[string]string `json:"network_ips,omitempty"`
 }
 
 type InstanceRuntimeACLRule struct {
@@ -201,4 +207,74 @@ func DecodeInstanceRuntimeDetails(raw string) (InstanceRuntimeDetails, error) {
 		return InstanceRuntimeDetails{}, err
 	}
 	return details, nil
+}
+
+func ResolveRuntimeAliasAccessURL(accessURL, rawRuntimeDetails string) string {
+	trimmed := strings.TrimSpace(accessURL)
+	if trimmed == "" {
+		return accessURL
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return accessURL
+	}
+	if !strings.HasPrefix(parsed.Hostname(), "awd-c") {
+		return accessURL
+	}
+	ip := resolveRuntimeEntryNetworkIP(rawRuntimeDetails)
+	if ip == "" {
+		return accessURL
+	}
+	if port := parsed.Port(); port != "" {
+		parsed.Host = net.JoinHostPort(ip, port)
+	} else {
+		parsed.Host = ip
+	}
+	return parsed.String()
+}
+
+func resolveRuntimeEntryNetworkIP(rawRuntimeDetails string) string {
+	details, err := DecodeInstanceRuntimeDetails(rawRuntimeDetails)
+	if err != nil {
+		return ""
+	}
+	networkNameByKey := make(map[string]string, len(details.Networks))
+	for _, network := range details.Networks {
+		if network.Key == "" || network.Name == "" {
+			continue
+		}
+		networkNameByKey[network.Key] = network.Name
+	}
+	for _, container := range details.Containers {
+		if !container.IsEntryPoint {
+			continue
+		}
+		if ip := resolveContainerNetworkIP(container, networkNameByKey); ip != "" {
+			return ip
+		}
+	}
+	for _, container := range details.Containers {
+		if ip := resolveContainerNetworkIP(container, networkNameByKey); ip != "" {
+			return ip
+		}
+	}
+	return ""
+}
+
+func resolveContainerNetworkIP(container InstanceRuntimeContainer, networkNameByKey map[string]string) string {
+	for _, networkKey := range container.NetworkKeys {
+		networkName := networkNameByKey[networkKey]
+		if networkName == "" {
+			continue
+		}
+		if ip := strings.TrimSpace(container.NetworkIPs[networkName]); ip != "" {
+			return ip
+		}
+	}
+	for _, ip := range container.NetworkIPs {
+		if trimmed := strings.TrimSpace(ip); trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
 }

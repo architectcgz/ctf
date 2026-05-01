@@ -43,6 +43,54 @@ func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 	}
 }
 
+func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
+	t.Parallel()
+
+	instance := &model.Instance{
+		ContainerID: "legacy-web",
+		NetworkID:   "legacy-net",
+		RuntimeDetails: `{
+			"containers":[
+				{"container_id":"web-ctr"}
+			],
+			"networks":[
+				{"network_id":"net-awd-contest-8","shared":true},
+				{"network_id":"net-owned"}
+			]
+		}`,
+	}
+
+	resources := ExtractManagedResources(instance)
+	if len(resources.ContainerIDs) != 1 || resources.ContainerIDs[0] != "web-ctr" {
+		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
+	}
+	if len(resources.NetworkIDs) != 1 || resources.NetworkIDs[0] != "net-owned" {
+		t.Fatalf("expected only owned network to be removed, got %+v", resources.NetworkIDs)
+	}
+}
+
+func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.T) {
+	t.Parallel()
+
+	instance := &model.Instance{
+		ContainerID: "legacy-web",
+		NetworkID:   "net-awd-contest-8",
+		RuntimeDetails: `{
+			"containers":[
+				{"container_id":"web-ctr"}
+			],
+			"networks":[
+				{"network_id":"net-awd-contest-8","shared":true}
+			]
+		}`,
+	}
+
+	resources := ExtractManagedResources(instance)
+	if len(resources.NetworkIDs) != 0 {
+		t.Fatalf("shared network must not be removed via legacy fallback, got %+v", resources.NetworkIDs)
+	}
+}
+
 func TestExtractManagedResourcesFallsBackToLegacyFields(t *testing.T) {
 	t.Parallel()
 

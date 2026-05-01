@@ -27,7 +27,7 @@ type stubPracticeRepository struct {
 	countScopedRunningInstancesFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
 	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string) error
+	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
 	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
@@ -139,9 +139,9 @@ func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, inst
 	return nil
 }
 
-func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string) error {
+func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
 	if s.resetInstanceRuntimeForRestartFn != nil {
-		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status)
+		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status, expiresAt)
 	}
 	return nil
 }

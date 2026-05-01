@@ -20,6 +20,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 			inst.access_url AS access_url,
 			inst.share_scope AS share_scope,
 			inst.status AS status,
+			inst.runtime_details AS runtime_details,
 			co.id AS contest_id,
 			tm.team_id AS attacker_team_id,
 			victim.id AS victim_team_id,
@@ -48,6 +49,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 	if scope.InstanceID <= 0 {
 		return nil, nil
 	}
+	scope.AccessURL = model.ResolveRuntimeAliasAccessURL(scope.AccessURL, scope.RuntimeDetails)
 	return &scope, nil
 }
 

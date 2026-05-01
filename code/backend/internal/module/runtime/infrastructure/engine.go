@@ -143,13 +143,14 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		}
 	}
 
-	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
+	networkCfg := buildContainerNetworkingConfig(cfg.Network, cfg.NetworkAliases)
+	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, networkCfg, nil, cfg.Name)
 	if err != nil {
 		if isImageNotFoundError(err) {
 			if pullErr := e.pullImage(ctx, cfg.Image); pullErr != nil {
 				return "", pullErr
 			}
-			resp, err = e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
+			resp, err = e.cli.ContainerCreate(ctx, containerCfg, hostCfg, networkCfg, nil, cfg.Name)
 			if err != nil {
 				return "", err
 			}
@@ -176,15 +177,56 @@ func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, prefer
 	return selectServicePort(resp.Config.ExposedPorts, preferredPort), nil
 }
 
-func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error) {
+func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error) {
 	resp, err := e.cli.NetworkCreate(ctx, name, networktypes.CreateOptions{
 		Labels:   labels,
 		Internal: internal,
 	})
 	if err != nil {
+		if errdefs.IsConflict(err) {
+			if !allowExisting {
+				return "", err
+			}
+			network, inspectErr := e.cli.NetworkInspect(ctx, name, networktypes.InspectOptions{})
+			if inspectErr != nil {
+				return "", inspectErr
+			}
+			if err := validateReusableNetwork(name, labels, internal, network); err != nil {
+				return "", err
+			}
+			return network.ID, nil
+		}
 		return "", err
 	}
 	return resp.ID, nil
+}
+
+func validateReusableNetwork(name string, labels map[string]string, internal bool, network networktypes.Inspect) error {
+	if network.Internal != internal {
+		return fmt.Errorf("existing network %q internal=%v does not match requested internal=%v", name, network.Internal, internal)
+	}
+	for key, expected := range labels {
+		if network.Labels[key] != expected {
+			return fmt.Errorf("existing network %q is not a managed runtime network", name)
+		}
+	}
+	return nil
+}
+
+func buildContainerNetworkingConfig(networkName string, aliases []string) *networktypes.NetworkingConfig {
+	networkName = strings.TrimSpace(networkName)
+	if networkName == "" {
+		return nil
+	}
+	endpoint := &networktypes.EndpointSettings{}
+	if len(aliases) > 0 {
+		endpoint.Aliases = append([]string(nil), aliases...)
+	}
+	return &networktypes.NetworkingConfig{
+		EndpointsConfig: map[string]*networktypes.EndpointSettings{
+			networkName: endpoint,
+		},
+	}
 }
 
 func (e *Engine) ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error {

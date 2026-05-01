@@ -87,6 +87,7 @@ type AWDServiceInstance struct {
 	AWDChallengeID int64
 	Status         string
 	AccessURL      string
+	RuntimeDetails string
 }
 
 type AWDTrafficEventRecord struct {

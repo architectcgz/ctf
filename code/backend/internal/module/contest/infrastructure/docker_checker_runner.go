@@ -309,6 +309,10 @@ func materializeCheckerFiles(files []contestports.CheckerRunFile) (string, error
 	if err != nil {
 		return "", err
 	}
+	if err := os.Chmod(root, 0o755); err != nil {
+		_ = os.RemoveAll(root)
+		return "", err
+	}
 	for _, file := range files {
 		rel, err := cleanCheckerFilePath(file.Path)
 		if err != nil {

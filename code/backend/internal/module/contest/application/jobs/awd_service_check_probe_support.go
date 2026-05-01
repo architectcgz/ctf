@@ -23,7 +23,7 @@ func (u *AWDRoundUpdater) collectAWDProbeAggregate(ctx context.Context, instance
 	}
 
 	for _, instance := range instances {
-		probe := u.probeServiceInstance(ctx, instance.AccessURL, healthPath)
+		probe := u.probeServiceInstance(ctx, instance.AccessURL, instance.RuntimeDetails, healthPath)
 		aggregate.targets = append(aggregate.targets, awdCheckTargetResult{
 			AccessURL: instance.AccessURL,
 			Healthy:   probe.healthy,

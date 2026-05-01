@@ -12,6 +12,7 @@ import (
 func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 	ctx context.Context,
 	accessURL string,
+	runtimeDetails string,
 	action awdHTTPCheckerActionConfig,
 	templateData awdHTTPCheckerTemplateData,
 	expectedSubstrings []string,
@@ -36,6 +37,27 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 	}
 
 	bodyValue := renderAWDHTTPCheckerTemplate(action.BodyTemplate, templateData)
+	if response, ok := u.runAWDHTTPCheckerActionInSandbox(ctx, targetURL, accessURL, runtimeDetails, action, bodyValue); ok {
+		if response.Error != "" {
+			summary.ErrorCode = "http_request_failed"
+			summary.Error = response.Error
+			return awdHTTPCheckerActionRuntimeResult{summary: summary}
+		}
+		summary.StatusCode = response.StatusCode
+		if response.StatusCode != action.ExpectedStatus {
+			summary.ErrorCode = "unexpected_http_status"
+			summary.Error = fmt.Sprintf("unexpected_http_status:%d", response.StatusCode)
+			return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
+		}
+		if len(expectedSubstrings) > 0 && !containsAnyAWDExpectedSubstring(response.Body, expectedSubstrings) {
+			summary.ErrorCode = "flag_mismatch"
+			summary.Error = "flag_mismatch"
+			return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
+		}
+		summary.Healthy = true
+		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
+	}
+
 	reqCtx, cancel := context.WithTimeout(ctx, normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout))
 	defer cancel()
 
@@ -49,10 +71,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 		req.Header.Set(key, renderAWDHTTPCheckerTemplate(value, templateData))
 	}
 
-	client := u.httpClient
-	if client == nil {
-		client = &http.Client{Timeout: normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout)}
-	}
+	client := u.httpClientForAWDTarget(accessURL, runtimeDetails)
 
 	resp, err := client.Do(req)
 	if err != nil {

@@ -71,11 +71,14 @@ func (e *testRuntimeEngine) nextIdentifier(prefix string) string {
 	return fmt.Sprintf("%s-%d", prefix, e.nextID)
 }
 
-func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[string]string, internal bool) (string, error) {
+func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[string]string, internal bool, allowExisting bool) (string, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	if existing, ok := e.networksByName[name]; ok {
+		if !allowExisting {
+			return "", fmt.Errorf("network %q already exists", name)
+		}
 		return existing.id, nil
 	}
 

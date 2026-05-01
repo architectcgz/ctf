@@ -10,12 +10,15 @@ type TopologyCreateNode struct {
 	ServiceProtocol string
 	IsEntryPoint    bool
 	NetworkKeys     []string
+	NetworkAliases  []string
 	Resources       *model.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
 	Key      string
+	Name     string
 	Internal bool
+	Shared   bool
 }
 
 type TopologyCreateRequest struct {

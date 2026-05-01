@@ -258,9 +258,12 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 		}).Error
 }
 
-func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string) error {
+func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
 	if instanceID <= 0 {
 		return nil
+	}
+	if expiresAt.IsZero() {
+		expiresAt = time.Now()
 	}
 
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -304,6 +307,7 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 				"runtime_details": "",
 				"access_url":      "",
 				"status":          status,
+				"expires_at":      expiresAt,
 				"destroyed_at":    nil,
 				"updated_at":      time.Now(),
 			}).Error

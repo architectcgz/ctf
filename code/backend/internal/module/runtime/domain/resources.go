@@ -78,7 +78,7 @@ func uniqueNetworkIDs(details model.InstanceRuntimeDetails, fallback string) []s
 	result := make([]string, 0, len(details.Networks))
 	seen := make(map[string]struct{}, len(details.Networks))
 	for _, item := range details.Networks {
-		if item.NetworkID == "" {
+		if item.NetworkID == "" || item.Shared {
 			continue
 		}
 		if _, exists := seen[item.NetworkID]; exists {
@@ -87,7 +87,7 @@ func uniqueNetworkIDs(details model.InstanceRuntimeDetails, fallback string) []s
 		seen[item.NetworkID] = struct{}{}
 		result = append(result, item.NetworkID)
 	}
-	if len(result) == 0 {
+	if len(result) == 0 && len(details.Networks) == 0 {
 		return fallbackIDs(fallback)
 	}
 	return result

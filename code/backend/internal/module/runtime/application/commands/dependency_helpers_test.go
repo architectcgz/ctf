@@ -28,7 +28,7 @@ func (*typedNilCleanupEngine) RemoveACLRules(context.Context, []model.InstanceRu
 
 type typedNilProvisioningEngine struct{}
 
-func (*typedNilProvisioningEngine) CreateNetwork(context.Context, string, map[string]string, bool) (string, error) {
+func (*typedNilProvisioningEngine) CreateNetwork(context.Context, string, map[string]string, bool, bool) (string, error) {
 	return "", nil
 }
 

@@ -806,6 +806,9 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 	if engine.createdContainerCfgs[0].Network != engine.createdNetworkName || engine.createdContainerCfgs[1].Network != engine.createdNetworkName {
 		t.Fatalf("expected all containers to join shared network")
 	}
+	if engine.createdNetworkAllowExisting {
+		t.Fatal("non-shared topology network must not reuse an existing Docker network")
+	}
 	if _, exists := engine.createdContainerCfgs[1].Ports["8080"]; exists {
 		t.Fatalf("non-entry container should not expose host port")
 	}
@@ -1143,6 +1146,65 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologyUsesStableAliasForPrivateEntryPoint(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-awd-contest-8",
+		containerIDs: []string{"web-awd"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-awd" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{"ctf-awd-contest-8": "172.30.0.20"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		DisableEntryPortPublishing: true,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:            "web",
+				Image:          "ctf/web:v1",
+				ServicePort:    8080,
+				IsEntryPoint:   true,
+				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkAliases: []string{"awd-c8-t15-s21"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result.AccessURL != "http://awd-c8-t15-s21:8080" {
+		t.Fatalf("expected alias access url, got %q", result.AccessURL)
+	}
+	if len(result.RuntimeDetails.Networks) != 1 || !result.RuntimeDetails.Networks[0].Shared || result.RuntimeDetails.Networks[0].Name != "ctf-awd-contest-8" {
+		t.Fatalf("expected shared contest network details, got %+v", result.RuntimeDetails.Networks)
+	}
+	if len(result.RuntimeDetails.Containers) != 1 || len(result.RuntimeDetails.Containers[0].NetworkAliases) != 1 || result.RuntimeDetails.Containers[0].NetworkAliases[0] != "awd-c8-t15-s21" {
+		t.Fatalf("expected runtime alias details, got %+v", result.RuntimeDetails.Containers)
+	}
+	if result.RuntimeDetails.Containers[0].NetworkIPs["ctf-awd-contest-8"] != "172.30.0.20" {
+		t.Fatalf("expected runtime network ip details, got %+v", result.RuntimeDetails.Containers[0].NetworkIPs)
+	}
+	if engine.createdContainerCfg == nil || len(engine.createdContainerCfg.NetworkAliases) != 1 || engine.createdContainerCfg.NetworkAliases[0] != "awd-c8-t15-s21" {
+		t.Fatalf("expected Docker network alias in container config, got %+v", engine.createdContainerCfg)
+	}
+	if !engine.createdNetworkAllowExisting {
+		t.Fatal("shared AWD contest network should allow reusing an existing Docker network")
+	}
+}
+
 func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	t.Parallel()
 
@@ -1473,6 +1535,8 @@ type fakeRuntimeEngine struct {
 	resolveServicePortErr          error
 	createdNetworkName             string
 	createdNetworkNames            []string
+	createdNetworkAllowExisting    bool
+	createdNetworkAllowExistingSeq []bool
 	createdNetworkLabel            map[string]string
 	createdContainerCfg            *model.ContainerConfig
 	createdContainerCfgs           []*model.ContainerConfig
@@ -1496,9 +1560,11 @@ type fakeRuntimeEngine struct {
 	removeACLRulesFn               func(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 }
 
-func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool) (string, error) {
+func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool, allowExisting bool) (string, error) {
 	f.createdNetworkName = name
 	f.createdNetworkNames = append(f.createdNetworkNames, name)
+	f.createdNetworkAllowExisting = allowExisting
+	f.createdNetworkAllowExistingSeq = append(f.createdNetworkAllowExistingSeq, allowExisting)
 	f.createdNetworkLabel = labels
 	if len(f.networkIDs) > 0 {
 		networkID := f.networkIDs[0]

@@ -96,6 +96,7 @@ type AWDTargetProxyScope struct {
 	ShareScope     model.ShareScope
 	Status         string
 	AccessURL      string
+	RuntimeDetails string
 }
 
 type AWDDefenseSSHScope struct {

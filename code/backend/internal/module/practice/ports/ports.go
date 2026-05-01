@@ -25,12 +25,15 @@ type TopologyCreateNode struct {
 	ServiceProtocol string
 	IsEntryPoint    bool
 	NetworkKeys     []string
+	NetworkAliases  []string
 	Resources       *model.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
 	Key      string
+	Name     string
 	Internal bool
+	Shared   bool
 }
 
 type TopologyCreateRequest struct {
@@ -54,7 +57,7 @@ type PracticeCommandTxRepository interface {
 	FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
 	CountScopedRunningInstances(ctx context.Context, userID int64, scope InstanceScope) (int, error)
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string) error
+	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
 	CreateInstance(ctx context.Context, instance *model.Instance) error
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	BindReservedPort(ctx context.Context, port int, instanceID int64) error

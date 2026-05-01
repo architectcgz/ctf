@@ -8,15 +8,12 @@ import (
 	"time"
 )
 
-func (u *AWDRoundUpdater) probeServiceInstance(ctx context.Context, accessURL, healthPath string) awdInstanceProbeResult {
+func (u *AWDRoundUpdater) probeServiceInstance(ctx context.Context, accessURL, runtimeDetails, healthPath string) awdInstanceProbeResult {
 	startedAt := time.Now()
 	attempts := make([]awdProbeAttemptResult, 0, 1)
 	targetURL, err := buildAWDHealthCheckURL(accessURL, healthPath)
 	if err == nil {
-		client := u.httpClient
-		if client == nil {
-			client = &http.Client{Timeout: normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout)}
-		}
+		client := u.httpClientForAWDTarget(accessURL, runtimeDetails)
 		reqCtx, cancel := context.WithTimeout(ctx, normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout))
 		defer cancel()
 

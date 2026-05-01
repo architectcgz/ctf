@@ -16,6 +16,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -1503,6 +1504,7 @@ func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	t.Parallel()
 
+	now := time.Now()
 	teamID := int64(4106)
 	serviceID := int64(7106)
 	contestID := int64(3106)
@@ -1522,7 +1524,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 		Status:         model.InstanceStatusRunning,
 		AccessURL:      "http://127.0.0.1:32106",
 		Nonce:          "nonce-keep",
-		ExpiresAt:      time.Now().Add(time.Hour),
+		ExpiresAt:      now.Add(-time.Minute),
 		MaxExtends:     2,
 	}
 	var cleanupInstanceID int64
@@ -1560,9 +1562,12 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 			}
 			return instance, nil
 		},
-		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string) error {
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
 			if instanceID != instance.ID {
 				t.Fatalf("unexpected reset instance id: %d", instanceID)
+			}
+			if !expiresAt.After(now) {
+				t.Fatalf("expected refreshed restart expiry after now, got %s now=%s", expiresAt, now)
 			}
 			resetStatus = status
 			return nil
@@ -1610,6 +1615,9 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	}
 	if resetStatus != model.InstanceStatusPending {
 		t.Fatalf("expected reset to pending, got %q", resetStatus)
+	}
+	if !resp.ExpiresAt.After(now) || !instance.ExpiresAt.After(now) {
+		t.Fatalf("restart should refresh expired instance ttl, resp=%s instance=%s now=%s", resp.ExpiresAt, instance.ExpiresAt, now)
 	}
 	if instance.ServiceID == nil || *instance.ServiceID != serviceID || instance.Nonce != "nonce-keep" || instance.HostPort != 32106 {
 		t.Fatalf("restart should preserve identity fields, got %+v", instance)
@@ -2079,6 +2087,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	}
 
 	contestID := int64(7001)
+	teamID := int64(7101)
 	serviceID := int64(8001)
 	var createTopologyCalled bool
 	service := &Service{
@@ -2092,20 +2101,35 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 				if !req.DisableEntryPortPublishing {
 					t.Fatal("expected entry port publishing to be disabled")
 				}
+				if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7001" || !req.Networks[0].Shared {
+					t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
+				}
 				if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
 					t.Fatalf("unexpected topology request: %+v", req)
 				}
+				if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7001-t7101-s8001" {
+					t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
+				}
 				return &practiceports.TopologyCreateResult{
 					PrimaryContainerID: "awd-private-ctr",
-					NetworkID:          "awd-private-net",
-					AccessURL:          "http://172.30.0.10:8080",
+					NetworkID:          "net-awd-contest-7001",
+					AccessURL:          "http://awd-c7001-t7101-s8001:8080",
 					RuntimeDetails: model.InstanceRuntimeDetails{
+						Networks: []model.InstanceRuntimeNetwork{
+							{
+								Key:       model.TopologyDefaultNetworkKey,
+								Name:      "ctf-awd-contest-7001",
+								NetworkID: "net-awd-contest-7001",
+								Shared:    true,
+							},
+						},
 						Containers: []model.InstanceRuntimeContainer{
 							{
-								NodeKey:      "default",
-								ContainerID:  "awd-private-ctr",
-								ServicePort:  8080,
-								IsEntryPoint: true,
+								NodeKey:        "default",
+								ContainerID:    "awd-private-ctr",
+								ServicePort:    8080,
+								IsEntryPoint:   true,
+								NetworkAliases: []string{"awd-c7001-t7101-s8001"},
 							},
 						},
 					},
@@ -2120,6 +2144,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	instance := &model.Instance{
 		ID:          9001,
 		ContestID:   &contestID,
+		TeamID:      &teamID,
 		ServiceID:   &serviceID,
 		ChallengeID: 501,
 	}
@@ -2138,8 +2163,179 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	if instance.HostPort != 0 {
 		t.Fatalf("expected instance host port to remain empty, got %d", instance.HostPort)
 	}
-	if instance.AccessURL != "http://172.30.0.10:8080" {
+	if instance.AccessURL != "http://awd-c7001-t7101-s8001:8080" {
 		t.Fatalf("unexpected access url: %s", instance.AccessURL)
+	}
+}
+
+func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        503,
+		Name:      "ctf/awd-topology",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7003)
+	teamID := int64(7103)
+	serviceID := int64(8003)
+	var createTopologyCalled bool
+	service := &Service{
+		imageRepo: challengeinfra.NewImageRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				createTopologyCalled = true
+				if req.ReservedHostPort != 0 {
+					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+				}
+				if !req.DisableEntryPortPublishing {
+					t.Fatal("expected entry port publishing to be disabled")
+				}
+				if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7003" || !req.Networks[0].Shared {
+					t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
+				}
+				if len(req.Nodes) != 1 || req.Nodes[0].Key != "web" || !req.Nodes[0].IsEntryPoint {
+					t.Fatalf("unexpected topology nodes: %+v", req.Nodes)
+				}
+				if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7003-t7103-s8003" {
+					t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "awd-topology-ctr",
+					NetworkID:          "net-awd-contest-7003",
+					AccessURL:          "http://awd-c7003-t7103-s8003:8080",
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Networks: []model.InstanceRuntimeNetwork{
+							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+						},
+						Containers: []model.InstanceRuntimeContainer{
+							{NodeKey: "web", ContainerID: "awd-topology-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
+						},
+					},
+				}, nil
+			},
+		},
+	}
+	instance := &model.Instance{
+		ID:          9003,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ChallengeID: 503,
+	}
+	challenge := &model.Challenge{
+		ID:       503,
+		ImageID:  503,
+		FlagType: model.FlagTypeStatic,
+	}
+	topology, err := model.EncodeTopologySpec(model.TopologySpec{
+		Nodes: []model.TopologyNode{
+			{Key: "web", ServicePort: 8080, InjectFlag: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode topology: %v", err)
+	}
+
+	if err := service.createContainer(context.Background(), instance, challenge, &model.ChallengeTopology{
+		ChallengeID:  503,
+		EntryNodeKey: "web",
+		Spec:         topology,
+	}, "flag{demo}"); err != nil {
+		t.Fatalf("createContainer() error = %v", err)
+	}
+	if !createTopologyCalled {
+		t.Fatal("expected private topology creation")
+	}
+	if instance.AccessURL != "http://awd-c7003-t7103-s8003:8080" {
+		t.Fatalf("unexpected access url: %s", instance.AccessURL)
+	}
+}
+
+func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        502,
+		Name:      "ctf/awd-web",
+		Tag:       "v2",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7002)
+	teamID := int64(7102)
+	serviceID := int64(8002)
+	instanceStore := &stubPracticeInstanceStore{
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			if instance.Status != model.InstanceStatusRunning {
+				t.Fatalf("expected running status, got %+v", instance)
+			}
+			if instance.AccessURL != "http://awd-c7002-t7102-s8002:8080" {
+				t.Fatalf("expected stable alias access url, got %q", instance.AccessURL)
+			}
+			return nil
+		},
+	}
+	service := &Service{
+		imageRepo:    challengeinfra.NewImageRepository(db),
+		instanceRepo: instanceStore,
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "awd-alias-ctr",
+					NetworkID:          "net-awd-contest-7002",
+					AccessURL:          "http://awd-c7002-t7102-s8002:8080",
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Networks: []model.InstanceRuntimeNetwork{
+							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7002", NetworkID: "net-awd-contest-7002", Shared: true},
+						},
+						Containers: []model.InstanceRuntimeContainer{
+							{NodeKey: "default", ContainerID: "awd-alias-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7002-t7102-s8002"}},
+						},
+					},
+				}, nil
+			},
+		},
+		config: &config.Config{
+			Container: config.ContainerConfig{
+				CreateTimeout:      time.Second,
+				StartProbeTimeout:  10 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 1,
+			},
+		},
+		logger: zap.NewNop(),
+	}
+	instance := &model.Instance{
+		ID:          9002,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ChallengeID: 502,
+		Status:      model.InstanceStatusCreating,
+	}
+	challenge := &model.Challenge{
+		ID:       502,
+		ImageID:  502,
+		FlagType: model.FlagTypeStatic,
+	}
+
+	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{demo}"); err != nil {
+		t.Fatalf("provisionInstance() should not host-probe AWD alias URL: %v", err)
 	}
 }
 

@@ -26,7 +26,7 @@ type provisioningRepository interface {
 }
 
 type provisioningEngine interface {
-	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
+	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error)
 	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
@@ -43,6 +43,7 @@ type createdTopologyNetwork struct {
 	name     string
 	id       string
 	internal bool
+	shared   bool
 }
 
 // ProvisioningService 收口运行时资源创建编排，包括单容器与拓扑实例创建。
@@ -155,10 +156,10 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
 	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
 	for _, network := range networks {
-		networkName := buildManagedNetworkName(network.Key)
-		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels(), network.Internal)
+		networkName := resolveCreateNetworkName(network)
+		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels(), network.Internal, network.Shared)
 		if err != nil {
-			s.cleanupTopologyResources(ctx, nil, collectCreatedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, nil, collectOwnedNetworkIDs(createdNetworks))
 			return nil, err
 		}
 		item := createdTopologyNetwork{
@@ -166,6 +167,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			name:     networkName,
 			id:       networkID,
 			internal: network.Internal,
+			shared:   network.Shared,
 		}
 		createdNetworks = append(createdNetworks, item)
 		networkByKey[network.Key] = item
@@ -181,6 +183,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			Name:      network.name,
 			NetworkID: network.id,
 			Internal:  network.internal,
+			Shared:    network.shared,
 		})
 	}
 
@@ -192,7 +195,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		if node.IsEntryPoint && servicePort <= 0 {
 			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
 			if err != nil {
-				s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+				s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 				return nil, err
 			}
 			servicePort = resolvedPort
@@ -205,29 +208,36 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		}
 
 		containerID, err := s.engine.CreateContainer(ctx, &model.ContainerConfig{
-			Image:     node.Image,
-			Name:      buildManagedContainerName(),
-			Env:       envMapToList(node.Env),
-			Ports:     ports,
-			Labels:    managedContainerLabels(),
-			Resources: node.Resources,
-			Network:   primaryNetwork.name,
+			Image:          node.Image,
+			Name:           buildManagedContainerName(),
+			Env:            envMapToList(node.Env),
+			Ports:          ports,
+			Labels:         managedContainerLabels(),
+			Resources:      node.Resources,
+			Network:        primaryNetwork.name,
+			NetworkAliases: normalizedNetworkAliases(node.NetworkAliases),
 		})
 		if err != nil {
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 			return nil, err
 		}
 		if err := s.engine.StartContainer(ctx, containerID); err != nil {
 			createdContainerIDs = append(createdContainerIDs, containerID)
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 			return nil, err
 		}
 		for _, networkKey := range nodeNetworkKeys[1:] {
 			if err := s.engine.ConnectContainerToNetwork(ctx, containerID, networkByKey[networkKey].name); err != nil {
 				createdContainerIDs = append(createdContainerIDs, containerID)
-				s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+				s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 				return nil, err
 			}
+		}
+		networkIPs, err := s.engine.InspectContainerNetworkIPs(ctx, containerID)
+		if err != nil {
+			createdContainerIDs = append(createdContainerIDs, containerID)
+			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+			return nil, err
 		}
 
 		createdContainerIDs = append(createdContainerIDs, containerID)
@@ -239,6 +249,8 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			ServiceProtocol: serviceProtocol,
 			IsEntryPoint:    node.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), nodeNetworkKeys...),
+			NetworkAliases:  normalizedNetworkAliases(node.NetworkAliases),
+			NetworkIPs:      networkIPs,
 		}
 		if node.IsEntryPoint && publishEntryPort {
 			runtimeItem.HostPort = hostPort
@@ -248,12 +260,12 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 	resolvedACLRules, err := s.resolveTopologyACLRules(ctx, req, details)
 	if err != nil {
-		s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+		s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 		return nil, err
 	}
 	if len(resolvedACLRules) > 0 {
 		if err := s.engine.ApplyACLRules(ctx, resolvedACLRules); err != nil {
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 			return nil, err
 		}
 		details.ACLRules = resolvedACLRules
@@ -261,7 +273,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 	accessURL, err := s.resolveEntryAccessURL(ctx, details, entryNodeIndex, publishEntryPort, hostPort)
 	if err != nil {
-		s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+		s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
 		return nil, err
 	}
 
@@ -285,6 +297,12 @@ func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details
 	}
 	if entry.ServicePort <= 0 {
 		return "", fmt.Errorf("entry service port is required for private access")
+	}
+	if len(entry.NetworkAliases) > 0 {
+		alias := strings.TrimSpace(entry.NetworkAliases[0])
+		if alias != "" {
+			return fmt.Sprintf("%s://%s:%d", scheme, alias, entry.ServicePort), nil
+		}
 	}
 
 	ipsByNetworkName, err := s.engine.InspectContainerNetworkIPs(ctx, entry.ContainerID)
@@ -437,6 +455,13 @@ func buildManagedNetworkName(key string) string {
 	return fmt.Sprintf("%s%s-%d", managedNetworkNamePrefix, trimmed, time.Now().UnixNano())
 }
 
+func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string {
+	if name := strings.TrimSpace(network.Name); name != "" {
+		return name
+	}
+	return buildManagedNetworkName(network.Key)
+}
+
 func managedContainerLabels() map[string]string {
 	return map[string]string{
 		runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
@@ -465,10 +490,30 @@ func normalizedNodeNetworkKeys(keys []string, networks []runtimeports.TopologyCr
 	return []string{normalizedCreateNetworks(networks)[0].Key}
 }
 
-func collectCreatedNetworkIDs(networks []createdTopologyNetwork) []string {
+func normalizedNetworkAliases(aliases []string) []string {
+	if len(aliases) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(aliases))
+	seen := make(map[string]struct{}, len(aliases))
+	for _, alias := range aliases {
+		trimmed := strings.TrimSpace(alias)
+		if trimmed == "" {
+			continue
+		}
+		if _, exists := seen[trimmed]; exists {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		result = append(result, trimmed)
+	}
+	return result
+}
+
+func collectOwnedNetworkIDs(networks []createdTopologyNetwork) []string {
 	result := make([]string, 0, len(networks))
 	for _, network := range networks {
-		if network.id != "" {
+		if network.id != "" && !network.shared {
 			result = append(result, network.id)
 		}
 	}

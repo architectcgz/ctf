@@ -26,7 +26,7 @@ import (
 )
 
 type runtimeEngine interface {
-	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
+	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error)
 	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
@@ -748,7 +748,9 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 	for _, network := range req.Networks {
 		networks = append(networks, runtimeports.TopologyCreateNetwork{
 			Key:      network.Key,
+			Name:     network.Name,
 			Internal: network.Internal,
+			Shared:   network.Shared,
 		})
 	}
 
@@ -762,6 +764,7 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 			ServiceProtocol: node.ServiceProtocol,
 			IsEntryPoint:    node.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
+			NetworkAliases:  append([]string(nil), node.NetworkAliases...),
 			Resources:       cloneRuntimeResourceLimits(node.Resources),
 		})
 	}

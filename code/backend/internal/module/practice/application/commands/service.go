@@ -167,11 +167,12 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	if s.schedulerEnabled() {
 		nextStatus = model.InstanceStatusPending
 	}
+	nextExpiresAt := time.Now().Add(s.config.Container.DefaultTTL)
 	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
-		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus); err != nil {
+		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		return nil
@@ -184,6 +185,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	instance.RuntimeDetails = ""
 	instance.AccessURL = ""
 	instance.Status = nextStatus
+	instance.ExpiresAt = nextExpiresAt
 	instance.DestroyedAt = nil
 	if !s.schedulerEnabled() {
 		chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
@@ -583,10 +585,16 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 		s.markInstanceFailed(ctx, instance)
 		return err
 	}
-	if err := s.waitForInstanceReadiness(createCtx, instance.AccessURL); err != nil {
-		s.logger.Error("实例访问地址未就绪", zap.Error(err), zap.Int64("instance_id", instance.ID), zap.String("access_url", instance.AccessURL))
-		s.markInstanceFailed(ctx, instance)
-		return errcode.ErrContainerStartFailed.WithCause(err)
+	if !usesAWDStableNetworkAlias(instance) {
+		if err := s.waitForInstanceReadiness(createCtx, instance.AccessURL); err != nil {
+			s.logger.Error("实例访问地址未就绪", zap.Error(err), zap.Int64("instance_id", instance.ID), zap.String("access_url", instance.AccessURL))
+			s.markInstanceFailed(ctx, instance)
+			return errcode.ErrContainerStartFailed.WithCause(err)
+		}
+	} else {
+		s.logger.Info("跳过宿主机探活，AWD 实例使用赛内稳定网络访问",
+			zap.Int64("instance_id", instance.ID),
+			zap.String("access_url", instance.AccessURL))
 	}
 
 	instance.Status = model.InstanceStatusRunning
@@ -1680,6 +1688,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	if err != nil {
 		return err
 	}
+	applyAWDStableNetworkToTopologyRequest(instance, request)
 	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -1711,12 +1720,19 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
 	targetProtocol := normalizeChallengeTargetProtocol(chal.TargetProtocol)
 	if isAWDInstance(instance) || targetProtocol == model.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
+		networks := []practiceports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		}
+		nodeAliases := []string(nil)
+		if isAWDInstance(instance) {
+			networks[0].Name = buildAWDContestNetworkName(instance)
+			networks[0].Shared = true
+			nodeAliases = []string{buildAWDServiceAlias(instance)}
+		}
 		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: isAWDInstance(instance),
-			Networks: []practiceports.TopologyCreateNetwork{
-				{Key: model.TopologyDefaultNetworkKey},
-			},
+			Networks:                   networks,
 			Nodes: []practiceports.TopologyCreateNode{
 				{
 					Key:             "default",
@@ -1726,6 +1742,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 					ServiceProtocol: targetProtocol,
 					IsEntryPoint:    true,
 					NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+					NetworkAliases:  nodeAliases,
 				},
 			},
 		})
@@ -1782,6 +1799,92 @@ func normalizeChallengeTargetProtocol(protocol string) string {
 
 func isAWDInstance(instance *model.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.ServiceID != nil
+}
+
+func buildAWDContestNetworkName(instance *model.Instance) string {
+	if instance == nil || instance.ContestID == nil {
+		return ""
+	}
+	return fmt.Sprintf("ctf-awd-contest-%d", *instance.ContestID)
+}
+
+func buildAWDServiceAlias(instance *model.Instance) string {
+	if instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
+		return ""
+	}
+	return fmt.Sprintf("awd-c%d-t%d-s%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID)
+}
+
+func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, request *practiceports.TopologyCreateRequest) {
+	if !isAWDInstance(instance) || request == nil {
+		return
+	}
+	entryIndex := -1
+	for idx := range request.Nodes {
+		if request.Nodes[idx].IsEntryPoint {
+			entryIndex = idx
+			break
+		}
+	}
+	if entryIndex < 0 {
+		return
+	}
+
+	networkKey := model.TopologyDefaultNetworkKey
+	if len(request.Nodes[entryIndex].NetworkKeys) > 0 && strings.TrimSpace(request.Nodes[entryIndex].NetworkKeys[0]) != "" {
+		networkKey = request.Nodes[entryIndex].NetworkKeys[0]
+	} else {
+		request.Nodes[entryIndex].NetworkKeys = []string{networkKey}
+	}
+
+	networkName := buildAWDContestNetworkName(instance)
+	networkFound := false
+	for idx := range request.Networks {
+		if request.Networks[idx].Key != networkKey {
+			continue
+		}
+		request.Networks[idx].Name = networkName
+		request.Networks[idx].Shared = true
+		networkFound = true
+		break
+	}
+	if !networkFound {
+		request.Networks = append(request.Networks, practiceports.TopologyCreateNetwork{
+			Key:    networkKey,
+			Name:   networkName,
+			Shared: true,
+		})
+	}
+
+	alias := buildAWDServiceAlias(instance)
+	if alias != "" {
+		request.Nodes[entryIndex].NetworkAliases = appendUniqueString(request.Nodes[entryIndex].NetworkAliases, alias)
+	}
+}
+
+func appendUniqueString(items []string, item string) []string {
+	item = strings.TrimSpace(item)
+	if item == "" {
+		return items
+	}
+	for _, existing := range items {
+		if strings.TrimSpace(existing) == item {
+			return items
+		}
+	}
+	return append(items, item)
+}
+
+func usesAWDStableNetworkAlias(instance *model.Instance) bool {
+	if !isAWDInstance(instance) {
+		return false
+	}
+	parsed, err := url.Parse(strings.TrimSpace(instance.AccessURL))
+	if err != nil {
+		return false
+	}
+	host := parsed.Hostname()
+	return strings.HasPrefix(host, "awd-c")
 }
 
 func (s *Service) buildTopologyCreateRequest(

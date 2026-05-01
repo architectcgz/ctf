@@ -48,12 +48,16 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-blue-web",
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusRunning,
-		AccessURL:   "http://127.0.0.1:39001",
-		ExpiresAt:   now.Add(time.Hour),
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		RuntimeDetails: `{
+			"networks":[{"key":"default","name":"ctf-awd-contest-9101","network_id":"net-awd-contest-9101","shared":true}],
+			"containers":[{"container_id":"ctr-blue-web","is_entry_point":true,"network_keys":["default"],"network_aliases":["awd-c9101-t9202-s9301"],"network_ips":{"ctf-awd-contest-9101":"172.30.10.20"}}]
+		}`,
+		ShareScope: model.InstanceSharingPerTeam,
+		Status:     model.InstanceStatusRunning,
+		AccessURL:  "http://awd-c9101-t9202-s9301:8080",
+		ExpiresAt:  now.Add(time.Hour),
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	})
 
 	scope, err := NewRepository(db).FindAWDTargetProxyScope(context.Background(), 1001, contestID, serviceID, victimTeamID)
@@ -63,7 +67,7 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 	if scope == nil {
 		t.Fatal("expected target scope")
 	}
-	if scope.InstanceID != instanceID || scope.AccessURL != "http://127.0.0.1:39001" {
+	if scope.InstanceID != instanceID || scope.AccessURL != "http://172.30.10.20:8080" {
 		t.Fatalf("unexpected instance scope: %+v", scope)
 	}
 	if scope.AttackerTeamID != attackerTeamID || scope.VictimTeamID != victimTeamID {
