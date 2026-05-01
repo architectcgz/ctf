@@ -99,3 +99,15 @@ func createAWDRoundInputFromDTO(req *dto.CreateAWDRoundReq) contestcmd.CreateAWD
 		OverrideReason: req.OverrideReason,
 	}
 }
+
+func upsertServiceCheckInputFromDTO(req *dto.UpsertAWDServiceCheckReq) contestcmd.UpsertServiceCheckInput {
+	if req == nil {
+		return contestcmd.UpsertServiceCheckInput{}
+	}
+	return contestcmd.UpsertServiceCheckInput{
+		TeamID:        req.TeamID,
+		ServiceID:     req.ServiceID,
+		ServiceStatus: req.ServiceStatus,
+		CheckResult:   req.CheckResult,
+	}
+}

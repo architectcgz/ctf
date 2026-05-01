@@ -12,7 +12,7 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 	ctx context.Context,
 	contestID, roundID int64,
 	runtimeService *model.ContestAWDService,
-	req *dto.UpsertAWDServiceCheckReq,
+	req UpsertServiceCheckInput,
 	team *model.Team,
 	record *model.AWDTeamService,
 ) (*dto.AWDTeamServiceResp, error) {

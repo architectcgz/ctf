@@ -240,7 +240,7 @@ func setReflectedField(t *testing.T, target reflect.Value, field string, value a
 	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
 }
 
-func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error) {
+func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
 	return s.commands.UpsertServiceCheck(ctx, contestID, roundID, req)
 }
 
@@ -363,7 +363,7 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	serviceID := defaultAWDContestServiceID(2, 201)
 
 	var resp *dto.AWDTeamServiceResp
-	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, &dto.UpsertAWDServiceCheckReq{
+	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, contestcmd.UpsertServiceCheckInput{
 		TeamID:        211,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
@@ -391,7 +391,7 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	assertContestRedisScore(t, redisClient, 2, 211, 40)
 	assertAWDServiceStatusCache(t, redisClient, 2, 211, serviceID, model.AWDServiceStatusUp)
 
-	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, &dto.UpsertAWDServiceCheckReq{
+	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, contestcmd.UpsertServiceCheckInput{
 		TeamID:        211,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusDown,
@@ -1610,7 +1610,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	createAWDTeamFixture(t, db, 313, 3, "Green", now)
 	serviceID := defaultAWDContestServiceID(3, 301)
 
-	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
+	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, contestcmd.UpsertServiceCheckInput{
 		TeamID:        311,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
@@ -1618,7 +1618,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}); err != nil {
 		t.Fatalf("seed Red service check: %v", err)
 	}
-	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
+	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, contestcmd.UpsertServiceCheckInput{
 		TeamID:        312,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusCompromised,
@@ -1626,7 +1626,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}); err != nil {
 		t.Fatalf("seed Blue service check: %v", err)
 	}
-	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
+	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, contestcmd.UpsertServiceCheckInput{
 		TeamID:        313,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
@@ -1845,7 +1845,7 @@ func TestAWDServiceHistoricalManualUpdatesDoNotOverrideLiveServiceStatusCache(t 
 		t.Fatalf("set current round: %v", err)
 	}
 
-	if _, err := service.UpsertServiceCheck(context.Background(), 16, 161, &dto.UpsertAWDServiceCheckReq{
+	if _, err := service.UpsertServiceCheck(context.Background(), 16, 161, contestcmd.UpsertServiceCheckInput{
 		TeamID:        1611,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusDown,
@@ -1891,7 +1891,7 @@ func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t
 		t.Fatalf("seed stale current round: %v", err)
 	}
 
-	if _, err := service.UpsertServiceCheck(context.Background(), 17, 171, &dto.UpsertAWDServiceCheckReq{
+	if _, err := service.UpsertServiceCheck(context.Background(), 17, 171, contestcmd.UpsertServiceCheckInput{
 		TeamID:        1711,
 		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,

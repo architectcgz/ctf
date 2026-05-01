@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -14,7 +13,7 @@ func (s *AWDService) upsertServiceCheckAndRecalculate(
 	ctx context.Context,
 	contestID, roundID int64,
 	runtimeService *model.ContestAWDService,
-	req *dto.UpsertAWDServiceCheckReq,
+	req UpsertServiceCheckInput,
 	checkResult string,
 	defenseScore int,
 	now time.Time,

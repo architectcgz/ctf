@@ -8,3 +8,10 @@ type CreateAWDRoundInput struct {
 	ForceOverride  *bool
 	OverrideReason *string
 }
+
+type UpsertServiceCheckInput struct {
+	TeamID        int64
+	ServiceID     int64
+	ServiceStatus string
+	CheckResult   map[string]any
+}
