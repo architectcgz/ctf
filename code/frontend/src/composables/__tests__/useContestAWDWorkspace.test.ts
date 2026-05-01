@@ -319,6 +319,112 @@ describe('useContestAWDWorkspace', () => {
     expect(contestApiMocks.startContestAWDServiceInstance).toHaveBeenCalledWith('1', '7009')
   })
 
+  it('重启服务后应短轮询直到 workspace 同步到新实例', async () => {
+    vi.useFakeTimers()
+
+    contestApiMocks.restartContestAWDServiceInstance.mockResolvedValueOnce({
+      id: '900',
+      challenge_id: 'legacy-101',
+      status: 'creating',
+      share_scope: 'per_team',
+      flag_type: 'dynamic',
+      expires_at: '2026-04-12T12:00:00Z',
+      remaining_extends: 1,
+      created_at: '2026-04-12T09:02:00Z',
+    })
+    contestApiMocks.getContestAWDWorkspace
+      .mockResolvedValueOnce({
+        contest_id: '1',
+        my_team: {
+          team_id: '13',
+          team_name: 'Red',
+        },
+        services: [],
+        targets: [],
+        recent_events: [],
+      })
+      .mockResolvedValueOnce({
+        contest_id: '1',
+        my_team: {
+          team_id: '13',
+          team_name: 'Red',
+        },
+        services: [
+          {
+            service_id: '7009',
+            awd_challenge_id: 'legacy-101',
+            instance_status: 'creating',
+            attack_received: 0,
+            sla_score: 0,
+            defense_score: 0,
+            attack_score: 0,
+          },
+        ],
+        targets: [],
+        recent_events: [],
+      })
+      .mockResolvedValueOnce({
+        contest_id: '1',
+        my_team: {
+          team_id: '13',
+          team_name: 'Red',
+        },
+        services: [
+          {
+            service_id: '7009',
+            awd_challenge_id: 'legacy-101',
+            instance_id: '900',
+            instance_status: 'running',
+            access_url: 'http://red.internal',
+            attack_received: 0,
+            sla_score: 0,
+            defense_score: 0,
+            attack_score: 0,
+          },
+        ],
+        targets: [],
+        recent_events: [],
+      })
+
+    let restartService!: (serviceId: string) => Promise<void>
+    let workspaceState!: ReturnType<typeof useContestAWDWorkspace>['workspace']
+
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          restartService = workspace.restartService
+          workspaceState = workspace.workspace
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    const restartAttempt = restartService('7009')
+    await flushPromises()
+    await restartAttempt
+
+    expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledTimes(2)
+    expect(workspaceState.value?.services[0]?.instance_status).toBe('creating')
+
+    await vi.advanceTimersByTimeAsync(1_000)
+    await flushPromises()
+
+    expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledTimes(3)
+    expect(workspaceState.value?.services[0]).toMatchObject({
+      service_id: '7009',
+      instance_id: '900',
+      instance_status: 'running',
+    })
+
+    wrapper.unmount()
+  })
+
   it('打开跨队攻击入口时应请求目标代理 access 并防止重复点击', async () => {
     let resolveAccess: ((value: { access_url: string }) => void) | null = null
     const openMock = vi.spyOn(window, 'open').mockImplementation(() => null)
