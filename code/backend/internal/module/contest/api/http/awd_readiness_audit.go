@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -40,8 +39,8 @@ func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideRe
 	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, awdReadinessResultToDTO(snapshot), err))
 }
 
-func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req *dto.UpdateContestReq) bool {
-	if contest == nil || req == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
+func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req contestcmd.UpdateContestInput) bool {
+	if contest == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
 		return false
 	}
 	return contestdomain.ShouldGateAWDContestStart(contest.Mode, contest.Status, req.Status)

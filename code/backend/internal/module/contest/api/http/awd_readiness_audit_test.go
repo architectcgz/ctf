@@ -25,7 +25,7 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 	var readinessCalls int
 	handler := NewHandler(
 		stubContestService{
-			updateContestFunc: func(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
+			updateContestFunc: func(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error) {
 				return nil, errcode.ErrInvalidStatusTransition
 			},
 		},
@@ -111,18 +111,18 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 }
 
 type stubContestService struct {
-	createContestFunc func(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
-	updateContestFunc func(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error)
+	createContestFunc func(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error)
+	updateContestFunc func(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error)
 }
 
-func (s stubContestService) CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error) {
+func (s stubContestService) CreateContest(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error) {
 	if s.createContestFunc != nil {
 		return s.createContestFunc(ctx, req)
 	}
 	return nil, nil
 }
 
-func (s stubContestService) UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
+func (s stubContestService) UpdateContest(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error) {
 	if s.updateContestFunc != nil {
 		return s.updateContestFunc(ctx, id, req)
 	}

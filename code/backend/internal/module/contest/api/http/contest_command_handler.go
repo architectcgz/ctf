@@ -16,7 +16,7 @@ func (h *Handler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateContest(c.Request.Context(), &req)
+	resp, err := h.commands.CreateContest(c.Request.Context(), createContestInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -32,6 +32,7 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
+	input := updateContestInputFromDTO(&req)
 
 	var readinessSnapshot *contestqry.AWDReadinessResult
 	if h.readinessQueries != nil && h.queries != nil {
@@ -40,8 +41,8 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 			response.FromError(c, err)
 			return
 		}
-		if shouldPrepareUpdateContestReadinessAudit(contest, &req) {
-			readinessSnapshot, err = loadAWDReadinessAuditSnapshot(c.Request.Context(), h.readinessQueries, id, req.ForceOverride)
+		if shouldPrepareUpdateContestReadinessAudit(contest, input) {
+			readinessSnapshot, err = loadAWDReadinessAuditSnapshot(c.Request.Context(), h.readinessQueries, id, input.ForceOverride)
 			if err != nil {
 				response.FromError(c, err)
 				return
@@ -50,8 +51,8 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 	}
 
 	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
-	resp, err := h.commands.UpdateContest(requestCtx, id, &req)
-	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionStartContest, req.OverrideReason, readinessSnapshot, gateTrace, err)
+	resp, err := h.commands.UpdateContest(requestCtx, id, input)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionStartContest, input.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return
