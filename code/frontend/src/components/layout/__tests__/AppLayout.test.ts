@@ -100,7 +100,7 @@ describe('AppLayout workspace shell', () => {
     adminApiMocks.listChallengeImports.mockResolvedValue([])
   })
 
-  it('switches academy and platform routes into a shared backoffice shell while leaving student routes on the default layout', () => {
+  it('keeps academy and platform routes on the backoffice content shell while student content spacing stays route-driven', () => {
     expect(appLayoutSource).toContain('isBackofficeRoute(route.path)')
     expect(appLayoutSource).toContain('workspace-main--backoffice')
     expect(appLayoutSource).not.toContain('BackofficeSubNav')
@@ -206,7 +206,8 @@ describe('AppLayout workspace shell', () => {
       expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalled()
     })
 
-    const resourcesButton = desktopAside!
+    const refreshedDesktopAside = wrapper.find('.backoffice-sidebar--desktop')
+    const resourcesButton = refreshedDesktopAside
       .findAll('button')
       .find((node) => node.text().trim() === '题库与资源')
 

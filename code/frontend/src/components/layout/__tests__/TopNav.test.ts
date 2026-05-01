@@ -151,13 +151,12 @@ async function mountTopNav() {
   authMocks.logout.mockReset()
 
   const authStore = useAuthStore()
-  authStore.setAuth(
-    {
-      id: 'student-1',
-      username: 'alice',
-      name: 'Alice',
-      role: 'student',
-    })
+  authStore.setAuth({
+    id: 'student-1',
+    username: 'alice',
+    name: 'Alice',
+    role: 'student',
+  })
 
   const router = createTestRouter()
   await router.push('/student/dashboard')
@@ -179,7 +178,10 @@ async function mountTopNav() {
   return { wrapper }
 }
 
-async function mountBackofficeTopNav(path = '/platform/overview', role: 'admin' | 'teacher' = 'admin') {
+async function mountBackofficeTopNav(
+  path = '/platform/overview',
+  role: 'admin' | 'teacher' = 'admin'
+) {
   setActivePinia(createPinia())
   localStorage.clear()
   document.documentElement.removeAttribute('data-brand')
@@ -187,13 +189,12 @@ async function mountBackofficeTopNav(path = '/platform/overview', role: 'admin' 
   authMocks.logout.mockReset()
 
   const authStore = useAuthStore()
-  authStore.setAuth(
-    {
-      id: 'admin-1',
-      username: 'admin',
-      name: 'Admin',
-      role,
-    })
+  authStore.setAuth({
+    id: 'admin-1',
+    username: 'admin',
+    name: 'Admin',
+    role,
+  })
 
   const router = createTestRouter()
   await router.push(path)
@@ -292,10 +293,8 @@ describe('TopNav', () => {
     expect(topNavSource).not.toContain('md:text-[15px]')
   })
 
-  it('supports a dedicated admin workspace treatment on platform routes', () => {
-    expect(topNavSource).toContain('const isBackofficeRoute = computed(() =>')
-    expect(topNavSource).toContain("import { isBackofficeRoute as checkBackofficeRoute }")
-    expect(topNavSource).toContain('checkBackofficeRoute(route.path)')
+  it('supports the shared admin workspace treatment across all role shells', () => {
+    expect(topNavSource).toContain('useWorkspaceShellNavigation')
     expect(topNavSource).toContain('topnav-shell--admin')
     expect(topNavSource).toContain('Workspace')
   })
@@ -308,8 +307,7 @@ describe('TopNav', () => {
   })
 
   it('renders backoffice breadcrumbs from sidebar module and submenu instead of the removed horizontal subnav', () => {
-    expect(topNavSource).toContain('getBackofficeModuleByPath')
-    expect(topNavSource).toContain('getVisibleBackofficeSecondaryItems')
+    expect(topNavSource).toContain('useWorkspaceShellNavigation')
     expect(topNavSource).toContain('backofficeBreadcrumb')
     expect(topNavSource).toContain('backofficeBreadcrumb.workspacePath')
     expect(topNavSource).toContain('backofficeBreadcrumb.moduleLabel')
@@ -492,7 +490,7 @@ describe('TopNav', () => {
   })
 
   it('removes the duplicate desktop backoffice sidebar toggle from the global topnav', async () => {
-    expect(topNavSource).toContain('v-if="!isBackofficeRoute || isMobile"')
+    expect(topNavSource).toContain('v-if="isMobile"')
 
     const originalWidth = window.innerWidth
     Object.defineProperty(window, 'innerWidth', {
@@ -512,5 +510,19 @@ describe('TopNav', () => {
       writable: true,
       value: originalWidth,
     })
+  })
+
+  it('renders student routes with the same topnav shell and workspace breadcrumb treatment', async () => {
+    const { wrapper } = await mountTopNav()
+
+    expect(wrapper.find('.topnav-shell--admin').exists()).toBe(true)
+    expect(wrapper.find('.topnav-breadcrumb').exists()).toBe(true)
+    expect(wrapper.findAll('.topnav-breadcrumb button').map((button) => button.text())).toEqual([
+      'Workspace',
+      '训练',
+      '仪表盘',
+    ])
+
+    wrapper.unmount()
   })
 })

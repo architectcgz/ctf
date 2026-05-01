@@ -16,7 +16,9 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toMatch(
       /<aside[\s\S]*class="[^"]*backoffice-sidebar[^"]*backoffice-sidebar--desktop[^"]*sticky[^"]*top-0[^"]*z-\[60\][^"]*hidden[^"]*min-h-screen[^"]*shrink-0[^"]*flex-col[^"]*md:flex"/s
     )
-    expect(sidebarSource).toContain(":class=\"collapsed ? 'w-20' : 'backoffice-sidebar--expanded'\"")
+    expect(sidebarSource).toContain(
+      ":class=\"collapsed ? 'w-20' : 'backoffice-sidebar--expanded'\""
+    )
     expect(sidebarSource).toContain('.backoffice-sidebar--expanded')
     expect(sidebarSource).toMatch(
       /<nav[\s\S]*class="[^"]*flex-1[^"]*space-y-1\.5[^"]*overflow-x-hidden[^"]*"/s
@@ -43,14 +45,11 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).not.toContain('w-[3px]')
   })
 
-  it('uses the same ChallengeOps shell identity across academy and platform backoffice routes', () => {
-    expect(sidebarSource).toContain('const isBackofficeRoute = computed(')
-    expect(sidebarSource).toContain("route.path.startsWith('/academy/')")
-    expect(sidebarSource).toContain("route.path.startsWith('/platform/')")
+  it('uses the shared workspace shell identity composable across student, academy and platform routes', () => {
+    expect(sidebarSource).toContain('useWorkspaceShellNavigation')
     expect(sidebarSource).not.toContain("route.path.startsWith('/admin/')")
-    expect(sidebarSource).toContain("const brandKicker = computed(() => (isBackofficeRoute.value ? 'ChallengeOps' : 'Student Space'))")
-    expect(sidebarSource).toContain('ChallengeOps')
-    expect(sidebarSource).not.toContain('Academic Ops')
+    expect(sidebarSource).toContain('brandKicker')
+    expect(sidebarSource).toContain('shell.value.brandKicker')
   })
 
   it('tokenizes backoffice sidebar surfaces for dark theme instead of keeping white utility backgrounds', () => {
@@ -61,13 +60,53 @@ describe('Sidebar desktop layout', () => {
   })
 
   it('uses unified backoffice modules instead of raw main/teacher/admin route buckets', () => {
-    expect(sidebarSource).toContain('getVisibleBackofficeModules')
-    expect(sidebarSource).toContain('getVisibleBackofficeSecondaryItems')
+    expect(sidebarSource).toContain('shell.value.modules')
     expect(sidebarSource).toContain('backofficeModuleIconMap')
     expect(sidebarSource).toContain('currentBackofficeModuleKey')
-    expect(sidebarSource).toContain('isBackofficeRoute')
+    expect(sidebarSource).toContain('useWorkspaceShellNavigation')
     expect(sidebarSource).toContain('backofficeNavGroups')
     expect(sidebarSource).toContain('defaultNavGroups')
+  })
+
+  it('renders student users inside the same backoffice sidebar chrome', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/student/dashboard', component: { template: '<div>dashboard</div>' } },
+        { path: '/challenges', component: { template: '<div>challenges</div>' } },
+        { path: '/student/instances', component: { template: '<div>instances</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      name: 'Alice',
+    })
+
+    await router.push('/student/dashboard')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    expect(wrapper.find('.backoffice-sidebar--desktop').exists()).toBe(true)
+    expect(wrapper.find('.sidebar-shell-desktop').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Student Space')
+    expect(wrapper.text()).toContain('训练')
+    expect(wrapper.text()).toContain('仪表盘')
+    expect(wrapper.text()).toContain('题目')
+
+    wrapper.unmount()
   })
 
   it('shows the four primary backoffice modules for admin users', async () => {
@@ -83,13 +122,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        name: 'Admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      name: 'Admin',
+    })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -118,20 +156,25 @@ describe('Sidebar desktop layout', () => {
       history: createMemoryHistory(),
       routes: [
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
-        { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
-        { path: '/platform/contest-ops/projector', component: { template: '<div>projector</div>' } },
+        {
+          path: '/platform/contest-ops/contests',
+          component: { template: '<div>contest management</div>' },
+        },
+        {
+          path: '/platform/contest-ops/projector',
+          component: { template: '<div>projector</div>' },
+        },
         { path: '/platform/contests/:id/manage', component: { template: '<div>manage</div>' } },
       ],
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        name: 'Admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      name: 'Admin',
+    })
 
     await router.push('/platform/contest-ops/contests')
     await router.isReady()
@@ -162,20 +205,22 @@ describe('Sidebar desktop layout', () => {
       history: createMemoryHistory(),
       routes: [
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
-        { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
+        {
+          path: '/platform/contest-ops/contests',
+          component: { template: '<div>contest management</div>' },
+        },
         { path: '/platform/contests/:id/manage', component: { template: '<div>manage</div>' } },
         { path: '/platform/contests', component: { template: '<div>contests</div>' } },
       ],
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        name: 'Admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      name: 'Admin',
+    })
 
     await router.push('/platform/contests/contest-1/manage')
     await router.isReady()
@@ -213,13 +258,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        name: 'Admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      name: 'Admin',
+    })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -234,7 +278,9 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const operationsButton = wrapper.findAll('button').find((node) => node.text().includes('教学运营'))
+    const operationsButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('教学运营'))
 
     expect(operationsButton).toBeTruthy()
 
@@ -260,13 +306,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        name: 'Teacher',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      name: 'Teacher',
+    })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -305,13 +350,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        name: 'Teacher',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      name: 'Teacher',
+    })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -326,9 +370,15 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const classButtons = wrapper.findAll('button').filter((node) => node.text().includes('班级管理'))
-    const studentButtons = wrapper.findAll('button').filter((node) => node.text().includes('学生管理'))
-    const reviewButtons = wrapper.findAll('button').filter((node) => node.text().includes('AWD复盘'))
+    const classButtons = wrapper
+      .findAll('button')
+      .filter((node) => node.text().includes('班级管理'))
+    const studentButtons = wrapper
+      .findAll('button')
+      .filter((node) => node.text().includes('学生管理'))
+    const reviewButtons = wrapper
+      .findAll('button')
+      .filter((node) => node.text().includes('AWD复盘'))
 
     expect(classButtons.length).toBeGreaterThan(0)
     expect(studentButtons.length).toBeGreaterThan(0)
@@ -362,13 +412,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        name: 'Teacher',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      name: 'Teacher',
+    })
 
     await router.push('/academy/overview')
     await router.isReady()
@@ -388,9 +437,7 @@ describe('Sidebar desktop layout', () => {
     expect(desktopAside).toBeTruthy()
 
     async function clickSidebarEntry(label: string, expectedPath: string): Promise<void> {
-      const button = desktopAside!
-        .findAll('button')
-        .find((node) => node.text().trim() === label)
+      const button = desktopAside!.findAll('button').find((node) => node.text().trim() === label)
 
       expect(button).toBeTruthy()
 
@@ -424,13 +471,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        name: 'Teacher',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      name: 'Teacher',
+    })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -482,13 +528,12 @@ describe('Sidebar desktop layout', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        name: 'Teacher',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      name: 'Teacher',
+    })
 
     await router.push('/academy/overview')
     await router.isReady()

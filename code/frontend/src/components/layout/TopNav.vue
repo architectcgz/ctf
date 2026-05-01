@@ -1,14 +1,11 @@
 <template>
-  <header
-    class="topnav-shell sticky top-0 z-50"
-    :class="{ 'topnav-shell--admin': isBackofficeRoute }"
-  >
+  <header class="topnav-shell topnav-shell--admin sticky top-0 z-50">
     <div
       class="topnav-inner topnav-inner-shell mx-auto flex h-16 w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8"
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button
-          v-if="!isBackofficeRoute || isMobile"
+          v-if="isMobile"
           type="button"
           class="topnav-icon-button"
           :aria-label="sidebarCollapsed ? '展开导航' : '折叠导航'"
@@ -25,10 +22,7 @@
           />
         </button>
 
-        <div
-          v-if="isBackofficeRoute"
-          class="topnav-breadcrumb flex min-w-0 items-center text-sm font-bold"
-        >
+        <div class="topnav-breadcrumb flex min-w-0 items-center text-sm font-bold">
           <button
             type="button"
             class="topnav-breadcrumb__link topnav-breadcrumb__root whitespace-nowrap"
@@ -66,21 +60,12 @@
             </button>
           </template>
         </div>
-
-        <div
-          v-else
-          class="topnav-title-block min-w-0"
-        >
-          <div class="topnav-page-title truncate font-semibold text-text-primary">
-            {{ pageTitle }}
-          </div>
-        </div>
       </div>
 
       <div class="topnav-actions flex shrink-0 items-center gap-3">
         <div
           class="topnav-tool-cluster"
-          :class="{ 'topnav-tool-cluster--admin': isBackofficeRoute }"
+          :class="{ 'topnav-tool-cluster--admin': true }"
         >
           <button
             type="button"
@@ -144,7 +129,7 @@
 
         <div
           class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3"
-          :class="{ 'topnav-user-card--admin': isBackofficeRoute }"
+          :class="{ 'topnav-user-card--admin': true }"
         >
           <div class="topnav-user-mark">
             {{ userInitial }}
@@ -178,16 +163,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
-import {
-  getBackofficeModuleByPath,
-  getVisibleBackofficeSecondaryItems,
-} from '@/config/backofficeNavigation'
 import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useTheme } from '@/composables/useTheme'
+import { useWorkspaceShellNavigation } from '@/composables/useWorkspaceShellNavigation'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
-import { isBackofficeRoute as checkBackofficeRoute } from '@/utils/backofficeRouteMeta'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 
 defineProps<{
@@ -203,7 +184,6 @@ defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const isBackofficeRoute = computed(() => checkBackofficeRoute(route.path))
 
 const isMobile = ref(window.innerWidth < 768)
 const brandPickerRef = ref<HTMLElement | null>(null)
@@ -217,12 +197,6 @@ const { availableBrands, brand, setBrand, theme, toggleTheme } = useTheme()
 const { breadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const pageTitle = computed(() => resolveRouteTitle(route))
-const workspacePath = computed(() => {
-  if (authStore.user?.role === 'teacher') {
-    return '/academy/overview'
-  }
-  return '/platform/overview'
-})
 function firstRouteParamValue(param: unknown): string {
   if (Array.isArray(param)) {
     return param[0] ?? ''
@@ -265,13 +239,7 @@ const backofficeDetailLabel = computed(() => {
     return prefixedDetailLabel('导入', importId, '导入预览')
   }
 
-  if (
-    [
-      'ContestEdit',
-      'ContestAnnouncements',
-      'ContestOperations',
-    ].includes(routeName)
-  ) {
+  if (['ContestEdit', 'ContestAnnouncements', 'ContestOperations'].includes(routeName)) {
     return prefixedDetailLabel('竞赛', id, '竞赛详情')
   }
 
@@ -309,30 +277,16 @@ const backofficeDetailLabel = computed(() => {
 
   return null
 })
-const backofficeBreadcrumb = computed(() => {
-  const module = getBackofficeModuleByPath(route.path)
-  const secondaryItems = getVisibleBackofficeSecondaryItems(route.path, authStore.user?.role ?? null)
-  const activeSecondaryItem = secondaryItems.find((item) => item.active) ?? null
-  const modulePath = secondaryItems[0]?.path ?? workspacePath.value
-  const secondaryPath = activeSecondaryItem?.path ?? modulePath
-  const detailLabel = backofficeDetailLabel.value
-
-  return {
-    workspacePath: workspacePath.value,
-    moduleLabel: module?.label ?? '后台',
-    modulePath,
-    secondaryLabel: activeSecondaryItem?.label ?? pageTitle.value ?? '工作区',
-    secondaryPath,
-    detailLabel,
-    detailPath: route.fullPath,
-  }
-})
-const roleCaption = computed(() => {
-  const role = authStore.user?.role
-  if (role === 'admin') return '系统管理'
-  if (role === 'teacher') return '教学空间'
-  return '学生空间'
-})
+const shell = useWorkspaceShellNavigation(() => ({
+  path: route.path,
+  fullPath: route.fullPath,
+  role: authStore.user?.role,
+  routeName: String(route.name ?? ''),
+  pageTitle: pageTitle.value,
+  detailLabel: backofficeDetailLabel.value,
+}))
+const backofficeBreadcrumb = computed(() => shell.value.breadcrumb)
+const roleCaption = computed(() => shell.value.roleCaption)
 const currentBrandLabel = computed(
   () => availableBrands.find((option) => option.value === brand.value)?.label || '绿色'
 )
@@ -388,7 +342,11 @@ onUnmounted(() => {
 .topnav-shell {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 86%, var(--color-bg-surface));
+  --topnav-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 86%,
+    var(--color-bg-surface)
+  );
   --topnav-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 88%, transparent);
   --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
@@ -690,7 +648,11 @@ onUnmounted(() => {
 
 :global([data-theme='light']) .topnav-shell {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
-  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --topnav-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
   --topnav-surface-elevated: var(--color-bg-surface);
   --topnav-line: color-mix(in srgb, var(--color-border-default) 90%, transparent);
   --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
