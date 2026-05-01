@@ -6,10 +6,6 @@ import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeI
 import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import ChallengeImportUploadResultsPanel from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue'
-import {
-  getChallengeCategoryLabel,
-  getChallengeDifficultyLabel,
-} from '@/entities/challenge'
 import { useChallengePackageImport } from '@/features/challenge-package-import'
 
 const router = useRouter()
@@ -55,18 +51,6 @@ async function inspectImportTask(importId: string): Promise<void> {
     name: 'PlatformChallengeImportPreview',
     params: { importId },
   })
-}
-
-function getCategoryLabel(value: string): string {
-  return ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'].includes(value)
-    ? getChallengeCategoryLabel(value as Parameters<typeof getChallengeCategoryLabel>[0])
-    : '杂项'
-}
-
-function getDifficultyLabel(value: string): string {
-  return ['beginner', 'easy', 'medium', 'hard', 'insane'].includes(value)
-    ? getChallengeDifficultyLabel(value as Parameters<typeof getChallengeDifficultyLabel>[0])
-    : '简单'
 }
 
 function formatDateTime(value: string): string {
@@ -122,8 +106,6 @@ function formatDateTime(value: string): string {
             :queue-loading="queueLoading"
             :queue-count="queueCount"
             :queue="queue"
-            :get-category-label="getCategoryLabel"
-            :get-difficulty-label="getDifficultyLabel"
             :format-date-time="formatDateTime"
             @inspect="inspectImportTask"
           />

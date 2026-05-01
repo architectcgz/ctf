@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
+import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
+
 type ChallengeImportQueueItem = {
   id: string
   title: string
   file_name: string
-  category: string
-  difficulty: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
   points: number
   created_at: string
 }
@@ -13,8 +16,6 @@ defineProps<{
   queueLoading: boolean
   queueCount: number
   queue: ChallengeImportQueueItem[]
-  getCategoryLabel: (value: string) => string
-  getDifficultyLabel: (value: string) => string
   formatDateTime: (value: string) => string
 }>()
 
@@ -89,12 +90,10 @@ function handleInspect(importId: string): void {
               {{ item.file_name }}
             </p>
             <div class="mt-3 flex flex-wrap gap-2">
-              <span class="challenge-table-pill challenge-table-pill--category">
-                {{ getCategoryLabel(item.category) }}
-              </span>
-              <span class="challenge-table-pill challenge-table-pill--neutral">
-                {{ getDifficultyLabel(item.difficulty) }}
-              </span>
+              <ChallengeCategoryDifficultyPills
+                :category="item.category"
+                :difficulty="item.difficulty"
+              />
               <span class="challenge-queue-points">{{ item.points }} pts</span>
             </div>
           </div>
@@ -150,31 +149,6 @@ function handleInspect(importId: string): void {
 .challenge-queue-file,
 .challenge-queue-time {
   color: var(--challenge-page-muted);
-}
-
-.challenge-table-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.4rem;
-  padding: 0 0.5rem;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.challenge-table-pill--category {
-  background: color-mix(in srgb, var(--workspace-brand) 10%, var(--challenge-page-surface));
-  color: var(--challenge-page-accent);
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, transparent);
-}
-
-.challenge-table-pill--neutral {
-  background: color-mix(in srgb, var(--challenge-page-line) 18%, var(--challenge-page-surface));
-  color: var(--challenge-page-muted);
-  border: 1px solid color-mix(in srgb, var(--challenge-page-line-strong) 78%, transparent);
 }
 
 .challenge-queue-title {

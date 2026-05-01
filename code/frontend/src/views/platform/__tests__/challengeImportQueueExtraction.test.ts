@@ -16,4 +16,13 @@ describe('ChallengeImportManage queue extraction', () => {
       'class="ui-btn ui-btn--primary challenge-queue-action"'
     )
   })
+
+  it('待确认导入面板应把分类与难度标签继续下沉到 challenge entity ui', () => {
+    expect(challengeImportQueuePanelSource).toContain(
+      "ChallengeCategoryDifficultyPills } from '@/entities/challenge'"
+    )
+    expect(challengeImportQueuePanelSource).toContain('<ChallengeCategoryDifficultyPills')
+    expect(challengeImportQueuePanelSource).not.toContain(':get-category-label=')
+    expect(challengeImportQueuePanelSource).not.toContain(':get-difficulty-label=')
+  })
 })
