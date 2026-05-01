@@ -254,7 +254,7 @@ func (stubAWDQueryService) GetTrafficSummary(ctx context.Context, contestID, rou
 	return nil, nil
 }
 
-func (stubAWDQueryService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error) {
+func (stubAWDQueryService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error) {
 	return nil, nil
 }
 

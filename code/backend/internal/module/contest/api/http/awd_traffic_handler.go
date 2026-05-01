@@ -36,11 +36,11 @@ func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
 	response.Success(c, awdTrafficEventPageResultToDTO(resp))
 }
 
-func listAWDTrafficEventsInputFromDTO(req *dto.ListAWDTrafficEventsReq) *contestqry.ListAWDTrafficEventsInput {
+func listAWDTrafficEventsInputFromDTO(req *dto.ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput {
 	if req == nil {
-		return nil
+		return contestqry.ListAWDTrafficEventsInput{}
 	}
-	return &contestqry.ListAWDTrafficEventsInput{
+	return contestqry.ListAWDTrafficEventsInput{
 		AttackerTeamID: req.AttackerTeamID,
 		VictimTeamID:   req.VictimTeamID,
 		ServiceID:      req.ServiceID,
