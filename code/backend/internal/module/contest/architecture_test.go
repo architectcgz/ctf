@@ -111,6 +111,18 @@ func TestRoundListQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	}
 }
 
+func TestAttackLogQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_attack_log_list_query.go"),
+		filepath.Join("application", "queries", "awd_attack_log_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

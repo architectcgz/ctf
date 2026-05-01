@@ -3,12 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]*dto.AWDAttackLogResp, error) {
+func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]AWDAttackLogResult, error) {
 	if _, err := s.ensureAWDRound(ctx, contestID, roundID); err != nil {
 		return nil, err
 	}
@@ -23,9 +21,8 @@ func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int6
 		return nil, err
 	}
 
-	resp := make([]*dto.AWDAttackLogResp, 0, len(logs))
+	resp := make([]AWDAttackLogResult, 0, len(logs))
 	for _, item := range logs {
-		logCopy := item
 		attackerName := ""
 		victimName := ""
 		if team := teams[item.AttackerTeamID]; team != nil {
@@ -34,7 +31,22 @@ func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int6
 		if team := teams[item.VictimTeamID]; team != nil {
 			victimName = team.Name
 		}
-		resp = append(resp, contestdomain.AWDAttackLogRespFromModel(&logCopy, attackerName, victimName))
+		resp = append(resp, AWDAttackLogResult{
+			ID:             item.ID,
+			RoundID:        item.RoundID,
+			AttackerTeamID: item.AttackerTeamID,
+			AttackerTeam:   attackerName,
+			VictimTeamID:   item.VictimTeamID,
+			VictimTeam:     victimName,
+			ServiceID:      item.ServiceID,
+			AWDChallengeID: item.AWDChallengeID,
+			AttackType:     item.AttackType,
+			Source:         item.Source,
+			SubmittedFlag:  item.SubmittedFlag,
+			IsSuccess:      item.IsSuccess,
+			ScoreGained:    item.ScoreGained,
+			CreatedAt:      item.CreatedAt,
+		})
 	}
 	return resp, nil
 }

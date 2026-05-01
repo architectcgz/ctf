@@ -238,7 +238,7 @@ func (stubAWDQueryService) ListServices(ctx context.Context, contestID, roundID 
 	return nil, nil
 }
 
-func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]*dto.AWDAttackLogResp, error) {
+func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]contestqry.AWDAttackLogResult, error) {
 	return nil, nil
 }
 
