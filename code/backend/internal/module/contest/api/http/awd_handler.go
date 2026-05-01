@@ -31,7 +31,7 @@ type awdQueryService interface {
 	GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error)
 	ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error)
 	GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
-	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error)
+	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*contestqry.AWDWorkspaceResult, error)
 }
 
 type awdServiceQueryService interface {
