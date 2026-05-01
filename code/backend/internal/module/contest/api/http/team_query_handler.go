@@ -4,6 +4,8 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +43,7 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, teams)
+	response.Success(c, teamResultsToDTO(teams))
 }
 
 func (h *TeamHandler) GetMyTeam(c *gin.Context) {
@@ -58,4 +60,25 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 		return
 	}
 	response.Success(c, team)
+}
+
+func teamResultsToDTO(items []*contestqry.TeamResult) []*dto.TeamResp {
+	result := make([]*dto.TeamResp, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			result = append(result, nil)
+			continue
+		}
+		result = append(result, &dto.TeamResp{
+			ID:          item.ID,
+			ContestID:   item.ContestID,
+			Name:        item.Name,
+			CaptainID:   item.CaptainID,
+			InviteCode:  item.InviteCode,
+			MaxMembers:  item.MaxMembers,
+			MemberCount: item.MemberCount,
+			CreatedAt:   item.CreatedAt,
+		})
+	}
+	return result
 }

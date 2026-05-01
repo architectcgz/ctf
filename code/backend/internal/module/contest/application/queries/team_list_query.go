@@ -6,12 +6,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error) {
+func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*TeamResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -34,9 +33,9 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.Te
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]*dto.TeamResp, 0, len(teams))
+	result := make([]*TeamResult, 0, len(teams))
 	for _, team := range teams {
-		result = append(result, contestdomain.TeamRespFromModel(team, countMap[team.ID]))
+		result = append(result, teamResultFromModel(team, countMap[team.ID]))
 	}
 	return result, nil
 }

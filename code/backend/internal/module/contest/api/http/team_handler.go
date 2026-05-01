@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type teamCommandService interface {
@@ -16,7 +18,7 @@ type teamCommandService interface {
 type teamQueryService interface {
 	GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error)
 	GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error)
-	ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error)
+	ListTeams(ctx context.Context, contestID int64) ([]*contestqry.TeamResult, error)
 }
 
 type TeamHandler struct {
