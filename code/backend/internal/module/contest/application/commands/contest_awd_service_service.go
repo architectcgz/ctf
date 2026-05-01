@@ -125,7 +125,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return contestdomain.ContestAWDServiceRespFromModel(record), nil
+	return contestAWDServiceRespFromModel(record), nil
 }
 
 func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error {

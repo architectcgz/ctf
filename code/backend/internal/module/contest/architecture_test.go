@@ -408,6 +408,16 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 	}
 }
 
+func TestDomainDoesNotOwnContestHTTPResponseMappers(t *testing.T) {
+	t.Parallel()
+
+	if _, err := os.Stat(filepath.Join("domain", "mappers.go")); err == nil {
+		t.Fatalf("domain/mappers.go should not exist; DTO response mappers belong outside domain")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat domain/mappers.go: %v", err)
+	}
+}
+
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
 	t.Helper()
 

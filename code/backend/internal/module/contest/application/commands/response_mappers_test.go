@@ -1,11 +1,10 @@
-package domain_test
+package commands
 
 import (
 	"testing"
 	"time"
 
 	"ctf-platform/internal/model"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 func TestContestRespFromModelReturnsTimesInUTC(t *testing.T) {
@@ -16,7 +15,7 @@ func TestContestRespFromModelReturnsTimesInUTC(t *testing.T) {
 	created := start.Add(-time.Hour)
 	updated := created.Add(time.Minute)
 
-	resp := contestdomain.ContestRespFromModel(&model.Contest{
+	resp := contestRespFromModel(&model.Contest{
 		ID:         6,
 		Title:      "time contract",
 		Mode:       model.ContestModeAWD,

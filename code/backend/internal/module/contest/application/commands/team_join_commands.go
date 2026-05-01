@@ -53,5 +53,5 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 	}
 
 	count, _ := s.teamRepo.GetMemberCount(ctx, team.ID)
-	return contestdomain.TeamRespFromModel(team, int(count)), nil
+	return teamRespFromModel(team, int(count)), nil
 }

@@ -33,5 +33,5 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req *dto.U
 	}
 
 	s.log.Info("contest_updated", zap.Int64("contest_id", id))
-	return domain.ContestRespFromModel(contest), nil
+	return contestRespFromModel(contest), nil
 }

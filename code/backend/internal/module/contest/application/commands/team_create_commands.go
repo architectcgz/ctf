@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -25,5 +24,5 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 	if err != nil {
 		return nil, err
 	}
-	return contestdomain.TeamRespFromModel(team, 1), nil
+	return teamRespFromModel(team, 1), nil
 }
