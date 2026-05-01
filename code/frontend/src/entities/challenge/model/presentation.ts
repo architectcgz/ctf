@@ -12,7 +12,10 @@ export function getChallengeCategoryLabel(category: ChallengeCategory): string {
   return labels[category]
 }
 
-export function getChallengeCategoryColor(category: ChallengeCategory): string {
+export function getChallengeCategoryColor(
+  category: ChallengeCategory,
+  colorMap: Partial<Record<ChallengeCategory, string>> = {}
+): string {
   const colors: Record<ChallengeCategory, string> = {
     web: 'var(--challenge-tone-web)',
     pwn: 'var(--challenge-tone-pwn)',
@@ -21,7 +24,7 @@ export function getChallengeCategoryColor(category: ChallengeCategory): string {
     misc: 'var(--challenge-tone-misc)',
     forensics: 'var(--challenge-tone-forensics)',
   }
-  return colors[category]
+  return colorMap[category] ?? colors[category]
 }
 
 export function getChallengeDifficultyLabel(difficulty: ChallengeDifficulty): string {

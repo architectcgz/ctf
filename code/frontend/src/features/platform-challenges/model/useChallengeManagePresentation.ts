@@ -8,6 +8,12 @@ import type {
   ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
+import {
+  getChallengeCategoryColor,
+  getChallengeCategoryLabel,
+  getChallengeDifficultyColor,
+  getChallengeDifficultyLabel,
+} from '@/entities/challenge'
 import type { PlatformChallengeListRow } from './usePlatformChallenges'
 
 interface UseChallengeManagePresentationOptions {
@@ -23,48 +29,29 @@ export function useChallengeManagePresentation({
 }: UseChallengeManagePresentationOptions) {
   const openActionMenuId = ref<string | null>(null)
 
-  function getCategoryLabel(category: ChallengeCategory): string {
-    const labels: Record<ChallengeCategory, string> = {
-      web: 'Web',
-      pwn: 'Pwn',
-      reverse: '逆向',
-      crypto: '密码',
-      misc: '杂项',
-      forensics: '取证',
-    }
-    return labels[category]
-  }
+  const getCategoryLabel = getChallengeCategoryLabel
 
   function getCategoryColor(category: ChallengeCategory): string {
-    return {
+    return getChallengeCategoryColor(category, {
       web: 'var(--color-cat-web)',
       pwn: 'var(--color-cat-pwn)',
       reverse: 'var(--color-cat-reverse)',
       crypto: 'var(--color-cat-crypto)',
       misc: 'var(--color-cat-misc)',
       forensics: 'var(--color-cat-forensics)',
-    }[category]
+    })
   }
 
-  function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
-    const labels: Record<ChallengeDifficulty, string> = {
-      beginner: '入门',
-      easy: '简单',
-      medium: '中等',
-      hard: '困难',
-      insane: '地狱',
-    }
-    return labels[difficulty]
-  }
+  const getDifficultyLabel = getChallengeDifficultyLabel
 
   function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-    return {
+    return getChallengeDifficultyColor(difficulty, {
       beginner: 'var(--color-diff-beginner)',
       easy: 'var(--color-diff-easy)',
       medium: 'var(--color-diff-medium)',
       hard: 'var(--color-diff-hard)',
       insane: 'var(--color-diff-insane)',
-    }[difficulty]
+    })
   }
 
   function getStatusLabel(status: ChallengeStatus): string {

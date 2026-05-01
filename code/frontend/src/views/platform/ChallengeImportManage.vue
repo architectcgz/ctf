@@ -6,6 +6,10 @@ import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeI
 import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import ChallengeImportUploadResultsPanel from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue'
+import {
+  getChallengeCategoryLabel,
+  getChallengeDifficultyLabel,
+} from '@/entities/challenge'
 import { useChallengePackageImport } from '@/features/challenge-package-import'
 
 const router = useRouter()
@@ -21,23 +25,6 @@ const {
 } = useChallengePackageImport()
 
 const queueCount = computed(() => queue.value.length)
-
-const categoryLabels = {
-  web: 'Web',
-  pwn: 'Pwn',
-  reverse: '逆向',
-  crypto: '密码',
-  misc: '杂项',
-  forensics: '取证',
-} as const
-
-const difficultyLabels = {
-  beginner: '入门',
-  easy: '简单',
-  medium: '中等',
-  hard: '困难',
-  insane: '地狱',
-} as const
 
 onMounted(() => {
   void refreshQueue()
@@ -71,11 +58,15 @@ async function inspectImportTask(importId: string): Promise<void> {
 }
 
 function getCategoryLabel(value: string): string {
-  return categoryLabels[value as keyof typeof categoryLabels] ?? '杂项'
+  return ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'].includes(value)
+    ? getChallengeCategoryLabel(value as Parameters<typeof getChallengeCategoryLabel>[0])
+    : '杂项'
 }
 
 function getDifficultyLabel(value: string): string {
-  return difficultyLabels[value as keyof typeof difficultyLabels] ?? '简单'
+  return ['beginner', 'easy', 'medium', 'hard', 'insane'].includes(value)
+    ? getChallengeDifficultyLabel(value as Parameters<typeof getChallengeDifficultyLabel>[0])
+    : '简单'
 }
 
 function formatDateTime(value: string): string {

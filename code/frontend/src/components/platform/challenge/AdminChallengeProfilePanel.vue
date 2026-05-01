@@ -3,6 +3,10 @@ import { CircleDot, Gauge, Tags, Trophy } from 'lucide-vue-next'
 
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
+import {
+  getChallengeCategoryLabel,
+  getChallengeDifficultyLabel,
+} from '@/entities/challenge'
 
 interface Props {
   challenge: AdminChallengeListItem
@@ -45,39 +49,11 @@ function updateFlagPrefix(event: Event): void {
 }
 
 function getCategoryLabel(category?: AdminChallengeListItem['category']): string {
-  switch (category) {
-    case 'web':
-      return 'Web'
-    case 'pwn':
-      return 'Pwn'
-    case 'reverse':
-      return '逆向'
-    case 'crypto':
-      return '密码'
-    case 'misc':
-      return '杂项'
-    case 'forensics':
-      return '取证'
-    default:
-      return '未分类'
-  }
+  return category ? getChallengeCategoryLabel(category) : '未分类'
 }
 
 function getDifficultyLabel(difficulty?: AdminChallengeListItem['difficulty']): string {
-  switch (difficulty) {
-    case 'beginner':
-      return '入门'
-    case 'easy':
-      return '简单'
-    case 'medium':
-      return '中等'
-    case 'hard':
-      return '困难'
-    case 'insane':
-      return '地狱'
-    default:
-      return '未设置'
-  }
+  return difficulty ? getChallengeDifficultyLabel(difficulty) : '未设置'
 }
 
 function getStatusLabel(status?: AdminChallengeListItem['status']): string {

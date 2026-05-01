@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportManage from '../ChallengeImportManage.vue'
+import challengeImportManageSource from '../ChallengeImportManage.vue?raw'
 import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
 
@@ -119,5 +120,11 @@ describe('ChallengeImportManage', () => {
       name: 'PlatformChallengeImportPreview',
       params: { importId: 'import-ok' },
     })
+  })
+
+  it('导入页应复用 challenge entity 的分类与难度文案规则', () => {
+    expect(challengeImportManageSource).toContain("from '@/entities/challenge'")
+    expect(challengeImportManageSource).not.toContain('const categoryLabels = {')
+    expect(challengeImportManageSource).not.toContain('const difficultyLabels = {')
   })
 })
