@@ -18,8 +18,8 @@ type contestQueryService interface {
 }
 
 type scoreboardQueryService interface {
-	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
-	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
+	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*contestqry.ScoreboardResult, error)
+	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*contestqry.ScoreboardResult, error)
 }
 
 type scoreboardCommandService interface {
