@@ -8,6 +8,17 @@ import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 
+export interface PlatformChallengeFlagDraft {
+  flagConfigSummary: string
+  flagDraftSummary: string
+  flagPrefix: string
+  flagRegex: string
+  flagType: FlagType
+  flagValue: string
+  isSharedInstanceChallenge: boolean
+  saving: boolean
+}
+
 function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): string {
   if (!config?.configured) return '未配置'
 
@@ -53,6 +64,16 @@ export function usePlatformChallengeDetailPage() {
       flag_prefix: flagPrefix.value.trim() || undefined,
     })
   )
+  const flagDraft = computed<PlatformChallengeFlagDraft>(() => ({
+    flagConfigSummary: flagConfigSummary.value,
+    flagDraftSummary: flagDraftSummary.value,
+    flagPrefix: flagPrefix.value,
+    flagRegex: flagRegex.value,
+    flagType: flagType.value,
+    flagValue: flagValue.value,
+    isSharedInstanceChallenge: isSharedInstanceChallenge.value,
+    saving: saving.value,
+  }))
 
   function openTopology(): void {
     if (!challengeId.value) return
@@ -194,6 +215,15 @@ export function usePlatformChallengeDetailPage() {
     }
   }
 
+  function updateFlagDraft(
+    patch: Partial<Pick<PlatformChallengeFlagDraft, 'flagPrefix' | 'flagRegex' | 'flagType' | 'flagValue'>>
+  ): void {
+    if (patch.flagType !== undefined) flagType.value = patch.flagType
+    if (patch.flagValue !== undefined) flagValue.value = patch.flagValue
+    if (patch.flagRegex !== undefined) flagRegex.value = patch.flagRegex
+    if (patch.flagPrefix !== undefined) flagPrefix.value = patch.flagPrefix
+  }
+
   watch(
     challengeId,
     (id) => {
@@ -213,6 +243,7 @@ export function usePlatformChallengeDetailPage() {
     challengeId,
     downloadingAttachment,
     downloadAttachment,
+    flagDraft,
     flagConfigSummary,
     flagDraftSummary,
     flagPrefix,
@@ -225,6 +256,7 @@ export function usePlatformChallengeDetailPage() {
     openTopology,
     saveFlagConfig,
     saving,
+    updateFlagDraft,
     workspaceLabel,
   }
 }

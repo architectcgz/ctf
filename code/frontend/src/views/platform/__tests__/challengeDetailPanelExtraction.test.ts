@@ -5,6 +5,7 @@ import adminChallengeTopbarPanelSource from '@/components/platform/challenge/Adm
 import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
 import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
 import challengeProfileMetaGridSource from '@/entities/challenge/ui/ChallengeProfileMetaGrid.vue?raw'
+import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
 
 describe('Admin ChallengeDetail panel extraction', () => {
   it('应将题目详情 tab 抽到独立 platform challenge 组件', () => {
@@ -41,5 +42,15 @@ describe('Admin ChallengeDetail panel extraction', () => {
     expect(challengeProfileMetaGridSource).toContain('<dl class="challenge-meta-grid">')
     expect(challengeProfileMetaGridSource).toContain("getChallengeInstanceSharingLabel(challenge.instance_sharing)")
     expect(challengeProfileMetaGridSource).toContain("formatChallengeDateTime(challenge.created_at)")
+  })
+
+  it('题目详情判题配置应复用 platform challenge detail feature ui', () => {
+    expect(adminChallengeProfilePanelSource).toContain("from '@/features/platform-challenge-detail'")
+    expect(adminChallengeProfilePanelSource).toContain('<PlatformChallengeFlagConfigPanel')
+    expect(adminChallengeProfilePanelSource).not.toContain('<section class="journal-panel challenge-flag-panel')
+    expect(platformChallengeFlagConfigPanelSource).toContain(
+      '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'
+    )
+    expect(platformChallengeFlagConfigPanelSource).toContain("@click=\"emit('save')\"")
   })
 })

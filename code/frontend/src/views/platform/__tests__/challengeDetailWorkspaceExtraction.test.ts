@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
+import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
 
 describe('Admin ChallengeDetail workspace extraction', () => {
   it('应将题目管理页的 tab rail 与 workspace 壳层抽到独立 platform challenge 组件', () => {
@@ -29,5 +30,18 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(challengeDetailSource).not.toContain('async function saveFlagConfig()')
     expect(challengeDetailSource).not.toContain('async function loadChallenge(')
     expect(challengeDetailSource).not.toContain('function summarizeFlagConfig(')
+  })
+
+  it('应将 Flag 配置状态透传收敛到 draft 对象并下沉到 feature ui', () => {
+    expect(challengeDetailSource).toContain(':flag-draft="flagDraft"')
+    expect(challengeDetailSource).toContain('@update:flag-draft="updateFlagDraft"')
+    expect(adminChallengeWorkspaceTabsSource).toContain(':flag-draft="flagDraft"')
+    expect(adminChallengeWorkspaceTabsSource).toContain(
+      "@update:flag-draft=\"emit('update:flag-draft', $event)\""
+    )
+    expect(adminChallengeWorkspaceTabsSource).not.toContain(':flag-type="flagType"')
+    expect(platformChallengeFlagConfigPanelSource).toContain(
+      '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'
+    )
   })
 })

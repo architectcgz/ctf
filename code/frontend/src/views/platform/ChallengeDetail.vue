@@ -16,23 +16,13 @@
       :set-tab-button-ref="setTabButtonRef"
       :challenge="challenge"
       :downloading-attachment="downloadingAttachment"
-      :flag-config-summary="flagConfigSummary"
-      :flag-draft-summary="flagDraftSummary"
-      :flag-type="flagType"
-      :flag-value="flagValue"
-      :flag-regex="flagRegex"
-      :flag-prefix="flagPrefix"
-      :saving="saving"
-      :is-shared-instance-challenge="isSharedInstanceChallenge"
+      :flag-draft="flagDraft"
       :challenge-id="challengeId"
       @select="switchPanel"
       @keydown="handleTabKeydown($event.event, $event.index)"
       @download-attachment="downloadAttachment"
       @save-flag-config="saveFlagConfig"
-      @update:flag-type="flagType = $event"
-      @update:flag-value="flagValue = $event"
-      @update:flag-regex="flagRegex = $event"
-      @update:flag-prefix="flagPrefix = $event"
+      @update:flag-draft="updateFlagDraft"
     />
   </section>
 </template>
@@ -71,18 +61,12 @@ const {
   challengeId,
   downloadingAttachment,
   downloadAttachment,
-  flagConfigSummary,
-  flagDraftSummary,
-  flagPrefix,
-  flagRegex,
-  flagType,
-  flagValue,
-  isSharedInstanceChallenge,
+  flagDraft,
   loading,
   openChallengeList,
   openTopology,
   saveFlagConfig,
-  saving,
+  updateFlagDraft,
   workspaceLabel,
 } = usePlatformChallengeDetailPage()
 const {
