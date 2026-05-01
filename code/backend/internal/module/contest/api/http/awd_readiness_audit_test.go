@@ -246,7 +246,7 @@ func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contest
 	return nil, nil
 }
 
-func (stubAWDQueryService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
+func (stubAWDQueryService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDRoundSummaryResult, error) {
 	return nil, nil
 }
 

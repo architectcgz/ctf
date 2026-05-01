@@ -252,7 +252,7 @@ func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID,
 	return s.commands.SubmitAttack(ctx, userID, contestID, serviceID, req)
 }
 
-func (s *awdServiceForTest) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
+func (s *awdServiceForTest) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDRoundSummaryResult, error) {
 	return s.queries.GetRoundSummary(ctx, contestID, roundID)
 }
 
@@ -2698,7 +2698,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 	}
 }
 
-func findAWDSummaryItem(items []*dto.AWDRoundSummaryItem, teamID int64) *dto.AWDRoundSummaryItem {
+func findAWDSummaryItem(items []*contestqry.AWDRoundSummaryItemResult, teamID int64) *contestqry.AWDRoundSummaryItemResult {
 	for _, item := range items {
 		if item.TeamID == teamID {
 			return item

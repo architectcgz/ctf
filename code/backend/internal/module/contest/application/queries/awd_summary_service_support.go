@@ -1,14 +1,13 @@
 package queries
 
 import (
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 func accumulateAWDRoundServiceSummary(
-	items map[int64]*dto.AWDRoundSummaryItem,
-	metrics *dto.AWDRoundMetrics,
+	items map[int64]*AWDRoundSummaryItemResult,
+	metrics *AWDRoundMetricsResult,
 	services []model.AWDTeamService,
 ) {
 	for _, service := range services {

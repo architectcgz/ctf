@@ -160,6 +160,21 @@ func TestWorkspaceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	}
 }
 
+func TestRoundSummaryQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_summary_query.go"),
+		filepath.Join("application", "queries", "awd_summary_support.go"),
+		filepath.Join("application", "queries", "awd_summary_attack_support.go"),
+		filepath.Join("application", "queries", "awd_summary_service_support.go"),
+		filepath.Join("application", "queries", "awd_summary_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestContestAWDServiceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	t.Parallel()
 

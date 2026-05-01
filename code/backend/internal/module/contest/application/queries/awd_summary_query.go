@@ -3,12 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
+func (s *AWDService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*AWDRoundSummaryResult, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
 		return nil, err
@@ -30,8 +28,19 @@ func (s *AWDService) GetRoundSummary(ctx context.Context, contestID, roundID int
 
 	metrics, respItems := buildAWDRoundSummary(teams, services, attackLogs)
 
-	return &dto.AWDRoundSummaryResp{
-		Round:   contestdomain.AWDRoundRespFromModel(round),
+	return &AWDRoundSummaryResult{
+		Round: &AWDRoundResult{
+			ID:           round.ID,
+			ContestID:    round.ContestID,
+			RoundNumber:  round.RoundNumber,
+			Status:       round.Status,
+			StartedAt:    round.StartedAt,
+			EndedAt:      round.EndedAt,
+			AttackScore:  round.AttackScore,
+			DefenseScore: round.DefenseScore,
+			CreatedAt:    round.CreatedAt,
+			UpdatedAt:    round.UpdatedAt,
+		},
 		Metrics: metrics,
 		Items:   respItems,
 	}, nil
