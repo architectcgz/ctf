@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type contestService interface {
@@ -12,8 +13,8 @@ type contestService interface {
 }
 
 type contestQueryService interface {
-	GetContest(ctx context.Context, id int64) (*dto.ContestResp, error)
-	ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
+	GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error)
+	ListContests(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
 }
 
 type scoreboardQueryService interface {

@@ -6,7 +6,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
@@ -38,7 +37,7 @@ func TestContestServiceListContestsAcceptsNarrowRepository(t *testing.T) {
 
 	service := NewContestService(&contestListRepoStub{}, zap.NewNop())
 
-	items, total, err := service.ListContests(context.Background(), &dto.ListContestsReq{Page: 1, Size: 10})
+	items, total, err := service.ListContests(context.Background(), ListContestsInput{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("ListContests() error = %v", err)
 	}

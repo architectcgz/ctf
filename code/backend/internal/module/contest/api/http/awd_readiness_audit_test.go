@@ -30,8 +30,8 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 			},
 		},
 		stubContestQueryService{
-			getContestFunc: func(ctx context.Context, id int64) (*dto.ContestResp, error) {
-				return &dto.ContestResp{
+			getContestFunc: func(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
+				return &contestqry.ContestResult{
 					ID:     id,
 					Mode:   model.ContestModeAWD,
 					Status: model.ContestStatusRegistration,
@@ -130,18 +130,18 @@ func (s stubContestService) UpdateContest(ctx context.Context, id int64, req *dt
 }
 
 type stubContestQueryService struct {
-	getContestFunc   func(ctx context.Context, id int64) (*dto.ContestResp, error)
-	listContestsFunc func(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
+	getContestFunc   func(ctx context.Context, id int64) (*contestqry.ContestResult, error)
+	listContestsFunc func(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
 }
 
-func (s stubContestQueryService) GetContest(ctx context.Context, id int64) (*dto.ContestResp, error) {
+func (s stubContestQueryService) GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
 	if s.getContestFunc != nil {
 		return s.getContestFunc(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s stubContestQueryService) ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error) {
+func (s stubContestQueryService) ListContests(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error) {
 	if s.listContestsFunc != nil {
 		return s.listContestsFunc(ctx, req)
 	}

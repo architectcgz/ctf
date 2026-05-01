@@ -40,7 +40,7 @@ func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideRe
 	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, awdReadinessResultToDTO(snapshot), err))
 }
 
-func shouldPrepareUpdateContestReadinessAudit(contest *dto.ContestResp, req *dto.UpdateContestReq) bool {
+func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req *dto.UpdateContestReq) bool {
 	if contest == nil || req == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
 		return false
 	}

@@ -5,12 +5,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error) {
+func (s *ContestService) ListContests(ctx context.Context, req ListContestsInput) ([]*ContestResult, int64, error) {
 	page := req.Page
 	if page < 1 {
 		page = 1
@@ -27,9 +25,9 @@ func (s *ContestService) ListContests(ctx context.Context, req *dto.ListContests
 		return nil, 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := make([]*dto.ContestResp, len(contests))
+	resp := make([]*ContestResult, len(contests))
 	for i, c := range contests {
-		resp[i] = domain.ContestRespFromModel(c)
+		resp[i] = contestResultFromModel(c)
 	}
 	return resp, total, nil
 }
