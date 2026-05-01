@@ -132,6 +132,15 @@ describe('TeacherAWDReviewDetail', () => {
     expect(awdReviewDetailSource).not.toContain('bg-emerald-400')
   })
 
+  it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
+    expect(awdReviewDetailSource).toContain("useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'")
+    expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewDetailSource).not.toContain('const activeContestTitle = computed')
+    expect(awdReviewDetailSource).not.toContain('const summaryStats = computed')
+    expect(awdReviewDetailSource).not.toContain('function contestStatusLabel')
+    expect(awdReviewDetailSource).not.toContain('function formatServiceRef')
+  })
+
   it('默认显示整场总览，并在进行中赛事上禁用教师报告导出', async () => {
     const wrapper = mount(TeacherAWDReviewDetail)
 

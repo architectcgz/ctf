@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import {
   Activity,
   ArrowLeft,
@@ -27,6 +26,10 @@ const {
   error,
   review,
   exporting,
+  activeContestTitle,
+  activeSummaryTitle,
+  summaryStats,
+  timelineRounds,
   selectedRoundNumber,
   selectedRound,
   selectedTeam,
@@ -38,53 +41,11 @@ const {
   setRound,
   openTeam,
   closeTeam,
+  contestStatusLabel,
+  formatServiceRef,
   exportArchive,
   exportReport,
 } = useTeacherAwdReviewDetail()
-
-const activeContestTitle = computed(() => review.value?.contest.title || '--')
-const activeSummaryTitle = computed(() =>
-  selectedRoundNumber.value ? `第 ${selectedRoundNumber.value} 轮` : '整场总览'
-)
-
-const summaryStats = computed(() => {
-  if (selectedRound.value) {
-    return {
-      roundCount: 1,
-      teamCount: selectedRound.value.teams.length,
-      serviceCount: selectedRound.value.round.service_count,
-      attackCount: selectedRound.value.round.attack_count,
-      trafficCount: selectedRound.value.round.traffic_count,
-    }
-  }
-
-  return {
-    roundCount: review.value?.overview?.round_count ?? 0,
-    teamCount: review.value?.overview?.team_count ?? 0,
-    serviceCount: review.value?.overview?.service_count ?? 0,
-    attackCount: review.value?.overview?.attack_count ?? 0,
-    trafficCount: review.value?.overview?.traffic_count ?? 0,
-  }
-})
-
-const timelineRounds = computed(() => review.value?.rounds || [])
-
-function contestStatusLabel(status: string): string {
-  switch (status) {
-    case 'running':
-      return '进行中'
-    case 'ended':
-      return '已结束'
-    case 'frozen':
-      return '冻结中'
-    default:
-      return status || '未开始'
-  }
-}
-
-function formatServiceRef(serviceId?: string): string {
-  return `Service #${serviceId || '--'}`
-}
 </script>
 
 <template>

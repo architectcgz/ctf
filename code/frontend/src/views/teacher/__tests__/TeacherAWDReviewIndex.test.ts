@@ -67,6 +67,15 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).toContain('进入复盘')
   })
 
+  it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
+    expect(teacherAwdReviewIndexSource).toContain("useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'")
+    expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
+    expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
+    expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
+    expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.status ===')
+    expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.export_ready)')
+  })
+
   it('应在停止输入后自动筛选，不再依赖显式筛选按钮', async () => {
     const wrapper = mount(TeacherAWDReviewIndex)
 

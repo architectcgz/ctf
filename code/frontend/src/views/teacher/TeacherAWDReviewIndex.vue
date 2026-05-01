@@ -5,30 +5,19 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
 import { formatDate } from '@/utils/format'
 
-const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
-  useTeacherAwdReviewIndex()
-
-const statusOptions = [
-  { value: '', label: '全部状态' },
-  { value: 'running', label: '进行中' },
-  { value: 'ended', label: '已结束' },
-  { value: 'frozen', label: '冻结中' },
-]
-
-function contestStatusLabel(status: string): string {
-  switch (status) {
-    case 'running':
-      return '进行中'
-    case 'ended':
-      return '已结束'
-    case 'frozen':
-      return '冻结中'
-    case 'published':
-      return '已发布'
-    default:
-      return status || '未开始'
-  }
-}
+const {
+  router,
+  loading,
+  error,
+  contests,
+  filters,
+  hasContests,
+  statusOptions,
+  contestSummary,
+  loadContests,
+  openContest,
+  contestStatusLabel,
+} = useTeacherAwdReviewIndex()
 </script>
 
 <template>
@@ -76,7 +65,7 @@ function contestStatusLabel(status: string): string {
                 赛事数量
               </div>
               <div class="progress-card-value metric-panel-value">
-                {{ contests.length }}
+                {{ contestSummary.totalCount }}
               </div>
               <div class="progress-card-hint metric-panel-helper">
                 当前可进入 AWD 复盘的赛事总数
@@ -87,7 +76,7 @@ function contestStatusLabel(status: string): string {
                 进行中
               </div>
               <div class="progress-card-value metric-panel-value">
-                {{ contests.filter((item) => item.status === 'running').length }}
+                {{ contestSummary.runningCount }}
               </div>
               <div class="progress-card-hint metric-panel-helper">
                 仍在持续产出实时攻防信号的赛事
@@ -98,7 +87,7 @@ function contestStatusLabel(status: string): string {
                 可导出教师报告
               </div>
               <div class="progress-card-value metric-panel-value">
-                {{ contests.filter((item) => item.export_ready).length }}
+                {{ contestSummary.exportReadyCount }}
               </div>
               <div class="progress-card-hint metric-panel-helper">
                 已结束并允许生成教师复盘报告的赛事

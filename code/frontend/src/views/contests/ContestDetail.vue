@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
 import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
@@ -11,43 +10,10 @@ import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnno
 import ContestChallengeWorkspacePanel from '@/components/contests/ContestChallengeWorkspacePanel.vue'
 import ContestOverviewPanel from '@/components/contests/ContestOverviewPanel.vue'
 import ContestTeamPanel from '@/components/contests/ContestTeamPanel.vue'
-import { useContestDetailPage } from '@/features/contest-detail'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import { useAuthStore } from '@/stores/auth'
-import { getContestAccentColor, isStudentVisibleContestStatus } from '@/utils/contest'
-
-type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
-
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const contestId = computed(() => String(route.params.id ?? ''))
-const currentUserId = computed(() => authStore.user?.id)
-const selectedChallengeId = computed(() => route.query.challenge)
-const workspaceTabOrder: ContestWorkspaceTab[] = ['overview', 'announcements', 'challenges', 'team']
-const {
-  activeTab: activeWorkspaceTab,
-  setTabButtonRef,
-  selectTab: selectWorkspaceTab,
-  handleTabKeydown: handleWorkspaceTabKeydown,
-} = useUrlSyncedTabs<ContestWorkspaceTab>({
-  orderedTabs: workspaceTabOrder,
-  defaultTab: 'overview',
-})
-
-function syncSelectedChallengeQuery(challengeId: string | null): void {
-  const query = { ...route.query }
-  if (challengeId) {
-    query.challenge = challengeId
-    query.panel = 'challenges'
-  } else {
-    delete query.challenge
-  }
-
-  void router.replace({ query })
-}
+import { useContestDetailRoutePage } from '@/features/contest-detail'
 
 const {
+  router,
   contest,
   team,
   challenges,
@@ -66,6 +32,16 @@ const {
   creatingTeam,
   joiningTeam,
   isCaptain,
+  activeWorkspaceTab,
+  setTabButtonRef,
+  selectWorkspaceTab,
+  handleWorkspaceTabKeydown,
+  workspaceTabs,
+  solvedCount,
+  totalPoints,
+  memberCount,
+  contestAccentStyle,
+  contestAccessible,
   selectChallenge,
   submitFlagAction,
   openCreateTeam,
@@ -76,46 +52,7 @@ const {
   joinTeamAction,
   kickMember,
   refreshAnnouncements,
-} = useContestDetailPage({
-  contestId,
-  currentUserId,
-  selectedChallengeId,
-  onSelectedChallengeChange: syncSelectedChallengeQuery,
-})
-
-const isAWDContest = computed(() => contest.value?.mode === 'awd')
-const workspaceTabs = computed<Array<{ id: ContestWorkspaceTab; label: string }>>(() => [
-  { id: 'overview', label: '概览' },
-  { id: 'announcements', label: '公告' },
-  { id: 'challenges', label: isAWDContest.value ? '战场' : '题目' },
-  { id: 'team', label: '队伍' },
-])
-
-watch(
-  () => contest.value?.mode,
-  (mode) => {
-    if (mode === 'awd' && !route.query.panel) {
-      selectWorkspaceTab('challenges')
-    }
-  }
-)
-
-const solvedCount = computed(() => challenges.value.filter((item) => item.is_solved).length)
-const totalPoints = computed(() =>
-  challenges.value.reduce((sum, item) => sum + (item.points || 0), 0)
-)
-const memberCount = computed(() => team.value?.members.length ?? 0)
-
-const contestAccentStyle = computed<Record<string, string> | undefined>(() => {
-  if (!contest.value) return undefined
-  return {
-    '--contest-accent': getContestAccentColor(contest.value.status),
-  }
-})
-const contestAccessible = computed(() =>
-  contest.value ? isStudentVisibleContestStatus(contest.value.status) : false
-)
-
+} = useContestDetailRoutePage()
 </script>
 
 <template>

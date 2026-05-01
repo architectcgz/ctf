@@ -21,6 +21,17 @@ export function useTeacherAwdReviewIndex() {
   let latestRequestId = 0
 
   const hasContests = computed(() => contests.value.length > 0)
+  const statusOptions = [
+    { value: '', label: '全部状态' },
+    { value: 'running', label: '进行中' },
+    { value: 'ended', label: '已结束' },
+    { value: 'frozen', label: '冻结中' },
+  ] as const
+  const contestSummary = computed(() => ({
+    totalCount: contests.value.length,
+    runningCount: contests.value.filter((item) => item.status === 'running').length,
+    exportReadyCount: contests.value.filter((item) => item.export_ready).length,
+  }))
 
   async function loadContests(): Promise<void> {
     const requestId = ++latestRequestId
@@ -64,6 +75,21 @@ export function useTeacherAwdReviewIndex() {
     })
   }
 
+  function contestStatusLabel(status: string): string {
+    switch (status) {
+      case 'running':
+        return '进行中'
+      case 'ended':
+        return '已结束'
+      case 'frozen':
+        return '冻结中'
+      case 'published':
+        return '已发布'
+      default:
+        return status || '未开始'
+    }
+  }
+
   onMounted(() => {
     void loadContests()
   })
@@ -86,7 +112,10 @@ export function useTeacherAwdReviewIndex() {
     contests,
     filters,
     hasContests,
+    statusOptions,
+    contestSummary,
     loadContests,
     openContest,
+    contestStatusLabel,
   }
 }

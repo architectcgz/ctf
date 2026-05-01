@@ -39,6 +39,30 @@ export function useTeacherAwdReviewDetail() {
   const contestId = computed(() => String(route.params.contestId || ''))
   const selectedRoundNumber = computed(() => parseRoundQuery(route.query.round))
   const selectedRound = computed(() => review.value?.selected_round)
+  const activeContestTitle = computed(() => review.value?.contest.title || '--')
+  const activeSummaryTitle = computed(() =>
+    selectedRoundNumber.value ? `第 ${selectedRoundNumber.value} 轮` : '整场总览'
+  )
+  const summaryStats = computed(() => {
+    if (selectedRound.value) {
+      return {
+        roundCount: 1,
+        teamCount: selectedRound.value.teams.length,
+        serviceCount: selectedRound.value.round.service_count,
+        attackCount: selectedRound.value.round.attack_count,
+        trafficCount: selectedRound.value.round.traffic_count,
+      }
+    }
+
+    return {
+      roundCount: review.value?.overview?.round_count ?? 0,
+      teamCount: review.value?.overview?.team_count ?? 0,
+      serviceCount: review.value?.overview?.service_count ?? 0,
+      attackCount: review.value?.overview?.attack_count ?? 0,
+      trafficCount: review.value?.overview?.traffic_count ?? 0,
+    }
+  })
+  const timelineRounds = computed(() => review.value?.rounds || [])
   const selectedTeam = computed(
     () => selectedRound.value?.teams.find((item) => item.team_id === selectedTeamId.value) ?? null
   )
@@ -252,6 +276,23 @@ export function useTeacherAwdReviewDetail() {
     selectedTeamId.value = null
   }
 
+  function contestStatusLabel(status: string): string {
+    switch (status) {
+      case 'running':
+        return '进行中'
+      case 'ended':
+        return '已结束'
+      case 'frozen':
+        return '冻结中'
+      default:
+        return status || '未开始'
+    }
+  }
+
+  function formatServiceRef(serviceId?: string): string {
+    return `Service #${serviceId || '--'}`
+  }
+
   watch(
     () => [route.params.contestId, route.query.round],
     () => {
@@ -273,6 +314,10 @@ export function useTeacherAwdReviewDetail() {
     review,
     exporting,
     contestId,
+    activeContestTitle,
+    activeSummaryTitle,
+    summaryStats,
+    timelineRounds,
     selectedRoundNumber,
     selectedRound,
     selectedTeamId,
@@ -285,6 +330,8 @@ export function useTeacherAwdReviewDetail() {
     setRound,
     openTeam,
     closeTeam,
+    contestStatusLabel,
+    formatServiceRef,
     exportArchive,
     exportReport,
   }
