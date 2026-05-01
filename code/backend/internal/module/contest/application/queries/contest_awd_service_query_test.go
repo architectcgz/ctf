@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -79,17 +80,17 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	if len(resp) != 1 {
 		t.Fatalf("unexpected service count: %d", len(resp))
 	}
-	if resp[0].ValidationState != model.AWDCheckerValidationStateFailed {
+	if resp[0].ValidationState != string(model.AWDCheckerValidationStateFailed) {
 		t.Fatalf("expected validation state failed, got %+v", resp[0])
 	}
 	if resp[0].LastPreviewAt == nil || !resp[0].LastPreviewAt.Equal(now) {
 		t.Fatalf("expected last preview at %v, got %+v", now, resp[0].LastPreviewAt)
 	}
-	if resp[0].LastPreviewResult == nil || resp[0].LastPreviewResult.ServiceStatus != model.AWDServiceStatusDown {
-		t.Fatalf("expected preview result in response, got %+v", resp[0].LastPreviewResult)
+	if resp[0].LastPreviewResultRaw == "" {
+		t.Fatalf("expected raw preview result in response, got %+v", resp[0])
 	}
-	if resp[0].LastPreviewResult.PreviewContext.AccessURL != "http://preview.internal" {
-		t.Fatalf("unexpected preview access url: %+v", resp[0].LastPreviewResult.PreviewContext)
+	if !strings.Contains(resp[0].LastPreviewResultRaw, `"access_url":"http://preview.internal"`) {
+		t.Fatalf("unexpected preview result: %+v", resp[0].LastPreviewResultRaw)
 	}
 	if _, ok := resp[0].RuntimeConfig["challenge_id"]; ok {
 		t.Fatalf("expected runtime config to hide compatibility challenge_id, got %+v", resp[0].RuntimeConfig)

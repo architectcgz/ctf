@@ -35,7 +35,7 @@ type awdQueryService interface {
 }
 
 type awdServiceQueryService interface {
-	ListContestAWDServices(ctx context.Context, contestID int64) ([]*dto.ContestAWDServiceResp, error)
+	ListContestAWDServices(ctx context.Context, contestID int64) ([]contestqry.ContestAWDServiceResult, error)
 }
 
 type AWDHandler struct {

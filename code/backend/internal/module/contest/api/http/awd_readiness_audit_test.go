@@ -226,7 +226,7 @@ func (stubAWDServiceCommandService) DeleteContestAWDService(ctx context.Context,
 
 type stubAWDServiceQueryService struct{}
 
-func (stubAWDServiceQueryService) ListContestAWDServices(ctx context.Context, contestID int64) ([]*dto.ContestAWDServiceResp, error) {
+func (stubAWDServiceQueryService) ListContestAWDServices(ctx context.Context, contestID int64) ([]contestqry.ContestAWDServiceResult, error) {
 	return nil, nil
 }
 

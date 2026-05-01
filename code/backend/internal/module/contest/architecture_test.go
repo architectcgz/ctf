@@ -148,6 +148,19 @@ func TestTrafficEventQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	}
 }
 
+func TestContestAWDServiceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "contest_awd_service_query.go"),
+		filepath.Join("application", "queries", "contest_awd_service_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/model")
+	}
+}
+
 func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
