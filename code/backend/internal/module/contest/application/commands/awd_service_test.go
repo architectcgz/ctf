@@ -260,7 +260,7 @@ func (s *awdServiceForTest) GetTrafficSummary(ctx context.Context, contestID, ro
 	return s.queries.GetTrafficSummary(ctx, contestID, roundID)
 }
 
-func (s *awdServiceForTest) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *dto.ListAWDTrafficEventsReq) (*dto.AWDTrafficEventPageResp, error) {
+func (s *awdServiceForTest) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error) {
 	return s.queries.ListTrafficEvents(ctx, contestID, roundID, req)
 }
 
@@ -2666,7 +2666,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
 	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
 
-	page, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
+	page, err := service.ListTrafficEvents(context.Background(), 91, 911, &contestqry.ListAWDTrafficEventsInput{
 		StatusGroup: "server_error",
 		PathKeyword: "login",
 		Page:        1,
@@ -2685,7 +2685,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		t.Fatalf("expected traffic event to expose service_id, got %+v", page.List[0])
 	}
 
-	emptyPage, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
+	emptyPage, err := service.ListTrafficEvents(context.Background(), 91, 911, &contestqry.ListAWDTrafficEventsInput{
 		ServiceID: defaultAWDContestServiceID(91, 91001) + 1,
 		Page:      1,
 		Size:      20,
