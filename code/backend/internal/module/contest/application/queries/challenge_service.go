@@ -9,10 +9,10 @@ type ChallengeService struct {
 	repo          contestports.ContestChallengeRepository
 	challengeRepo challengecontracts.ContestChallengeContract
 	contestRepo   contestports.ContestLookupRepository
-	awdRepo       contestports.AWDRepository
+	awdRepo       contestports.AWDServiceStore
 }
 
-func NewChallengeService(repo contestports.ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.ContestLookupRepository, awdRepo contestports.AWDRepository) *ChallengeService {
+func NewChallengeService(repo contestports.ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.ContestLookupRepository, awdRepo contestports.AWDServiceStore) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,

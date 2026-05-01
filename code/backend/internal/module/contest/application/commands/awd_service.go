@@ -14,9 +14,10 @@ import (
 )
 
 type AWDService struct {
-	repo             contestports.AWDRepository
+	repo             contestports.AWDCommandRepository
 	roundManager     contestports.AWDRoundManager
 	redis            *redislib.Client
+	scoreboardCache  contestports.ScoreboardCacheWriter
 	contestRepo      contestports.ContestLookupRepository
 	flagSecret       string
 	awdConfig        config.ContestAWDConfig
@@ -29,7 +30,7 @@ type AWDService struct {
 }
 
 func NewAWDService(
-	repo contestports.AWDRepository,
+	repo contestports.AWDCommandRepository,
 	contestRepo contestports.ContestLookupRepository,
 	redis *redislib.Client,
 	flagSecret string,
@@ -39,14 +40,20 @@ func NewAWDService(
 	imageRepo challengecontracts.ImageStore,
 	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
+	scoreboardCaches ...contestports.ScoreboardCacheWriter,
 ) *AWDService {
 	if log == nil {
 		log = zap.NewNop()
+	}
+	var scoreboardCache contestports.ScoreboardCacheWriter
+	if len(scoreboardCaches) > 0 {
+		scoreboardCache = scoreboardCaches[0]
 	}
 	return &AWDService{
 		repo:             repo,
 		roundManager:     roundManager,
 		redis:            redis,
+		scoreboardCache:  scoreboardCache,
 		contestRepo:      contestRepo,
 		flagSecret:       flagSecret,
 		awdConfig:        awdConfig,

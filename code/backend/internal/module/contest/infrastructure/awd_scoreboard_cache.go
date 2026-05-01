@@ -15,6 +15,25 @@ type redisScoreboardCache interface {
 	TxPipeline() redislib.Pipeliner
 }
 
+type ScoreboardCache struct {
+	db    *gorm.DB
+	redis redisScoreboardCache
+}
+
+func NewScoreboardCache(db *gorm.DB, redis *redislib.Client) *ScoreboardCache {
+	if db == nil || redis == nil {
+		return nil
+	}
+	return &ScoreboardCache{db: db, redis: redis}
+}
+
+func (c *ScoreboardCache) RebuildContestScoreboard(ctx context.Context, contestID int64) error {
+	if c == nil {
+		return nil
+	}
+	return RebuildContestScoreboardCache(ctx, c.db, c.redis, contestID)
+}
+
 func RebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis redisScoreboardCache, contestID int64) error {
 	if db == nil || redis == nil || contestID <= 0 {
 		return nil

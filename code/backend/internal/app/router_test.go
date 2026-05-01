@@ -614,7 +614,7 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 	}
 }
 
-func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
+func TestBuildContestModuleDelegatesToRuntime(t *testing.T) {
 	t.Parallel()
 
 	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
@@ -624,12 +624,10 @@ func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildContestCoreHandler(",
-		"buildContestAWDHandler(",
-		"buildContestChallengeHandler(",
-		"buildContestParticipationHandler(",
-		"buildContestTeamHandler(",
-		"buildContestSubmissionHandler(",
+		"contestruntime.Build(",
+		"contestruntime.Deps{",
+		"root.RegisterBackgroundJob(",
+		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -641,9 +639,9 @@ func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
 func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "contest", "runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read contest_module.go: %v", err)
+		t.Fatalf("read contest runtime module: %v", err)
 	}
 
 	source := string(content)
@@ -657,46 +655,44 @@ func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("contest composition deps should not keep concrete repo field %s", marker)
+			t.Fatalf("contest runtime deps should not keep concrete repo field %s", marker)
 		}
 	}
 }
 
-func TestContestModuleUsesTypedCrossModuleDeps(t *testing.T) {
+func TestContestRuntimeUsesTypedCrossModuleDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "contest", "runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read contest_module.go: %v", err)
+		t.Fatalf("read contest runtime module: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
-		"type contestModuleDeps struct",
-		"challengeCatalog",
+		"type Deps struct",
+		"ChallengeCatalog",
 		"challengecontracts.ContestChallengeContract",
-		"flagValidator",
+		"FlagValidator",
 		"challengecontracts.FlagValidator",
-		"containerFiles",
+		"ContainerFiles",
 		"contestports.AWDContainerFileWriter",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("contest composition should declare typed cross-module deps marker %s", marker)
+			t.Fatalf("contest runtime should declare typed cross-module deps marker %s", marker)
 		}
 	}
 
 	blocked := []string{
 		"challenge         *ChallengeModule",
 		"runtime           *RuntimeModule",
-		"deps.runtime.contest.containerFiles",
-		"runtime.contest.containerFiles",
 		"deps.challenge.Catalog",
 		"deps.challenge.FlagValidator",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("contest composition should not keep direct module dependency marker %s", marker)
+			t.Fatalf("contest runtime should not keep direct module dependency marker %s", marker)
 		}
 	}
 }

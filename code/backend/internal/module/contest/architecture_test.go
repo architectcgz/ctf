@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -40,6 +41,8 @@ func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 	}
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/infrastructure")
+		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
 }
 
@@ -100,7 +103,7 @@ func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
-func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
+func TestPortsDoNotDependOnFrameworksDTOOrCacheClients(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
@@ -110,11 +113,25 @@ func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/queries")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/jobs")
+	}
+}
+
+func TestPortsDoNotExposeGORMTags(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
+	if err != nil {
+		t.Fatalf("glob ports files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotDeclareGORMTags(t, file)
 	}
 }
 
@@ -128,6 +145,17 @@ func TestPortsDoNotDeclareWideRepository(t *testing.T) {
 	if strings.Contains(string(content), "type Repository interface") {
 		t.Fatalf("contest ports must not declare the legacy wide Repository interface")
 	}
+}
+
+func TestRuntimeOwnsContestWiring(t *testing.T) {
+	t.Parallel()
+
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/jobs")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/api/http")
 }
 
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
@@ -170,4 +198,50 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 			t.Fatalf("%s must not import %s", filePath, blockedImport)
 		}
 	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+	t.Fatalf("%s must import %s", filePath, expectedImport)
+}
+
+func assertFileDoesNotDeclareGORMTags(t *testing.T, filePath string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, 0)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		field, ok := node.(*ast.Field)
+		if !ok || field.Tag == nil {
+			return true
+		}
+		tag, err := strconv.Unquote(field.Tag.Value)
+		if err != nil {
+			t.Fatalf("unquote struct tag %s in %s: %v", field.Tag.Value, filePath, err)
+		}
+		if strings.Contains(tag, `gorm:"`) {
+			t.Fatalf("%s must not expose gorm tags in ports", filePath)
+		}
+		return true
+	})
 }

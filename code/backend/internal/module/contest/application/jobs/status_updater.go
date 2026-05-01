@@ -12,7 +12,7 @@ import (
 
 type StatusUpdater struct {
 	repo      contestports.ContestStatusRepository
-	awdRepo   contestports.AWDRepository
+	awdRepo   contestports.AWDReadinessQuery
 	redis     *redislib.Client
 	log       *zap.Logger
 	interval  time.Duration
@@ -20,14 +20,14 @@ type StatusUpdater struct {
 	lockTTL   time.Duration
 }
 
-func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger, awdRepos ...contestports.AWDRepository) *StatusUpdater {
+func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger, awdRepos ...contestports.AWDReadinessQuery) *StatusUpdater {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	if lockTTL <= 0 {
 		lockTTL = 30 * time.Second
 	}
-	var awdRepo contestports.AWDRepository
+	var awdRepo contestports.AWDReadinessQuery
 	if len(awdRepos) > 0 {
 		awdRepo = awdRepos[0]
 	}

@@ -11,11 +11,11 @@ import (
 )
 
 type ContestAWDServiceQueryService struct {
-	repo        contestports.AWDRepository
+	repo        contestports.AWDServiceStore
 	contestRepo contestports.ContestLookupRepository
 }
 
-func NewContestAWDServiceQueryService(repo contestports.AWDRepository, contestRepo contestports.ContestLookupRepository) *ContestAWDServiceQueryService {
+func NewContestAWDServiceQueryService(repo contestports.AWDServiceStore, contestRepo contestports.ContestLookupRepository) *ContestAWDServiceQueryService {
 	return &ContestAWDServiceQueryService{repo: repo, contestRepo: contestRepo}
 }
 

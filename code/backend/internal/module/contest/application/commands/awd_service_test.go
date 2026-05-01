@@ -167,7 +167,7 @@ func (f *fakeAWDPreviewRoundManager) PreviewServiceCheck(_ context.Context, req 
 }
 
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {
-	return contestjobs.NewAWDRoundUpdater(contestinfra.NewAWDRepository(db), redisClient, cfg, flagSecret, injector, log)
+	return contestjobs.NewAWDRoundUpdater(contestinfra.NewAWDRepository(db), redisClient, cfg, flagSecret, injector, log, contestinfra.NewScoreboardCache(db, redisClient))
 }
 
 func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret string, cfg config.ContestAWDConfig) *awdServiceForTest {
@@ -187,6 +187,7 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 			imageRepo,
 			awdChallengeRepo,
 			nil,
+			contestinfra.NewScoreboardCache(db, redisClient),
 		),
 		queries: contestqry.NewAWDService(awdRepo, contestRepo),
 	}

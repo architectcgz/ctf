@@ -20,14 +20,15 @@ const (
 )
 
 type AWDRoundUpdater struct {
-	repo          contestports.AWDRepository
-	redis         *redislib.Client
-	cfg           config.ContestAWDConfig
-	flagSecret    string
-	injector      contestports.AWDFlagInjector
-	checkerRunner contestports.CheckerRunner
-	httpClient    *http.Client
-	log           *zap.Logger
+	repo            contestports.AWDRoundUpdateRepository
+	redis           *redislib.Client
+	scoreboardCache contestports.ScoreboardCacheWriter
+	cfg             config.ContestAWDConfig
+	flagSecret      string
+	injector        contestports.AWDFlagInjector
+	checkerRunner   contestports.CheckerRunner
+	httpClient      *http.Client
+	log             *zap.Logger
 }
 
 type awdServiceTargetKey struct {
@@ -52,12 +53,13 @@ func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model
 }
 
 func NewAWDRoundUpdater(
-	repo contestports.AWDRepository,
+	repo contestports.AWDRoundUpdateRepository,
 	redis *redislib.Client,
 	cfg config.ContestAWDConfig,
 	flagSecret string,
 	injector contestports.AWDFlagInjector,
 	log *zap.Logger,
+	scoreboardCaches ...contestports.ScoreboardCacheWriter,
 ) *AWDRoundUpdater {
 	if log == nil {
 		log = zap.NewNop()
@@ -65,14 +67,19 @@ func NewAWDRoundUpdater(
 	if injector == nil {
 		injector = &noopAWDFlagInjector{log: log.Named("awd_flag_injector")}
 	}
+	var scoreboardCache contestports.ScoreboardCacheWriter
+	if len(scoreboardCaches) > 0 {
+		scoreboardCache = scoreboardCaches[0]
+	}
 	return &AWDRoundUpdater{
-		repo:       repo,
-		redis:      redis,
-		cfg:        cfg,
-		flagSecret: flagSecret,
-		injector:   injector,
-		httpClient: &http.Client{Timeout: normalizedAWDCheckerTimeout(cfg.CheckerTimeout)},
-		log:        log,
+		repo:            repo,
+		redis:           redis,
+		scoreboardCache: scoreboardCache,
+		cfg:             cfg,
+		flagSecret:      flagSecret,
+		injector:        injector,
+		httpClient:      &http.Client{Timeout: normalizedAWDCheckerTimeout(cfg.CheckerTimeout)},
+		log:             log,
 	}
 }
 

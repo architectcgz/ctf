@@ -19,7 +19,7 @@ import (
 )
 
 type ContestAWDServiceService struct {
-	repo                 contestports.AWDRepository
+	repo                 contestports.AWDServiceStore
 	contestRepo          contestports.ContestLookupRepository
 	contestChallengeRepo contestports.ContestChallengeRepository
 	challengeRepo        challengecontracts.ContestChallengeContract
@@ -28,7 +28,7 @@ type ContestAWDServiceService struct {
 }
 
 func NewContestAWDServiceService(
-	repo contestports.AWDRepository,
+	repo contestports.AWDServiceStore,
 	contestRepo contestports.ContestLookupRepository,
 	contestChallengeRepo contestports.ContestChallengeRepository,
 	challengeRepo challengecontracts.ContestChallengeContract,

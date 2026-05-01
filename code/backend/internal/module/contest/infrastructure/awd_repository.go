@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
@@ -72,8 +71,4 @@ func (r *AWDRepository) DeleteContestAWDServiceByContestAndID(ctx context.Contex
 
 func (r *AWDRepository) RecalculateContestTeamScores(ctx context.Context, contestID int64) error {
 	return RecalculateAWDContestTeamScores(ctx, r.db, contestID)
-}
-
-func (r *AWDRepository) RebuildContestScoreboardCache(ctx context.Context, redis *redislib.Client, contestID int64) error {
-	return RebuildContestScoreboardCache(ctx, r.db, redis, contestID)
 }

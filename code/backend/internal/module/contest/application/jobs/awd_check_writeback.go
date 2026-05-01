@@ -36,8 +36,8 @@ func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest
 			return err
 		}
 	}
-	if u.redis != nil {
-		if err := u.repo.RebuildContestScoreboardCache(ctx, u.redis, contest.ID); err != nil {
+	if u.scoreboardCache != nil {
+		if err := u.scoreboardCache.RebuildContestScoreboard(ctx, contest.ID); err != nil {
 			return err
 		}
 	}

@@ -45,7 +45,7 @@ func (d *awdReadinessGateDecision) ForcedOverride() bool {
 	return d != nil && d.forcedOverride
 }
 
-func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDRepository, contestID int64, forceOverride *bool, overrideReason *string) error {
+func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQuery, contestID int64, forceOverride *bool, overrideReason *string) error {
 	decision, err := evaluateAWDReadinessGate(ctx, repo, contestID, forceOverride, overrideReason)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDRepository
 	return errcode.ErrAWDReadinessBlocked
 }
 
-func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDRepository, contestID int64, forceOverride *bool, overrideReason *string) (*awdReadinessGateDecision, error) {
+func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQuery, contestID int64, forceOverride *bool, overrideReason *string) (*awdReadinessGateDecision, error) {
 	forced, normalizedReason, err := normalizeAWDReadinessOverride(forceOverride, overrideReason)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDReposito
 	}, nil
 }
 
-func loadAWDReadinessSummary(ctx context.Context, repo contestports.AWDRepository, contestID int64) (*contestdomain.AWDReadinessSummary, error) {
+func loadAWDReadinessSummary(ctx context.Context, repo contestports.AWDReadinessQuery, contestID int64) (*contestdomain.AWDReadinessSummary, error) {
 	records, err := repo.ListReadinessChallengesByContest(ctx, contestID)
 	if err != nil {
 		return nil, err

@@ -16,8 +16,10 @@ func (s *AWDService) buildAttackLogResponse(
 	logRecord *model.AWDAttackLog,
 	teams map[int64]*model.Team,
 ) (*dto.AWDAttackLogResp, error) {
-	if err := s.repo.RebuildContestScoreboardCache(ctx, s.redis, contestID); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+	if s.scoreboardCache != nil {
+		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
 	}
 	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
 	if err != nil {
