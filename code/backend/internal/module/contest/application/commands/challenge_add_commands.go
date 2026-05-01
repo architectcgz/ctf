@@ -11,7 +11,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req *dto.AddContestChallengeReq) (*dto.ContestChallengeResp, error) {
+func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req AddContestChallengeInput) (*dto.ContestChallengeResp, error) {
 	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return nil, err
 	}

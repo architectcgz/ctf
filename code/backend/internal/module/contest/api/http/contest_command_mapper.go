@@ -62,3 +62,26 @@ func createTeamInputFromDTO(req *dto.CreateTeamReq) contestcmd.CreateTeamInput {
 		MaxMembers: req.MaxMembers,
 	}
 }
+
+func addContestChallengeInputFromDTO(req *dto.AddContestChallengeReq) contestcmd.AddContestChallengeInput {
+	if req == nil {
+		return contestcmd.AddContestChallengeInput{}
+	}
+	return contestcmd.AddContestChallengeInput{
+		ChallengeID: req.ChallengeID,
+		Points:      req.Points,
+		Order:       req.Order,
+		IsVisible:   req.IsVisible,
+	}
+}
+
+func updateContestChallengeInputFromDTO(req *dto.UpdateContestChallengeReq) contestcmd.UpdateContestChallengeInput {
+	if req == nil {
+		return contestcmd.UpdateContestChallengeInput{}
+	}
+	return contestcmd.UpdateContestChallengeInput{
+		Points:    req.Points,
+		Order:     req.Order,
+		IsVisible: req.IsVisible,
+	}
+}

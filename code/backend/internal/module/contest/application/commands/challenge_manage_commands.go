@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,7 +34,7 @@ func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, conte
 	return nil
 }
 
-func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, challengeID int64, req *dto.UpdateContestChallengeReq) error {
+func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, challengeID int64, req UpdateContestChallengeInput) error {
 	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return err
 	}
