@@ -1641,6 +1641,70 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsDownWithoutHealthyInstance(t *testin
 	}
 }
 
+func TestAWDRoundUpdaterExemptsSLAWhenSystemRecoveryIsActive(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now().UTC()
+
+	createAWDContestFixture(t, db, 174, now)
+	createAWDRoundFixture(t, db, 17401, 174, 1, 50, 40, now)
+	createAWDChallengeFixture(t, db, 174001, now)
+	createAWDContestChallengeFixture(t, db, 174, 174001, now)
+	createAWDTeamFixture(t, db, 174011, 174, "Alpha", now)
+
+	serviceID := defaultAWDContestServiceID(174, 174001)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("id = ?", serviceID).
+		Update("score_config", `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`).Error; err != nil {
+		t.Fatalf("update service score config: %v", err)
+	}
+	finishedAt := now.Add(time.Hour)
+	if err := db.Create(&model.AWDServiceOperation{
+		ContestID:     174,
+		TeamID:        174011,
+		ServiceID:     serviceID,
+		InstanceID:    174900,
+		OperationType: model.AWDServiceOperationTypeRecover,
+		RequestedBy:   model.AWDServiceOperationRequestedBySystem,
+		Reason:        "container_not_running",
+		SLABillable:   false,
+		Status:        model.AWDServiceOperationStatusRecovering,
+		StartedAt:     now.Add(-time.Minute),
+		FinishedAt:    &finishedAt,
+		CreatedAt:     now.Add(-time.Minute),
+		UpdatedAt:     now.Add(-time.Minute),
+	}).Error; err != nil {
+		t.Fatalf("create system recovery operation: %v", err)
+	}
+
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerBatchSize: 10,
+		RoundInterval:      5 * time.Minute,
+		RoundLockTTL:       time.Minute,
+		CheckerTimeout:     time.Second,
+		CheckerHealthPath:  "/health",
+	}, "test-flag-secret", nil, zap.NewNop())
+
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 174}, 1); err != nil {
+		t.Fatalf("syncRoundServiceChecks() error = %v", err)
+	}
+
+	var record model.AWDTeamService
+	if err := db.Where("round_id = ? AND team_id = ? AND service_id = ?", 17401, 174011, serviceID).First(&record).Error; err != nil {
+		t.Fatalf("load service check: %v", err)
+	}
+	if record.ServiceStatus != model.AWDServiceStatusDown || record.SLAScore != 1 || record.DefenseScore != 0 {
+		t.Fatalf("expected down service with SLA exemption only, got %+v", record)
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(record.CheckResult), &result); err != nil {
+		t.Fatalf("unmarshal check result: %v", err)
+	}
+	if result["sla_exempt"] != true || result["sla_exempt_reason"] != "system_recovery" {
+		t.Fatalf("expected SLA exemption marker, got %#v", result)
+	}
+}
+
 func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 	db := newAWDTestDB(t)
 	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)

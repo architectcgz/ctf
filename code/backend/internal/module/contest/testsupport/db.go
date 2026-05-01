@@ -61,6 +61,7 @@ func SetupAWDTestDB(t *testing.T) *gorm.DB {
 		&model.AWDTeamService{},
 		&model.AWDAttackLog{},
 		&model.AWDTrafficEvent{},
+		&model.AWDServiceOperation{},
 	); err != nil {
 		t.Fatalf("auto migrate awd tables: %v", err)
 	}

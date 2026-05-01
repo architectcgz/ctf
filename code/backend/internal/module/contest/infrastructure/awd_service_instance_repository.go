@@ -25,7 +25,6 @@ func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, conte
 			model.InstanceStatusRunning,
 			model.InstanceStatusFailed,
 		}).
-		Where("inst.access_url <> ''").
 		Where("(inst.contest_id = ? AND inst.team_id IS NOT NULL) OR (inst.team_id IS NULL AND tm.team_id IS NOT NULL)", contestID).
 		Order("COALESCE(inst.team_id, tm.team_id) ASC, cas.\"order\" ASC, cas.id ASC, inst.created_at DESC, inst.id DESC").
 		Scan(&instances).Error; err != nil {

@@ -67,6 +67,11 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	if outcome.serviceStatus == model.AWDServiceStatusUp {
 		outcome.slaScore = definition.SLAScore
 		outcome.defenseScore = effectiveAWDDefenseScore(definition, round)
+	} else if exempt, err := u.repo.HasSystemRecoveryOperationAt(ctx, contestID, teamID, definition.ServiceID, time.Now().UTC()); err != nil {
+		return nil, err
+	} else if exempt {
+		outcome.slaScore = definition.SLAScore
+		outcome.checkResult = annotateAWDRecoverySLAExemption(outcome.checkResult)
 	}
 	return outcome, nil
 }

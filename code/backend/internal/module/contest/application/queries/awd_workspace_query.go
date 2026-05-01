@@ -110,6 +110,9 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 			Reachable:      instance.Status == model.InstanceStatusRunning && instance.AccessURL != "",
 		})
 	}
+	if err := s.populateAWDWorkspaceLatestOperations(ctx, contestID, myTeam.ID, serviceMap); err != nil {
+		return nil, err
+	}
 
 	if currentRound != nil {
 		if err := s.populateAWDWorkspaceCurrentRound(ctx, currentRound.ID, myTeam.ID, teams, serviceMap, resp); err != nil {
@@ -120,6 +123,29 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	resp.Services = sortAWDWorkspaceServices(serviceMap)
 	resp.Targets = sortAWDWorkspaceTargets(targetMap)
 	return resp, nil
+}
+
+func (s *AWDService) populateAWDWorkspaceLatestOperations(
+	ctx context.Context,
+	contestID, myTeamID int64,
+	serviceMap map[int64]*dto.ContestAWDWorkspaceServiceResp,
+) error {
+	operations, err := s.repo.ListLatestServiceOperationsByContest(ctx, contestID)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	for _, operation := range operations {
+		if operation.TeamID != myTeamID || operation.ServiceID <= 0 {
+			continue
+		}
+		item := ensureAWDWorkspaceService(serviceMap, operation.ServiceID, 0)
+		item.OperationStatus = operation.Status
+		item.OperationType = operation.OperationType
+		item.OperationReason = operation.Reason
+		slaBillable := operation.SLABillable
+		item.OperationSLABillable = &slaBillable
+	}
+	return nil
 }
 
 func (s *AWDService) populateAWDWorkspaceCurrentRound(

@@ -45,6 +45,7 @@ const {
   hasTeam,
   submitResult,
   startingServiceKey,
+  serviceActionPendingById,
   openingServiceKey,
   openingSSHKey,
   sshAccessByServiceId,
@@ -228,6 +229,23 @@ function getInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): strin
 
 function canOpenWorkspaceService(service?: ContestAWDWorkspaceServiceData): boolean {
   return Boolean(service?.instance_id && (!service.instance_status || service.instance_status === 'running'))
+}
+
+function isWorkspaceServiceActionPending(challenge: ContestChallengeItem): boolean {
+  const serviceId = challenge.awd_service_id
+  if (!serviceId) {
+    return false
+  }
+  const service = getWorkspaceService(challenge)
+  return Boolean(
+    startingServiceKey.value === serviceId ||
+      serviceActionPendingById.value[serviceId] ||
+      service?.instance_status === 'pending' ||
+      service?.instance_status === 'creating' ||
+      service?.operation_status === 'requested' ||
+      service?.operation_status === 'provisioning' ||
+      service?.operation_status === 'recovering'
+  )
 }
 
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
@@ -523,11 +541,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
                   </button>
                   <button
-                    :disabled="startingServiceKey === getServiceStartKey(challenge)"
+                    :disabled="isWorkspaceServiceActionPending(challenge)"
                     class="asset-btn asset-btn--primary"
                     @click="challenge.awd_service_id && restartService(challenge.awd_service_id)"
                   >
-                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : '重启' }}
+                    {{ isWorkspaceServiceActionPending(challenge) ? '重启中' : '重启' }}
                   </button>
                 </div>
               </div>

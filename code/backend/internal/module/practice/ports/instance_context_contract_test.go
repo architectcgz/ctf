@@ -18,6 +18,10 @@ func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *model.Instance)
 	return nil
 }
 
+func (ctxOnlyInstanceRepository) FinishActiveAWDServiceOperationForInstance(context.Context, int64, string, string, time.Time) error {
+	return nil
+}
+
 func (ctxOnlyInstanceRepository) RefreshInstanceExpiry(context.Context, int64, time.Time) error {
 	return nil
 }
@@ -71,6 +75,14 @@ func (ctxOnlyPracticeCommandTxRepository) ResetInstanceRuntimeForRestart(context
 }
 
 func (ctxOnlyPracticeCommandTxRepository) CreateInstance(context.Context, *model.Instance) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) CreateAWDServiceOperation(context.Context, *model.AWDServiceOperation) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) FinishAWDServiceOperation(context.Context, int64, string, string, time.Time) error {
 	return nil
 }
 

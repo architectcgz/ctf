@@ -31,6 +31,8 @@ type AWDRepository interface {
 	FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error)
 	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
 	ListServiceInstancesByContest(ctx context.Context, contestID int64, serviceIDs []int64) ([]AWDServiceInstance, error)
+	ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]model.AWDServiceOperation, error)
+	HasSystemRecoveryOperationAt(ctx context.Context, contestID, teamID, serviceID int64, checkedAt time.Time) (bool, error)
 	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
 	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
 	ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error)

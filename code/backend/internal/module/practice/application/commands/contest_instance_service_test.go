@@ -370,6 +370,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.Team{},
 		&model.TeamMember{},
 		&model.Instance{},
+		&model.AWDServiceOperation{},
 		&model.PortAllocation{},
 		&model.Submission{},
 	); err != nil {

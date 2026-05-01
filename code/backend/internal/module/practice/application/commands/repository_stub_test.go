@@ -29,6 +29,8 @@ type stubPracticeRepository struct {
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
 	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
+	createAWDServiceOperationFn            func(ctx context.Context, operation *model.AWDServiceOperation) error
+	finishAWDServiceOperationFn            func(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
 	createSubmissionFn                     func(ctx context.Context, submission *model.Submission) error
@@ -149,6 +151,20 @@ func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Cont
 func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *model.Instance) error {
 	if s.createInstanceFn != nil {
 		return s.createInstanceFn(ctx, instance)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
+	if s.createAWDServiceOperationFn != nil {
+		return s.createAWDServiceOperationFn(ctx, operation)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	if s.finishAWDServiceOperationFn != nil {
+		return s.finishAWDServiceOperationFn(ctx, operationID, status, errorMessage, finishedAt)
 	}
 	return nil
 }

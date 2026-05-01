@@ -59,6 +59,8 @@ type PracticeCommandTxRepository interface {
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
 	CreateInstance(ctx context.Context, instance *model.Instance) error
+	CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error
+	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	BindReservedPort(ctx context.Context, port int, instanceID int64) error
 }
@@ -108,6 +110,7 @@ type PracticeRankingRepository interface {
 type InstanceRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	UpdateRuntime(ctx context.Context, instance *model.Instance) error
+	FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)

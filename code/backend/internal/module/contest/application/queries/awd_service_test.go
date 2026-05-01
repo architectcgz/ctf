@@ -535,6 +535,68 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	}
 }
 
+func TestAWDServiceGetUserWorkspaceIncludesQueuedOwnServiceWithoutAccessURL(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 16, 0, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 806, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8061, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 806, 8061, now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8601, 806, "Red", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 806, 8601, 9601, now)
+
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(806, 8061)
+	contestID := int64(806)
+	teamID := int64(8601)
+	if err := db.Create(&model.Instance{
+		ID:          61,
+		UserID:      9601,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 8061,
+		ServiceID:   &serviceID,
+		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      model.InstanceStatusPending,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create pending awd workspace instance: %v", err)
+	}
+	if err := db.Create(&model.AWDServiceOperation{
+		ID:            71,
+		ContestID:     contestID,
+		TeamID:        teamID,
+		ServiceID:     serviceID,
+		InstanceID:    61,
+		OperationType: model.AWDServiceOperationTypeRestart,
+		RequestedBy:   model.AWDServiceOperationRequestedByUser,
+		Reason:        "user_restart",
+		SLABillable:   true,
+		Status:        model.AWDServiceOperationStatusProvisioning,
+		StartedAt:     now,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}).Error; err != nil {
+		t.Fatalf("create awd service operation: %v", err)
+	}
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9601, 806)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	item := findAWDWorkspaceServiceByID(resp.Services, serviceID)
+	if item == nil {
+		t.Fatalf("expected pending own service in workspace, got %+v", resp.Services)
+	}
+	if item.InstanceID != 61 || item.InstanceStatus != model.InstanceStatusPending {
+		t.Fatalf("expected pending instance to remain visible, got %+v", item)
+	}
+	if item.OperationStatus != model.AWDServiceOperationStatusProvisioning || item.OperationType != model.AWDServiceOperationTypeRestart || item.OperationSLABillable == nil || !*item.OperationSLABillable {
+		t.Fatalf("expected latest operation in workspace, got %+v", item)
+	}
+}
+
 func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Date(2026, 4, 12, 15, 30, 0, 0, time.UTC)

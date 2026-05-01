@@ -42,6 +42,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
+  const serviceActionPendingById = ref<Record<string, boolean>>({})
 
   let requestToken = 0
   let autoRefreshTimer: number | null = null
@@ -59,6 +60,28 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   async function loadScoreboard(contestId: string): Promise<void> {
     const payload = await getScoreboard(contestId, { page: 1, page_size: 10 })
     scoreboardRows.value = payload.scoreboard.list
+  }
+
+  function isServiceRuntimeBusy(status?: string): boolean {
+    return status === 'pending' || status === 'creating'
+  }
+
+  function isServiceOperationBusy(status?: string): boolean {
+    return status === 'requested' || status === 'provisioning' || status === 'recovering'
+  }
+
+  function clearSettledServiceActions(nextWorkspace: ContestAWDWorkspaceData): void {
+    const nextPending = { ...serviceActionPendingById.value }
+    for (const item of nextWorkspace.services || []) {
+      const serviceId = item.service_id
+      if (!serviceId) {
+        continue
+      }
+      if (!isServiceRuntimeBusy(item.instance_status) && !isServiceOperationBusy(item.operation_status)) {
+        delete nextPending[serviceId]
+      }
+    }
+    serviceActionPendingById.value = nextPending
   }
 
   async function refreshAll(): Promise<void> {
@@ -87,6 +110,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       }
 
       workspace.value = nextWorkspace
+      clearSettledServiceActions(nextWorkspace)
       error.value = ''
       lastSyncedAt.value = new Date().toISOString()
     } catch (err) {
@@ -136,17 +160,24 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
 
   async function restartService(serviceId: string): Promise<void> {
     const contestId = toValue(options.contestId)
-    if (!contestId || !serviceId || startingServiceKey.value) {
+    if (!contestId || !serviceId || startingServiceKey.value || serviceActionPendingById.value[serviceId]) {
       return
     }
 
     startingServiceKey.value = serviceId
+    serviceActionPendingById.value = {
+      ...serviceActionPendingById.value,
+      [serviceId]: true,
+    }
     try {
       await restartContestAWDServiceInstance(contestId, serviceId)
       await refreshAll()
       toast.success('服务重启请求已提交')
     } catch (err) {
       console.error(err)
+      const nextPending = { ...serviceActionPendingById.value }
+      delete nextPending[serviceId]
+      serviceActionPendingById.value = nextPending
       toast.error(err instanceof Error ? err.message : '重启服务失败')
     } finally {
       startingServiceKey.value = ''
@@ -296,6 +327,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     hasTeam,
     submitResult,
     startingServiceKey,
+    serviceActionPendingById,
     openingServiceKey,
     openingSSHKey,
     sshAccessByServiceId,

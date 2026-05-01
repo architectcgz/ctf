@@ -21,18 +21,22 @@ type ContestAWDWorkspaceTeamResp struct {
 }
 
 type ContestAWDWorkspaceServiceResp struct {
-	ServiceID      int64                `json:"service_id"`
-	AWDChallengeID int64                `json:"awd_challenge_id"`
-	InstanceID     int64                `json:"instance_id,omitempty"`
-	InstanceStatus string               `json:"instance_status,omitempty"`
-	AccessURL      string               `json:"access_url,omitempty"`
-	ServiceStatus  string               `json:"service_status,omitempty"`
-	CheckerType    model.AWDCheckerType `json:"checker_type,omitempty"`
-	AttackReceived int                  `json:"attack_received"`
-	SLAScore       int                  `json:"sla_score"`
-	DefenseScore   int                  `json:"defense_score"`
-	AttackScore    int                  `json:"attack_score"`
-	UpdatedAt      *time.Time           `json:"updated_at,omitempty"`
+	ServiceID            int64                `json:"service_id"`
+	AWDChallengeID       int64                `json:"awd_challenge_id"`
+	InstanceID           int64                `json:"instance_id,omitempty"`
+	InstanceStatus       string               `json:"instance_status,omitempty"`
+	AccessURL            string               `json:"access_url,omitempty"`
+	ServiceStatus        string               `json:"service_status,omitempty"`
+	OperationStatus      string               `json:"operation_status,omitempty"`
+	OperationType        string               `json:"operation_type,omitempty"`
+	OperationReason      string               `json:"operation_reason,omitempty"`
+	OperationSLABillable *bool                `json:"operation_sla_billable,omitempty"`
+	CheckerType          model.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived       int                  `json:"attack_received"`
+	SLAScore             int                  `json:"sla_score"`
+	DefenseScore         int                  `json:"defense_score"`
+	AttackScore          int                  `json:"attack_score"`
+	UpdatedAt            *time.Time           `json:"updated_at,omitempty"`
 }
 
 type ContestAWDWorkspaceTargetTeamResp struct {

@@ -456,6 +456,10 @@ export interface ContestAWDWorkspaceServiceData {
   instance_status?: InstanceStatus
   access_url?: string
   service_status?: AWDServiceStatus
+  operation_status?: 'requested' | 'provisioning' | 'recovering' | 'recovered' | 'succeeded' | 'failed'
+  operation_type?: 'start' | 'restart' | 'recover' | 'recreate'
+  operation_reason?: string
+  operation_sla_billable?: boolean
   checker_type?: AWDCheckerType
   attack_received: number
   sla_score: number

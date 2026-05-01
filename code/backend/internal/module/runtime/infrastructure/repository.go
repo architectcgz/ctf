@@ -373,6 +373,44 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 	return result.RowsAffected > 0, nil
 }
 
+func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
+	return r.dbWithContext(ctx).Create(operation).Error
+}
+
+func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Model(&model.AWDServiceOperation{}).
+		Where("instance_id = ? AND status IN ?", instanceID, []string{
+			model.AWDServiceOperationStatusRequested,
+			model.AWDServiceOperationStatusProvisioning,
+			model.AWDServiceOperationStatusRecovering,
+		}).
+		Updates(map[string]any{
+			"status":        status,
+			"error_message": errorMessage,
+			"finished_at":   finishedAt,
+			"updated_at":    time.Now(),
+		}).Error
+}
+
+func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	if operationID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Model(&model.AWDServiceOperation{}).
+		Where("id = ?", operationID).
+		Updates(map[string]any{
+			"status":        status,
+			"error_message": errorMessage,
+			"finished_at":   finishedAt,
+			"updated_at":    time.Now(),
+		}).Error
+}
+
 func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
 	rows := make([]teacherInstanceRow, 0)
 

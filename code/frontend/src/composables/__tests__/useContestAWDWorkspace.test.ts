@@ -319,6 +319,79 @@ describe('useContestAWDWorkspace', () => {
     expect(contestApiMocks.startContestAWDServiceInstance).toHaveBeenCalledWith('1', '7009')
   })
 
+  it('重启后刷新到创建中状态时应保持服务操作占用并阻止重复重启', async () => {
+    contestApiMocks.getContestAWDWorkspace
+      .mockResolvedValueOnce({
+        contest_id: '1',
+        my_team: {
+          team_id: '13',
+          team_name: 'Red',
+        },
+        services: [
+          {
+            service_id: '7009',
+            awd_challenge_id: '101',
+            instance_id: '900',
+            instance_status: 'running',
+            service_status: 'up',
+            attack_received: 0,
+            sla_score: 1,
+            defense_score: 2,
+            attack_score: 0,
+          },
+        ],
+        targets: [],
+        recent_events: [],
+      })
+      .mockResolvedValueOnce({
+        contest_id: '1',
+        my_team: {
+          team_id: '13',
+          team_name: 'Red',
+        },
+        services: [
+          {
+            service_id: '7009',
+            awd_challenge_id: '101',
+            instance_id: '900',
+            instance_status: 'creating',
+            attack_received: 0,
+            sla_score: 0,
+            defense_score: 0,
+            attack_score: 0,
+          },
+        ],
+        targets: [],
+        recent_events: [],
+      })
+
+    let restartService!: (serviceId: string) => Promise<void>
+    let serviceActionPendingById!: { value: Record<string, boolean> }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          restartService = workspace.restartService
+          serviceActionPendingById = workspace.serviceActionPendingById
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await restartService('7009')
+    await flushPromises()
+
+    expect(serviceActionPendingById.value['7009']).toBe(true)
+
+    await restartService('7009')
+    expect(contestApiMocks.restartContestAWDServiceInstance).toHaveBeenCalledTimes(1)
+  })
+
   it('打开跨队攻击入口时应请求目标代理 access 并防止重复点击', async () => {
     let resolveAccess: ((value: { access_url: string }) => void) | null = null
     const openMock = vi.spyOn(window, 'open').mockImplementation(() => null)

@@ -127,7 +127,12 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	if err != nil {
 		return nil, err
 	}
-	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
+	resp, err := s.startChallengeWithScope(ctx, userID, challengeID, scope)
+	if err != nil {
+		return nil, err
+	}
+	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, model.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), model.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
+	return resp, nil
 }
 
 func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
@@ -153,7 +158,12 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	}
 
 	if instance == nil {
-		return s.startChallengeWithScope(ctx, userID, challengeID, scope)
+		resp, err := s.startChallengeWithScope(ctx, userID, challengeID, scope)
+		if err != nil {
+			return nil, err
+		}
+		s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, model.AWDServiceOperationTypeRestart, awdOperationStatusForInstanceStatus(resp.Status), model.AWDServiceOperationRequestedByUser, &userID, "user_restart", true)
+		return resp, nil
 	}
 	if instance.Status == model.InstanceStatusPending || instance.Status == model.InstanceStatusCreating {
 		return instanceRespForScope(instance, scope), nil
@@ -173,6 +183,13 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 			return err
 		}
 		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		operationStatus := model.AWDServiceOperationStatusRequested
+		if nextStatus == model.InstanceStatusPending {
+			operationStatus = model.AWDServiceOperationStatusProvisioning
+		}
+		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, contestID, scope, model.AWDServiceOperationTypeRestart, operationStatus, model.AWDServiceOperationRequestedByUser, &userID, "user_restart", true); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		return nil
@@ -201,6 +218,58 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		}
 	}
 	return instanceRespForScope(instance, scope), nil
+}
+
+func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
+	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+		return createAWDServiceOperation(ctx, txRepo, instanceID, contestID, scope, operationType, status, requestedBy, requestedByID, reason, slaBillable)
+	}); err != nil {
+		s.logger.Warn("记录 AWD 服务操作失败",
+			zap.Int64("contest_id", contestID),
+			zap.Int64("instance_id", instanceID),
+			zap.String("operation_type", operationType),
+			zap.Error(err))
+	}
+}
+
+func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeCommandTxRepository, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) error {
+	if repo == nil || instanceID <= 0 || contestID <= 0 || scope.TeamID == nil || *scope.TeamID <= 0 || scope.ServiceID == nil || *scope.ServiceID <= 0 {
+		return nil
+	}
+	now := time.Now().UTC()
+	var finishedAt *time.Time
+	if isFinishedAWDServiceOperationStatus(status) {
+		finishedAt = &now
+	}
+	return repo.CreateAWDServiceOperation(ctx, &model.AWDServiceOperation{
+		ContestID:     contestID,
+		TeamID:        *scope.TeamID,
+		ServiceID:     *scope.ServiceID,
+		InstanceID:    instanceID,
+		OperationType: operationType,
+		RequestedBy:   requestedBy,
+		RequestedByID: requestedByID,
+		Reason:        reason,
+		SLABillable:   slaBillable,
+		Status:        status,
+		StartedAt:     now,
+		FinishedAt:    finishedAt,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+}
+
+func awdOperationStatusForInstanceStatus(instanceStatus string) string {
+	if instanceStatus == model.InstanceStatusRunning {
+		return model.AWDServiceOperationStatusSucceeded
+	}
+	return model.AWDServiceOperationStatusProvisioning
+}
+
+func isFinishedAWDServiceOperationStatus(status string) bool {
+	return status == model.AWDServiceOperationStatusSucceeded ||
+		status == model.AWDServiceOperationStatusRecovered ||
+		status == model.AWDServiceOperationStatusFailed
 }
 
 func restartCleanupRuntimeView(instance *model.Instance) *model.Instance {
@@ -450,6 +519,9 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusFailed, "provision_failed", time.Now().UTC()); err != nil {
+		s.logger.Warn("更新失败实例 AWD 操作状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
 }
 
 func (s *Service) RunProvisioningLoop(ctx context.Context) {
@@ -602,6 +674,9 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
 		return errcode.ErrInternal.WithCause(err)
+	}
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
+		s.logger.Warn("更新实例 AWD 操作完成状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 
 	s.logger.Info("实例启动成功",

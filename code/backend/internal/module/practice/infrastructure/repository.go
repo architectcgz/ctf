@@ -318,6 +318,45 @@ func (r *Repository) CreateInstance(ctx context.Context, instance *model.Instanc
 	return r.dbWithContext(ctx).Create(instance).Error
 }
 
+func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
+	return r.dbWithContext(ctx).Create(operation).Error
+}
+
+func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Model(&model.AWDServiceOperation{}).
+		Where("instance_id = ? AND status IN ?", instanceID, []string{
+			model.AWDServiceOperationStatusRequested,
+			model.AWDServiceOperationStatusProvisioning,
+			model.AWDServiceOperationStatusRecovering,
+		}).
+		Updates(map[string]any{
+			"status":        status,
+			"error_message": errorMessage,
+			"finished_at":   finishedAt,
+			"updated_at":    time.Now(),
+		}).Error
+}
+
+func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	if operationID <= 0 {
+		return nil
+	}
+	updates := map[string]any{
+		"status":        status,
+		"error_message": errorMessage,
+		"finished_at":   finishedAt,
+		"updated_at":    time.Now(),
+	}
+	return r.dbWithContext(ctx).
+		Model(&model.AWDServiceOperation{}).
+		Where("id = ?", operationID).
+		Updates(updates).Error
+}
+
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
 	for port := start; port < end; port++ {
 		result := r.dbWithContext(ctx).

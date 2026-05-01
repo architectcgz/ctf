@@ -15,6 +15,8 @@ type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
 	recoverableActiveInstances              []*model.Instance
 	requeuedIDs                             []int64
+	operations                              []*model.AWDServiceOperation
+	finishedOperations                      []int64
 	findExpiredFn                           func(ctx context.Context) ([]*model.Instance, error)
 	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*model.Instance, error)
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
@@ -51,6 +53,24 @@ func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.C
 	return append([]*model.Instance(nil), r.recoverableActiveInstances...), nil
 }
 
+func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *model.AWDServiceOperation) error {
+	operation.ID = int64(len(r.operations) + 1)
+	r.operations = append(r.operations, operation)
+	return nil
+}
+
+func (r *maintenanceTestRepository) FinishAWDServiceOperation(_ context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	r.finishedOperations = append(r.finishedOperations, operationID)
+	for _, operation := range r.operations {
+		if operation.ID == operationID {
+			operation.Status = status
+			operation.ErrorMessage = errorMessage
+			operation.FinishedAt = &finishedAt
+		}
+	}
+	return nil
+}
+
 func (r *maintenanceTestRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
 	if r.requeueLostRuntimeFn != nil {
 		return r.requeueLostRuntimeFn(ctx, id)
@@ -64,6 +84,8 @@ type maintenanceTestEngine struct {
 	containerStates   map[string]*runtimeports.ManagedContainerState
 	inspectErr        error
 	inspectErrs       map[string]error
+	startedIDs        []string
+	startErrs         map[string]error
 }
 
 func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
@@ -84,6 +106,14 @@ func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, conta
 		return state, nil
 	}
 	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+}
+
+func (e *maintenanceTestEngine) StartContainer(_ context.Context, containerID string) error {
+	e.startedIDs = append(e.startedIDs, containerID)
+	if err, ok := e.startErrs[containerID]; ok {
+		return err
+	}
+	return nil
 }
 
 type maintenanceTestCleaner struct {
@@ -107,6 +137,10 @@ func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]runt
 
 func (*typedNilMaintenanceEngine) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
 	return nil, nil
+}
+
+func (*typedNilMaintenanceEngine) StartContainer(context.Context, string) error {
+	return nil
 }
 
 func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
@@ -266,9 +300,12 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 	}
 }
 
-func TestRuntimeMaintenanceServiceRequeuesExitedTopologyContainer(t *testing.T) {
+func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t *testing.T) {
 	t.Parallel()
 
+	contestID := int64(9001)
+	teamID := int64(9101)
+	serviceID := int64(9201)
 	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
 		Containers: []model.InstanceRuntimeContainer{
 			{ContainerID: "entry", IsEntryPoint: true},
@@ -282,6 +319,9 @@ func TestRuntimeMaintenanceServiceRequeuesExitedTopologyContainer(t *testing.T) 
 		recoverableActiveInstances: []*model.Instance{
 			{
 				ID:             43,
+				ContestID:      &contestID,
+				TeamID:         &teamID,
+				ServiceID:      &serviceID,
 				ContainerID:    "entry",
 				RuntimeDetails: runtimeDetails,
 				Status:         model.InstanceStatusRunning,
@@ -303,8 +343,21 @@ func TestRuntimeMaintenanceServiceRequeuesExitedTopologyContainer(t *testing.T) 
 	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
 		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
 	}
-	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 43 {
-		t.Fatalf("expected instance 43 requeued, got %v", repo.requeuedIDs)
+	if len(engine.startedIDs) != 1 || engine.startedIDs[0] != "sidecar" {
+		t.Fatalf("expected stopped sidecar to be started first, got %v", engine.startedIDs)
+	}
+	if len(repo.requeuedIDs) != 0 {
+		t.Fatalf("expected no requeue when stopped container starts, got %v", repo.requeuedIDs)
+	}
+	if len(repo.operations) != 1 {
+		t.Fatalf("expected one system recover operation, got %+v", repo.operations)
+	}
+	operation := repo.operations[0]
+	if operation.OperationType != model.AWDServiceOperationTypeRecover || operation.RequestedBy != model.AWDServiceOperationRequestedBySystem || operation.SLABillable {
+		t.Fatalf("unexpected recover operation: %+v", operation)
+	}
+	if operation.Status != model.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
+		t.Fatalf("expected recovered operation to be finished, got %+v", operation)
 	}
 }
 

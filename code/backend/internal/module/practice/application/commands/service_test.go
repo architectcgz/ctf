@@ -104,6 +104,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Team{},
 		&model.Instance{},
+		&model.AWDServiceOperation{},
 		&model.PortAllocation{},
 		&model.Submission{},
 	); err != nil {
@@ -201,6 +202,7 @@ func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*model
 type stubPracticeInstanceStore struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
 	updateRuntimeWithContextFn              func(ctx context.Context, instance *model.Instance) error
+	finishActiveAWDServiceOperationFn       func(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
@@ -216,6 +218,13 @@ func (s *stubPracticeInstanceStore) FindByID(ctx context.Context, id int64) (*mo
 func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
 	if s.updateRuntimeWithContextFn != nil {
 		return s.updateRuntimeWithContextFn(ctx, instance)
+	}
+	return nil
+}
+
+func (s *stubPracticeInstanceStore) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if s.finishActiveAWDServiceOperationFn != nil {
+		return s.finishActiveAWDServiceOperationFn(ctx, instanceID, status, errorMessage, finishedAt)
 	}
 	return nil
 }
@@ -1529,6 +1538,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	}
 	var cleanupInstanceID int64
 	var resetStatus string
+	var operation *model.AWDServiceOperation
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
 			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning}, nil
@@ -1570,6 +1580,10 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 				t.Fatalf("expected refreshed restart expiry after now, got %s now=%s", expiresAt, now)
 			}
 			resetStatus = status
+			return nil
+		},
+		createAWDServiceOperationFn: func(ctx context.Context, got *model.AWDServiceOperation) error {
+			operation = got
 			return nil
 		},
 	}
@@ -1624,6 +1638,9 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	}
 	if instance.ContainerID != "" || instance.NetworkID != "" || instance.RuntimeDetails != "" || instance.AccessURL != "" {
 		t.Fatalf("restart should clear runtime fields, got %+v", instance)
+	}
+	if operation == nil || operation.OperationType != model.AWDServiceOperationTypeRestart || operation.RequestedBy != model.AWDServiceOperationRequestedByUser || !operation.SLABillable {
+		t.Fatalf("expected billable user restart operation, got %+v", operation)
 	}
 }
 
