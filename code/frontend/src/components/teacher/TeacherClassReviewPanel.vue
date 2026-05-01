@@ -117,27 +117,22 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 
 .review-item {
   --review-accent: var(--panel-accent);
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--review-accent) 12%, var(--panel-border));
-  border-left: 5px solid color-mix(in srgb, var(--review-accent) 64%, transparent);
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--review-accent) 18%, var(--panel-border));
+  border-left: 4px solid color-mix(in srgb, var(--review-accent) 64%, transparent);
   background: linear-gradient(
-    145deg,
+    135deg,
     color-mix(in srgb, var(--panel-surface) 98%, var(--color-bg-base)),
     color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
   );
-  padding: var(--space-6) var(--space-7);
-  box-shadow:
-    0 1px 3px 0 rgb(0 0 0 / 0.1),
-    0 1px 2px -1px rgb(0 0 0 / 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: 0 4px 12px var(--color-shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .review-item:hover {
-  transform: translateX(6px);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-  border-color: color-mix(in srgb, var(--review-accent) 30%, var(--panel-border));
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px var(--color-shadow-soft);
 }
 
 .review-item--primary {

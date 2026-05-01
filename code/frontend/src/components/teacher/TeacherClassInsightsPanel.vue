@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { GraduationCap, FileChartColumnIncreasing } from 'lucide-vue-next'
 
 import type { TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -72,14 +71,17 @@ const weakDimensionStats = computed(() => {
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">
-            <GraduationCap class="inline-block w-3 h-3 mr-1 mb-0.5 opacity-60" />
             Top Students
           </div>
           <h2 class="teacher-panel__title">
             班级 Top 学生
           </h2>
           <p class="teacher-panel__subtitle">
-            按解题效率与知识点掌握度综合评估。
+            {{
+              className
+                ? `${className} 当前按解题数和得分排序的前 5 名。`
+                : '当前班级按解题数和得分排序的前 5 名。'
+            }}
           </p>
         </header>
 
@@ -131,14 +133,17 @@ const weakDimensionStats = computed(() => {
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">
-            <FileChartColumnIncreasing class="inline-block w-3 h-3 mr-1 mb-0.5 opacity-60" />
-            Skill Distribution
+            Dimensions
           </div>
           <h2 class="teacher-panel__title">
             薄弱维度分布
           </h2>
           <p class="teacher-panel__subtitle">
-            当前班级在核心安全维度上的分布密度。
+            {{
+              className
+                ? `${className} 当前学生最弱维度的分布情况。`
+                : '当前班级学生最弱维度的分布情况。'
+            }}
           </p>
         </header>
 
@@ -184,42 +189,15 @@ const weakDimensionStats = computed(() => {
 }
 
 .teacher-insight-layout--bare {
-  gap: var(--space-10);
-}
-
-.teacher-panel__title {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-18);
-  font-weight: 800;
-  color: var(--panel-ink);
-  letter-spacing: -0.01em;
-}
-
-.teacher-panel__subtitle {
-  margin-top: var(--space-1);
-  font-size: var(--font-size-13);
-  line-height: 1.5;
-  color: var(--panel-muted);
+  gap: var(--space-8);
 }
 
 .teacher-subsection--bare {
   border: 1px solid var(--teacher-card-border);
-  border-radius: 28px;
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base))
-  );
-  padding: var(--space-8);
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.03),
-    0 2px 4px -2px rgb(0 0 0 / 0.03);
-  transition: all 0.3s ease;
-}
-
-.teacher-subsection--bare:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, var(--teacher-card-border));
-  box-shadow: 0 12px 20px -10px rgb(0 0 0 / 0.08);
+  border-radius: 24px;
+  background: var(--workspace-panel);
+  padding: var(--space-6) var(--space-7);
+  box-shadow: 0 4px 16px var(--color-shadow-soft);
 }
 
 .teacher-insight-layout--split-cards {

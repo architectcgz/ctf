@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { AlertTriangle } from 'lucide-vue-next'
+import { AlertTriangle, Activity } from 'lucide-vue-next'
 
 import type {
   TeacherClassItem,
@@ -9,6 +9,7 @@ import type {
   TeacherClassTrendData,
   TeacherStudentItem,
 } from '@/api/contracts'
+import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
@@ -31,25 +32,27 @@ const emit = defineEmits<{
   openClassManagement: []
 }>()
 
-type DashboardTab = 'overview' | 'portrait' | 'insight' | 'trend' | 'review' | 'intervention'
+type WorkspaceTab = 'overview' | 'portrait' | 'trend' | 'insight' | 'advice' | 'action'
 
-const dashboardTabs: Array<{
-  key: DashboardTab
+interface WorkspaceTabItem {
+  key: WorkspaceTab
   label: string
   buttonId: string
   panelId: string
-}> = [
-  { key: 'overview', label: '进度总览', buttonId: 'dashboard-tab-overview', panelId: 'overview' },
-  { key: 'portrait', label: '能力画像', buttonId: 'dashboard-tab-portrait', panelId: 'portrait' },
-  { key: 'insight', label: '学生洞察', buttonId: 'dashboard-tab-insight', panelId: 'insight' },
-  { key: 'trend', label: '趋势复盘', buttonId: 'dashboard-tab-trend', panelId: 'trend' },
-  { key: 'review', label: '教学复盘', buttonId: 'dashboard-tab-review', panelId: 'review' },
-  { key: 'intervention', label: '介入建议', buttonId: 'dashboard-tab-intervention', panelId: 'intervention' },
+}
+
+const workspaceTabs: WorkspaceTabItem[] = [
+  { key: 'overview', label: '进度总览', buttonId: 'top-tab-overview', panelId: 'overview' },
+  { key: 'portrait', label: '能力画像', buttonId: 'top-tab-portrait', panelId: 'portrait' },
+  { key: 'trend', label: '趋势复盘', buttonId: 'top-tab-trend', panelId: 'trend' },
+  { key: 'insight', label: '学生洞察', buttonId: 'top-tab-insight', panelId: 'insight' },
+  { key: 'advice', label: '今日教学建议', buttonId: 'top-tab-advice', panelId: 'advice' },
+  { key: 'action', label: '介入建议', buttonId: 'top-tab-action', panelId: 'action' },
 ]
 
-const dashboardTabOrder = dashboardTabs.map((tab) => tab.key) as DashboardTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<DashboardTab>({
-  orderedTabs: dashboardTabOrder,
+const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
   defaultTab: 'overview',
 })
 
@@ -59,8 +62,10 @@ const {
   overviewDescription,
   metaPills,
   overviewMetrics,
+  teachingAdvice,
   studentInsightRows,
   portraitSummaryNotes,
+  trendSignals,
   weakDimensionStats,
 } = useTeacherDashboardMetrics({
   students: toRef(props, 'students'),
@@ -75,16 +80,16 @@ const {
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col">
     <nav
-      class="workspace-tabbar top-tabs"
+      class="workspace-tabbar top-tabs teacher-dashboard-tabs"
       role="tablist"
       aria-label="教学概览标签页"
     >
       <button
-        v-for="(tab, index) in dashboardTabs"
+        v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
         :key="tab.key"
         :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        class="workspace-tab top-tab"
+        class="top-tab"
         :class="{ active: activeTab === tab.key }"
         type="button"
         role="tab"
@@ -103,11 +108,8 @@ const {
         <section
           v-show="activeTab === 'overview'"
           id="overview"
-          class="workspace-hero teacher-dashboard-hero tab-panel"
-          :class="{ active: activeTab === 'overview' }"
+          class="workspace-hero teacher-dashboard-hero tab-panel active"
           role="tabpanel"
-          aria-labelledby="dashboard-tab-overview"
-          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
@@ -195,253 +197,175 @@ const {
         <section
           v-show="activeTab === 'portrait'"
           id="portrait"
-          class="tab-panel"
-          :class="{ active: activeTab === 'portrait' }"
+          class="section tab-panel active"
           role="tabpanel"
-          aria-labelledby="dashboard-tab-portrait"
-          :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
         >
-          <section class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Skill Portrait
-                </div>
-                <h2 class="list-heading__title">
-                  能力画像与薄弱维度
-                </h2>
+          <div class="section-head section-head--premium">
+            <div class="teacher-heading">
+              <div class="section-kicker">
+                Skill Portrait
               </div>
-            </header>
-
-            <div class="teacher-dashboard-panel-body portrait-grid">
-              <div class="portrait-summary-block">
-                <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
-                  <article
-                    v-for="item in portraitSummaryNotes"
-                    :key="item.key"
-                    class="summary-note progress-card metric-panel-card"
-                  >
-                    <div class="summary-note-label progress-card-label metric-panel-label">
-                      {{ item.label }}
-                    </div>
-                    <div class="summary-note-value progress-card-value metric-panel-value">
-                      {{ item.value }}
-                    </div>
-                    <div class="summary-note-copy progress-card-hint metric-panel-helper">
-                      {{ item.copy || '画像摘要' }}
-                    </div>
-                  </article>
-                </div>
-
-                <div class="portrait-guidance">
-                  <div class="portrait-guidance__label">
-                    使用方式
-                  </div>
-                  <div class="portrait-guidance__copy">
-                    先看影响学生最多的能力方向，再结合复盘结论安排题单或课堂讲解。
-                  </div>
-                </div>
-              </div>
-
-              <div class="portrait-dimension-block">
-                <div class="panel-header-row">
-                  <h3 class="panel-title">
-                    优先补强方向
-                  </h3>
-                  <span class="panel-badge">按学生数排序</span>
-                </div>
-
-                <div
-                  v-if="weakDimensionStats.length > 0"
-                  class="weak-list workspace-directory-list"
-                >
-                  <article
-                    v-for="(item, index) in weakDimensionStats.slice(0, 5)"
-                    :key="item.dimension"
-                    class="weak-item"
-                  >
-                    <div class="weak-rank">
-                      {{ `${index + 1}`.padStart(2, '0') }}
-                    </div>
-                    <div class="weak-content">
-                      <div
-                        class="weak-name"
-                        :title="item.dimension"
-                      >
-                        {{ item.dimension }}
-                      </div>
-                      <div class="weak-copy">
-                        {{ item.count }} 名学生当前在该方向暴露弱项。
-                      </div>
-                      <div class="weak-bar">
-                        <span :style="{ width: item.width }" />
-                      </div>
-                    </div>
-                    <div class="weak-score">
-                      {{ item.count }} 人
-                    </div>
-                  </article>
-                </div>
-                <div
-                  v-else
-                  class="workspace-directory-empty portrait-empty"
-                >
-                  暂无可排序的薄弱维度
-                </div>
-              </div>
+              <h2 class="section-title">
+                能力画像与薄弱维度
+              </h2>
             </div>
-          </section>
-        </section>
+          </div>
 
-        <section
-          v-show="activeTab === 'insight'"
-          id="insight"
-          class="tab-panel"
-          :class="{ active: activeTab === 'insight' }"
-          role="tabpanel"
-          aria-labelledby="dashboard-tab-insight"
-          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
-        >
-          <section class="overview-panel workspace-directory-section teacher-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Student Insight
-                </div>
-                <h2 class="list-heading__title">
-                  学生洞察
-                </h2>
+          <div class="portrait-grid portrait-grid--premium">
+            <div class="portrait-summary-block">
+              <div class="panel-header-row">
+                <h3 class="panel-title">
+                  优先补强方向
+                </h3>
               </div>
-            </header>
 
-            <div class="teacher-dashboard-panel-body">
-              <div class="student-insight-list workspace-directory-list">
+              <div
+                v-if="weakDimensionStats.length > 0"
+                class="weak-list weak-list--premium"
+              >
                 <article
-                  v-for="row in studentInsightRows"
-                  :key="row.key"
-                  class="student-insight-row"
-                  :class="`student-insight-row--${row.tone}`"
+                  v-for="(item, index) in weakDimensionStats.slice(0, 3)"
+                  :key="item.dimension"
+                  class="weak-item weak-item--premium"
                 >
-                  <div class="student-insight-row__status">
-                    {{ row.status }}
+                  <div class="weak-rank">
+                    {{ `${index + 1}`.padStart(2, '0') }}
                   </div>
-                  <div class="student-insight-row__main">
-                    <h3
-                      class="student-insight-row__title"
-                      :title="row.title"
-                    >
-                      {{ row.title }}
-                    </h3>
-                    <p class="student-insight-row__detail">
-                      {{ row.detail }}
-                    </p>
-                    <div class="student-insight-row__chips">
-                      <span
-                        v-for="chip in row.chips"
-                        :key="chip"
-                        class="student-insight-chip"
-                      >
-                        {{ chip }}
-                      </span>
+                  <div class="weak-content">
+                    <div class="weak-name">
+                      {{ item.dimension }}
                     </div>
+                    <div class="weak-copy">
+                      {{ item.count }} 名学生当前在该方向暴露弱项。
+                    </div>
+                  </div>
+                  <div class="weak-score">
+                    {{ item.count }} <small>人</small>
+                  </div>
+                </article>
+              </div>
+
+              <div class="summary-grid summary-grid--premium metric-panel-grid">
+                <article
+                  v-for="item in portraitSummaryNotes"
+                  :key="item.key"
+                  class="summary-note summary-note--premium metric-panel-card"
+                >
+                  <div class="summary-note-label metric-panel-label">
+                    {{ item.label }}
+                  </div>
+                  <div class="summary-note-value metric-panel-value">
+                    {{ item.value }}
+                  </div>
+                  <div class="summary-note-copy metric-panel-helper">
+                    {{ item.copy || '当前画像摘要' }}
                   </div>
                 </article>
               </div>
             </div>
-          </section>
+
+            <div class="workspace-subpanel workspace-subpanel--flat workspace-subpanel--insight">
+              <TeacherClassInsightsPanel
+                :students="students"
+                :class-name="selectedClassName"
+                split-cards
+                bare
+              />
+            </div>
+          </div>
         </section>
 
         <section
           v-show="activeTab === 'trend'"
           id="trend"
-          class="tab-panel"
-          :class="{ active: activeTab === 'trend' }"
+          class="section tab-panel active"
           role="tabpanel"
-          aria-labelledby="dashboard-tab-trend"
-          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
         >
-          <section class="overview-panel workspace-directory-section teacher-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Trend Review
-                </div>
-                <h2 class="list-heading__title">
-                  趋势复盘
-                </h2>
+          <div class="workspace-subpanel workspace-subpanel--premium">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Trend Review
               </div>
+              <h2 class="workspace-tab-heading__title">
+                趋势复盘
+              </h2>
             </header>
-
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassTrendPanel
-                :trend="trend"
-                title="班级近 7 天训练趋势"
-                bare
-              />
-            </div>
-          </section>
+            <TeacherClassTrendPanel
+              :trend="trend"
+              title="班级近 7 天训练趋势"
+              bare
+            />
+          </div>
         </section>
 
         <section
-          v-show="activeTab === 'review'"
-          id="review"
-          class="tab-panel"
-          :class="{ active: activeTab === 'review' }"
+          v-show="activeTab === 'insight'"
+          id="insight"
+          class="section tab-panel active"
           role="tabpanel"
-          aria-labelledby="dashboard-tab-review"
-          :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
         >
-          <section class="overview-panel workspace-directory-section teacher-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Review
-                </div>
-                <h2 class="list-heading__title">
-                  教学复盘结论
-                </h2>
+          <div class="workspace-subpanel workspace-subpanel--premium">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Student Insight
               </div>
+              <h2 class="workspace-tab-heading__title">
+                学生洞察
+              </h2>
             </header>
-
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassReviewPanel
-                :review="review"
-                :class-name="selectedClassName"
-                bare
-              />
-            </div>
-          </section>
+            <TeacherClassInsightsPanel
+              :students="students"
+              :class-name="selectedClassName"
+              split-cards
+              bare
+            />
+          </div>
         </section>
 
         <section
-          v-show="activeTab === 'intervention'"
-          id="intervention"
-          class="tab-panel"
-          :class="{ active: activeTab === 'intervention' }"
+          v-show="activeTab === 'advice'"
+          id="advice"
+          class="section tab-panel active"
           role="tabpanel"
-          aria-labelledby="dashboard-tab-intervention"
-          :aria-hidden="activeTab === 'intervention' ? 'false' : 'true'"
         >
-          <section class="overview-panel workspace-directory-section teacher-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Intervention
-                </div>
-                <h2 class="list-heading__title">
-                  优先介入学生
-                </h2>
+          <div class="workspace-subpanel workspace-subpanel--premium">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Teaching Advice
               </div>
+              <h2 class="workspace-tab-heading__title">
+                今日教学建议
+              </h2>
             </header>
+            <TeacherClassReviewPanel
+              :review="review"
+              :class-name="selectedClassName"
+              bare
+            />
+          </div>
+        </section>
 
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherInterventionPanel
-                :students="students"
-                :class-name="selectedClassName"
-                bare
-              />
-            </div>
-          </section>
+        <section
+          v-show="activeTab === 'action'"
+          id="action"
+          class="section tab-panel active"
+          role="tabpanel"
+        >
+          <div class="workspace-subpanel workspace-subpanel--premium">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Intervention
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                介入建议
+              </h2>
+            </header>
+            <TeacherInterventionPanel
+              :students="students"
+              :class-name="selectedClassName"
+              bare
+            />
+          </div>
         </section>
       </main>
     </div>
@@ -462,6 +386,10 @@ const {
   --workspace-brand: var(--journal-accent);
   --workspace-brand-ink: var(--journal-accent-strong);
   --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: 0;
+  --page-top-tabs-padding: 0 var(--space-workspace-side-padding);
+  --page-top-tabs-border: var(--workspace-line-soft);
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -488,25 +416,6 @@ const {
   grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.34fr);
   gap: var(--space-7);
   align-items: stretch;
-}
-
-.overview-panel {
-  --workspace-directory-section-padding: 0;
-  --workspace-directory-section-gap: var(--space-5);
-  --workspace-directory-shell-radius: 16px;
-  --workspace-directory-shell-padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.overview-panel--wide {
-  grid-column: 1 / -1;
-}
-
-.overview-panel > .list-heading {
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .hero-summary {
@@ -560,7 +469,13 @@ const {
   min-height: 100%;
   padding: var(--space-5);
   border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--teacher-card-border));
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 48%
+    ),
+    color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
 .rail-label {
@@ -590,279 +505,155 @@ const {
   color: var(--journal-muted);
 }
 
-.teacher-dashboard-panel-body {
-  min-width: 0;
+.section {
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--workspace-line-soft);
 }
 
-.portrait-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
-  gap: var(--space-5);
-  align-items: start;
+.section-head {
+  margin-bottom: var(--space-5);
 }
 
-.portrait-summary-block,
-.portrait-dimension-block {
-  display: grid;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
-.panel-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.panel-title {
-  margin: 0;
-  font-size: var(--font-size-17);
+.section-kicker {
+  font-size: var(--font-size-11);
   font-weight: 800;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+  letter-spacing: 0.1em;
+}
+
+.section-title {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-22);
+  font-weight: 900;
   color: var(--journal-ink);
 }
 
-.panel-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  padding: 0 var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  border-radius: 999px;
-  background: var(--workspace-brand-soft);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+.section-head--premium {
+  margin-bottom: var(--space-7);
 }
 
-.weak-list {
-  --workspace-directory-shell-background: color-mix(
-    in srgb,
-    var(--journal-surface) 96%,
-    transparent
-  );
+.workspace-subpanel--premium {
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 24px;
+  background: var(--workspace-panel);
+  padding: var(--space-7);
+  box-shadow: 0 4px 20px var(--color-shadow-soft);
+}
+
+.portrait-grid--premium {
   display: grid;
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-8);
+  align-items: start;
 }
 
-.weak-item {
+.panel-header-row {
+  margin-bottom: var(--space-5);
+}
+
+.weak-list--premium {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.weak-item--premium {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--space-4);
   align-items: center;
-  padding: var(--space-4) var(--space-4-5);
-  border-bottom: 1px solid var(--workspace-directory-row-divider);
-  background: transparent;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  padding: var(--space-5);
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
+  );
+  box-shadow: 0 2px 8px var(--color-shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.weak-item:last-child {
-  border-bottom: 0;
-}
-
-.weak-item:hover {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+.weak-item--premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-shadow-soft);
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-card-border));
 }
 
 .weak-rank {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.125rem;
-  height: 2.125rem;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
   background: var(--workspace-brand-soft);
-  font: 700 var(--font-size-13) / 1 var(--font-family-mono);
+  font: 800 var(--font-size-14) / 1 var(--font-family-mono);
   color: var(--journal-accent-strong);
 }
 
-.weak-content {
-  min-width: 0;
-}
-
 .weak-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-15);
+  font-size: var(--font-size-17);
   font-weight: 800;
   color: var(--journal-ink);
 }
 
 .weak-copy {
   margin-top: var(--space-1);
-  font-size: var(--font-size-13);
+  font-size: var(--font-size-14);
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
 .weak-score {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-13);
+  font-size: var(--font-size-18);
   font-weight: 800;
   color: var(--journal-accent-strong);
 }
 
-.weak-bar {
-  height: 0.375rem;
-  margin-top: var(--space-2);
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--teacher-card-border) 66%, transparent);
-}
-
-.weak-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--journal-accent) 72%, var(--journal-accent-strong));
-}
-
-.portrait-empty {
-  padding: var(--space-5);
-  font-size: var(--font-size-13);
-  color: var(--journal-muted);
-}
-
-.portrait-guidance {
-  border-left: 3px solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
-  padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-}
-
-.portrait-guidance__label {
+.weak-score small {
   font-size: var(--font-size-12);
-  font-weight: 800;
-  color: var(--journal-accent-strong);
-}
-
-.portrait-guidance__copy {
-  margin-top: var(--space-1);
-  font-size: var(--font-size-13);
-  line-height: 1.65;
+  font-weight: 700;
+  margin-left: 2px;
   color: var(--journal-muted);
 }
 
-.summary-note {
-  min-height: 7.25rem;
+.summary-grid--premium {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
-.summary-note-copy {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.summary-note--premium {
+  min-height: 8.5rem;
+  padding: var(--space-5);
+  border-radius: 20px;
+  border: 1px solid var(--teacher-card-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
 }
 
-.teacher-dashboard-panel-body.workspace-subpanel--flat {
-  display: flex;
-  flex-direction: column;
+.workspace-subpanel--flat.workspace-subpanel--insight {
+  margin-top: 0;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.teacher-panel) {
-  width: 100%;
-}
-
-.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.review-item),
-.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.intervention-item) {
-  border-width: 0 0 1px;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.student-insight-list {
-  display: grid;
-}
-
-.student-insight-row {
-  display: grid;
-  grid-template-columns: minmax(7rem, 0.18fr) minmax(0, 1fr);
-  gap: var(--space-5);
-  padding: var(--space-4-5) var(--space-5);
-  border-bottom: 1px solid var(--workspace-directory-row-divider);
-}
-
-.student-insight-row:last-child {
-  border-bottom: 0;
-}
-
-.student-insight-row__status {
-  align-self: start;
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.875rem;
-  padding: 0 var(--space-3);
+.quick-action {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--teacher-card-border);
-  border-radius: 999px;
-  font-size: var(--font-size-12);
-  font-weight: 800;
-  color: var(--journal-muted);
-}
-
-.student-insight-row--ready .student-insight-row__status {
-  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
-  background: color-mix(in srgb, var(--color-success) 8%, transparent);
-  color: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
-}
-
-.student-insight-row--warning .student-insight-row__status {
-  border-color: color-mix(in srgb, var(--color-warning) 32%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 9%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 78%, var(--journal-ink));
-}
-
-.student-insight-row--danger .student-insight-row__status {
-  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 78%, var(--journal-ink));
-}
-
-.student-insight-row__main {
-  min-width: 0;
-}
-
-.student-insight-row__title {
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-16);
-  font-weight: 800;
+  border-radius: 12px;
+  background: var(--journal-surface);
   color: var(--journal-ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-
-.student-insight-row__detail {
-  margin: var(--space-2) 0 0;
-  font-size: var(--font-size-14);
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-.student-insight-row__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.student-insight-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.625rem;
-  padding: 0 var(--space-2-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 86%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-surface) 78%, transparent);
-  font-size: var(--font-size-12);
-  color: var(--journal-muted);
+.quick-action:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
 }
 
 @media (max-width: 1180px) {
@@ -874,6 +665,7 @@ const {
 
 @media (max-width: 760px) {
   .teacher-dashboard-shell {
+    --page-top-tabs-gap: var(--space-5);
     --metric-panel-columns: 1fr;
   }
 
@@ -887,11 +679,6 @@ const {
 
   .weak-score {
     grid-column: 2;
-  }
-
-  .student-insight-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
   }
 }
 </style>
