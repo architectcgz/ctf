@@ -9,13 +9,18 @@ import platformChallengeFlagConfigPanelSource from '@/features/platform-challeng
 import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
 import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
 import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
+import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 
 describe('Admin ChallengeDetail panel extraction', () => {
   it('应将题目详情 tab 抽到独立 platform challenge 组件', () => {
     expect(challengeDetailSource).toContain(
+      "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
+    )
+    expect(challengeDetailSource).toContain('<PlatformChallengeDetailWorkspace')
+    expect(platformChallengeDetailWorkspaceSource).toContain(
       "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
     )
-    expect(challengeDetailSource).toContain('<AdminChallengeWorkspaceTabs')
+    expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(adminChallengeWorkspaceTabsSource).toContain(
       "import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'"
     )
@@ -23,10 +28,10 @@ describe('Admin ChallengeDetail panel extraction', () => {
   })
 
   it('应将题目详情顶栏抽到独立 platform challenge 组件', () => {
-    expect(challengeDetailSource).toContain(
+    expect(platformChallengeDetailWorkspaceSource).toContain(
       "import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'"
     )
-    expect(challengeDetailSource).toContain('<AdminChallengeTopbarPanel')
+    expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
     expect(adminChallengeTopbarPanelSource).toContain('<span class="workspace-overline">Challenge Profile</span>')
     expect(adminChallengeTopbarPanelSource).toContain('拓扑编排')
     expect(adminChallengeTopbarPanelSource).toContain('返回题库')

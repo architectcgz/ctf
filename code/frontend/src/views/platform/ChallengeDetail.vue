@@ -2,14 +2,9 @@
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col"
   >
-    <AdminChallengeTopbarPanel
+    <PlatformChallengeDetailWorkspace
       :workspace-label="workspaceLabel"
       :has-challenge-id="Boolean(challengeId)"
-      @open-topology="openTopology"
-      @open-challenge-list="openChallengeList"
-    />
-
-    <AdminChallengeWorkspaceTabs
       :loading="loading"
       :panel-tabs="panelTabs"
       :active-panel="activePanel"
@@ -18,11 +13,13 @@
       :downloading-attachment="downloadingAttachment"
       :flag-draft="flagDraft"
       :challenge-id="challengeId"
+      @open-topology="openTopology"
+      @open-challenge-list="openChallengeList"
       @select="switchPanel"
       @keydown="handleTabKeydown($event.event, $event.index)"
       @download-attachment="downloadAttachment"
       @save-flag-config="saveFlagConfig"
-      @update:flag-draft="updateFlagDraft"
+      @update-flag-draft="updateFlagDraft"
     />
   </section>
 </template>
@@ -31,10 +28,9 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'
-import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { usePlatformChallengeDetailPage } from '@/features/platform-challenge-detail'
+import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 

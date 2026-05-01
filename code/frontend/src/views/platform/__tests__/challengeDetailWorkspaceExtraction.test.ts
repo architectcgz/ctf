@@ -6,13 +6,15 @@ import platformChallengeFlagActionBarSource from '@/features/platform-challenge-
 import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
 import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
 import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
+import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 
 describe('Admin ChallengeDetail workspace extraction', () => {
   it('应将题目管理页的 tab rail 与 workspace 壳层抽到独立 platform challenge 组件', () => {
     expect(challengeDetailSource).toContain(
-      "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
+      "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )
-    expect(challengeDetailSource).toContain('<AdminChallengeWorkspaceTabs')
+    expect(challengeDetailSource).toContain('<PlatformChallengeDetailWorkspace')
+    expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(adminChallengeWorkspaceTabsSource).toContain('aria-label="题目管理视图切换"')
     expect(adminChallengeWorkspaceTabsSource).toContain('admin-challenge-panel-writeup')
     expect(adminChallengeWorkspaceTabsSource).toContain('ChallengeWriteupManagePanel')
@@ -39,7 +41,7 @@ describe('Admin ChallengeDetail workspace extraction', () => {
 
   it('应将 Flag 配置状态透传收敛到 draft 对象并下沉到 feature ui', () => {
     expect(challengeDetailSource).toContain(':flag-draft="flagDraft"')
-    expect(challengeDetailSource).toContain('@update:flag-draft="updateFlagDraft"')
+    expect(challengeDetailSource).toContain('@update-flag-draft="updateFlagDraft"')
     expect(adminChallengeWorkspaceTabsSource).toContain(':flag-draft="flagDraft"')
     expect(adminChallengeWorkspaceTabsSource).toContain(
       "@update:flag-draft=\"emit('update:flag-draft', $event)\""
