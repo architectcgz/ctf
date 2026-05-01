@@ -244,7 +244,7 @@ func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, r
 	return s.commands.UpsertServiceCheck(ctx, contestID, roundID, req)
 }
 
-func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
+func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
 	return s.commands.CreateAttackLog(ctx, contestID, roundID, req)
 }
 
@@ -1659,7 +1659,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("seed Green sla/checker fields: %v", err)
 	}
 
-	first, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
+	first, err := service.CreateAttackLog(context.Background(), 3, 31, contestcmd.CreateAttackLogInput{
 		AttackerTeamID: 311,
 		VictimTeamID:   312,
 		ServiceID:      serviceID,
@@ -1677,7 +1677,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("expected first score gained 60, got %+v", first)
 	}
 
-	second, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
+	second, err := service.CreateAttackLog(context.Background(), 3, 31, contestcmd.CreateAttackLogInput{
 		AttackerTeamID: 311,
 		VictimTeamID:   312,
 		ServiceID:      serviceID,
@@ -1699,7 +1699,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("unexpected Blue service impact: %+v", blueService)
 	}
 
-	if _, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
+	if _, err := service.CreateAttackLog(context.Background(), 3, 31, contestcmd.CreateAttackLogInput{
 		AttackerTeamID: 313,
 		VictimTeamID:   312,
 		ServiceID:      serviceID,
@@ -1788,7 +1788,7 @@ func TestAWDServiceCreateAttackLogCreatesVictimServiceImpactWhenMissing(t *testi
 	createAWDTeamFixture(t, db, 612, 6, "Blue", now)
 	serviceID := defaultAWDContestServiceID(6, 601)
 
-	resp, err := service.CreateAttackLog(context.Background(), 6, 61, &dto.CreateAWDAttackLogReq{
+	resp, err := service.CreateAttackLog(context.Background(), 6, 61, contestcmd.CreateAttackLogInput{
 		AttackerTeamID: 611,
 		VictimTeamID:   612,
 		ServiceID:      serviceID,

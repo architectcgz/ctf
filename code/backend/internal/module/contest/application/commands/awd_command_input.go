@@ -20,3 +20,12 @@ type RunCurrentRoundChecksInput struct {
 	ForceOverride  *bool
 	OverrideReason *string
 }
+
+type CreateAttackLogInput struct {
+	AttackerTeamID int64
+	VictimTeamID   int64
+	ServiceID      int64
+	AttackType     string
+	SubmittedFlag  string
+	IsSuccess      bool
+}

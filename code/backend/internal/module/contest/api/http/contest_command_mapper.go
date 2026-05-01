@@ -121,3 +121,17 @@ func runCurrentRoundChecksInputFromDTO(req *dto.RunCurrentAWDCheckerReq) contest
 		OverrideReason: req.OverrideReason,
 	}
 }
+
+func createAttackLogInputFromDTO(req *dto.CreateAWDAttackLogReq) contestcmd.CreateAttackLogInput {
+	if req == nil {
+		return contestcmd.CreateAttackLogInput{}
+	}
+	return contestcmd.CreateAttackLogInput{
+		AttackerTeamID: req.AttackerTeamID,
+		VictimTeamID:   req.VictimTeamID,
+		ServiceID:      req.ServiceID,
+		AttackType:     req.AttackType,
+		SubmittedFlag:  req.SubmittedFlag,
+		IsSuccess:      req.IsSuccess,
+	}
+}

@@ -18,7 +18,7 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, &req)
+	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, createAttackLogInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return

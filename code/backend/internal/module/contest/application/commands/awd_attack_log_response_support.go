@@ -11,7 +11,7 @@ import (
 func (s *AWDService) buildAttackLogResponse(
 	ctx context.Context,
 	contestID, roundID int64,
-	req *dto.CreateAWDAttackLogReq,
+	req CreateAttackLogInput,
 	logRecord *model.AWDAttackLog,
 	teams map[int64]*model.Team,
 ) (*dto.AWDAttackLogResp, error) {

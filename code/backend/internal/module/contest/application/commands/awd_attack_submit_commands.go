@@ -13,7 +13,7 @@ func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, servic
 		return nil, err
 	}
 
-	return s.createAttackLog(ctx, contestID, attackContext.round.ID, &dto.CreateAWDAttackLogReq{
+	return s.createAttackLog(ctx, contestID, attackContext.round.ID, CreateAttackLogInput{
 		AttackerTeamID: attackContext.attackerTeamID,
 		VictimTeamID:   req.VictimTeamID,
 		ServiceID:      serviceID,
