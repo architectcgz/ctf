@@ -61,7 +61,7 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 		RuntimeConfig:     runtimeConfig,
 		ValidationState:   contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState)),
 		LastPreviewAt:     item.LastPreviewAt,
-		LastPreviewResult: contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult),
+		LastPreviewResult: awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult)),
 		CreatedAt:         item.CreatedAt,
 		UpdatedAt:         item.UpdatedAt,
 	}

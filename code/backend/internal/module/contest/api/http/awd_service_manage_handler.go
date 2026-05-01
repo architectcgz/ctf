@@ -38,12 +38,32 @@ func contestAWDServiceResultsToDTO(results []contestqry.ContestAWDServiceResult)
 			RuntimeConfig:     item.RuntimeConfig,
 			ValidationState:   model.AWDCheckerValidationState(item.ValidationState),
 			LastPreviewAt:     item.LastPreviewAt,
-			LastPreviewResult: contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw),
+			LastPreviewResult: awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw)),
 			CreatedAt:         item.CreatedAt,
 			UpdatedAt:         item.UpdatedAt,
 		})
 	}
 	return resp
+}
+
+func awdCheckerPreviewResultToDTO(item *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp {
+	if item == nil {
+		return nil
+	}
+	return &dto.AWDCheckerPreviewResp{
+		CheckerType:   item.CheckerType,
+		ServiceStatus: item.ServiceStatus,
+		CheckResult:   item.CheckResult,
+		PreviewContext: dto.AWDCheckerPreviewContextResp{
+			ServiceID:      item.PreviewContext.ServiceID,
+			AccessURL:      item.PreviewContext.AccessURL,
+			PreviewFlag:    item.PreviewContext.PreviewFlag,
+			RoundNumber:    item.PreviewContext.RoundNumber,
+			TeamID:         item.PreviewContext.TeamID,
+			AWDChallengeID: item.PreviewContext.AWDChallengeID,
+		},
+		PreviewToken: item.PreviewToken,
+	}
 }
 
 func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {
