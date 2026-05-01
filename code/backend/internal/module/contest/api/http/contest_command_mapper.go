@@ -33,3 +33,13 @@ func updateContestInputFromDTO(req *dto.UpdateContestReq) contestcmd.UpdateConte
 		OverrideReason: req.OverrideReason,
 	}
 }
+
+func createAnnouncementInputFromDTO(req *dto.CreateContestAnnouncementReq) contestcmd.CreateAnnouncementInput {
+	if req == nil {
+		return contestcmd.CreateAnnouncementInput{}
+	}
+	return contestcmd.CreateAnnouncementInput{
+		Title:   req.Title,
+		Content: req.Content,
+	}
+}

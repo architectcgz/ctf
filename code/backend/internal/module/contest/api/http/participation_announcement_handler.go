@@ -21,7 +21,7 @@ func (h *ParticipationHandler) CreateAnnouncement(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	item, err := h.commands.CreateAnnouncement(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID, &req)
+	item, err := h.commands.CreateAnnouncement(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID, createAnnouncementInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
@@ -88,7 +87,7 @@ func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testin
 		t.Fatalf("create contest: %v", err)
 	}
 
-	item, err := service.CreateAnnouncement(context.Background(), contest.ID, 9001, &dto.CreateContestAnnouncementReq{
+	item, err := service.CreateAnnouncement(context.Background(), contest.ID, 9001, CreateAnnouncementInput{
 		Title:   "比赛开始",
 		Content: "欢迎接入实时公告。",
 	})

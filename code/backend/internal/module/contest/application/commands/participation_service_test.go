@@ -211,7 +211,7 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 		t.Fatalf("create submission: %v", err)
 	}
 
-	created, err := commandService.CreateAnnouncement(context.Background(), contest.ID, 9001, &dto.CreateContestAnnouncementReq{
+	created, err := commandService.CreateAnnouncement(context.Background(), contest.ID, 9001, contestcmd.CreateAnnouncementInput{
 		Title:   "比赛开始",
 		Content: "欢迎来到比赛。",
 	})
