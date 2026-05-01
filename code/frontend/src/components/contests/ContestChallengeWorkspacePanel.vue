@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
+
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import type { ContestChallengeItem, SubmitFlagData } from '@/api/contracts'
 
@@ -35,6 +37,18 @@ function selectedChallengeMeta(): string {
   if (!props.selectedChallenge) return ''
   return `${props.selectedChallenge.category} · ${props.selectedChallenge.points} 分`
 }
+
+function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string {
+  const labels: Record<ContestChallengeItem['difficulty'], string> = {
+    beginner: '入门',
+    easy: '简单',
+    medium: '中等',
+    hard: '困难',
+    insane: '极难',
+  }
+
+  return labels[difficulty]
+}
 </script>
 
 <template>
@@ -53,12 +67,17 @@ function selectedChallengeMeta(): string {
     v-else
     class="contest-challenge-workspace"
   >
-    <div class="contest-challenge-list">
+    <div
+      class="contest-challenge-list"
+      aria-label="竞赛题目列表"
+    >
       <button
         v-for="challenge in challenges"
         :key="challenge.id"
         type="button"
         :class="challengeClass(challenge.id, challenge.is_solved)"
+        :aria-pressed="selectedChallenge?.id === challenge.id"
+        :title="challenge.title"
         @click="emit('select-challenge', challenge)"
       >
         <div class="contest-challenge__head">
@@ -68,12 +87,18 @@ function selectedChallengeMeta(): string {
           <span
             v-if="challenge.is_solved"
             class="contest-challenge__solved"
-          >✓</span>
+            aria-label="已解出"
+          >
+            <CheckCircle2
+              class="contest-challenge__solved-icon"
+              aria-hidden="true"
+            />
+          </span>
         </div>
         <div class="contest-challenge__meta">
-          <span>{{ challenge.category }}</span>
-          <span>{{ challenge.points }} 分</span>
-          <span>{{ challenge.solved_count }} 人解出</span>
+          <span class="contest-challenge__meta-item">{{ challenge.category }}</span>
+          <span class="contest-challenge__meta-item">{{ challenge.points }} 分</span>
+          <span class="contest-challenge__solve-count">{{ challenge.solved_count }} 人解出</span>
         </div>
       </button>
     </div>
@@ -94,14 +119,39 @@ function selectedChallengeMeta(): string {
           </div>
         </div>
 
-        <div class="challenge-focus__stats">
-          <span class="contest-chip contest-chip--neutral">
-            解出人数 {{ selectedChallenge.solved_count }}
-          </span>
+        <div class="challenge-focus__summary">
+          <div class="challenge-focus__summary-item">
+            <Target
+              class="challenge-focus__summary-icon"
+              aria-hidden="true"
+            />
+            <span>难度</span>
+            <strong>{{ difficultyLabel(selectedChallenge.difficulty) }}</strong>
+          </div>
+          <div class="challenge-focus__summary-item">
+            <Trophy
+              class="challenge-focus__summary-icon"
+              aria-hidden="true"
+            />
+            <span>积分</span>
+            <strong>{{ selectedChallenge.points }}</strong>
+          </div>
+          <div class="challenge-focus__summary-item">
+            <UsersRound
+              class="challenge-focus__summary-icon"
+              aria-hidden="true"
+            />
+            <span>解出</span>
+            <strong>{{ selectedChallenge.solved_count }}</strong>
+          </div>
           <span
             v-if="selectedChallenge.is_solved"
-            class="contest-chip contest-chip--success"
+            class="contest-chip contest-chip--success challenge-focus__status"
           >
+            <CheckCircle2
+              class="challenge-focus__status-icon"
+              aria-hidden="true"
+            />
             已解出
           </span>
         </div>
@@ -139,7 +189,7 @@ function selectedChallengeMeta(): string {
             <button
               type="button"
               :disabled="submitting"
-              class="ui-btn ui-btn--primary"
+              class="ui-btn ui-btn--primary flag-submit__button"
               @click="emit('submit-flag')"
             >
               {{ submitting ? '提交中...' : '提交' }}
@@ -168,28 +218,31 @@ function selectedChallengeMeta(): string {
 
 <style scoped>
 .contest-empty-state {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .contest-challenge-workspace {
-  margin-top: 1rem;
+  --contest-challenge-list-track: clamp(17rem, 28vw, 22rem);
+  margin-top: var(--space-4);
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, var(--contest-challenge-list-track)) minmax(0, 1fr);
 }
 
 .contest-challenge-list {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .contest-challenge {
+  min-width: 0;
   border: 0;
   border-inline-start: 2px solid
     color-mix(in srgb, var(--contest-accent) 24%, var(--color-border-default));
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
   background: transparent;
-  padding: 0.75rem 0.35rem 0.75rem 0.85rem;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
   text-align: left;
   transition:
     border-color 150ms ease,
@@ -201,7 +254,8 @@ function selectedChallengeMeta(): string {
 .contest-challenge:focus-visible {
   border-inline-start-color: color-mix(in srgb, var(--contest-accent) 72%, var(--color-border-default));
   background: color-mix(in srgb, var(--contest-accent) 5%, transparent);
-  outline: none;
+  outline: 2px solid color-mix(in srgb, var(--contest-accent) 26%, transparent);
+  outline-offset: var(--space-1);
 }
 
 .contest-challenge--active {
@@ -217,31 +271,64 @@ function selectedChallengeMeta(): string {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .contest-challenge__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-size-0-90);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .contest-challenge__solved {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
   color: var(--color-success);
-  font-weight: 700;
+}
+
+.contest-challenge__solved-icon {
+  width: var(--space-4);
+  height: var(--space-4);
 }
 
 .contest-challenge__meta {
-  margin-top: 0.35rem;
+  margin-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.7rem;
+  align-items: center;
+  gap: var(--space-1-5) var(--space-2);
   font-size: var(--font-size-0-76);
   color: var(--color-text-secondary);
 }
 
+.contest-challenge__meta-item,
+.contest-challenge__solve-count {
+  min-width: 0;
+}
+
+.contest-challenge__meta-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contest-challenge__solve-count {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-elevated) 74%, transparent);
+  padding: var(--space-0-5) var(--space-2);
+  color: color-mix(in srgb, var(--color-text-secondary) 90%, var(--color-text-primary));
+}
+
 .challenge-focus {
   min-width: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  padding-inline-start: var(--space-6);
 }
 
 .challenge-focus__head {
@@ -249,11 +336,12 @@ function selectedChallengeMeta(): string {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .challenge-focus__title {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
+  overflow-wrap: anywhere;
   font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--color-text-primary);
@@ -264,30 +352,70 @@ function selectedChallengeMeta(): string {
   color: var(--color-text-secondary);
 }
 
-.challenge-focus__stats {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+.challenge-focus__summary {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: stretch;
+}
+
+.challenge-focus__summary-item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  padding: var(--space-2) 0 var(--space-2-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-0-78);
+}
+
+.challenge-focus__summary-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  color: color-mix(in srgb, var(--contest-accent) 72%, var(--color-text-secondary));
+}
+
+.challenge-focus__summary-item strong {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-0-92);
+}
+
+.challenge-focus__status {
+  align-self: center;
+  gap: var(--space-1-5);
+  white-space: nowrap;
+}
+
+.challenge-focus__status-icon {
+  width: var(--space-4);
+  height: var(--space-4);
 }
 
 .challenge-focus__form-title {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .flag-submit {
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  align-items: stretch;
+  gap: var(--space-2);
+  max-width: 44rem;
 }
 
 .flag-submit__label {
   display: inline-flex;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .flag-submit__control {
@@ -295,10 +423,14 @@ function selectedChallengeMeta(): string {
   min-width: 0;
 }
 
+.flag-submit__button {
+  min-width: 6rem;
+}
+
 .contest-alert {
-  margin-top: 0.8rem;
+  margin-top: var(--space-3);
   border-inline-start: 2px solid transparent;
-  padding: 0.6rem 0.75rem;
+  padding: var(--space-2-5) var(--space-3);
   font-size: var(--font-size-0-84);
   line-height: 1.6;
 }
@@ -317,7 +449,7 @@ function selectedChallengeMeta(): string {
 
 .contest-inline-note {
   border-inline-start: 2px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  padding-inline-start: 0.85rem;
+  padding-inline-start: var(--space-3);
   font-size: var(--font-size-0-88);
   line-height: 1.7;
   color: var(--color-text-secondary);
@@ -325,13 +457,49 @@ function selectedChallengeMeta(): string {
 
 @media (max-width: 1100px) {
   .contest-challenge-workspace {
+    gap: var(--space-5);
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contest-challenge-list {
+    display: flex;
+    gap: var(--space-2);
+    margin-inline: calc(var(--space-1) * -1);
+    overflow-x: auto;
+    padding: var(--space-1) var(--space-1) var(--space-2);
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .contest-challenge {
+    flex: 0 0 min(19rem, 82vw);
+    scroll-snap-align: start;
+  }
+
+  .challenge-focus {
+    border-inline-start: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+    padding-block-start: var(--space-5);
+    padding-inline-start: 0;
   }
 }
 
 @media (max-width: 640px) {
+  .challenge-focus__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .challenge-focus__status {
+    justify-self: start;
+  }
+
   .flag-submit {
     flex-direction: column;
+    max-width: none;
+  }
+
+  .flag-submit__button {
+    width: 100%;
   }
 }
 </style>
