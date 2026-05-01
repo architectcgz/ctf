@@ -3,14 +3,18 @@ import { describe, expect, it } from 'vitest'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
 import challengeDetailInteractionsSource from '@/features/challenge-detail/model/useChallengeDetailInteractions.ts?raw'
+import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
 import challengeDetailPresentationSource from '@/features/challenge-detail/model/useChallengeDetailPresentation.ts?raw'
 
 describe('challenge detail solution tabs extraction', () => {
-  it('ChallengeDetail 应复用 useTabKeyboardNavigation，且 presentation composable 不再内置题解子标签键盘逻辑', () => {
+  it('ChallengeDetail 的题解子标签键盘逻辑应由 page-level feature 承接，presentation composable 保持纯派生', () => {
     expect(challengeDetailSource).toContain(
+      "import { useChallengeDetailPage } from '@/features/challenge-detail'"
+    )
+    expect(challengeDetailPageSource).toContain(
       "import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'"
     )
-    expect(challengeDetailSource).toContain('useTabKeyboardNavigation<ChallengeSolutionTab>({')
+    expect(challengeDetailPageSource).toContain('useTabKeyboardNavigation<ChallengeSolutionTab>({')
     expect(challengeDetailSource).not.toContain('function focusTab(id: string): void {')
     expect(challengeDetailSource).not.toContain(
       'function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: ChallengeSolutionTab): void {'
