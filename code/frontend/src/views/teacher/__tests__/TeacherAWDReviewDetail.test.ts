@@ -349,15 +349,15 @@ describe('TeacherAWDReviewDetail', () => {
     expect(collectTestIdTexts('awd-review-drawer-traffic-service-id')).toContain('Service #7009')
   })
 
-  it('轮次切换区应并入目录段结构，不再保留独立筛选卡片壳', () => {
+  it('轮次切换区应交由独立组件承接，页面保留组合层职责', () => {
     expect(awdReviewDetailSource).toContain(
-      'class="workspace-directory-section teacher-directory-section awd-review-round-section"'
+      "import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'"
     )
-    expect(awdReviewDetailSource).toContain('class="list-heading"')
+    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewRoundSelector')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-title')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-copy')
     expect(awdReviewDetailSource).not.toContain(
-      '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
+      '默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。'
     )
   })
 
