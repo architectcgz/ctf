@@ -174,6 +174,18 @@ func TestContestQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	}
 }
 
+func TestScoreboardRankQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "scoreboard_rank_query.go"),
+		filepath.Join("application", "queries", "scoreboard_rank_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
