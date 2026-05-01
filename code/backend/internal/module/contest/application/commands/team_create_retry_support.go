@@ -6,12 +6,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
-func resolveCreateTeamMaxMembers(req *dto.CreateTeamReq) int {
+func resolveCreateTeamMaxMembers(req CreateTeamInput) int {
 	maxMembers := req.MaxMembers
 	if maxMembers == 0 {
 		maxMembers = 4

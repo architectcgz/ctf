@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -139,7 +138,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 		t.Fatalf("create pending registration: %v", err)
 	}
 
-	_, err := service.CreateTeam(context.Background(), 20, 2002, &dto.CreateTeamReq{Name: "Pending Team"})
+	_, err := service.CreateTeam(context.Background(), 20, 2002, contestcmd.CreateTeamInput{Name: "Pending Team"})
 	if err != errcode.ErrContestRegistrationPending {
 		t.Fatalf("expected ErrContestRegistrationPending, got %v", err)
 	}

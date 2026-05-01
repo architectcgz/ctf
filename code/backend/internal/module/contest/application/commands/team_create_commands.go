@@ -7,7 +7,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64, req *dto.CreateTeamReq) (*dto.TeamResp, error) {
+func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64, req CreateTeamInput) (*dto.TeamResp, error) {
 	if err := s.ensureTeamJoinableContest(ctx, contestID); err != nil {
 		return nil, err
 	}

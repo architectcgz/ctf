@@ -52,3 +52,13 @@ func reviewRegistrationInputFromDTO(req *dto.ReviewContestRegistrationReq) conte
 		Status: req.Status,
 	}
 }
+
+func createTeamInputFromDTO(req *dto.CreateTeamReq) contestcmd.CreateTeamInput {
+	if req == nil {
+		return contestcmd.CreateTeamInput{}
+	}
+	return contestcmd.CreateTeamInput{
+		Name:       req.Name,
+		MaxMembers: req.MaxMembers,
+	}
+}
