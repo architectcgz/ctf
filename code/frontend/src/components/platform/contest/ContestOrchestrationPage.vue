@@ -109,9 +109,7 @@ function openContestWorkbench(contest: ContestDetailData) {
             <div class="workspace-overline">
               Contest Workspace
             </div>
-            <h1 class="workspace-page-title">
-              竞赛目录
-            </h1>
+            <h1 class="workspace-page-title">竞赛目录</h1>
           </div>
 
           <div class="ui-toolbar-actions contest-panel-actions">

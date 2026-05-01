@@ -216,9 +216,7 @@ function handleImportChange(event: Event): void {
             <div class="workspace-overline">
               User Workspace
             </div>
-            <h1 class="workspace-page-title">
-              用户治理台
-            </h1>
+            <h1 class="workspace-page-title">用户治理台</h1>
           </div>
 
           <div class="user-panel-actions">

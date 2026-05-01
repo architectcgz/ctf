@@ -347,13 +347,13 @@ async function handleExportArchive(): Promise<void> {
 
 .summary-card {
   --metric-panel-border: var(--teacher-card-border);
-  --metric-panel-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
   --metric-panel-radius: 18px;
   --metric-panel-padding: var(--space-4);
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
 }
 
 .summary-card--primary {
-  --metric-panel-background: linear-gradient(
+  background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
     color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
@@ -361,7 +361,7 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card--warning {
-  --metric-panel-background: linear-gradient(
+  background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-warning) 14%, var(--journal-surface)),
     color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))

@@ -9,6 +9,7 @@ import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 
+// PagePaginationControls is provided through WorkspaceDirectoryPagination.
 interface StudentDirectoryTableRow {
   id: string
   student_no: string

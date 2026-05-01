@@ -187,21 +187,6 @@ const weakDimensionStats = computed(() => {
   gap: var(--space-10);
 }
 
-.teacher-panel__title {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-18);
-  font-weight: 800;
-  color: var(--panel-ink);
-  letter-spacing: -0.01em;
-}
-
-.teacher-panel__subtitle {
-  margin-top: var(--space-1);
-  font-size: var(--font-size-13);
-  line-height: 1.5;
-  color: var(--panel-muted);
-}
-
 .teacher-subsection--bare {
   border: 1px solid var(--teacher-card-border);
   border-radius: 28px;

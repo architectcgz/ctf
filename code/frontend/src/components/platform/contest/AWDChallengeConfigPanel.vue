@@ -224,7 +224,7 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
             Challenge Directory
           </div>
           <h3 class="list-heading__title">
-            校验目录
+            题目目录
           </h3>
         </div>
       </header>
@@ -316,13 +316,22 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
                 </div>
               </td>
               <td class="col-actions">
-                <button
-                  :id="`awd-challenge-config-edit-${item.challenge_id}`"
-                  class="action-btn"
-                  @click="emit('edit', item)"
-                >
-                  <Edit class="h-3.5 w-3.5" />
-                </button>
+                <div class="ui-row-actions config-row__actions">
+                  <RouterLink
+                    class="ui-btn ui-btn--secondary"
+                    :to="getChallengePreviewRoute(item)"
+                  >
+                    预览
+                  </RouterLink>
+                  <button
+                    :id="`awd-challenge-config-edit-${item.challenge_id}`"
+                    class="ui-btn ui-btn--primary"
+                    @click="emit('edit', item)"
+                  >
+                    <Edit class="h-3.5 w-3.5" />
+                    编辑
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -534,33 +543,7 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
   text-align: right;
 }
 
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--ui-control-height-sm);
-  height: var(--ui-control-height-sm);
-  margin-left: auto;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--ui-control-radius-md);
-  background: var(--color-bg-surface);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition:
-    background var(--ui-motion-fast),
-    border-color var(--ui-motion-fast),
-    color var(--ui-motion-fast);
-}
-
-.action-btn:hover {
-  border-color: var(--color-primary);
-  background: var(--color-bg-elevated);
-  color: var(--color-primary);
-}
-
-.action-btn:focus-visible {
-  outline: var(--ui-focus-ring-width) solid
-    color-mix(in srgb, var(--color-primary) 72%, transparent);
-  outline-offset: var(--space-0-5);
+.config-row__actions {
+  justify-content: flex-end;
 }
 </style>

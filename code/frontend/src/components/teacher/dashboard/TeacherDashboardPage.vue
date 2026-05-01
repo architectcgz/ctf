@@ -765,10 +765,6 @@ const {
   box-shadow: none;
 }
 
-.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.teacher-panel) {
-  width: 100%;
-}
-
 .teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.review-item),
 .teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.intervention-item) {
   border-width: 0 0 1px;

@@ -9,6 +9,7 @@ import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 
+// PagePaginationControls is provided through WorkspaceDirectoryPagination.
 interface ClassDirectoryTableRow {
   name: string
   code: string
@@ -98,9 +99,7 @@ function handleStatusFilterChange(event: Event): void {
             <div class="workspace-overline">
               Class Directory
             </div>
-            <h1 class="teacher-title workspace-page-title">
-              班级管理
-            </h1>
+            <h1 class="teacher-title workspace-page-title">班级管理</h1>
             <p class="teacher-copy workspace-page-copy">
               查看当前可管理班级，并进入对应班级继续查看学生和训练表现。
             </p>

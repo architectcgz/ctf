@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -33,12 +33,13 @@ const summaryLabel = computed(() => {
     v-if="total > 0"
     class="workspace-directory-pagination workspace-directory-pagination-shell"
   >
-    <PlatformPaginationControls
+    <PagePaginationControls
       :page="page"
       :total-pages="totalPages"
       :total="total"
       :total-label="summaryLabel"
       :disabled="disabled"
+      show-jump
       @change-page="emit('changePage', $event)"
     />
   </div>

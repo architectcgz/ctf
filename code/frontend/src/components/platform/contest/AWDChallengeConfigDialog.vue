@@ -1156,8 +1156,8 @@ function handleSubmit() {
             :key="index"
             class="checker-action-section"
           >
-            <header class="list-heading checker-action-section__head">
-              <h4 class="list-heading__title checker-action-section__title">
+            <header class="list-heading checker-tcp-step__head">
+              <h4 class="list-heading__title checker-tcp-step__title">
                 Step {{ index + 1 }}
               </h4>
               <button

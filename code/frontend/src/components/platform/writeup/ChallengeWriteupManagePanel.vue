@@ -240,9 +240,7 @@ onMounted(() => {
           <div class="workspace-overline">
             Writeup Directory
           </div>
-          <h1 class="workspace-page-title">
-            题解管理
-          </h1>
+          <h1 class="workspace-page-title">题解管理</h1>
         </div>
 
         <div class="writeup-manage-actions">

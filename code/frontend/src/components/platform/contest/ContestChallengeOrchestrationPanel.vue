@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Plus, RefreshCw, Trash, Boxes, AlertTriangle } from 'lucide-vue-next'
+import { Plus, RefreshCw, Trash, Boxes, AlertTriangle, MoreHorizontal } from 'lucide-vue-next'
 
 import {
   createContestAWDService,
@@ -23,6 +23,7 @@ import type {
 import { ApiError } from '@/api/request'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import { useContestAwdChallengePicker } from '@/features/contest-workbench'
 import { useContestChallengePool } from '@/features/contest-workbench'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -32,6 +33,7 @@ import {
 } from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
@@ -60,6 +62,7 @@ const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeViewData | null>(null)
 const removingChallengeId = ref<string | null>(null)
+const openActionMenuId = ref<string | null>(null)
 const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
 const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
 const panelLoading = computed(() => (usingExternalChallengeLinks.value ? Boolean(props.loadingExternal) : loading.value))
@@ -70,8 +73,13 @@ const panelLoadError = computed(() =>
 const {
   visibleItems,
   summaryItems,
+  filterItems,
+  activeFilter,
   isAwdContest,
+  setFilter,
 } = useContestChallengePool(currentChallengeLinks, toRef(props, 'contestMode'))
+const showAwdChallengeFilters = false
+const showChallengeOverflowMenu = false
 
 const panelCopy = computed(() =>
   isAwdContest.value
@@ -419,6 +427,13 @@ watch(awdChallengeLoadError, (error, previousError) => {
       :summary-items="summaryItems"
     />
 
+    <ContestChallengeFilterStrip
+      v-if="showAwdChallengeFilters && isAwdContest && filterItems.length > 0"
+      :filter-items="filterItems"
+      :active-filter="activeFilter"
+      @select="setFilter"
+    />
+
     <div class="studio-directory-canvas">
       <AppEmpty
         v-if="panelLoadError && currentChallengeLinks.length === 0"
@@ -529,6 +544,40 @@ watch(awdChallengeLoadError, (error, previousError) => {
                     >
                       编辑
                     </button>
+                    <CActionMenu
+                      v-if="showChallengeOverflowMenu"
+                      :open="openActionMenuId === challenge.id"
+                      title="Challenge Actions"
+                      menu-label="题目更多操作"
+                      @update:open="openActionMenuId = $event ? challenge.id : null"
+                    >
+                      <template #trigger="{ open, toggle, setTriggerRef }">
+                        <button
+                          :ref="setTriggerRef"
+                          type="button"
+                          class="c-action-menu__trigger c-action-menu__trigger--icon"
+                          :aria-expanded="open ? 'true' : 'false'"
+                          aria-haspopup="menu"
+                          aria-label="题目更多操作"
+                          @click.stop="toggle"
+                        >
+                          <MoreHorizontal class="h-3.5 w-3.5" />
+                        </button>
+                      </template>
+
+                      <template #default="{ close }">
+                        <button
+                          :id="`contest-challenge-remove-${getChallengeActionKey(challenge)}`"
+                          type="button"
+                          class="c-action-menu__item c-action-menu__item--danger"
+                          :disabled="removingChallengeId === challenge.id"
+                          @click="close(); void handleRemove(challenge)"
+                        >
+                          <Trash class="h-3.5 w-3.5" />
+                          移除
+                        </button>
+                      </template>
+                    </CActionMenu>
                     <button
                       :id="`contest-challenge-remove-${getChallengeActionKey(challenge)}`"
                       type="button"
@@ -536,7 +585,6 @@ watch(awdChallengeLoadError, (error, previousError) => {
                       :disabled="removingChallengeId === challenge.id"
                       @click="handleRemove(challenge)"
                     >
-                      <Trash class="h-3.5 w-3.5" />
                       移除
                     </button>
                   </div>

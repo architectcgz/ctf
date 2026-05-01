@@ -33,17 +33,6 @@ defineProps<{
 .contest-challenge-panel__summary {
   --admin-summary-grid-columns: repeat(auto-fit, minmax(11rem, 1fr));
   --metric-panel-border: color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 12%, transparent),
-      transparent 46%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base))
-    );
   --metric-panel-shadow: 0 var(--space-2) var(--space-5)
     color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
 }

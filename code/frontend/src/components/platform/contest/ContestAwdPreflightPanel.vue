@@ -43,6 +43,7 @@ function handleNavigateChallenge(challengeId: string) {
     <AWDReadinessChecklist
       :readiness="readiness"
       action-label="修正配置"
+      data-primary-action-class="ui-btn ui-btn--primary"
       @edit-config="handleNavigateChallenge"
     />
   </section>
