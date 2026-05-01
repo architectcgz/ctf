@@ -197,7 +197,7 @@ func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, re
 	return s.commands.CreateRound(ctx, contestID, req)
 }
 
-func (s *awdServiceForTest) ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error) {
+func (s *awdServiceForTest) ListRounds(ctx context.Context, contestID int64) ([]contestqry.AWDRoundResult, error) {
 	return s.queries.ListRounds(ctx, contestID)
 }
 

@@ -230,7 +230,7 @@ func (stubAWDServiceQueryService) ListContestAWDServices(ctx context.Context, co
 	return nil, nil
 }
 
-func (stubAWDQueryService) ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error) {
+func (stubAWDQueryService) ListRounds(ctx context.Context, contestID int64) ([]contestqry.AWDRoundResult, error) {
 	return nil, nil
 }
 

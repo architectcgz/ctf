@@ -3,12 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error) {
+func (s *AWDService) ListRounds(ctx context.Context, contestID int64) ([]AWDRoundResult, error) {
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -18,10 +16,20 @@ func (s *AWDService) ListRounds(ctx context.Context, contestID int64) ([]*dto.AW
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := make([]*dto.AWDRoundResp, 0, len(rounds))
+	resp := make([]AWDRoundResult, 0, len(rounds))
 	for _, round := range rounds {
-		roundCopy := round
-		resp = append(resp, contestdomain.AWDRoundRespFromModel(&roundCopy))
+		resp = append(resp, AWDRoundResult{
+			ID:           round.ID,
+			ContestID:    round.ContestID,
+			RoundNumber:  round.RoundNumber,
+			Status:       round.Status,
+			StartedAt:    round.StartedAt,
+			EndedAt:      round.EndedAt,
+			AttackScore:  round.AttackScore,
+			DefenseScore: round.DefenseScore,
+			CreatedAt:    round.CreatedAt,
+			UpdatedAt:    round.UpdatedAt,
+		})
 	}
 	return resp, nil
 }
