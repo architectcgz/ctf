@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import {
-  Activity,
   ArrowLeft,
   ChevronRight,
   Clock,
   Download,
   FileDown,
-  Shield,
-  Target,
   TrendingUp,
   Trophy,
-  Waypoints,
   Zap,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import { useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'
 import { formatDate } from '@/utils/format'
@@ -325,130 +322,11 @@ const {
             </section>
           </section>
 
-          <section
+          <TeacherAWDReviewEvidenceGrid
             v-if="selectedRound"
-            class="awd-review-evidence-grid"
-          >
-            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
-              <header class="list-heading awd-review-evidence-head">
-                <div>
-                  <div class="journal-note-label">
-                    Service Evidence
-                  </div>
-                  <h3 class="list-heading__title">
-                    服务运行
-                  </h3>
-                </div>
-                <Activity class="awd-review-evidence-icon awd-review-evidence-icon--service h-4 w-4" />
-              </header>
-              <div class="awd-review-evidence-list custom-scrollbar">
-                <AppEmpty
-                  v-if="selectedRound.services.length === 0"
-                  icon="Shield"
-                  title="无服务数据"
-                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
-                />
-                <article
-                  v-for="service in selectedRound.services"
-                  v-else
-                  :key="service.id"
-                  class="awd-review-evidence-item"
-                >
-                  <div class="awd-review-evidence-item__head">
-                    <strong>{{ service.team_name }} · {{ service.challenge_title }}</strong>
-                    <span
-                      v-if="service.service_id"
-                      data-testid="awd-review-service-id"
-                      class="teacher-directory-chip awd-review-service-chip"
-                    >
-                      {{ formatServiceRef(service.service_id) }}
-                    </span>
-                  </div>
-                  <p>{{ service.service_status }} · SLA {{ service.sla_score }}</p>
-                </article>
-              </div>
-            </article>
-
-            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
-              <header class="list-heading awd-review-evidence-head">
-                <div>
-                  <div class="journal-note-label">
-                    Attack Evidence
-                  </div>
-                  <h3 class="list-heading__title">
-                    攻击记录
-                  </h3>
-                </div>
-                <Target class="awd-review-evidence-icon awd-review-evidence-icon--attack h-4 w-4" />
-              </header>
-              <div class="awd-review-evidence-list custom-scrollbar">
-                <AppEmpty
-                  v-if="selectedRound.attacks.length === 0"
-                  icon="Target"
-                  title="无攻击记录"
-                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
-                />
-                <article
-                  v-for="attack in selectedRound.attacks"
-                  v-else
-                  :key="attack.id"
-                  class="awd-review-evidence-item"
-                >
-                  <div class="awd-review-evidence-item__head">
-                    <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
-                    <span
-                      v-if="attack.service_id"
-                      data-testid="awd-review-attack-service-id"
-                      class="teacher-directory-chip awd-review-service-chip"
-                    >
-                      {{ formatServiceRef(attack.service_id) }}
-                    </span>
-                  </div>
-                  <p>{{ attack.challenge_title }} · {{ attack.attack_type }}</p>
-                </article>
-              </div>
-            </article>
-
-            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
-              <header class="list-heading awd-review-evidence-head">
-                <div>
-                  <div class="journal-note-label">
-                    Traffic Evidence
-                  </div>
-                  <h3 class="list-heading__title">
-                    流量审计
-                  </h3>
-                </div>
-                <Waypoints class="awd-review-evidence-icon awd-review-evidence-icon--traffic h-4 w-4" />
-              </header>
-              <div class="awd-review-evidence-list custom-scrollbar">
-                <AppEmpty
-                  v-if="selectedRound.traffic.length === 0"
-                  icon="Activity"
-                  title="无流量证据"
-                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
-                />
-                <article
-                  v-for="event in selectedRound.traffic"
-                  v-else
-                  :key="event.id"
-                  class="awd-review-evidence-item"
-                >
-                  <div class="awd-review-evidence-item__head">
-                    <strong>{{ event.method }} {{ event.path }}</strong>
-                    <span
-                      v-if="event.service_id"
-                      data-testid="awd-review-traffic-service-id"
-                      class="teacher-directory-chip awd-review-service-chip"
-                    >
-                      {{ formatServiceRef(event.service_id) }}
-                    </span>
-                  </div>
-                  <p>{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}</p>
-                </article>
-              </div>
-            </article>
-          </section>
+            :selected-round="selectedRound"
+            :format-service-ref="formatServiceRef"
+          />
         </template>
       </div>
 
