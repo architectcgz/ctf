@@ -70,4 +70,39 @@ describe('PlatformChallengeFlagConfigPanel', () => {
     expect(wrapper.emitted('save')).toBeTruthy()
     expect(wrapper.emitted('save')?.length).toBe(1)
   })
+
+  it('应根据判题模式切换字段显隐', async () => {
+    const wrapper = mount(PlatformChallengeFlagConfigPanel, {
+      props: {
+        draft: createDraft({
+          flagType: 'static',
+        }),
+      },
+    })
+
+    expect(wrapper.find('input[placeholder="例如：flag{demo}"]').exists()).toBe(true)
+    expect(wrapper.find('input[placeholder="例如：flag"]').exists()).toBe(false)
+    expect(wrapper.find('input[placeholder="例如：^flag\\{demo-[0-9]+\\}$"]').exists()).toBe(false)
+
+    await wrapper.setProps({
+      draft: createDraft({
+        flagType: 'dynamic',
+      }),
+    })
+
+    expect(wrapper.find('input[placeholder="例如：flag"]').exists()).toBe(true)
+    expect(wrapper.find('input[placeholder="例如：flag{demo}"]').exists()).toBe(false)
+    expect(wrapper.find('input[placeholder="例如：^flag\\{demo-[0-9]+\\}$"]').exists()).toBe(false)
+
+    await wrapper.setProps({
+      draft: createDraft({
+        flagType: 'regex',
+      }),
+    })
+
+    const regexPlaceholders = wrapper.findAll('input').map((node) => node.attributes('placeholder') || '')
+    expect(wrapper.find('input[placeholder="例如：flag"]').exists()).toBe(true)
+    expect(regexPlaceholders.some((placeholder) => placeholder.includes('^flag'))).toBe(true)
+    expect(wrapper.find('input[placeholder="例如：flag{demo}"]').exists()).toBe(false)
+  })
 })
