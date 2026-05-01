@@ -9,12 +9,6 @@ import type {
   SubmissionWriteupStatus,
   SubmissionWriteupVisibilityStatus,
 } from '@/api/contracts'
-import {
-  getChallengeCategoryColor,
-  getChallengeCategoryLabel,
-  getChallengeDifficultyColor,
-  getChallengeDifficultyLabel,
-} from '@/entities/challenge'
 
 export type ChallengeSolutionTab = 'recommended' | 'community'
 export type ChallengeSubmissionRecordStatus = 'correct' | 'incorrect' | 'pending_review' | 'error'
@@ -170,14 +164,6 @@ export function useChallengeDetailPresentation({
     selectedSolutionId.value = null
   }
 
-  function buildMetaPillStyle(color: string): Record<string, string> {
-    return {
-      borderColor: `color-mix(in srgb, ${color} 18%, transparent)`,
-      backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
-      color,
-    }
-  }
-
   function submissionStatusLabel(status?: SubmissionWriteupStatus): string {
     if (status === 'draft') return '草稿'
     if (status === 'published' || status === 'submitted') return '已发布'
@@ -232,18 +218,6 @@ export function useChallengeDetailPresentation({
     })
   }
 
-  const getCategoryLabel = getChallengeCategoryLabel
-  const getCategoryColor = getChallengeCategoryColor
-  const getDifficultyLabel = getChallengeDifficultyLabel
-  const getDifficultyColor = (difficulty: ChallengeDetailData['difficulty']) =>
-    getChallengeDifficultyColor(difficulty, {
-      beginner: 'var(--challenge-tone-beginner)',
-      easy: 'var(--challenge-tone-easy)',
-      medium: 'var(--challenge-tone-medium)',
-      hard: 'var(--challenge-tone-hard)',
-      insane: 'var(--challenge-tone-insane)',
-    })
-
   watch(
     displayedSolutionCards,
     (items) => {
@@ -286,16 +260,11 @@ export function useChallengeDetailPresentation({
     submitFieldLabel,
     submitInputClass,
     clearSolutions,
-    buildMetaPillStyle,
     submissionStatusLabel,
     submissionStatusText,
     submissionRecordMessage,
     visibilityStatusLabel,
     formatWriteupTime,
     formatSubmissionTime,
-    getCategoryLabel,
-    getCategoryColor,
-    getDifficultyLabel,
-    getDifficultyColor,
   }
 }

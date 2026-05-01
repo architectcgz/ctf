@@ -13,39 +13,7 @@
         <h1 class="question-title workspace-page-title">
           {{ challenge.title }}
         </h1>
-        <div class="meta-strip">
-          <span
-            class="meta-pill meta-pill--brand"
-            :style="buildMetaPillStyle(getCategoryColor(challenge.category))"
-          >
-            {{ getCategoryLabel(challenge.category) }}
-          </span>
-          <span
-            class="meta-pill"
-            :style="buildMetaPillStyle(getDifficultyColor(challenge.difficulty))"
-          >
-            {{ getDifficultyLabel(challenge.difficulty) }}
-          </span>
-          <span
-            v-if="challenge.is_solved"
-            class="meta-pill"
-          >
-            已解出
-          </span>
-          <span
-            v-if="challenge.attachment_url"
-            class="meta-pill"
-          >
-            附件可下载
-          </span>
-          <span
-            v-for="tag in challenge.tags"
-            :key="tag"
-            class="meta-pill"
-          >
-            {{ tag }}
-          </span>
-        </div>
+        <ChallengeMetaStrip :challenge="challenge" />
       </div>
 
       <aside
@@ -147,21 +115,13 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  ChallengeCategory,
-  ChallengeDetailData,
-  ChallengeDifficulty,
-} from '@/api/contracts'
+import type { ChallengeDetailData } from '@/api/contracts'
+import { ChallengeMetaStrip } from '@/entities/challenge'
 
 interface Props {
   challenge: ChallengeDetailData
   sanitizedDescription: string
   scoreRailProbeMessage: string
-  buildMetaPillStyle: (color: string) => Record<string, string>
-  getCategoryLabel: (category: ChallengeCategory) => string
-  getCategoryColor: (category: ChallengeCategory) => string
-  getDifficultyLabel: (difficulty: ChallengeDifficulty) => string
-  getDifficultyColor: (difficulty: ChallengeDifficulty) => string
   isHintExpanded: (level: number) => boolean
 }
 
@@ -190,32 +150,6 @@ const emit = defineEmits<{
 .question-title {
   margin: var(--space-3) 0 0;
   color: var(--text-main);
-}
-
-.meta-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  margin-top: var(--space-4);
-}
-
-.meta-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--text-subtle);
-}
-
-.meta-pill--brand {
-  border-color: color-mix(in srgb, var(--brand) 20%, transparent);
-  background: var(--brand-soft);
-  color: var(--brand-ink);
 }
 
 .score-rail {
