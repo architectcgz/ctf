@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -52,7 +51,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 1801, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 1801, CreateContestAWDServiceInput{
 		AWDChallengeID: 2801,
 		Points:         180,
 		Order:          1,
@@ -128,7 +127,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 1802, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 1802, CreateContestAWDServiceInput{
 		AWDChallengeID: 2802,
 		Points:         120,
 		Order:          2,

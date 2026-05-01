@@ -44,3 +44,29 @@ type PreviewCheckerInput struct {
 	PreviewFlag      string
 	PreviewRequestID string
 }
+
+type CreateContestAWDServiceInput struct {
+	AWDChallengeID         int64
+	Points                 int
+	DisplayName            string
+	Order                  int
+	IsVisible              *bool
+	CheckerType            *string
+	CheckerConfig          map[string]any
+	AWDSLAScore            *int
+	AWDDefenseScore        *int
+	AWDCheckerPreviewToken *string
+}
+
+type UpdateContestAWDServiceInput struct {
+	AWDChallengeID         *int64
+	Points                 *int
+	DisplayName            *string
+	Order                  *int
+	IsVisible              *bool
+	CheckerType            *string
+	CheckerConfig          map[string]any
+	AWDSLAScore            *int
+	AWDDefenseScore        *int
+	AWDCheckerPreviewToken *string
+}

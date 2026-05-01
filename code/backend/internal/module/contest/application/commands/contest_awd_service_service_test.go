@@ -85,7 +85,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 801, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 801, CreateContestAWDServiceInput{
 		AWDChallengeID: 1001,
 		Points:         100,
 		DisplayName:    "Bank Portal",
@@ -149,7 +149,7 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 1808, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 1808, CreateContestAWDServiceInput{
 		AWDChallengeID: 180801,
 		Points:         100,
 	})
@@ -204,7 +204,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	_, err := service.CreateContestAWDService(context.Background(), 1809, &dto.CreateContestAWDServiceReq{
+	_, err := service.CreateContestAWDService(context.Background(), 1809, CreateContestAWDServiceInput{
 		AWDChallengeID:  180901,
 		Points:          100,
 		AWDSLAScore:     intPtr(6),
@@ -249,7 +249,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	_, err := service.CreateContestAWDService(context.Background(), 1810, &dto.CreateContestAWDServiceReq{
+	_, err := service.CreateContestAWDService(context.Background(), 1810, CreateContestAWDServiceInput{
 		AWDChallengeID: 181001,
 		Points:         501,
 	})
@@ -305,7 +305,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 802, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 802, CreateContestAWDServiceInput{
 		AWDChallengeID: 1002,
 		Points:         100,
 		DisplayName:    "Billing API",
@@ -319,7 +319,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	visible := false
 	displayName := "Billing API v2"
 	order := 5
-	if err := service.UpdateContestAWDService(context.Background(), 802, resp.ID, &dto.UpdateContestAWDServiceReq{
+	if err := service.UpdateContestAWDService(context.Background(), 802, resp.ID, UpdateContestAWDServiceInput{
 		DisplayName: &displayName,
 		Order:       &order,
 		IsVisible:   &visible,
@@ -387,7 +387,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 804, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 804, CreateContestAWDServiceInput{
 		AWDChallengeID:  1004,
 		Points:          100,
 		Order:           1,
@@ -483,7 +483,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 805, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 805, CreateContestAWDServiceInput{
 		AWDChallengeID: 1005,
 		Points:         100,
 		Order:          2,
@@ -493,7 +493,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 		t.Fatalf("create contest awd service: %v", err)
 	}
 
-	if err := service.UpdateContestAWDService(context.Background(), 805, resp.ID, &dto.UpdateContestAWDServiceReq{
+	if err := service.UpdateContestAWDService(context.Background(), 805, resp.ID, UpdateContestAWDServiceInput{
 		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/healthz"}},
 		AWDSLAScore:     intPtr(2),
@@ -619,7 +619,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		t.Fatalf("storeAWDCheckerPreviewToken() error = %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 806, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 806, CreateContestAWDServiceInput{
 		AWDChallengeID:         1006,
 		Points:                 100,
 		Order:                  1,
@@ -705,7 +705,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	_, err = service.CreateContestAWDService(context.Background(), 1806, &dto.CreateContestAWDServiceReq{
+	_, err = service.CreateContestAWDService(context.Background(), 1806, CreateContestAWDServiceInput{
 		AWDChallengeID:         1106,
 		Points:                 100,
 		Order:                  1,
@@ -780,7 +780,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 807, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 807, CreateContestAWDServiceInput{
 		AWDChallengeID: 1007,
 		Points:         100,
 		Order:          1,
@@ -825,7 +825,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		t.Fatalf("storeAWDCheckerPreviewToken() error = %v", err)
 	}
 
-	if err := service.UpdateContestAWDService(context.Background(), 807, resp.ID, &dto.UpdateContestAWDServiceReq{
+	if err := service.UpdateContestAWDService(context.Background(), 807, resp.ID, UpdateContestAWDServiceInput{
 		AWDCheckerPreviewToken: stringPtr(token),
 	}); err != nil {
 		t.Fatalf("UpdateContestAWDService() error = %v", err)
@@ -904,7 +904,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 1807, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 1807, CreateContestAWDServiceInput{
 		AWDChallengeID: 1107,
 		Points:         100,
 		Order:          1,
@@ -914,7 +914,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 		t.Fatalf("CreateContestAWDService() error = %v", err)
 	}
 
-	err = service.UpdateContestAWDService(context.Background(), 1807, resp.ID, &dto.UpdateContestAWDServiceReq{
+	err = service.UpdateContestAWDService(context.Background(), 1807, resp.ID, UpdateContestAWDServiceInput{
 		AWDCheckerPreviewToken: stringPtr("missing-preview-token"),
 	})
 	if err == nil {
@@ -972,7 +972,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
 
-	resp, err := service.CreateContestAWDService(context.Background(), 803, &dto.CreateContestAWDServiceReq{
+	resp, err := service.CreateContestAWDService(context.Background(), 803, CreateContestAWDServiceInput{
 		AWDChallengeID: 1003,
 		Points:         100,
 		DisplayName:    "User Center",

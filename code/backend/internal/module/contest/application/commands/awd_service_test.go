@@ -909,7 +909,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestService := contestcmd.NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, redisClient)
-	created, err := contestService.CreateContestAWDService(context.Background(), contestID, &dto.CreateContestAWDServiceReq{
+	created, err := contestService.CreateContestAWDService(context.Background(), contestID, contestcmd.CreateContestAWDServiceInput{
 		AWDChallengeID:         awdChallengeID,
 		Points:                 100,
 		Order:                  1,

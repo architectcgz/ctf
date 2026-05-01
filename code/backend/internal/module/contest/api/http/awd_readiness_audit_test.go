@@ -212,11 +212,11 @@ type stubAWDQueryService struct {
 
 type stubAWDServiceCommandService struct{}
 
-func (stubAWDServiceCommandService) CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error) {
+func (stubAWDServiceCommandService) CreateContestAWDService(ctx context.Context, contestID int64, req contestcmd.CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceCommandService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error {
+func (stubAWDServiceCommandService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req contestcmd.UpdateContestAWDServiceInput) error {
 	return nil
 }
 

@@ -45,7 +45,7 @@ func NewContestAWDServiceService(
 	}
 }
 
-func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error) {
+func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, contestID int64, req CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error) {
 	contest, err := s.ensureMutableAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	return contestAWDServiceRespFromModel(record), nil
 }
 
-func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error {
+func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req UpdateContestAWDServiceInput) error {
 	contest, err := s.ensureMutableAWDContest(ctx, contestID)
 	if err != nil {
 		return err

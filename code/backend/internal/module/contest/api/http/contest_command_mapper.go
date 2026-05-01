@@ -160,3 +160,39 @@ func previewCheckerInputFromDTO(req *dto.PreviewAWDCheckerReq) contestcmd.Previe
 		PreviewRequestID: req.PreviewRequestID,
 	}
 }
+
+func createContestAWDServiceInputFromDTO(req *dto.CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput {
+	if req == nil {
+		return contestcmd.CreateContestAWDServiceInput{}
+	}
+	return contestcmd.CreateContestAWDServiceInput{
+		AWDChallengeID:         req.AWDChallengeID,
+		Points:                 req.Points,
+		DisplayName:            req.DisplayName,
+		Order:                  req.Order,
+		IsVisible:              req.IsVisible,
+		CheckerType:            req.CheckerType,
+		CheckerConfig:          req.CheckerConfig,
+		AWDSLAScore:            req.AWDSLAScore,
+		AWDDefenseScore:        req.AWDDefenseScore,
+		AWDCheckerPreviewToken: req.AWDCheckerPreviewToken,
+	}
+}
+
+func updateContestAWDServiceInputFromDTO(req *dto.UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput {
+	if req == nil {
+		return contestcmd.UpdateContestAWDServiceInput{}
+	}
+	return contestcmd.UpdateContestAWDServiceInput{
+		AWDChallengeID:         req.AWDChallengeID,
+		Points:                 req.Points,
+		DisplayName:            req.DisplayName,
+		Order:                  req.Order,
+		IsVisible:              req.IsVisible,
+		CheckerType:            req.CheckerType,
+		CheckerConfig:          req.CheckerConfig,
+		AWDSLAScore:            req.AWDSLAScore,
+		AWDDefenseScore:        req.AWDDefenseScore,
+		AWDCheckerPreviewToken: req.AWDCheckerPreviewToken,
+	}
+}
