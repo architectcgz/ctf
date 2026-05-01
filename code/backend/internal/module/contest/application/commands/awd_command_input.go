@@ -29,3 +29,8 @@ type CreateAttackLogInput struct {
 	SubmittedFlag  string
 	IsSuccess      bool
 }
+
+type SubmitAttackInput struct {
+	VictimTeamID int64
+	Flag         string
+}

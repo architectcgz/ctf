@@ -135,3 +135,13 @@ func createAttackLogInputFromDTO(req *dto.CreateAWDAttackLogReq) contestcmd.Crea
 		IsSuccess:      req.IsSuccess,
 	}
 }
+
+func submitAttackInputFromDTO(req *dto.SubmitAWDAttackReq) contestcmd.SubmitAttackInput {
+	if req == nil {
+		return contestcmd.SubmitAttackInput{}
+	}
+	return contestcmd.SubmitAttackInput{
+		VictimTeamID: req.VictimTeamID,
+		Flag:         req.Flag,
+	}
+}

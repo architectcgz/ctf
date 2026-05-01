@@ -61,7 +61,7 @@ func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, &req)
+	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, submitAttackInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return

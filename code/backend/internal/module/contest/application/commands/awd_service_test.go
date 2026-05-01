@@ -248,7 +248,7 @@ func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roun
 	return s.commands.CreateAttackLog(ctx, contestID, roundID, req)
 }
 
-func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
 	return s.commands.SubmitAttack(ctx, userID, contestID, serviceID, req)
 }
 
@@ -1944,7 +1944,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 		t.Fatalf("set round flag: %v", err)
 	}
 
-	first, err := service.SubmitAttack(context.Background(), 4001, 4, serviceID, &dto.SubmitAWDAttackReq{
+	first, err := service.SubmitAttack(context.Background(), 4001, 4, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 412,
 		Flag:         flag,
 	})
@@ -1958,7 +1958,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 		t.Fatalf("unexpected first attack resp: %+v", first)
 	}
 
-	second, err := service.SubmitAttack(context.Background(), 4002, 4, serviceID, &dto.SubmitAWDAttackReq{
+	second, err := service.SubmitAttack(context.Background(), 4002, 4, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 412,
 		Flag:         flag,
 	})
@@ -2039,7 +2039,7 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 		t.Fatalf("set service scoped round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 24001, 24, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 24001, 24, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 2412,
 		Flag:         flag,
 	})
@@ -2123,7 +2123,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 		return nil
 	})
 
-	first, err := service.SubmitAttack(context.Background(), 14001, 14, serviceID, &dto.SubmitAWDAttackReq{
+	first, err := service.SubmitAttack(context.Background(), 14001, 14, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 1412,
 		Flag:         flag,
 	})
@@ -2134,7 +2134,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 		t.Fatalf("unexpected first attack resp: %+v", first)
 	}
 
-	second, err := service.SubmitAttack(context.Background(), 14002, 14, serviceID, &dto.SubmitAWDAttackReq{
+	second, err := service.SubmitAttack(context.Background(), 14002, 14, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 1412,
 		Flag:         flag,
 	})
@@ -2204,7 +2204,7 @@ func TestAWDServiceSubmitAttackAcceptsPreviousRoundFlagWithinGrace(t *testing.T)
 	}
 
 	previousFlag := contestdomain.BuildAWDRoundFlag(5, 1, 512, 501, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 5001, 5, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 5001, 5, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 512,
 		Flag:         previousFlag,
 	})
@@ -2259,7 +2259,7 @@ func TestAWDServiceSubmitAttackAllowsFrozenContest(t *testing.T) {
 		t.Fatalf("set round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 6001, 6, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 6001, 6, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 612,
 		Flag:         flag,
 	})
@@ -2314,7 +2314,7 @@ func TestAWDServiceSubmitAttackIgnoresStaleCurrentRoundPointer(t *testing.T) {
 		t.Fatalf("set current round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 7001, 7, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 7001, 7, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 712,
 		Flag:         currentFlag,
 	})
@@ -2387,7 +2387,7 @@ func TestAWDServiceSubmitAttackUsesTimeDerivedCurrentRoundWhenRoundStatusLags(t 
 		t.Fatalf("set actual round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 8001, 8, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 8001, 8, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 812,
 		Flag:         currentFlag,
 	})
@@ -2448,7 +2448,7 @@ func TestAWDServiceSubmitAttackRejectsPreviousFlagAfterMaterializingMissingCurre
 	}
 
 	previousFlag := contestdomain.BuildAWDRoundFlag(9, 1, 912, 901, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 9001, 9, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 9001, 9, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 912,
 		Flag:         previousFlag,
 	})
@@ -2508,7 +2508,7 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	}
 
 	currentFlag := contestdomain.BuildAWDRoundFlag(10, 2, 1012, 1001, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 10001, 10, serviceID, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 10001, 10, serviceID, contestcmd.SubmitAttackInput{
 		VictimTeamID: 1012,
 		Flag:         currentFlag,
 	})

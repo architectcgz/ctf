@@ -7,7 +7,7 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
 	attackContext, err := s.prepareSubmitAttackContext(ctx, userID, contestID, serviceID, req)
 	if err != nil {
 		return nil, err

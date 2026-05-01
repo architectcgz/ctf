@@ -202,7 +202,7 @@ func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, rou
 	return nil, nil
 }
 
-func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
