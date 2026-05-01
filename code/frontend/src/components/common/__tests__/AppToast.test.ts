@@ -81,6 +81,21 @@ describe('AppToast', () => {
     expect(closeButton.find('.app-toast-close-icon').exists()).toBe(true)
   })
 
+  it('uses a soft accent rail instead of a full-height solid strip', async () => {
+    const wrapper = await mountToast()
+    useToast().error('提交失败')
+    await nextTick()
+
+    const toastItemStyle = wrapper.get('.app-toast-item').attributes('style') ?? ''
+
+    expect(toastItemStyle).toContain('--app-toast-accent-color: var(--color-danger)')
+    expect(appToastSource).toContain('color-mix(in srgb, var(--app-toast-accent-color)')
+    expect(appToastSource).not.toContain(':style="{ backgroundColor: toneMeta(item.type).accentColor }"')
+    expect(appToastSource).not.toMatch(
+      /\.app-toast-accent\s*\{[\s\S]*?inset-block:\s*0;[\s\S]*?inset-inline-start:\s*0;/
+    )
+  })
+
   it('avoids layout arbitrary values in the shared toast shell', () => {
     expect(appToastSource).not.toContain('max-w-[calc(100vw-2rem)]')
     expect(appToastSource).not.toContain('w-[380px]')

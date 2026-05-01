@@ -4,14 +4,11 @@
       v-for="item in toasts"
       :key="item.id"
       class="app-toast-item"
-      :style="toneMeta(item.type).containerStyle"
+      :style="toastStyle(item.type)"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
     >
-      <div
-        class="app-toast-accent"
-        :style="{ backgroundColor: toneMeta(item.type).accentColor }"
-      />
+      <div class="app-toast-accent" />
 
       <div class="app-toast-content">
         <div class="app-toast-leading">
@@ -149,6 +146,15 @@ function title(type: ToastType): string {
 function toneMeta(type: ToastType): ToastToneMeta {
   return toneMap[type]
 }
+
+function toastStyle(type: ToastType): Record<string, string> {
+  const meta = toneMeta(type)
+
+  return {
+    ...meta.containerStyle,
+    '--app-toast-accent-color': meta.accentColor,
+  }
+}
 </script>
 
 <style scoped>
@@ -178,11 +184,35 @@ function toneMeta(type: ToastType): ToastToneMeta {
   pointer-events: auto;
 }
 
-.app-toast-accent {
+.app-toast-item::before {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
-  width: var(--space-1);
+  width: 38%;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--app-toast-accent-color) 10%, transparent),
+    transparent 82%
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.app-toast-accent {
+  position: absolute;
+  inset-block: var(--space-3-5);
+  inset-inline-start: var(--space-2);
+  width: var(--space-0-5);
+  border-radius: var(--ui-badge-radius-pill);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--app-toast-accent-color) 72%, transparent) 28%,
+    var(--app-toast-accent-color) 50%,
+    color-mix(in srgb, var(--app-toast-accent-color) 72%, transparent) 72%,
+    transparent
+  );
+  opacity: 0.82;
   pointer-events: none;
 }
 
