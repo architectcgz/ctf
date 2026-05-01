@@ -295,7 +295,7 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 		t.Fatalf("unexpected registrations: %+v", items)
 	}
 
-	reviewed, err := commandService.ReviewRegistration(context.Background(), 30, items[0].ID, 9001, &dto.ReviewContestRegistrationReq{
+	reviewed, err := commandService.ReviewRegistration(context.Background(), 30, items[0].ID, 9001, contestcmd.ReviewRegistrationInput{
 		Status: model.ContestRegistrationStatusApproved,
 	})
 	if err != nil {

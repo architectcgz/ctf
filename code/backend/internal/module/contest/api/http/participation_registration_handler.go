@@ -39,7 +39,7 @@ func (h *ParticipationHandler) ReviewRegistration(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	item, err := h.commands.ReviewRegistration(c.Request.Context(), contestID, registrationID, authctx.MustCurrentUser(c).UserID, &req)
+	item, err := h.commands.ReviewRegistration(c.Request.Context(), contestID, registrationID, authctx.MustCurrentUser(c).UserID, reviewRegistrationInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return

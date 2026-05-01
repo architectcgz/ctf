@@ -43,3 +43,12 @@ func createAnnouncementInputFromDTO(req *dto.CreateContestAnnouncementReq) conte
 		Content: req.Content,
 	}
 }
+
+func reviewRegistrationInputFromDTO(req *dto.ReviewContestRegistrationReq) contestcmd.ReviewRegistrationInput {
+	if req == nil {
+		return contestcmd.ReviewRegistrationInput{}
+	}
+	return contestcmd.ReviewRegistrationInput{
+		Status: req.Status,
+	}
+}

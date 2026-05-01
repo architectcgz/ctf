@@ -10,7 +10,7 @@ import (
 
 type participationCommandService interface {
 	RegisterContest(ctx context.Context, contestID, userID int64) error
-	ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req *dto.ReviewContestRegistrationReq) (*dto.ContestRegistrationResp, error)
+	ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req contestcmd.ReviewRegistrationInput) (*dto.ContestRegistrationResp, error)
 	CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req contestcmd.CreateAnnouncementInput) (*dto.ContestAnnouncementResp, error)
 	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error
 }
