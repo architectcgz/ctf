@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
+import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
 import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
+import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
+import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
 
 describe('Admin ChallengeDetail workspace extraction', () => {
   it('应将题目管理页的 tab rail 与 workspace 壳层抽到独立 platform challenge 组件', () => {
@@ -43,5 +46,11 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(platformChallengeFlagConfigPanelSource).toContain(
       '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'
     )
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagFieldGrid')
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagNoticeStack')
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagActionBar')
+    expect(platformChallengeFlagFieldGridSource).toContain("emit('update:draft'")
+    expect(platformChallengeFlagNoticeStackSource).toContain('manual_review')
+    expect(platformChallengeFlagActionBarSource).toContain("emit('save')")
   })
 })

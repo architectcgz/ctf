@@ -6,6 +6,9 @@ import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/A
 import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
 import challengeProfileMetaGridSource from '@/entities/challenge/ui/ChallengeProfileMetaGrid.vue?raw'
 import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
+import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
+import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
+import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
 
 describe('Admin ChallengeDetail panel extraction', () => {
   it('应将题目详情 tab 抽到独立 platform challenge 组件', () => {
@@ -51,6 +54,11 @@ describe('Admin ChallengeDetail panel extraction', () => {
     expect(platformChallengeFlagConfigPanelSource).toContain(
       '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'
     )
-    expect(platformChallengeFlagConfigPanelSource).toContain("@click=\"emit('save')\"")
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagFieldGrid')
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagNoticeStack')
+    expect(platformChallengeFlagConfigPanelSource).toContain('<PlatformChallengeFlagActionBar')
+    expect(platformChallengeFlagFieldGridSource).toContain('正则表达式')
+    expect(platformChallengeFlagNoticeStackSource).toContain('共享实例只适用于无状态题')
+    expect(platformChallengeFlagActionBarSource).toContain("@click=\"emit('save')\"")
   })
 })
