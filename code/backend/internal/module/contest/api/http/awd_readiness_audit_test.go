@@ -69,7 +69,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 
 	handler := NewAWDHandler(
 		stubAWDCommandService{
-			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 				trace := contestcmd.AWDReadinessGateTraceFromContext(ctx)
 				if trace == nil {
 					t.Fatal("expected readiness gate trace in command context")
@@ -161,7 +161,7 @@ func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestI
 
 type stubAWDCommandService struct {
 	createRoundFunc           func(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
-	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error)
+	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
 	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
 	previewCheckerFunc        func(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
 }
@@ -173,7 +173,7 @@ func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64,
 	return nil, nil
 }
 
-func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 	if s.runCurrentRoundChecksFunc != nil {
 		return s.runCurrentRoundChecksFunc(ctx, contestID, req)
 	}

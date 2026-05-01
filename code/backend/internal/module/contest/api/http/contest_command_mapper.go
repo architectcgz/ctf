@@ -111,3 +111,13 @@ func upsertServiceCheckInputFromDTO(req *dto.UpsertAWDServiceCheckReq) contestcm
 		CheckResult:   req.CheckResult,
 	}
 }
+
+func runCurrentRoundChecksInputFromDTO(req *dto.RunCurrentAWDCheckerReq) contestcmd.RunCurrentRoundChecksInput {
+	if req == nil {
+		return contestcmd.RunCurrentRoundChecksInput{}
+	}
+	return contestcmd.RunCurrentRoundChecksInput{
+		ForceOverride:  req.ForceOverride,
+		OverrideReason: req.OverrideReason,
+	}
+}

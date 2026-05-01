@@ -15,3 +15,8 @@ type UpsertServiceCheckInput struct {
 	ServiceStatus string
 	CheckResult   map[string]any
 }
+
+type RunCurrentRoundChecksInput struct {
+	ForceOverride  *bool
+	OverrideReason *string
+}

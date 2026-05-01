@@ -16,7 +16,7 @@ import (
 
 const awdCheckerPreviewAttemptCount = 3
 
-func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -27,9 +27,6 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	}
 	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
 		return nil, errcode.ErrContestNotRunning
-	}
-	if req == nil {
-		req = &dto.RunCurrentAWDCheckerReq{}
 	}
 	if err := ensureAWDReadinessGate(ctx, s.repo, contestID, req.ForceOverride, req.OverrideReason); err != nil {
 		return nil, err

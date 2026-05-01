@@ -201,7 +201,7 @@ func (s *awdServiceForTest) ListRounds(ctx context.Context, contestID int64) ([]
 	return s.queries.ListRounds(ctx, contestID)
 }
 
-func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 	return s.commands.RunCurrentRoundChecks(ctx, contestID, req)
 }
 
@@ -469,7 +469,7 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 		CheckerHealthPath: "/health",
 	})
 
-	resp, err := service.RunCurrentRoundChecks(context.Background(), 22, nil)
+	resp, err := service.RunCurrentRoundChecks(context.Background(), 22, contestcmd.RunCurrentRoundChecksInput{})
 	if err != nil {
 		t.Fatalf("RunCurrentRoundChecks() error = %v", err)
 	}
@@ -528,7 +528,7 @@ func TestAWDServiceRunCurrentRoundChecksRejectsEndedContest(t *testing.T) {
 
 	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{})
 
-	_, err = service.RunCurrentRoundChecks(context.Background(), 222, nil)
+	_, err = service.RunCurrentRoundChecks(context.Background(), 222, contestcmd.RunCurrentRoundChecksInput{})
 	if err != errcode.ErrContestEnded {
 		t.Fatalf("expected ErrContestEnded, got %v", err)
 	}
@@ -595,7 +595,7 @@ func TestAWDServiceRunCurrentRoundChecksBlocksWhenReadinessNotReady(t *testing.T
 
 	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
 
-	_, err := service.RunCurrentRoundChecks(context.Background(), 240, nil)
+	_, err := service.RunCurrentRoundChecks(context.Background(), 240, contestcmd.RunCurrentRoundChecksInput{})
 	assertAWDReadinessBlocked(t, err)
 }
 
@@ -608,7 +608,7 @@ func TestAWDServiceRunCurrentRoundChecksRejectsBlankOverrideReason(t *testing.T)
 
 	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
 
-	_, err := service.RunCurrentRoundChecks(context.Background(), 241, &dto.RunCurrentAWDCheckerReq{
+	_, err := service.RunCurrentRoundChecks(context.Background(), 241, contestcmd.RunCurrentRoundChecksInput{
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("  "),
 	})

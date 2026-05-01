@@ -118,7 +118,7 @@ func TestAWDServiceRunCurrentRoundChecksBlocksItemLevelReadinessReasons(t *testi
 			assertCommandReadinessBlockingReason(t, db, tc.contestID, tc.challengeID, tc.blockingReason)
 
 			service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
-			_, err := service.RunCurrentRoundChecks(context.Background(), tc.contestID, nil)
+			_, err := service.RunCurrentRoundChecks(context.Background(), tc.contestID, contestcmd.RunCurrentRoundChecksInput{})
 			assertAWDReadinessBlocked(t, err)
 		})
 	}
