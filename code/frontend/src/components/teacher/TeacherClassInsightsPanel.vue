@@ -9,6 +9,7 @@ const props = defineProps<{
   className?: string
   stacked?: boolean
   splitCards?: boolean
+  bare?: boolean
 }>()
 
 const topStudents = computed(() =>
@@ -45,24 +46,32 @@ const weakDimensionStats = computed(() => {
 <template>
   <section
     class="teacher-panel"
-    :class="{ 'teacher-panel--shellless': splitCards }"
+    :class="{
+      'teacher-panel--shellless': splitCards || bare,
+      'teacher-panel--bare': bare,
+    }"
   >
     <div
       class="teacher-insight-layout"
       :class="{
         'teacher-insight-layout--stacked': stacked,
         'teacher-insight-layout--split-cards': splitCards,
+        'teacher-insight-layout--bare': bare,
       }"
     >
       <section
         class="teacher-subsection"
         :class="
-          splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined
+          splitCards
+            ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire']
+            : bare
+              ? ['teacher-subsection--bare']
+              : undefined
         "
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">
-            Students
+            Top Students
           </div>
           <h2 class="teacher-panel__title">
             班级 Top 学生
@@ -85,12 +94,12 @@ const weakDimensionStats = computed(() => {
 
         <div
           v-else
-          class="top-student-list"
+          class="top-student-list top-student-list--premium"
         >
           <article
             v-for="(student, index) in topStudents"
             :key="student.id"
-            class="top-student-item"
+            class="top-student-item top-student-item--premium"
           >
             <div class="top-student-item__main">
               <div class="top-student-item__name-wrap">
@@ -104,9 +113,9 @@ const weakDimensionStats = computed(() => {
                 <span v-if="student.weak_dimension"> · 薄弱项 {{ student.weak_dimension }}</span>
               </div>
             </div>
-            <div class="top-student-item__stats">
-              <div>{{ student.solved_count ?? 0 }} 题</div>
-              <div>{{ student.total_score ?? 0 }} 分</div>
+            <div class="top-student-item__stats top-student-item__stats--premium">
+              <div class="stat-main">{{ student.solved_count ?? 0 }} <small>题</small></div>
+              <div class="stat-sub">{{ student.total_score ?? 0 }} <small>分</small></div>
             </div>
           </article>
         </div>
@@ -115,12 +124,16 @@ const weakDimensionStats = computed(() => {
       <section
         class="teacher-subsection"
         :class="
-          splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined
+          splitCards
+            ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire']
+            : bare
+              ? ['teacher-subsection--bare']
+              : undefined
         "
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">
-            Weak Dimensions
+            Dimensions
           </div>
           <h2 class="teacher-panel__title">
             薄弱维度分布
@@ -143,18 +156,18 @@ const weakDimensionStats = computed(() => {
 
         <div
           v-else
-          class="dimension-list"
+          class="dimension-list dimension-list--premium"
         >
           <div
             v-for="item in weakDimensionStats"
             :key="item.dimension"
-            class="dimension-item"
+            class="dimension-item dimension-item--premium"
           >
             <div class="dimension-item__head">
               <span class="dimension-item__name">{{ item.dimension }}</span>
-              <span class="dimension-item__count">{{ item.count }} 人</span>
+              <span class="dimension-item__count">{{ item.count }} <small>人</small></span>
             </div>
-            <div class="dimension-item__bar">
+            <div class="dimension-item__bar dimension-item__bar--premium">
               <div
                 class="dimension-item__bar-fill"
                 :style="{ width: item.width }"
@@ -175,6 +188,18 @@ const weakDimensionStats = computed(() => {
   gap: var(--space-5);
 }
 
+.teacher-insight-layout--bare {
+  gap: var(--space-8);
+}
+
+.teacher-subsection--bare {
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 24px;
+  background: var(--workspace-panel);
+  padding: var(--space-6) var(--space-7);
+  box-shadow: 0 4px 16px var(--color-shadow-soft);
+}
+
 .teacher-insight-layout--split-cards {
   gap: var(--space-4);
   --showcase-panel-border: var(--panel-border);
@@ -193,23 +218,22 @@ const weakDimensionStats = computed(() => {
   border-top: 1px solid var(--showcase-panel-border, var(--panel-border));
 }
 
-.top-student-list {
+.top-student-list--premium {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
-.top-student-item {
+.top-student-item--premium {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3-5);
-  border-bottom: 1px dashed var(--panel-divider);
-  padding: var(--space-1) 0 var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--panel-divider);
 }
 
-.top-student-item:last-child {
+.top-student-item--premium:last-child {
   border-bottom: 0;
-  padding-bottom: 0;
 }
 
 .top-student-item__main {
@@ -224,12 +248,12 @@ const weakDimensionStats = computed(() => {
 
 .top-student-item__rank {
   display: inline-flex;
-  min-width: 1.3rem;
+  min-width: 1.5rem;
   justify-content: center;
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
-  color: var(--panel-accent);
+  font-size: var(--font-size-14);
+  font-weight: 800;
+  color: var(--panel-accent-strong);
 }
 
 .top-student-item__name {
@@ -237,38 +261,47 @@ const weakDimensionStats = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-0-92);
-  font-weight: 700;
+  font-size: var(--font-size-16);
+  font-weight: 800;
   color: var(--panel-ink);
 }
 
 .top-student-item__meta {
   margin-top: var(--space-1);
-  font-size: var(--font-size-0-80);
+  font-size: var(--font-size-13);
   color: var(--panel-muted);
 }
 
-.top-student-item__stats {
+.top-student-item__stats--premium {
   flex-shrink: 0;
   text-align: right;
-  font-size: var(--font-size-0-78);
-  line-height: 1.6;
+  font-family: var(--font-family-mono);
+}
+
+.top-student-item__stats--premium .stat-main {
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--panel-ink);
+}
+
+.top-student-item__stats--premium .stat-sub {
+  font-size: var(--font-size-12);
   color: var(--panel-muted);
 }
 
-.dimension-list {
+.top-student-item__stats--premium small {
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.dimension-list--premium {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-5);
 }
 
-.dimension-item {
-  border-bottom: 1px dashed var(--panel-divider);
-  padding: var(--space-1) 0 var(--space-3);
-}
-
-.dimension-item:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+.dimension-item--premium {
+  padding: var(--space-2) 0;
 }
 
 .dimension-item__head {
@@ -279,28 +312,36 @@ const weakDimensionStats = computed(() => {
 }
 
 .dimension-item__name {
-  font-size: var(--font-size-0-88);
-  font-weight: 600;
+  font-size: var(--font-size-15);
+  font-weight: 700;
   color: var(--panel-ink);
 }
 
 .dimension-item__count {
-  font-size: var(--font-size-0-78);
-  color: var(--panel-muted);
+  font-size: var(--font-size-15);
+  font-weight: 700;
+  color: var(--panel-accent-strong);
 }
 
-.dimension-item__bar {
-  margin-top: var(--space-1-5);
-  height: 0.35rem;
+.dimension-item__count small {
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  color: var(--panel-muted);
+  margin-left: 1px;
+}
+
+.dimension-item__bar--premium {
+  margin-top: var(--space-2-5);
+  height: 0.5rem;
   overflow: hidden;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-border) 84%, var(--panel-surface));
+  background: color-mix(in srgb, var(--panel-border) 60%, var(--panel-surface));
 }
 
 .dimension-item__bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-accent) 85%, var(--panel-surface));
+  background: linear-gradient(to right, var(--panel-accent), var(--panel-accent-strong));
 }
 
 @media (min-width: 1280px) {

@@ -200,7 +200,7 @@ const {
           class="section tab-panel active"
           role="tabpanel"
         >
-          <div class="section-head">
+          <div class="section-head section-head--premium">
             <div class="teacher-heading">
               <div class="section-kicker">
                 Skill Portrait
@@ -211,25 +211,27 @@ const {
             </div>
           </div>
 
-          <div class="portrait-grid">
+          <div class="portrait-grid portrait-grid--premium">
             <div class="portrait-summary-block">
-              <h3 class="panel-title">
-                优先补强方向
-              </h3>
+              <div class="panel-header-row">
+                <h3 class="panel-title">
+                  优先补强方向
+                </h3>
+              </div>
 
               <div
                 v-if="weakDimensionStats.length > 0"
-                class="weak-list"
+                class="weak-list weak-list--premium"
               >
                 <article
                   v-for="(item, index) in weakDimensionStats.slice(0, 3)"
                   :key="item.dimension"
-                  class="weak-item"
+                  class="weak-item weak-item--premium"
                 >
                   <div class="weak-rank">
                     {{ `${index + 1}`.padStart(2, '0') }}
                   </div>
-                  <div>
+                  <div class="weak-content">
                     <div class="weak-name">
                       {{ item.dimension }}
                     </div>
@@ -238,35 +240,36 @@ const {
                     </div>
                   </div>
                   <div class="weak-score">
-                    {{ item.count }} 人
+                    {{ item.count }} <small>人</small>
                   </div>
                 </article>
               </div>
 
-              <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+              <div class="summary-grid summary-grid--premium metric-panel-grid">
                 <article
                   v-for="item in portraitSummaryNotes"
                   :key="item.key"
-                  class="summary-note progress-card metric-panel-card"
+                  class="summary-note summary-note--premium metric-panel-card"
                 >
-                  <div class="summary-note-label progress-card-label metric-panel-label">
+                  <div class="summary-note-label metric-panel-label">
                     {{ item.label }}
                   </div>
-                  <div class="summary-note-value progress-card-value metric-panel-value">
+                  <div class="summary-note-value metric-panel-value">
                     {{ item.value }}
                   </div>
-                  <div class="summary-note-copy progress-card-hint metric-panel-helper">
-                    当前画像摘要
+                  <div class="summary-note-copy metric-panel-helper">
+                    {{ item.copy || '当前画像摘要' }}
                   </div>
                 </article>
               </div>
             </div>
 
-            <div class="workspace-subpanel">
+            <div class="workspace-subpanel workspace-subpanel--flat workspace-subpanel--insight">
               <TeacherClassInsightsPanel
                 :students="students"
                 :class-name="selectedClassName"
                 split-cards
+                bare
               />
             </div>
           </div>
@@ -278,7 +281,7 @@ const {
           class="section tab-panel active"
           role="tabpanel"
         >
-          <div class="workspace-subpanel">
+          <div class="workspace-subpanel workspace-subpanel--premium">
             <header class="workspace-tab-heading">
               <div class="workspace-overline">
                 Trend Review
@@ -301,7 +304,7 @@ const {
           class="section tab-panel active"
           role="tabpanel"
         >
-          <div class="workspace-subpanel">
+          <div class="workspace-subpanel workspace-subpanel--premium">
             <header class="workspace-tab-heading">
               <div class="workspace-overline">
                 Student Insight
@@ -314,6 +317,7 @@ const {
               :students="students"
               :class-name="selectedClassName"
               split-cards
+              bare
             />
           </div>
         </section>
@@ -324,7 +328,7 @@ const {
           class="section tab-panel active"
           role="tabpanel"
         >
-          <div class="workspace-subpanel">
+          <div class="workspace-subpanel workspace-subpanel--premium">
             <header class="workspace-tab-heading">
               <div class="workspace-overline">
                 Teaching Advice
@@ -336,6 +340,7 @@ const {
             <TeacherClassReviewPanel
               :review="review"
               :class-name="selectedClassName"
+              bare
             />
           </div>
         </section>
@@ -346,7 +351,7 @@ const {
           class="section tab-panel active"
           role="tabpanel"
         >
-          <div class="workspace-subpanel">
+          <div class="workspace-subpanel workspace-subpanel--premium">
             <header class="workspace-tab-heading">
               <div class="workspace-overline">
                 Intervention
@@ -358,6 +363,7 @@ const {
             <TeacherInterventionPanel
               :students="students"
               :class-name="selectedClassName"
+              bare
             />
           </div>
         </section>
@@ -523,70 +529,116 @@ const {
   color: var(--journal-ink);
 }
 
-.portrait-grid {
+.section-head--premium {
+  margin-bottom: var(--space-7);
+}
+
+.workspace-subpanel--premium {
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 24px;
+  background: var(--workspace-panel);
+  padding: var(--space-7);
+  box-shadow: 0 4px 20px var(--color-shadow-soft);
+}
+
+.portrait-grid--premium {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
-  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-8);
   align-items: start;
 }
 
-.portrait-summary-block {
+.panel-header-row {
+  margin-bottom: var(--space-5);
+}
+
+.weak-list--premium {
   display: grid;
   gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
-.panel-title {
-  margin: 0;
-  font-size: var(--font-size-17);
-  font-weight: 800;
-  color: var(--journal-ink);
-}
-
-.weak-list {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.weak-item {
+.weak-item--premium {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-items: center;
-  padding: var(--space-4);
+  padding: var(--space-5);
   border: 1px solid var(--teacher-card-border);
-  border-radius: var(--workspace-radius-md, 14px);
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
+  );
+  box-shadow: 0 2px 8px var(--color-shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.weak-item--premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-shadow-soft);
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-card-border));
 }
 
 .weak-rank {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
   background: var(--workspace-brand-soft);
-  font: 700 var(--font-size-13) / 1 var(--font-family-mono);
+  font: 800 var(--font-size-14) / 1 var(--font-family-mono);
   color: var(--journal-accent-strong);
 }
+
 .weak-name {
-  font-size: var(--font-size-15);
+  font-size: var(--font-size-17);
   font-weight: 800;
   color: var(--journal-ink);
 }
 
 .weak-copy {
   margin-top: var(--space-1);
-  font-size: var(--font-size-13);
+  font-size: var(--font-size-14);
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
 .weak-score {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-13);
+  font-size: var(--font-size-18);
   font-weight: 800;
   color: var(--journal-accent-strong);
+}
+
+.weak-score small {
+  font-size: var(--font-size-12);
+  font-weight: 700;
+  margin-left: 2px;
+  color: var(--journal-muted);
+}
+
+.summary-grid--premium {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.summary-note--premium {
+  min-height: 8.5rem;
+  padding: var(--space-5);
+  border-radius: 20px;
+  border: 1px solid var(--teacher-card-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
+}
+
+.workspace-subpanel--flat.workspace-subpanel--insight {
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .quick-action {

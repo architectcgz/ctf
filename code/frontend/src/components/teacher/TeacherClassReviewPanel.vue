@@ -7,6 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 const props = defineProps<{
   review: TeacherClassReviewData | null
   className?: string
+  bare?: boolean
 }>()
 
 const reviewItems = computed(() => props.review?.items ?? [])
@@ -25,8 +26,14 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 </script>
 
 <template>
-  <section class="teacher-panel">
-    <header class="teacher-panel__header">
+  <section
+    class="teacher-panel"
+    :class="{ 'teacher-panel--shellless': bare }"
+  >
+    <header
+      v-if="!bare"
+      class="teacher-panel__header"
+    >
       <div class="journal-eyebrow">
         Review
       </div>
@@ -47,7 +54,7 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 
     <div
       v-else
-      class="review-list"
+      class="review-list review-list--premium"
     >
       <article
         v-for="item in reviewItems"
@@ -63,12 +70,12 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 
         <div
           v-if="item.students && item.students.length > 0"
-          class="review-item__students"
+          class="review-item__students review-item__students--premium"
         >
           <span
             v-for="student in item.students"
             :key="student.id"
-            class="review-item__student-chip"
+            class="review-item__student-chip review-item__student-chip--premium"
           >
             {{ student.name || student.username }}
           </span>
@@ -76,19 +83,23 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 
         <div
           v-if="item.recommendation"
-          class="review-item__recommendation"
+          class="review-item__recommendation review-item__recommendation--premium"
         >
           <div class="review-item__recommendation-label">
             推荐训练题
           </div>
-          <div class="review-item__recommendation-title">
-            {{ item.recommendation.title }}
-          </div>
-          <div class="review-item__recommendation-meta">
-            {{ item.recommendation.category }} / {{ item.recommendation.difficulty }}
-          </div>
-          <div class="review-item__recommendation-reason">
-            {{ item.recommendation.reason }}
+          <div class="review-item__recommendation-body">
+            <div class="recommendation-info">
+              <div class="review-item__recommendation-title">
+                {{ item.recommendation.title }}
+              </div>
+              <div class="review-item__recommendation-meta">
+                {{ item.recommendation.category }} · {{ item.recommendation.difficulty }}
+              </div>
+            </div>
+            <div class="review-item__recommendation-reason">
+              {{ item.recommendation.reason }}
+            </div>
           </div>
         </div>
       </article>
@@ -101,21 +112,27 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 
 .review-list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .review-item {
   --review-accent: var(--panel-accent);
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--review-accent) 18%, var(--panel-border));
-  border-top-width: 3px;
-  border-top-color: color-mix(in srgb, var(--review-accent) 58%, transparent);
+  border-left: 4px solid color-mix(in srgb, var(--review-accent) 64%, transparent);
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--panel-surface) 94%, var(--color-bg-base)),
+    135deg,
+    color-mix(in srgb, var(--panel-surface) 98%, var(--color-bg-base)),
     color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
   );
-  padding: var(--space-4) var(--space-4) var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: 0 4px 12px var(--color-shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px var(--color-shadow-soft);
 }
 
 .review-item--primary {
@@ -135,66 +152,81 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 }
 
 .review-item__title {
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
+  font-size: var(--font-size-17);
+  font-weight: 800;
   color: var(--panel-ink);
 }
 
 .review-item__detail {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-0-85);
-  line-height: 1.72;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-15);
+  line-height: 1.75;
   color: var(--panel-muted);
 }
 
-.review-item__students {
-  margin-top: var(--space-3);
+.review-item__students--premium {
+  margin-top: var(--space-4);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1-5);
+  gap: var(--space-2);
 }
 
-.review-item__student-chip {
+.review-item__student-chip--premium {
   display: inline-flex;
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--review-accent) 34%, transparent);
   background: color-mix(in srgb, var(--review-accent) 8%, transparent);
-  padding: var(--space-0-5) var(--space-2);
-  font-size: var(--font-size-0-74);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 8px;
+  font-size: var(--font-size-13);
+  font-weight: 600;
   color: color-mix(in srgb, var(--review-accent) 78%, var(--panel-ink));
 }
 
-.review-item__recommendation {
-  margin-top: var(--space-3);
-  border-top: 1px dashed color-mix(in srgb, var(--review-accent) 28%, var(--panel-border));
-  padding-top: var(--space-3);
+.review-item__recommendation--premium {
+  margin-top: var(--space-5);
+  border-top: 1px solid color-mix(in srgb, var(--review-accent) 12%, var(--panel-border));
+  padding-top: var(--space-4);
+}
+
+.review-item__recommendation-body {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--space-5);
+  margin-top: var(--space-2);
 }
 
 .review-item__recommendation-label {
-  font-size: var(--font-size-0-69);
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--review-accent) 76%, var(--panel-muted));
 }
 
 .review-item__recommendation-title {
   margin-top: var(--space-1);
-  font-size: var(--font-size-0-86);
-  font-weight: 700;
+  font-size: var(--font-size-15);
+  font-weight: 800;
   color: var(--panel-ink);
 }
 
 .review-item__recommendation-meta {
   margin-top: var(--space-0-5);
-  font-size: var(--font-size-0-76);
+  font-size: var(--font-size-13);
   color: var(--panel-muted);
 }
 
 .review-item__recommendation-reason {
-  margin-top: var(--space-1);
-  font-size: var(--font-size-0-82);
-  line-height: 1.68;
+  font-size: var(--font-size-14);
+  line-height: 1.7;
   color: var(--panel-muted);
+}
+
+@media (max-width: 768px) {
+  .review-item__recommendation-body {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
 }
 </style>
