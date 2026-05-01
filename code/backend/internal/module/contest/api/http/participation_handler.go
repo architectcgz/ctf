@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type participationCommandService interface {
@@ -14,7 +16,7 @@ type participationCommandService interface {
 
 type participationQueryService interface {
 	ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult[*dto.ContestRegistrationResp], error)
-	ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error)
+	ListAnnouncements(ctx context.Context, contestID int64) ([]*contestqry.ContestAnnouncementResult, error)
 	GetMyProgress(ctx context.Context, contestID, userID int64) (*dto.ContestMyProgressResp, error)
 }
 

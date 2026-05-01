@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, items)
+	response.Success(c, contestAnnouncementResultsToDTO(items))
 }
 
 func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
@@ -55,4 +56,21 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		return
 	}
 	response.Success(c, item)
+}
+
+func contestAnnouncementResultsToDTO(items []*contestqry.ContestAnnouncementResult) []*dto.ContestAnnouncementResp {
+	result := make([]*dto.ContestAnnouncementResp, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			result = append(result, nil)
+			continue
+		}
+		result = append(result, &dto.ContestAnnouncementResp{
+			ID:        item.ID,
+			Title:     item.Title,
+			Content:   item.Content,
+			CreatedAt: item.CreatedAt,
+		})
+	}
+	return result
 }
