@@ -7,6 +7,7 @@ import { downloadAttachment as downloadChallengeAttachment } from '@/api/challen
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
+import { buildChallengeFlagDraftSummary, summarizeChallengeFlagConfig } from './presentation'
 
 export interface PlatformChallengeFlagDraft {
   flagConfigSummary: string
@@ -17,23 +18,6 @@ export interface PlatformChallengeFlagDraft {
   flagValue: string
   isSharedInstanceChallenge: boolean
   saving: boolean
-}
-
-function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): string {
-  if (!config?.configured) return '未配置'
-
-  switch (config.flag_type) {
-    case 'static':
-      return '静态 Flag'
-    case 'dynamic':
-      return `动态 Flag / 前缀 ${config.flag_prefix || 'flag'}`
-    case 'regex':
-      return `正则匹配 / ${config.flag_regex || '未填写'}`
-    case 'manual_review':
-      return '人工审核'
-    default:
-      return '未配置'
-  }
 }
 
 export function usePlatformChallengeDetailPage() {
@@ -54,14 +38,13 @@ export function usePlatformChallengeDetailPage() {
 
   const challengeId = computed(() => String(route.params.id || ''))
   const workspaceLabel = computed(() => challenge.value?.title || '题目管理')
-  const flagConfigSummary = computed(() => summarizeFlagConfig(challenge.value?.flag_config))
+  const flagConfigSummary = computed(() => summarizeChallengeFlagConfig(challenge.value?.flag_config))
   const isSharedInstanceChallenge = computed(() => challenge.value?.instance_sharing === 'shared')
   const flagDraftSummary = computed(() =>
-    summarizeFlagConfig({
-      configured: true,
-      flag_type: flagType.value,
-      flag_regex: flagRegex.value.trim() || undefined,
-      flag_prefix: flagPrefix.value.trim() || undefined,
+    buildChallengeFlagDraftSummary({
+      flagType: flagType.value,
+      flagPrefix: flagPrefix.value,
+      flagRegex: flagRegex.value,
     })
   )
   const flagDraft = computed<PlatformChallengeFlagDraft>(() => ({
