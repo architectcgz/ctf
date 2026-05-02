@@ -744,6 +744,20 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（拓扑结构增删操作拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyStructureMutations.ts`，承接：
+  - 网络增删
+  - 节点增删
+  - 连线/策略追加
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该模块，移除内联结构增删逻辑。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 702 降至 642）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
