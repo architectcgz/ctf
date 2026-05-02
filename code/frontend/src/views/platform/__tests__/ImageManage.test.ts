@@ -155,6 +155,9 @@ describe('ImageManage', () => {
     expect(imageManagePageSource).toContain(
       "import { useImageManageMutations } from './useImageManageMutations'"
     )
+    expect(imageManagePageSource).toContain("from './imageManagePresentation'")
+    expect(imageManagePageSource).toContain('filterAndSortImages(')
+    expect(imageManagePageSource).toContain('buildImageStatusSummary(')
     expect(imageManagePageSource).not.toContain('createImage(')
     expect(imageManagePageSource).not.toContain('deleteImage(')
   })
