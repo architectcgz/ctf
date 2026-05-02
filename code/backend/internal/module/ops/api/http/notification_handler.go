@@ -84,35 +84,12 @@ func (h *NotificationHandler) PublishAdminNotification(c *gin.Context) {
 		return
 	}
 
-	result, err := h.commands.PublishAdminNotification(c.Request.Context(), authUser.UserID, publishAdminNotificationInputFromDTO(&req))
+	result, err := h.commands.PublishAdminNotification(c.Request.Context(), authUser.UserID, opsRequestMapper.ToPublishAdminNotificationInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, result)
-}
-
-func publishAdminNotificationInputFromDTO(req *dto.AdminNotificationPublishReq) opscmd.PublishAdminNotificationInput {
-	if req == nil {
-		return opscmd.PublishAdminNotificationInput{}
-	}
-	rules := make([]opscmd.NotificationAudienceRuleInput, 0, len(req.AudienceRules.Rules))
-	for _, rule := range req.AudienceRules.Rules {
-		rules = append(rules, opscmd.NotificationAudienceRuleInput{
-			Type:   rule.Type,
-			Values: rule.Values,
-		})
-	}
-	return opscmd.PublishAdminNotificationInput{
-		Type:    req.Type,
-		Title:   req.Title,
-		Content: req.Content,
-		Link:    req.Link,
-		AudienceRules: opscmd.NotificationAudienceRulesInput{
-			Mode:  req.AudienceRules.Mode,
-			Rules: rules,
-		},
-	}
 }
 
 func (h *NotificationHandler) ServeWS(c *gin.Context) {

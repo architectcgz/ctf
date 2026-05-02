@@ -57,7 +57,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, createChallengeInputFromDTO(&req))
+	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeRequestMapper.ToCreateChallengeInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -79,62 +79,12 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateChallenge(c.Request.Context(), id, updateChallengeInputFromDTO(&req)); err != nil {
+	if err := h.commands.UpdateChallenge(c.Request.Context(), id, challengeRequestMapper.ToUpdateChallengeInput(req)); err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	response.Success(c, nil)
-}
-
-func createChallengeInputFromDTO(req *dto.CreateChallengeReq) challengecmd.CreateChallengeInput {
-	if req == nil {
-		return challengecmd.CreateChallengeInput{}
-	}
-	hints := make([]challengecmd.ChallengeHintInput, 0, len(req.Hints))
-	for _, hint := range req.Hints {
-		hints = append(hints, challengecmd.ChallengeHintInput{
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		})
-	}
-	return challengecmd.CreateChallengeInput{
-		Title:           req.Title,
-		Description:     req.Description,
-		Category:        req.Category,
-		Difficulty:      req.Difficulty,
-		Points:          req.Points,
-		ImageID:         req.ImageID,
-		AttachmentURL:   req.AttachmentURL,
-		InstanceSharing: req.InstanceSharing,
-		Hints:           hints,
-	}
-}
-
-func updateChallengeInputFromDTO(req *dto.UpdateChallengeReq) challengecmd.UpdateChallengeInput {
-	if req == nil {
-		return challengecmd.UpdateChallengeInput{}
-	}
-	hints := make([]challengecmd.ChallengeHintInput, 0, len(req.Hints))
-	for _, hint := range req.Hints {
-		hints = append(hints, challengecmd.ChallengeHintInput{
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		})
-	}
-	return challengecmd.UpdateChallengeInput{
-		Title:           req.Title,
-		Description:     req.Description,
-		Category:        req.Category,
-		Difficulty:      req.Difficulty,
-		Points:          req.Points,
-		ImageID:         req.ImageID,
-		AttachmentURL:   req.AttachmentURL,
-		InstanceSharing: req.InstanceSharing,
-		Hints:           hints,
-	}
 }
 
 func (h *Handler) DeleteChallenge(c *gin.Context) {

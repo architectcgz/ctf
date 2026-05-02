@@ -97,7 +97,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Register(c.Request.Context(), registerInputFromDTO(req))
+	resp, session, err := h.commands.Register(c.Request.Context(), authRequestMapper.ToRegisterInput(*req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -114,7 +114,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Login(c.Request.Context(), loginInputFromDTO(req))
+	resp, session, err := h.commands.Login(c.Request.Context(), authRequestMapper.ToLoginInput(*req))
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -147,28 +147,6 @@ func (h *Handler) Login(c *gin.Context) {
 		UserAgent: userAgentPtr(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
-}
-
-func registerInputFromDTO(req *dto.RegisterReq) authcmd.RegisterInput {
-	if req == nil {
-		return authcmd.RegisterInput{}
-	}
-	return authcmd.RegisterInput{
-		Username:  req.Username,
-		Password:  req.Password,
-		Email:     req.Email,
-		ClassName: req.ClassName,
-	}
-}
-
-func loginInputFromDTO(req *dto.LoginReq) authcmd.LoginInput {
-	if req == nil {
-		return authcmd.LoginInput{}
-	}
-	return authcmd.LoginInput{
-		Username: req.Username,
-		Password: req.Password,
-	}
 }
 
 func (h *Handler) Logout(c *gin.Context) {
@@ -224,10 +202,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, identitycontracts.ChangePasswordInput{
-		OldPassword: req.OldPassword,
-		NewPassword: req.NewPassword,
-	}); err != nil {
+	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, authRequestMapper.ToChangePasswordInput(*req)); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
 			Action:       model.AuditActionUpdate,

@@ -9,190 +9,103 @@ func createContestInputFromDTO(req *dto.CreateContestReq) contestcmd.CreateConte
 	if req == nil {
 		return contestcmd.CreateContestInput{}
 	}
-	return contestcmd.CreateContestInput{
-		Title:       req.Title,
-		Description: req.Description,
-		Mode:        req.Mode,
-		StartTime:   req.StartTime,
-		EndTime:     req.EndTime,
-	}
+	return contestRequestMapper.ToCreateContestInput(*req)
 }
 
 func updateContestInputFromDTO(req *dto.UpdateContestReq) contestcmd.UpdateContestInput {
 	if req == nil {
 		return contestcmd.UpdateContestInput{}
 	}
-	return contestcmd.UpdateContestInput{
-		Title:          req.Title,
-		Description:    req.Description,
-		Mode:           req.Mode,
-		StartTime:      req.StartTime,
-		EndTime:        req.EndTime,
-		Status:         req.Status,
-		ForceOverride:  req.ForceOverride,
-		OverrideReason: req.OverrideReason,
-	}
+	return contestRequestMapper.ToUpdateContestInput(*req)
 }
 
 func createAnnouncementInputFromDTO(req *dto.CreateContestAnnouncementReq) contestcmd.CreateAnnouncementInput {
 	if req == nil {
 		return contestcmd.CreateAnnouncementInput{}
 	}
-	return contestcmd.CreateAnnouncementInput{
-		Title:   req.Title,
-		Content: req.Content,
-	}
+	return contestRequestMapper.ToCreateAnnouncementInput(*req)
 }
 
 func reviewRegistrationInputFromDTO(req *dto.ReviewContestRegistrationReq) contestcmd.ReviewRegistrationInput {
 	if req == nil {
 		return contestcmd.ReviewRegistrationInput{}
 	}
-	return contestcmd.ReviewRegistrationInput{
-		Status: req.Status,
-	}
+	return contestRequestMapper.ToReviewRegistrationInput(*req)
 }
 
 func createTeamInputFromDTO(req *dto.CreateTeamReq) contestcmd.CreateTeamInput {
 	if req == nil {
 		return contestcmd.CreateTeamInput{}
 	}
-	return contestcmd.CreateTeamInput{
-		Name:       req.Name,
-		MaxMembers: req.MaxMembers,
-	}
+	return contestRequestMapper.ToCreateTeamInput(*req)
 }
 
 func addContestChallengeInputFromDTO(req *dto.AddContestChallengeReq) contestcmd.AddContestChallengeInput {
 	if req == nil {
 		return contestcmd.AddContestChallengeInput{}
 	}
-	return contestcmd.AddContestChallengeInput{
-		ChallengeID: req.ChallengeID,
-		Points:      req.Points,
-		Order:       req.Order,
-		IsVisible:   req.IsVisible,
-	}
+	return contestRequestMapper.ToAddContestChallengeInput(*req)
 }
 
 func updateContestChallengeInputFromDTO(req *dto.UpdateContestChallengeReq) contestcmd.UpdateContestChallengeInput {
 	if req == nil {
 		return contestcmd.UpdateContestChallengeInput{}
 	}
-	return contestcmd.UpdateContestChallengeInput{
-		Points:    req.Points,
-		Order:     req.Order,
-		IsVisible: req.IsVisible,
-	}
+	return contestRequestMapper.ToUpdateContestChallengeInput(*req)
 }
 
 func createAWDRoundInputFromDTO(req *dto.CreateAWDRoundReq) contestcmd.CreateAWDRoundInput {
 	if req == nil {
 		return contestcmd.CreateAWDRoundInput{}
 	}
-	return contestcmd.CreateAWDRoundInput{
-		RoundNumber:    req.RoundNumber,
-		Status:         req.Status,
-		AttackScore:    req.AttackScore,
-		DefenseScore:   req.DefenseScore,
-		ForceOverride:  req.ForceOverride,
-		OverrideReason: req.OverrideReason,
-	}
+	return contestRequestMapper.ToCreateAWDRoundInput(*req)
 }
 
 func upsertServiceCheckInputFromDTO(req *dto.UpsertAWDServiceCheckReq) contestcmd.UpsertServiceCheckInput {
 	if req == nil {
 		return contestcmd.UpsertServiceCheckInput{}
 	}
-	return contestcmd.UpsertServiceCheckInput{
-		TeamID:        req.TeamID,
-		ServiceID:     req.ServiceID,
-		ServiceStatus: req.ServiceStatus,
-		CheckResult:   req.CheckResult,
-	}
+	return contestRequestMapper.ToUpsertServiceCheckInput(*req)
 }
 
 func runCurrentRoundChecksInputFromDTO(req *dto.RunCurrentAWDCheckerReq) contestcmd.RunCurrentRoundChecksInput {
 	if req == nil {
 		return contestcmd.RunCurrentRoundChecksInput{}
 	}
-	return contestcmd.RunCurrentRoundChecksInput{
-		ForceOverride:  req.ForceOverride,
-		OverrideReason: req.OverrideReason,
-	}
+	return contestRequestMapper.ToRunCurrentRoundChecksInput(*req)
 }
 
 func createAttackLogInputFromDTO(req *dto.CreateAWDAttackLogReq) contestcmd.CreateAttackLogInput {
 	if req == nil {
 		return contestcmd.CreateAttackLogInput{}
 	}
-	return contestcmd.CreateAttackLogInput{
-		AttackerTeamID: req.AttackerTeamID,
-		VictimTeamID:   req.VictimTeamID,
-		ServiceID:      req.ServiceID,
-		AttackType:     req.AttackType,
-		SubmittedFlag:  req.SubmittedFlag,
-		IsSuccess:      req.IsSuccess,
-	}
+	return contestRequestMapper.ToCreateAttackLogInput(*req)
 }
 
 func submitAttackInputFromDTO(req *dto.SubmitAWDAttackReq) contestcmd.SubmitAttackInput {
 	if req == nil {
 		return contestcmd.SubmitAttackInput{}
 	}
-	return contestcmd.SubmitAttackInput{
-		VictimTeamID: req.VictimTeamID,
-		Flag:         req.Flag,
-	}
+	return contestRequestMapper.ToSubmitAttackInput(*req)
 }
 
 func previewCheckerInputFromDTO(req *dto.PreviewAWDCheckerReq) contestcmd.PreviewCheckerInput {
 	if req == nil {
 		return contestcmd.PreviewCheckerInput{}
 	}
-	return contestcmd.PreviewCheckerInput{
-		AWDChallengeID:   req.AWDChallengeID,
-		ServiceID:        req.ServiceID,
-		CheckerType:      req.CheckerType,
-		CheckerConfig:    req.CheckerConfig,
-		AccessURL:        req.AccessURL,
-		PreviewFlag:      req.PreviewFlag,
-		PreviewRequestID: req.PreviewRequestID,
-	}
+	return contestRequestMapper.ToPreviewCheckerInput(*req)
 }
 
 func createContestAWDServiceInputFromDTO(req *dto.CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput {
 	if req == nil {
 		return contestcmd.CreateContestAWDServiceInput{}
 	}
-	return contestcmd.CreateContestAWDServiceInput{
-		AWDChallengeID:         req.AWDChallengeID,
-		Points:                 req.Points,
-		DisplayName:            req.DisplayName,
-		Order:                  req.Order,
-		IsVisible:              req.IsVisible,
-		CheckerType:            req.CheckerType,
-		CheckerConfig:          req.CheckerConfig,
-		AWDSLAScore:            req.AWDSLAScore,
-		AWDDefenseScore:        req.AWDDefenseScore,
-		AWDCheckerPreviewToken: req.AWDCheckerPreviewToken,
-	}
+	return contestRequestMapper.ToCreateContestAWDServiceInput(*req)
 }
 
 func updateContestAWDServiceInputFromDTO(req *dto.UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput {
 	if req == nil {
 		return contestcmd.UpdateContestAWDServiceInput{}
 	}
-	return contestcmd.UpdateContestAWDServiceInput{
-		AWDChallengeID:         req.AWDChallengeID,
-		Points:                 req.Points,
-		DisplayName:            req.DisplayName,
-		Order:                  req.Order,
-		IsVisible:              req.IsVisible,
-		CheckerType:            req.CheckerType,
-		CheckerConfig:          req.CheckerConfig,
-		AWDSLAScore:            req.AWDSLAScore,
-		AWDDefenseScore:        req.AWDDefenseScore,
-		AWDCheckerPreviewToken: req.AWDCheckerPreviewToken,
-	}
+	return contestRequestMapper.ToUpdateContestAWDServiceInput(*req)
 }

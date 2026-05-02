@@ -58,7 +58,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.CreateUser(c.Request.Context(), createUserInputFromDTO(&req))
+	user, err := h.commands.CreateUser(c.Request.Context(), identityRequestMapper.ToCreateUserInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -74,45 +74,12 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.UpdateUser(c.Request.Context(), userID, updateUserInputFromDTO(&req))
+	user, err := h.commands.UpdateUser(c.Request.Context(), userID, identityRequestMapper.ToUpdateUserInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, gin.H{"user": user})
-}
-
-func createUserInputFromDTO(req *dto.CreateAdminUserReq) identitycontracts.CreateUserInput {
-	if req == nil {
-		return identitycontracts.CreateUserInput{}
-	}
-	return identitycontracts.CreateUserInput{
-		Username:  req.Username,
-		Password:  req.Password,
-		Name:      req.Name,
-		Email:     req.Email,
-		StudentNo: req.StudentNo,
-		TeacherNo: req.TeacherNo,
-		ClassName: req.ClassName,
-		Role:      req.Role,
-		Status:    req.Status,
-	}
-}
-
-func updateUserInputFromDTO(req *dto.UpdateAdminUserReq) identitycontracts.UpdateUserInput {
-	if req == nil {
-		return identitycontracts.UpdateUserInput{}
-	}
-	return identitycontracts.UpdateUserInput{
-		Password:  req.Password,
-		Name:      req.Name,
-		Email:     req.Email,
-		StudentNo: req.StudentNo,
-		TeacherNo: req.TeacherNo,
-		ClassName: req.ClassName,
-		Role:      req.Role,
-		Status:    req.Status,
-	}
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {

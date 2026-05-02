@@ -37,24 +37,13 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateTag(c.Request.Context(), createTagInputFromDTO(&req))
+	resp, err := h.commands.CreateTag(c.Request.Context(), challengeRequestMapper.ToCreateTagInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	response.Success(c, resp)
-}
-
-func createTagInputFromDTO(req *dto.CreateTagReq) challengecmd.CreateTagInput {
-	if req == nil {
-		return challengecmd.CreateTagInput{}
-	}
-	return challengecmd.CreateTagInput{
-		Name:        req.Name,
-		Type:        req.Type,
-		Description: req.Description,
-	}
 }
 
 func (h *TagHandler) ListTags(c *gin.Context) {

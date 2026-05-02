@@ -28,28 +28,12 @@ func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.queries.ListTrafficEvents(c.Request.Context(), contestID, roundID, listAWDTrafficEventsInputFromDTO(&req))
+	resp, err := h.queries.ListTrafficEvents(c.Request.Context(), contestID, roundID, contestRequestMapper.ToListAWDTrafficEventsInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, awdTrafficEventPageResultToDTO(resp))
-}
-
-func listAWDTrafficEventsInputFromDTO(req *dto.ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput {
-	if req == nil {
-		return contestqry.ListAWDTrafficEventsInput{}
-	}
-	return contestqry.ListAWDTrafficEventsInput{
-		AttackerTeamID: req.AttackerTeamID,
-		VictimTeamID:   req.VictimTeamID,
-		ServiceID:      req.ServiceID,
-		AWDChallengeID: req.AWDChallengeID,
-		StatusGroup:    req.StatusGroup,
-		PathKeyword:    req.PathKeyword,
-		Page:           req.Page,
-		Size:           req.Size,
-	}
 }
 
 func awdTrafficEventPageResultToDTO(result *contestqry.AWDTrafficEventPageResult) *dto.AWDTrafficEventPageResp {
