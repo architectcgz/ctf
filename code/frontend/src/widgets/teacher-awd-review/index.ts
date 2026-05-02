@@ -4,3 +4,4 @@ export { default as TeacherAWDReviewSurfaceShell } from './TeacherAWDReviewSurfa
 export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWorkspaceHeader.vue'
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
 export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'
+export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
