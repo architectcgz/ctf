@@ -148,10 +148,10 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 		}
 	}
 
-	return &dto.AdminNotificationPublishResp{
+	return notificationMapper.ToAdminNotificationPublishRespPtr(adminNotificationPublishRespSource{
 		BatchID:        batch.ID,
 		RecipientCount: len(notifications),
-	}, nil
+	}), nil
 }
 
 func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificationID int64) error {

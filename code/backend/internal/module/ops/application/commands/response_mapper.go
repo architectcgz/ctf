@@ -7,6 +7,11 @@ import (
 	"ctf-platform/internal/model"
 )
 
+type adminNotificationPublishRespSource struct {
+	BatchID        int64
+	RecipientCount int
+}
+
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
 // goverter:converter
@@ -19,6 +24,9 @@ type notificationResponseMapper interface {
 	// goverter:ignore Unread
 	ToNotificationInfo(source model.Notification) dto.NotificationInfo
 	ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo
+
+	ToAdminNotificationPublishResp(source adminNotificationPublishRespSource) dto.AdminNotificationPublishResp
+	ToAdminNotificationPublishRespPtr(source adminNotificationPublishRespSource) *dto.AdminNotificationPublishResp
 }
 
 var notificationMapper notificationResponseMapper

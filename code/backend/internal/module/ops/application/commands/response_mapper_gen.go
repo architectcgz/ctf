@@ -10,6 +10,16 @@ import (
 
 type notificationResponseMapperImpl struct{}
 
+func (c *notificationResponseMapperImpl) ToAdminNotificationPublishResp(source adminNotificationPublishRespSource) dto.AdminNotificationPublishResp {
+	var dtoAdminNotificationPublishResp dto.AdminNotificationPublishResp
+	dtoAdminNotificationPublishResp.BatchID = source.BatchID
+	dtoAdminNotificationPublishResp.RecipientCount = source.RecipientCount
+	return dtoAdminNotificationPublishResp
+}
+func (c *notificationResponseMapperImpl) ToAdminNotificationPublishRespPtr(source adminNotificationPublishRespSource) *dto.AdminNotificationPublishResp {
+	dtoAdminNotificationPublishResp := c.ToAdminNotificationPublishResp(source)
+	return &dtoAdminNotificationPublishResp
+}
 func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) dto.NotificationInfo {
 	var dtoNotificationInfo dto.NotificationInfo
 	dtoNotificationInfo.ID = source.ID
