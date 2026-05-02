@@ -898,6 +898,21 @@ npm run test:run -- src/views/contests/__tests__/ContestDetail.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch Q 子项（教师学员分析复盘归档流程拆分）
+- 新增 `features/teacher-student-analysis/model/useReviewArchiveExportFlow.ts`，承接：
+  - 复盘归档导出触发
+  - 状态轮询与失败分支处理
+  - 报告下载动作与导出提示
+  - 报告弹窗可见性状态
+- `useTeacherStudentAnalysisPage.ts` 改为组合调用该模块，移除内联复盘导出细节。
+- `useTeacherStudentAnalysisPage.ts` 行数下降（本批由 505 降至 420）。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/views/teacher/__tests__/TeacherDashboard.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
