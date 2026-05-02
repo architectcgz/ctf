@@ -32,17 +32,10 @@ type MyTeamResult struct {
 }
 
 func teamResultFromModel(team *model.Team, memberCount int) *TeamResult {
-	if team == nil {
+	resp := contestQueryResponseMapperInst.ToTeamResultBasePtr(team)
+	if resp == nil {
 		return nil
 	}
-	return &TeamResult{
-		ID:          team.ID,
-		ContestID:   team.ContestID,
-		Name:        team.Name,
-		CaptainID:   team.CaptainID,
-		InviteCode:  team.InviteCode,
-		MaxMembers:  team.MaxMembers,
-		MemberCount: memberCount,
-		CreatedAt:   team.CreatedAt,
-	}
+	resp.MemberCount = memberCount
+	return resp
 }

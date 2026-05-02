@@ -27,19 +27,14 @@ type ContestResult struct {
 }
 
 func contestResultFromModel(contest *model.Contest) *ContestResult {
-	if contest == nil {
+	resp := contestQueryResponseMapperInst.ToContestResultBasePtr(contest)
+	if resp == nil {
 		return nil
 	}
-	return &ContestResult{
-		ID:          contest.ID,
-		Title:       contest.Title,
-		Description: contest.Description,
-		Mode:        contest.Mode,
-		StartTime:   domain.NormalizeContestTime(contest.StartTime),
-		EndTime:     domain.NormalizeContestTime(contest.EndTime),
-		FreezeTime:  domain.NormalizeContestTimePtr(contest.FreezeTime),
-		Status:      contest.Status,
-		CreatedAt:   domain.NormalizeContestTime(contest.CreatedAt),
-		UpdatedAt:   domain.NormalizeContestTime(contest.UpdatedAt),
-	}
+	resp.StartTime = domain.NormalizeContestTime(resp.StartTime)
+	resp.EndTime = domain.NormalizeContestTime(resp.EndTime)
+	resp.FreezeTime = domain.NormalizeContestTimePtr(resp.FreezeTime)
+	resp.CreatedAt = domain.NormalizeContestTime(resp.CreatedAt)
+	resp.UpdatedAt = domain.NormalizeContestTime(resp.UpdatedAt)
+	return resp
 }
