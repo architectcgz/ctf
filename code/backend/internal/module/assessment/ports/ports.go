@@ -40,22 +40,40 @@ type ChallengeRepository interface {
 	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }
 
-type ReportRepository interface {
+type AssessmentReportLifecycleRepository interface {
 	Create(ctx context.Context, report *model.Report) error
 	FindByID(ctx context.Context, reportID int64) (*model.Report, error)
 	MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error
 	MarkFailed(ctx context.Context, reportID int64, message string) error
+}
+
+type AssessmentReportUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error)
+}
+
+type AssessmentReportContestLookupRepository interface {
 	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+}
+
+type AssessmentPersonalReportRepository interface {
 	GetPersonalStats(ctx context.Context, userID int64) (*assessmentdomain.PersonalReportStats, error)
 	ListPersonalDimensionStats(ctx context.Context, userID int64) ([]assessmentdomain.ReportDimensionStat, error)
+}
+
+type AssessmentClassReportRepository interface {
 	CountClassStudents(ctx context.Context, className string) (int, error)
 	GetClassAverageScore(ctx context.Context, className string) (float64, error)
 	ListClassDimensionAverages(ctx context.Context, className string) ([]assessmentdomain.ClassDimensionAverage, error)
 	ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentdomain.ClassTopStudent, error)
+}
+
+type AssessmentContestExportRepository interface {
 	ListContestScoreboard(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportScoreboardItem, error)
 	ListContestChallenges(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportChallengeItem, error)
 	ListContestTeams(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportTeamItem, error)
+}
+
+type AssessmentReviewArchiveRepository interface {
 	CountPublishedChallenges(ctx context.Context) (int64, error)
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error)
 	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error)

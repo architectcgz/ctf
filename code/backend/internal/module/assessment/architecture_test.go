@@ -102,6 +102,18 @@ func TestPortsDoNotDeclareWideProfileRepository(t *testing.T) {
 	}
 }
 
+func TestPortsDoNotDeclareWideReportRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "ports.go"))
+	if err != nil {
+		t.Fatalf("read assessment ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type ReportRepository interface") {
+		t.Fatalf("assessment ports must not declare the legacy wide ReportRepository interface")
+	}
+}
+
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 	t.Parallel()
 

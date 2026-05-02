@@ -27,7 +27,7 @@ import (
 )
 
 type ReportService struct {
-	repo              assessmentports.ReportRepository
+	repo              reportRepository
 	assessmentService assessmentports.AssessmentProfileReader
 	awdReviewBuilder  AWDReviewExportBuilder
 	config            config.ReportConfig
@@ -36,6 +36,16 @@ type ReportService struct {
 	baseCtx           context.Context
 	cancel            context.CancelFunc
 	tasks             sync.WaitGroup
+}
+
+type reportRepository interface {
+	assessmentports.AssessmentReportLifecycleRepository
+	assessmentports.AssessmentReportUserLookupRepository
+	assessmentports.AssessmentReportContestLookupRepository
+	assessmentports.AssessmentPersonalReportRepository
+	assessmentports.AssessmentClassReportRepository
+	assessmentports.AssessmentContestExportRepository
+	assessmentports.AssessmentReviewArchiveRepository
 }
 
 type personalReportData struct {
@@ -91,7 +101,7 @@ type ReviewArchiveStudent struct {
 	ClassName string `json:"class_name,omitempty"`
 }
 
-func NewReportService(repo assessmentports.ReportRepository, assessmentService assessmentports.AssessmentProfileReader, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
+func NewReportService(repo reportRepository, assessmentService assessmentports.AssessmentProfileReader, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
