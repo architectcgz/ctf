@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 import teacherAwdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
+import teacherAwdReviewContestDirectorySource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestDirectory.vue?raw'
 import teacherAwdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
 
 const pushMock = vi.fn()
@@ -124,14 +125,15 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewIndexFilters')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewDirectorySection')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
+    expect(teacherAwdReviewContestDirectorySource).toContain('<TeacherAWDReviewIndexFilters')
+    expect(teacherAwdReviewContestDirectorySource).toContain('<TeacherAWDReviewDirectorySection')
     expect(teacherAwdReviewDirectorySectionSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
     expect(teacherAwdReviewDirectorySectionSource).toContain('class="list-heading"')
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-title')
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-copy')
+    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-title')
+    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-copy')
     expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )

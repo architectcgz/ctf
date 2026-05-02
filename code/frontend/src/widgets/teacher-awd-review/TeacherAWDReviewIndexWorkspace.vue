@@ -3,11 +3,7 @@ import { computed } from 'vue'
 import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
-import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
-import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
-import TeacherAWDReviewDirectorySection from './TeacherAWDReviewDirectorySection.vue'
-import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
-import TeacherAWDReviewIndexFilters from './TeacherAWDReviewIndexFilters.vue'
+import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
@@ -104,38 +100,20 @@ const summaryItems = computed(() => [
         </template>
       </TeacherAWDReviewSummaryPanel>
 
-      <TeacherAWDReviewDirectorySection
-        :total-count="contests.length"
-      >
-        <template #filters>
-          <TeacherAWDReviewIndexFilters
-            :status-options="statusOptions"
-            :status-filter="statusFilter"
-            :keyword-filter="keywordFilter"
-            @update-status-filter="emit('updateStatusFilter', $event)"
-            @update-keyword-filter="emit('updateKeywordFilter', $event)"
-          />
-        </template>
-
-        <TeacherAWDReviewDirectoryState
-          :loading="loading"
-          :error="error"
-          :has-contests="hasContests"
-          @reload="emit('reload')"
-        >
-          <section class="teacher-directory">
-            <TeacherAWDReviewContestHead />
-
-            <TeacherAWDReviewContestRow
-              v-for="contest in contests"
-              :key="contest.id"
-              :contest="contest"
-              :contest-status-label="contestStatusLabel"
-              @open-contest="emit('openContest', $event)"
-            />
-          </section>
-        </TeacherAWDReviewDirectoryState>
-      </TeacherAWDReviewDirectorySection>
+      <TeacherAWDReviewContestDirectory
+        :loading="loading"
+        :error="error"
+        :contests="contests"
+        :has-contests="hasContests"
+        :status-options="statusOptions"
+        :status-filter="statusFilter"
+        :keyword-filter="keywordFilter"
+        :contest-status-label="contestStatusLabel"
+        @reload="emit('reload')"
+        @open-contest="emit('openContest', $event)"
+        @update-status-filter="emit('updateStatusFilter', $event)"
+        @update-keyword-filter="emit('updateKeywordFilter', $event)"
+      />
     </div>
   </TeacherAWDReviewSurfaceShell>
 </template>
@@ -154,11 +132,6 @@ const summaryItems = computed(() => [
   letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
   text-transform: uppercase;
   color: var(--journal-accent, var(--color-primary));
-}
-
-.teacher-directory {
-  display: flex;
-  flex-direction: column;
 }
 
 @media (max-width: 1080px) {

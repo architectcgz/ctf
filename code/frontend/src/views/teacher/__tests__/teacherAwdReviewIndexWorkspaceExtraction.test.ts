@@ -5,6 +5,7 @@ import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherA
 import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewContestDirectorySource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestDirectory.vue?raw'
 import awdReviewIndexFiltersSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexFilters.vue?raw'
 import awdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestHead.vue?raw'
@@ -24,14 +25,15 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewDirectorySection')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewIndexFilters')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewDirectoryState')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestHead')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestRow')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
     expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
+    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewDirectorySection')
+    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewIndexFilters')
+    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewDirectoryState')
+    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewContestHead')
+    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewContestRow')
     expect(awdReviewDirectorySectionSource).toContain('class="workspace-directory-section teacher-directory-section"')
     expect(awdReviewDirectorySectionSource).toContain('AWD_REVIEW_DIRECTORY_COLUMNS')
     expect(awdReviewIndexFiltersSource).toContain('class="teacher-directory-filters"')
