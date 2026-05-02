@@ -118,17 +118,11 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 
 	list := make([]*dto.ChallengeListItem, 0, len(challenges))
 	for _, challenge := range challenges {
-		list = append(list, &dto.ChallengeListItem{
-			ID:            challenge.ID,
-			Title:         challenge.Title,
-			Category:      challenge.Category,
-			Difficulty:    challenge.Difficulty,
-			Points:        challenge.Points,
-			IsSolved:      solvedMap[challenge.ID],
-			SolvedCount:   solvedCountMap[challenge.ID],
-			TotalAttempts: attemptsMap[challenge.ID],
-			CreatedAt:     challenge.CreatedAt,
-		})
+		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(challenge)
+		item.IsSolved = solvedMap[challenge.ID]
+		item.SolvedCount = solvedCountMap[challenge.ID]
+		item.TotalAttempts = attemptsMap[challenge.ID]
+		list = append(list, item)
 	}
 
 	return &dto.PageResult[*dto.ChallengeListItem]{

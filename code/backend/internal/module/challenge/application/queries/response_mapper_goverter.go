@@ -20,6 +20,12 @@ type challengeQueryResponseMapper interface {
 	ToChallengeHintRespPtr(source *model.ChallengeHint) *dto.ChallengeHintResp
 	ToChallengeHintRespsPtr(source []*model.ChallengeHint) []*dto.ChallengeHintResp
 
+	// goverter:ignore SolvedCount
+	// goverter:ignore TotalAttempts
+	// goverter:ignore IsSolved
+	ToChallengeListItemBase(source model.Challenge) dto.ChallengeListItem
+	ToChallengeListItemBasePtr(source *model.Challenge) *dto.ChallengeListItem
+
 	// goverter:ignore NeedTarget
 	// goverter:ignore Hints
 	// goverter:ignore SolvedCount

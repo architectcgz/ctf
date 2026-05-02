@@ -58,6 +58,24 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*mod
 	}
 	return pDtoChallengeHintRespList
 }
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source model.Challenge) dto.ChallengeListItem {
+	var dtoChallengeListItem dto.ChallengeListItem
+	dtoChallengeListItem.ID = source.ID
+	dtoChallengeListItem.Title = source.Title
+	dtoChallengeListItem.Category = source.Category
+	dtoChallengeListItem.Difficulty = source.Difficulty
+	dtoChallengeListItem.Points = source.Points
+	dtoChallengeListItem.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoChallengeListItem
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *model.Challenge) *dto.ChallengeListItem {
+	var pDtoChallengeListItem *dto.ChallengeListItem
+	if source != nil {
+		dtoChallengeListItem := c.ToChallengeListItemBase((*source))
+		pDtoChallengeListItem = &dtoChallengeListItem
+	}
+	return pDtoChallengeListItem
+}
 func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source model.ChallengeWriteup) dto.ChallengeWriteupResp {
 	var dtoChallengeWriteupResp dto.ChallengeWriteupResp
 	dtoChallengeWriteupResp.ID = source.ID
