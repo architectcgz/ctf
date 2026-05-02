@@ -17,6 +17,7 @@ import (
 // goverter:output:package :commands
 type contestResponseMapper interface {
 	ToContestRespBase(source model.Contest) dto.ContestResp
+	ToContestAnnouncementRespBase(source model.ContestAnnouncement) dto.ContestAnnouncementResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category
@@ -47,6 +48,9 @@ type contestResponseMapper interface {
 	// goverter:ignore VictimTeam
 	// goverter:ignore Source
 	ToAWDAttackLogRespBase(source model.AWDAttackLog) dto.AWDAttackLogResp
+
+	// goverter:ignore Username
+	ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp
 }
 
 var contestResponseMapperInst contestResponseMapper

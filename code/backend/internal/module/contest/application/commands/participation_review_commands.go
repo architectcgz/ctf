@@ -49,16 +49,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.ContestRegistrationResp{
-		ID:         registration.ID,
-		ContestID:  registration.ContestID,
-		UserID:     registration.UserID,
-		Username:   user.Username,
-		TeamID:     registration.TeamID,
-		Status:     registration.Status,
-		ReviewedBy: registration.ReviewedBy,
-		ReviewedAt: registration.ReviewedAt,
-		CreatedAt:  registration.CreatedAt,
-		UpdatedAt:  registration.UpdatedAt,
-	}, nil
+	mapped := contestResponseMapperInst.ToContestRegistrationRespBase(*registration)
+	mapped.Username = user.Username
+	return &mapped, nil
 }
