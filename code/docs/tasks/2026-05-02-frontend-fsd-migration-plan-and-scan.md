@@ -861,6 +861,15 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch N 子项（前端架构 skill 记录与索引）
+- 新增主索引：
+  - `code/docs/skills/SKILL.md`
+  - 收录本仓库前端 skill 入口与使用场景
+- 新增前端架构 skill：
+  - `code/docs/skills/frontend-sliced-architecture/SKILL.md`
+  - 同步本轮迁移的分层约束、标准扫描命令、最小验证集与记录链接
+- 结果：后续前端迁移任务可直接复用项目内 skill，不再依赖单次会话说明。
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
