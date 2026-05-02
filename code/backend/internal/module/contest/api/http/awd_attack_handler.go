@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -24,10 +23,6 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 		return
 	}
 	response.Success(c, resp)
-}
-
-func awdAttackLogResultsToDTO(results []contestqry.AWDAttackLogResult) []*dto.AWDAttackLogResp {
-	return contestRequestMapper.ToAWDAttackLogResps(results)
 }
 
 func (h *AWDHandler) SubmitAttack(c *gin.Context) {
@@ -57,5 +52,5 @@ func (h *AWDHandler) ListAttackLogs(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdAttackLogResultsToDTO(resp))
+	response.Success(c, contestRequestMapper.ToAWDAttackLogResps(resp))
 }

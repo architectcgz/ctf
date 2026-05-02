@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 )
@@ -34,10 +33,6 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-func awdRoundResultsToDTO(results []contestqry.AWDRoundResult) []*dto.AWDRoundResp {
-	return contestRequestMapper.ToAWDRoundResps(results)
-}
-
 func (h *AWDHandler) ListRounds(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	resp, err := h.queries.ListRounds(c.Request.Context(), contestID)
@@ -45,5 +40,5 @@ func (h *AWDHandler) ListRounds(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdRoundResultsToDTO(resp))
+	response.Success(c, contestRequestMapper.ToAWDRoundResps(resp))
 }

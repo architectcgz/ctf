@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -25,10 +24,6 @@ func (h *AWDHandler) UpsertServiceCheck(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-func awdTeamServiceResultsToDTO(results []contestqry.AWDTeamServiceResult) []*dto.AWDTeamServiceResp {
-	return contestRequestMapper.ToAWDTeamServiceResps(results)
-}
-
 func (h *AWDHandler) ListServices(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	roundID := c.GetInt64("rid")
@@ -37,5 +32,5 @@ func (h *AWDHandler) ListServices(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdTeamServiceResultsToDTO(resp))
+	response.Success(c, contestRequestMapper.ToAWDTeamServiceResps(resp))
 }

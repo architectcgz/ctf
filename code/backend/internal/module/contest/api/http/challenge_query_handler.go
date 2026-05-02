@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -24,15 +22,7 @@ func (h *ChallengeHandler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, contestChallengeInfoResultsToDTO(payload))
-}
-
-func contestChallengeResultsToDTO(items []*contestqry.ContestChallengeResult) []*dto.ContestChallengeResp {
-	return contestRequestMapper.ToContestChallengeResps(items)
-}
-
-func contestChallengeInfoResultsToDTO(items []*contestqry.ContestChallengeInfoResult) []*dto.ContestChallengeInfo {
-	return contestRequestMapper.ToContestChallengeInfos(items)
+	response.Success(c, contestRequestMapper.ToContestChallengeInfos(payload))
 }
 
 func (h *ChallengeHandler) ListAdminChallenges(c *gin.Context) {
@@ -48,5 +38,5 @@ func (h *ChallengeHandler) ListAdminChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, contestChallengeResultsToDTO(payload))
+	response.Success(c, contestRequestMapper.ToContestChallengeResps(payload))
 }
