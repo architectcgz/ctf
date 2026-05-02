@@ -517,93 +517,37 @@ func toClassItems(items []readmodelports.ClassItem) []dto.TeacherClassItem {
 	if len(items) == 0 {
 		return []dto.TeacherClassItem{}
 	}
-
-	result := make([]dto.TeacherClassItem, 0, len(items))
-	for _, item := range items {
-		result = append(result, dto.TeacherClassItem{
-			Name:         item.Name,
-			StudentCount: item.StudentCount,
-		})
-	}
-	return result
+	return teachingReadmodelMapper.ToClassItems(items)
 }
 
 func toStudentItems(items []readmodelports.StudentItem) []dto.TeacherStudentItem {
 	if len(items) == 0 {
 		return []dto.TeacherStudentItem{}
 	}
-
-	result := make([]dto.TeacherStudentItem, 0, len(items))
-	for _, item := range items {
-		result = append(result, dto.TeacherStudentItem{
-			ID:               item.ID,
-			Username:         item.Username,
-			StudentNo:        item.StudentNo,
-			Name:             item.Name,
-			ClassName:        item.ClassName,
-			SolvedCount:      item.SolvedCount,
-			TotalScore:       item.TotalScore,
-			RecentEventCount: item.RecentEventCount,
-			WeakDimension:    item.WeakDimension,
-		})
-	}
-	return result
+	return teachingReadmodelMapper.ToStudentItems(items)
 }
 
 func toClassSummary(summary *readmodelports.ClassSummary) *dto.TeacherClassSummaryResp {
 	if summary == nil {
 		return nil
 	}
-
-	return &dto.TeacherClassSummaryResp{
-		ClassName:          summary.ClassName,
-		StudentCount:       summary.StudentCount,
-		AverageSolved:      summary.AverageSolved,
-		ActiveStudentCount: summary.ActiveStudentCount,
-		ActiveRate:         summary.ActiveRate,
-		RecentEventCount:   summary.RecentEventCount,
-	}
+	mapped := teachingReadmodelMapper.ToClassSummary(*summary)
+	return &mapped
 }
 
 func toClassTrend(trend *readmodelports.ClassTrend) *dto.TeacherClassTrendResp {
 	if trend == nil {
 		return nil
 	}
-
-	points := make([]dto.TeacherClassTrendPoint, 0, len(trend.Points))
-	for _, point := range trend.Points {
-		points = append(points, dto.TeacherClassTrendPoint{
-			Date:               point.Date,
-			ActiveStudentCount: point.ActiveStudentCount,
-			EventCount:         point.EventCount,
-			SolveCount:         point.SolveCount,
-		})
-	}
-
-	return &dto.TeacherClassTrendResp{
-		ClassName: trend.ClassName,
-		Points:    points,
-	}
+	mapped := teachingReadmodelMapper.ToClassTrendResp(*trend)
+	return &mapped
 }
 
 func toTimelineEvents(events []readmodelports.TimelineEventRecord) []dto.TimelineEvent {
 	if len(events) == 0 {
 		return []dto.TimelineEvent{}
 	}
-
-	result := make([]dto.TimelineEvent, 0, len(events))
-	for _, event := range events {
-		result = append(result, dto.TimelineEvent{
-			Type:        event.Type,
-			ChallengeID: event.ChallengeID,
-			Title:       event.Title,
-			Timestamp:   event.Timestamp,
-			IsCorrect:   event.IsCorrect,
-			Points:      event.Points,
-			Detail:      event.Detail,
-		})
-	}
-	return result
+	return teachingReadmodelMapper.ToTimelineEvents(events)
 }
 
 func toProgressBreakdownMap(rows []readmodelports.ProgressRow) map[string]dto.ProgressBreakdown {
@@ -690,15 +634,10 @@ func limitStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherSt
 }
 
 func toReviewStudentRefs(students []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
-	items := make([]dto.TeacherReviewStudentRef, 0, len(students))
-	for _, student := range students {
-		items = append(items, dto.TeacherReviewStudentRef{
-			ID:       student.ID,
-			Username: student.Username,
-			Name:     student.Name,
-		})
+	if len(students) == 0 {
+		return []dto.TeacherReviewStudentRef{}
 	}
-	return items
+	return teachingReadmodelMapper.ToReviewStudentRefs(students)
 }
 
 func joinStudentNames(students []dto.TeacherStudentItem) string {
