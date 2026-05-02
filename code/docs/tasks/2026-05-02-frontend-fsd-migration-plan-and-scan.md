@@ -1196,6 +1196,20 @@ npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorksp
 npm run typecheck
 ```
 
+### 已完成：Batch AK 子项（教师看板洞察文案构建拆分）
+- 新增 `features/teacher-dashboard/model/teacherDashboardInsightBuilders.ts`，承接：
+  - 学生洞察行构建（`studentInsightRows`）
+  - 画像摘要构建（`portraitSummaryNotes`）
+  - 趋势信号构建（`trendSignals`）
+- `useTeacherDashboardMetrics.ts` 改为组合调用该纯函数模块，移除内联的大段文案构建逻辑。
+- `useTeacherDashboardMetrics.ts` 行数下降（本批由 336 降至 233）。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
