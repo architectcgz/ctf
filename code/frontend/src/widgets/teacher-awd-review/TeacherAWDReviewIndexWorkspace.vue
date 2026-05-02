@@ -162,14 +162,8 @@ const summaryItems = computed(() => [
 }
 
 @media (max-width: 1080px) {
-  .teacher-topbar {
-    align-items: flex-start;
-    flex-direction: column;
+  .teacher-page {
+    min-height: auto;
   }
-
-  .teacher-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
 }
 </style>

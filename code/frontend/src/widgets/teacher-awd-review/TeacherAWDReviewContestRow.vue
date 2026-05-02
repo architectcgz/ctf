@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { formatDate } from '@/utils/format'
+import {
+  AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA,
+  type AwdReviewDirectoryColumnKey,
+} from './model/directory'
 import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
 
 defineProps<{
@@ -11,6 +15,14 @@ defineProps<{
 const emit = defineEmits<{
   openContest: [contestId: string]
 }>()
+
+const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
+  (result, column) => {
+    result[column.key] = column.rowClass
+    return result
+  },
+  {} as Record<AwdReviewDirectoryColumnKey, string>
+)
 </script>
 
 <template>
@@ -19,11 +31,11 @@ const emit = defineEmits<{
     class="teacher-directory-row"
     @click="emit('openContest', contest.id)"
   >
-    <div class="teacher-directory-cell teacher-directory-cell-code">
+    <div :class="rowClassByKey.code">
       AWD-{{ contest.id }}
     </div>
 
-    <div class="teacher-directory-cell teacher-directory-cell-name">
+    <div :class="rowClassByKey.name">
       <h4 class="teacher-directory-row-title">
         {{ contest.title }}
       </h4>
@@ -33,19 +45,19 @@ const emit = defineEmits<{
       </p>
     </div>
 
-    <div class="teacher-directory-row-metrics">
+    <div :class="rowClassByKey.rounds">
       <span>{{
         contest.current_round ? `第 ${contest.current_round} 轮` : '未开始'
       }}</span>
       <span>共 {{ contest.round_count }} 轮</span>
     </div>
 
-    <div class="teacher-directory-row-metrics">
+    <div :class="rowClassByKey.teams">
       <span>{{ contest.team_count }} 支队伍</span>
       <span>{{ contest.mode.toUpperCase() }}</span>
     </div>
 
-    <div class="teacher-directory-row-tags">
+    <div :class="rowClassByKey.status">
       <span class="teacher-directory-chip">
         {{ contestStatusLabel(contest.status) }}
       </span>
@@ -57,7 +69,9 @@ const emit = defineEmits<{
       </span>
     </div>
 
-    <TeacherAWDReviewContestRowCta />
+    <div :class="rowClassByKey.action">
+      <TeacherAWDReviewContestRowCta />
+    </div>
   </button>
 </template>
 
@@ -133,6 +147,10 @@ const emit = defineEmits<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.teacher-directory-row-action {
+  justify-self: end;
 }
 
 .teacher-directory-chip {

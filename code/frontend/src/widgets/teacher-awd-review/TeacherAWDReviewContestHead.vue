@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { AWD_REVIEW_DIRECTORY_HEADERS } from './model/directory'
+import { AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA } from './model/directory'
 </script>
 
 <template>
   <div class="teacher-directory-head">
     <span
-      v-for="(label, index) in AWD_REVIEW_DIRECTORY_HEADERS"
-      :key="label"
-      :class="index === 0 ? 'teacher-directory-head-cell teacher-directory-head-cell-code' : index === 1 ? 'teacher-directory-head-cell teacher-directory-head-cell-name' : ''"
+      v-for="column in AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA"
+      :key="column.key"
+      :class="['teacher-directory-head-cell', column.headClass]"
     >
-      {{ label }}
+      {{ column.label }}
     </span>
   </div>
 </template>
