@@ -462,23 +462,12 @@ func buildPublishCheckFailureSummary(resp *dto.ChallengeSelfCheckResp) string {
 }
 
 func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishCheckJob) *dto.ChallengePublishCheckJobResp {
-	if job == nil {
+	resp := challengeCommandResponseMapperInst.ToChallengePublishCheckJobRespBasePtr(job)
+	if resp == nil {
 		return nil
 	}
-	resp := &dto.ChallengePublishCheckJobResp{
-		ID:             job.ID,
-		ChallengeID:    job.ChallengeID,
-		RequestedBy:    job.RequestedBy,
-		Status:         mapPublishCheckStatus(job.Status),
-		Active:         isActivePublishCheckStatus(job.Status),
-		RequestSource:  job.RequestSource,
-		FailureSummary: job.FailureSummary,
-		StartedAt:      job.StartedAt,
-		FinishedAt:     job.FinishedAt,
-		PublishedAt:    job.PublishedAt,
-		CreatedAt:      job.CreatedAt,
-		UpdatedAt:      job.UpdatedAt,
-	}
+	resp.Status = mapPublishCheckStatus(job.Status)
+	resp.Active = isActivePublishCheckStatus(job.Status)
 	if strings.TrimSpace(job.ResultJSON) != "" {
 		var result dto.ChallengeSelfCheckResp
 		if err := json.Unmarshal([]byte(job.ResultJSON), &result); err == nil {
