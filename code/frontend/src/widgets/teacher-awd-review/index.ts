@@ -5,3 +5,4 @@ export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWo
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
 export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'
 export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
+export { default as TeacherAWDReviewContestHead } from './TeacherAWDReviewContestHead.vue'
