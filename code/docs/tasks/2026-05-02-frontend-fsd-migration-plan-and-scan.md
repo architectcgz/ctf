@@ -927,6 +927,21 @@ npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch S 子项（教师分析题解/评审流程拆分）
+- 新增 `features/teacher-student-analysis/model/useTeacherSubmissionReviewFlows.ts`，承接：
+  - 题解分页刷新与翻页动作
+  - 社区题解推荐/取消推荐/隐藏/恢复
+  - 人工评审详情读取与审批提交
+  - 题解与人工评审状态重置/写入
+- `useTeacherStudentAnalysisPage.ts` 改为组合调用该模块，移除内联题解与评审流程细节。
+- `useTeacherStudentAnalysisPage.ts` 行数下降（本批由 420 降至 315）。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/views/teacher/__tests__/TeacherDashboard.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

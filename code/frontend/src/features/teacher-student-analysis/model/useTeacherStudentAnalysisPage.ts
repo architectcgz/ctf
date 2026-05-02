@@ -9,14 +9,8 @@ import {
   getStudentRecommendations,
   getStudentSkillProfile,
   getStudentTimeline,
-  getTeacherManualReviewSubmission,
   getTeacherManualReviewSubmissions,
   getTeacherWriteupSubmissions,
-  hideTeacherCommunityWriteup,
-  recommendTeacherCommunityWriteup,
-  restoreTeacherCommunityWriteup,
-  reviewTeacherManualReviewSubmission,
-  unrecommendTeacherCommunityWriteup,
 } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -24,15 +18,11 @@ import type {
   SkillProfileData,
   TeacherClassItem,
   TeacherEvidenceData,
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
   TeacherStudentItem,
-  TeacherSubmissionWriteupItemData,
   TimelineEvent,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
-import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 import {
@@ -42,11 +32,11 @@ import {
   resolveStudentReviewArchiveRouteName,
 } from '@/utils/teachingWorkspaceRouting'
 import { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
+import { useTeacherSubmissionReviewFlows } from './useTeacherSubmissionReviewFlows'
 
 export function useTeacherStudentAnalysisPage() {
   const route = useRoute()
   const router = useRouter()
-  const toast = useToast()
   const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
@@ -66,15 +56,26 @@ export function useTeacherStudentAnalysisPage() {
   const recommendations = ref<RecommendationItem[]>([])
   const timeline = ref<TimelineEvent[]>([])
   const evidence = ref<TeacherEvidenceData | null>(null)
-  const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
-  const writeupPage = ref(1)
-  const writeupPageSize = ref(6)
-  const writeupTotal = ref(0)
-  const writeupPaginationLoading = ref(false)
-  const manualReviewSubmissions = ref<TeacherManualReviewSubmissionItemData[]>([])
-  const activeManualReview = ref<TeacherManualReviewSubmissionDetailData | null>(null)
-  const manualReviewLoading = ref(false)
-  const manualReviewSaving = ref(false)
+  const {
+    writeupSubmissions,
+    writeupPage,
+    writeupPageSize,
+    writeupTotal,
+    writeupPaginationLoading,
+    manualReviewSubmissions,
+    activeManualReview,
+    manualReviewLoading,
+    manualReviewSaving,
+    resetSubmissionReviewState,
+    applyWriteupPagePayload,
+    refreshWriteupSubmissions,
+    changeWriteupPage,
+    openManualReview,
+    reviewManualReview,
+    moderateWriteup,
+  } = useTeacherSubmissionReviewFlows({
+    getCurrentStudentId: studentIdFromRoute,
+  })
 
   const selectedStudent = computed(
     () => students.value.find((item) => item.id === selectedStudentId.value) ?? null
@@ -143,11 +144,7 @@ export function useTeacherStudentAnalysisPage() {
       recommendations.value = []
       timeline.value = []
       evidence.value = null
-      writeupSubmissions.value = []
-      writeupPage.value = 1
-      writeupTotal.value = 0
-      manualReviewSubmissions.value = []
-      activeManualReview.value = null
+      resetSubmissionReviewState()
       selectedStudentId.value = ''
       return
     }
@@ -184,114 +181,12 @@ export function useTeacherStudentAnalysisPage() {
       recommendations.value = nextRecommendations
       timeline.value = nextTimeline
       evidence.value = nextEvidence
-      writeupSubmissions.value = nextWriteups.list
-      writeupPage.value = nextWriteups.page
-      writeupPageSize.value = nextWriteups.page_size
-      writeupTotal.value = nextWriteups.total
+      applyWriteupPagePayload(nextWriteups)
       manualReviewSubmissions.value = nextManualReviews.list
       activeManualReview.value = null
     } finally {
       loadingDetails.value = false
     }
-  }
-
-  async function refreshWriteupSubmissions(
-    studentId = studentIdFromRoute(),
-    targetPage = writeupPage.value
-  ): Promise<void> {
-    if (!studentId) {
-      writeupSubmissions.value = []
-      writeupPage.value = 1
-      writeupTotal.value = 0
-      return
-    }
-    writeupPaginationLoading.value = true
-    try {
-      const nextWriteups = await getTeacherWriteupSubmissions({
-        student_id: studentId,
-        submission_status: 'published',
-        page: targetPage,
-        page_size: writeupPageSize.value,
-      })
-      const totalPages = Math.max(
-        1,
-        Math.ceil(nextWriteups.total / Math.max(1, nextWriteups.page_size))
-      )
-      if (targetPage > totalPages) {
-        writeupPaginationLoading.value = false
-        await refreshWriteupSubmissions(studentId, totalPages)
-        return
-      }
-      writeupSubmissions.value = nextWriteups.list
-      writeupPage.value = nextWriteups.page
-      writeupPageSize.value = nextWriteups.page_size
-      writeupTotal.value = nextWriteups.total
-    } finally {
-      writeupPaginationLoading.value = false
-    }
-  }
-
-  async function changeWriteupPage(page: number): Promise<void> {
-    if (page < 1 || page === writeupPage.value || writeupPaginationLoading.value) return
-    await refreshWriteupSubmissions(studentIdFromRoute(), page)
-  }
-
-  async function openManualReview(submissionId: string): Promise<void> {
-    manualReviewLoading.value = true
-    try {
-      activeManualReview.value = await getTeacherManualReviewSubmission(submissionId)
-    } finally {
-      manualReviewLoading.value = false
-    }
-  }
-
-  async function reviewManualReview(payload: {
-    submissionId: string
-    reviewStatus: 'approved' | 'rejected'
-    reviewComment?: string
-  }): Promise<void> {
-    manualReviewSaving.value = true
-    try {
-      activeManualReview.value = await reviewTeacherManualReviewSubmission(payload.submissionId, {
-        review_status: payload.reviewStatus,
-        review_comment: payload.reviewComment,
-      })
-      const currentStudentId = studentIdFromRoute()
-      if (currentStudentId) {
-        const nextManualReviews = await getTeacherManualReviewSubmissions({
-          student_id: currentStudentId,
-          page_size: 6,
-        })
-        manualReviewSubmissions.value = nextManualReviews.list
-      }
-    } finally {
-      manualReviewSaving.value = false
-    }
-  }
-
-  async function moderateWriteup(payload: {
-    submissionId: string
-    action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
-  }): Promise<void> {
-    switch (payload.action) {
-      case 'recommend':
-        await recommendTeacherCommunityWriteup(payload.submissionId)
-        toast.success('已设为推荐题解')
-        break
-      case 'unrecommend':
-        await unrecommendTeacherCommunityWriteup(payload.submissionId)
-        toast.success('已取消推荐题解')
-        break
-      case 'hide':
-        await hideTeacherCommunityWriteup(payload.submissionId)
-        toast.success('已隐藏社区题解')
-        break
-      case 'restore':
-        await restoreTeacherCommunityWriteup(payload.submissionId)
-        toast.success('已恢复社区题解')
-        break
-    }
-    await refreshWriteupSubmissions()
   }
 
   async function initialize(): Promise<void> {
