@@ -2,17 +2,20 @@ import { computed, ref, watch } from 'vue'
 
 import {
   createContest,
-  getContestAWDReadiness,
   getContests,
   updateContest,
   type AdminContestCreatePayload,
   type AdminContestUpdatePayload,
 } from '@/api/admin/contests'
 import { ApiError } from '@/api/request'
-import type { AWDReadinessData, ContestDetailData, ContestStatus } from '@/api/contracts'
+import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
+import {
+  createDefaultAWDStartOverrideDialogState,
+  useAwdStartOverrideFlow,
+} from './useAwdStartOverrideFlow'
 
 export type PlatformContestStatus = Extract<
   ContestStatus,
@@ -34,14 +37,6 @@ export interface ContestFieldLocks {
   mode: boolean
   starts_at: boolean
   ends_at: boolean
-}
-
-interface AWDStartOverrideDialogState {
-  open: boolean
-  title: string
-  readiness: AWDReadinessData | null
-  confirmLoading: boolean
-  pendingPayload: AdminContestUpdatePayload | null
 }
 
 const STATUS_TRANSITIONS: Record<PlatformContestStatus, PlatformContestStatus[]> = {
@@ -81,16 +76,6 @@ function createEmptyDraft(): ContestFormDraft {
     starts_at: toDateTimeLocal(startAt.toISOString()),
     ends_at: toDateTimeLocal(endAt.toISOString()),
     status: 'draft',
-  }
-}
-
-function createDefaultAWDStartOverrideDialogState(): AWDStartOverrideDialogState {
-  return {
-    open: false,
-    title: '',
-    readiness: null,
-    confirmLoading: false,
-    pendingPayload: null,
   }
 }
 
@@ -209,9 +194,6 @@ export function usePlatformContests() {
   const editingContestId = ref<string | null>(null)
   const editingBaseStatus = ref<PlatformContestStatus | null>(null)
   const formDraft = ref<ContestFormDraft>(createEmptyDraft())
-  const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(
-    createDefaultAWDStartOverrideDialogState()
-  )
 
   const pagination = usePagination<ContestDetailData>(({ page, page_size }) =>
     getContests({
@@ -258,66 +240,23 @@ export function usePlatformContests() {
   async function finalizeContestUpdateSuccess() {
     toast.success('竞赛已更新')
     dialogOpen.value = false
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
+    closeAWDStartOverrideDialog()
     await pagination.refresh()
   }
-
-  async function openAWDStartOverrideDialog(payload: AdminContestUpdatePayload) {
-    if (!editingContestId.value) {
-      return
-    }
-    const readiness = await getContestAWDReadiness(editingContestId.value)
-    awdStartOverrideDialogState.value = {
-      open: true,
-      title: '启动赛事',
-      readiness,
-      confirmLoading: false,
-      pendingPayload: payload,
-    }
-  }
-
-  function closeAWDStartOverrideDialog() {
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-  }
-
-  async function confirmAWDStartOverride(reason: string) {
-    const contestId = editingContestId.value
-    const payload = awdStartOverrideDialogState.value.pendingPayload
-    const normalizedReason = reason.trim()
-    if (!contestId || !payload || !normalizedReason) {
-      return
-    }
-
-    awdStartOverrideDialogState.value = {
-      ...awdStartOverrideDialogState.value,
-      confirmLoading: true,
-    }
-
-    try {
-      await updateContest(
-        contestId,
-        {
-          ...payload,
-          force_override: true,
-          override_reason: normalizedReason,
-        }
-      )
-      await finalizeContestUpdateSuccess()
-    } catch (error) {
-      if (isAWDReadinessBlockedError(error)) {
-        await openAWDStartOverrideDialog(payload)
-        return
-      }
-      toast.error(humanizeRequestError(error, '竞赛更新失败'))
-    } finally {
-      if (awdStartOverrideDialogState.value.open) {
-        awdStartOverrideDialogState.value = {
-          ...awdStartOverrideDialogState.value,
-          confirmLoading: false,
-        }
-      }
-    }
-  }
+  const {
+    awdStartOverrideDialogState,
+    openAWDStartOverrideDialog,
+    closeAWDStartOverrideDialog,
+    confirmAWDStartOverride,
+  } = useAwdStartOverrideFlow({
+    editingContestId,
+    onContestUpdated: finalizeContestUpdateSuccess,
+    isBlockedError: isAWDReadinessBlockedError,
+    humanizeRequestError,
+    notifyError: (message) => {
+      toast.error(message)
+    },
+  })
 
   async function saveContest(draft: ContestFormDraft): Promise<'create' | 'edit' | null> {
     const title = draft.title.trim()

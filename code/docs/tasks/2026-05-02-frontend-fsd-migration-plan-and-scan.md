@@ -870,6 +870,20 @@ npm run typecheck
   - 同步本轮迁移的分层约束、标准扫描命令、最小验证集与记录链接
 - 结果：后续前端迁移任务可直接复用项目内 skill，不再依赖单次会话说明。
 
+### 已完成：Batch O 子项（平台赛事 AWD 启动 override 流程拆分）
+- 新增 `features/platform-contests/model/useAwdStartOverrideFlow.ts`，承接：
+  - AWD 启动前 readiness 拉取
+  - override dialog 状态维护（open/close/confirmLoading/pendingPayload）
+  - override 确认后强制更新与错误分支处理
+- `usePlatformContests.ts` 改为组合调用该模块，移除内联 AWD override 流程细节。
+- `usePlatformContests.ts` 行数下降（本批由 404 降至 343）。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/PlatformContestTable.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
