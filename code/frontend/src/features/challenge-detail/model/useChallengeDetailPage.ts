@@ -1,11 +1,6 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import {
-  getChallengeDetail,
-  getCommunityChallengeSolutions,
-  getRecommendedChallengeSolutions,
-} from '@/api/challenge'
 import type {
   ChallengeDetailData,
   CommunityChallengeSolutionData,
@@ -22,6 +17,7 @@ import {
   useChallengeDetailPresentation,
   type ChallengeSolutionTab,
 } from '.'
+import { useChallengeDetailDataLoader } from './useChallengeDetailDataLoader'
 import { useChallengeInstance } from './useChallengeInstance'
 
 type WorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
@@ -43,7 +39,6 @@ export function useChallengeDetailPage() {
   const submissionRecordPage = ref(1)
 
   let scoreRailProbeTimer: number | null = null
-  let latestChallengeRequestId = 0
 
   const {
     instance,
@@ -77,6 +72,20 @@ export function useChallengeDetailPage() {
 
   const solutionTabOrder: ChallengeSolutionTab[] = ['recommended', 'community']
   const submissionRecordPageSize = 10
+  const { clearSolutions, loadSolutions, loadChallenge } = useChallengeDetailDataLoader({
+    challengeId,
+    challenge,
+    loading,
+    recommendedSolutions,
+    communitySolutions,
+    onSolutionsLoadFailed: () => {
+      toast.error('加载题解失败')
+    },
+    onChallengeLoadFailed: () => {
+      toast.error('加载题目详情失败')
+      void router.push('/challenges')
+    },
+  })
 
   const {
     myWriteup,
@@ -123,7 +132,6 @@ export function useChallengeDetailPage() {
     submitPanelCopy,
     submitFieldLabel,
     submitInputClass,
-    clearSolutions,
     submissionStatusLabel,
     submissionStatusText,
     submissionRecordMessage,
@@ -172,56 +180,6 @@ export function useChallengeDetailPage() {
 
   function changeSubmissionRecordPage(page: number): void {
     submissionRecordPage.value = page
-  }
-
-  async function loadSolutions(id: string, requestId = latestChallengeRequestId): Promise<void> {
-    try {
-      const [recommended, communityPage] = await Promise.all([
-        getRecommendedChallengeSolutions(id),
-        getCommunityChallengeSolutions(id),
-      ])
-      if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
-      }
-      recommendedSolutions.value = recommended
-      communitySolutions.value = communityPage.list
-    } catch {
-      if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
-      }
-      clearSolutions()
-      toast.error('加载题解失败')
-    }
-  }
-
-  async function loadChallenge(): Promise<void> {
-    const id = challengeId.value
-    const requestId = ++latestChallengeRequestId
-    loading.value = true
-
-    try {
-      const detail = await getChallengeDetail(id)
-      if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
-      }
-      challenge.value = detail
-
-      if (detail.is_solved) {
-        await loadSolutions(id, requestId)
-      } else {
-        clearSolutions()
-      }
-    } catch {
-      if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
-      }
-      toast.error('加载题目详情失败')
-      void router.push('/challenges')
-    } finally {
-      if (requestId === latestChallengeRequestId && id === challengeId.value) {
-        loading.value = false
-      }
-    }
   }
 
   watch(

@@ -1014,6 +1014,21 @@ npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/compo
 npm run typecheck
 ```
 
+### 已完成：Batch Y 子项（题目详情数据加载层拆分）
+- 新增 `features/challenge-detail/model/useChallengeDetailDataLoader.ts`，承接：
+  - 题目详情加载
+  - 解出后推荐/社区题解并发加载
+  - 请求竞态保护（最新请求 token）
+  - 失败分支与题解列表清理
+- `useChallengeDetailPage.ts` 改为组合调用该模块，移除内联 `loadChallenge/loadSolutions` 实现。
+- `useChallengeDetailPage.ts` 行数下降（本批由 319 降至 277）。
+
+验证：
+```bash
+npm run test:run -- src/views/challenges/__tests__/ChallengeDetail.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
