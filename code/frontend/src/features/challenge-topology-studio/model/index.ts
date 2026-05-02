@@ -6,6 +6,7 @@ export { useTopologyInteractionBindings } from './useTopologyInteractionBindings
 export { useTopologyPersistenceActions } from './useTopologyPersistenceActions'
 export { useTopologySelectionState } from './useTopologySelectionState'
 export { useTopologyStructureMutations } from './useTopologyStructureMutations'
+export { useTopologyStudioPresentation } from './useTopologyStudioPresentation'
 export { useTopologyTemplateApply } from './useTopologyTemplateApply'
 export { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
 export { useTopologyTemplateMutations } from './useTopologyTemplateMutations'

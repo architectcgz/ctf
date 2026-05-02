@@ -817,6 +817,20 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch K 子项（拓扑页面展示派生拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyStudioPresentation.ts`，承接：
+  - page header / hero / status card / secondary card
+  - 题包来源摘要、基线摘要、修订记录、文件列表
+  - `nodeOptions`、`topologySummary`、`canvasModeLabel`
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该子模块，移除大段展示派生逻辑。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 418 降至 303）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
