@@ -29,7 +29,7 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 	}
 }
 
-func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error) {
+func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req SaveChallengeTopologyInput) (*dto.ChallengeTopologyResp, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -128,7 +128,7 @@ func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challenge
 	return s.repo.DeleteChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
-func (s *TopologyService) CreateTemplate(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error) {
 	rawSpec, entryNodeKey, err := domain.BuildTopologySpec(req.EntryNodeKey, req.Networks, req.Nodes, req.Links, req.Policies)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (s *TopologyService) CreateTemplate(ctx context.Context, req *dto.UpsertEnv
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error) {
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -184,7 +184,7 @@ func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
 	return s.templateRepo.Delete(ctx, id)
 }
 
-func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req *dto.SaveChallengeTopologyReq) (rawSpec, entryNodeKey string, templateID *int64, err error) {
+func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req SaveChallengeTopologyInput) (rawSpec, entryNodeKey string, templateID *int64, err error) {
 	if req.TemplateID != nil {
 		item, findErr := s.templateRepo.FindByID(ctx, *req.TemplateID)
 		if findErr != nil {
