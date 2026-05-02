@@ -1,42 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { ContestStatus } from '@/api/contracts'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
-import { useScoreboardView } from '@/features/scoreboard'
+import { useScoreboardRoutePage, useScoreboardView } from '@/features/scoreboard'
 import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
 
-type ScoreboardPanelKey = 'contest' | 'points'
-
 const CONTEST_PAGE_SIZE = 6
-const route = useRoute()
-const router = useRouter()
-const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> =
-  [
-    {
-      key: 'contest',
-      label: '竞赛排行榜',
-      panelId: 'scoreboard-panel-contest',
-      tabId: 'scoreboard-tab-contest',
-    },
-    {
-      key: 'points',
-      label: '积分排行榜',
-      panelId: 'scoreboard-panel-points',
-      tabId: 'scoreboard-tab-points',
-    },
-  ]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
-  useRouteQueryTabs<ScoreboardPanelKey>({
-    route,
-    router,
-    orderedTabs: panelTabs.map((tab) => tab.key) as ScoreboardPanelKey[],
-    defaultTab: 'contest',
-  })
+const { panelTabs, activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
+  useScoreboardRoutePage()
 
 const {
   hasSections,
