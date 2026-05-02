@@ -3,10 +3,6 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   deleteChallengeTopology,
   exportChallengePackage,
-  getChallengeDetail,
-  getChallengeTopology,
-  getEnvironmentTemplates,
-  getImages,
   saveChallengeTopology,
 } from '@/api/admin/authoring'
 import type {
@@ -40,6 +36,7 @@ import {
   type TopologyPolicyDraft,
 } from './topologyDraft'
 import type { CanvasInteractionMode } from './topologyTypes'
+import { useTopologyDataLoader } from './useTopologyDataLoader'
 import { useTopologyTemplateApply } from './useTopologyTemplateApply'
 import { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
 import { useTopologyTemplateMutations } from './useTopologyTemplateMutations'
@@ -383,10 +380,21 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     applyTopologyDraft(createEmptyTopologyDraft())
   }
 
-  async function loadTemplates() {
-    templates.value = await getEnvironmentTemplates(templateKeyword.value.trim() || undefined)
-    reconcileTemplateSelection()
-  }
+  const { loadTemplates, loadPageData, reloadAll } = useTopologyDataLoader({
+    challengeId: options.challengeId,
+    loading,
+    isTemplateLibraryMode,
+    selectedTemplateId,
+    templateKeyword,
+    templates,
+    challenge,
+    topology,
+    images,
+    applyTopologyDraft,
+    applyEmptyTemplateDraft,
+    resetTemplateForm,
+    reconcileTemplateSelection,
+  })
 
   const { templateBusy, handleCreateTemplate, handleUpdateTemplate, handleDeleteTemplate } =
     useTopologyTemplateMutations({
@@ -410,46 +418,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       await reloadAll()
     },
   })
-
-  async function loadPageData() {
-    loading.value = true
-    try {
-      if (isTemplateLibraryMode.value) {
-        const imageResult = await getImages({ page: 1, page_size: 200 })
-        challenge.value = null
-        topology.value = null
-        images.value = imageResult.list
-        if (!selectedTemplateId.value) {
-          applyTopologyDraft(createEmptyTopologyDraft())
-          resetTemplateForm(null)
-        }
-        return
-      }
-
-      const [challengeDetail, imageResult, currentTopology] = await Promise.all([
-        getChallengeDetail(options.challengeId),
-        getImages({ page: 1, page_size: 200 }),
-        getChallengeTopology(options.challengeId),
-      ])
-
-      challenge.value = challengeDetail
-      images.value = imageResult.list
-      topology.value = currentTopology
-      applyTopologyDraft(createDraftFromTopology(currentTopology))
-      resetTemplateForm(
-        currentTopology?.template_id
-          ? templates.value.find((item) => item.id === currentTopology.template_id) || null
-          : null
-      )
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function reloadAll() {
-    await loadTemplates()
-    await loadPageData()
-  }
 
   function handleResetTemplateEditor() {
     applyTopologyDraft(createEmptyTopologyDraft())

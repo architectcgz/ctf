@@ -701,6 +701,20 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（拓扑数据加载流程拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyDataLoader.ts`，承接：
+  - 模板列表加载
+  - 页面基础数据加载（模板库模式 / 题目模式）
+  - `reloadAll` 编排
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该模块，移除内联 `loadTemplates/loadPageData/reloadAll` 分支。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 833 降至 801）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
