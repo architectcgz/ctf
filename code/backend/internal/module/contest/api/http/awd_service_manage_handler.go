@@ -24,18 +24,10 @@ func contestAWDServiceResultsToDTO(results []contestqry.ContestAWDServiceResult)
 	for i := range results {
 		item := results[i]
 		mapped := contestRequestMapper.ToContestAWDServiceResp(item)
-		mapped.LastPreviewResult = awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw))
+		mapped.LastPreviewResult = contestRequestMapper.ToAWDCheckerPreviewRespPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw))
 		resp = append(resp, &mapped)
 	}
 	return resp
-}
-
-func awdCheckerPreviewResultToDTO(item *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToAWDCheckerPreviewResp(*item)
-	return &mapped
 }
 
 func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {

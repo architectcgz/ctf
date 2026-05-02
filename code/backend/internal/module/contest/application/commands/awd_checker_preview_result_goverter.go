@@ -15,7 +15,9 @@ import (
 type awdCheckerPreviewResultMapper interface {
 	ToStringAnyMap(source map[string]any) map[string]any
 	ToDomain(source dto.AWDCheckerPreviewResp) contestdomain.AWDCheckerPreviewResult
+	ToDomainPtr(source *dto.AWDCheckerPreviewResp) *contestdomain.AWDCheckerPreviewResult
 	ToDTO(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
+	ToDTOPtr(source *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp
 }
 
 var awdPreviewResultMapper awdCheckerPreviewResultMapper

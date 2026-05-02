@@ -42,7 +42,7 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	mapped.ScoreConfig = contestdomain.ParseAWDCheckerConfig(item.ScoreConfig)
 	mapped.RuntimeConfig = runtimeConfig
 	mapped.ValidationState = contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))
-	mapped.LastPreviewResult = awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
+	mapped.LastPreviewResult = awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
 	return &mapped
 }
 

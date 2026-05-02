@@ -47,7 +47,7 @@ func storeAWDCheckerPreviewToken(
 		AWDChallengeID: awdChallengeID,
 		CheckerType:    checkerType,
 		CheckerConfig:  checkerConfig,
-		Result:         *awdCheckerPreviewResultFromDTO(result),
+		Result:         *awdPreviewResultMapper.ToDomainPtr(result),
 		CreatedAt:      time.Now().UTC(),
 	}
 	raw, err := json.Marshal(record)

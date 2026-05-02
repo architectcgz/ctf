@@ -20,6 +20,14 @@ func (c *awdCheckerPreviewResultMapperImpl) ToDTO(source domain.AWDCheckerPrevie
 	dtoAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
 	return dtoAWDCheckerPreviewResp
 }
+func (c *awdCheckerPreviewResultMapperImpl) ToDTOPtr(source *domain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp {
+	var pDtoAWDCheckerPreviewResp *dto.AWDCheckerPreviewResp
+	if source != nil {
+		dtoAWDCheckerPreviewResp := c.ToDTO((*source))
+		pDtoAWDCheckerPreviewResp = &dtoAWDCheckerPreviewResp
+	}
+	return pDtoAWDCheckerPreviewResp
+}
 func (c *awdCheckerPreviewResultMapperImpl) ToDomain(source dto.AWDCheckerPreviewResp) domain.AWDCheckerPreviewResult {
 	var domainAWDCheckerPreviewResult domain.AWDCheckerPreviewResult
 	domainAWDCheckerPreviewResult.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
@@ -28,6 +36,14 @@ func (c *awdCheckerPreviewResultMapperImpl) ToDomain(source dto.AWDCheckerPrevie
 	domainAWDCheckerPreviewResult.PreviewContext = c.dtoAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source.PreviewContext)
 	domainAWDCheckerPreviewResult.PreviewToken = source.PreviewToken
 	return domainAWDCheckerPreviewResult
+}
+func (c *awdCheckerPreviewResultMapperImpl) ToDomainPtr(source *dto.AWDCheckerPreviewResp) *domain.AWDCheckerPreviewResult {
+	var pDomainAWDCheckerPreviewResult *domain.AWDCheckerPreviewResult
+	if source != nil {
+		domainAWDCheckerPreviewResult := c.ToDomain((*source))
+		pDomainAWDCheckerPreviewResult = &domainAWDCheckerPreviewResult
+	}
+	return pDomainAWDCheckerPreviewResult
 }
 func (c *awdCheckerPreviewResultMapperImpl) ToStringAnyMap(source map[string]interface{}) map[string]interface{} {
 	var mapStringUnknown map[string]interface{}

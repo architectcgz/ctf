@@ -50,6 +50,14 @@ func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewResp(source domain.AWDChec
 	dtoAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
 	return dtoAWDCheckerPreviewResp
 }
+func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewRespPtr(source *domain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp {
+	var pDtoAWDCheckerPreviewResp *dto.AWDCheckerPreviewResp
+	if source != nil {
+		dtoAWDCheckerPreviewResp := c.ToAWDCheckerPreviewResp((*source))
+		pDtoAWDCheckerPreviewResp = &dtoAWDCheckerPreviewResp
+	}
+	return pDtoAWDCheckerPreviewResp
+}
 func (c *ContestRequestMapperImpl) ToAWDReadinessItemResp(source queries.AWDReadinessItem) dto.AWDReadinessItemResp {
 	var dtoAWDReadinessItemResp dto.AWDReadinessItemResp
 	dtoAWDReadinessItemResp.ServiceID = source.ServiceID
