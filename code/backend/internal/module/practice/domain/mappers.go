@@ -6,19 +6,13 @@ import (
 )
 
 func InstanceRespFromModel(inst *model.Instance) *dto.InstanceResp {
-	return &dto.InstanceResp{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		ShareScope:       inst.ShareScope,
-		AccessURL:        inst.AccessURL,
-		Access:           dto.BuildInstanceAccessInfo(inst.AccessURL),
-		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: RemainingExtends(inst),
-		CreatedAt:        inst.CreatedAt,
+	resp := practiceResponseMapperInst.ToInstanceRespBasePtr(inst)
+	if resp == nil {
+		return nil
 	}
+	resp.Access = dto.BuildInstanceAccessInfo(inst.AccessURL)
+	resp.RemainingExtends = RemainingExtends(inst)
+	return resp
 }
 
 func RemainingExtends(inst *model.Instance) int {
