@@ -69,22 +69,46 @@ type PracticeTransactionManager interface {
 	WithinTransaction(ctx context.Context, fn func(txRepo PracticeCommandTxRepository) error) error
 }
 
-type PracticeContestCommandRepository interface {
+type PracticeContestLookupRepository interface {
 	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+}
+
+type PracticeContestChallengeLookupRepository interface {
 	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+}
+
+type PracticeContestAWDServiceRepository interface {
 	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
+}
+
+type PracticeContestAWDInstanceRepository interface {
 	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error)
+}
+
+type PracticeContestTeamRepository interface {
 	FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error)
 	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)
+}
+
+type PracticeContestRegistrationRepository interface {
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 }
 
-type PracticeSubmissionCommandRepository interface {
+type PracticeSubmissionWriteRepository interface {
 	CreateSubmission(ctx context.Context, submission *model.Submission) error
-	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
-	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	UpdateSubmission(ctx context.Context, submission *model.Submission) error
+}
+
+type PracticeSolvedSubmissionRepository interface {
+	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
+}
+
+type PracticeSubmissionHistoryRepository interface {
+	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
+}
+
+type PracticeSubmissionConstraintRepository interface {
 	IsUniqueViolation(err error) bool
 }
 
@@ -92,8 +116,11 @@ type PracticeUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 }
 
-type PracticeManualReviewCommandRepository interface {
+type PracticeManualReviewListRepository interface {
 	ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
+}
+
+type PracticeManualReviewLookupRepository interface {
 	GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*TeacherManualReviewSubmissionRecord, error)
 }
 

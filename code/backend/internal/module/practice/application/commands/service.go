@@ -45,10 +45,19 @@ type ScoreUpdater interface {
 
 type practiceCommandRepository interface {
 	practiceports.PracticeTransactionManager
-	practiceports.PracticeContestCommandRepository
-	practiceports.PracticeSubmissionCommandRepository
+	practiceports.PracticeContestLookupRepository
+	practiceports.PracticeContestChallengeLookupRepository
+	practiceports.PracticeContestAWDServiceRepository
+	practiceports.PracticeContestAWDInstanceRepository
+	practiceports.PracticeContestTeamRepository
+	practiceports.PracticeContestRegistrationRepository
+	practiceports.PracticeSubmissionWriteRepository
+	practiceports.PracticeSolvedSubmissionRepository
+	practiceports.PracticeSubmissionHistoryRepository
+	practiceports.PracticeSubmissionConstraintRepository
 	practiceports.PracticeUserLookupRepository
-	practiceports.PracticeManualReviewCommandRepository
+	practiceports.PracticeManualReviewListRepository
+	practiceports.PracticeManualReviewLookupRepository
 }
 
 type practiceInstanceCommandRepository interface {

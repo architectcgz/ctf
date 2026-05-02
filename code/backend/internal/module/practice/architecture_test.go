@@ -100,8 +100,16 @@ func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
 	if strings.Contains(string(content), "type PracticeRepository interface") {
 		t.Fatalf("practice ports must not declare the legacy wide PracticeRepository interface")
 	}
-	if strings.Contains(string(content), "type InstanceRepository interface") {
-		t.Fatalf("practice ports must not declare the wide InstanceRepository interface")
+	forbiddenInterfaces := []string{
+		"type InstanceRepository interface",
+		"type PracticeContestCommandRepository interface",
+		"type PracticeSubmissionCommandRepository interface",
+		"type PracticeManualReviewCommandRepository interface",
+	}
+	for _, forbidden := range forbiddenInterfaces {
+		if strings.Contains(string(content), forbidden) {
+			t.Fatalf("practice ports must not declare the wide interface %s", forbidden)
+		}
 	}
 }
 
