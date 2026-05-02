@@ -758,6 +758,20 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（选中边编辑逻辑拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyEdgeEditing.ts`，承接：
+  - 选中边 kind 切换（link/policy 互转）
+  - 选中边 source/target 更新
+  - kind 字符串输入分发
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该模块，移除内联边编辑实现。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 642 降至 595）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
