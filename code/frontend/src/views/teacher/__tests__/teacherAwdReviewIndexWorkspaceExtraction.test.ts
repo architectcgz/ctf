@@ -32,6 +32,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
     expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
     expect(awdReviewDirectorySectionSource).toContain('class="workspace-directory-section teacher-directory-section"')
+    expect(awdReviewDirectorySectionSource).toContain('AWD_REVIEW_DIRECTORY_COLUMNS')
     expect(awdReviewIndexFiltersSource).toContain('class="teacher-directory-filters"')
     expect(awdReviewDirectoryStateSource).toContain('title="AWD复盘目录加载失败"')
     expect(awdReviewContestHeadSource).toContain('class="teacher-directory-head"')

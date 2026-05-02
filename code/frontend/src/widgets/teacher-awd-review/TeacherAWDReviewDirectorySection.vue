@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { AWD_REVIEW_DIRECTORY_COLUMNS } from './model/directory'
+
 defineProps<{
   totalCount: number
 }>()
@@ -8,6 +10,7 @@ defineProps<{
   <section
     class="workspace-directory-section teacher-directory-section"
     aria-label="AWD 赛事目录"
+    :style="{ '--awd-review-directory-columns': AWD_REVIEW_DIRECTORY_COLUMNS }"
   >
     <header class="list-heading">
       <div>

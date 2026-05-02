@@ -146,8 +146,6 @@ const summaryItems = computed(() => [
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-  --awd-review-directory-columns: minmax(0, 7rem) minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 0.85fr)
-    minmax(0, 1fr) auto;
 }
 
 .awd-review-index-overline {
