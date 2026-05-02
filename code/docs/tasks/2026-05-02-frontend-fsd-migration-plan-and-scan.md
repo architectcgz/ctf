@@ -1210,6 +1210,18 @@ npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AL 子项（拓扑组件 helper 对齐 feature model）
+- `components/platform/topology/topologyDraft.ts` 改为转发导出 `features/challenge-topology-studio/model/topologyDraft.ts`。
+- `components/platform/topology/topologyLayout.ts` 改为转发导出 `features/challenge-topology-studio/model/topologyLayout.ts`。
+- 结果：拓扑组件层不再维护一份重复的 draft/layout 实现，后续变更统一在 feature model 演进，避免双份逻辑漂移。
+- 结果：组件层 API 直连扫描中，`topologyDraft.ts` 的 `@/api/admin/authoring` 依赖已清除。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
