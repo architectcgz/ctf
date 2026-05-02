@@ -1356,6 +1356,22 @@ npm run test:run -- src/features/platform-awd-challenges/model/usePlatformAwdCha
 npm run typecheck
 ```
 
+### 已完成：Batch AU 子项（AWD 复盘导出 payload builder 拆分）
+- 新增 `features/awd-inspector/model/awdInspectorExportPayloads.ts`，承接：
+  - 服务导出 CSV 行映射（`buildServiceExportRows`）
+  - 攻击导出 CSV 行映射（`buildAttackExportRows`）
+  - 复盘包 JSON payload 映射（`buildReviewPackagePayload`）
+  - 流量来源标签映射（`getAwdTrafficSourceLabel`）
+- `useAwdInspectorExports.ts` 改为组合调用 builder 模块，移除内联的大段导出数据映射实现。
+- 新增边界测试：`useAwdInspectorExportsBoundary.test.ts`，锁定主模块已接入 builder。
+- `useAwdInspectorExports.ts` 行数下降（本批由 310 降至 206）。
+
+验证：
+```bash
+npm run test:run -- src/features/awd-inspector/model/useAwdInspectorExports.test.ts src/features/awd-inspector/model/useAwdInspectorExportsBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
