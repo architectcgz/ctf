@@ -10,7 +10,7 @@ import (
 
 func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, records []model.AWDTeamService, statusFields map[string]any) error {
 	if len(records) > 0 {
-		if err := u.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
+		if err := u.repo.WithinRoundServiceWritebackTransaction(ctx, func(txRepo contestports.AWDRoundServiceWritebackTxRepository) error {
 			if err := txRepo.UpsertTeamServices(ctx, records); err != nil {
 				return err
 			}

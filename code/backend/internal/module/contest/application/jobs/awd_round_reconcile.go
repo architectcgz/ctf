@@ -14,7 +14,7 @@ func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *model.Co
 		scheduledRounds = activeRound
 	}
 
-	return u.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
+	return u.repo.WithinRoundReconcileTransaction(ctx, func(txRepo contestports.AWDRoundReconcileTxRepository) error {
 		existingRounds, err := txRepo.ListRoundsByContest(ctx, contest.ID)
 		if err != nil {
 			return err

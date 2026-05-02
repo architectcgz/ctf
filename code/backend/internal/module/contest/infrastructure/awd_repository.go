@@ -25,7 +25,25 @@ func (r *AWDRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo contestports.AWDRepository) error) error {
+func (r *AWDRepository) WithinServiceCheckTransaction(ctx context.Context, fn func(txRepo contestports.AWDServiceCheckTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
+}
+
+func (r *AWDRepository) WithinAttackLogTransaction(ctx context.Context, fn func(txRepo contestports.AWDAttackLogTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
+}
+
+func (r *AWDRepository) WithinRoundReconcileTransaction(ctx context.Context, fn func(txRepo contestports.AWDRoundReconcileTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
+}
+
+func (r *AWDRepository) WithinRoundServiceWritebackTransaction(ctx context.Context, fn func(txRepo contestports.AWDRoundServiceWritebackTxRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})

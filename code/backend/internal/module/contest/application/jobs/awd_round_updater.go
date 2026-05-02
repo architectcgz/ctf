@@ -20,7 +20,7 @@ const (
 )
 
 type AWDRoundUpdater struct {
-	repo            contestports.AWDRoundUpdateRepository
+	repo            awdRoundUpdaterRepository
 	redis           *redislib.Client
 	scoreboardCache contestports.ScoreboardCacheWriter
 	cfg             config.ContestAWDConfig
@@ -29,6 +29,17 @@ type AWDRoundUpdater struct {
 	checkerRunner   contestports.CheckerRunner
 	httpClient      *http.Client
 	log             *zap.Logger
+}
+
+type awdRoundUpdaterRepository interface {
+	contestports.AWDRoundReconcileTxRunner
+	contestports.AWDRoundServiceWritebackTxRunner
+	contestports.AWDRoundStore
+	contestports.AWDContestScheduleQuery
+	contestports.AWDTeamLookup
+	contestports.AWDServiceDefinitionQuery
+	contestports.AWDServiceInstanceQuery
+	contestports.AWDServiceOperationQuery
 }
 
 type awdServiceTargetKey struct {
@@ -53,7 +64,7 @@ func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model
 }
 
 func NewAWDRoundUpdater(
-	repo contestports.AWDRoundUpdateRepository,
+	repo awdRoundUpdaterRepository,
 	redis *redislib.Client,
 	cfg config.ContestAWDConfig,
 	flagSecret string,

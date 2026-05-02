@@ -20,7 +20,7 @@ func (s *AWDService) upsertServiceCheckAndRecalculate(
 	now time.Time,
 ) (*model.AWDTeamService, error) {
 	var record *model.AWDTeamService
-	if err := s.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
+	if err := s.repo.WithinServiceCheckTransaction(ctx, func(txRepo contestports.AWDServiceCheckTxRepository) error {
 		var txErr error
 		record, txErr = txRepo.UpsertServiceCheck(
 			ctx,

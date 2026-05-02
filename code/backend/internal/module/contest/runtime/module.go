@@ -59,7 +59,7 @@ type moduleDeps struct {
 	contestScoreboard     contestports.ContestScoreboardRepository
 	contestAdmin          contestports.ContestScoreboardAdminRepository
 	contestStatus         contestports.ContestStatusRepository
-	awdRepo               contestports.AWDRepository
+	awdRepo               *contestinfra.AWDRepository
 	challengeRepo         contestports.ContestChallengeRepository
 	teamRepo              contestports.ContestTeamRepository
 	teamFinder            contestports.ContestTeamFinder

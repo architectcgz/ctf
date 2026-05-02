@@ -224,6 +224,25 @@ func TestPortsDoNotDeclareWideRepository(t *testing.T) {
 	}
 }
 
+func TestPortsDoNotDeclareWideAWDRepositories(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "awd.go"))
+	if err != nil {
+		t.Fatalf("read contest awd ports file: %v", err)
+	}
+	for _, legacy := range []string{
+		"type AWDRepository interface",
+		"type AWDQueryRepository interface",
+		"type AWDCommandRepository interface",
+		"type AWDRoundUpdateRepository interface",
+	} {
+		if strings.Contains(string(content), legacy) {
+			t.Fatalf("contest awd ports must not declare legacy wide interface %s", legacy)
+		}
+	}
+}
+
 func TestRuntimeOwnsContestWiring(t *testing.T) {
 	t.Parallel()
 

@@ -14,7 +14,7 @@ import (
 )
 
 type AWDService struct {
-	repo             contestports.AWDCommandRepository
+	repo             awdCommandRepository
 	roundManager     contestports.AWDRoundManager
 	redis            *redislib.Client
 	scoreboardCache  contestports.ScoreboardCacheWriter
@@ -29,8 +29,20 @@ type AWDService struct {
 	runtimeProbe     challengeports.ChallengeRuntimeProbe
 }
 
+type awdCommandRepository interface {
+	contestports.AWDServiceCheckTxRunner
+	contestports.AWDAttackLogTxRunner
+	contestports.AWDServiceStore
+	contestports.AWDRoundStore
+	contestports.AWDTeamLookup
+	contestports.AWDChallengeLookup
+	contestports.AWDReadinessQuery
+	contestports.AWDTeamServiceStore
+	contestports.AWDAttackLogStore
+}
+
 func NewAWDService(
-	repo contestports.AWDCommandRepository,
+	repo awdCommandRepository,
 	contestRepo contestports.ContestLookupRepository,
 	redis *redislib.Client,
 	flagSecret string,

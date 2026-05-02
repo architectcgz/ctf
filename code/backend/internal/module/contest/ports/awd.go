@@ -7,62 +7,41 @@ import (
 	"ctf-platform/internal/model"
 )
 
-type AWDRepository interface {
-	AWDTransactionRunner
-	AWDServiceStore
-	AWDRoundStore
-	AWDContestScheduleQuery
-	AWDTeamLookup
-	AWDChallengeLookup
-	AWDServiceDefinitionQuery
-	AWDReadinessQuery
-	AWDServiceInstanceQuery
-	AWDServiceOperationQuery
-	AWDTeamServiceStore
-	AWDAttackLogStore
-	AWDTrafficEventQuery
-	AWDScoreStore
+type AWDServiceCheckTxRepository interface {
+	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
+	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 }
 
-type AWDQueryRepository interface {
-	AWDRoundStore
-	AWDTeamLookup
-	AWDServiceDefinitionQuery
-	AWDReadinessQuery
-	AWDServiceInstanceQuery
-	AWDServiceOperationQuery
-	AWDTeamServiceStore
-	AWDAttackLogStore
-	AWDTrafficEventQuery
+type AWDServiceCheckTxRunner interface {
+	WithinServiceCheckTransaction(ctx context.Context, fn func(repo AWDServiceCheckTxRepository) error) error
 }
 
-type AWDCommandRepository interface {
-	AWDTransactionRunner
-	AWDServiceStore
-	AWDRoundStore
-	AWDTeamLookup
-	AWDChallengeLookup
-	AWDReadinessQuery
-	AWDServiceOperationQuery
-	AWDTeamServiceStore
-	AWDAttackLogStore
-	AWDScoreStore
+type AWDAttackLogTxRepository interface {
+	CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error
+	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, serviceID, awdChallengeID int64, scoreGained int, updatedAt time.Time) error
+	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 }
 
-type AWDRoundUpdateRepository interface {
-	AWDTransactionRunner
-	AWDRoundStore
-	AWDContestScheduleQuery
-	AWDTeamLookup
-	AWDServiceDefinitionQuery
-	AWDServiceInstanceQuery
-	AWDServiceOperationQuery
-	AWDTeamServiceStore
-	AWDScoreStore
+type AWDAttackLogTxRunner interface {
+	WithinAttackLogTransaction(ctx context.Context, fn func(repo AWDAttackLogTxRepository) error) error
 }
 
-type AWDTransactionRunner interface {
-	WithinTransaction(ctx context.Context, fn func(repo AWDRepository) error) error
+type AWDRoundReconcileTxRepository interface {
+	ListRoundsByContest(ctx context.Context, contestID int64) ([]model.AWDRound, error)
+	UpsertRound(ctx context.Context, round *model.AWDRound) error
+}
+
+type AWDRoundReconcileTxRunner interface {
+	WithinRoundReconcileTransaction(ctx context.Context, fn func(repo AWDRoundReconcileTxRepository) error) error
+}
+
+type AWDRoundServiceWritebackTxRepository interface {
+	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
+	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
+}
+
+type AWDRoundServiceWritebackTxRunner interface {
+	WithinRoundServiceWritebackTransaction(ctx context.Context, fn func(repo AWDRoundServiceWritebackTxRepository) error) error
 }
 
 type AWDServiceStore interface {
