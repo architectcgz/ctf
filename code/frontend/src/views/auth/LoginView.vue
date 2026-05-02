@@ -99,16 +99,14 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
-import { useRoute } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
-import { sanitizeRedirectPath } from '@/router/guards'
-import { useAuth } from '@/features/auth'
+import { useAuth, useLoginViewPage } from '@/features/auth'
 
 const { login } = useAuth()
+const { redirectTo } = useLoginViewPage()
 const { track } = useProbeEasterEggs()
-const route = useRoute()
 
 const loading = ref(false)
 const submitError = ref('')
@@ -193,10 +191,9 @@ async function onSubmit() {
   loading.value = true
   submitError.value = ''
   try {
-    const redirectTo = sanitizeRedirectPath(route.query.redirect)
     await login(
       { username, password },
-      redirectTo === '/' ? undefined : redirectTo
+      redirectTo.value === '/' ? undefined : redirectTo.value
     )
   } catch (err) {
     submitError.value = err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'

@@ -15,6 +15,13 @@ const routeState = vi.hoisted(() => ({
 
 vi.mock('@/features/auth', () => ({
   useAuth: () => authMocks,
+  useLoginViewPage: () => ({
+    redirectTo: {
+      get value() {
+        return routeState.query.redirect ?? '/'
+      },
+    },
+  }),
 }))
 vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
@@ -96,6 +103,8 @@ describe('LoginView', () => {
   })
 
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
+    expect(loginViewSource).toContain('useLoginViewPage')
+    expect(loginViewSource).not.toContain('useRoute')
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
     expect(loginViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"')
