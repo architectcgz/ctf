@@ -1,5 +1,6 @@
 export * from './usePlatformContests'
 export * from './contestFormSupport'
+export * from './useContestListState'
 export * from './useContestDialogState'
 export * from './useContestSaveFlow'
 export * from './useContestManagePage'

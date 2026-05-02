@@ -1274,6 +1274,21 @@ npm run test:run -- src/features/platform-contests/model/platformContestsModelBo
 npm run typecheck
 ```
 
+### 已完成：Batch AP 子项（平台赛事列表查询状态拆分）
+- 新增 `features/platform-contests/model/useContestListState.ts`，承接：
+  - `statusFilter` 状态
+  - 赛事列表分页请求与参数注入
+  - 筛选切换后的分页重置（回到第一页）
+- `usePlatformContests.ts` 改为组合调用该模块，移除内联 `usePagination + watch` 逻辑。
+- 扩展边界测试：`platformContestsModelBoundary.test.ts` 增加 `usePlatformContests` 必须引用 `useContestListState` 的断言，并禁止再次内联分页请求实现。
+- `usePlatformContests.ts` 行数下降（本批由 178 降至 165）。
+
+验证：
+```bash
+npm run test:run -- src/features/platform-contests/model/platformContestsModelBoundary.test.ts src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/PlatformContestTable.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
