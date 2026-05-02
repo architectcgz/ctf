@@ -134,10 +134,10 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 		}
 		resp.SelectedRound = &dto.TeacherAWDSelectedRoundResp{
 			Round:    selectedRoundResp,
-			Teams:    toTeacherAWDReviewTeams(selectedTeams),
-			Services: toTeacherAWDReviewServices(selectedServices),
-			Attacks:  toTeacherAWDReviewAttacks(selectedAttacks),
-			Traffic:  toTeacherAWDReviewTraffic(selectedTraffic),
+			Teams:    teacherAWDReviewMapper.ToTeacherAWDReviewTeamResps(selectedTeams),
+			Services: teacherAWDReviewMapper.ToTeacherAWDReviewServiceResps(selectedServices),
+			Attacks:  teacherAWDReviewMapper.ToTeacherAWDReviewAttackResps(selectedAttacks),
+			Traffic:  teacherAWDReviewMapper.ToTeacherAWDReviewTrafficResps(selectedTraffic),
 		}
 	}
 
@@ -149,22 +149,6 @@ func snapshotTypeForContest(status string) string {
 		return "final"
 	}
 	return "live"
-}
-
-func toTeacherAWDReviewTeams(items []assessmentdomain.TeacherAWDReviewTeamSummary) []dto.TeacherAWDReviewTeamResp {
-	return teacherAWDReviewMapper.ToTeacherAWDReviewTeamResps(items)
-}
-
-func toTeacherAWDReviewServices(items []assessmentdomain.TeacherAWDReviewServiceRecord) []dto.TeacherAWDReviewServiceResp {
-	return teacherAWDReviewMapper.ToTeacherAWDReviewServiceResps(items)
-}
-
-func toTeacherAWDReviewAttacks(items []assessmentdomain.TeacherAWDReviewAttackRecord) []dto.TeacherAWDReviewAttackResp {
-	return teacherAWDReviewMapper.ToTeacherAWDReviewAttackResps(items)
-}
-
-func toTeacherAWDReviewTraffic(items []assessmentdomain.TeacherAWDReviewTrafficRecord) []dto.TeacherAWDReviewTrafficResp {
-	return teacherAWDReviewMapper.ToTeacherAWDReviewTrafficResps(items)
 }
 
 func findTeacherAWDReviewTeam(items []assessmentdomain.TeacherAWDReviewTeamSummary, teamID *int64) (*assessmentdomain.TeacherAWDReviewTeamSummary, bool) {
