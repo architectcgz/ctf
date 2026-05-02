@@ -90,24 +90,11 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	now := time.Now()
 	result := make([]dto.TeacherInstanceItem, len(items))
 	for idx, item := range items {
-		result[idx] = dto.TeacherInstanceItem{
-			ID:              item.ID,
-			StudentID:       item.StudentID,
-			StudentName:     item.StudentName,
-			StudentUsername: item.StudentUsername,
-			StudentNo:       item.StudentNo,
-			ClassName:       item.ClassName,
-			ChallengeID:     item.ChallengeID,
-			ChallengeTitle:  item.ChallengeTitle,
-			Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
-			AccessURL:       item.AccessURL,
-			Access:          dto.BuildInstanceAccessInfo(item.AccessURL),
-			ExpiresAt:       item.ExpiresAt,
-			RemainingTime:   runtimedomain.RemainingTime(item.ExpiresAt, now),
-			ExtendCount:     item.ExtendCount,
-			MaxExtends:      item.MaxExtends,
-			CreatedAt:       item.CreatedAt,
-		}
+		mapped := runtimeResponseMapper.ToTeacherInstanceItem(item)
+		mapped.Status = visibleInstanceStatus(item.Status, item.ExpiresAt, now)
+		mapped.Access = dto.BuildInstanceAccessInfo(item.AccessURL)
+		mapped.RemainingTime = runtimedomain.RemainingTime(item.ExpiresAt, now)
+		result[idx] = mapped
 	}
 
 	return result, nil
@@ -118,25 +105,13 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 	if inst.ContestMode == model.ContestModeAWD {
 		accessURL = ""
 	}
-	return &dto.InstanceInfo{
-		ID:               inst.ID,
-		ContestMode:      inst.ContestMode,
-		ChallengeID:      inst.ChallengeID,
-		ChallengeTitle:   inst.ChallengeTitle,
-		Category:         inst.Category,
-		Difficulty:       inst.Difficulty,
-		FlagType:         inst.FlagType,
-		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
-		ShareScope:       inst.ShareScope,
-		AccessURL:        accessURL,
-		Access:           dto.BuildInstanceAccessInfo(accessURL),
-		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    runtimedomain.RemainingTime(inst.ExpiresAt, now),
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
-	}
+	mapped := runtimeResponseMapper.ToInstanceInfo(inst)
+	mapped.Status = visibleInstanceStatus(inst.Status, inst.ExpiresAt, now)
+	mapped.AccessURL = accessURL
+	mapped.Access = dto.BuildInstanceAccessInfo(accessURL)
+	mapped.RemainingTime = runtimedomain.RemainingTime(inst.ExpiresAt, now)
+	mapped.RemainingExtends = runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount)
+	return &mapped
 }
 
 func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
