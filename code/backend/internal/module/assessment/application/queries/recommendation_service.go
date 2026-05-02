@@ -22,7 +22,7 @@ import (
 
 type RecommendationService struct {
 	repo          recommendationRepository
-	challengeRepo assessmentports.ChallengeRepository
+	challengeRepo assessmentports.RecommendationChallengeRepository
 	redis         *redis.Client
 	logger        *zap.Logger
 	config        config.RecommendationConfig
@@ -35,7 +35,7 @@ type recommendationRepository interface {
 
 var _ assessmentcontracts.RecommendationProvider = (*RecommendationService)(nil)
 
-func NewRecommendationService(repo recommendationRepository, challengeRepo assessmentports.ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
+func NewRecommendationService(repo recommendationRepository, challengeRepo assessmentports.RecommendationChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

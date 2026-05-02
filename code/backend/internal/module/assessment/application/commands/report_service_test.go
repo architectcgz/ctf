@@ -602,6 +602,12 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 
 	service := NewReportService(
 		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
 		&testAssessmentProfileReader{
 			resp: &dto.SkillProfileResp{
 				UserID: 7,
@@ -783,6 +789,12 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 
 	service := NewReportService(
 		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -860,6 +872,12 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	}
 
 	service := NewReportService(
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
 		repo,
 		nil,
 		config.ReportConfig{
@@ -954,6 +972,12 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 
 	service := NewReportService(
 		&testReportRepository{db: db},
+		&testReportRepository{db: db},
+		&testReportRepository{db: db},
+		&testReportRepository{db: db},
+		&testReportRepository{db: db},
+		&testReportRepository{db: db},
+		&testReportRepository{db: db},
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -985,6 +1009,12 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 	t.Parallel()
 
 	service := NewReportService(
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
 		nil,
 		nil,
 		config.ReportConfig{
@@ -1028,6 +1058,12 @@ func TestReportServiceCloseRejectsNilContext(t *testing.T) {
 	service := NewReportService(
 		nil,
 		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: model.ReportFormatPDF,
@@ -1045,6 +1081,12 @@ func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
 	t.Parallel()
 
 	service := NewReportService(
+		&testReportRepository{},
+		&testReportRepository{},
+		&testReportRepository{},
+		&testReportRepository{},
+		&testReportRepository{},
+		&testReportRepository{},
 		&testReportRepository{},
 		nil,
 		config.ReportConfig{

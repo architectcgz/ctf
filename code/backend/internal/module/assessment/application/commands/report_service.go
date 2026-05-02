@@ -27,7 +27,13 @@ import (
 )
 
 type ReportService struct {
-	repo              reportRepository
+	lifecycleRepo     assessmentports.AssessmentReportLifecycleRepository
+	userRepo          assessmentports.AssessmentReportUserLookupRepository
+	contestRepo       assessmentports.AssessmentReportContestLookupRepository
+	personalRepo      assessmentports.AssessmentPersonalReportRepository
+	classRepo         assessmentports.AssessmentClassReportRepository
+	contestExportRepo assessmentports.AssessmentContestExportRepository
+	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository
 	assessmentService assessmentports.AssessmentProfileReader
 	awdReviewBuilder  AWDReviewExportBuilder
 	config            config.ReportConfig
@@ -36,16 +42,6 @@ type ReportService struct {
 	baseCtx           context.Context
 	cancel            context.CancelFunc
 	tasks             sync.WaitGroup
-}
-
-type reportRepository interface {
-	assessmentports.AssessmentReportLifecycleRepository
-	assessmentports.AssessmentReportUserLookupRepository
-	assessmentports.AssessmentReportContestLookupRepository
-	assessmentports.AssessmentPersonalReportRepository
-	assessmentports.AssessmentClassReportRepository
-	assessmentports.AssessmentContestExportRepository
-	assessmentports.AssessmentReviewArchiveRepository
 }
 
 type personalReportData struct {
@@ -101,14 +97,31 @@ type ReviewArchiveStudent struct {
 	ClassName string `json:"class_name,omitempty"`
 }
 
-func NewReportService(repo reportRepository, assessmentService assessmentports.AssessmentProfileReader, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
+func NewReportService(
+	lifecycleRepo assessmentports.AssessmentReportLifecycleRepository,
+	userRepo assessmentports.AssessmentReportUserLookupRepository,
+	contestRepo assessmentports.AssessmentReportContestLookupRepository,
+	personalRepo assessmentports.AssessmentPersonalReportRepository,
+	classRepo assessmentports.AssessmentClassReportRepository,
+	contestExportRepo assessmentports.AssessmentContestExportRepository,
+	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository,
+	assessmentService assessmentports.AssessmentProfileReader,
+	cfg config.ReportConfig,
+	logger *zap.Logger,
+) *ReportService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 
 	cfg = assessmentdomain.NormalizeReportConfig(cfg)
 	return &ReportService{
-		repo:              repo,
+		lifecycleRepo:     lifecycleRepo,
+		userRepo:          userRepo,
+		contestRepo:       contestRepo,
+		personalRepo:      personalRepo,
+		classRepo:         classRepo,
+		contestExportRepo: contestExportRepo,
+		reviewArchiveRepo: reviewArchiveRepo,
 		assessmentService: assessmentService,
 		config:            cfg,
 		logger:            logger,
@@ -145,7 +158,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		UserID: &userID,
 		Status: model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -157,7 +170,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		s.markFailed(reportCtx, report.ID, err)
 		return nil, err
 	}
-	if err := s.repo.MarkReady(reportCtx, report.ID, filePath, expiresAt); err != nil {
+	if err := s.lifecycleRepo.MarkReady(reportCtx, report.ID, filePath, expiresAt); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -172,7 +185,7 @@ func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Contex
 }
 
 func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error) {
-	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
 	}
@@ -196,7 +209,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		ClassName: &className,
 		Status:    model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -205,14 +218,14 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		if genErr != nil {
 			return genErr
 		}
-		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req *dto.CreateContestExportReq) (*dto.ReportExportData, error) {
-	if _, err := s.repo.FindContestByID(ctx, contestID); err != nil {
+	if _, err := s.contestRepo.FindContestByID(ctx, contestID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
@@ -226,7 +239,7 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 		UserID: &requesterID,
 		Status: model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -235,18 +248,18 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 		if genErr != nil {
 			return genErr
 		}
-		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req *dto.CreateStudentReviewArchiveReq) (*dto.ReportExportData, error) {
-	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
 	}
-	student, err := s.repo.FindUserByID(ctx, studentID)
+	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrNotFound
 	}
@@ -262,7 +275,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 		ClassName: &student.ClassName,
 		Status:    model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -271,7 +284,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 		if genErr != nil {
 			return genErr
 		}
-		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
@@ -295,7 +308,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		UserID: &requesterID,
 		Status: model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -309,7 +322,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		if err != nil {
 			return err
 		}
-		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
@@ -337,7 +350,7 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		UserID: &requesterID,
 		Status: model.ReportStatusProcessing,
 	}
-	if err := s.repo.Create(ctx, report); err != nil {
+	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -351,18 +364,18 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		if err != nil {
 			return err
 		}
-		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*ReviewArchiveData, error) {
-	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
 	}
-	student, err := s.repo.FindUserByID(ctx, studentID)
+	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrNotFound
 	}
@@ -405,7 +418,7 @@ func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.Rep
 }
 
 func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID int64) (*model.Contest, error) {
-	contest, err := s.repo.FindContestByID(ctx, contestID)
+	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -419,7 +432,7 @@ func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID i
 }
 
 func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error) {
-	report, err := s.repo.FindByID(ctx, reportID)
+	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -477,7 +490,7 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 }
 
 func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error) {
-	report, err := s.repo.FindByID(ctx, reportID)
+	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -636,7 +649,7 @@ func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *
 }
 
 func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int64) (*personalReportData, error) {
-	user, err := s.repo.FindUserByID(ctx, userID)
+	user, err := s.userRepo.FindUserByID(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
 	}
@@ -646,11 +659,11 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	stats, err := s.repo.GetPersonalStats(ctx, userID)
+	stats, err := s.personalRepo.GetPersonalStats(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	dimensionStats, err := s.repo.ListPersonalDimensionStats(ctx, userID)
+	dimensionStats, err := s.personalRepo.ListPersonalDimensionStats(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -664,19 +677,19 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 }
 
 func (s *ReportService) buildClassReportData(ctx context.Context, className string) (*classReportData, error) {
-	totalStudents, err := s.repo.CountClassStudents(ctx, className)
+	totalStudents, err := s.classRepo.CountClassStudents(ctx, className)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	avgScore, err := s.repo.GetClassAverageScore(ctx, className)
+	avgScore, err := s.classRepo.GetClassAverageScore(ctx, className)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	dimensionAverages, err := s.repo.ListClassDimensionAverages(ctx, className)
+	dimensionAverages, err := s.classRepo.ListClassDimensionAverages(ctx, className)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	topStudents, err := s.repo.ListClassTopStudents(ctx, className, 10)
+	topStudents, err := s.classRepo.ListClassTopStudents(ctx, className, 10)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -691,7 +704,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 }
 
 func (s *ReportService) buildContestExportData(ctx context.Context, contestID int64) (*contestExportData, error) {
-	contest, err := s.repo.FindContestByID(ctx, contestID)
+	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -699,15 +712,15 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	scoreboard, err := s.repo.ListContestScoreboard(ctx, contestID)
+	scoreboard, err := s.contestExportRepo.ListContestScoreboard(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	challenges, err := s.repo.ListContestChallenges(ctx, contestID)
+	challenges, err := s.contestExportRepo.ListContestChallenges(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	teams, err := s.repo.ListContestTeams(ctx, contestID)
+	teams, err := s.contestExportRepo.ListContestTeams(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -731,32 +744,32 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 }
 
 func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, studentID int64) (*ReviewArchiveData, error) {
-	student, err := s.repo.FindUserByID(ctx, studentID)
+	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrNotFound
 	}
 
-	stats, err := s.repo.GetPersonalStats(ctx, studentID)
+	stats, err := s.personalRepo.GetPersonalStats(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	totalChallenges, err := s.repo.CountPublishedChallenges(ctx)
+	totalChallenges, err := s.reviewArchiveRepo.CountPublishedChallenges(ctx)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	timeline, err := s.repo.GetStudentTimeline(ctx, studentID, 200, 0)
+	timeline, err := s.reviewArchiveRepo.GetStudentTimeline(ctx, studentID, 200, 0)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	evidence, err := s.repo.GetStudentEvidence(ctx, studentID, nil)
+	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, nil)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	writeups, err := s.repo.ListStudentWriteups(ctx, studentID)
+	writeups, err := s.reviewArchiveRepo.ListStudentWriteups(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	manualReviews, err := s.repo.ListStudentManualReviews(ctx, studentID)
+	manualReviews, err := s.reviewArchiveRepo.ListStudentManualReviews(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -1109,7 +1122,7 @@ func reportContentType(format string) string {
 }
 
 func (s *ReportService) markFailed(ctx context.Context, reportID int64, err error) {
-	if s.repo == nil {
+	if s.lifecycleRepo == nil {
 		return
 	}
 	if ctx == nil {
@@ -1123,7 +1136,7 @@ func (s *ReportService) markFailed(ctx context.Context, reportID int64, err erro
 	}
 	markCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	if updateErr := s.repo.MarkFailed(markCtx, reportID, message); updateErr != nil {
+	if updateErr := s.lifecycleRepo.MarkFailed(markCtx, reportID, message); updateErr != nil {
 		s.logger.Error("report_mark_failed_error", zap.Int64("report_id", reportID), zap.Error(updateErr))
 	}
 }

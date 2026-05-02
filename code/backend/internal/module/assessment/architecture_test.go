@@ -124,6 +124,9 @@ func TestPortsDoNotDeclareWideRecommendationRepository(t *testing.T) {
 	if strings.Contains(string(content), "type RecommendationRepository interface") {
 		t.Fatalf("assessment ports must not declare the wide RecommendationRepository interface")
 	}
+	if strings.Contains(string(content), "type ChallengeRepository interface") {
+		t.Fatalf("assessment ports must not declare the generic ChallengeRepository interface for recommendation queries")
+	}
 }
 
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {

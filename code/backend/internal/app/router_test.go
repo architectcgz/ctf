@@ -861,7 +861,7 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 		"recommendationRepo",
 		"*assessmentinfra.Repository",
 		"challengeRepo",
-		"assessmentports.ChallengeRepository",
+		"assessmentports.RecommendationChallengeRepository",
 		"reportRepo",
 		"*assessmentinfra.ReportRepository",
 	}
@@ -888,7 +888,7 @@ func TestAssessmentModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	expected := []string{
 		"type assessmentModuleExternalDeps struct",
 		"challengeRepo",
-		"assessmentports.ChallengeRepository",
+		"assessmentports.RecommendationChallengeRepository",
 		"buildAssessmentModuleExternalDeps(",
 	}
 	for _, marker := range expected {

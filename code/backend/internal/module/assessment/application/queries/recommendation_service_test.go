@@ -52,7 +52,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newRecommendationTestService(db *gorm.DB, challengeRepo assessmentports.ChallengeRepository, redisClient *redis.Client) *assessmentqry.RecommendationService {
+func newRecommendationTestService(db *gorm.DB, challengeRepo assessmentports.RecommendationChallengeRepository, redisClient *redis.Client) *assessmentqry.RecommendationService {
 	return assessmentqry.NewRecommendationService(
 		assessmentinfra.NewRepository(db),
 		challengeRepo,

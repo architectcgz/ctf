@@ -39,7 +39,7 @@ type RecommendationSolvedChallengeRepository interface {
 	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
 }
 
-type ChallengeRepository interface {
+type RecommendationChallengeRepository interface {
 	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }
 

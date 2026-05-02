@@ -30,7 +30,7 @@ type assessmentModuleDeps struct {
 }
 
 type assessmentModuleExternalDeps struct {
-	challengeRepo assessmentports.ChallengeRepository
+	challengeRepo assessmentports.RecommendationChallengeRepository
 }
 
 func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentModule {
@@ -104,6 +104,12 @@ func buildAssessmentRecommendationHandler(root *Root, cfg *config.Config, deps a
 
 func buildAssessmentReportHandler(root *Root, cfg *config.Config, deps assessmentModuleDeps, profileQueryService assessmentports.AssessmentProfileReader) (*assessmentcmd.ReportService, *assessmenthttp.ReportHandler) {
 	reportService := assessmentcmd.NewReportService(
+		deps.reportRepo,
+		deps.reportRepo,
+		deps.reportRepo,
+		deps.reportRepo,
+		deps.reportRepo,
+		deps.reportRepo,
 		deps.reportRepo,
 		profileQueryService,
 		cfg.Report,
