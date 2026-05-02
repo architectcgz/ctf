@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 const awdReadinessAuditPayloadKey = "awd_readiness_audit_payload"
@@ -132,7 +133,7 @@ func AWDReadinessAudit(recorder auditlog.Recorder, log *zap.Logger) gin.HandlerF
 			ResourceID:   resourceID,
 			Detail:       detail,
 			IPAddress:    c.ClientIP(),
-			UserAgent:    stringPtr(c.Request.UserAgent()),
+			UserAgent:    commonmapper.NormalizeOptionalTrimmedString(c.Request.UserAgent()),
 		}); err != nil {
 			log.Error("awd_readiness_audit_record_failed", zap.Error(err))
 		}

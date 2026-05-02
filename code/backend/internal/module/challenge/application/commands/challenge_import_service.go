@@ -22,6 +22,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -168,7 +169,7 @@ func (s *ChallengeService) CommitChallengeImport(
 		switch {
 		case errors.Is(findErr, gorm.ErrRecordNotFound):
 			current = model.Challenge{
-				PackageSlug:    stringPointer(parsed.Slug),
+				PackageSlug:    commonmapper.NormalizeOptionalTrimmedString(parsed.Slug),
 				Title:          parsed.Title,
 				Description:    parsed.Description,
 				Category:       parsed.Category,
@@ -872,14 +873,6 @@ func generateChallengeImportPreviewID() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(token), nil
-}
-
-func stringPointer(value string) *string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
 }
 
 func int64Ptr(value int64) *int64 {

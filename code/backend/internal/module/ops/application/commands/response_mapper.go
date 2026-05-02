@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -22,10 +21,6 @@ type notificationResponseMapper interface {
 }
 
 var notificationMapper notificationResponseMapper
-
-func notificationContent(content string) *string {
-	return commonmapper.NormalizeOptionalString(content)
-}
 
 func CopyTime(value time.Time) time.Time {
 	return value

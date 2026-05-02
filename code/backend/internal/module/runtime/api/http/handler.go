@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -155,7 +156,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 				"username":   currentUser.Username,
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: stringPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 	}
 
@@ -362,13 +363,6 @@ func (h *Handler) DestroyTeacherInstance(c *gin.Context) {
 	}
 
 	response.Success(c, nil)
-}
-
-func stringPtr(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
 }
 
 func buildProxyAccessURL(instanceID int64, ticket string) string {
@@ -640,7 +634,7 @@ func (h *Handler) recordProxyAudit(
 			ResourceID:   &instanceID,
 			Detail:       detail,
 			IPAddress:    c.ClientIP(),
-			UserAgent:    stringPtr(c.Request.UserAgent()),
+			UserAgent:    commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 	}
 	if h.proxyTrafficRecorder != nil {

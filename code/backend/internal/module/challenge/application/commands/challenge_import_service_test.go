@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -150,7 +151,7 @@ flag:
 		Difficulty:  "easy",
 		Points:      50,
 		Status:      model.ChallengeStatusPublished,
-		PackageSlug: stringPointer("web-source-audit-double-wrap-01"),
+		PackageSlug: commonmapper.NormalizeOptionalTrimmedString("web-source-audit-double-wrap-01"),
 		CreatedBy:   int64Pointer(4),
 		DeletedAt:   modelDeletedAt(deletedAt),
 	}
@@ -325,7 +326,7 @@ flag:
 		Difficulty:  "easy",
 		Points:      50,
 		Status:      model.ChallengeStatusDraft,
-		PackageSlug: stringPointer("web-source-audit-double-wrap-01"),
+		PackageSlug: commonmapper.NormalizeOptionalTrimmedString("web-source-audit-double-wrap-01"),
 		CreatedBy:   int64Pointer(4),
 	}
 	if err := db.Create(&challenge).Error; err != nil {

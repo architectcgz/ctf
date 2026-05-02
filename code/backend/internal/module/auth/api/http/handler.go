@@ -17,6 +17,7 @@ import (
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -126,7 +127,7 @@ func (h *Handler) Login(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -144,7 +145,7 @@ func (h *Handler) Login(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
 }
@@ -169,7 +170,7 @@ func (h *Handler) Logout(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -214,7 +215,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -230,7 +231,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -281,7 +282,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -300,7 +301,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
 }
@@ -330,11 +331,4 @@ func (h *Handler) recordAudit(c *gin.Context, entry auditlog.Entry) {
 	if err := h.auditRecorder.Record(c.Request.Context(), entry); err != nil {
 		h.log.Warn("auth_audit_record_failed", zap.String("action", entry.Action), zap.Error(err))
 	}
-}
-
-func userAgentPtr(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
 }
