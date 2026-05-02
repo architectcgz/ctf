@@ -392,6 +392,21 @@ npm run test:run -- src/views/dashboard/__tests__/DashboardView.test.ts src/view
 npm run typecheck
 ```
 
+### 已完成：Batch F3 子项（contest-projector helper/type 迁移）
+- 新增 feature 内部文件：
+  - `features/contest-projector/model/projectorTypes.ts`
+  - `features/contest-projector/model/projectorFormatters.ts`
+- `features/contest-projector/model/useContestProjectorPage.ts` 与 `useContestProjectorDerived.ts` 已改为引用本 feature 内部 `projectorTypes/projectorFormatters`，不再反向依赖 `components/platform/contest/projector/*`。
+- 补充边界断言：
+  - 新增 `features/contest-projector/model/useContestProjectorBoundary.test.ts`，约束 projector feature model 不允许导入 `components/projector` 内部文件。
+
+验证：
+```bash
+rg -n "from ['\"]@/components/platform/contest/projector" code/frontend/src/features --glob '*.ts'
+npm run test:run -- src/features/contest-projector/model/useContestProjectorBoundary.test.ts src/features/contest-projector/model/useContestProjectorDerived.test.ts src/features/contest-projector/model/useContestProjectorData.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

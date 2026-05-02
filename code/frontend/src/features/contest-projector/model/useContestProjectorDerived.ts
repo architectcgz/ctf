@@ -11,7 +11,7 @@ import type {
   ContestProjectorAttackLeader,
   ContestProjectorServiceMatrixRow,
   ContestProjectorTrafficTrendBar,
-} from '@/components/platform/contest/projector/contestProjectorTypes'
+} from './projectorTypes'
 
 interface UseContestProjectorDerivedOptions {
   scoreboardRows: Readonly<Ref<ScoreboardRow[]>>

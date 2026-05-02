@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import type { ContestProjectorFocusPanel } from '@/components/platform/contest/projector/contestProjectorTypes'
 import { useToast } from '@/composables/useToast'
+import type { ContestProjectorFocusPanel } from './projectorTypes'
 
 import { useContestProjectorData } from './useContestProjectorData'
 import { useContestProjectorDerived } from './useContestProjectorDerived'
@@ -9,7 +9,7 @@ import {
   formatProjectorTime,
   getContestStatusLabel,
   getRoundStatusLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
+} from './projectorFormatters'
 
 export function useContestProjectorPage() {
   const toast = useToast()
