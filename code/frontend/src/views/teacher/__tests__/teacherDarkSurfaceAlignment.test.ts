@@ -9,6 +9,7 @@ import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherA
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -49,13 +50,14 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).toContain('WorkspaceDataTable')
     expect(instanceManagementSource).toContain('teacher-directory-row')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="workspace-overline"')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-actions"')
+    expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
   })
 
   it('class management should not leak element-plus primary plain button chrome', () => {

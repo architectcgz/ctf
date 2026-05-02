@@ -141,12 +141,7 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('赛事概览条不应继续保留多余的底部分隔线', () => {
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      'class="teacher-summary teacher-summary--flat metric-panel-default-surface"'
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
-      /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
-    )
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
   })
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {

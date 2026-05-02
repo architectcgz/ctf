@@ -9,6 +9,7 @@ import instanceManagementSource from '@/components/teacher/instance-management/T
 import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -139,14 +140,13 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-default-surface')
-    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-grid')
-    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
-    expect(awdReviewWorkspaceSource).toContain('metric-panel-default-surface')
-    expect(awdReviewWorkspaceSource).toContain('metric-panel-grid')
-    expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
+    expect(awdReviewSummaryPanelSource).toContain('metric-panel-default-surface')
+    expect(awdReviewSummaryPanelSource).toContain('metric-panel-grid')
+    expect(awdReviewSummaryPanelSource).toContain('metric-panel-card')
 
     expect(teacherSurfaceSource).not.toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(teacherSurfaceSource).not.toContain(

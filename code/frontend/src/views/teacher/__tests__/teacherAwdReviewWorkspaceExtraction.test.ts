@@ -4,6 +4,7 @@ import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
 
 describe('Teacher AWD review workspace extraction', () => {
   it('详情路由页应收敛为 widget 组合层', () => {
@@ -16,7 +17,9 @@ describe('Teacher AWD review workspace extraction', () => {
 
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
+    expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
   })
 })

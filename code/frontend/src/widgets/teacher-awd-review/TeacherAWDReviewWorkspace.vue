@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import {
   ArrowLeft,
   Download,
@@ -20,6 +21,7 @@ import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/Tea
 import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
+import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 
@@ -33,7 +35,7 @@ interface SummaryStats {
   trafficCount: number
 }
 
-defineProps<{
+const props = defineProps<{
   polling: boolean
   loading: boolean
   error: string | null
@@ -63,6 +65,30 @@ const emit = defineEmits<{
   openTeam: [team: TeacherAWDReviewTeamItemData]
   closeTeam: []
 }>()
+
+const summaryItems = computed(() => [
+  {
+    label: '轮次范围',
+    value: props.summaryStats.roundCount,
+    hint: '当前视图覆盖的轮次数量',
+  },
+  {
+    label: '参与队伍',
+    value: props.summaryStats.teamCount,
+    hint: '当前视图包含的队伍数量',
+  },
+  {
+    label: '服务 / 攻击 / 流量',
+    value: `${props.summaryStats.serviceCount} / ${props.summaryStats.attackCount} / ${props.summaryStats.trafficCount}`,
+    hint: '证据总量与服务运行信号',
+  },
+  {
+    label: '导出状态',
+    value: props.polling ? '后台处理中...' : '链路就绪',
+    hint: '归档与教师报告导出链路状态',
+    valueClass: 'awd-review-status-text',
+  },
+])
 </script>
 
 <template>
@@ -75,9 +101,9 @@ const emit = defineEmits<{
         overline-class="awd-review-detail-overline"
       >
         <template #description>
-            <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
-            <span> · </span>
-            多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
+          <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
+          <span> · </span>
+          多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
         </template>
 
         <template #actions>
@@ -112,115 +138,73 @@ const emit = defineEmits<{
         </template>
       </TeacherAWDReviewWorkspaceHeader>
 
-      <section class="teacher-summary teacher-summary--flat metric-panel-default-surface awd-review-summary">
-          <div class="teacher-summary-title">
-            <Trophy class="h-4 w-4" />
-            <span>{{ activeSummaryTitle }}</span>
-            <span
-              v-if="review"
-              class="awd-review-status-chip"
-              :class="`awd-review-status-chip--${review.contest.status || 'idle'}`"
-            >
-              {{ contestStatusLabel(review.contest.status || '') }}
-            </span>
-          </div>
+      <TeacherAWDReviewSummaryPanel
+        :title="activeSummaryTitle"
+        :items="summaryItems"
+        summary-class="awd-review-summary"
+      >
+        <template #title-prefix>
+          <Trophy class="h-4 w-4" />
+        </template>
+        <template #title-suffix>
+          <span
+            v-if="review"
+            class="awd-review-status-chip"
+            :class="`awd-review-status-chip--${review.contest.status || 'idle'}`"
+          >
+            {{ contestStatusLabel(review.contest.status || '') }}
+          </span>
+        </template>
+      </TeacherAWDReviewSummaryPanel>
 
-          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
-            <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">
-                轮次范围
-              </div>
-              <div class="progress-card-value metric-panel-value">
-                {{ summaryStats.roundCount }}
-              </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前视图覆盖的轮次数量
-              </div>
-            </article>
-            <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">
-                参与队伍
-              </div>
-              <div class="progress-card-value metric-panel-value">
-                {{ summaryStats.teamCount }}
-              </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前视图包含的队伍数量
-              </div>
-            </article>
-            <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">
-                服务 / 攻击 / 流量
-              </div>
-              <div class="progress-card-value metric-panel-value">
-                {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
-              </div>
-              <div class="progress-card-hint metric-panel-helper">
-                证据总量与服务运行信号
-              </div>
-            </article>
-            <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">
-                导出状态
-              </div>
-              <div class="progress-card-value metric-panel-value awd-review-status-text">
-                {{ polling ? '后台处理中...' : '链路就绪' }}
-              </div>
-              <div class="progress-card-hint metric-panel-helper">
-                归档与教师报告导出链路状态
-              </div>
-            </article>
-          </div>
-        </section>
+      <TeacherAWDReviewRoundSelector
+        :rounds="timelineRounds"
+        :selected-round-number="selectedRoundNumber"
+        @set-round="emit('setRound', $event)"
+      />
 
-        <TeacherAWDReviewRoundSelector
-          :rounds="timelineRounds"
-          :selected-round-number="selectedRoundNumber"
+      <div
+        v-if="loading"
+        class="teacher-empty-state workspace-directory-empty awd-review-loading"
+      >
+        <div class="academy-spinner" />
+        <p>正在载入复盘分析数据...</p>
+      </div>
+
+      <AppEmpty
+        v-else-if="error"
+        title="复盘详情加载失败"
+        :description="error"
+        icon="AlertCircle"
+        class="teacher-empty-state workspace-directory-empty"
+      >
+        <template #action>
+          <button
+            type="button"
+            class="teacher-btn teacher-btn--primary"
+            @click="emit('loadReview')"
+          >
+            重新加载
+          </button>
+        </template>
+      </AppEmpty>
+
+      <template v-else-if="review">
+        <TeacherAWDReviewAnalysisSection
+          :active-summary-title="activeSummaryTitle"
+          :rounds="review.rounds"
+          :selected-round="selectedRound"
+          :team-count="summaryStats.teamCount"
           @set-round="emit('setRound', $event)"
+          @open-team="emit('openTeam', $event)"
         />
 
-        <div
-          v-if="loading"
-          class="teacher-empty-state workspace-directory-empty awd-review-loading"
-        >
-          <div class="academy-spinner" />
-          <p>正在载入复盘分析数据...</p>
-        </div>
-
-        <AppEmpty
-          v-else-if="error"
-          title="复盘详情加载失败"
-          :description="error"
-          icon="AlertCircle"
-          class="teacher-empty-state workspace-directory-empty"
-        >
-          <template #action>
-            <button
-              type="button"
-              class="teacher-btn teacher-btn--primary"
-              @click="emit('loadReview')"
-            >
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
-        <template v-else-if="review">
-          <TeacherAWDReviewAnalysisSection
-            :active-summary-title="activeSummaryTitle"
-            :rounds="review.rounds"
-            :selected-round="selectedRound"
-            :team-count="summaryStats.teamCount"
-            @set-round="emit('setRound', $event)"
-            @open-team="emit('openTeam', $event)"
-          />
-
-          <TeacherAWDReviewEvidenceGrid
-            v-if="selectedRound"
-            :selected-round="selectedRound"
-            :format-service-ref="formatServiceRef"
-          />
-        </template>
+        <TeacherAWDReviewEvidenceGrid
+          v-if="selectedRound"
+          :selected-round="selectedRound"
+          :format-service-ref="formatServiceRef"
+        />
+      </template>
 
       <TeacherAWDReviewTeamDrawer
         :visible="Boolean(selectedTeam)"
