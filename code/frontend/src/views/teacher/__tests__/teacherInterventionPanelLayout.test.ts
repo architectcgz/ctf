@@ -4,6 +4,11 @@ import teacherInterventionPanelSource from '@/components/teacher/TeacherInterven
 
 describe('teacher intervention panel layout', () => {
   it('应采用紧凑可穿透的介入列表布局', () => {
+    expect(teacherInterventionPanelSource).toContain(
+      "from '@/features/teacher-student-analysis'"
+    )
+    expect(teacherInterventionPanelSource).toContain('useTeacherInterventionRecommendations')
+    expect(teacherInterventionPanelSource).not.toContain("from '@/api/teacher'")
     expect(teacherInterventionPanelSource).toContain('intervention-item__header')
     expect(teacherInterventionPanelSource).toContain('intervention-item__name-button')
     expect(teacherInterventionPanelSource).toContain("@click=\"openStudent(item.student.id)\"")

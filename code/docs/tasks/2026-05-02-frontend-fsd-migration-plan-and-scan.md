@@ -323,6 +323,19 @@ npm run test:run -- src/views/platform/__tests__/ChallengeWriteupManagePanel.tes
 npm run typecheck
 ```
 
+### 已完成：Batch E3（教师介入面板推荐 API 收口）
+- 新增 `features/teacher-student-analysis/model/useTeacherInterventionRecommendations.ts`，承接 `TeacherInterventionPanel` 的介入候选计算、推荐目标选择和推荐题异步拉取 watch。
+- `TeacherInterventionPanel.vue` 已收敛为展示 + 学员跳转层，不再直接依赖：
+  - `@/api/teacher`（保留 `@/api/contracts` 类型导入）
+- 补充 source 边界断言：
+  - `views/teacher/__tests__/teacherInterventionPanelLayout.test.ts` 新增 `useTeacherInterventionRecommendations` 引用断言与 API import 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/teacherInterventionPanelLayout.test.ts src/views/teacher/__tests__/TeacherDashboard.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

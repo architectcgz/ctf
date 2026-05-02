@@ -1,2 +1,1 @@
-export { useTeacherStudentAnalysisPage } from './model'
-
+export { useTeacherStudentAnalysisPage, useTeacherInterventionRecommendations } from './model'
