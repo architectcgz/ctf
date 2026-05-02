@@ -1029,6 +1029,20 @@ npm run test:run -- src/views/challenges/__tests__/ChallengeDetail.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch Z 子项（教师 AWD 复盘导出流程拆分）
+- 新增 `features/teacher-awd-review/model/useTeacherAwdReviewExportFlow.ts`，承接：
+  - 复盘归档/教师报告导出
+  - 轮询状态跟进与失败分支
+  - 生成后下载动作与提示
+- `useTeacherAwdReviewDetail.ts` 改为组合调用该模块，移除内联导出与轮询实现。
+- `useTeacherAwdReviewDetail.ts` 行数下降（本批由 352 降至 224）。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
