@@ -16,7 +16,6 @@ import type {
   TeacherAWDReviewTeamItemData,
   TeacherAWDReviewTrafficItemData,
 } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
 import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue'
 import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
@@ -24,6 +23,7 @@ import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherA
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
+import TeacherAWDReviewWorkspaceState from './TeacherAWDReviewWorkspaceState.vue'
 
 type ExportKind = 'archive' | 'report'
 
@@ -163,48 +163,29 @@ const summaryItems = computed(() => [
         @set-round="emit('setRound', $event)"
       />
 
-      <div
-        v-if="loading"
-        class="teacher-empty-state workspace-directory-empty awd-review-loading"
+      <TeacherAWDReviewWorkspaceState
+        :loading="loading"
+        :error="error"
+        :has-review="Boolean(review)"
+        @load-review="emit('loadReview')"
       >
-        <div class="academy-spinner" />
-        <p>正在载入复盘分析数据...</p>
-      </div>
+        <template v-if="review">
+          <TeacherAWDReviewAnalysisSection
+            :active-summary-title="activeSummaryTitle"
+            :rounds="review.rounds"
+            :selected-round="selectedRound"
+            :team-count="summaryStats.teamCount"
+            @set-round="emit('setRound', $event)"
+            @open-team="emit('openTeam', $event)"
+          />
 
-      <AppEmpty
-        v-else-if="error"
-        title="复盘详情加载失败"
-        :description="error"
-        icon="AlertCircle"
-        class="teacher-empty-state workspace-directory-empty"
-      >
-        <template #action>
-          <button
-            type="button"
-            class="teacher-btn teacher-btn--primary"
-            @click="emit('loadReview')"
-          >
-            重新加载
-          </button>
+          <TeacherAWDReviewEvidenceGrid
+            v-if="selectedRound"
+            :selected-round="selectedRound"
+            :format-service-ref="formatServiceRef"
+          />
         </template>
-      </AppEmpty>
-
-      <template v-else-if="review">
-        <TeacherAWDReviewAnalysisSection
-          :active-summary-title="activeSummaryTitle"
-          :rounds="review.rounds"
-          :selected-round="selectedRound"
-          :team-count="summaryStats.teamCount"
-          @set-round="emit('setRound', $event)"
-          @open-team="emit('openTeam', $event)"
-        />
-
-        <TeacherAWDReviewEvidenceGrid
-          v-if="selectedRound"
-          :selected-round="selectedRound"
-          :format-service-ref="formatServiceRef"
-        />
-      </template>
+      </TeacherAWDReviewWorkspaceState>
 
       <TeacherAWDReviewTeamDrawer
         :visible="Boolean(selectedTeam)"
@@ -272,30 +253,5 @@ const summaryItems = computed(() => [
 
 .awd-review-status-text {
   color: var(--awd-review-muted);
-}
-
-.awd-review-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  min-height: 14rem;
-  color: var(--awd-review-muted);
-}
-
-.academy-spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid color-mix(in srgb, var(--awd-review-line) 88%, transparent);
-  border-top-color: var(--awd-review-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 </style>

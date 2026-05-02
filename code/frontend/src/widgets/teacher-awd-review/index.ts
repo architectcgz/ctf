@@ -1,5 +1,6 @@
 export { default as TeacherAWDReviewWorkspace } from './TeacherAWDReviewWorkspace.vue'
 export { default as TeacherAWDReviewIndexWorkspace } from './TeacherAWDReviewIndexWorkspace.vue'
+export { default as TeacherAWDReviewWorkspaceState } from './TeacherAWDReviewWorkspaceState.vue'
 export { default as TeacherAWDReviewSurfaceShell } from './TeacherAWDReviewSurfaceShell.vue'
 export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWorkspaceHeader.vue'
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
