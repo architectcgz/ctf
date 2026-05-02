@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import CheatDetection from '../CheatDetection.vue'
+import cheatDetectionSource from '../CheatDetection.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -77,6 +78,11 @@ describe('CheatDetection', () => {
       name: 'AuditLog',
       query: { action: 'submit' },
     })
+  })
+
+  it('路由页应仅负责组合，不直接耦合风险检测请求流程', () => {
+    expect(cheatDetectionSource).toContain('useCheatDetectionPage')
+    expect(cheatDetectionSource).not.toContain("from '@/api/admin/platform'")
   })
 
   it('应兼容旧 panel query，并继续渲染同一风险工作台', async () => {
