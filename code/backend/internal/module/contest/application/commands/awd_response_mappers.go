@@ -10,40 +10,18 @@ func awdRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
 	if round == nil {
 		return nil
 	}
-	return &dto.AWDRoundResp{
-		ID:           round.ID,
-		ContestID:    round.ContestID,
-		RoundNumber:  round.RoundNumber,
-		Status:       round.Status,
-		StartedAt:    round.StartedAt,
-		EndedAt:      round.EndedAt,
-		AttackScore:  round.AttackScore,
-		DefenseScore: round.DefenseScore,
-		CreatedAt:    round.CreatedAt,
-		UpdatedAt:    round.UpdatedAt,
-	}
+	mapped := contestResponseMapperInst.ToAWDRoundRespBase(*round)
+	return &mapped
 }
 
 func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
 	if record == nil {
 		return nil
 	}
-	resp := &dto.AWDTeamServiceResp{
-		ID:             record.ID,
-		RoundID:        record.RoundID,
-		TeamID:         record.TeamID,
-		TeamName:       teamName,
-		ServiceID:      record.ServiceID,
-		AWDChallengeID: record.AWDChallengeID,
-		ServiceStatus:  record.ServiceStatus,
-		CheckResult:    contestdomain.ParseAWDCheckResult(record.CheckResult),
-		CheckerType:    record.CheckerType,
-		AttackReceived: record.AttackReceived,
-		SLAScore:       record.SLAScore,
-		DefenseScore:   record.DefenseScore,
-		AttackScore:    record.AttackScore,
-		UpdatedAt:      record.UpdatedAt,
-	}
+	mapped := contestResponseMapperInst.ToAWDTeamServiceRespBase(*record)
+	resp := &mapped
+	resp.TeamName = teamName
+	resp.CheckResult = contestdomain.ParseAWDCheckResult(record.CheckResult)
 	if len(serviceName) > 0 {
 		resp.ServiceName = serviceName[0]
 		resp.AWDChallengeTitle = serviceName[0]
@@ -55,20 +33,9 @@ func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimT
 	if record == nil {
 		return nil
 	}
-	return &dto.AWDAttackLogResp{
-		ID:             record.ID,
-		RoundID:        record.RoundID,
-		AttackerTeamID: record.AttackerTeamID,
-		AttackerTeam:   attackerTeam,
-		VictimTeamID:   record.VictimTeamID,
-		VictimTeam:     victimTeam,
-		ServiceID:      record.ServiceID,
-		AWDChallengeID: record.AWDChallengeID,
-		AttackType:     record.AttackType,
-		Source:         contestdomain.NormalizeAWDAttackSource(record.Source),
-		SubmittedFlag:  record.SubmittedFlag,
-		IsSuccess:      record.IsSuccess,
-		ScoreGained:    record.ScoreGained,
-		CreatedAt:      record.CreatedAt,
-	}
+	mapped := contestResponseMapperInst.ToAWDAttackLogRespBase(*record)
+	mapped.AttackerTeam = attackerTeam
+	mapped.VictimTeam = victimTeam
+	mapped.Source = contestdomain.NormalizeAWDAttackSource(record.Source)
+	return &mapped
 }
