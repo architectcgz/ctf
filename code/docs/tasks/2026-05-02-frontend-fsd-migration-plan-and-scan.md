@@ -1166,6 +1166,21 @@ npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorksp
 npm run typecheck
 ```
 
+### 已完成：Batch AI 子项（AWD 战场访问动作拆分）
+- 新增 `features/contest-awd-workspace/model/useAwdWorkspaceAccessActions.ts`，承接：
+  - 本队实例访问打开
+  - 防守 SSH 连接生成与缓存
+  - 目标服务访问打开
+  - 访问动作互斥 key 状态管理
+- `useContestAWDWorkspace.ts` 改为组合调用该模块，主流程保留刷新、自动轮询与攻击提交流程。
+- `useContestAWDWorkspace.ts` 行数下降（本批由 284 降至 220）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorkspace.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
