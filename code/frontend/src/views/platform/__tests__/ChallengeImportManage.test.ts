@@ -127,5 +127,7 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportQueuePanelSource).toContain("from '@/entities/challenge'")
     expect(challengeImportManageSource).not.toContain('const categoryLabels = {')
     expect(challengeImportManageSource).not.toContain('const difficultyLabels = {')
+    expect(challengeImportManageSource).toContain('useChallengeImportManagePage')
+    expect(challengeImportManageSource).not.toContain('useRouter')
   })
 })

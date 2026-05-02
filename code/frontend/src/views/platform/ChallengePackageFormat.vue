@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import ChallengePackageFormatGuidePanel from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue'
+import { useChallengePackageFormatPage } from '@/features/challenge-package-import'
 
-const router = useRouter()
+const { backToImportManage } = useChallengePackageFormatPage()
 </script>
 
 <template>
@@ -17,7 +17,7 @@ const router = useRouter()
       <button
         class="nav-back"
         type="button"
-        @click="router.push({ name: 'PlatformChallengeImportManage' })"
+        @click="backToImportManage"
       >
         返回导入题目包
       </button>
