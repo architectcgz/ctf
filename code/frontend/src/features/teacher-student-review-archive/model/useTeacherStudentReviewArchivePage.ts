@@ -12,6 +12,10 @@ import {
   resolveStudentAnalysisRouteName,
   resolveStudentManagementRouteName,
 } from '@/utils/teachingWorkspaceRouting'
+import {
+  resolveTeacherStudentReviewArchiveErrorMessage,
+  TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
+} from './presentation'
 import { useTeacherStudentReviewArchive } from './useTeacherStudentReviewArchive'
 
 export function useTeacherStudentReviewArchivePage() {
@@ -67,16 +71,15 @@ export function useTeacherStudentReviewArchivePage() {
     if (error instanceof ApiError) {
       return
     }
-    const message = error instanceof Error && error.message.trim() ? error.message : fallback
-    toast.error(message)
+    toast.error(resolveTeacherStudentReviewArchiveErrorMessage(error, fallback))
   }
 
   async function downloadArchiveReport(reportId: string): Promise<void> {
     try {
       await downloadGeneratedReport(reportId)
-      toast.success('复盘归档已生成并开始下载')
+      toast.success(TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.success)
     } catch (error) {
-      notifyExportActionError(error, '复盘归档下载失败，请稍后重试')
+      notifyExportActionError(error, TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.downloadFailed)
     }
   }
 
@@ -95,7 +98,9 @@ export function useTeacherStudentReviewArchivePage() {
       if (result.status === 'failed') {
         pendingReportId.value = null
         stopPolling()
-        toast.error(result.error_message || '复盘归档生成失败')
+        toast.error(
+          result.error_message || TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
+        )
         return
       }
 
@@ -113,19 +118,24 @@ export function useTeacherStudentReviewArchivePage() {
           if (next.status === 'failed') {
             pendingReportId.value = null
             stopPolling()
-            toast.error(next.error_message || '复盘归档生成失败')
+            toast.error(
+              next.error_message || TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
+            )
           }
         },
         (error) => {
           pendingReportId.value = null
-          notifyExportActionError(error, '复盘归档生成状态同步失败，请稍后重试')
+          notifyExportActionError(
+            error,
+            TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pollingFailed
+          )
         }
       )
-      toast.info('复盘归档开始生成，完成后会自动下载')
+      toast.info(TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pending)
     } catch (error) {
       pendingReportId.value = null
       stopPolling()
-      notifyExportActionError(error, '复盘归档导出失败，请稍后重试')
+      notifyExportActionError(error, TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.exportFailed)
     } finally {
       exporting.value = false
     }
