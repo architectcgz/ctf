@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 import AWDChallengeEditorDialog from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue'
 import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { usePlatformAwdChallenges } from '@/features/platform-awd-challenges'
-
-const router = useRouter()
+import { useAwdChallengeLibraryPage, usePlatformAwdChallenges } from '@/features/platform-awd-challenges'
+const { openImportPage } = useAwdChallengeLibraryPage()
 
 const {
   list,
@@ -59,9 +57,6 @@ function handleDialogOpenChange(value: boolean) {
   }
 }
 
-function openImportPage() {
-  void router.push({ name: 'PlatformAwdChallengeImport' })
-}
 </script>
 
 <template>

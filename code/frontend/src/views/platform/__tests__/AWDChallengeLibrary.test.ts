@@ -7,7 +7,7 @@ import AWDChallengeImport from '../AWDChallengeImport.vue'
 import awdChallengeLibrarySource from '../AWDChallengeLibrary.vue?raw'
 import awdChallengeImportSource from '../AWDChallengeImport.vue?raw'
 
-const pushMock = vi.fn()
+const openImportPageMock = vi.fn()
 
 const actionMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -23,6 +23,9 @@ const actionMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/platform-awd-challenges', () => ({
+  useAwdChallengeLibraryPage: () => ({
+    openImportPage: openImportPageMock,
+  }),
   usePlatformAwdChallenges: () => ({
     list: ref([
       {
@@ -70,16 +73,8 @@ vi.mock('@/features/platform-awd-challenges', () => ({
   }),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 beforeEach(() => {
-  pushMock.mockReset()
+  openImportPageMock.mockReset()
   Object.values(actionMocks).forEach((mock) => mock.mockClear())
 })
 
@@ -96,12 +91,14 @@ describe('AWDChallengeLibrary', () => {
 
     await wrapper.findAll('button').find((button) => button.text() === '导入题目包')?.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformAwdChallengeImport' })
+    expect(openImportPageMock).toHaveBeenCalledTimes(1)
   })
 
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
     expect(awdChallengeLibrarySource).toContain('<template>\n  <div>')
     expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
+    expect(awdChallengeLibrarySource).not.toContain('useRouter')
   })
 })
 
