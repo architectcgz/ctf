@@ -1151,6 +1151,21 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AH 子项（AWD 战场服务启停动作拆分）
+- 新增 `features/contest-awd-workspace/model/useAwdWorkspaceServiceActions.ts`，承接：
+  - 服务启动/重启动作
+  - 服务动作中的并发互斥与 pending 标记
+  - 刷新后 settled 状态清理
+  - 动作成功/失败提示
+- `useContestAWDWorkspace.ts` 改为组合调用该模块，主流程保留“战场数据刷新与整体编排”职责。
+- `useContestAWDWorkspace.ts` 行数下降（本批由 347 降至 284）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorkspace.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

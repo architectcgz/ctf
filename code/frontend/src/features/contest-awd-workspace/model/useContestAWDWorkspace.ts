@@ -5,8 +5,6 @@ import {
   getScoreboard,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
-  restartContestAWDServiceInstance,
-  startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
 import { requestInstanceAccess } from '@/api/instance'
@@ -18,6 +16,7 @@ import type {
   ScoreboardRow,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { useAwdWorkspaceServiceActions } from './useAwdWorkspaceServiceActions'
 
 const AWD_WORKSPACE_AUTO_REFRESH_INTERVAL_MS = 15_000
 
@@ -35,14 +34,12 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const loading = ref(false)
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
-  const startingServiceKey = ref('')
   const openingServiceKey = ref('')
   const openingSSHKey = ref('')
   const sshAccessByServiceId = ref<Record<string, AWDDefenseSSHAccessData>>({})
   const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
-  const serviceActionPendingById = ref<Record<string, boolean>>({})
 
   let requestToken = 0
   let autoRefreshTimer: number | null = null
@@ -60,28 +57,6 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   async function loadScoreboard(contestId: string): Promise<void> {
     const payload = await getScoreboard(contestId, { page: 1, page_size: 10 })
     scoreboardRows.value = payload.scoreboard.list
-  }
-
-  function isServiceRuntimeBusy(status?: string): boolean {
-    return status === 'pending' || status === 'creating'
-  }
-
-  function isServiceOperationBusy(status?: string): boolean {
-    return status === 'requested' || status === 'provisioning' || status === 'recovering'
-  }
-
-  function clearSettledServiceActions(nextWorkspace: ContestAWDWorkspaceData): void {
-    const nextPending = { ...serviceActionPendingById.value }
-    for (const item of nextWorkspace.services || []) {
-      const serviceId = item.service_id
-      if (!serviceId) {
-        continue
-      }
-      if (!isServiceRuntimeBusy(item.instance_status) && !isServiceOperationBusy(item.operation_status)) {
-        delete nextPending[serviceId]
-      }
-    }
-    serviceActionPendingById.value = nextPending
   }
 
   async function refreshAll(): Promise<void> {
@@ -128,59 +103,21 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
+  const {
+    clearSettledServiceActions,
+    restartService,
+    serviceActionPendingById,
+    startService,
+    startingServiceKey,
+  } = useAwdWorkspaceServiceActions({
+    contestId: options.contestId,
+    refreshAll,
+  })
+
   function stopAutoRefresh(): void {
     if (autoRefreshTimer !== null) {
       window.clearInterval(autoRefreshTimer)
       autoRefreshTimer = null
-    }
-  }
-
-  async function startService(serviceId: string): Promise<void> {
-    const contestId = toValue(options.contestId)
-    if (!contestId || !serviceId || startingServiceKey.value) {
-      return
-    }
-
-    startingServiceKey.value = serviceId
-    try {
-      const instance = await startContestAWDServiceInstance(contestId, serviceId)
-      await refreshAll()
-      if (instance.access_url) {
-        toast.success('服务已就绪，可直接进入')
-      } else {
-        toast.success('服务启动请求已提交')
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error(err instanceof Error ? err.message : '启动服务失败')
-    } finally {
-      startingServiceKey.value = ''
-    }
-  }
-
-  async function restartService(serviceId: string): Promise<void> {
-    const contestId = toValue(options.contestId)
-    if (!contestId || !serviceId || startingServiceKey.value || serviceActionPendingById.value[serviceId]) {
-      return
-    }
-
-    startingServiceKey.value = serviceId
-    serviceActionPendingById.value = {
-      ...serviceActionPendingById.value,
-      [serviceId]: true,
-    }
-    try {
-      await restartContestAWDServiceInstance(contestId, serviceId)
-      await refreshAll()
-      toast.success('服务重启请求已提交')
-    } catch (err) {
-      console.error(err)
-      const nextPending = { ...serviceActionPendingById.value }
-      delete nextPending[serviceId]
-      serviceActionPendingById.value = nextPending
-      toast.error(err instanceof Error ? err.message : '重启服务失败')
-    } finally {
-      startingServiceKey.value = ''
     }
   }
 
