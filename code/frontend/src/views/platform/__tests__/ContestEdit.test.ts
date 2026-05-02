@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { computed, defineComponent, ref, watch } from 'vue'
 
 import ContestEdit from '../ContestEdit.vue'
+import contestEditSource from '../ContestEdit.vue?raw'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
 import type { VueWrapper } from '@vue/test-utils'
@@ -680,6 +681,11 @@ describe('ContestEdit', () => {
     contestApiMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
     contestApiMocks.deleteAdminContestChallenge.mockResolvedValue(undefined)
     destructiveConfirmMock.mockResolvedValue(true)
+  })
+
+  it('路由页应仅负责组合，不直接耦合竞赛编辑加载与保存流程', () => {
+    expect(contestEditSource).toContain('useContestEditPage')
+    expect(contestEditSource).not.toContain("from '@/api/admin/contests'")
   })
 
   it('顶部应提供公告入口并跳转到单场公告管理页', async () => {
