@@ -158,9 +158,14 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigPageSource).toContain(
       "import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'"
     )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'"
+    )
     expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")
     expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
     expect(contestAwdConfigPageSource).not.toContain('updateContestAWDService')
+    expect(contestAwdConfigPageSource).not.toContain('getContest')
+    expect(contestAwdConfigPageSource).not.toContain('listContestAWDServices')
   })
 
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {

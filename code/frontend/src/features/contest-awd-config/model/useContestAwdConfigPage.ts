@@ -1,14 +1,6 @@
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import {
-  getContest,
-  listContestAWDServices,
-} from '@/api/admin/contests'
-import type {
-  AdminContestAWDServiceData,
-  ContestDetailData,
-} from '@/api/contracts'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAwdChallengeSelection } from './useAwdChallengeSelection'
@@ -21,6 +13,7 @@ import {
 } from './awdCheckerLabels'
 import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'
 import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'
+import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'
 
 export function useContestAwdConfigPage() {
   const route = useRoute()
@@ -28,13 +21,19 @@ export function useContestAwdConfigPage() {
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const contestId = computed(() => String(route.params.id ?? ''))
-  const loading = ref(true)
-  const refreshing = ref(false)
-  const loadError = ref('')
-  const contest = ref<ContestDetailData | null>(null)
-  const services = ref<AdminContestAWDServiceData[]>([])
-
-  let loadVersion = 0
+  const {
+    clearBreadcrumbDetailTitle,
+    contest,
+    loadError,
+    loading,
+    loadPage,
+    refreshing,
+    services,
+    setAfterLoadHandler,
+  } = useContestAwdConfigDataLoader({
+    contestId,
+    setBreadcrumbDetailTitle,
+  })
 
   const {
     selectedServiceId,
@@ -50,6 +49,7 @@ export function useContestAwdConfigPage() {
     router,
     services,
   })
+  setAfterLoadHandler(reconcileSelectedServiceId)
   const {
     AWD_HTTP_METHOD_OPTIONS,
     AWD_HTTP_STANDARD_PRESETS,
@@ -129,34 +129,6 @@ export function useContestAwdConfigPage() {
       : ''
   )
 
-  async function loadPage(initial = false) {
-    if (!contestId.value) return
-    const version = ++loadVersion
-    if (initial) loading.value = true
-    refreshing.value = !initial
-    try {
-      const [contestDetail, serviceList] = await Promise.all([
-        getContest(contestId.value),
-        listContestAWDServices(contestId.value),
-      ])
-      if (version !== loadVersion) return
-      contest.value = contestDetail
-      services.value = serviceList
-      setBreadcrumbDetailTitle(contestDetail.title)
-      reconcileSelectedServiceId()
-      loadError.value = ''
-    } catch (error) {
-      if (version !== loadVersion) return
-      loadError.value =
-        error instanceof Error && error.message.trim() ? error.message : 'AWD 配置加载失败'
-    } finally {
-      if (version === loadVersion) {
-        loading.value = false
-        refreshing.value = false
-      }
-    }
-  }
-
   function goBackToStudio() {
     void router.push({
       name: 'ContestEdit',
@@ -180,7 +152,7 @@ export function useContestAwdConfigPage() {
   })
 
   onUnmounted(() => {
-    setBreadcrumbDetailTitle()
+    clearBreadcrumbDetailTitle()
   })
 
   return {

@@ -1135,6 +1135,22 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AG 子项（AWD 配置页数据加载流程拆分）
+- 新增 `features/contest-awd-config/model/useContestAwdConfigDataLoader.ts`，承接：
+  - 页面加载/刷新状态（`loading/refreshing`）
+  - 配置加载错误态（`loadError`）
+  - 赛事与服务列表并发加载与竞态版本控制
+  - 面包屑标题同步与卸载清理
+- `useContestAwdConfigPage.ts` 改为组合调用该模块，移除内联加载并发控制逻辑。
+- `useContestAwdConfigPage.ts` 行数下降（本批由 229 降至 201）。
+- 补充 source 边界断言：`ContestAwdConfig.test.ts` 增加 `useContestAwdConfigDataLoader` 导入断言与 `getContest/listContestAWDServices` 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
