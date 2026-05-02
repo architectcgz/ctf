@@ -3,6 +3,7 @@ package runtime
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -100,6 +101,18 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/application")
+	}
+}
+
+func TestPortsDoNotDeclareWideInstanceRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "http.go"))
+	if err != nil {
+		t.Fatalf("read runtime ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type InstanceRepository interface") {
+		t.Fatalf("runtime ports must not declare the legacy wide InstanceRepository interface")
 	}
 }
 

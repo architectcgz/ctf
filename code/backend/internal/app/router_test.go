@@ -459,7 +459,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type runtimeModuleDeps struct",
 		"repo",
-		"runtimeports.InstanceRepository",
+		"*runtimeinfra.Repository",
 		"practiceInstanceRepo",
 		"practiceports.InstanceRepository",
 		"instanceCommands",

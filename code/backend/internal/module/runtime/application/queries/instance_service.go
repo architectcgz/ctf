@@ -13,10 +13,17 @@ import (
 )
 
 type InstanceService struct {
-	repo runtimeports.InstanceRepository
+	repo instanceQueryRepository
 }
 
-func NewInstanceService(repo runtimeports.InstanceRepository) *InstanceService {
+type instanceQueryRepository interface {
+	runtimeports.InstanceUserLookupRepository
+	runtimeports.InstanceAccessRepository
+	runtimeports.UserVisibleInstanceRepository
+	runtimeports.TeacherInstanceQueryRepository
+}
+
+func NewInstanceService(repo instanceQueryRepository) *InstanceService {
 	return &InstanceService{repo: repo}
 }
 

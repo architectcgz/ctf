@@ -5,8 +5,26 @@ import runtimeports "ctf-platform/internal/module/runtime/ports"
 // CountRunningRepository 定义运行中实例统计仓储能力。
 type CountRunningRepository = runtimeports.CountRunningRepository
 
-// InstanceRepository 定义实例 HTTP 用例所需的仓储能力。
-type InstanceRepository = runtimeports.InstanceRepository
+// InstanceLookupRepository 定义实例按 ID 查询能力。
+type InstanceLookupRepository = runtimeports.InstanceLookupRepository
+
+// InstanceUserLookupRepository 定义实例相关用户查询能力。
+type InstanceUserLookupRepository = runtimeports.InstanceUserLookupRepository
+
+// InstanceAccessRepository 定义实例访问校验查询能力。
+type InstanceAccessRepository = runtimeports.InstanceAccessRepository
+
+// UserVisibleInstanceRepository 定义用户可见实例列表查询能力。
+type UserVisibleInstanceRepository = runtimeports.UserVisibleInstanceRepository
+
+// TeacherInstanceQueryRepository 定义教师端实例列表查询能力。
+type TeacherInstanceQueryRepository = runtimeports.TeacherInstanceQueryRepository
+
+// InstanceExtendRepository 定义实例续期能力。
+type InstanceExtendRepository = runtimeports.InstanceExtendRepository
+
+// InstanceStatusRepository 定义实例状态更新能力。
+type InstanceStatusRepository = runtimeports.InstanceStatusRepository
 
 // RuntimeCleaner 定义实例销毁时的运行时资源清理能力。
 type RuntimeCleaner = runtimeports.RuntimeCleaner

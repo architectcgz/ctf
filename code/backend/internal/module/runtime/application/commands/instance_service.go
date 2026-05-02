@@ -16,13 +16,21 @@ import (
 )
 
 type InstanceService struct {
-	repo    runtimeports.InstanceRepository
+	repo    instanceCommandRepository
 	cleaner runtimeports.RuntimeCleaner
 	config  *config.ContainerConfig
 	logger  *zap.Logger
 }
 
-func NewInstanceService(repo runtimeports.InstanceRepository, cleaner runtimeports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
+type instanceCommandRepository interface {
+	runtimeports.InstanceLookupRepository
+	runtimeports.InstanceUserLookupRepository
+	runtimeports.InstanceAccessRepository
+	runtimeports.InstanceExtendRepository
+	runtimeports.InstanceStatusRepository
+}
+
+func NewInstanceService(repo instanceCommandRepository, cleaner runtimeports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

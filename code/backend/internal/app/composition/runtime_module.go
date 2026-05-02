@@ -103,8 +103,7 @@ type runtimeContestDeps struct {
 }
 
 type runtimeModuleDeps struct {
-	repo                  runtimeports.InstanceRepository
-	proxyTicketReader     runtimeports.ProxyTicketInstanceReader
+	repo                  *runtimeinfra.Repository
 	practiceInstanceRepo  practiceports.InstanceRepository
 	instanceCommands      runtimeHTTPCommandService
 	instanceQueries       runtimeHTTPQueryService
@@ -167,7 +166,6 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 
 	return runtimeModuleDeps{
 		repo:                  repo,
-		proxyTicketReader:     repo,
 		practiceInstanceRepo:  repo,
 		instanceCommands:      runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
 		instanceQueries:       runtimeqry.NewInstanceService(repo),
@@ -201,10 +199,10 @@ func registerRuntimeBackgroundJobs(root *Root, deps runtimeModuleDeps) {
 		cleaner.Stop,
 	))
 
-	if cfg.Container.DefenseSSHEnabled && deps.proxyTicketService != nil && deps.proxyTicketReader != nil && deps.sshExecutor != nil {
+	if cfg.Container.DefenseSSHEnabled && deps.proxyTicketService != nil && deps.repo != nil && deps.sshExecutor != nil {
 		gateway := NewAWDDefenseSSHGateway(
 			deps.proxyTicketService,
-			deps.proxyTicketReader,
+			deps.repo,
 			deps.sshExecutor,
 			cfg.Container.DefenseSSHPort,
 			log.Named("awd_defense_ssh_gateway"),
@@ -223,7 +221,7 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.instanceCommands,
 			deps.instanceQueries,
 			deps.proxyTicketService,
-			deps.proxyTicketReader,
+			deps.repo,
 			deps.defenseWorkbench,
 			root.Config().Container.ProxyBodyPreviewSize,
 			deps.defenseSSHEnabled,

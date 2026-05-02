@@ -11,13 +11,31 @@ type CountRunningRepository interface {
 	CountRunning(ctx context.Context) (int64, error)
 }
 
-type InstanceRepository interface {
+type InstanceLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
+}
+
+type InstanceUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+}
+
+type InstanceAccessRepository interface {
 	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
+}
+
+type UserVisibleInstanceRepository interface {
 	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
+}
+
+type TeacherInstanceQueryRepository interface {
 	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
+}
+
+type InstanceExtendRepository interface {
 	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
+}
+
+type InstanceStatusRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 }
 

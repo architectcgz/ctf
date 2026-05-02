@@ -52,5 +52,11 @@ func (ctxOnlyProxyTicketInstanceReader) FindAWDDefenseSSHScope(context.Context, 
 	return nil, nil
 }
 
-var _ runtimeports.InstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.InstanceLookupRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.InstanceUserLookupRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.InstanceAccessRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.UserVisibleInstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.TeacherInstanceQueryRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.InstanceExtendRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ runtimeports.InstanceStatusRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ runtimeports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)
