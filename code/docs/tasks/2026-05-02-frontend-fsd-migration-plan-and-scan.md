@@ -984,6 +984,21 @@ npm run test:run -- src/views/contests/__tests__/ContestDetail.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch W 子项（实例操作动作流拆分）
+- 新增 `features/instance-list/model/useInstanceOperations.ts`，承接：
+  - 地址复制
+  - 实例延时
+  - 打开目标（含 TCP 命令复制）
+  - 销毁实例确认与删除
+- `useInstanceListPage.ts` 改为组合调用该模块，移除内联操作动作细节。
+- `useInstanceListPage.ts` 行数下降（本批由 352 降至 270）。
+
+验证：
+```bash
+npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
