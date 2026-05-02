@@ -172,6 +172,12 @@ describe('DashboardView', () => {
     expect(tabTexts).toEqual(['训练总览', '训练队列', '分类补强', '训练记录', '强度推进'])
   })
 
+  it('路由页应仅负责组合，不直接耦合学生仪表盘查询流程', () => {
+    expect(dashboardViewSource).toContain('useStudentDashboardPage')
+    expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
+    expect(dashboardViewSource).not.toContain('Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])')
+  })
+
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
