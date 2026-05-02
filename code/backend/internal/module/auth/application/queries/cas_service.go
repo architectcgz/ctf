@@ -31,14 +31,14 @@ func NewCASService(cfg config.CASConfig) CASService {
 }
 
 func (s *casService) Status() *dto.CASStatusResp {
-	return &dto.CASStatusResp{
+	return authQueryResponseMapperInst.ToCASStatusRespPtr(casStatusSource{
 		Provider:      casProviderName,
 		Enabled:       s.config.Enabled,
 		Configured:    s.isConfigured(),
 		AutoProvision: s.config.AutoProvision,
 		LoginPath:     casLoginPath,
 		CallbackPath:  casCallbackPath,
-	}
+	})
 }
 
 func (s *casService) BuildLogin(context.Context) (*dto.CASLoginResp, error) {
@@ -53,11 +53,11 @@ func (s *casService) BuildLogin(context.Context) (*dto.CASLoginResp, error) {
 	if err != nil {
 		return nil, errcode.ErrCASNotConfigured.WithCause(err)
 	}
-	return &dto.CASLoginResp{
+	return authQueryResponseMapperInst.ToCASLoginRespPtr(casLoginSource{
 		Provider:    casProviderName,
 		RedirectURL: loginURL,
 		CallbackURL: s.config.ServiceURL,
-	}, nil
+	}), nil
 }
 
 func (s *casService) isConfigured() bool {
