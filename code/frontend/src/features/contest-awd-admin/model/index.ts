@@ -1,5 +1,6 @@
 export { usePlatformContestAwd } from './usePlatformContestAwd'
 export { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
+export { useAwdLifecycleBindings } from './useAwdLifecycleBindings'
 export { useAwdReadinessDecision } from './useAwdReadinessDecision'
 export { useAwdRoundOperations } from './useAwdRoundOperations'
 export { useAwdRoundDetailState } from './useAwdRoundDetailState'

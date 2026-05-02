@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
 import {
   getContestAWDReadiness,
@@ -18,18 +18,16 @@ import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformC
 import {
   createEmptyInstanceOrchestration,
   loadStoredSelectedRoundId,
-  persistSelectedRoundId,
   pickRoundId,
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
 import { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
+import { useAwdLifecycleBindings } from './useAwdLifecycleBindings'
 import { useAwdRoundDetailState } from './useAwdRoundDetailState'
 import { useAwdRoundOperations } from './useAwdRoundOperations'
 import { useAwdServiceOperations } from './useAwdServiceOperations'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
-
-const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 
 export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetailData | null>>) {
   const rounds = ref<AWDRoundData[]>([])
@@ -127,7 +125,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
 
   let roundsRequestToken = 0
   let syncingSelectedRound = false
-  let autoRefreshTimer: number | null = null
 
   async function applyTrafficFilters(
     patch: Partial<
@@ -247,67 +244,19 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     challengeCatalog.value = []
   }
 
-  watch(
-    () => selectedContest.value?.id || null,
-    async (nextContestId, previousContestId) => {
-      if (nextContestId !== previousContestId) {
-        resetTrafficFiltersState()
-      }
+  useAwdLifecycleBindings({
+    selectedContest,
+    selectedRoundId,
+    shouldAutoRefresh,
+    refresh: async () => {
       await refresh()
     },
-    { immediate: true }
-  )
-
-  watch(
-    () => selectedRoundId.value,
-    async (nextRoundId, previousRoundId) => {
-      if (!selectedContest.value || !nextRoundId || nextRoundId === previousRoundId) {
-        if (!nextRoundId) {
-          clearRoundDetail()
-        }
-        return
-      }
-      if (syncingSelectedRound) {
-        return
-      }
-      await refreshRoundDetail(nextRoundId)
-    }
-  )
-
-  watch(
-    () => [selectedContest.value?.id || null, selectedRoundId.value] as const,
-    ([contestId, roundId]) => {
-      if (!contestId) {
-        return
-      }
-      persistSelectedRoundId(contestId, roundId)
+    refreshRoundDetail: async (roundId) => {
+      await refreshRoundDetail(roundId)
     },
-    { immediate: true }
-  )
-
-  function stopAutoRefresh() {
-    if (autoRefreshTimer !== null) {
-      window.clearInterval(autoRefreshTimer)
-      autoRefreshTimer = null
-    }
-  }
-
-  watch(
-    shouldAutoRefresh,
-    (enabled) => {
-      stopAutoRefresh()
-      if (!enabled || typeof window === 'undefined') {
-        return
-      }
-      autoRefreshTimer = window.setInterval(() => {
-        void refresh()
-      }, AWD_AUTO_REFRESH_INTERVAL_MS)
-    },
-    { immediate: true }
-  )
-
-  onBeforeUnmount(() => {
-    stopAutoRefresh()
+    clearRoundDetail,
+    resetTrafficFiltersState,
+    isSyncingSelectedRound: () => syncingSelectedRound,
   })
 
   return {
