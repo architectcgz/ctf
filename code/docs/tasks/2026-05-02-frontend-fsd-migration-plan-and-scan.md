@@ -673,6 +673,21 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（模板增删改动作拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyTemplateMutations.ts`，承接：
+  - 模板创建
+  - 模板更新
+  - 模板删除（含删除确认）
+  - `templateBusy` 与异常提示流程
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该子模块，移除内联模板 CRUD 命令式流程。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 916 降至 849）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

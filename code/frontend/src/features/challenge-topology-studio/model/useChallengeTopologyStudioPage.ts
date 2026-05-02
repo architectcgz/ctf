@@ -1,16 +1,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import {
-  createEnvironmentTemplate,
   deleteChallengeTopology,
-  deleteEnvironmentTemplate,
   exportChallengePackage,
   getChallengeDetail,
   getChallengeTopology,
   getEnvironmentTemplates,
   getImages,
   saveChallengeTopology,
-  updateEnvironmentTemplate,
 } from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,
@@ -37,7 +34,6 @@ import {
   createEmptyPolicyDraft,
   createEmptyTopologyDraft,
   buildTopologyDraftValidationIssues,
-  serializeEnvironmentTemplateDraft,
   serializeTopologyDraft,
   type TopologyEditorDraft,
   type TopologyLinkDraft,
@@ -46,6 +42,7 @@ import {
 } from './topologyDraft'
 import type { CanvasInteractionMode } from './topologyTypes'
 import { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
+import { useTopologyTemplateMutations } from './useTopologyTemplateMutations'
 
 export type TopologyStudioMode = 'challenge' | 'template-library'
 
@@ -60,7 +57,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   const loading = ref(true)
   const saving = ref(false)
   const exporting = ref(false)
-  const templateBusy = ref(false)
   const challenge = ref<AdminChallengeListItem | null>(null)
   const topology = ref<ChallengeTopologyData | null>(null)
   const images = ref<AdminImageListItem[]>([])
@@ -383,10 +379,28 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     syncEntryNode()
   }
 
+  function applyEmptyTemplateDraft() {
+    applyTopologyDraft(createEmptyTopologyDraft())
+  }
+
   async function loadTemplates() {
     templates.value = await getEnvironmentTemplates(templateKeyword.value.trim() || undefined)
     reconcileTemplateSelection()
   }
+
+  const { templateBusy, handleCreateTemplate, handleUpdateTemplate, handleDeleteTemplate } =
+    useTopologyTemplateMutations({
+      canSaveTemplate,
+      templateName,
+      templateDescription,
+      selectedTemplateId,
+      templates,
+      draft,
+      isTemplateLibraryMode,
+      applyEmptyTemplateDraft,
+      resetTemplateForm,
+      loadTemplates,
+    })
 
   async function loadPageData() {
     loading.value = true
@@ -693,87 +707,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       toast.error(message)
     } finally {
       saving.value = false
-    }
-  }
-
-  async function handleCreateTemplate() {
-    if (!canSaveTemplate.value) {
-      toast.error('请填写模板名称')
-      return
-    }
-
-    templateBusy.value = true
-    try {
-      const created = await createEnvironmentTemplate(
-        serializeEnvironmentTemplateDraft(
-          templateName.value,
-          templateDescription.value,
-          draft.value
-        )
-      )
-      resetTemplateForm(created)
-      toast.success('模板已创建')
-      await loadTemplates()
-    } finally {
-      templateBusy.value = false
-    }
-  }
-
-  async function handleUpdateTemplate() {
-    if (!selectedTemplateId.value) {
-      toast.warning('请先选择一个模板')
-      return
-    }
-    if (!canSaveTemplate.value) {
-      toast.error('请填写模板名称')
-      return
-    }
-
-    templateBusy.value = true
-    try {
-      const updated = await updateEnvironmentTemplate(
-        selectedTemplateId.value,
-        serializeEnvironmentTemplateDraft(
-          templateName.value,
-          templateDescription.value,
-          draft.value
-        )
-      )
-      resetTemplateForm(updated)
-      toast.success('模板已更新')
-      await loadTemplates()
-    } finally {
-      templateBusy.value = false
-    }
-  }
-
-  async function handleDeleteTemplate(templateId: string) {
-    const template = templates.value.find((item) => item.id === templateId)
-    const confirmed = await confirmDestructiveAction({
-      title: '删除模板',
-      message: `确认删除模板“${template?.name || templateId}”吗？该操作不可撤销。`,
-      confirmButtonText: '确认删除',
-    })
-    if (!confirmed) {
-      return
-    }
-    templateBusy.value = true
-    try {
-      await deleteEnvironmentTemplate(templateId)
-      if (selectedTemplateId.value === templateId) {
-        if (isTemplateLibraryMode.value) {
-          applyTopologyDraft(createEmptyTopologyDraft())
-        }
-        resetTemplateForm(null)
-      }
-      toast.success('模板已删除')
-      await loadTemplates()
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message.trim() ? error.message : '删除模板失败'
-      toast.error(message)
-    } finally {
-      templateBusy.value = false
     }
   }
 
