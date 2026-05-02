@@ -18,7 +18,7 @@ func NewTagService(repo challengeports.TagRepository) *TagService {
 	return &TagService{repo: repo}
 }
 
-func (s *TagService) CreateTag(ctx context.Context, req *dto.CreateTagReq) (*dto.TagResp, error) {
+func (s *TagService) CreateTag(ctx context.Context, req CreateTagInput) (*dto.TagResp, error) {
 	tag := &model.Tag{
 		Name:        req.Name,
 		Type:        req.Type,
