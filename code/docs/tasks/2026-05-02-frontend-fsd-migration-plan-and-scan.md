@@ -1222,6 +1222,22 @@ npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AM 子项（镜像创建弹窗类型依赖下沉）
+- 新增 `entities/image`：
+  - `entities/image/model/createForm.ts`
+  - `entities/image/model/index.ts`
+  - `entities/image/index.ts`
+- `ImageCreateModal.vue` 改为依赖 `entities/image` 的 `ImageCreateForm`，不再直接导入 `@/api/admin/authoring`。
+- `useImageManagePage.ts` 改为复用 `ImageCreateForm` 和 `createEmptyImageCreateForm`，统一创建表单初始值与重置逻辑。
+- 补充 source 边界断言：`ImageManage.test.ts` 增加 `ImageCreateModal` 不导入 `@/api/admin/authoring` 的断言。
+- 结果：组件层 API 直连扫描仅剩测试断言源码引用，不再有运行时代码命中。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

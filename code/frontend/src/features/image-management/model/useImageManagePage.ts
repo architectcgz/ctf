@@ -5,9 +5,12 @@ import {
   createImage,
   deleteImage,
   getImages,
-  type AdminImagePayload,
 } from '@/api/admin/authoring'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
+import {
+  createEmptyImageCreateForm,
+  type ImageCreateForm,
+} from '@/entities/image'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
@@ -64,11 +67,7 @@ export function useImageManagePage() {
   const creating = ref(false)
   const keyword = ref('')
   const statusFilter = ref<ImageStatus | ''>('')
-  const form = reactive<AdminImagePayload>({
-    name: '',
-    tag: '',
-    description: '',
-  })
+  const form = reactive<ImageCreateForm>(createEmptyImageCreateForm())
 
   const { list, total, page, pageSize, loading, changePage, refresh } = usePagination(getImages)
   const sortConfig = ref<ImageSortOption>(sortOptions[0]!)
@@ -174,7 +173,7 @@ export function useImageManagePage() {
       await createImage(form)
       toast.success('镜像创建成功')
       dialogVisible.value = false
-      Object.assign(form, { name: '', tag: '', description: '' })
+      Object.assign(form, createEmptyImageCreateForm())
       await refresh()
     } catch {
       toast.error('创建失败')

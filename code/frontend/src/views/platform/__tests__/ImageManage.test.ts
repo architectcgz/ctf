@@ -137,6 +137,8 @@ describe('ImageManage', () => {
     expect(imageCreateModalSource).toContain(
       "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
     )
+    expect(imageCreateModalSource).toContain("from '@/entities/image'")
+    expect(imageCreateModalSource).not.toContain("from '@/api/admin/authoring'")
     expect(imageCreateModalSource).toContain('<AdminSurfaceModal')
     expect(imageCreateModalSource).not.toContain('<ElForm')
     expect(imageCreateModalSource).not.toContain('<ElFormItem')
