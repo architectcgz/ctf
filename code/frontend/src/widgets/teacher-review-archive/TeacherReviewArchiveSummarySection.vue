@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { ReviewArchiveData } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 import { formatDate } from '@/utils/format'
+import { REVIEW_ARCHIVE_SUMMARY_COPY } from './model/presentation'
 
 const props = defineProps<{
   archive: ReviewArchiveData
@@ -29,49 +30,50 @@ const rankedSkillDimensions = computed(() =>
 <template>
   <section class="review-archive-summary-grid">
     <SectionCard
-      title="训练摘要"
-      subtitle="将当前归档的关键指标收束为一页课堂摘要。"
+      :title="REVIEW_ARCHIVE_SUMMARY_COPY.summaryTitle"
+      :subtitle="REVIEW_ARCHIVE_SUMMARY_COPY.summarySubtitle"
     >
       <div class="summary-grid metric-panel-grid metric-panel-default-surface">
         <article class="summary-card summary-card--primary metric-panel-card">
           <div class="summary-card__label metric-panel-label">
-            完成率
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateLabel }}
           </div>
           <div class="summary-card__value metric-panel-value">
             {{ solvedRate }}%
           </div>
           <div class="summary-card__hint metric-panel-helper">
-            已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateHintPrefix }}
+            {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}
           </div>
         </article>
         <article class="summary-card summary-card--warning metric-panel-card">
           <div class="summary-card__label metric-panel-label">
-            有效提交
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionLabel }}
           </div>
           <div class="summary-card__value metric-panel-value">
             {{ archive.summary.correct_submission_count }}
           </div>
           <div class="summary-card__hint metric-panel-helper">
-            归档内命中 Flag 的提交次数
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionHint }}
           </div>
         </article>
         <article class="summary-card summary-card--neutral metric-panel-card">
           <div class="summary-card__label metric-panel-label">
-            最近活跃
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityLabel }}
           </div>
           <div class="summary-card__value summary-card__value--time metric-panel-value">
             {{ formattedLastActivity }}
           </div>
           <div class="summary-card__hint metric-panel-helper">
-            归档内最后一条训练活动
+            {{ REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityHint }}
           </div>
         </article>
       </div>
     </SectionCard>
 
     <SectionCard
-      title="能力画像"
-      subtitle="优先识别当前最强与最弱的训练维度。"
+      :title="REVIEW_ARCHIVE_SUMMARY_COPY.skillTitle"
+      :subtitle="REVIEW_ARCHIVE_SUMMARY_COPY.skillSubtitle"
     >
       <div class="skill-bars">
         <article

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { REVIEW_ARCHIVE_STATE_COPY } from './model/presentation'
 
 defineProps<{
   loading: boolean
@@ -26,7 +27,7 @@ const emit = defineEmits<{
 
   <AppEmpty
     v-else-if="error"
-    title="复盘归档加载失败"
+    :title="REVIEW_ARCHIVE_STATE_COPY.errorTitle"
     :description="error"
     icon="AlertTriangle"
   >
@@ -36,15 +37,15 @@ const emit = defineEmits<{
         class="ui-btn ui-btn--primary"
         @click="emit('reload')"
       >
-        重新加载
+        {{ REVIEW_ARCHIVE_STATE_COPY.reload }}
       </button>
     </template>
   </AppEmpty>
 
   <AppEmpty
     v-else-if="!hasArchive"
-    title="暂无复盘归档"
-    description="当前学生还没有可展示的复盘归档数据。"
+    :title="REVIEW_ARCHIVE_STATE_COPY.emptyTitle"
+    :description="REVIEW_ARCHIVE_STATE_COPY.emptyDescription"
     icon="FileChartColumnIncreasing"
   />
 
