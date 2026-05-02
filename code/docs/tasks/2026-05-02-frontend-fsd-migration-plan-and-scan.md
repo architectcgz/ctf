@@ -999,6 +999,21 @@ npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch X 子项（平台赛事保存流程拆分）
+- 新增 `features/platform-contests/model/useContestSaveFlow.ts`，承接：
+  - 赛事创建/更新提交流程
+  - 结束赛事确认分支
+  - AWD 启动 gate 拦截与 override 弹层分支
+  - 提交成功后的关闭与列表刷新编排
+- `usePlatformContests.ts` 改为组合调用该模块，移除内联保存命令式实现。
+- `usePlatformContests.ts` 行数下降（本批由 346 降至 301）。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/PlatformContestTable.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

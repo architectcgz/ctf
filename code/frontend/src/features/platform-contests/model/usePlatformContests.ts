@@ -1,10 +1,7 @@
 import { computed, ref, watch } from 'vue'
 
 import {
-  createContest,
   getContests,
-  updateContest,
-  type AdminContestCreatePayload,
   type AdminContestUpdatePayload,
 } from '@/api/admin/contests'
 import { ApiError } from '@/api/request'
@@ -16,6 +13,7 @@ import {
   useAwdStartOverrideFlow,
 } from './useAwdStartOverrideFlow'
 import { useContestDialogState } from './useContestDialogState'
+import { useContestSaveFlow } from './useContestSaveFlow'
 
 export type PlatformContestStatus = Extract<
   ContestStatus,
@@ -166,7 +164,7 @@ export function buildContestUpdatePayload(
   return payload
 }
 function shouldGateAWDContestStart(
-  mode: ContestDetailData['mode'] | null,
+  mode: ContestFormDraft['mode'],
   targetStatus: PlatformContestStatus
 ): boolean {
   return mode === 'awd' && targetStatus === 'running'
@@ -189,7 +187,6 @@ function humanizeRequestError(error: unknown, fallback: string): string {
 export function usePlatformContests() {
   const toast = useToast()
   const statusFilter = ref<StatusFilter>('all')
-  const saving = ref(false)
   const {
     dialogOpen,
     editingContestId,
@@ -261,69 +258,27 @@ export function usePlatformContests() {
     closeAWDStartOverrideDialog()
   }
 
-  async function saveContest(draft: ContestFormDraft): Promise<'create' | 'edit' | null> {
-    const title = draft.title.trim()
-    const description = draft.description.trim()
-
-    if (!title) {
-      toast.error('请填写竞赛标题')
-      return null
-    }
-
-    saving.value = true
-    try {
-      if (editingContestId.value) {
-        if (shouldConfirmContestTermination(editingBaseStatus.value, draft.status)) {
-          const confirmed = await confirmContestTermination(title)
-          if (!confirmed) {
-            return null
-          }
-        }
-
-        const payload = buildContestUpdatePayload(draft, fieldLocks.value)
-        if (shouldGateAWDContestStart(draft.mode, draft.status)) {
-          try {
-            await updateContest(editingContestId.value, payload)
-            await finalizeContestUpdateSuccess()
-            return 'edit'
-          } catch (error) {
-            if (isAWDReadinessBlockedError(error)) {
-              await openAWDStartOverrideDialog(payload)
-              return null
-            }
-            toast.error(humanizeRequestError(error, '竞赛更新失败'))
-          }
-          return null
-        }
-
-        await updateContest(editingContestId.value, payload)
-        await finalizeContestUpdateSuccess()
-        return 'edit'
-      } else {
-        const payload: AdminContestCreatePayload = {
-          title,
-          description,
-          mode: draft.mode,
-          starts_at: toISOString(draft.starts_at),
-          ends_at: toISOString(draft.ends_at),
-        }
-        await createContest(payload)
-        toast.success('竞赛已创建')
-        closeDialog()
-        await pagination.refresh()
-        return 'create'
-      }
-    } catch (error) {
-      if (!(error instanceof ApiError)) {
-        toast.error(
-          humanizeRequestError(error, editingContestId.value ? '竞赛更新失败' : '竞赛创建失败')
-        )
-      }
-      return null
-    } finally {
-      saving.value = false
-    }
-  }
+  const { saving, saveContest } = useContestSaveFlow({
+    editingContestId,
+    editingBaseStatus,
+    fieldLocks,
+    closeDialog,
+    refreshContests: pagination.refresh,
+    openAWDStartOverrideDialog,
+    shouldConfirmContestTermination,
+    confirmContestTermination,
+    buildContestUpdatePayload,
+    shouldGateAWDContestStart,
+    isAWDReadinessBlockedError,
+    toISOString,
+    humanizeRequestError,
+    notifySuccess: (message) => {
+      toast.success(message)
+    },
+    notifyError: (message) => {
+      toast.error(message)
+    },
+  })
 
   return {
     ...pagination,
