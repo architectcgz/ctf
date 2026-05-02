@@ -3148,8 +3148,60 @@ ALTER TABLE ONLY public.user_scores
     ADD CONSTRAINT user_scores_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
+INSERT INTO public.roles (code, name, description)
+VALUES
+    ('student', 'Student', '学员'),
+    ('teacher', 'Teacher', '教师'),
+    ('admin', 'Admin', '管理员')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO public.users (
+    username,
+    password_hash,
+    email,
+    role,
+    class_name,
+    status,
+    student_no,
+    teacher_no,
+    name
+)
+VALUES
+    ('admin', '$2a$10$BZtdXbWm6DBx6NWilSbaqOTecF3c8xnhnXmYBZicjjpiXHwNCD9fu', 'admin@example.com', 'admin', NULL, 'active', NULL, NULL, 'Platform Admin'),
+    ('teacher', '$2a$10$BZtdXbWm6DBx6NWilSbaqOTecF3c8xnhnXmYBZicjjpiXHwNCD9fu', 'teacher@example.com', 'teacher', 'CTF-1', 'active', NULL, 'T20260001', 'Demo Teacher'),
+    ('student', '$2a$10$BZtdXbWm6DBx6NWilSbaqOTecF3c8xnhnXmYBZicjjpiXHwNCD9fu', 'student@example.com', 'student', 'CTF-1', 'active', '20260001', NULL, 'Demo Student'),
+    ('student2', '$2a$10$BZtdXbWm6DBx6NWilSbaqOTecF3c8xnhnXmYBZicjjpiXHwNCD9fu', 'student2@example.com', 'student', 'CTF-1', 'active', '20260002', NULL, 'Demo Student 2')
+ON CONFLICT (username) WHERE (deleted_at IS NULL) DO UPDATE
+SET
+    password_hash = EXCLUDED.password_hash,
+    email = EXCLUDED.email,
+    role = EXCLUDED.role,
+    class_name = EXCLUDED.class_name,
+    status = EXCLUDED.status,
+    student_no = EXCLUDED.student_no,
+    teacher_no = EXCLUDED.teacher_no,
+    name = EXCLUDED.name,
+    updated_at = now();
+
+DELETE FROM public.user_roles
+WHERE user_id IN (
+    SELECT id
+    FROM public.users
+    WHERE username IN ('admin', 'teacher', 'student', 'student2')
+);
+
+INSERT INTO public.user_roles (user_id, role_id)
+SELECT
+    u.id,
+    r.id
+FROM public.users AS u
+JOIN public.roles AS r
+    ON r.code = u.role
+WHERE u.username IN ('admin', 'teacher', 'student', 'student2')
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
+
 --
 -- PostgreSQL database dump complete
 --
-
 
