@@ -31,8 +31,11 @@ type AssessmentDimensionScoreRepository interface {
 	GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error)
 }
 
-type RecommendationRepository interface {
+type RecommendationProfileRepository interface {
 	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+}
+
+type RecommendationSolvedChallengeRepository interface {
 	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
 }
 

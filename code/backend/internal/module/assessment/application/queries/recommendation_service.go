@@ -21,16 +21,21 @@ import (
 )
 
 type RecommendationService struct {
-	repo          assessmentports.RecommendationRepository
+	repo          recommendationRepository
 	challengeRepo assessmentports.ChallengeRepository
 	redis         *redis.Client
 	logger        *zap.Logger
 	config        config.RecommendationConfig
 }
 
+type recommendationRepository interface {
+	assessmentports.RecommendationProfileRepository
+	assessmentports.RecommendationSolvedChallengeRepository
+}
+
 var _ assessmentcontracts.RecommendationProvider = (*RecommendationService)(nil)
 
-func NewRecommendationService(repo assessmentports.RecommendationRepository, challengeRepo assessmentports.ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
+func NewRecommendationService(repo recommendationRepository, challengeRepo assessmentports.ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

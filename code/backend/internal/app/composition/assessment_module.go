@@ -24,7 +24,7 @@ type AssessmentModule struct {
 
 type assessmentModuleDeps struct {
 	profileRepo        *assessmentinfra.Repository
-	recommendationRepo assessmentports.RecommendationRepository
+	recommendationRepo *assessmentinfra.Repository
 	reportRepo         *assessmentinfra.ReportRepository
 	awdReviewRepo      *assessmentinfra.TeacherAWDReviewRepository
 }

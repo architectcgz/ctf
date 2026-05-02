@@ -859,7 +859,7 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 		"profileRepo",
 		"*assessmentinfra.Repository",
 		"recommendationRepo",
-		"assessmentports.RecommendationRepository",
+		"*assessmentinfra.Repository",
 		"challengeRepo",
 		"assessmentports.ChallengeRepository",
 		"reportRepo",
