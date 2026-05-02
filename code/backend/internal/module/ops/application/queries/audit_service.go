@@ -15,12 +15,12 @@ import (
 )
 
 type AuditService struct {
-	repo       opsports.AuditRepository
+	repo       opsports.AuditQueryRepository
 	pagination config.PaginationConfig
 	logger     *zap.Logger
 }
 
-func NewAuditService(repo opsports.AuditRepository, pagination config.PaginationConfig, logger *zap.Logger) *AuditService {
+func NewAuditService(repo opsports.AuditQueryRepository, pagination config.PaginationConfig, logger *zap.Logger) *AuditService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

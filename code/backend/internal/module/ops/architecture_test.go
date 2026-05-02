@@ -3,6 +3,7 @@ package ops
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -96,6 +97,30 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/queries")
+	}
+}
+
+func TestPortsDoNotDeclareWideNotificationRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "notification.go"))
+	if err != nil {
+		t.Fatalf("read ops notification ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type NotificationRepository interface") {
+		t.Fatalf("ops notification ports must not declare the legacy wide NotificationRepository interface")
+	}
+}
+
+func TestPortsDoNotDeclareWideAuditRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "audit.go"))
+	if err != nil {
+		t.Fatalf("read ops audit ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type AuditRepository interface") {
+		t.Fatalf("ops audit ports must not declare the legacy wide AuditRepository interface")
 	}
 }
 

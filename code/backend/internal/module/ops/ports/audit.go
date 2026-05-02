@@ -31,7 +31,10 @@ type AuditLogRecord struct {
 	ActorUsername string    `gorm:"column:actor_username"`
 }
 
-type AuditRepository interface {
+type AuditCommandRepository interface {
 	Create(ctx context.Context, log *model.AuditLog) error
+}
+
+type AuditQueryRepository interface {
 	List(ctx context.Context, filter AuditLogListFilter) ([]AuditLogRecord, int64, error)
 }

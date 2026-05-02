@@ -13,11 +13,11 @@ import (
 )
 
 type AuditService struct {
-	repo   opsports.AuditRepository
+	repo   opsports.AuditCommandRepository
 	logger *zap.Logger
 }
 
-func NewAuditService(repo opsports.AuditRepository, logger *zap.Logger) *AuditService {
+func NewAuditService(repo opsports.AuditCommandRepository, logger *zap.Logger) *AuditService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

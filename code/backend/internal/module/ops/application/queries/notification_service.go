@@ -13,12 +13,12 @@ import (
 )
 
 type NotificationService struct {
-	repo       opsports.NotificationRepository
+	repo       opsports.NotificationQueryRepository
 	pagination config.PaginationConfig
 	logger     *zap.Logger
 }
 
-func NewNotificationService(repo opsports.NotificationRepository, pagination config.PaginationConfig, logger *zap.Logger) *NotificationService {
+func NewNotificationService(repo opsports.NotificationQueryRepository, pagination config.PaginationConfig, logger *zap.Logger) *NotificationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
