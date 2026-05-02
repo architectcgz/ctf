@@ -537,33 +537,26 @@ func TestAuthModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type authModuleDeps struct",
-		"users",
-		"identitycontracts.UserRepository",
-		"tokenService",
-		"authcontracts.TokenService",
-		"profileCommands",
-		"identitycontracts.ProfileCommandService",
-		"profileQueries",
-		"identitycontracts.ProfileQueryService",
-		"auditRecorder",
-		"auditlog.Recorder",
-		"buildAuthModuleDeps(",
+		"type AuthModule = authruntime.Module",
+		"authruntime.Build(",
+		"authruntime.Deps{",
+		"Users:           identity.Users",
+		"AuditRecorder:   ops.AuditService",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("auth composition should declare typed deps marker %s", marker)
+			t.Fatalf("auth composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"authcmd.NewService(identity.users, identity.TokenService",
-		"authcmd.NewCASService(cfg.Auth.CAS, identity.users, identity.TokenService",
-		"users:           identity.users,",
+		"type authModuleDeps struct",
+		"authcmd.NewService(",
+		"authcmd.NewCASService(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("auth composition should not keep direct module dependency marker %s", marker)
+			t.Fatalf("auth composition should not keep wiring marker %s", marker)
 		}
 	}
 }
