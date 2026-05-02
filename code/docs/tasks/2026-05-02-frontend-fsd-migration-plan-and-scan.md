@@ -1436,6 +1436,20 @@ npm run test:run -- src/features/awd-inspector/model/useAwdInspectorDerivedData.
 npm run typecheck
 ```
 
+### 已完成：Batch AZ 子项（平台通知发布 payload/校验 support 拆分）
+- 新增 `features/admin-notification-publisher/model/adminNotificationPublishSupport.ts`，承接：
+  - 发布表单默认值构建（`createDefaultNotificationPublishForm`）
+  - 发布 payload 组装（`buildAdminNotificationPublishPayload`）
+  - 发布前表单校验（`validateNotificationPublishForm`）
+- `useAdminNotificationPublisher.ts` 改为复用 support 模块，主组合器聚焦请求取消、用户检索与发布提交流程。
+- 新增边界测试：`useAdminNotificationPublisherBoundary.test.ts`，锁定主组合器不再内联 payload/校验细节。
+
+验证：
+```bash
+npm run test:run -- src/features/admin-notification-publisher/model/useAdminNotificationPublisher.test.ts src/features/admin-notification-publisher/model/useAdminNotificationPublisherBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

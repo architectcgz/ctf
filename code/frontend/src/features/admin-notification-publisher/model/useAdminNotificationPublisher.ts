@@ -12,42 +12,22 @@ import type {
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 import type { UserRole } from '@/utils/constants'
+import {
+  buildAdminNotificationPublishPayload,
+  createDefaultNotificationPublishForm,
+  validateNotificationPublishForm,
+  type NotificationAudienceTarget,
+  type NotificationPublishErrors,
+  type NotificationPublishFormDraft,
+} from './adminNotificationPublishSupport'
 
-export type NotificationAudienceTarget = 'all' | 'role' | 'class' | 'user'
-
-export interface NotificationPublishFormDraft {
-  type: AdminNotificationPublishPayload['type']
-  title: string
-  content: string
-  link: string
-}
-
-interface NotificationPublishErrors {
-  title?: string
-  content?: string
-  audience?: string
-}
-
-function createDefaultForm(): NotificationPublishFormDraft {
-  return {
-    type: 'system',
-    title: '',
-    content: '',
-    link: '',
-  }
-}
-
-function uniqueValues(values: string[]): string[] {
-  return Array.from(
-    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
-  )
-}
+export type { NotificationAudienceTarget, NotificationPublishFormDraft }
 
 export function useAdminNotificationPublisher() {
   const toast = useToast()
   const { createController, abort } = useAbortController()
 
-  const form = reactive<NotificationPublishFormDraft>(createDefaultForm())
+  const form = reactive<NotificationPublishFormDraft>(createDefaultNotificationPublishForm())
   const audienceTarget = ref<NotificationAudienceTarget>('all')
   const selectedRoles = ref<UserRole[]>([])
   const selectedClasses = ref<string[]>([])
@@ -104,83 +84,27 @@ export function useAdminNotificationPublisher() {
   }
 
   function buildPayload(): AdminNotificationPublishPayload {
-    const trimmedTitle = form.title.trim()
-    const trimmedContent = form.content.trim()
-    const trimmedLink = form.link.trim()
-
-    if (audienceTarget.value === 'role') {
-      return {
-        type: form.type,
-        title: trimmedTitle,
-        content: trimmedContent,
-        link: trimmedLink || undefined,
-        audience_rules: {
-          mode: 'union',
-          rules: [{ type: 'role', values: uniqueValues(selectedRoles.value) as UserRole[] }],
-        },
-      }
-    }
-
-    if (audienceTarget.value === 'class') {
-      return {
-        type: form.type,
-        title: trimmedTitle,
-        content: trimmedContent,
-        link: trimmedLink || undefined,
-        audience_rules: {
-          mode: 'union',
-          rules: [{ type: 'class', values: uniqueValues(selectedClasses.value) }],
-        },
-      }
-    }
-
-    if (audienceTarget.value === 'user') {
-      return {
-        type: form.type,
-        title: trimmedTitle,
-        content: trimmedContent,
-        link: trimmedLink || undefined,
-        audience_rules: {
-          mode: 'union',
-          rules: [{ type: 'user', values: uniqueValues(selectedUserIds.value) }],
-        },
-      }
-    }
-
-    return {
-      type: form.type,
-      title: trimmedTitle,
-      content: trimmedContent,
-      link: trimmedLink || undefined,
-      audience_rules: {
-        mode: 'union',
-        rules: [{ type: 'all' }],
-      },
-    }
+    return buildAdminNotificationPublishPayload({
+      form,
+      audienceTarget: audienceTarget.value,
+      selectedRoles: selectedRoles.value,
+      selectedClasses: selectedClasses.value,
+      selectedUserIds: selectedUserIds.value,
+    })
   }
 
   function validate(): boolean {
     clearErrors()
-
-    if (form.title.trim().length === 0) {
-      errors.title = '请输入通知标题。'
-    }
-
-    if (form.content.trim().length === 0) {
-      errors.content = '请输入通知内容。'
-    }
-
-    if (audienceTarget.value === 'role' && uniqueValues(selectedRoles.value).length === 0) {
-      errors.audience = '请至少选择一个角色。'
-    }
-
-    if (audienceTarget.value === 'class' && uniqueValues(selectedClasses.value).length === 0) {
-      errors.audience = '请至少选择一个班级。'
-    }
-
-    if (audienceTarget.value === 'user' && uniqueValues(selectedUserIds.value).length === 0) {
-      errors.audience = '请至少选择一个用户。'
-    }
+    const validation = validateNotificationPublishForm({
+      form,
+      audienceTarget: audienceTarget.value,
+      selectedRoles: selectedRoles.value,
+      selectedClasses: selectedClasses.value,
+      selectedUserIds: selectedUserIds.value,
+    })
+    errors.title = validation.title
+    errors.content = validation.content
+    errors.audience = validation.audience
 
     return !errors.title && !errors.content && !errors.audience
   }
@@ -226,7 +150,7 @@ export function useAdminNotificationPublisher() {
   }
 
   function reset(): void {
-    const initial = createDefaultForm()
+    const initial = createDefaultNotificationPublishForm()
     form.type = initial.type
     form.title = initial.title
     form.content = initial.content
