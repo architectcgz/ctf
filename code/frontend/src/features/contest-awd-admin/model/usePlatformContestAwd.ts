@@ -1,32 +1,22 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
 import {
-  createContestAWDRound,
-  createContestAWDAttackLog,
-  createContestAWDServiceCheck,
   getContestAWDReadiness,
   getContestAWDInstanceOrchestration,
   listContestTeams,
   listContestAWDRounds,
-  runContestAWDRoundCheck,
-  runContestAWDCurrentRoundCheck,
   listContestAWDServices,
 } from '@/api/admin/contests'
 import type {
-  AWDAttackLogData,
   AWDRoundData,
-  AWDTeamServiceData,
   AdminChallengeListItem,
   AdminContestChallengeData,
   AdminContestTeamData,
   ContestDetailData,
 } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 import {
   createEmptyInstanceOrchestration,
-  humanizeRequestError,
-  isAWDReadinessBlockedError,
   loadStoredSelectedRoundId,
   persistSelectedRoundId,
   pickRoundId,
@@ -35,13 +25,13 @@ import {
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
 import { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
 import { useAwdRoundDetailState } from './useAwdRoundDetailState'
+import { useAwdRoundOperations } from './useAwdRoundOperations'
 import { useAwdServiceOperations } from './useAwdServiceOperations'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 
 export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetailData | null>>) {
-  const toast = useToast()
   const rounds = ref<AWDRoundData[]>([])
   const selectedRoundId = ref<string | null>(null)
   const {
@@ -56,10 +46,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
   const loadingRounds = ref(false)
   const loadingChallengeCatalog = ref(false)
-  const checking = ref(false)
-  const creatingRound = ref(false)
-  const savingServiceCheck = ref(false)
-  const savingAttackLog = ref(false)
 
   const {
     instanceOrchestration,
@@ -239,105 +225,26 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     }
   }
 
+  const {
+    checking,
+    creatingRound,
+    savingServiceCheck,
+    savingAttackLog,
+    runSelectedRoundCheck,
+    createRound,
+    createServiceCheck,
+    createAttackLog,
+  } = useAwdRoundOperations({
+    selectedContest,
+    selectedRoundId,
+    selectedRound,
+    refresh,
+    refreshRoundDetail,
+    openOverrideDialog,
+  })
+
   async function loadChallengeCatalog() {
     challengeCatalog.value = []
-  }
-
-  async function runSelectedRoundCheck() {
-    if (!selectedContest.value) {
-      return
-    }
-
-    const activeRoundId = selectedRoundId.value
-    const shouldRunCurrentRound = selectedRound.value?.status === 'running' || !activeRoundId
-    checking.value = true
-    try {
-      let result
-      if (shouldRunCurrentRound) {
-        result = await runContestAWDCurrentRoundCheck(selectedContest.value.id)
-      } else {
-        result = await runContestAWDRoundCheck(selectedContest.value.id, activeRoundId)
-      }
-      toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
-      await refresh(result.round.id)
-    } catch (error) {
-      if (shouldRunCurrentRound && isAWDReadinessBlockedError(error)) {
-        await openOverrideDialog('run_current_round_check', '立即巡检当前轮')
-        return
-      }
-      toast.error(humanizeRequestError(error, '执行巡检失败'))
-    } finally {
-      checking.value = false
-    }
-  }
-
-  async function createRound(payload: {
-    round_number: number
-    status?: AWDRoundData['status']
-    attack_score?: number
-    defense_score?: number
-  }) {
-    if (!selectedContest.value) {
-      return
-    }
-
-    creatingRound.value = true
-    try {
-      const round = await createContestAWDRound(selectedContest.value.id, payload)
-      toast.success(`第 ${round.round_number} 轮已创建`)
-      await refresh(round.id)
-      return round
-    } catch (error) {
-      if (isAWDReadinessBlockedError(error)) {
-        await openOverrideDialog('create_round', '创建轮次', payload)
-        return
-      }
-      toast.error(humanizeRequestError(error, '创建轮次失败'))
-    } finally {
-      creatingRound.value = false
-    }
-  }
-
-  async function createServiceCheck(payload: {
-    team_id: number
-    service_id: number
-    service_status: AWDTeamServiceData['service_status']
-    check_result?: Record<string, unknown>
-  }) {
-    if (!selectedContest.value || !selectedRoundId.value) {
-      return
-    }
-
-    savingServiceCheck.value = true
-    try {
-      await createContestAWDServiceCheck(selectedContest.value.id, selectedRoundId.value, payload)
-      toast.success('服务检查结果已记录')
-      await refreshRoundDetail(selectedRoundId.value)
-    } finally {
-      savingServiceCheck.value = false
-    }
-  }
-
-  async function createAttackLog(payload: {
-    attacker_team_id: number
-    victim_team_id: number
-    service_id: number
-    attack_type: AWDAttackLogData['attack_type']
-    submitted_flag?: string
-    is_success: boolean
-  }) {
-    if (!selectedContest.value || !selectedRoundId.value) {
-      return
-    }
-
-    savingAttackLog.value = true
-    try {
-      await createContestAWDAttackLog(selectedContest.value.id, selectedRoundId.value, payload)
-      toast.success('攻击日志已记录')
-      await refreshRoundDetail(selectedRoundId.value)
-    } finally {
-      savingAttackLog.value = false
-    }
   }
 
   watch(

@@ -831,6 +831,21 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch L 子项（AWD 轮次动作流程拆分）
+- 新增 `features/contest-awd-admin/model/useAwdRoundOperations.ts`，承接：
+  - 轮次巡检触发（当前轮 / 指定轮）
+  - 轮次创建（含 readiness override 分支）
+  - 服务检查记录创建
+  - 攻击日志记录创建
+- `usePlatformContestAwd.ts` 改为组合调用该模块，移除内联轮次动作流程与相关 loading 状态。
+- `usePlatformContestAwd.ts` 行数继续下降（本批由 461 降至 368）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

@@ -1,6 +1,7 @@
 export { usePlatformContestAwd } from './usePlatformContestAwd'
 export { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
 export { useAwdReadinessDecision } from './useAwdReadinessDecision'
+export { useAwdRoundOperations } from './useAwdRoundOperations'
 export { useAwdRoundDetailState } from './useAwdRoundDetailState'
 export { useAwdServiceOperations } from './useAwdServiceOperations'
 export { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
