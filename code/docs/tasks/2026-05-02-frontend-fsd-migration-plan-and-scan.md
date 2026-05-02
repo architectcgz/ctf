@@ -1405,6 +1405,22 @@ npm run test:run -- src/features/contest-projector/model/useContestProjectorDeri
 npm run typecheck
 ```
 
+### 已完成：Batch AX 子项（AWD 复盘服务侧派生聚合拆分）
+- 新增 `features/awd-inspector/model/awdInspectorServiceDerived.ts`，承接：
+  - 服务检查来源提取（`getServiceCheckSourceValue`）
+  - 服务告警原因判定（`getServiceAlertReason`）
+  - 服务筛选（`filterServices`）
+  - 服务队伍/检查来源选项构建（`buildServiceTeamOptions`、`buildServiceCheckSourceOptions`）
+  - 服务告警聚合（`buildServiceAlerts`）
+- `useAwdInspectorDerivedData.ts` 改为组合调用上述纯函数模块，移除内联服务告警聚合与筛选实现。
+- 新增边界测试：`useAwdInspectorDerivedDataBoundary.test.ts`，锁定主组合器必须复用 `awdInspectorServiceDerived`。
+
+验证：
+```bash
+npm run test:run -- src/features/awd-inspector/model/useAwdInspectorDerivedData.test.ts src/features/awd-inspector/model/useAwdInspectorDerivedDataBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
