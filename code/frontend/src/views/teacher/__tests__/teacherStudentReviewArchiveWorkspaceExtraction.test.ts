@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
+import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
 describe('Teacher student review archive workspace extraction', () => {
@@ -19,11 +20,14 @@ describe('Teacher student review archive workspace extraction', () => {
 
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveHero')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveObservationStrip')
+    expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveSummarySection')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveEvidencePanel')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveReflectionPanel')
     expect(reviewArchiveWorkspaceSource).toContain('class="review-archive-shell')
     expect(reviewArchiveWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
+    expect(reviewArchiveSummarySectionSource).toContain('class="review-archive-summary-grid"')
+    expect(reviewArchiveSummarySectionSource).toContain('class="skill-bars"')
 
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
