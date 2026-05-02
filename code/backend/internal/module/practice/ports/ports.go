@@ -189,16 +189,28 @@ type TeacherManualReviewSubmissionRecord struct {
 	ReviewerName    string
 }
 
-type PracticeScoreRepository interface {
+type PracticeChallengeScoreRepository interface {
 	FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error)
 	FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error)
+}
+
+type PracticeSolvedChallengeRepository interface {
 	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
+}
+
+type PracticeUserScoreWriteRepository interface {
 	UpsertUserScore(ctx context.Context, userScore *model.UserScore) error
 }
 
-type PracticeRankingRepository interface {
+type PracticeUserScoreReadRepository interface {
 	FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error)
+}
+
+type PracticeRankingListRepository interface {
 	ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error)
+}
+
+type PracticeUserDirectoryRepository interface {
 	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error)
 }
 

@@ -19,8 +19,8 @@ type PracticeModule struct {
 
 type practiceModuleDeps struct {
 	commandRepo *practiceinfra.Repository
-	scoreRepo   practiceports.PracticeScoreRepository
-	rankingRepo practiceports.PracticeRankingRepository
+	scoreRepo   *practiceinfra.Repository
+	rankingRepo *practiceinfra.Repository
 }
 
 type practiceModuleExternalDeps struct {

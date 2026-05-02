@@ -19,13 +19,19 @@ import (
 )
 
 type ScoreService struct {
-	repo   practiceports.PracticeScoreRepository
+	repo   practiceScoreRepository
 	redis  *redis.Client
 	logger *zap.Logger
 	config *config.ScoreConfig
 }
 
-func NewScoreService(repo practiceports.PracticeScoreRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+type practiceScoreRepository interface {
+	practiceports.PracticeChallengeScoreRepository
+	practiceports.PracticeSolvedChallengeRepository
+	practiceports.PracticeUserScoreWriteRepository
+}
+
+func NewScoreService(repo practiceScoreRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

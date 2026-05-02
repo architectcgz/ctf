@@ -107,6 +107,8 @@ func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
 		"type PracticeContestCommandRepository interface",
 		"type PracticeSubmissionCommandRepository interface",
 		"type PracticeManualReviewCommandRepository interface",
+		"type PracticeScoreRepository interface",
+		"type PracticeRankingRepository interface",
 	}
 	for _, forbidden := range forbiddenInterfaces {
 		if strings.Contains(string(content), forbidden) {

@@ -768,9 +768,9 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 		"commandRepo",
 		"*practiceinfra.Repository",
 		"scoreRepo",
-		"practiceports.PracticeScoreRepository",
+		"*practiceinfra.Repository",
 		"rankingRepo",
-		"practiceports.PracticeRankingRepository",
+		"*practiceinfra.Repository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

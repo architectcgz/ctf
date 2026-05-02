@@ -16,13 +16,19 @@ import (
 )
 
 type ScoreService struct {
-	repo   practiceports.PracticeRankingRepository
+	repo   practiceRankingRepository
 	redis  *redis.Client
 	logger *zap.Logger
 	config *config.ScoreConfig
 }
 
-func NewScoreService(repo practiceports.PracticeRankingRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+type practiceRankingRepository interface {
+	practiceports.PracticeUserScoreReadRepository
+	practiceports.PracticeRankingListRepository
+	practiceports.PracticeUserDirectoryRepository
+}
+
+func NewScoreService(repo practiceRankingRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
