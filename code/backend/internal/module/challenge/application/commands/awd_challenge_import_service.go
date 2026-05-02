@@ -280,27 +280,16 @@ func buildAWDChallengeImportPreview(
 	if parsed == nil {
 		return nil
 	}
-	return &dto.AWDChallengeImportPreviewResp{
-		ID:               id,
-		FileName:         fileName,
-		Slug:             parsed.Slug,
-		Title:            parsed.Title,
-		Category:         parsed.Category,
-		Difficulty:       parsed.Difficulty,
-		Description:      parsed.Description,
-		ServiceType:      parsed.ServiceType,
-		DeploymentMode:   parsed.DeploymentMode,
-		Version:          parsed.Version,
-		CheckerType:      parsed.CheckerType,
-		CheckerConfig:    cloneAWDChallengeConfig(parsed.CheckerConfig),
-		FlagMode:         parsed.FlagMode,
-		FlagConfig:       cloneAWDChallengeConfig(parsed.FlagConfig),
-		DefenseEntryMode: parsed.DefenseEntryMode,
-		AccessConfig:     cloneAWDChallengeConfig(parsed.AccessConfig),
-		RuntimeConfig:    cloneAWDChallengeConfig(parsed.RuntimeConfig),
-		Warnings:         append([]string(nil), parsed.Warnings...),
-		CreatedAt:        createdAt,
-	}
+	resp := challengeCommandResponseMapperInst.ToAWDChallengeImportPreviewRespBasePtr(parsed)
+	resp.ID = id
+	resp.FileName = fileName
+	resp.CheckerConfig = cloneAWDChallengeConfig(parsed.CheckerConfig)
+	resp.FlagConfig = cloneAWDChallengeConfig(parsed.FlagConfig)
+	resp.AccessConfig = cloneAWDChallengeConfig(parsed.AccessConfig)
+	resp.RuntimeConfig = cloneAWDChallengeConfig(parsed.RuntimeConfig)
+	resp.Warnings = append([]string(nil), parsed.Warnings...)
+	resp.CreatedAt = createdAt
+	return resp
 }
 
 func findAWDChallengeForImportedPackageUpsert(

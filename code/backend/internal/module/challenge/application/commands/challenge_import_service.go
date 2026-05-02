@@ -281,53 +281,30 @@ func buildChallengeImportPreview(
 	parsed *domain.ParsedChallengePackage,
 	createdAt time.Time,
 ) *dto.ChallengeImportPreviewResp {
-	attachments := make([]dto.ChallengeImportAttachmentResp, 0, len(parsed.Attachments))
-	for _, attachment := range parsed.Attachments {
-		attachments = append(attachments, dto.ChallengeImportAttachmentResp{
-			Name: attachment.Name,
-			Path: attachment.Path,
-		})
+	resp := challengeCommandResponseMapperInst.ToChallengeImportPreviewRespBasePtr(parsed)
+	resp.ID = id
+	resp.FileName = fileName
+	resp.Attachments = challengeCommandResponseMapperInst.ToChallengeImportAttachmentResps(parsed.Attachments)
+	resp.Hints = challengeCommandResponseMapperInst.ToChallengeHintAdminRespFromParseds(parsed.Hints)
+	resp.Flag = dto.ChallengeImportFlagResp{
+		Type:   parsed.FlagType,
+		Prefix: parsed.FlagPrefix,
 	}
-
-	hints := make([]dto.ChallengeHintAdminResp, 0, len(parsed.Hints))
-	for _, hint := range parsed.Hints {
-		hints = append(hints, dto.ChallengeHintAdminResp{
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		})
+	resp.Runtime = dto.ChallengeImportRuntimeResp{
+		Type:     parsed.Manifest.Runtime.Type,
+		ImageRef: parsed.RuntimeImageRef,
 	}
-
-	return &dto.ChallengeImportPreviewResp{
-		ID:          id,
-		FileName:    fileName,
-		Slug:        parsed.Slug,
-		Title:       parsed.Title,
-		Description: parsed.Description,
-		Category:    parsed.Category,
-		Difficulty:  parsed.Difficulty,
-		Points:      parsed.Points,
-		Attachments: attachments,
-		Hints:       hints,
-		Flag: dto.ChallengeImportFlagResp{
-			Type:   parsed.FlagType,
-			Prefix: parsed.FlagPrefix,
+	resp.Extensions = dto.ChallengeImportExtensionsResp{
+		Topology: dto.ChallengeImportTopologyExtensionResp{
+			Source:  parsed.Manifest.Extensions.Topology.Source,
+			Enabled: parsed.Manifest.Extensions.Topology.Enabled,
 		},
-		Runtime: dto.ChallengeImportRuntimeResp{
-			Type:     parsed.Manifest.Runtime.Type,
-			ImageRef: parsed.RuntimeImageRef,
-		},
-		Extensions: dto.ChallengeImportExtensionsResp{
-			Topology: dto.ChallengeImportTopologyExtensionResp{
-				Source:  parsed.Manifest.Extensions.Topology.Source,
-				Enabled: parsed.Manifest.Extensions.Topology.Enabled,
-			},
-		},
-		Topology:     domain.ChallengeImportTopologyRespFromParsed(parsed.Topology),
-		PackageFiles: domain.ChallengePackageFileRespList(parsed.PackageFiles),
-		Warnings:     parsed.Warnings,
-		CreatedAt:    createdAt,
 	}
+	resp.Topology = domain.ChallengeImportTopologyRespFromParsed(parsed.Topology)
+	resp.PackageFiles = domain.ChallengePackageFileRespList(parsed.PackageFiles)
+	resp.Warnings = parsed.Warnings
+	resp.CreatedAt = createdAt
+	return resp
 }
 
 func writeImportUploadArchive(targetPath string, reader io.Reader) error {

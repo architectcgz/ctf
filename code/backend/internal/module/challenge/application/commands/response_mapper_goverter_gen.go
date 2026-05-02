@@ -6,10 +6,95 @@ package commands
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	domain "ctf-platform/internal/module/challenge/domain"
 )
 
 type challengeCommandResponseMapperImpl struct{}
 
+func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBase(source domain.ParsedAWDChallengePackage) dto.AWDChallengeImportPreviewResp {
+	var dtoAWDChallengeImportPreviewResp dto.AWDChallengeImportPreviewResp
+	dtoAWDChallengeImportPreviewResp.Slug = source.Slug
+	dtoAWDChallengeImportPreviewResp.Title = source.Title
+	dtoAWDChallengeImportPreviewResp.Category = source.Category
+	dtoAWDChallengeImportPreviewResp.Difficulty = source.Difficulty
+	dtoAWDChallengeImportPreviewResp.Description = source.Description
+	dtoAWDChallengeImportPreviewResp.ServiceType = source.ServiceType
+	dtoAWDChallengeImportPreviewResp.DeploymentMode = source.DeploymentMode
+	dtoAWDChallengeImportPreviewResp.Version = source.Version
+	dtoAWDChallengeImportPreviewResp.CheckerType = source.CheckerType
+	dtoAWDChallengeImportPreviewResp.FlagMode = source.FlagMode
+	dtoAWDChallengeImportPreviewResp.DefenseEntryMode = source.DefenseEntryMode
+	return dtoAWDChallengeImportPreviewResp
+}
+func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBasePtr(source *domain.ParsedAWDChallengePackage) *dto.AWDChallengeImportPreviewResp {
+	var pDtoAWDChallengeImportPreviewResp *dto.AWDChallengeImportPreviewResp
+	if source != nil {
+		dtoAWDChallengeImportPreviewResp := c.ToAWDChallengeImportPreviewRespBase((*source))
+		pDtoAWDChallengeImportPreviewResp = &dtoAWDChallengeImportPreviewResp
+	}
+	return pDtoAWDChallengeImportPreviewResp
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParsed(source domain.ParsedChallengePackageHint) dto.ChallengeHintAdminResp {
+	var dtoChallengeHintAdminResp dto.ChallengeHintAdminResp
+	dtoChallengeHintAdminResp.Level = source.Level
+	dtoChallengeHintAdminResp.Title = source.Title
+	dtoChallengeHintAdminResp.Content = source.Content
+	return dtoChallengeHintAdminResp
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParseds(source []domain.ParsedChallengePackageHint) []dto.ChallengeHintAdminResp {
+	var dtoChallengeHintAdminRespList []dto.ChallengeHintAdminResp
+	if source != nil {
+		dtoChallengeHintAdminRespList = make([]dto.ChallengeHintAdminResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoChallengeHintAdminRespList[i] = c.ToChallengeHintAdminRespFromParsed(source[i])
+		}
+	}
+	return dtoChallengeHintAdminRespList
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportAttachmentResps(source []domain.ParsedChallengePackageAttachment) []dto.ChallengeImportAttachmentResp {
+	var dtoChallengeImportAttachmentRespList []dto.ChallengeImportAttachmentResp
+	if source != nil {
+		dtoChallengeImportAttachmentRespList = make([]dto.ChallengeImportAttachmentResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoChallengeImportAttachmentRespList[i] = c.domainParsedChallengePackageAttachmentToDtoChallengeImportAttachmentResp(source[i])
+		}
+	}
+	return dtoChallengeImportAttachmentRespList
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBase(source domain.ParsedChallengePackage) dto.ChallengeImportPreviewResp {
+	var dtoChallengeImportPreviewResp dto.ChallengeImportPreviewResp
+	dtoChallengeImportPreviewResp.Slug = source.Slug
+	dtoChallengeImportPreviewResp.Title = source.Title
+	dtoChallengeImportPreviewResp.Description = source.Description
+	dtoChallengeImportPreviewResp.Category = source.Category
+	dtoChallengeImportPreviewResp.Difficulty = source.Difficulty
+	dtoChallengeImportPreviewResp.Points = source.Points
+	return dtoChallengeImportPreviewResp
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBasePtr(source *domain.ParsedChallengePackage) *dto.ChallengeImportPreviewResp {
+	var pDtoChallengeImportPreviewResp *dto.ChallengeImportPreviewResp
+	if source != nil {
+		dtoChallengeImportPreviewResp := c.ToChallengeImportPreviewRespBase((*source))
+		pDtoChallengeImportPreviewResp = &dtoChallengeImportPreviewResp
+	}
+	return pDtoChallengeImportPreviewResp
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(source model.ChallengePackageRevision) dto.ChallengePackageExportResp {
+	var dtoChallengePackageExportResp dto.ChallengePackageExportResp
+	dtoChallengePackageExportResp.RevisionID = source.ID
+	dtoChallengePackageExportResp.ArchivePath = source.ArchivePath
+	dtoChallengePackageExportResp.SourceDir = source.SourceDir
+	dtoChallengePackageExportResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoChallengePackageExportResp
+}
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *dto.ChallengePackageExportResp {
+	var pDtoChallengePackageExportResp *dto.ChallengePackageExportResp
+	if source != nil {
+		dtoChallengePackageExportResp := c.ToChallengePackageExportRespBase((*source))
+		pDtoChallengePackageExportResp = &dtoChallengePackageExportResp
+	}
+	return pDtoChallengePackageExportResp
+}
 func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) dto.ChallengePublishCheckJobResp {
 	var dtoChallengePublishCheckJobResp dto.ChallengePublishCheckJobResp
 	dtoChallengePublishCheckJobResp.ID = source.ID
@@ -31,4 +116,10 @@ func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBaseP
 		pDtoChallengePublishCheckJobResp = &dtoChallengePublishCheckJobResp
 	}
 	return pDtoChallengePublishCheckJobResp
+}
+func (c *challengeCommandResponseMapperImpl) domainParsedChallengePackageAttachmentToDtoChallengeImportAttachmentResp(source domain.ParsedChallengePackageAttachment) dto.ChallengeImportAttachmentResp {
+	var dtoChallengeImportAttachmentResp dto.ChallengeImportAttachmentResp
+	dtoChallengeImportAttachmentResp.Name = source.Name
+	dtoChallengeImportAttachmentResp.Path = source.Path
+	return dtoChallengeImportAttachmentResp
 }
