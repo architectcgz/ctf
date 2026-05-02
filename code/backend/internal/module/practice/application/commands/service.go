@@ -43,8 +43,16 @@ type ScoreUpdater interface {
 	lockTimeout() time.Duration
 }
 
+type practiceCommandRepository interface {
+	practiceports.PracticeTransactionManager
+	practiceports.PracticeContestCommandRepository
+	practiceports.PracticeSubmissionCommandRepository
+	practiceports.PracticeUserLookupRepository
+	practiceports.PracticeManualReviewCommandRepository
+}
+
 type Service struct {
-	repo              practiceports.PracticeCommandRepository
+	repo              practiceCommandRepository
 	challengeRepo     challengecontracts.PracticeChallengeContract
 	imageRepo         challengecontracts.ImageStore
 	instanceRepo      practiceports.InstanceRepository
@@ -69,7 +77,7 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 }
 
 func NewService(
-	repo practiceports.PracticeCommandRepository,
+	repo practiceCommandRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo challengecontracts.ImageStore,
 	instanceRepo practiceports.InstanceRepository,
@@ -1167,7 +1175,7 @@ func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challe
 
 func ensureTeacherCanAccessManualReviewSubmission(
 	ctx context.Context,
-	repo practiceports.PracticeCommandRepository,
+	repo practiceports.PracticeUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
 	record *practiceports.TeacherManualReviewSubmissionRecord,
@@ -1193,7 +1201,7 @@ func ensureTeacherCanAccessManualReviewSubmission(
 
 func normalizeTeacherManualReviewQuery(
 	ctx context.Context,
-	repo practiceports.PracticeCommandRepository,
+	repo practiceports.PracticeUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,

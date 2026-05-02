@@ -3,6 +3,7 @@ package teaching_readmodel
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -76,6 +77,18 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/application/queries")
+	}
+}
+
+func TestPortsDoNotDeclareWideRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "query.go"))
+	if err != nil {
+		t.Fatalf("read teaching_readmodel ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type Repository interface") {
+		t.Fatalf("teaching_readmodel ports must not declare the legacy wide Repository interface")
 	}
 }
 

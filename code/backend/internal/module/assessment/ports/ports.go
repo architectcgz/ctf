@@ -9,13 +9,24 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 )
 
-type ProfileRepository interface {
+type AssessmentProfileLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
-	Upsert(ctx context.Context, profile *model.SkillProfile) error
+}
+
+type AssessmentProfileReadRepository interface {
 	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
-	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
+}
+
+type AssessmentProfileWriteRepository interface {
+	Upsert(ctx context.Context, profile *model.SkillProfile) error
 	BatchUpsert(ctx context.Context, profiles []*model.SkillProfile) error
+}
+
+type AssessmentProfileRebuildRepository interface {
 	ListStudentIDs(ctx context.Context) ([]int64, error)
+}
+
+type AssessmentDimensionScoreRepository interface {
 	GetDimensionScores(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error)
 	GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error)
 }

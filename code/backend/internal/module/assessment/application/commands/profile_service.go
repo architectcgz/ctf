@@ -23,15 +23,23 @@ import (
 )
 
 type Service struct {
-	repo   assessmentports.ProfileRepository
+	repo   profileCommandRepository
 	redis  *redis.Client
 	config config.AssessmentConfig
 	logger *zap.Logger
 }
 
+type profileCommandRepository interface {
+	assessmentports.AssessmentProfileLookupRepository
+	assessmentports.AssessmentProfileReadRepository
+	assessmentports.AssessmentProfileWriteRepository
+	assessmentports.AssessmentProfileRebuildRepository
+	assessmentports.AssessmentDimensionScoreRepository
+}
+
 var _ assessmentcontracts.ProfileService = (*Service)(nil)
 
-func NewProfileService(repo assessmentports.ProfileRepository, redis *redis.Client, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
+func NewProfileService(repo profileCommandRepository, redis *redis.Client, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

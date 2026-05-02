@@ -70,19 +70,34 @@ type ClassTrend struct {
 	Points    []ClassTrendPoint
 }
 
-type Repository interface {
+type TeachingUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+}
+
+type TeachingClassQueryRepository interface {
 	CountStudentsByClass(ctx context.Context, className string) (int64, error)
 	CountClasses(ctx context.Context) (int64, error)
 	ListClasses(ctx context.Context, offset, limit int) ([]ClassItem, error)
+}
+
+type TeachingStudentDirectoryRepository interface {
 	ListStudents(ctx context.Context, className, keyword, studentNo, sortKey, sortOrder string, since time.Time, offset, limit int) ([]StudentItem, int64, error)
 	ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]StudentItem, error)
+}
+
+type TeachingStudentProfileRepository interface {
 	CountPublishedChallenges(ctx context.Context) (int64, error)
 	CountSolvedChallenges(ctx context.Context, userID int64) (int64, error)
 	GetCategoryProgress(ctx context.Context, userID int64) ([]ProgressRow, error)
 	GetDifficultyProgress(ctx context.Context, userID int64) ([]ProgressRow, error)
+}
+
+type TeachingStudentActivityRepository interface {
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]TimelineEventRecord, error)
 	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]EvidenceEventRecord, error)
+}
+
+type TeachingClassInsightRepository interface {
 	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassSummary, error)
 	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassTrend, error)
 }

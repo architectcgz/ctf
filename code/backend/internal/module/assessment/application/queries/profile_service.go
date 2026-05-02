@@ -12,10 +12,15 @@ import (
 )
 
 type ProfileService struct {
-	repo assessmentports.ProfileRepository
+	repo profileQueryRepository
 }
 
-func NewProfileService(repo assessmentports.ProfileRepository) *ProfileService {
+type profileQueryRepository interface {
+	assessmentports.AssessmentProfileLookupRepository
+	assessmentports.AssessmentProfileReadRepository
+}
+
+func NewProfileService(repo profileQueryRepository) *ProfileService {
 	return &ProfileService{repo: repo}
 }
 

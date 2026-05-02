@@ -3,6 +3,7 @@ package practice_readmodel
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -73,6 +74,18 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/application/queries")
+	}
+}
+
+func TestPortsDoNotDeclareWideQueryRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "query.go"))
+	if err != nil {
+		t.Fatalf("read practice_readmodel ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type QueryRepository interface") {
+		t.Fatalf("practice_readmodel ports must not declare the legacy wide QueryRepository interface")
 	}
 }
 

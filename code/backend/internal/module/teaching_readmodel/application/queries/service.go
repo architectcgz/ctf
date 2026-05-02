@@ -18,16 +18,25 @@ import (
 )
 
 type QueryService struct {
-	repo                  readmodelports.Repository
+	repo                  teachingReadModelQueryRepository
 	recommendationService assessmentcontracts.RecommendationProvider
 	pagination            config.PaginationConfig
 	logger                *zap.Logger
 }
 
+type teachingReadModelQueryRepository interface {
+	readmodelports.TeachingUserLookupRepository
+	readmodelports.TeachingClassQueryRepository
+	readmodelports.TeachingStudentDirectoryRepository
+	readmodelports.TeachingStudentProfileRepository
+	readmodelports.TeachingStudentActivityRepository
+	readmodelports.TeachingClassInsightRepository
+}
+
 var _ Service = (*QueryService)(nil)
 
 func NewQueryService(
-	repo readmodelports.Repository,
+	repo teachingReadModelQueryRepository,
 	recommendationService assessmentcontracts.RecommendationProvider,
 	pagination config.PaginationConfig,
 	logger *zap.Logger,

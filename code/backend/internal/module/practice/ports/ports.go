@@ -65,8 +65,11 @@ type PracticeCommandTxRepository interface {
 	BindReservedPort(ctx context.Context, port int, instanceID int64) error
 }
 
-type PracticeCommandRepository interface {
+type PracticeTransactionManager interface {
 	WithinTransaction(ctx context.Context, fn func(txRepo PracticeCommandTxRepository) error) error
+}
+
+type PracticeContestCommandRepository interface {
 	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
 	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
@@ -75,14 +78,23 @@ type PracticeCommandRepository interface {
 	FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error)
 	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+}
+
+type PracticeSubmissionCommandRepository interface {
 	CreateSubmission(ctx context.Context, submission *model.Submission) error
 	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
 	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	UpdateSubmission(ctx context.Context, submission *model.Submission) error
+	IsUniqueViolation(err error) bool
+}
+
+type PracticeUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+}
+
+type PracticeManualReviewCommandRepository interface {
 	ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
 	GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*TeacherManualReviewSubmissionRecord, error)
-	IsUniqueViolation(err error) bool
 }
 
 type TeacherManualReviewSubmissionRecord struct {

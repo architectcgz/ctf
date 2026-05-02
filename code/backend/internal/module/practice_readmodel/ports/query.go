@@ -27,10 +27,13 @@ type TimelineEventRecord struct {
 	Detail      string
 }
 
-type QueryRepository interface {
+type ProgressQueryRepository interface {
 	GetUserProgress(ctx context.Context, userID int64) (totalScore int, totalSolved int, err error)
 	GetUserRank(ctx context.Context, userID int64) (int, error)
 	GetCategoryStats(ctx context.Context, userID int64) ([]CategoryProgressStat, error)
 	GetDifficultyStats(ctx context.Context, userID int64) ([]DifficultyProgressStat, error)
+}
+
+type TimelineQueryRepository interface {
 	GetUserTimeline(ctx context.Context, userID int64, limit, offset int) ([]TimelineEventRecord, error)
 }

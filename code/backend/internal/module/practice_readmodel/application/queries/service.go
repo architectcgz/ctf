@@ -9,8 +9,13 @@ import (
 	"ctf-platform/internal/module/practice_readmodel/ports"
 )
 
+type queryRepository interface {
+	ports.ProgressQueryRepository
+	ports.TimelineQueryRepository
+}
+
 type QueryService struct {
-	repo     ports.QueryRepository
+	repo     queryRepository
 	cache    *redis.Client
 	cacheTTL time.Duration
 	logger   *zap.Logger
@@ -18,7 +23,7 @@ type QueryService struct {
 
 var _ Service = (*QueryService)(nil)
 
-func NewQueryService(repo ports.QueryRepository, cache *redis.Client, cacheTTL time.Duration, logger *zap.Logger) *QueryService {
+func NewQueryService(repo queryRepository, cache *redis.Client, cacheTTL time.Duration, logger *zap.Logger) *QueryService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
