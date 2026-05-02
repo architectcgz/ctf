@@ -379,12 +379,11 @@ func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildOpsModuleDeps(",
-		"buildOpsAuditHandler(",
-		"buildOpsDashboardHandler(",
-		"buildOpsRiskHandler(",
-		"buildOpsNotificationDeps(",
-		"buildOpsNotificationHandler(",
+		"module := opsruntime.Build(",
+		"opsruntime.Deps{",
+		"return &OpsModule{",
+		"m.runtime.BindNotificationHandler(tokenService)",
+		"m.NotificationHandler = m.runtime.NotificationHandler",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -571,38 +570,29 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type opsModuleDeps struct",
-		"auditRepo",
-		"opsports.AuditRepository",
-		"riskRepo",
-		"opsports.RiskRepository",
-		"runtimeQuery",
-		"opsports.RuntimeQuery",
-		"runtimeStats",
-		"opsports.RuntimeStatsProvider",
-		"type opsNotificationDeps struct",
-		"notificationRepo",
-		"opsports.NotificationRepository",
-		"broadcaster",
-		"opsports.NotificationBroadcaster",
+		"runtime *opsruntime.Module",
+		"opsruntime.Build(",
+		"opsruntime.Deps{",
+		"return &OpsModule{",
+		"RuntimeQuery: runtime.OpsRuntimeQuery",
+		"RuntimeStats: runtime.OpsRuntimeStatsProvider",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("ops composition should declare typed deps marker %s", marker)
+			t.Fatalf("ops composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"auditRepo := opsinfra.NewAuditRepository(db)",
-		"riskRepo := opsinfra.NewRiskRepository(db)",
-		"notificationRepo := opsinfra.NewNotificationRepository(db)",
-		"runtimeapp \"ctf-platform/internal/module/runtime/application\"",
-		"runtime.ops.query",
-		"runtime.ops.statsProvider",
+		"type opsModuleDeps struct",
+		"type opsNotificationDeps struct",
+		"opsinfra.NewAuditRepository(",
+		"opsinfra.NewRiskRepository(",
+		"opsinfra.NewNotificationRepository(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("ops composition should not keep concrete marker %s", marker)
+			t.Fatalf("ops composition should not keep wiring marker %s", marker)
 		}
 	}
 }

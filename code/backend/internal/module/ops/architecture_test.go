@@ -3,6 +3,7 @@ package ops
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -97,6 +98,98 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/queries")
 	}
+}
+
+func TestRuntimeOwnsOpsWiring(t *testing.T) {
+	t.Parallel()
+
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/api/http")
+}
+
+func TestRuntimeUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read ops runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"auditRepo        opsports.AuditRepository",
+		"riskRepo         opsports.RiskRepository",
+		"notificationRepo opsports.NotificationRepository",
+		"runtimeQuery     opsports.RuntimeQuery",
+		"runtimeStats     opsports.RuntimeStatsProvider",
+		"webSocketManager *websocketpkg.Manager",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"type opsModuleDeps struct",
+		"type opsNotificationDeps struct",
+		"buildOpsModuleDeps(",
+		"buildOpsNotificationDeps(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should not keep composition glue marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read ops runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"newModuleDeps(",
+		"buildAuditHandler(",
+		"buildDashboardHandler(",
+		"buildRiskHandler(",
+		"buildNotificationHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should delegate through %s", marker)
+		}
+	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
