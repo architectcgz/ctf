@@ -61,10 +61,10 @@ type moduleDeps struct {
 	contestStatus         contestports.ContestStatusRepository
 	awdRepo               *contestinfra.AWDRepository
 	challengeRepo         contestports.ContestChallengeRepository
-	teamRepo              contestports.ContestTeamRepository
+	teamRepo              *contestinfra.TeamRepository
 	teamFinder            contestports.ContestTeamFinder
-	participationRepo     contestports.ContestParticipationRepository
-	submissionRepo        contestports.ContestSubmissionRepository
+	participationRepo     *contestinfra.ParticipationRepository
+	submissionRepo        *contestinfra.SubmissionRepository
 	challengeCatalog      challengecontracts.ContestChallengeContract
 	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
 	imageRepo             challengecontracts.ImageStore

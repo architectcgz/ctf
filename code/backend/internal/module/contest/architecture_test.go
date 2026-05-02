@@ -243,6 +243,29 @@ func TestPortsDoNotDeclareWideAWDRepositories(t *testing.T) {
 	}
 }
 
+func TestPortsDoNotDeclareWideTeamParticipationOrSubmissionRepositories(t *testing.T) {
+	t.Parallel()
+
+	checks := []struct {
+		file   string
+		legacy string
+	}{
+		{file: "team.go", legacy: "type ContestTeamRepository interface"},
+		{file: "participation.go", legacy: "type ContestParticipationRepository interface"},
+		{file: "submission.go", legacy: "type ContestSubmissionRepository interface"},
+	}
+
+	for _, check := range checks {
+		content, err := os.ReadFile(filepath.Join("ports", check.file))
+		if err != nil {
+			t.Fatalf("read contest ports file %s: %v", check.file, err)
+		}
+		if strings.Contains(string(content), check.legacy) {
+			t.Fatalf("contest ports must not declare legacy wide interface %s", check.legacy)
+		}
+	}
+}
+
 func TestRuntimeOwnsContestWiring(t *testing.T) {
 	t.Parallel()
 

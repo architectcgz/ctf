@@ -23,7 +23,7 @@ func (r *SubmissionRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *SubmissionRepository) WithinTransaction(ctx context.Context, fn func(repo contestports.ContestSubmissionRepository) error) error {
+func (r *SubmissionRepository) WithinScoringTransaction(ctx context.Context, fn func(repo contestports.ContestSubmissionScoringTxRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})

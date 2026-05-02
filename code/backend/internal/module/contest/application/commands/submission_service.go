@@ -15,9 +15,16 @@ type scoreboardUpdater interface {
 	RebuildScoreboard(ctx context.Context, contestID int64) error
 }
 
+type submissionRepository interface {
+	contestports.ContestSubmissionScoringTxRunner
+	contestports.ContestSubmissionRegistrationLookupRepository
+	contestports.ContestSubmissionChallengeLookupRepository
+	contestports.ContestSubmissionWriteRepository
+}
+
 type SubmissionService struct {
 	contestRepo       contestports.ContestLookupRepository
-	repo              contestports.ContestSubmissionRepository
+	repo              submissionRepository
 	redis             *redislib.Client
 	flagValidator     challengecontracts.FlagValidator
 	teamRepo          contestports.ContestTeamFinder
@@ -26,7 +33,7 @@ type SubmissionService struct {
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo contestports.ContestSubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo submissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,

@@ -20,7 +20,7 @@ func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, s
 		teamScoreDeltas: make(map[int64]int),
 	}
 
-	err := s.repo.WithinTransaction(ctx, func(txRepo contestports.ContestSubmissionRepository) error {
+	err := s.repo.WithinScoringTransaction(ctx, func(txRepo contestports.ContestSubmissionScoringTxRepository) error {
 		lockedChallenge, err := txRepo.LockContestChallenge(ctx, *submission.ContestID, submission.ChallengeID)
 		if err != nil {
 			return err
