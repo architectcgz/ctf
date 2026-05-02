@@ -135,7 +135,7 @@ func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, reque
 	return s.queryService.ListContests(ctx, requesterID)
 }
 
-func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error) {
+func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error) {
 	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
 }
 

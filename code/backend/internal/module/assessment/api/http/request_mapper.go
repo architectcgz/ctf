@@ -3,6 +3,7 @@ package http
 import (
 	"ctf-platform/internal/dto"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
+	assessmentqueries "ctf-platform/internal/module/assessment/application/queries"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -16,6 +17,7 @@ type AssessmentRequestMapper interface {
 	ToCreateContestExportInput(source dto.CreateContestExportReq) assessmentcommands.CreateContestExportInput
 	ToCreateStudentReviewArchiveInput(source dto.CreateStudentReviewArchiveReq) assessmentcommands.CreateStudentReviewArchiveInput
 	ToCreateTeacherAWDReviewExportInput(source dto.CreateTeacherAWDReviewExportReq) assessmentcommands.CreateTeacherAWDReviewExportInput
+	ToGetTeacherAWDReviewArchiveInput(source dto.GetTeacherAWDReviewArchiveReq) assessmentqueries.GetTeacherAWDReviewArchiveInput
 }
 
 var assessmentRequestMapper AssessmentRequestMapper

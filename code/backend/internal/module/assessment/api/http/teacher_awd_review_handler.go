@@ -8,12 +8,13 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
+	assessmentqueries "ctf-platform/internal/module/assessment/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type teacherAWDReviewService interface {
 	ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error)
-	GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error)
+	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqueries.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error)
 	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
 	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
 }
@@ -46,7 +47,7 @@ func (h *TeacherAWDReviewHandler) GetReview(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetContestArchive(c.Request.Context(), currentUser.UserID, contestID, &req)
+	resp, err := h.service.GetContestArchive(c.Request.Context(), currentUser.UserID, contestID, assessmentRequestMapper.ToGetTeacherAWDReviewArchiveInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -6,6 +6,7 @@ package http
 import (
 	dto "ctf-platform/internal/dto"
 	commands "ctf-platform/internal/module/assessment/application/commands"
+	queries "ctf-platform/internal/module/assessment/application/queries"
 )
 
 type AssessmentRequestMapperImpl struct{}
@@ -38,4 +39,16 @@ func (c *AssessmentRequestMapperImpl) ToCreateTeacherAWDReviewExportInput(source
 		commandsCreateTeacherAWDReviewExportInput.RoundNumber = &xint
 	}
 	return commandsCreateTeacherAWDReviewExportInput
+}
+func (c *AssessmentRequestMapperImpl) ToGetTeacherAWDReviewArchiveInput(source dto.GetTeacherAWDReviewArchiveReq) queries.GetTeacherAWDReviewArchiveInput {
+	var queriesGetTeacherAWDReviewArchiveInput queries.GetTeacherAWDReviewArchiveInput
+	if source.RoundNumber != nil {
+		xint := *source.RoundNumber
+		queriesGetTeacherAWDReviewArchiveInput.RoundNumber = &xint
+	}
+	if source.TeamID != nil {
+		xint64 := *source.TeamID
+		queriesGetTeacherAWDReviewArchiveInput.TeamID = &xint64
+	}
+	return queriesGetTeacherAWDReviewArchiveInput
 }

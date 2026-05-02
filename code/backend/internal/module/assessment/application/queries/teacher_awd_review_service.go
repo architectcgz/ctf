@@ -46,10 +46,7 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 	return resp, nil
 }
 
-func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error) {
-	if req == nil {
-		req = &dto.GetTeacherAWDReviewArchiveReq{}
-	}
+func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error) {
 	if req.TeamID != nil && req.RoundNumber == nil {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 需要配合 round 使用", errcode.ErrInvalidParams.HTTPStatus)
 	}
