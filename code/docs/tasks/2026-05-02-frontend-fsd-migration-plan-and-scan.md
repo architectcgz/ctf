@@ -942,6 +942,20 @@ npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts s
 npm run typecheck
 ```
 
+### 已完成：Batch T 子项（竞赛编排保存/移除动作拆分）
+- 新增 `features/contest-workbench/model/useContestChallengeMutations.ts`，承接：
+  - Jeopardy/AWD 题目保存流程
+  - AWD 批量关联失败汇总与提示
+  - 题目移除确认与删除流程
+- `useContestChallengeOrchestration.ts` 改为组合调用该模块，移除内联保存/删除命令式实现。
+- `useContestChallengeOrchestration.ts` 行数下降（本批由 398 降至 271）。
+
+验证：
+```bash
+npm run test:run -- src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/platform/__tests__/contestChallengeOrchestrationExtraction.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
