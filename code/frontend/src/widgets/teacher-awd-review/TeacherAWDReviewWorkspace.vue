@@ -23,6 +23,7 @@ import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 import TeacherAWDReviewWorkspaceState from './TeacherAWDReviewWorkspaceState.vue'
+import { buildTeacherAwdReviewSummaryItems } from './model/presentation'
 
 type ExportKind = 'archive' | 'report'
 
@@ -65,29 +66,9 @@ const emit = defineEmits<{
   closeTeam: []
 }>()
 
-const summaryItems = computed(() => [
-  {
-    label: '轮次范围',
-    value: props.summaryStats.roundCount,
-    hint: '当前视图覆盖的轮次数量',
-  },
-  {
-    label: '参与队伍',
-    value: props.summaryStats.teamCount,
-    hint: '当前视图包含的队伍数量',
-  },
-  {
-    label: '服务 / 攻击 / 流量',
-    value: `${props.summaryStats.serviceCount} / ${props.summaryStats.attackCount} / ${props.summaryStats.trafficCount}`,
-    hint: '证据总量与服务运行信号',
-  },
-  {
-    label: '导出状态',
-    value: props.polling ? '后台处理中...' : '链路就绪',
-    hint: '归档与教师报告导出链路状态',
-    valueClass: 'awd-review-status-text',
-  },
-])
+const summaryItems = computed(() =>
+  buildTeacherAwdReviewSummaryItems(props.summaryStats, props.polling)
+)
 </script>
 
 <template>

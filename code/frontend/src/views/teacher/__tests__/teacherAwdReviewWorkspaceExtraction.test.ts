@@ -24,6 +24,7 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewStatusChip')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceActions')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceState')
+    expect(awdReviewWorkspaceSource).toContain('buildTeacherAwdReviewSummaryItems')
     expect(awdReviewWorkspaceActionsSource).toContain('data-testid="awd-review-export-archive"')
     expect(awdReviewWorkspaceActionsSource).toContain('data-testid="awd-review-export-report"')
     expect(awdReviewStatusChipSource).toContain('class="awd-review-status-chip"')
