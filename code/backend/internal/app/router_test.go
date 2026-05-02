@@ -1031,9 +1031,9 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceReadmodelModuleDeps struct",
-		"repo",
-		"practicereadmodelports.QueryRepository",
+		"type PracticeReadmodelModule = practicereadmodelruntime.Module",
+		"practicereadmodelruntime.Build(",
+		"practicereadmodelruntime.Deps{",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1041,8 +1041,14 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if strings.Contains(source, "practicereadmodelinfra.NewRepository(db)") {
-		t.Fatalf("practice readmodel composition should not instantiate concrete repo inline")
+	blocked := []string{
+		"type practiceReadmodelModuleDeps struct",
+		"practicereadmodelinfra.NewRepository(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice readmodel composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 
@@ -1056,9 +1062,10 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type teachingReadmodelModuleDeps struct",
-		"repo",
-		"readmodelports.Repository",
+		"type TeachingReadmodelModule = readmodelruntime.Module",
+		"readmodelruntime.Build(",
+		"readmodelruntime.Deps{",
+		"Recommendations: assessment.Recommendations",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1066,8 +1073,14 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if strings.Contains(source, "readmodelinfra.NewRepository(db)") {
-		t.Fatalf("teaching readmodel composition should not instantiate concrete repo inline")
+	blocked := []string{
+		"type teachingReadmodelModuleDeps struct",
+		"readmodelinfra.NewRepository(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("teaching readmodel composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 
