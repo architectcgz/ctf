@@ -1181,6 +1181,21 @@ npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorksp
 npm run typecheck
 ```
 
+### 已完成：Batch AJ 子项（AWD 战场攻击提交流程拆分）
+- 新增 `features/contest-awd-workspace/model/useAwdWorkspaceAttackSubmission.ts`，承接：
+  - 攻击提交流程状态（`submittingKey`、`submitResult`）
+  - 提交参数标准化与互斥控制
+  - 提交后刷新与结果提示
+  - 自定义攻击结果 toast 文案透传
+- `useContestAWDWorkspace.ts` 改为组合调用该模块，主流程进一步收敛为刷新、轮询与子动作编排。
+- `useContestAWDWorkspace.ts` 行数下降（本批由 220 降至 185）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-workspace/model/useContestAWDWorkspace.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

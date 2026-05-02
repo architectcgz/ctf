@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
-  submitContestAWDAttack,
 } from '@/api/contest'
 import type {
   AWDAttackLogData,
@@ -11,8 +10,8 @@ import type {
   ContestDetailData,
   ScoreboardRow,
 } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
 import { useAwdWorkspaceAccessActions } from './useAwdWorkspaceAccessActions'
+import { useAwdWorkspaceAttackSubmission } from './useAwdWorkspaceAttackSubmission'
 import { useAwdWorkspaceServiceActions } from './useAwdWorkspaceServiceActions'
 
 const AWD_WORKSPACE_AUTO_REFRESH_INTERVAL_MS = 15_000
@@ -24,14 +23,10 @@ interface UseContestAWDWorkspaceOptions {
 }
 
 export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
-  const toast = useToast()
-
   const workspace = ref<ContestAWDWorkspaceData | null>(null)
   const scoreboardRows = ref<ScoreboardRow[]>([])
   const loading = ref(false)
   const error = ref('')
-  const submitResult = ref<AWDAttackLogData | null>(null)
-  const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
 
   let requestToken = 0
@@ -109,6 +104,15 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     contestId: options.contestId,
   })
   const {
+    submitAttack,
+    submitResult,
+    submittingKey,
+  } = useAwdWorkspaceAttackSubmission({
+    contestId: options.contestId,
+    refreshAll,
+    formatAttackResultToast: options.formatAttackResultToast,
+  })
+  const {
     clearSettledServiceActions,
     restartService,
     serviceActionPendingById,
@@ -123,45 +127,6 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     if (autoRefreshTimer !== null) {
       window.clearInterval(autoRefreshTimer)
       autoRefreshTimer = null
-    }
-  }
-
-  async function submitAttack(
-    serviceId: string,
-    victimTeamId: number,
-    flag: string
-  ): Promise<AWDAttackLogData | null> {
-    const contestId = toValue(options.contestId)
-    const normalizedFlag = flag.trim()
-    if (!contestId || !victimTeamId || !normalizedFlag) {
-      return null
-    }
-    if (submittingKey.value) {
-      return null
-    }
-
-    submittingKey.value = `${serviceId}:${victimTeamId}`
-    submitResult.value = null
-
-    try {
-      const result = await submitContestAWDAttack(contestId, serviceId, {
-        victim_team_id: victimTeamId,
-        flag: normalizedFlag,
-      })
-      submitResult.value = result
-      await refreshAll()
-      const formattedMessage = options.formatAttackResultToast?.(result)
-      toast.success(
-        formattedMessage ||
-          (result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag')
-      )
-      return result
-    } catch (err) {
-      console.error(err)
-      toast.error(err instanceof Error ? err.message : '提交 stolen flag 失败')
-      return null
-    } finally {
-      submittingKey.value = ''
     }
   }
 
