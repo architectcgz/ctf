@@ -1,1 +1,1 @@
-export { useContestAwdConfigPage, runAwdCheckerPreview } from './model'
+export * from './model'

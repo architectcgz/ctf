@@ -32,7 +32,7 @@ import {
   type AWDLegacyProbeDraft,
   type AWDScriptCheckerDraft,
   type AWDTCPStandardDraft,
-} from '@/components/platform/contest/awdCheckerConfigSupport'
+} from './awdCheckerConfigSupport'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'

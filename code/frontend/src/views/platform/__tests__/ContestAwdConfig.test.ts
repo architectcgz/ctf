@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
+import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -148,6 +149,9 @@ describe('ContestAwdConfig', () => {
     )
     expect(contestAwdConfigSource).toContain('<ContestAwdServiceDirectory')
     expect(contestAwdConfigSource).toContain('<ContestAwdDebugStation')
+    expect(contestAwdConfigPageSource).not.toContain(
+      "from '@/components/platform/contest/awdCheckerConfigSupport'"
+    )
   })
 
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {

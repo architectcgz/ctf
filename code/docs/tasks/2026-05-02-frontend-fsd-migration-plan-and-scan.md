@@ -407,6 +407,23 @@ npm run test:run -- src/features/contest-projector/model/useContestProjectorBoun
 npm run typecheck
 ```
 
+### 已完成：Batch F3 子项（awd checker config support 下沉）
+- 新增 `features/contest-awd-config/model/awdCheckerConfigSupport.ts`，承接原 `components/platform/contest/awdCheckerConfigSupport.ts` 的 checker 配置草稿与构造逻辑。
+- `useContestAwdConfigPage.ts` 已改为引用 feature 内部 `awdCheckerConfigSupport`，不再反向依赖组件层 helper。
+- `AWDChallengeConfigDialog.vue` 已改为从 `features/contest-awd-config/model/*` 引用：
+  - `runAwdCheckerPreview`
+  - `awdCheckerConfigSupport`
+- 更新 source 边界断言：
+  - `views/platform/__tests__/ContestAwdConfig.test.ts` 断言 `useContestAwdConfigPage` 不再导入 `@/components/platform/contest/awdCheckerConfigSupport`。
+  - `views/__tests__/duplicateActionGuardAudit.test.ts` 断言 `AWDChallengeConfigDialog` 走 feature model 入口。
+
+验证：
+```bash
+rg -n "from ['\"]@/components/platform/contest/awdCheckerConfigSupport" code/frontend/src/features --glob '*.ts'
+npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/platform/__tests__/ContestAwdConfig.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

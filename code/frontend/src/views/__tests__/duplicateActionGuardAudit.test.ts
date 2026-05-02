@@ -14,7 +14,12 @@ describe('duplicate action guard audit', () => {
   it('表单 submit 与按钮 click 共用 handler 时应在本地 owner 上短路 in-flight 状态', () => {
     expect(adminNotificationPublishDrawerSource).toContain('if (publisher.submitting.value) {')
     expect(awdChallengeEditorDialogSource).toContain('if (props.saving) {')
-    expect(awdChallengeConfigDialogSource).toContain("from '@/features/contest-awd-config'")
+    expect(awdChallengeConfigDialogSource).toContain(
+      "from '@/features/contest-awd-config/model/useAwdCheckerPreview'"
+    )
+    expect(awdChallengeConfigDialogSource).toContain(
+      "from '@/features/contest-awd-config/model/awdCheckerConfigSupport'"
+    )
     expect(awdChallengeConfigDialogSource).not.toContain("from '@/api/admin/contests'")
     expect(awdChallengeConfigDialogSource).toContain('if (props.saving) {')
     expect(awdAttackLogDialogSource).toContain('if (props.saving) {')
