@@ -49,7 +49,7 @@ func (h *ChallengeHandler) UpdatePoints(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateChallenge(c.Request.Context(), contestID, challengeID, updateContestChallengeInputFromDTO(&req)); err != nil {
+	if err := h.commands.UpdateChallenge(c.Request.Context(), contestID, challengeID, contestRequestMapper.ToUpdateContestChallengeInput(req)); err != nil {
 		response.FromError(c, err)
 		return
 	}

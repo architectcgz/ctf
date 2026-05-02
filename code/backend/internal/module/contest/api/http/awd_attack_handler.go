@@ -18,7 +18,7 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, createAttackLogInputFromDTO(&req))
+	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, contestRequestMapper.ToCreateAttackLogInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -61,7 +61,7 @@ func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, submitAttackInputFromDTO(&req))
+	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, contestRequestMapper.ToSubmitAttackInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

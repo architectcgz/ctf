@@ -19,7 +19,7 @@ func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 			return
 		}
 	}
-	input := runCurrentRoundChecksInputFromDTO(&req)
+	input := contestRequestMapper.ToRunCurrentRoundChecksInput(req)
 
 	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, input.ForceOverride)
 	if err != nil {
@@ -55,7 +55,7 @@ func (h *AWDHandler) PreviewChecker(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	input := previewCheckerInputFromDTO(&req)
+	input := contestRequestMapper.ToPreviewCheckerInput(req)
 
 	requestCtx := contestcmd.WithAWDPreviewRequester(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
 	resp, err := h.commands.PreviewChecker(requestCtx, contestID, input)

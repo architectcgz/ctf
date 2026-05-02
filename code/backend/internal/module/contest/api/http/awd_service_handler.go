@@ -18,7 +18,7 @@ func (h *AWDHandler) UpsertServiceCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.UpsertServiceCheck(c.Request.Context(), contestID, roundID, upsertServiceCheckInputFromDTO(&req))
+	resp, err := h.commands.UpsertServiceCheck(c.Request.Context(), contestID, roundID, contestRequestMapper.ToUpsertServiceCheckInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

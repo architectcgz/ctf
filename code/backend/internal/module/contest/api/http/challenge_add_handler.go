@@ -22,7 +22,7 @@ func (h *ChallengeHandler) AddChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.AddChallengeToContest(c.Request.Context(), contestID, addContestChallengeInputFromDTO(&req))
+	resp, err := h.commands.AddChallengeToContest(c.Request.Context(), contestID, contestRequestMapper.ToAddContestChallengeInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

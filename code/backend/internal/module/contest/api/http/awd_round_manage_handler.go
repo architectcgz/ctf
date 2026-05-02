@@ -16,7 +16,7 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	input := createAWDRoundInputFromDTO(&req)
+	input := contestRequestMapper.ToCreateAWDRoundInput(req)
 
 	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, input.ForceOverride)
 	if err != nil {

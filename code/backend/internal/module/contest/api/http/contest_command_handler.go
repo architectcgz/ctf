@@ -16,7 +16,7 @@ func (h *Handler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateContest(c.Request.Context(), createContestInputFromDTO(&req))
+	resp, err := h.commands.CreateContest(c.Request.Context(), contestRequestMapper.ToCreateContestInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -32,7 +32,7 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	input := updateContestInputFromDTO(&req)
+	input := contestRequestMapper.ToUpdateContestInput(req)
 
 	var readinessSnapshot *contestqry.AWDReadinessResult
 	if h.readinessQueries != nil && h.queries != nil {

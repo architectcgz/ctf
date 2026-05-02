@@ -73,7 +73,7 @@ func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	input := createContestAWDServiceInputFromDTO(&req)
+	input := contestRequestMapper.ToCreateContestAWDServiceInput(req)
 
 	resp, err := h.serviceCommands.CreateContestAWDService(c.Request.Context(), contestID, input)
 	if err != nil {
@@ -91,7 +91,7 @@ func (h *AWDHandler) UpdateContestAWDService(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	input := updateContestAWDServiceInputFromDTO(&req)
+	input := contestRequestMapper.ToUpdateContestAWDServiceInput(req)
 
 	if err := h.serviceCommands.UpdateContestAWDService(c.Request.Context(), contestID, serviceID, input); err != nil {
 		response.FromError(c, err)
