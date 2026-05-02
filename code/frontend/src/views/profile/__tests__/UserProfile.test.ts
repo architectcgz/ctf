@@ -127,6 +127,12 @@ describe('UserProfile', () => {
     createElementSpy.mockRestore()
   })
 
+  it('路由页应仅负责组合，不直接耦合个人资料请求与导出流程', () => {
+    expect(userProfileSource).toContain('useUserProfilePage')
+    expect(userProfileSource).not.toContain("from '@/api/auth'")
+    expect(userProfileSource).not.toContain("from '@/api/assessment'")
+  })
+
   it('管理员不应该展示个人报告区块', async () => {
     authApiMocks.getProfile.mockResolvedValue({
       id: 'admin-1',

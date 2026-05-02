@@ -52,6 +52,12 @@ describe('SecuritySettings', () => {
     })
   })
 
+  it('路由页应仅负责组合，不直接耦合密码提交与校验流程', () => {
+    expect(securitySettingsSource).toContain('useSecuritySettingsPage')
+    expect(securitySettingsSource).not.toContain("from '@/api/auth'")
+    expect(securitySettingsSource).not.toContain('validatePasswordForm')
+  })
+
   it('密码修改进行中重复提交表单时只应提交一次', async () => {
     authApiMocks.changePassword.mockImplementation(() => new Promise(() => {}))
 
