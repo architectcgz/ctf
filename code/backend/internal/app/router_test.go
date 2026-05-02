@@ -583,7 +583,7 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 		"auditRepo",
 		"*opsinfra.AuditRepository",
 		"riskRepo",
-		"opsports.RiskRepository",
+		"*opsinfra.RiskRepository",
 		"runtimeQuery",
 		"opsports.RuntimeQuery",
 		"runtimeStats",

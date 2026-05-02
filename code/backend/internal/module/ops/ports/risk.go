@@ -12,7 +12,10 @@ type RiskAuditEvent struct {
 	CreatedAt time.Time
 }
 
-type RiskRepository interface {
+type RiskSubmitEventRepository interface {
 	ListRecentSubmitEvents(ctx context.Context, since time.Time, limit int) ([]RiskAuditEvent, error)
+}
+
+type RiskLoginEventRepository interface {
 	ListRecentLoginEvents(ctx context.Context, since time.Time, limit int) ([]RiskAuditEvent, error)
 }

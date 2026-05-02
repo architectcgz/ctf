@@ -24,11 +24,16 @@ const (
 )
 
 type RiskService struct {
-	repo opsports.RiskRepository
+	repo riskRepository
 	log  *zap.Logger
 }
 
-func NewRiskService(repo opsports.RiskRepository, log *zap.Logger) *RiskService {
+type riskRepository interface {
+	opsports.RiskSubmitEventRepository
+	opsports.RiskLoginEventRepository
+}
+
+func NewRiskService(repo riskRepository, log *zap.Logger) *RiskService {
 	if log == nil {
 		log = zap.NewNop()
 	}

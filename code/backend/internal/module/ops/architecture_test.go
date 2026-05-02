@@ -124,6 +124,18 @@ func TestPortsDoNotDeclareWideAuditRepository(t *testing.T) {
 	}
 }
 
+func TestPortsDoNotDeclareWideRiskRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "risk.go"))
+	if err != nil {
+		t.Fatalf("read ops risk ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type RiskRepository interface") {
+		t.Fatalf("ops risk ports must not declare the wide RiskRepository interface")
+	}
+}
+
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
 	t.Helper()
 

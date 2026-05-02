@@ -24,7 +24,7 @@ type OpsModule struct {
 
 type opsModuleDeps struct {
 	auditRepo        *opsinfra.AuditRepository
-	riskRepo         opsports.RiskRepository
+	riskRepo         *opsinfra.RiskRepository
 	runtimeQuery     opsports.RuntimeQuery
 	runtimeStats     opsports.RuntimeStatsProvider
 	webSocketManager *websocketpkg.Manager
