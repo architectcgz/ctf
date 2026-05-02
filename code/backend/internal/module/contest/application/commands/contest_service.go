@@ -7,12 +7,17 @@ import (
 )
 
 type ContestService struct {
-	repo    contestports.ContestCommandRepository
+	repo    contestCommandRepository
 	awdRepo contestports.AWDReadinessQuery
 	log     *zap.Logger
 }
 
-func NewContestService(repo contestports.ContestCommandRepository, awdRepo contestports.AWDReadinessQuery, log *zap.Logger) *ContestService {
+type contestCommandRepository interface {
+	contestports.ContestLookupRepository
+	contestports.ContestWriteRepository
+}
+
+func NewContestService(repo contestCommandRepository, awdRepo contestports.AWDReadinessQuery, log *zap.Logger) *ContestService {
 	if log == nil {
 		log = zap.NewNop()
 	}

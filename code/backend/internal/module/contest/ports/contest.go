@@ -7,9 +7,8 @@ import (
 	"ctf-platform/internal/model"
 )
 
-type ContestCommandRepository interface {
+type ContestWriteRepository interface {
 	Create(ctx context.Context, contest *model.Contest) error
-	FindByID(ctx context.Context, id int64) (*model.Contest, error)
 	Update(ctx context.Context, contest *model.Contest) error
 }
 

@@ -222,6 +222,9 @@ func TestPortsDoNotDeclareWideRepository(t *testing.T) {
 	if strings.Contains(string(content), "type Repository interface") {
 		t.Fatalf("contest ports must not declare the legacy wide Repository interface")
 	}
+	if strings.Contains(string(content), "type ContestCommandRepository interface") {
+		t.Fatalf("contest ports must not declare the wide ContestCommandRepository interface")
+	}
 }
 
 func TestPortsDoNotDeclareWideAWDRepositories(t *testing.T) {

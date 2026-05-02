@@ -53,7 +53,7 @@ type Deps struct {
 
 type moduleDeps struct {
 	input                 Deps
-	contestCommands       contestports.ContestCommandRepository
+	contestCommands       *contestinfra.Repository
 	contestLookup         contestports.ContestLookupRepository
 	contestList           contestports.ContestListRepository
 	contestScoreboard     contestports.ContestScoreboardRepository
