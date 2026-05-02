@@ -54,7 +54,7 @@ func (s *ImageService) StartBackgroundTasks(ctx context.Context) {
 	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
-func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
+func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*dto.ImageResp, error) {
 	existing, err := s.repo.FindByNameTag(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
@@ -87,7 +87,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq)
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
+func (s *ImageService) UpdateImage(ctx context.Context, id int64, req UpdateImageInput) error {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

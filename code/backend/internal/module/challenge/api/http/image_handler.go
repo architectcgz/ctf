@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/response"
 )
 
@@ -18,8 +19,8 @@ type ImageHandler struct {
 }
 
 type imageCommandService interface {
-	CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
-	UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error
+	CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*dto.ImageResp, error)
+	UpdateImage(ctx context.Context, id int64, req challengecmd.UpdateImageInput) error
 	DeleteImage(ctx context.Context, id int64) error
 }
 
@@ -39,7 +40,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateImage(c.Request.Context(), &req)
+	resp, err := h.commands.CreateImage(c.Request.Context(), createImageInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -93,12 +94,33 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateImage(c.Request.Context(), id, &req); err != nil {
+	if err := h.commands.UpdateImage(c.Request.Context(), id, updateImageInputFromDTO(&req)); err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	response.Success(c, nil)
+}
+
+func createImageInputFromDTO(req *dto.CreateImageReq) challengecmd.CreateImageInput {
+	if req == nil {
+		return challengecmd.CreateImageInput{}
+	}
+	return challengecmd.CreateImageInput{
+		Name:        req.Name,
+		Tag:         req.Tag,
+		Description: req.Description,
+	}
+}
+
+func updateImageInputFromDTO(req *dto.UpdateImageReq) challengecmd.UpdateImageInput {
+	if req == nil {
+		return challengecmd.UpdateImageInput{}
+	}
+	return challengecmd.UpdateImageInput{
+		Description: req.Description,
+		Status:      req.Status,
+	}
 }
 
 func (h *ImageHandler) DeleteImage(c *gin.Context) {

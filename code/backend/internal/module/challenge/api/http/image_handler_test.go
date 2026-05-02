@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/internal/validation"
 )
 
@@ -17,12 +18,12 @@ type stubImageCommandService struct {
 	createCalled bool
 }
 
-func (s *stubImageCommandService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
+func (s *stubImageCommandService) CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*dto.ImageResp, error) {
 	s.createCalled = true
 	return &dto.ImageResp{}, nil
 }
 
-func (s *stubImageCommandService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
+func (s *stubImageCommandService) UpdateImage(ctx context.Context, id int64, req challengecmd.UpdateImageInput) error {
 	return nil
 }
 
