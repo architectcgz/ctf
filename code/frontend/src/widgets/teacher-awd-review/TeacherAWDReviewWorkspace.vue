@@ -21,6 +21,7 @@ import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/Teache
 import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
+import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 
 type ExportKind = 'archive' | 'report'
 
@@ -67,22 +68,19 @@ const emit = defineEmits<{
 <template>
   <TeacherAWDReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
-      <header class="teacher-topbar workspace-tab-heading awd-review-detail-header">
-        <div class="teacher-heading workspace-tab-heading__main">
-          <div class="workspace-overline awd-review-detail-overline">
-            AWD Review
-          </div>
-          <h1 class="teacher-title workspace-page-title">
-            AWD复盘
-          </h1>
-          <p class="teacher-copy workspace-page-copy">
+      <TeacherAWDReviewWorkspaceHeader
+        overline="AWD Review"
+        title="AWD复盘"
+        header-class="awd-review-detail-header"
+        overline-class="awd-review-detail-overline"
+      >
+        <template #description>
             <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
             <span> · </span>
             多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
-          </p>
-        </div>
+        </template>
 
-        <div class="teacher-actions">
+        <template #actions>
           <button
             type="button"
             class="teacher-btn teacher-btn--ghost"
@@ -111,8 +109,8 @@ const emit = defineEmits<{
             <FileDown class="h-4 w-4" />
             生成评估报告
           </button>
-        </div>
-      </header>
+        </template>
+      </TeacherAWDReviewWorkspaceHeader>
 
       <section class="teacher-summary teacher-summary--flat metric-panel-default-surface awd-review-summary">
           <div class="teacher-summary-title">

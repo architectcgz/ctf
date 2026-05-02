@@ -5,6 +5,7 @@ import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { formatDate } from '@/utils/format'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
+import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 
 interface ContestSummary {
   totalCount: number
@@ -42,16 +43,17 @@ const emit = defineEmits<{
 <template>
   <TeacherAWDReviewSurfaceShell>
     <div class="teacher-page">
-      <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
-        <div class="teacher-heading workspace-tab-heading__main">
-          <div class="workspace-overline awd-review-index-overline">AWD Review</div>
-          <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
-          <p class="teacher-copy workspace-page-copy">
+      <TeacherAWDReviewWorkspaceHeader
+        overline="AWD Review"
+        title="AWD复盘"
+        header-class="awd-review-index-header"
+        overline-class="awd-review-index-overline"
+      >
+        <template #description>
             集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
-          </p>
-        </div>
+        </template>
 
-        <div class="teacher-actions">
+        <template #actions>
           <button
             type="button"
             class="teacher-btn teacher-btn--ghost"
@@ -67,8 +69,8 @@ const emit = defineEmits<{
             <RefreshCcw class="h-4 w-4" />
             刷新目录
           </button>
-        </div>
-      </header>
+        </template>
+      </TeacherAWDReviewWorkspaceHeader>
 
       <section class="teacher-summary teacher-summary--flat metric-panel-default-surface">
           <div class="teacher-summary-title">

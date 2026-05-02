@@ -150,19 +150,13 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('overline="AWD Review"')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('title="AWD复盘"')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('header-class="awd-review-index-header"')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      '<header class="teacher-topbar workspace-tab-heading awd-review-index-header">'
+      'overline-class="awd-review-index-overline"'
     )
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      '<div class="teacher-heading workspace-tab-heading__main">'
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      '<div class="workspace-overline awd-review-index-overline">AWD Review</div>'
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<p class="teacher-copy workspace-page-copy">')
     expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
       /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
     )
