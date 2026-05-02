@@ -139,10 +139,10 @@ func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, 
 	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
 }
 
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
 	return s.reportService.CreateTeacherAWDReviewArchive(ctx, requesterID, contestID, req)
 }
 
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
 	return s.reportService.CreateTeacherAWDReviewReport(ctx, requesterID, contestID, req)
 }

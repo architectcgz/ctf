@@ -14,10 +14,10 @@ import (
 )
 
 type reportService interface {
-	CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error)
-	CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error)
-	CreateContestExport(ctx context.Context, requesterID, contestID int64, req *dto.CreateContestExportReq) (*dto.ReportExportData, error)
-	CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req *dto.CreateStudentReviewArchiveReq) (*dto.ReportExportData, error)
+	CreatePersonalReport(ctx context.Context, userID int64, req assessmentcommands.CreatePersonalReportInput) (*dto.ReportExportData, error)
+	CreateClassReport(ctx context.Context, requesterID int64, req assessmentcommands.CreateClassReportInput) (*dto.ReportExportData, error)
+	CreateContestExport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateContestExportInput) (*dto.ReportExportData, error)
+	CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req assessmentcommands.CreateStudentReviewArchiveInput) (*dto.ReportExportData, error)
 	GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*assessmentcommands.ReviewArchiveData, error)
 	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error)
 	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error)
@@ -41,7 +41,7 @@ func (h *ReportHandler) CreatePersonalReport(c *gin.Context) {
 	}
 
 	currentUser := authctx.MustCurrentUser(c)
-	resp, err := h.service.CreatePersonalReport(c.Request.Context(), currentUser.UserID, &req)
+	resp, err := h.service.CreatePersonalReport(c.Request.Context(), currentUser.UserID, assessmentRequestMapper.ToCreatePersonalReportInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -59,7 +59,7 @@ func (h *ReportHandler) CreateClassReport(c *gin.Context) {
 	}
 
 	currentUser := authctx.MustCurrentUser(c)
-	resp, err := h.service.CreateClassReport(c.Request.Context(), currentUser.UserID, &req)
+	resp, err := h.service.CreateClassReport(c.Request.Context(), currentUser.UserID, assessmentRequestMapper.ToCreateClassReportInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -83,7 +83,7 @@ func (h *ReportHandler) CreateContestExport(c *gin.Context) {
 	}
 
 	currentUser := authctx.MustCurrentUser(c)
-	resp, err := h.service.CreateContestExport(c.Request.Context(), currentUser.UserID, contestID, &req)
+	resp, err := h.service.CreateContestExport(c.Request.Context(), currentUser.UserID, contestID, assessmentRequestMapper.ToCreateContestExportInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -107,7 +107,7 @@ func (h *ReportHandler) CreateStudentReviewArchive(c *gin.Context) {
 	}
 
 	currentUser := authctx.MustCurrentUser(c)
-	resp, err := h.service.CreateStudentReviewArchive(c.Request.Context(), currentUser.UserID, studentID, &req)
+	resp, err := h.service.CreateStudentReviewArchive(c.Request.Context(), currentUser.UserID, studentID, assessmentRequestMapper.ToCreateStudentReviewArchiveInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
