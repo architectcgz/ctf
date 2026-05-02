@@ -4,6 +4,7 @@ import { ArrowRight, FolderKanban, RefreshCcw } from 'lucide-vue-next'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { formatDate } from '@/utils/format'
+import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 
 interface ContestSummary {
   totalCount: number
@@ -39,40 +40,37 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface workspace-shell flex min-h-full flex-1 flex-col">
-    <section
-      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col border px-6 py-6 md:px-8"
-    >
-      <div class="teacher-page">
-        <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
-          <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-index-overline">AWD Review</div>
-            <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
-            <p class="teacher-copy workspace-page-copy">
-              集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
-            </p>
-          </div>
+  <TeacherAWDReviewSurfaceShell>
+    <div class="teacher-page">
+      <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
+        <div class="teacher-heading workspace-tab-heading__main">
+          <div class="workspace-overline awd-review-index-overline">AWD Review</div>
+          <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
+          <p class="teacher-copy workspace-page-copy">
+            集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
+          </p>
+        </div>
 
-          <div class="teacher-actions">
-            <button
-              type="button"
-              class="teacher-btn teacher-btn--ghost"
-              @click="emit('openDashboard')"
-            >
-              教学概览
-            </button>
-            <button
-              type="button"
-              class="teacher-btn teacher-btn--primary"
-              @click="emit('refresh')"
-            >
-              <RefreshCcw class="h-4 w-4" />
-              刷新目录
-            </button>
-          </div>
-        </header>
+        <div class="teacher-actions">
+          <button
+            type="button"
+            class="teacher-btn teacher-btn--ghost"
+            @click="emit('openDashboard')"
+          >
+            教学概览
+          </button>
+          <button
+            type="button"
+            class="teacher-btn teacher-btn--primary"
+            @click="emit('refresh')"
+          >
+            <RefreshCcw class="h-4 w-4" />
+            刷新目录
+          </button>
+        </div>
+      </header>
 
-        <section class="teacher-summary teacher-summary--flat metric-panel-default-surface">
+      <section class="teacher-summary teacher-summary--flat metric-panel-default-surface">
           <div class="teacher-summary-title">
             <FolderKanban class="h-4 w-4" />
             <span>Review Snapshot</span>
@@ -269,9 +267,8 @@ const emit = defineEmits<{
             </button>
           </section>
         </section>
-      </div>
-    </section>
-  </div>
+    </div>
+  </TeacherAWDReviewSurfaceShell>
 </template>
 
 <style scoped>

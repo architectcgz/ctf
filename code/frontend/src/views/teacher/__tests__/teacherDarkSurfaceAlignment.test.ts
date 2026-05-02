@@ -7,6 +7,7 @@ import studentManagementSource from '@/components/teacher/student-management/Stu
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -25,8 +26,7 @@ describe('teacher dark surface alignment', () => {
     expect(classManagementSource).toContain('teacher-surface')
     expect(studentManagementSource).toContain('teacher-surface')
     expect(instanceManagementSource).toContain('teacher-surface')
-    expect(awdReviewIndexWorkspaceSource).toContain('teacher-surface')
-    expect(awdReviewWorkspaceSource).toContain('teacher-surface')
+    expect(awdReviewSurfaceShellSource).toContain('teacher-surface')
   })
 
   it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {

@@ -20,6 +20,7 @@ import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/Tea
 import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
+import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 
 type ExportKind = 'archive' | 'report'
 
@@ -64,59 +65,56 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface workspace-shell flex min-h-full flex-1 flex-col">
-    <section
-      class="teacher-hero teacher-surface-hero teacher-review-workspace flex min-h-full flex-1 flex-col border px-6 py-6 md:px-8"
-    >
-      <div class="teacher-page">
-        <header class="teacher-topbar workspace-tab-heading awd-review-detail-header">
-          <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-detail-overline">
-              AWD Review
-            </div>
-            <h1 class="teacher-title workspace-page-title">
-              AWD复盘
-            </h1>
-            <p class="teacher-copy workspace-page-copy">
-              <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
-              <span> · </span>
-              多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
-            </p>
+  <TeacherAWDReviewSurfaceShell section-class="teacher-review-workspace">
+    <div class="teacher-page">
+      <header class="teacher-topbar workspace-tab-heading awd-review-detail-header">
+        <div class="teacher-heading workspace-tab-heading__main">
+          <div class="workspace-overline awd-review-detail-overline">
+            AWD Review
           </div>
+          <h1 class="teacher-title workspace-page-title">
+            AWD复盘
+          </h1>
+          <p class="teacher-copy workspace-page-copy">
+            <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
+            <span> · </span>
+            多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
+          </p>
+        </div>
 
-          <div class="teacher-actions">
-            <button
-              type="button"
-              class="teacher-btn teacher-btn--ghost"
-              @click="emit('openIndex')"
-            >
-              <ArrowLeft class="h-4 w-4" />
-              返回列表
-            </button>
-            <button
-              data-testid="awd-review-export-archive"
-              type="button"
-              class="teacher-btn teacher-btn--ghost"
-              :disabled="loading || !review || exporting === 'archive'"
-              @click="emit('exportArchive')"
-            >
-              <Download class="h-4 w-4" />
-              归档导出
-            </button>
-            <button
-              data-testid="awd-review-export-report"
-              type="button"
-              class="teacher-btn teacher-btn--primary"
-              :disabled="loading || !review || exporting === 'report' || !canExportReport"
-              @click="emit('exportReport')"
-            >
-              <FileDown class="h-4 w-4" />
-              生成评估报告
-            </button>
-          </div>
-        </header>
+        <div class="teacher-actions">
+          <button
+            type="button"
+            class="teacher-btn teacher-btn--ghost"
+            @click="emit('openIndex')"
+          >
+            <ArrowLeft class="h-4 w-4" />
+            返回列表
+          </button>
+          <button
+            data-testid="awd-review-export-archive"
+            type="button"
+            class="teacher-btn teacher-btn--ghost"
+            :disabled="loading || !review || exporting === 'archive'"
+            @click="emit('exportArchive')"
+          >
+            <Download class="h-4 w-4" />
+            归档导出
+          </button>
+          <button
+            data-testid="awd-review-export-report"
+            type="button"
+            class="teacher-btn teacher-btn--primary"
+            :disabled="loading || !review || exporting === 'report' || !canExportReport"
+            @click="emit('exportReport')"
+          >
+            <FileDown class="h-4 w-4" />
+            生成评估报告
+          </button>
+        </div>
+      </header>
 
-        <section class="teacher-summary teacher-summary--flat metric-panel-default-surface awd-review-summary">
+      <section class="teacher-summary teacher-summary--flat metric-panel-default-surface awd-review-summary">
           <div class="teacher-summary-title">
             <Trophy class="h-4 w-4" />
             <span>{{ activeSummaryTitle }}</span>
@@ -225,7 +223,6 @@ const emit = defineEmits<{
             :format-service-ref="formatServiceRef"
           />
         </template>
-      </div>
 
       <TeacherAWDReviewTeamDrawer
         :visible="Boolean(selectedTeam)"
@@ -235,8 +232,8 @@ const emit = defineEmits<{
         :traffic="selectedTeamTraffic"
         @close="emit('closeTeam')"
       />
-    </section>
-  </div>
+    </div>
+  </TeacherAWDReviewSurfaceShell>
 </template>
 
 <style scoped>

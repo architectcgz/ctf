@@ -8,6 +8,7 @@ import dashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -165,15 +166,13 @@ describe('teacher base surface alignment', () => {
   })
 
   it('awd review pages should soften page header, cards, and divider borders through shared teacher shells', () => {
-    expect(awdReviewIndexWorkspaceSource).toContain('teacher-management-shell')
-    expect(awdReviewIndexWorkspaceSource).toContain('workspace-shell')
+    expect(awdReviewSurfaceShellSource).toContain('teacher-management-shell')
+    expect(awdReviewSurfaceShellSource).toContain('workspace-shell')
     expect(awdReviewIndexWorkspaceSource).not.toContain('.teacher-btn {')
     expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(awdReviewIndexWorkspaceSource).not.toContain('rounded-[30px]')
 
-    expect(awdReviewWorkspaceSource).toContain('teacher-management-shell')
-    expect(awdReviewWorkspaceSource).toContain('workspace-shell')
     expect(awdReviewWorkspaceSource).not.toContain('.teacher-btn {')
     expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)

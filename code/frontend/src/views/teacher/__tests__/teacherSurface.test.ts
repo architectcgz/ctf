@@ -9,6 +9,7 @@ import studentManagementSource from '@/components/teacher/student-management/Stu
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -32,8 +33,7 @@ const teacherManagementSources = [
   ['ClassManagementPage.vue', classManagementSource],
   ['StudentManagementPage.vue', studentManagementSource],
   ['TeacherInstanceManagementPage.vue', instanceManagementSource],
-  ['TeacherAWDReviewIndexWorkspace.vue', awdReviewIndexWorkspaceSource],
-  ['TeacherAWDReviewWorkspace.vue', awdReviewWorkspaceSource],
+  ['TeacherAWDReviewSurfaceShell.vue', awdReviewSurfaceShellSource],
 ] as const
 
 const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sourceName, source]) =>
@@ -61,6 +61,11 @@ describe('teacher surface source regression', () => {
       expect(source).not.toContain('--journal-ink: var(--color-text-primary);')
     }
   )
+
+  it('AWD 复盘 widgets 应通过共享 surface shell 承接教师端外层壳', () => {
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
+  })
 
   it.each(teacherSurfaceForbiddenLiteralCases)(
     '%s 不应包含教师端高对比亮色 surface 硬编码: %s',
