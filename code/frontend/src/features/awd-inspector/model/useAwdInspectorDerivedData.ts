@@ -7,6 +7,12 @@ import type {
   AWDTeamServiceData,
 } from '@/api/contracts'
 import {
+  buildAttackSourceOptions,
+  buildAttackTeamOptions,
+  buildTrafficTeamOptions,
+  filterAttacks,
+} from './awdInspectorAttackDerived'
+import {
   buildServiceAlerts,
   buildServiceCheckSourceOptions,
   buildServiceTeamOptions,
@@ -72,84 +78,24 @@ export function useAwdInspectorDerivedData({
     })
   )
 
-  const attackTeamOptions = computed(() => {
-    const seen = new Set<string>()
-    return attacks.value.flatMap((item) => {
-      const entries = [
-        { id: item.attacker_team_id, name: item.attacker_team },
-        { id: item.victim_team_id, name: item.victim_team },
-      ]
-      return entries.filter((entry) => {
-        if (seen.has(entry.id)) {
-          return false
-        }
-        seen.add(entry.id)
-        return true
-      })
+  const attackTeamOptions = computed(() => buildAttackTeamOptions(attacks.value))
+
+  const attackSourceOptions = computed(() => buildAttackSourceOptions(attacks.value))
+
+  const trafficTeamOptions = computed(() =>
+    buildTrafficTeamOptions({
+      services: services.value,
+      attackTeamOptions: attackTeamOptions.value,
+      trafficSummary: trafficSummary.value,
+      trafficEvents: trafficEvents.value,
     })
-  })
-
-  const attackSourceOptions = computed(() => {
-    const seen = new Set<AWDAttackLogData['source']>()
-    return attacks.value
-      .map((item) => item.source)
-      .filter((item) => {
-        if (seen.has(item)) {
-          return false
-        }
-        seen.add(item)
-        return true
-      })
-  })
-
-  const trafficTeamOptions = computed(() => {
-    const entries = new Map<string, string>()
-
-    for (const service of services.value) {
-      entries.set(service.team_id, service.team_name)
-    }
-    for (const attackTeam of attackTeamOptions.value) {
-      entries.set(attackTeam.id, attackTeam.name)
-    }
-    for (const item of trafficSummary.value?.top_attackers || []) {
-      entries.set(item.team_id, item.team_name)
-    }
-    for (const item of trafficSummary.value?.top_victims || []) {
-      entries.set(item.team_id, item.team_name)
-    }
-    for (const item of trafficEvents.value) {
-      if (item.attacker_team_name?.trim()) {
-        entries.set(item.attacker_team_id, item.attacker_team_name)
-      }
-      if (item.victim_team_name?.trim()) {
-        entries.set(item.victim_team_id, item.victim_team_name)
-      }
-    }
-
-    return [...entries.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'))
-  })
+  )
 
   const filteredAttacks = computed(() =>
-    attacks.value.filter((item) => {
-      if (
-        attackTeamFilter.value &&
-        item.attacker_team_id !== attackTeamFilter.value &&
-        item.victim_team_id !== attackTeamFilter.value
-      ) {
-        return false
-      }
-      if (attackResultFilter.value === 'success' && !item.is_success) {
-        return false
-      }
-      if (attackResultFilter.value === 'failed' && item.is_success) {
-        return false
-      }
-      if (attackSourceFilter.value !== 'all' && item.source !== attackSourceFilter.value) {
-        return false
-      }
-      return true
+    filterAttacks(attacks.value, {
+      attackTeamFilter: attackTeamFilter.value,
+      attackResultFilter: attackResultFilter.value,
+      attackSourceFilter: attackSourceFilter.value,
     })
   )
 

@@ -1421,6 +1421,21 @@ npm run test:run -- src/features/awd-inspector/model/useAwdInspectorDerivedData.
 npm run typecheck
 ```
 
+### 已完成：Batch AY 子项（AWD 复盘攻击与流量派生拆分）
+- 新增 `features/awd-inspector/model/awdInspectorAttackDerived.ts`，承接：
+  - 攻击队伍选项聚合（`buildAttackTeamOptions`）
+  - 攻击来源选项聚合（`buildAttackSourceOptions`）
+  - 流量队伍选项聚合（`buildTrafficTeamOptions`）
+  - 攻击记录筛选（`filterAttacks`）
+- `useAwdInspectorDerivedData.ts` 改为组合调用攻击/流量派生模块，移除内联攻击筛选与流量队伍构建实现。
+- 扩展边界测试：`useAwdInspectorDerivedDataBoundary.test.ts` 新增攻击/流量派生组合断言。
+
+验证：
+```bash
+npm run test:run -- src/features/awd-inspector/model/useAwdInspectorDerivedData.test.ts src/features/awd-inspector/model/useAwdInspectorDerivedDataBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

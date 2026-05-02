@@ -11,4 +11,13 @@ describe('useAwdInspectorDerivedData boundary', () => {
     expect(source).not.toContain('function getServiceCheckSourceValue(')
     expect(source).not.toContain('const grouped = new Map<string, AWDServiceAlertView>()')
   })
+
+  it('应组合攻击与流量派生 builders，避免主组合器内联攻击筛选与队伍选项拼装', () => {
+    expect(source).toContain("from './awdInspectorAttackDerived'")
+    expect(source).toContain('buildAttackTeamOptions(')
+    expect(source).toContain('buildAttackSourceOptions(')
+    expect(source).toContain('buildTrafficTeamOptions(')
+    expect(source).toContain('filterAttacks(')
+    expect(source).not.toContain('const entries = new Map<string, string>()')
+  })
 })
