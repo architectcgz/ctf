@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildReviewArchiveSummaryCards,
+  rankReviewArchiveSkillDimensions,
   REVIEW_ARCHIVE_STATE_COPY,
   REVIEW_ARCHIVE_SUMMARY_COPY,
 } from './presentation'
@@ -34,5 +35,15 @@ describe('teacher review archive widget presentation', () => {
     expect(cards[1].key).toBe('correct_submission')
     expect(cards[2].key).toBe('latest_activity')
     expect(cards[2].valueClass).toBe('summary-card__value--time')
+  })
+
+  it('应按得分降序排列能力维度', () => {
+    const ranked = rankReviewArchiveSkillDimensions([
+      { key: 'crypto', name: '密码', value: 48 },
+      { key: 'web', name: 'Web', value: 82 },
+      { key: 'misc', name: '杂项', value: 70 },
+    ])
+
+    expect(ranked.map((item) => item.key)).toEqual(['web', 'misc', 'crypto'])
   })
 })

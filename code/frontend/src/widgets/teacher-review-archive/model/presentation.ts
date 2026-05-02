@@ -29,6 +29,12 @@ export interface ReviewArchiveSummaryCardSchema {
   valueClass?: string
 }
 
+interface ReviewArchiveSkillDimensionItem {
+  key: string
+  name: string
+  value: number
+}
+
 interface ReviewArchiveSummaryCardInput {
   solvedRate: number
   totalSolved: number
@@ -64,4 +70,10 @@ export function buildReviewArchiveSummaryCards(
       valueClass: 'summary-card__value--time',
     },
   ]
+}
+
+export function rankReviewArchiveSkillDimensions(
+  dimensions: ReviewArchiveSkillDimensionItem[]
+): ReviewArchiveSkillDimensionItem[] {
+  return [...dimensions].sort((left, right) => right.value - left.value)
 }

@@ -6,6 +6,7 @@ import SectionCard from '@/components/common/SectionCard.vue'
 import { formatDate } from '@/utils/format'
 import {
   buildReviewArchiveSummaryCards,
+  rankReviewArchiveSkillDimensions,
   REVIEW_ARCHIVE_SUMMARY_COPY,
 } from './model/presentation'
 
@@ -26,7 +27,7 @@ const formattedLastActivity = computed(() => {
 })
 
 const rankedSkillDimensions = computed(() =>
-  [...props.archive.skill_profile.dimensions].sort((left, right) => right.value - left.value)
+  rankReviewArchiveSkillDimensions(props.archive.skill_profile.dimensions)
 )
 
 const summaryCards = computed(() =>
