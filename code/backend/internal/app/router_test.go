@@ -850,31 +850,26 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type assessmentModuleDeps struct",
-		"profileRepo",
-		"assessmentports.ProfileRepository",
-		"recommendationRepo",
-		"assessmentports.RecommendationRepository",
-		"challengeRepo",
-		"assessmentports.ChallengeRepository",
-		"reportRepo",
-		"assessmentports.ReportRepository",
+		"type AssessmentModule = assessmentruntime.Module",
+		"assessmentruntime.Build(",
+		"assessmentruntime.Deps{",
+		"ChallengeRepo: challenge.Catalog",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("assessment composition should declare typed deps marker %s", marker)
+			t.Fatalf("assessment composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"repo := assessmentinfra.NewRepository(db)",
-		"reportRepo := assessmentinfra.NewReportRepository(db)",
-		"*assessmentinfra.Repository",
-		"*assessmentinfra.ReportRepository",
+		"type assessmentModuleDeps struct",
+		"assessmentinfra.NewRepository(",
+		"assessmentinfra.NewReportRepository(",
+		"assessmentinfra.NewTeacherAWDReviewRepository(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("assessment composition deps should not keep concrete assessment repository marker %s", marker)
+			t.Fatalf("assessment composition should not keep wiring marker %s", marker)
 		}
 	}
 }
@@ -889,14 +884,12 @@ func TestAssessmentModuleUsesTypedCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type assessmentModuleExternalDeps struct",
-		"challengeRepo",
-		"assessmentports.ChallengeRepository",
-		"buildAssessmentModuleExternalDeps(",
+		"assessmentruntime.Deps{",
+		"ChallengeRepo: challenge.Catalog",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("assessment composition should declare typed cross-module deps marker %s", marker)
+			t.Fatalf("assessment composition should declare runtime deps marker %s", marker)
 		}
 	}
 }
@@ -911,12 +904,9 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildAssessmentModuleDeps(",
-		"buildAssessmentModuleExternalDeps(",
-		"buildAssessmentProfileHandler(",
-		"buildAssessmentRecommendationHandler(",
-		"buildAssessmentReportHandler(",
-		"buildAssessmentTeacherAWDReviewHandler(",
+		"assessmentruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewBackgroundJob(job.Name, job.Start, job.Stop)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
