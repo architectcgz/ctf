@@ -2,7 +2,7 @@ import { ref } from 'vue'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 
-import type { ContestFormDraft, PlatformContestStatus } from './usePlatformContests'
+import type { ContestFormDraft, PlatformContestStatus } from './contestFormSupport'
 
 interface UseContestDialogStateOptions {
   createEmptyDraft: () => ContestFormDraft

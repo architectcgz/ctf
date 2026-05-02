@@ -12,7 +12,7 @@ import type {
   ContestFieldLocks,
   ContestFormDraft,
   PlatformContestStatus,
-} from './usePlatformContests'
+} from './contestFormSupport'
 
 interface UseContestSaveFlowOptions {
   editingContestId: Ref<string | null>

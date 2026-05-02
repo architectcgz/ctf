@@ -1257,6 +1257,23 @@ npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AO 子项（平台赛事表单 support 层拆分）
+- 新增 `features/platform-contests/model/contestFormSupport.ts`，承接：
+  - 赛事表单 draft 类型（`ContestFormDraft`）
+  - 状态与字段锁规则（`PlatformContestStatus`、`createFieldLocks`、`createContestStatusOptions`）
+  - draft 与 payload 映射（`createDraftFromContest`、`buildContestUpdatePayload`）
+  - 时间转换与状态确认规则（`toISOString`、`shouldConfirmContestTermination`）
+- `usePlatformContests.ts` 改为复用 support 层，移除内联表单规则实现。
+- `useContestDialogState.ts`、`useContestSaveFlow.ts` 改为直接依赖 `contestFormSupport.ts` 类型，消除对 `usePlatformContests` 的反向类型依赖。
+- 新增边界测试：`platformContestsModelBoundary.test.ts`，锁定子模块不再导入 `usePlatformContests`。
+- `usePlatformContests.ts` 行数下降（本批由 301 降至 178）。
+
+验证：
+```bash
+npm run test:run -- src/features/platform-contests/model/platformContestsModelBoundary.test.ts src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/PlatformContestTable.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
