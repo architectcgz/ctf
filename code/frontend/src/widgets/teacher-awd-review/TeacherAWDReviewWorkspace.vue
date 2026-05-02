@@ -23,7 +23,10 @@ import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 import TeacherAWDReviewWorkspaceState from './TeacherAWDReviewWorkspaceState.vue'
-import { buildTeacherAwdReviewSummaryItems } from './model/presentation'
+import {
+  buildTeacherAwdReviewSummaryItems,
+  TEACHER_AWD_REVIEW_WORKSPACE_COPY,
+} from './model/presentation'
 
 type ExportKind = 'archive' | 'report'
 
@@ -75,15 +78,15 @@ const summaryItems = computed(() =>
   <TeacherAWDReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
       <TeacherAWDReviewWorkspaceHeader
-        overline="AWD Review"
-        title="AWD复盘"
+        :overline="TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline"
+        :title="TEACHER_AWD_REVIEW_WORKSPACE_COPY.title"
         header-class="awd-review-detail-header"
         overline-class="awd-review-detail-overline"
       >
         <template #description>
           <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
           <span> · </span>
-          多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
+          {{ TEACHER_AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix }}
         </template>
 
         <template #actions>

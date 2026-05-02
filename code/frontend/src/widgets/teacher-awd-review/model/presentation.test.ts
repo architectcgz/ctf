@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildTeacherAwdReviewSummaryItems } from './presentation'
+import {
+  buildTeacherAwdReviewSummaryItems,
+  TEACHER_AWD_REVIEW_WORKSPACE_COPY,
+} from './presentation'
 
 describe('teacher awd review widget presentation', () => {
   it('应生成固定顺序的摘要项', () => {
@@ -36,5 +39,11 @@ describe('teacher awd review widget presentation', () => {
     )
 
     expect(items[3].value).toBe('后台处理中...')
+  })
+
+  it('应提供工作区文案出口', () => {
+    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline).toBe('AWD Review')
+    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.title).toBe('AWD复盘')
+    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix).toContain('多维复盘攻防实战过程')
   })
 })

@@ -13,6 +13,13 @@ export interface TeacherAwdReviewSummaryItem {
   valueClass?: string
 }
 
+export const TEACHER_AWD_REVIEW_WORKSPACE_COPY = {
+  overline: 'AWD Review',
+  title: 'AWD复盘',
+  descriptionSuffix:
+    '多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。',
+} as const
+
 export function buildTeacherAwdReviewSummaryItems(
   summaryStats: TeacherAwdReviewSummaryStats,
   polling: boolean
