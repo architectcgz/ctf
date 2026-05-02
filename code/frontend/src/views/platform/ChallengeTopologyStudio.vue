@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
+import { useChallengeTopologyStudioRoutePage } from '@/features/platform-challenges'
 
-const route = useRoute()
-const router = useRouter()
+const { challengeId, backToChallengeDetail } = useChallengeTopologyStudioRoutePage()
 </script>
 
 <template>
-  <ChallengeTopologyStudioPage
-    :challenge-id="String(route.params.id || '')"
-    @back="
-      router.push({ name: 'PlatformChallengeDetail', params: { id: String(route.params.id || '') } })
-    "
-  />
+  <ChallengeTopologyStudioPage :challenge-id="challengeId" @back="backToChallengeDetail" />
 </template>
