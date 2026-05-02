@@ -176,34 +176,13 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		return nil, err
 	}
 
-	hintList := make([]*dto.ChallengeHintResp, 0, len(hints))
-	for _, hint := range hints {
-		hintResp := &dto.ChallengeHintResp{
-			ID:      hint.ID,
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		}
-		hintList = append(hintList, hintResp)
-	}
-
-	return &dto.ChallengeDetailResp{
-		ID:              challenge.ID,
-		Title:           challenge.Title,
-		Description:     challenge.Description,
-		Category:        challenge.Category,
-		Difficulty:      challenge.Difficulty,
-		Points:          challenge.Points,
-		NeedTarget:      challenge.ImageID > 0,
-		FlagType:        challenge.FlagType,
-		InstanceSharing: challenge.InstanceSharing,
-		AttachmentURL:   challenge.AttachmentURL,
-		Hints:           hintList,
-		SolvedCount:     solvedCount,
-		TotalAttempts:   attempts,
-		IsSolved:        isSolved,
-		CreatedAt:       challenge.CreatedAt,
-	}, nil
+	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challenge)
+	resp.NeedTarget = challenge.ImageID > 0
+	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintRespsPtr(hints)
+	resp.SolvedCount = solvedCount
+	resp.TotalAttempts = attempts
+	resp.IsSolved = isSolved
+	return resp, nil
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {

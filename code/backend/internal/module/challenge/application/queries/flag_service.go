@@ -89,12 +89,9 @@ func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*dt
 		configured = true
 	}
 
-	return &dto.FlagResp{
-		FlagType:   challenge.FlagType,
-		FlagRegex:  challenge.FlagRegex,
-		FlagPrefix: challenge.FlagPrefix,
-		Configured: configured,
-	}, nil
+	resp := challengeQueryResponseMapperInst.ToFlagRespBasePtr(challenge)
+	resp.Configured = configured
+	return resp, nil
 }
 
 func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
