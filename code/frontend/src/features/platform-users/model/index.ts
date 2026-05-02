@@ -1,4 +1,5 @@
 export { usePlatformUsers } from './usePlatformUsers'
+export { usePlatformUserManagePage } from './usePlatformUserManagePage'
 export type { PlatformUserFormDraft } from './usePlatformUsers'
 export { usePlatformClassManagementPage } from './usePlatformClassManagementPage'
 export { usePlatformStudentManagementPage } from './usePlatformStudentManagementPage'
