@@ -5,6 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
+import reviewArchiveStateSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveState.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -219,7 +220,8 @@ describe('TeacherStudentReviewArchive', () => {
     )
     expect(reviewArchiveSource).toContain('<TeacherReviewArchiveWorkspace')
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
-    expect(reviewArchiveWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
+    expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')

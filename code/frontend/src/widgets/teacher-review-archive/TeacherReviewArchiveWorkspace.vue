@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { ReviewArchiveData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
 import ReviewArchiveEvidencePanel from '@/components/teacher/review-archive/ReviewArchiveEvidencePanel.vue'
 import ReviewArchiveHero from '@/components/teacher/review-archive/ReviewArchiveHero.vue'
 import ReviewArchiveObservationStrip from '@/components/teacher/review-archive/ReviewArchiveObservationStrip.vue'
 import ReviewArchiveReflectionPanel from '@/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue'
+import TeacherReviewArchiveState from './TeacherReviewArchiveState.vue'
 import TeacherReviewArchiveSummarySection from './TeacherReviewArchiveSummarySection.vue'
 
 const props = defineProps<{
@@ -32,58 +32,30 @@ const emit = defineEmits<{
       @export-archive="emit('exportArchive')"
     />
 
-    <div
-      v-if="loading"
-      class="review-archive-loading"
+    <TeacherReviewArchiveState
+      :loading="loading"
+      :error="error"
+      :has-archive="Boolean(archive)"
+      @reload="emit('reload')"
     >
-      <div class="review-archive-loading__hero" />
-      <div class="review-archive-loading__grid">
-        <div class="review-archive-loading__block" />
-        <div class="review-archive-loading__block" />
-      </div>
-    </div>
+      <template v-if="archive">
+        <ReviewArchiveObservationStrip :items="archive.teacher_observations.items" />
 
-    <AppEmpty
-      v-else-if="error"
-      title="复盘归档加载失败"
-      :description="error"
-      icon="AlertTriangle"
-    >
-      <template #action>
-        <button
-          type="button"
-          class="ui-btn ui-btn--primary"
-          @click="emit('reload')"
-        >
-          重新加载
-        </button>
+        <TeacherReviewArchiveSummarySection :archive="archive" />
+
+        <ReviewArchiveEvidencePanel
+          :timeline="archive.timeline"
+          :evidence="archive.evidence"
+          :writeups="archive.writeups"
+          :manual-reviews="archive.manual_reviews"
+        />
+
+        <ReviewArchiveReflectionPanel
+          :writeups="archive.writeups"
+          :manual-reviews="archive.manual_reviews"
+        />
       </template>
-    </AppEmpty>
-
-    <AppEmpty
-      v-else-if="!archive"
-      title="暂无复盘归档"
-      description="当前学生还没有可展示的复盘归档数据。"
-      icon="FileChartColumnIncreasing"
-    />
-
-    <template v-else>
-      <ReviewArchiveObservationStrip :items="archive.teacher_observations.items" />
-
-      <TeacherReviewArchiveSummarySection :archive="archive" />
-
-      <ReviewArchiveEvidencePanel
-        :timeline="archive.timeline"
-        :evidence="archive.evidence"
-        :writeups="archive.writeups"
-        :manual-reviews="archive.manual_reviews"
-      />
-
-      <ReviewArchiveReflectionPanel
-        :writeups="archive.writeups"
-        :manual-reviews="archive.manual_reviews"
-      />
-    </template>
+    </TeacherReviewArchiveState>
   </div>
 </template>
 
@@ -110,47 +82,5 @@ const emit = defineEmits<{
 
 :deep(.section-card__header) {
   border-bottom: 1px dashed var(--teacher-divider);
-}
-
-.review-archive-loading__hero,
-.review-archive-loading__block {
-  border-radius: 26px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-border) 80%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  animation: review-archive-pulse 1.35s ease-in-out infinite;
-}
-
-.review-archive-loading__hero {
-  height: 220px;
-}
-
-.review-archive-loading__grid {
-  display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.review-archive-loading__block {
-  height: 180px;
-}
-
-@keyframes review-archive-pulse {
-  0%,
-  100% {
-    opacity: 0.58;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 1023px) {
-  .review-archive-loading__grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

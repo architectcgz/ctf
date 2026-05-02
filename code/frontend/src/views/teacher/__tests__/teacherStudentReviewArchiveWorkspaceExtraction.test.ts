@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
+import reviewArchiveStateSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveState.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
@@ -20,11 +21,13 @@ describe('Teacher student review archive workspace extraction', () => {
 
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveHero')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveObservationStrip')
+    expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
     expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveSummarySection')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveEvidencePanel')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveReflectionPanel')
     expect(reviewArchiveWorkspaceSource).toContain('class="review-archive-shell')
-    expect(reviewArchiveWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveStateSource).toContain('class="review-archive-loading__hero"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
     expect(reviewArchiveSummarySectionSource).toContain('class="review-archive-summary-grid"')
     expect(reviewArchiveSummarySectionSource).toContain('class="skill-bars"')
