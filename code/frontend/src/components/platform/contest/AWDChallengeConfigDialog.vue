@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
-import { runContestAWDCheckerPreview } from '@/api/admin/contests'
 import type {
   AdminAwdChallengeData,
   AdminChallengeListItem,
@@ -20,6 +19,7 @@ import {
   type ContestAwdPreviewProgressEvent,
 } from '@/features/awd-inspector'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
+import { runAwdCheckerPreview } from '@/features/contest-awd-config'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
   AWD_HTTP_METHOD_OPTIONS,
@@ -760,14 +760,15 @@ async function handlePreview() {
   try {
     await previewRealtime.start().catch(() => undefined)
     const accessURL = previewForm.access_url.trim()
-    const result = await runContestAWDCheckerPreview(props.contestId, {
-      ...(resolvePreviewServiceID() > 0 ? { service_id: resolvePreviewServiceID() } : {}),
-      awd_challenge_id: resolvePreviewChallengeID(),
-      checker_type: form.awd_checker_type,
-      checker_config: buildCheckerConfig(),
-      ...(accessURL ? { access_url: accessURL } : {}),
-      preview_flag: previewForm.preview_flag.trim() || undefined,
-      preview_request_id: nextPreviewRequestId,
+    const result = await runAwdCheckerPreview({
+      contestId: props.contestId,
+      serviceId: resolvePreviewServiceID(),
+      awdChallengeId: resolvePreviewChallengeID(),
+      checkerType: form.awd_checker_type,
+      checkerConfig: buildCheckerConfig(),
+      accessURL,
+      previewFlag: previewForm.preview_flag,
+      previewRequestId: nextPreviewRequestId,
     })
     previewResult.value = result
     previewToken.value = result.preview_token || ''

@@ -336,6 +336,19 @@ npm run test:run -- src/views/teacher/__tests__/teacherInterventionPanelLayout.t
 npm run typecheck
 ```
 
+### 已完成：Batch E4（AWD Checker 试跑 API 收口）
+- 新增 `features/contest-awd-config/model/useAwdCheckerPreview.ts`，承接 `runContestAWDCheckerPreview` 请求组装与执行。
+- `AWDChallengeConfigDialog.vue` 已改为调用 `runAwdCheckerPreview`，不再直接依赖：
+  - `@/api/admin/contests`（保留 `@/api/contracts` 类型导入）
+- 补充 source 边界断言：
+  - `views/__tests__/duplicateActionGuardAudit.test.ts` 新增 `AWDChallengeConfigDialog` 对 `features/contest-awd-config` 的引用断言与 `@/api/admin/contests` 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
