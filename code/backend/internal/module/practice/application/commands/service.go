@@ -323,19 +323,10 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 		Instances: make([]*dto.AdminAWDInstanceItemResp, 0, len(instances)),
 	}
 	for _, team := range teams {
-		resp.Teams = append(resp.Teams, &dto.AdminAWDInstanceTeamResp{
-			TeamID:    team.ID,
-			TeamName:  team.Name,
-			CaptainID: team.CaptainID,
-		})
+		resp.Teams = append(resp.Teams, practiceCommandResponseMapperInst.ToAdminAWDInstanceTeamRespPtr(team))
 	}
 	for _, service := range services {
-		resp.Services = append(resp.Services, &dto.AdminAWDInstanceServiceResp{
-			ServiceID:      service.ID,
-			AWDChallengeID: service.AWDChallengeID,
-			DisplayName:    service.DisplayName,
-			IsVisible:      service.IsVisible,
-		})
+		resp.Services = append(resp.Services, practiceCommandResponseMapperInst.ToAdminAWDInstanceServiceRespPtr(service))
 	}
 	seen := make(map[string]struct{}, len(instances))
 	for _, instance := range instances {

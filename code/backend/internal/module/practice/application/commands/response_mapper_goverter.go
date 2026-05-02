@@ -15,6 +15,15 @@ import (
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :commands
 type practiceCommandResponseMapper interface {
+	// goverter:map ID TeamID
+	// goverter:map Name TeamName
+	ToAdminAWDInstanceTeamResp(source model.Team) dto.AdminAWDInstanceTeamResp
+	ToAdminAWDInstanceTeamRespPtr(source *model.Team) *dto.AdminAWDInstanceTeamResp
+
+	// goverter:map ID ServiceID
+	ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp
+	ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *dto.AdminAWDInstanceServiceResp
+
 	// goverter:ignore StudentUsername
 	// goverter:ignore StudentName
 	// goverter:ignore ClassName

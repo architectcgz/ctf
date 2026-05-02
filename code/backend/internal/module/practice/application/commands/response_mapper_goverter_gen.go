@@ -10,6 +10,37 @@ import (
 
 type practiceCommandResponseMapperImpl struct{}
 
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp {
+	var dtoAdminAWDInstanceServiceResp dto.AdminAWDInstanceServiceResp
+	dtoAdminAWDInstanceServiceResp.ServiceID = source.ID
+	dtoAdminAWDInstanceServiceResp.AWDChallengeID = source.AWDChallengeID
+	dtoAdminAWDInstanceServiceResp.DisplayName = source.DisplayName
+	dtoAdminAWDInstanceServiceResp.IsVisible = source.IsVisible
+	return dtoAdminAWDInstanceServiceResp
+}
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *dto.AdminAWDInstanceServiceResp {
+	var pDtoAdminAWDInstanceServiceResp *dto.AdminAWDInstanceServiceResp
+	if source != nil {
+		dtoAdminAWDInstanceServiceResp := c.ToAdminAWDInstanceServiceResp((*source))
+		pDtoAdminAWDInstanceServiceResp = &dtoAdminAWDInstanceServiceResp
+	}
+	return pDtoAdminAWDInstanceServiceResp
+}
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamResp(source model.Team) dto.AdminAWDInstanceTeamResp {
+	var dtoAdminAWDInstanceTeamResp dto.AdminAWDInstanceTeamResp
+	dtoAdminAWDInstanceTeamResp.TeamID = source.ID
+	dtoAdminAWDInstanceTeamResp.TeamName = source.Name
+	dtoAdminAWDInstanceTeamResp.CaptainID = source.CaptainID
+	return dtoAdminAWDInstanceTeamResp
+}
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamRespPtr(source *model.Team) *dto.AdminAWDInstanceTeamResp {
+	var pDtoAdminAWDInstanceTeamResp *dto.AdminAWDInstanceTeamResp
+	if source != nil {
+		dtoAdminAWDInstanceTeamResp := c.ToAdminAWDInstanceTeamResp((*source))
+		pDtoAdminAWDInstanceTeamResp = &dtoAdminAWDInstanceTeamResp
+	}
+	return pDtoAdminAWDInstanceTeamResp
+}
 func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp {
 	var dtoChallengeSubmissionRecordResp dto.ChallengeSubmissionRecordResp
 	dtoChallengeSubmissionRecordResp.ID = source.ID
