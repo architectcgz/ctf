@@ -212,9 +212,13 @@ describe('TeacherStudentReviewArchive', () => {
 
   it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
     expect(reviewArchiveSource).toContain(
+      "import { useTeacherStudentReviewArchivePage } from '@/features/teacher-student-review-archive'"
+    )
+    expect(reviewArchiveSource).toContain(
       "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
     )
     expect(reviewArchiveSource).toContain('<TeacherReviewArchiveWorkspace')
+    expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
     expect(reviewArchiveWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
