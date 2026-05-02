@@ -1,10 +1,4 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-
-import {
-  deleteChallengeTopology,
-  exportChallengePackage,
-  saveChallengeTopology,
-} from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,
   AdminImageListItem,
@@ -29,12 +23,12 @@ import {
   createEmptyPolicyDraft,
   createEmptyTopologyDraft,
   buildTopologyDraftValidationIssues,
-  serializeTopologyDraft,
   type TopologyEditorDraft,
   type TopologyLinkDraft,
   type TopologyNodeDraft,
   type TopologyPolicyDraft,
 } from './topologyDraft'
+import { useTopologyPersistenceActions } from './useTopologyPersistenceActions'
 import type { CanvasInteractionMode } from './topologyTypes'
 import { useTopologyDataLoader } from './useTopologyDataLoader'
 import { useTopologyTemplateApply } from './useTopologyTemplateApply'
@@ -418,6 +412,19 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       await reloadAll()
     },
   })
+  const { handleSaveTopology, handleExportPackage, handleDeleteTopology } =
+    useTopologyPersistenceActions({
+      challengeId: options.challengeId,
+      isTemplateLibraryMode,
+      draft,
+      topology,
+      saving,
+      exporting,
+      applyTopologyDraft,
+      applyEmptyTemplateDraft,
+      loadTemplates,
+      reloadAll,
+    })
 
   function handleResetTemplateEditor() {
     applyTopologyDraft(createEmptyTopologyDraft())
@@ -599,67 +606,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   function addPolicy() {
     draft.value.policies = [...draft.value.policies, createEmptyPolicyDraft()]
-  }
-
-  async function handleSaveTopology() {
-    saving.value = true
-    try {
-      const saved = await saveChallengeTopology(
-        options.challengeId,
-        serializeTopologyDraft(draft.value)
-      )
-      topology.value = saved
-      applyTopologyDraft(createDraftFromTopology(saved))
-      toast.success('题目拓扑已保存')
-      await loadTemplates()
-    } finally {
-      saving.value = false
-    }
-  }
-
-  async function handleExportPackage() {
-    if (isTemplateLibraryMode.value) {
-      return
-    }
-    exporting.value = true
-    try {
-      const exported = await exportChallengePackage(options.challengeId)
-      toast.success('题目包已导出')
-      await reloadAll()
-      if (typeof window !== 'undefined' && exported.download_url) {
-        window.open(exported.download_url, '_blank', 'noopener')
-      }
-    } finally {
-      exporting.value = false
-    }
-  }
-
-  async function handleDeleteTopology() {
-    if (!topology.value) {
-      toast.warning('当前题目还没有已保存的拓扑')
-      return
-    }
-    const confirmed = await confirmDestructiveAction({
-      title: '删除题目拓扑',
-      message: '确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。',
-      confirmButtonText: '确认删除',
-    })
-    if (!confirmed) {
-      return
-    }
-    saving.value = true
-    try {
-      await deleteChallengeTopology(options.challengeId)
-      topology.value = null
-      applyTopologyDraft(createEmptyTopologyDraft())
-      toast.success('题目拓扑已删除')
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message.trim() ? error.message : '删除题目拓扑失败'
-      toast.error(message)
-    } finally {
-      saving.value = false
-    }
   }
 
   function isEditingTarget(target: EventTarget | null): boolean {
