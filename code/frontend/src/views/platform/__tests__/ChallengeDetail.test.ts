@@ -123,6 +123,10 @@ describe('Admin ChallengeDetail', () => {
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(challengeDetailSource).toContain('usePlatformChallengeDetailRoutePage')
+    expect(challengeDetailSource).not.toContain('useRouteQueryTabs')
+    expect(challengeDetailSource).not.toContain('useRoute')
+    expect(challengeDetailSource).not.toContain('useRouter')
     expect(challengeDetailSource).toContain(
       "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )

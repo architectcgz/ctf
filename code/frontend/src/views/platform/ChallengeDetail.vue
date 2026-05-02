@@ -25,34 +25,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
-import { usePlatformChallengeDetailPage } from '@/features/platform-challenge-detail'
+import { usePlatformChallengeDetailRoutePage } from '@/features/platform-challenge-detail'
 import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'
 
-type ChallengePanelKey = 'detail' | 'writeup'
-
-const panelTabs = [
-  {
-    key: 'detail' as const,
-    label: '题目管理',
-    tabId: 'admin-challenge-tab-detail',
-    panelId: 'admin-challenge-panel-detail',
-  },
-  {
-    key: 'writeup' as const,
-    label: '题解管理',
-    tabId: 'admin-challenge-tab-writeup',
-    panelId: 'admin-challenge-panel-writeup',
-  },
-]
-
-const route = useRoute()
-const router = useRouter()
-const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
 const {
+  panelTabs,
   challenge,
   challengeId,
   downloadingAttachment,
@@ -64,20 +41,11 @@ const {
   saveFlagConfig,
   updateFlagDraft,
   workspaceLabel,
-} = usePlatformChallengeDetailPage()
-const {
-  activeTab: activePanel,
+  activePanel,
   setTabButtonRef,
-  selectTab: switchPanel,
+  switchPanel,
   handleTabKeydown,
-} = useRouteQueryTabs<ChallengePanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabOrder,
-  defaultTab: 'detail',
-  routeName: 'PlatformChallengeDetail',
-  routeParams: route.params,
-})
+} = usePlatformChallengeDetailRoutePage()
 </script>
 
 <style scoped>
