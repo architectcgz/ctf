@@ -280,19 +280,7 @@ func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []dto
 }
 
 func ChallengePackageRevisionRespFromModel(item *model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
-	return dto.ChallengePackageRevisionResp{
-		ID:                 item.ID,
-		RevisionNo:         item.RevisionNo,
-		SourceType:         item.SourceType,
-		ParentRevisionID:   item.ParentRevisionID,
-		PackageSlug:        item.PackageSlug,
-		ArchivePath:        item.ArchivePath,
-		SourceDir:          item.SourceDir,
-		TopologySourcePath: item.TopologySourcePath,
-		CreatedBy:          item.CreatedBy,
-		CreatedAt:          item.CreatedAt,
-		UpdatedAt:          item.UpdatedAt,
-	}
+	return challengeResponseMapperInst.ToChallengePackageRevisionResp(*item)
 }
 
 func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology) *dto.ChallengeImportTopologyResp {

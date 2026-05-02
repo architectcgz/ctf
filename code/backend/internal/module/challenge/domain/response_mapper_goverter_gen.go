@@ -89,6 +89,35 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.
 	}
 	return pDtoChallengeHintAdminResp
 }
+func (c *challengeResponseMapperImpl) ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
+	var dtoChallengePackageRevisionResp dto.ChallengePackageRevisionResp
+	dtoChallengePackageRevisionResp.ID = source.ID
+	dtoChallengePackageRevisionResp.RevisionNo = source.RevisionNo
+	dtoChallengePackageRevisionResp.SourceType = source.SourceType
+	if source.ParentRevisionID != nil {
+		xint64 := *source.ParentRevisionID
+		dtoChallengePackageRevisionResp.ParentRevisionID = &xint64
+	}
+	dtoChallengePackageRevisionResp.PackageSlug = source.PackageSlug
+	dtoChallengePackageRevisionResp.ArchivePath = source.ArchivePath
+	dtoChallengePackageRevisionResp.SourceDir = source.SourceDir
+	dtoChallengePackageRevisionResp.TopologySourcePath = source.TopologySourcePath
+	if source.CreatedBy != nil {
+		xint642 := *source.CreatedBy
+		dtoChallengePackageRevisionResp.CreatedBy = &xint642
+	}
+	dtoChallengePackageRevisionResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoChallengePackageRevisionResp
+}
+func (c *challengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp {
+	var pDtoChallengePackageRevisionResp *dto.ChallengePackageRevisionResp
+	if source != nil {
+		dtoChallengePackageRevisionResp := c.ToChallengePackageRevisionResp((*source))
+		pDtoChallengePackageRevisionResp = &dtoChallengePackageRevisionResp
+	}
+	return pDtoChallengePackageRevisionResp
+}
 func (c *challengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge) dto.ChallengeResp {
 	var dtoChallengeResp dto.ChallengeResp
 	dtoChallengeResp.ID = source.ID

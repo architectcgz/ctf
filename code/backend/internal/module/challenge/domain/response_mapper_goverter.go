@@ -60,6 +60,9 @@ type challengeResponseMapper interface {
 	ToRecommendedChallengeSolutionRespBase(source challengeports.RecommendedSolutionRecord) dto.RecommendedChallengeSolutionResp
 	ToRecommendedChallengeSolutionRespBasePtr(source *challengeports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp
 
+	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp
+	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp
+
 	// goverter:map Submission.ID ID
 	// goverter:map Submission.ChallengeID ChallengeID
 	// goverter:map Submission.UserID UserID
