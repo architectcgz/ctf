@@ -631,6 +631,20 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/co
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（round detail 状态拆分）
+- 新增 `features/contest-awd-admin/model/useAwdRoundDetailState.ts`，承接：
+  - round detail 拉取（services/attacks/summary/traffic/scoreboard）
+  - traffic events 拉取与并发请求 token 抑制
+  - round detail 相关 loading 状态与清空逻辑
+- `usePlatformContestAwd.ts` 改为组合调用该子模块，移除内联 round detail 读取细节。
+- `usePlatformContestAwd.ts` 行数继续下降（本批由 649 降至 556）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

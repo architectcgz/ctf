@@ -7,14 +7,8 @@ import {
   createContestAWDServiceCheck,
   getContestAWDReadiness,
   getContestAWDInstanceOrchestration,
-  getAdminContestLiveScoreboard,
-  getContestAWDRoundSummary,
-  getContestAWDRoundTrafficSummary,
   listContestAWDServices,
   listContestTeams,
-  listContestAWDRoundAttacks,
-  listContestAWDRoundTrafficEvents,
-  listContestAWDRoundServices,
   listContestAWDRounds,
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
@@ -23,15 +17,11 @@ import {
 import type {
   AWDAttackLogData,
   AWDRoundData,
-  AWDRoundSummaryData,
-  AWDTrafficEventData,
-  AWDTrafficSummaryData,
   AWDTeamServiceData,
   AdminChallengeListItem,
   AdminContestChallengeData,
   AdminContestTeamData,
   ContestDetailData,
-  ScoreboardRow,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
@@ -45,6 +35,7 @@ import {
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
+import { useAwdRoundDetailState } from './useAwdRoundDetailState'
 import { useAwdServiceOperations } from './useAwdServiceOperations'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
 
@@ -54,12 +45,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const toast = useToast()
   const rounds = ref<AWDRoundData[]>([])
   const selectedRoundId = ref<string | null>(null)
-  const services = ref<AWDTeamServiceData[]>([])
-  const attacks = ref<AWDAttackLogData[]>([])
-  const summary = ref<AWDRoundSummaryData | null>(null)
-  const trafficSummary = ref<AWDTrafficSummaryData | null>(null)
-  const trafficEvents = ref<AWDTrafficEventData[]>([])
-  const trafficEventsTotal = ref(0)
   const {
     trafficFilters,
     buildTrafficEventsParams,
@@ -68,15 +53,10 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     syncTrafficPagination,
     resetTrafficFiltersState,
   } = useAwdTrafficFilterState()
-  const scoreboardRows = ref<ScoreboardRow[]>([])
-  const scoreboardFrozen = ref(false)
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
   const loadingRounds = ref(false)
-  const loadingRoundDetail = ref(false)
-  const loadingTrafficSummary = ref(false)
-  const loadingTrafficEvents = ref(false)
   const loadingChallengeCatalog = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
@@ -94,6 +74,27 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     startAllTeamServices,
   } = useAwdServiceOperations({
     selectedContest,
+  })
+  const {
+    services,
+    attacks,
+    summary,
+    trafficSummary,
+    trafficEvents,
+    trafficEventsTotal,
+    scoreboardRows,
+    scoreboardFrozen,
+    loadingRoundDetail,
+    loadingTrafficSummary,
+    loadingTrafficEvents,
+    clearRoundDetail,
+    refreshRoundDetail,
+    refreshTrafficEvents,
+  } = useAwdRoundDetailState({
+    selectedContest,
+    selectedRoundId,
+    buildTrafficEventsParams,
+    syncTrafficPagination,
   })
 
   const {
@@ -129,21 +130,8 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   })
 
   let roundsRequestToken = 0
-  let roundDetailRequestToken = 0
-  let trafficEventsRequestToken = 0
   let syncingSelectedRound = false
   let autoRefreshTimer: number | null = null
-
-  function clearRoundDetail() {
-    services.value = []
-    attacks.value = []
-    summary.value = null
-    trafficSummary.value = null
-    trafficEvents.value = []
-    trafficEventsTotal.value = 0
-    scoreboardRows.value = []
-    scoreboardFrozen.value = false
-  }
 
   async function refreshChallengeLinks() {
     if (!selectedContest.value) {
@@ -152,87 +140,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     }
     const nextServices = await listContestAWDServices(selectedContest.value.id)
     challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextServices)
-  }
-
-  async function refreshRoundDetail(roundId = selectedRoundId.value) {
-    if (!selectedContest.value || !roundId) {
-      clearRoundDetail()
-      return
-    }
-
-    const requestToken = ++roundDetailRequestToken
-    loadingRoundDetail.value = true
-    loadingTrafficSummary.value = true
-    loadingTrafficEvents.value = true
-    try {
-      const [
-        nextServices,
-        nextAttacks,
-        nextSummary,
-        nextTrafficSummary,
-        nextTrafficEvents,
-        nextScoreboard,
-      ] = await Promise.all([
-        listContestAWDRoundServices(selectedContest.value.id, roundId),
-        listContestAWDRoundAttacks(selectedContest.value.id, roundId),
-        getContestAWDRoundSummary(selectedContest.value.id, roundId),
-        getContestAWDRoundTrafficSummary(selectedContest.value.id, roundId),
-        listContestAWDRoundTrafficEvents(
-          selectedContest.value.id,
-          roundId,
-          buildTrafficEventsParams()
-        ),
-        getAdminContestLiveScoreboard(selectedContest.value.id, { page: 1, page_size: 10 }),
-      ])
-
-      if (requestToken !== roundDetailRequestToken) {
-        return
-      }
-
-      services.value = nextServices
-      attacks.value = nextAttacks
-      summary.value = nextSummary
-      trafficSummary.value = nextTrafficSummary
-      trafficEvents.value = nextTrafficEvents.list
-      trafficEventsTotal.value = nextTrafficEvents.total
-      syncTrafficPagination(nextTrafficEvents.page, nextTrafficEvents.page_size)
-      scoreboardRows.value = nextScoreboard.scoreboard.list
-      scoreboardFrozen.value = nextScoreboard.frozen
-    } finally {
-      if (requestToken === roundDetailRequestToken) {
-        loadingRoundDetail.value = false
-        loadingTrafficSummary.value = false
-        loadingTrafficEvents.value = false
-      }
-    }
-  }
-
-  async function refreshTrafficEvents(roundId = selectedRoundId.value) {
-    if (!selectedContest.value || !roundId) {
-      trafficEvents.value = []
-      trafficEventsTotal.value = 0
-      return
-    }
-
-    const requestToken = ++trafficEventsRequestToken
-    loadingTrafficEvents.value = true
-    try {
-      const result = await listContestAWDRoundTrafficEvents(
-        selectedContest.value.id,
-        roundId,
-        buildTrafficEventsParams()
-      )
-      if (requestToken !== trafficEventsRequestToken) {
-        return
-      }
-      trafficEvents.value = result.list
-      trafficEventsTotal.value = result.total
-      syncTrafficPagination(result.page, result.page_size)
-    } finally {
-      if (requestToken === trafficEventsRequestToken) {
-        loadingTrafficEvents.value = false
-      }
-    }
   }
 
   async function applyTrafficFilters(
