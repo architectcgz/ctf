@@ -729,6 +729,21 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（交互绑定层拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyInteractionBindings.ts`，承接：
+  - 全局键盘事件绑定与解绑
+  - 首次 `reloadAll` 初始化加载
+  - draft 节点数量变化后的位置归一与选中修正
+  - interactionMode 变化时的 pending source 清理
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该模块，移除内联 lifecycle/watch/keyboard 逻辑。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 747 降至 702）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

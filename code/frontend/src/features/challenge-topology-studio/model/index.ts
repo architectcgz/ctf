@@ -1,5 +1,6 @@
 export { useChallengeTopologyStudioPage } from './useChallengeTopologyStudioPage'
 export { useTopologyDataLoader } from './useTopologyDataLoader'
+export { useTopologyInteractionBindings } from './useTopologyInteractionBindings'
 export { useTopologyPersistenceActions } from './useTopologyPersistenceActions'
 export { useTopologyTemplateApply } from './useTopologyTemplateApply'
 export { useTopologyTemplateSelection } from './useTopologyTemplateSelection'

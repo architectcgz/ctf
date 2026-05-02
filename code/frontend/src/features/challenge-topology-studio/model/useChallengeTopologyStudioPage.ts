@@ -1,4 +1,4 @@
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type {
   AdminChallengeListItem,
   AdminImageListItem,
@@ -31,6 +31,7 @@ import {
 import { useTopologyPersistenceActions } from './useTopologyPersistenceActions'
 import type { CanvasInteractionMode } from './topologyTypes'
 import { useTopologyDataLoader } from './useTopologyDataLoader'
+import { useTopologyInteractionBindings } from './useTopologyInteractionBindings'
 import { useTopologyTemplateApply } from './useTopologyTemplateApply'
 import { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
 import { useTopologyTemplateMutations } from './useTopologyTemplateMutations'
@@ -608,61 +609,15 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     draft.value.policies = [...draft.value.policies, createEmptyPolicyDraft()]
   }
 
-  function isEditingTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) {
-      return false
-    }
-    const tag = target.tagName
-    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
-  }
-
-  function handleGlobalKeydown(event: KeyboardEvent) {
-    if (isEditingTarget(event.target)) {
-      return
-    }
-
-    if (event.key === 'Escape') {
-      pendingSourceNodeKey.value = null
-      selectedEdgeId.value = null
-      interactionMode.value = 'pan'
-      return
-    }
-
-    if (
-      (event.key === 'Delete' || event.key === 'Backspace') &&
-      (selectedNodeKey.value || selectedEdgeId.value)
-    ) {
-      event.preventDefault()
-      removeSelectedCanvasItem()
-    }
-  }
-
-  onMounted(async () => {
-    window.addEventListener('keydown', handleGlobalKeydown)
-    await reloadAll()
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleGlobalKeydown)
-  })
-
-  watch(
-    () => draft.value.nodes.length,
-    () => {
-      nodePositions.value = normalizeCanvasPositions(draft.value, nodePositions.value)
-      if (
-        selectedNodeKey.value &&
-        !draft.value.nodes.some((node) => node.key === selectedNodeKey.value)
-      ) {
-        selectedNodeKey.value = draft.value.nodes[0]?.key || null
-      }
-    }
-  )
-
-  watch(interactionMode, (value) => {
-    if (value === 'pan' || value === 'add-node') {
-      pendingSourceNodeKey.value = null
-    }
+  useTopologyInteractionBindings({
+    draft,
+    selectedNodeKey,
+    selectedEdgeId,
+    interactionMode,
+    pendingSourceNodeKey,
+    nodePositions,
+    removeSelectedCanvasItem,
+    reloadAll,
   })
 
   return {
