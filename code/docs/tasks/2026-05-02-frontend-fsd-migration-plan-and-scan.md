@@ -956,6 +956,20 @@ npm run test:run -- src/components/platform/__tests__/ContestChallengeOrchestrat
 npm run typecheck
 ```
 
+### 已完成：Batch U 子项（平台赛事弹窗状态拆分）
+- 新增 `features/platform-contests/model/useContestDialogState.ts`，承接：
+  - 创建态初始化
+  - 编辑态草稿装载
+  - 弹窗开关与编辑上下文状态
+- `usePlatformContests.ts` 改为组合调用该模块；`saveContest`、AWD readiness override 与分页刷新仍保留在主流程组合器中。
+- 结果：主模块职责进一步收敛为“提交/校验/刷新编排”，弹窗状态不再与保存逻辑混杂。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/PlatformContestTable.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

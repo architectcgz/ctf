@@ -1,4 +1,5 @@
 export * from './usePlatformContests'
+export * from './useContestDialogState'
 export * from './useContestManagePage'
 export * from './useContestOperationsHubPage'
 export * from './useContestOperationsPage'

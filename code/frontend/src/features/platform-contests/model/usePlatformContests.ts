@@ -13,9 +13,9 @@ import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import {
-  createDefaultAWDStartOverrideDialogState,
   useAwdStartOverrideFlow,
 } from './useAwdStartOverrideFlow'
+import { useContestDialogState } from './useContestDialogState'
 
 export type PlatformContestStatus = Extract<
   ContestStatus,
@@ -189,11 +189,21 @@ function humanizeRequestError(error: unknown, fallback: string): string {
 export function usePlatformContests() {
   const toast = useToast()
   const statusFilter = ref<StatusFilter>('all')
-  const dialogOpen = ref(false)
   const saving = ref(false)
-  const editingContestId = ref<string | null>(null)
-  const editingBaseStatus = ref<PlatformContestStatus | null>(null)
-  const formDraft = ref<ContestFormDraft>(createEmptyDraft())
+  const {
+    dialogOpen,
+    editingContestId,
+    editingBaseStatus,
+    formDraft,
+    prepareCreateContest: prepareCreateContestState,
+    openCreateDialog: openCreateDialogState,
+    openEditDialog: openEditDialogState,
+    closeDialog: closeDialogState,
+  } = useContestDialogState({
+    createEmptyDraft,
+    createDraftFromContest,
+    normalizeEditableStatus,
+  })
 
   const pagination = usePagination<ContestDetailData>(({ page, page_size }) =>
     getContests({
@@ -211,36 +221,9 @@ export function usePlatformContests() {
     await pagination.changePage(1)
   })
 
-  function prepareCreateContest() {
-    editingContestId.value = null
-    editingBaseStatus.value = null
-    formDraft.value = createEmptyDraft()
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-    dialogOpen.value = false
-  }
-
-  function openCreateDialog() {
-    prepareCreateContest()
-    dialogOpen.value = true
-  }
-
-  function openEditDialog(contest: ContestDetailData) {
-    editingContestId.value = contest.id
-    editingBaseStatus.value = normalizeEditableStatus(contest.status)
-    formDraft.value = createDraftFromContest(contest)
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-    dialogOpen.value = true
-  }
-
-  function closeDialog() {
-    dialogOpen.value = false
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-  }
-
   async function finalizeContestUpdateSuccess() {
     toast.success('竞赛已更新')
-    dialogOpen.value = false
-    closeAWDStartOverrideDialog()
+    closeDialog()
     await pagination.refresh()
   }
   const {
@@ -257,6 +240,26 @@ export function usePlatformContests() {
       toast.error(message)
     },
   })
+
+  function prepareCreateContest() {
+    prepareCreateContestState()
+    closeAWDStartOverrideDialog()
+  }
+
+  function openCreateDialog() {
+    openCreateDialogState()
+    closeAWDStartOverrideDialog()
+  }
+
+  function openEditDialog(contest: ContestDetailData) {
+    openEditDialogState(contest)
+    closeAWDStartOverrideDialog()
+  }
+
+  function closeDialog() {
+    closeDialogState()
+    closeAWDStartOverrideDialog()
+  }
 
   async function saveContest(draft: ContestFormDraft): Promise<'create' | 'edit' | null> {
     const title = draft.title.trim()
@@ -306,7 +309,7 @@ export function usePlatformContests() {
         }
         await createContest(payload)
         toast.success('竞赛已创建')
-        dialogOpen.value = false
+        closeDialog()
         await pagination.refresh()
         return 'create'
       }
