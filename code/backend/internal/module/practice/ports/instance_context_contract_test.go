@@ -99,4 +99,16 @@ func (ctxOnlyPracticeCommandTxRepository) BindReservedPort(context.Context, int,
 	return nil
 }
 
-var _ practiceports.PracticeCommandTxRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceScopeLockRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeScopedExistingInstanceRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeScopedRestartableInstanceRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeScopedRunningCountRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceExpiryRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceRestartRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceCreateRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeAWDServiceOperationCreateRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeAWDServiceOperationFinishRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticePortReservationRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceStartTxRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeInstanceRestartTxRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
+var _ practiceports.PracticeAWDServiceOperationTxRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)

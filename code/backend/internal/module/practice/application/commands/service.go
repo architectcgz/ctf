@@ -44,7 +44,9 @@ type ScoreUpdater interface {
 }
 
 type practiceCommandRepository interface {
-	practiceports.PracticeTransactionManager
+	practiceports.PracticeInstanceStartTxManager
+	practiceports.PracticeInstanceRestartTxManager
+	practiceports.PracticeAWDServiceOperationTxManager
 	practiceports.PracticeContestLookupRepository
 	practiceports.PracticeContestChallengeLookupRepository
 	practiceports.PracticeContestAWDServiceRepository
@@ -169,7 +171,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	scope = resolveEffectiveInstanceScope(&model.Challenge{}, scope)
 
 	var instance *model.Instance
-	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
@@ -204,7 +206,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		nextStatus = model.InstanceStatusPending
 	}
 	nextExpiresAt := time.Now().Add(s.config.Container.DefaultTTL)
-	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
@@ -247,7 +249,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 }
 
 func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
-	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+	if err := s.repo.WithinAWDServiceOperationTx(ctx, func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error {
 		return createAWDServiceOperation(ctx, txRepo, instanceID, contestID, scope, operationType, status, requestedBy, requestedByID, reason, slaBillable)
 	}); err != nil {
 		s.logger.Warn("记录 AWD 服务操作失败",
@@ -258,7 +260,7 @@ func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, con
 	}
 }
 
-func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeCommandTxRepository, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) error {
+func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeAWDServiceOperationCreateRepository, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) error {
 	if repo == nil || instanceID <= 0 || contestID <= 0 || scope.TeamID == nil || *scope.TeamID <= 0 || scope.ServiceID == nil || *scope.ServiceID <= 0 {
 		return nil
 	}
@@ -433,7 +435,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if s.schedulerEnabled() {
 		initialStatus = model.InstanceStatusPending
 	}
-	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+	if err := s.repo.WithinInstanceStartTx(ctx, func(txRepo practiceports.PracticeInstanceStartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}

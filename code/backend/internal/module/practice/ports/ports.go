@@ -51,22 +51,78 @@ type TopologyCreateResult struct {
 	RuntimeDetails     model.InstanceRuntimeDetails
 }
 
-type PracticeCommandTxRepository interface {
+type PracticeInstanceScopeLockRepository interface {
 	LockInstanceScope(ctx context.Context, userID, challengeID int64, scope InstanceScope) error
+}
+
+type PracticeScopedExistingInstanceRepository interface {
 	FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
+}
+
+type PracticeScopedRestartableInstanceRepository interface {
 	FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
+}
+
+type PracticeScopedRunningCountRepository interface {
 	CountScopedRunningInstances(ctx context.Context, userID int64, scope InstanceScope) (int, error)
+}
+
+type PracticeInstanceExpiryRepository interface {
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
+}
+
+type PracticeInstanceRestartRepository interface {
 	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
+}
+
+type PracticeInstanceCreateRepository interface {
 	CreateInstance(ctx context.Context, instance *model.Instance) error
+}
+
+type PracticeAWDServiceOperationCreateRepository interface {
 	CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error
+}
+
+type PracticeAWDServiceOperationFinishRepository interface {
 	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
+}
+
+type PracticePortReservationRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	BindReservedPort(ctx context.Context, port int, instanceID int64) error
 }
 
-type PracticeTransactionManager interface {
-	WithinTransaction(ctx context.Context, fn func(txRepo PracticeCommandTxRepository) error) error
+type PracticeInstanceStartTxRepository interface {
+	PracticeInstanceScopeLockRepository
+	PracticeScopedExistingInstanceRepository
+	PracticeScopedRunningCountRepository
+	PracticeInstanceExpiryRepository
+	PracticeInstanceCreateRepository
+	PracticeAWDServiceOperationCreateRepository
+	PracticePortReservationRepository
+}
+
+type PracticeInstanceRestartTxRepository interface {
+	PracticeInstanceScopeLockRepository
+	PracticeScopedRestartableInstanceRepository
+	PracticeInstanceRestartRepository
+	PracticeAWDServiceOperationCreateRepository
+}
+
+type PracticeAWDServiceOperationTxRepository interface {
+	PracticeAWDServiceOperationCreateRepository
+}
+
+type PracticeInstanceStartTxManager interface {
+	WithinInstanceStartTx(ctx context.Context, fn func(txRepo PracticeInstanceStartTxRepository) error) error
+}
+
+type PracticeInstanceRestartTxManager interface {
+	WithinInstanceRestartTx(ctx context.Context, fn func(txRepo PracticeInstanceRestartTxRepository) error) error
+}
+
+type PracticeAWDServiceOperationTxManager interface {
+	WithinAWDServiceOperationTx(ctx context.Context, fn func(txRepo PracticeAWDServiceOperationTxRepository) error) error
 }
 
 type PracticeContestLookupRepository interface {

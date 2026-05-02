@@ -102,6 +102,8 @@ func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
 	}
 	forbiddenInterfaces := []string{
 		"type InstanceRepository interface",
+		"type PracticeCommandTxRepository interface",
+		"type PracticeTransactionManager interface",
 		"type PracticeContestCommandRepository interface",
 		"type PracticeSubmissionCommandRepository interface",
 		"type PracticeManualReviewCommandRepository interface",

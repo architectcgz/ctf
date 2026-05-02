@@ -12,7 +12,9 @@ import (
 )
 
 type stubPracticeRepository struct {
-	withinTransactionFn                    func(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error
+	withinInstanceStartTxFn                func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error
+	withinInstanceRestartTxFn              func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceRestartTxRepository) error) error
+	withinAWDServiceOperationTxFn          func(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error
 	findContestByIDFn                      func(ctx context.Context, contestID int64) (*model.Contest, error)
 	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
@@ -43,9 +45,23 @@ type stubPracticeRepository struct {
 	isUniqueViolationFn                    func(err error) bool
 }
 
-func (s *stubPracticeRepository) WithinTransaction(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error {
-	if s.withinTransactionFn != nil {
-		return s.withinTransactionFn(ctx, fn)
+func (s *stubPracticeRepository) WithinInstanceStartTx(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error {
+	if s.withinInstanceStartTxFn != nil {
+		return s.withinInstanceStartTxFn(ctx, fn)
+	}
+	return fn(s)
+}
+
+func (s *stubPracticeRepository) WithinInstanceRestartTx(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceRestartTxRepository) error) error {
+	if s.withinInstanceRestartTxFn != nil {
+		return s.withinInstanceRestartTxFn(ctx, fn)
+	}
+	return fn(s)
+}
+
+func (s *stubPracticeRepository) WithinAWDServiceOperationTx(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error {
+	if s.withinAWDServiceOperationTxFn != nil {
+		return s.withinAWDServiceOperationTxFn(ctx, fn)
 	}
 	return fn(s)
 }
