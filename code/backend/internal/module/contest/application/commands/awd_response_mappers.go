@@ -6,14 +6,6 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-func awdRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
-	if round == nil {
-		return nil
-	}
-	mapped := contestResponseMapperInst.ToAWDRoundRespBase(*round)
-	return &mapped
-}
-
 func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
 	if record == nil {
 		return nil

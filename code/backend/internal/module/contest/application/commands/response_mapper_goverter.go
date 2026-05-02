@@ -37,6 +37,7 @@ type contestResponseMapper interface {
 	ToTeamRespBase(source model.Team) dto.TeamResp
 
 	ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp
+	ToAWDRoundRespBasePtr(source *model.AWDRound) *dto.AWDRoundResp
 
 	// goverter:ignore TeamName
 	// goverter:ignore ServiceName

@@ -14,7 +14,7 @@ func (s *AWDService) buildCheckerRunResp(ctx context.Context, contestID int64, r
 		return nil, err
 	}
 	return &dto.AWDCheckerRunResp{
-		Round:    awdRoundRespFromModel(round),
+		Round:    contestResponseMapperInst.ToAWDRoundRespBasePtr(round),
 		Services: services,
 	}, nil
 }

@@ -45,5 +45,5 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req Creat
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return awdRoundRespFromModel(round), nil
+	return contestResponseMapperInst.ToAWDRoundRespBasePtr(round), nil
 }

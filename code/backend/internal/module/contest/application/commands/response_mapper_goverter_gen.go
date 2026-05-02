@@ -39,6 +39,14 @@ func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source model.AWDRound) dt
 	dtoAWDRoundResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoAWDRoundResp
 }
+func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *model.AWDRound) *dto.AWDRoundResp {
+	var pDtoAWDRoundResp *dto.AWDRoundResp
+	if source != nil {
+		dtoAWDRoundResp := c.ToAWDRoundRespBase((*source))
+		pDtoAWDRoundResp = &dtoAWDRoundResp
+	}
+	return pDtoAWDRoundResp
+}
 func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source model.AWDTeamService) dto.AWDTeamServiceResp {
 	var dtoAWDTeamServiceResp dto.AWDTeamServiceResp
 	dtoAWDTeamServiceResp.ID = source.ID
