@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import projectorDataSource from './useContestProjectorData.ts?raw'
-import projectorPageSource from './useContestProjectorPage.ts?raw'
 import projectorDerivedSource from './useContestProjectorDerived.ts?raw'
+import projectorPageSource from './useContestProjectorPage.ts?raw'
 
 describe('useContestProjector boundary', () => {
   it('data 组合器应下沉轮次选择与快照加载流程，避免回退内联实现', () => {
@@ -21,5 +21,11 @@ describe('useContestProjector boundary', () => {
   it('projector feature model 不应再反向依赖 components/projector 下的 type 与 formatter 文件', () => {
     expect(projectorPageSource).not.toContain("from '@/components/platform/contest/projector/")
     expect(projectorDerivedSource).not.toContain("from '@/components/platform/contest/projector/")
+  })
+
+  it('derived 组合器应复用 builders，避免回退到内联聚合实现', () => {
+    expect(projectorDerivedSource).toContain("from './projectorDerivedBuilders'")
+    expect(projectorDerivedSource).not.toContain('const serviceLabelMap = new Map<string, string>()')
+    expect(projectorDerivedSource).not.toContain('const edgeMap = new Map<string, ContestProjectorAttackEdge>()')
   })
 })

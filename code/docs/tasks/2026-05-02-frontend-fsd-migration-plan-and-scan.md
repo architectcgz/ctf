@@ -1390,6 +1390,21 @@ npm run test:run -- src/features/contest-projector/model/useContestProjectorData
 npm run typecheck
 ```
 
+### 已完成：Batch AW 子项（赛事大屏派生聚合 builders 拆分）
+- 新增 `features/contest-projector/model/projectorDerivedBuilders.ts`，承接：
+  - 服务矩阵聚合（`buildServiceMatrixRows`）
+  - 攻击队伍排行聚合（`buildAttackLeaders`）
+  - 队伍互攻关系聚合（`buildAttackEdges`）
+  - 流量趋势柱状数据映射（`buildTrafficTrendBars`）
+- `useContestProjectorDerived.ts` 改为组合调用 builders，移除内联的聚合实现与大段 Map 构建逻辑。
+- 扩展边界测试：`useContestProjectorBoundary.test.ts` 新增 derived source 断言，锁定组合器必须复用 builder 模块。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-projector/model/useContestProjectorDerived.test.ts src/features/contest-projector/model/useContestProjectorData.test.ts src/features/contest-projector/model/useContestProjectorBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
