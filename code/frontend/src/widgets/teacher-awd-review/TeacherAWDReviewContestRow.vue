@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ArrowRight } from 'lucide-vue-next'
+
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { formatDate } from '@/utils/format'
 
@@ -58,6 +60,7 @@ const emit = defineEmits<{
 
     <div class="teacher-directory-row-cta">
       <span>进入复盘</span>
+      <ArrowRight class="h-4 w-4" />
     </div>
   </button>
 </template>

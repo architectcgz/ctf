@@ -1,11 +1,16 @@
+<script setup lang="ts">
+import { AWD_REVIEW_DIRECTORY_HEADERS } from './model/directory'
+</script>
+
 <template>
   <div class="teacher-directory-head">
-    <span class="teacher-directory-head-cell teacher-directory-head-cell-code">代号</span>
-    <span class="teacher-directory-head-cell teacher-directory-head-cell-name">赛事</span>
-    <span>轮次</span>
-    <span>队伍</span>
-    <span>状态</span>
-    <span>操作</span>
+    <span
+      v-for="(label, index) in AWD_REVIEW_DIRECTORY_HEADERS"
+      :key="label"
+      :class="index === 0 ? 'teacher-directory-head-cell teacher-directory-head-cell-code' : index === 1 ? 'teacher-directory-head-cell teacher-directory-head-cell-name' : ''"
+    >
+      {{ label }}
+    </span>
   </div>
 </template>
 

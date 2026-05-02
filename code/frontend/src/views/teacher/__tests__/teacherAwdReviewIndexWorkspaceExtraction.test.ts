@@ -35,6 +35,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewIndexFiltersSource).toContain('class="teacher-directory-filters"')
     expect(awdReviewDirectoryStateSource).toContain('title="AWD复盘目录加载失败"')
     expect(awdReviewContestHeadSource).toContain('class="teacher-directory-head"')
+    expect(awdReviewContestHeadSource).toContain("AWD_REVIEW_DIRECTORY_HEADERS")
     expect(awdReviewContestRowSource).toContain('class="teacher-directory-row"')
   })
 })
