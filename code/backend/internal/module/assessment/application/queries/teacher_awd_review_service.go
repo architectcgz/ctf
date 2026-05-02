@@ -28,20 +28,7 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 	}
 
 	resp := &dto.TeacherAWDReviewContestListResp{
-		Contests: make([]dto.TeacherAWDReviewContestResp, 0, len(contests)),
-	}
-	for _, contest := range contests {
-		resp.Contests = append(resp.Contests, dto.TeacherAWDReviewContestResp{
-			ID:               contest.ID,
-			Title:            contest.Title,
-			Mode:             contest.Mode,
-			Status:           contest.Status,
-			CurrentRound:     contest.CurrentRound,
-			RoundCount:       contest.RoundCount,
-			TeamCount:        contest.TeamCount,
-			LatestEvidenceAt: contest.LatestEvidenceAt,
-			ExportReady:      contest.ExportReady,
-		})
+		Contests: teacherAWDReviewMapper.ToTeacherAWDReviewContestResps(contests),
 	}
 	return resp, nil
 }
@@ -79,18 +66,8 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 			RequestedBy:  requesterID,
 			RequestedID:  contestID,
 		},
-		Contest: dto.TeacherAWDReviewContestMetaResp{
-			ID:               contest.ID,
-			Title:            contest.Title,
-			Mode:             contest.Mode,
-			Status:           contest.Status,
-			CurrentRound:     contest.CurrentRound,
-			RoundCount:       contest.RoundCount,
-			TeamCount:        contest.TeamCount,
-			LatestEvidenceAt: contest.LatestEvidenceAt,
-			ExportReady:      contest.ExportReady,
-		},
-		Rounds: make([]dto.TeacherAWDReviewRoundResp, 0, len(rounds)),
+		Contest: teacherAWDReviewMapper.ToTeacherAWDReviewContestMetaResp(*contest),
+		Rounds:  make([]dto.TeacherAWDReviewRoundResp, 0, len(rounds)),
 		Overview: &dto.TeacherAWDReviewOverviewResp{
 			RoundCount:       len(rounds),
 			TeamCount:        len(teams),
@@ -120,19 +97,10 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 
-		roundResp := dto.TeacherAWDReviewRoundResp{
-			ID:           round.ID,
-			ContestID:    round.ContestID,
-			RoundNumber:  round.RoundNumber,
-			Status:       round.Status,
-			StartedAt:    round.StartedAt,
-			EndedAt:      round.EndedAt,
-			AttackScore:  round.AttackScore,
-			DefenseScore: round.DefenseScore,
-			ServiceCount: len(services),
-			AttackCount:  len(attacks),
-			TrafficCount: len(traffic),
-		}
+		roundResp := teacherAWDReviewMapper.ToTeacherAWDReviewRoundResp(round)
+		roundResp.ServiceCount = len(services)
+		roundResp.AttackCount = len(attacks)
+		roundResp.TrafficCount = len(traffic)
 		resp.Rounds = append(resp.Rounds, roundResp)
 		resp.Overview.ServiceCount += len(services)
 		resp.Overview.AttackCount += len(attacks)
@@ -184,88 +152,19 @@ func snapshotTypeForContest(status string) string {
 }
 
 func toTeacherAWDReviewTeams(items []assessmentdomain.TeacherAWDReviewTeamSummary) []dto.TeacherAWDReviewTeamResp {
-	resp := make([]dto.TeacherAWDReviewTeamResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, dto.TeacherAWDReviewTeamResp{
-			TeamID:      item.TeamID,
-			TeamName:    item.TeamName,
-			CaptainID:   item.CaptainID,
-			TotalScore:  item.TotalScore,
-			MemberCount: item.MemberCount,
-			LastSolveAt: item.LastSolveAt,
-		})
-	}
-	return resp
+	return teacherAWDReviewMapper.ToTeacherAWDReviewTeamResps(items)
 }
 
 func toTeacherAWDReviewServices(items []assessmentdomain.TeacherAWDReviewServiceRecord) []dto.TeacherAWDReviewServiceResp {
-	resp := make([]dto.TeacherAWDReviewServiceResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, dto.TeacherAWDReviewServiceResp{
-			ID:                item.ID,
-			RoundID:           item.RoundID,
-			TeamID:            item.TeamID,
-			TeamName:          item.TeamName,
-			ServiceID:         item.ServiceID,
-			AWDChallengeID:    item.AWDChallengeID,
-			AWDChallengeTitle: item.AWDChallengeTitle,
-			ServiceStatus:     item.ServiceStatus,
-			AttackReceived:    item.AttackReceived,
-			SLAScore:          item.SLAScore,
-			DefenseScore:      item.DefenseScore,
-			AttackScore:       item.AttackScore,
-			UpdatedAt:         item.UpdatedAt,
-		})
-	}
-	return resp
+	return teacherAWDReviewMapper.ToTeacherAWDReviewServiceResps(items)
 }
 
 func toTeacherAWDReviewAttacks(items []assessmentdomain.TeacherAWDReviewAttackRecord) []dto.TeacherAWDReviewAttackResp {
-	resp := make([]dto.TeacherAWDReviewAttackResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, dto.TeacherAWDReviewAttackResp{
-			ID:                item.ID,
-			RoundID:           item.RoundID,
-			AttackerTeamID:    item.AttackerTeamID,
-			AttackerTeamName:  item.AttackerTeamName,
-			VictimTeamID:      item.VictimTeamID,
-			VictimTeamName:    item.VictimTeamName,
-			ServiceID:         item.ServiceID,
-			AWDChallengeID:    item.AWDChallengeID,
-			AWDChallengeTitle: item.AWDChallengeTitle,
-			AttackType:        item.AttackType,
-			Source:            item.Source,
-			SubmittedFlag:     item.SubmittedFlag,
-			IsSuccess:         item.IsSuccess,
-			ScoreGained:       item.ScoreGained,
-			CreatedAt:         item.CreatedAt,
-		})
-	}
-	return resp
+	return teacherAWDReviewMapper.ToTeacherAWDReviewAttackResps(items)
 }
 
 func toTeacherAWDReviewTraffic(items []assessmentdomain.TeacherAWDReviewTrafficRecord) []dto.TeacherAWDReviewTrafficResp {
-	resp := make([]dto.TeacherAWDReviewTrafficResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, dto.TeacherAWDReviewTrafficResp{
-			ID:                item.ID,
-			ContestID:         item.ContestID,
-			RoundID:           item.RoundID,
-			AttackerTeamID:    item.AttackerTeamID,
-			AttackerTeamName:  item.AttackerTeamName,
-			VictimTeamID:      item.VictimTeamID,
-			VictimTeamName:    item.VictimTeamName,
-			ServiceID:         item.ServiceID,
-			AWDChallengeID:    item.AWDChallengeID,
-			AWDChallengeTitle: item.AWDChallengeTitle,
-			Method:            item.Method,
-			Path:              item.Path,
-			StatusCode:        item.StatusCode,
-			Source:            item.Source,
-			CreatedAt:         item.CreatedAt,
-		})
-	}
-	return resp
+	return teacherAWDReviewMapper.ToTeacherAWDReviewTrafficResps(items)
 }
 
 func findTeacherAWDReviewTeam(items []assessmentdomain.TeacherAWDReviewTeamSummary, teamID *int64) (*assessmentdomain.TeacherAWDReviewTeamSummary, bool) {
