@@ -16,7 +16,7 @@ import (
 // goverter:extend CopyTimePtr
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :domain
-type challengeResponseMapper interface {
+type ChallengeResponseMapper interface {
 	// goverter:ignore Hints
 	ToChallengeRespBase(source model.Challenge) dto.ChallengeResp
 	ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp
@@ -118,7 +118,11 @@ type challengeResponseMapper interface {
 	ToCommunityChallengeSolutionRespBasePtr(source *challengeports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp
 }
 
-var challengeResponseMapperInst challengeResponseMapper
+var challengeResponseMapperInst ChallengeResponseMapper
+
+func ResponseMapper() ChallengeResponseMapper {
+	return challengeResponseMapperInst
+}
 
 func CopyTime(value time.Time) time.Time {
 	return value

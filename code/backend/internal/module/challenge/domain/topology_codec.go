@@ -213,10 +213,6 @@ func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []dto
 	return challengeResponseMapperInst.ToTopologyTrafficPolicyResps(policies)
 }
 
-func ChallengePackageRevisionRespFromModel(item *model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
-	return challengeResponseMapperInst.ToChallengePackageRevisionResp(*item)
-}
-
 func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology) *dto.ChallengeImportTopologyResp {
 	if item == nil {
 		return nil

@@ -27,7 +27,7 @@ func (s *TagService) CreateTag(ctx context.Context, req CreateTagInput) (*dto.Ta
 	if err := s.repo.Create(ctx, tag); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return domain.TagRespFromModel(tag), nil
+	return domain.ResponseMapper().ToTagRespPtr(tag), nil
 }
 
 func (s *TagService) DeleteTag(ctx context.Context, id int64) error {

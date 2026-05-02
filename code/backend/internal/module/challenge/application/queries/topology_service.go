@@ -62,7 +62,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 				if revision == nil {
 					continue
 				}
-				resp.PackageRevisions = append(resp.PackageRevisions, domain.ChallengePackageRevisionRespFromModel(revision))
+				resp.PackageRevisions = append(resp.PackageRevisions, domain.ResponseMapper().ToChallengePackageRevisionResp(*revision))
 			}
 		}
 		if item.PackageRevisionID != nil && *item.PackageRevisionID > 0 {

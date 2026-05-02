@@ -113,18 +113,6 @@ func FormatImageSize(size int64) string {
 	return fmt.Sprintf("%.1f %s", value, units[unitIndex])
 }
 
-func TagRespFromModel(tag *model.Tag) *dto.TagResp {
-	return challengeResponseMapperInst.ToTagRespPtr(tag)
-}
-
-func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
-	return challengeResponseMapperInst.ToAdminChallengeWriteupRespPtr(item)
-}
-
-func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
-	return challengeResponseMapperInst.ToSubmissionWriteupRespPtr(item)
-}
-
 func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
 	resp := challengeResponseMapperInst.ToTeacherSubmissionWriteupItemRespBasePtr(&item)
 	resp.ContentPreview = buildContentPreview(item.Submission.Content)

@@ -58,7 +58,7 @@ func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID in
 	if err != nil {
 		return nil, err
 	}
-	return domain.AdminWriteupRespFromModel(item), nil
+	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(item), nil
 }
 
 func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
@@ -136,7 +136,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 	if err != nil {
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(item), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(item), nil
 }
 
 func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error) {
@@ -159,7 +159,7 @@ func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, act
 	if err != nil {
 		return nil, err
 	}
-	return domain.AdminWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _ int64) (*dto.AdminChallengeWriteupResp, error) {
@@ -181,7 +181,7 @@ func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _
 	if err != nil {
 		return nil, err
 	}
-	return domain.AdminWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
@@ -207,7 +207,7 @@ func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, r
 	if err != nil {
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
@@ -229,7 +229,7 @@ func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID,
 	if err != nil {
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
@@ -252,7 +252,7 @@ func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, reques
 	if err != nil {
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
@@ -272,7 +272,7 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 	if err != nil {
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(updated), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
 func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
