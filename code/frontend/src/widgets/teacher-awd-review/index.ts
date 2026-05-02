@@ -3,3 +3,4 @@ export { default as TeacherAWDReviewIndexWorkspace } from './TeacherAWDReviewInd
 export { default as TeacherAWDReviewSurfaceShell } from './TeacherAWDReviewSurfaceShell.vue'
 export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWorkspaceHeader.vue'
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
+export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'

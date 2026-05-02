@@ -123,6 +123,7 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewIndexFilters')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
