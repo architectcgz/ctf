@@ -6,7 +6,7 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import dashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -138,10 +138,10 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(awdReviewIndexSource).toContain('metric-panel-default-surface')
-    expect(awdReviewIndexSource).toContain('metric-panel-grid')
-    expect(awdReviewIndexSource).toContain('metric-panel-card')
-    expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
+    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-default-surface')
+    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-grid')
+    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceSource).toContain('metric-panel-default-surface')
     expect(awdReviewWorkspaceSource).toContain('metric-panel-grid')
     expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
@@ -165,12 +165,12 @@ describe('teacher base surface alignment', () => {
   })
 
   it('awd review pages should soften page header, cards, and divider borders through shared teacher shells', () => {
-    expect(awdReviewIndexSource).toContain('teacher-management-shell')
-    expect(awdReviewIndexSource).toContain('workspace-shell')
-    expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
-    expect(awdReviewIndexSource).not.toMatch(/^\.teacher-hero\s*\{/m)
-    expect(awdReviewIndexSource).not.toMatch(/^\.teacher-summary\s*\{/m)
-    expect(awdReviewIndexSource).not.toContain('rounded-[30px]')
+    expect(awdReviewIndexWorkspaceSource).toContain('teacher-management-shell')
+    expect(awdReviewIndexWorkspaceSource).toContain('workspace-shell')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('.teacher-btn {')
+    expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+    expect(awdReviewIndexWorkspaceSource).not.toContain('rounded-[30px]')
 
     expect(awdReviewWorkspaceSource).toContain('teacher-management-shell')
     expect(awdReviewWorkspaceSource).toContain('workspace-shell')

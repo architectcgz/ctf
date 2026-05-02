@@ -10,7 +10,7 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import teacherInstanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -35,7 +35,7 @@ describe('teacher eyebrow shared styles', () => {
       classStudentsSource,
       teacherInstanceManagementSource,
       studentManagementSource,
-      awdReviewIndexSource,
+      awdReviewIndexWorkspaceSource,
       awdReviewDetailSource,
     ]) {
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)

@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
+import teacherAwdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -69,6 +70,9 @@ describe('TeacherAWDReviewIndex', () => {
 
   it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
     expect(teacherAwdReviewIndexSource).toContain("useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'")
+    expect(teacherAwdReviewIndexSource).toContain(
+      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'"
+    )
     expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
     expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
@@ -119,59 +123,59 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
-    expect(teacherAwdReviewIndexSource).toContain('class="list-heading"')
-    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-title')
-    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-copy')
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('class="list-heading"')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-title')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-copy')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface-subtle\)\s*84%,\s*transparent\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*box-shadow:\s*0 10px 24px var\(--color-shadow-soft\);/s
     )
   })
 
   it('赛事概览条不应继续保留多余的底部分隔线', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       'class="teacher-summary teacher-summary--flat metric-panel-default-surface"'
     )
-    expect(teacherAwdReviewIndexSource).toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
       /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
     )
   })
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       '<header class="teacher-topbar workspace-tab-heading awd-review-index-header">'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       '<div class="teacher-heading workspace-tab-heading__main">'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       '<div class="workspace-overline awd-review-index-overline">AWD Review</div>'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
     )
-    expect(teacherAwdReviewIndexSource).toContain('<p class="teacher-copy workspace-page-copy">')
-    expect(teacherAwdReviewIndexSource).toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<p class="teacher-copy workspace-page-copy">')
+    expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
       /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
       '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
     )
   })
 
   it('筛选区源码不应继续保留表单提交和应用筛选按钮', () => {
-    expect(teacherAwdReviewIndexSource).not.toContain('@submit.prevent="loadContests"')
-    expect(teacherAwdReviewIndexSource).not.toContain('应用筛选')
-    expect(teacherAwdReviewIndexSource).not.toContain('赛事筛选')
-    expect(teacherAwdReviewIndexSource).not.toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('@submit.prevent="loadContests"')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('应用筛选')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('赛事筛选')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
       '支持按状态或关键字快速定位要进入的 AWD 赛事。'
     )
   })

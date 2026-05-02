@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -25,7 +25,7 @@ describe('teacher dark surface alignment', () => {
     expect(classManagementSource).toContain('teacher-surface')
     expect(studentManagementSource).toContain('teacher-surface')
     expect(instanceManagementSource).toContain('teacher-surface')
-    expect(awdReviewIndexSource).toContain('teacher-surface')
+    expect(awdReviewIndexWorkspaceSource).toContain('teacher-surface')
     expect(awdReviewWorkspaceSource).toContain('teacher-surface')
   })
 
@@ -47,10 +47,10 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).not.toContain('teacher-summary-item')
     expect(instanceManagementSource).toContain('WorkspaceDataTable')
     expect(instanceManagementSource).toContain('teacher-directory-row')
-    expect(awdReviewIndexSource).toContain('workspace-overline')
-    expect(awdReviewIndexSource).toContain('teacher-actions')
-    expect(awdReviewIndexSource).toContain('metric-panel-card')
-    expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
+    expect(awdReviewIndexWorkspaceSource).toContain('workspace-overline')
+    expect(awdReviewIndexWorkspaceSource).toContain('teacher-actions')
+    expect(awdReviewIndexWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceSource).toContain('workspace-overline')
     expect(awdReviewWorkspaceSource).toContain('teacher-actions')
     expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
@@ -96,11 +96,11 @@ describe('teacher dark surface alignment', () => {
   })
 
   it('awd review pages should not keep page-local teacher token duplication or bright hardcoded surfaces', () => {
-    expect(awdReviewIndexSource).not.toContain('--journal-ink: var(--color-text-primary);')
-    expect(awdReviewIndexSource).not.toContain('#ffffff')
-    expect(awdReviewIndexSource).not.toContain('#f8fafc')
-    expect(awdReviewIndexSource).not.toContain('rgba(255, 255, 255')
-    expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('#ffffff')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('#f8fafc')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('.teacher-btn {')
 
     expect(awdReviewWorkspaceSource).not.toContain('--journal-ink: var(--color-text-primary);')
     expect(awdReviewWorkspaceSource).not.toContain('#ffffff')

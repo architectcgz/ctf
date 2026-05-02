@@ -7,7 +7,7 @@ import classStudentsSource from '@/components/teacher/class-management/ClassStud
 import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
@@ -32,7 +32,7 @@ const teacherManagementSources = [
   ['ClassManagementPage.vue', classManagementSource],
   ['StudentManagementPage.vue', studentManagementSource],
   ['TeacherInstanceManagementPage.vue', instanceManagementSource],
-  ['TeacherAWDReviewIndex.vue', awdReviewIndexSource],
+  ['TeacherAWDReviewIndexWorkspace.vue', awdReviewIndexWorkspaceSource],
   ['TeacherAWDReviewWorkspace.vue', awdReviewWorkspaceSource],
 ] as const
 
