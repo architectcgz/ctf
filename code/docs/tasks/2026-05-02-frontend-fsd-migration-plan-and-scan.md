@@ -1305,6 +1305,25 @@ npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AR 子项（AWD 管理流量动作与状态标志拆分）
+- 新增 `features/contest-awd-admin/model/useAwdTrafficActions.ts`，承接：
+  - 流量筛选应用
+  - 流量分页切换
+  - 流量筛选重置
+  - 统一衔接 `refreshTrafficEvents`
+- 新增 `features/contest-awd-admin/model/useAwdContestStateFlags.ts`，承接：
+  - `hasSelectedContest` 派生
+  - `shouldAutoRefresh` 派生
+- `usePlatformContestAwd.ts` 改为组合调用上述模块，移除内联动作与状态派生实现。
+- 新增边界测试：`usePlatformContestAwdBoundary.test.ts`，锁定主组合器不再回退到内联流量动作实现。
+- `usePlatformContestAwd.ts` 行数下降（本批由 252 降至 224）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

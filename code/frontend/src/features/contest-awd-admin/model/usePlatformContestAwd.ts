@@ -9,8 +9,8 @@ import type {
 } from '@/api/contracts'
 import {
   createEmptyInstanceOrchestration,
-  type AWDTrafficFilterState,
 } from './awdAdminSupport'
+import { useAwdContestStateFlags } from './useAwdContestStateFlags'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
 import { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
 import { useAwdContestSnapshotLoader } from './useAwdContestSnapshotLoader'
@@ -18,6 +18,7 @@ import { useAwdLifecycleBindings } from './useAwdLifecycleBindings'
 import { useAwdRoundDetailState } from './useAwdRoundDetailState'
 import { useAwdRoundOperations } from './useAwdRoundOperations'
 import { useAwdServiceOperations } from './useAwdServiceOperations'
+import { useAwdTrafficActions } from './useAwdTrafficActions'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
 
 export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetailData | null>>) {
@@ -100,46 +101,17 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const selectedRound = computed(
     () => rounds.value.find((item) => item.id === selectedRoundId.value) || null
   )
-
-  const hasSelectedContest = computed(
-    () => Boolean(selectedContest.value) && selectedContest.value?.mode === 'awd'
-  )
-  const shouldAutoRefresh = computed(() => {
-    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
-      return false
-    }
-    if (selectedContest.value.status !== 'running' && selectedContest.value.status !== 'frozen') {
-      return false
-    }
-    return selectedRound.value?.status === 'running'
+  const { hasSelectedContest, shouldAutoRefresh } = useAwdContestStateFlags({
+    selectedContest,
+    selectedRound,
   })
-
-  async function applyTrafficFilters(
-    patch: Partial<
-      Pick<
-        AWDTrafficFilterState,
-        | 'attacker_team_id'
-        | 'victim_team_id'
-        | 'service_id'
-        | 'awd_challenge_id'
-        | 'status_group'
-        | 'path_keyword'
-      >
-    >
-  ) {
-    applyTrafficFiltersPatch(patch)
-    await refreshTrafficEvents(selectedRoundId.value)
-  }
-
-  async function setTrafficPage(page: number) {
-    setTrafficPageState(page)
-    await refreshTrafficEvents(selectedRoundId.value)
-  }
-
-  async function resetTrafficFilters() {
-    resetTrafficFiltersState()
-    await refreshTrafficEvents(selectedRoundId.value)
-  }
+  const { applyTrafficFilters, setTrafficPage, resetTrafficFilters } = useAwdTrafficActions({
+    selectedRoundId,
+    applyTrafficFiltersPatch,
+    setTrafficPageState,
+    resetTrafficFiltersState,
+    refreshTrafficEvents,
+  })
   const { refresh, isSyncingSelectedRound } = useAwdContestSnapshotLoader({
     selectedContest,
     rounds,
