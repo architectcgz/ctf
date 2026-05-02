@@ -21,7 +21,7 @@
 
     <form
       class="auth-login-form"
-      @submit.prevent="onSubmit"
+      @submit.prevent="submitWithFallback"
     >
       <div class="auth-field">
         <label
@@ -36,8 +36,8 @@
             autocomplete="username"
             class="ui-control"
             placeholder="输入您的登录名"
-            @input="submitError = ''"
-            @keyup.enter="onSubmit"
+            @input="clearSubmitError"
+            @keyup.enter="submitWithFallback"
           >
         </div>
       </div>
@@ -64,7 +64,7 @@
             autocomplete="current-password"
             class="ui-control"
             placeholder="输入您的访问密码"
-            @input="submitError = ''"
+            @input="clearSubmitError"
           >
         </div>
       </div>
@@ -98,109 +98,21 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, reactive, ref, useTemplateRef } from 'vue'
+import { useTemplateRef } from 'vue'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
-import { useAuth, useLoginViewPage } from '@/features/auth'
+import { useLoginPage } from '@/features/auth'
 
-const { login } = useAuth()
-const { redirectTo } = useLoginViewPage()
-const { track } = useProbeEasterEggs()
-
-const loading = ref(false)
-const submitError = ref('')
-const probeMessage = ref('')
-const form = reactive({ username: '', password: '' })
+const { form, loading, submitError, probeMessage, clearSubmitError, handleHeroProbe, onSubmit } =
+  useLoginPage()
 const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
-let probeMessageTimer: number | null = null
 
-function showProbeMessage(message: string) {
-  probeMessage.value = message
-  if (probeMessageTimer) {
-    window.clearTimeout(probeMessageTimer)
-  }
-  probeMessageTimer = window.setTimeout(() => {
-    probeMessage.value = ''
-    probeMessageTimer = null
-  }, 3000)
-}
-
-function emitLoginConsoleHints() {
-  // eslint-disable-next-line no-console
-  console.log(
-    '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
-    'font-weight: bold; font-size: 14px;',
-    'font-style: italic;'
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    `%c
-      :::::::: ::::::::::: :::::::::: 
-    :+:    :+:    :+:     :+:         
-   +:+           +:+     +:+          
-  +#+           +#+     +#++:++#      
- +#+           +#+     +#+            
-#+#    #+#    #+#     #+#             
-########     ###     ###              
-`,
-    'font-weight: bold;'
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cWARNING: %cUnauthorized debugging may lead to "unexpected" results. Good luck, cadet.',
-    'font-weight: bold;',
-    ''
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cAudit note: %ccuriosity detected. Keep it academic.',
-    'font-weight: bold;',
-    ''
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
-    'font-weight: bold;',
-    ''
-  )
-}
-emitLoginConsoleHints()
-
-onBeforeUnmount(() => {
-  if (probeMessageTimer) {
-    window.clearTimeout(probeMessageTimer)
-  }
-})
-
-function handleHeroProbe() {
-  const result = track('login-brand', 4)
-  if (!result.unlocked) {
-    return
-  }
-  showProbeMessage('隐藏入口排查完毕，结果让你失望了。')
-}
-
-async function onSubmit() {
-  const username = form.username.trim() || usernameInput.value?.value?.trim() || ''
-  const password = form.password || passwordInput.value?.value || ''
-  if (loading.value || !username || !password) return
-
-  form.username = username
-  form.password = password
-  loading.value = true
-  submitError.value = ''
-  try {
-    await login(
-      { username, password },
-      redirectTo.value === '/' ? undefined : redirectTo.value
-    )
-  } catch (err) {
-    submitError.value = err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'
-  } finally {
-    loading.value = false
-  }
+function submitWithFallback() {
+  return onSubmit({
+    username: usernameInput.value?.value,
+    password: passwordInput.value?.value,
+  })
 }
 </script>
 

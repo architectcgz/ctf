@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { reactive, ref } from 'vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import loginViewSource from '@/views/auth/LoginView.vue?raw'
@@ -14,18 +15,64 @@ const routeState = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/auth', () => ({
-  useAuth: () => authMocks,
-  useLoginViewPage: () => ({
-    redirectTo: {
-      get value() {
-        return routeState.query.redirect ?? '/'
+  useLoginPage: () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
+      'font-weight: bold; font-size: 14px;',
+      'font-style: italic;'
+    )
+    // eslint-disable-next-line no-console
+    console.log(
+      '%cAudit note: %ccuriosity detected. Keep it academic.',
+      'font-weight: bold;',
+      ''
+    )
+    // eslint-disable-next-line no-console
+    console.log(
+      '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
+      'font-weight: bold;',
+      ''
+    )
+
+    const form = reactive({ username: '', password: '' })
+    const loading = ref(false)
+    const submitError = ref('')
+    const probeMessage = ref('')
+
+    return {
+      form,
+      loading,
+      submitError,
+      probeMessage,
+      clearSubmitError: () => {
+        submitError.value = ''
       },
-    },
-  }),
+      handleHeroProbe: () => {
+        probeMessage.value = '隐藏入口排查完毕，结果让你失望了。'
+      },
+      onSubmit: async (fallbackValues?: { username?: string; password?: string }) => {
+        const username = form.username.trim() || fallbackValues?.username?.trim() || ''
+        const password = form.password || fallbackValues?.password || ''
+        if (loading.value || !username || !password) return
+        loading.value = true
+        submitError.value = ''
+        try {
+          await authMocks.login(
+            { username, password },
+            routeState.query.redirect ? routeState.query.redirect : undefined
+          )
+        } catch (err) {
+          submitError.value = err instanceof Error ? err.message : '身份验证失败，请核对信息'
+        } finally {
+          loading.value = false
+        }
+      },
+    }
+  },
 }))
 vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
-  useRoute: () => routeState,
 }))
 
 describe('LoginView', () => {
@@ -103,8 +150,8 @@ describe('LoginView', () => {
   })
 
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
-    expect(loginViewSource).toContain('useLoginViewPage')
-    expect(loginViewSource).not.toContain('useRoute')
+    expect(loginViewSource).toContain('useLoginPage')
+    expect(loginViewSource).not.toContain('useLoginViewPage')
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
     expect(loginViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"')

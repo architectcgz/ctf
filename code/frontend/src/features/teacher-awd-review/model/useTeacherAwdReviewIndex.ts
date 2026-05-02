@@ -7,6 +7,10 @@ import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
+export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
+  contestCode: string
+}
+
 export function useTeacherAwdReviewIndex() {
   const router = useRouter()
   const authStore = useAuthStore()
@@ -32,6 +36,15 @@ export function useTeacherAwdReviewIndex() {
     runningCount: contests.value.filter((item) => item.status === 'running').length,
     exportReadyCount: contests.value.filter((item) => item.export_ready).length,
   }))
+  const hasActiveFilters = computed(() =>
+    Boolean(filters.value.status || filters.value.keyword.trim())
+  )
+  const reviewRows = computed<PlatformAwdReviewRow[]>(() =>
+    contests.value.map((contest) => ({
+      ...contest,
+      contestCode: `AWD-${contest.id}`,
+    }))
+  )
 
   async function loadContests(): Promise<void> {
     const requestId = ++latestRequestId
@@ -83,6 +96,11 @@ export function useTeacherAwdReviewIndex() {
     router.push({ name: 'PlatformOverview' })
   }
 
+  function resetFilters(): void {
+    filters.value.status = ''
+    filters.value.keyword = ''
+  }
+
   function contestStatusLabel(status: string): string {
     switch (status) {
       case 'running':
@@ -121,7 +139,10 @@ export function useTeacherAwdReviewIndex() {
     hasContests,
     statusOptions,
     contestSummary,
+    hasActiveFilters,
+    reviewRows,
     loadContests,
+    resetFilters,
     openDashboard,
     openPlatformOverview,
     openContest,

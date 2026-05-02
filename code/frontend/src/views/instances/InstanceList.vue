@@ -4,6 +4,8 @@ import { ref } from 'vue'
 import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
+  canOpenInstanceInBrowser,
+  formatInstanceAccessDisplay,
   formatRemainingTime,
   getInstanceStatusClass,
   getInstanceStatusLabel,
@@ -30,25 +32,6 @@ const {
 } = useInstanceListPage()
 
 const warningCloseButton = ref<HTMLButtonElement | null>(null)
-
-function formatInstanceAccess(instance: {
-  access_url?: string
-  access?: { command?: string }
-  ssh_info?: { host: string; port: number }
-}): string {
-  return (
-    instance.access?.command ||
-    instance.access_url ||
-    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-  )
-}
-
-function canOpenInstanceInBrowser(instance: {
-  access_url?: string
-  access?: { protocol?: string }
-}): boolean {
-  return Boolean(instance.access_url) && instance.access?.protocol !== 'tcp'
-}
 useInstanceWarningFocus({ showWarning, warningCloseButton })
 </script>
 
@@ -143,15 +126,15 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
               <template v-if="instance.status === 'running'">
                 <div
                   class="instance-row-mono instance-row-access-value"
-                  :title="formatInstanceAccess(instance)"
+                  :title="formatInstanceAccessDisplay(instance)"
                 >
-                  {{ formatInstanceAccess(instance) }}
+                  {{ formatInstanceAccessDisplay(instance) }}
                 </div>
                 <div class="instance-row-inline-actions">
                   <button
                     type="button"
                     class="ui-btn ui-btn--link instance-link-btn"
-                    @click="copyAddress(formatInstanceAccess(instance))"
+                    @click="copyAddress(formatInstanceAccessDisplay(instance))"
                   >
                     复制
                   </button>

@@ -122,6 +122,22 @@ export function getInstanceWaitingHint(
   return details.join('，')
 }
 
+export function formatInstanceAccessDisplay(
+  instance: Pick<InstanceListItem, 'access_url' | 'access' | 'ssh_info'>
+): string {
+  return (
+    instance.access?.command ||
+    instance.access_url ||
+    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+  )
+}
+
+export function canOpenInstanceInBrowser(
+  instance: Pick<InstanceListItem, 'access_url' | 'access'>
+): boolean {
+  return Boolean(instance.access_url) && instance.access?.protocol !== 'tcp'
+}
+
 export function useInstanceListPage() {
   const toast = useToast()
   const { copy } = useClipboard()

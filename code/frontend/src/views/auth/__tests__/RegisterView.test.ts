@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { reactive, ref } from 'vue'
 
 import RegisterView from '@/views/auth/RegisterView.vue'
 import registerViewSource from '@/views/auth/RegisterView.vue?raw'
@@ -9,7 +10,36 @@ const authMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/auth', () => ({
-  useAuth: () => authMocks,
+  useRegisterPage: () => {
+    const form = reactive({ username: '', password: '', class_name: '' })
+    const loading = ref(false)
+    const submitError = ref('')
+
+    return {
+      form,
+      loading,
+      submitError,
+      clearSubmitError: () => {
+        submitError.value = ''
+      },
+      onSubmit: async () => {
+        if (loading.value || !form.username || !form.password) return
+        loading.value = true
+        submitError.value = ''
+        try {
+          await authMocks.register({
+            username: form.username,
+            password: form.password,
+            class_name: form.class_name.trim() || undefined,
+          })
+        } catch (err) {
+          submitError.value = err instanceof Error ? err.message : '注册失败，请稍后重试'
+        } finally {
+          loading.value = false
+        }
+      },
+    }
+  },
 }))
 
 vi.mock('vue-router', () => ({
@@ -135,6 +165,7 @@ describe('RegisterView', () => {
   })
 
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
+    expect(registerViewSource).toContain('useRegisterPage')
     expect(registerViewSource).toContain('class="ui-control-wrap"')
     expect(registerViewSource).toContain('class="ui-control"')
     expect(registerViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"')

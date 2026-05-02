@@ -454,6 +454,79 @@ npm run test:run -- src/views/dashboard/__tests__/DashboardView.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch H1/H2（auth 路由页流程收口）
+- 新增 feature 流程模型：
+  - `features/auth/model/useRegisterPage.ts`
+  - `features/auth/model/useLoginPage.ts`
+- `RegisterView.vue` 与 `LoginView.vue` 已改为组合层：
+  - 表单状态、提交流程、错误态、重复提交保护均由 feature composable 承担。
+  - `LoginView` 的 probe 提示与控制台提示逻辑已下沉至 `useLoginPage`。
+  - 浏览器自动填充场景仍通过 fallback 值保留原有提交行为。
+- 补充测试：
+  - `features/auth/model/useRegisterPage.test.ts`
+  - `features/auth/model/useLoginPage.test.ts`
+- 更新路由页边界断言：
+  - `views/auth/__tests__/LoginView.test.ts`
+  - `views/auth/__tests__/RegisterView.test.ts`
+
+验证：
+```bash
+npm run test:run -- src/features/auth/model/useLoginPage.test.ts src/features/auth/model/useRegisterPage.test.ts src/features/auth/model/useLoginViewPage.test.ts src/views/auth/__tests__/LoginView.test.ts src/views/auth/__tests__/RegisterView.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch H3（AWDReviewIndex 展示逻辑收口）
+- `features/teacher-awd-review/model/useTeacherAwdReviewIndex.ts` 新增并统一返回：
+  - `hasActiveFilters`
+  - `reviewRows`
+  - `resetFilters`
+- `AWDReviewIndex.vue` 已移除本地筛选/统计/映射计算，改为直接消费 feature 输出。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/AWDReviewIndex.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch H4（TeacherStudentAnalysis 弹窗状态收口）
+- `useTeacherStudentAnalysisPage.ts` 新增：
+  - `reportDialogVisible`
+  - `openClassReportDialog`
+- `TeacherStudentAnalysis.vue` 已去除本地 `ref` 与 `openClassReportDialog`，完全由 feature 输出驱动报告导出弹窗开关。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch H5（InstanceList 访问展示 helper 下沉）
+- `features/instance-list/model/useInstanceListPage.ts` 新增并导出：
+  - `formatInstanceAccessDisplay`
+  - `canOpenInstanceInBrowser`
+- `views/instances/InstanceList.vue` 已移除本地访问展示 helper，改为复用 feature 层实现，避免 route view 累积业务判断。
+
+验证：
+```bash
+npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch G3 子项（contest-awd-config draft 模块拆分）
+- 新增 `features/contest-awd-config/model/useAwdCheckerConfigDraft.ts`，收口以下能力：
+  - checker 草稿状态（legacy/http/tcp/script）
+  - 表单分值与字段错误态
+  - checker config 预览 JSON 与签名派生
+  - 校验、草稿 hydrate、HTTP 预设、TCP step 增删折叠
+- `useContestAwdConfigPage.ts` 已改为组装层，保留路由、加载、保存、试跑流程；草稿细节不再堆叠在主 composable。
+- `features/contest-awd-config/model/index.ts` 已补充 `useAwdCheckerConfigDraft` 导出。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

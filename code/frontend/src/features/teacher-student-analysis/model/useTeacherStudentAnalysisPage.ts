@@ -80,6 +80,7 @@ export function useTeacherStudentAnalysisPage() {
   const reviewArchiveSubmitting = ref(false)
   const downloadingReviewArchive = ref(false)
   const pendingReviewArchiveReportId = ref<string | null>(null)
+  const reportDialogVisible = ref(false)
 
   const selectedStudent = computed(
     () => students.value.find((item) => item.id === selectedStudentId.value) ?? null
@@ -343,6 +344,10 @@ export function useTeacherStudentAnalysisPage() {
     })
   }
 
+  function openClassReportDialog(): void {
+    reportDialogVisible.value = true
+  }
+
   async function downloadGeneratedReport(reportId: string): Promise<void> {
     downloadingReviewArchive.value = true
     try {
@@ -480,6 +485,7 @@ export function useTeacherStudentAnalysisPage() {
     activeManualReview,
     manualReviewLoading,
     manualReviewSaving,
+    reportDialogVisible,
     solvedRate,
     weakDimensions,
     initialize,
@@ -488,6 +494,7 @@ export function useTeacherStudentAnalysisPage() {
     selectClass,
     selectStudent,
     openChallenge,
+    openClassReportDialog,
     openReviewArchivePage,
     handleExportReviewArchive,
     openManualReview,

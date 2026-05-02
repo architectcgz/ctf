@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useTeacherStudentAnalysisPage } from '@/features/teacher-student-analysis'
-
-const reportDialogVisible = ref(false)
 
 const {
   classes,
@@ -31,6 +27,7 @@ const {
   activeManualReview,
   manualReviewLoading,
   manualReviewSaving,
+  reportDialogVisible,
   solvedRate,
   weakDimensions,
   initialize,
@@ -39,6 +36,7 @@ const {
   selectClass,
   selectStudent,
   openChallenge,
+  openClassReportDialog,
   openReviewArchivePage,
   handleExportReviewArchive,
   openManualReview,
@@ -46,10 +44,6 @@ const {
   reviewManualReview,
   changeWriteupPage,
 } = useTeacherStudentAnalysisPage()
-
-function openClassReportDialog(): void {
-  reportDialogVisible.value = true
-}
 </script>
 
 <template>
