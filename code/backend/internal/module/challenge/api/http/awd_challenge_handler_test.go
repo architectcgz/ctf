@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 )
 
 func TestAWDChallengeHandlerListChallenges(t *testing.T) {
@@ -55,11 +56,11 @@ type stubAWDChallengeCommandService struct {
 	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error)
 }
 
-func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	return nil, nil
 }
 
-func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	return nil, nil
 }
 

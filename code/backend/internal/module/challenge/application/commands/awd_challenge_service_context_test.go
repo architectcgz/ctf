@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -66,7 +65,7 @@ func TestAWDChallengeServiceCreateChallengePropagatesContextToRepository(t *test
 	service := NewAWDChallengeService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateChallenge(ctx, 2001, &dto.CreateAWDChallengeReq{
+	resp, err := service.CreateChallenge(ctx, 2001, CreateAWDChallengeInput{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -124,7 +123,7 @@ func TestAWDChallengeServiceUpdateChallengePropagatesContextToRepository(t *test
 	service := NewAWDChallengeService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpdateChallenge(ctx, 99, &dto.UpdateAWDChallengeReq{
+	resp, err := service.UpdateChallenge(ctx, 99, UpdateAWDChallengeInput{
 		Name:   "Bank Portal AWD",
 		Status: string(model.AWDChallengeStatusPublished),
 	})
