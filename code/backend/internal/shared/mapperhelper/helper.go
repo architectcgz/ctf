@@ -28,3 +28,10 @@ func CopyTimeToPtr(value time.Time) *time.Time {
 func SingleString(value string) []string {
 	return []string{value}
 }
+
+func NonNilSlice[T any](items []T) []T {
+	if len(items) == 0 {
+		return []T{}
+	}
+	return items
+}

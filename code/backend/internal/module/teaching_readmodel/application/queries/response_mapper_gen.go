@@ -30,6 +30,14 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassSummary(source ports.ClassS
 	dtoTeacherClassSummaryResp.RecentEventCount = source.RecentEventCount
 	return dtoTeacherClassSummaryResp
 }
+func (c *teachingReadmodelResponseMapperImpl) ToClassSummaryPtr(source *ports.ClassSummary) *dto.TeacherClassSummaryResp {
+	var pDtoTeacherClassSummaryResp *dto.TeacherClassSummaryResp
+	if source != nil {
+		dtoTeacherClassSummaryResp := c.ToClassSummary((*source))
+		pDtoTeacherClassSummaryResp = &dtoTeacherClassSummaryResp
+	}
+	return pDtoTeacherClassSummaryResp
+}
 func (c *teachingReadmodelResponseMapperImpl) ToClassTrendResp(source ports.ClassTrend) dto.TeacherClassTrendResp {
 	var dtoTeacherClassTrendResp dto.TeacherClassTrendResp
 	dtoTeacherClassTrendResp.ClassName = source.ClassName
@@ -40,6 +48,14 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassTrendResp(source ports.Clas
 		}
 	}
 	return dtoTeacherClassTrendResp
+}
+func (c *teachingReadmodelResponseMapperImpl) ToClassTrendRespPtr(source *ports.ClassTrend) *dto.TeacherClassTrendResp {
+	var pDtoTeacherClassTrendResp *dto.TeacherClassTrendResp
+	if source != nil {
+		dtoTeacherClassTrendResp := c.ToClassTrendResp((*source))
+		pDtoTeacherClassTrendResp = &dtoTeacherClassTrendResp
+	}
+	return pDtoTeacherClassTrendResp
 }
 func (c *teachingReadmodelResponseMapperImpl) ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
 	var dtoTeacherReviewStudentRefList []dto.TeacherReviewStudentRef

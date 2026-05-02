@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -72,7 +73,7 @@ func (s *QueryService) ListClasses(
 		if err != nil {
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
-		return toClassItems(items), total, page, size, nil
+		return commonmapper.NonNilSlice(teachingReadmodelMapper.ToClassItems(items)), total, page, size, nil
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
@@ -173,7 +174,7 @@ func (s *QueryService) ListStudents(
 	if err != nil {
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
-	return toStudentItems(items), total, page, size, nil
+	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), total, page, size, nil
 }
 
 func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirectoryQuery) (int, int) {
@@ -222,7 +223,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toStudentItems(items), nil
+	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), nil
 }
 
 func (s *QueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error) {
@@ -238,7 +239,7 @@ func (s *QueryService) GetClassSummary(ctx context.Context, requesterID int64, r
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toClassSummary(summary), nil
+	return teachingReadmodelMapper.ToClassSummaryPtr(summary), nil
 }
 
 func (s *QueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error) {
@@ -256,7 +257,7 @@ func (s *QueryService) GetClassTrend(ctx context.Context, requesterID int64, req
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toClassTrend(trend), nil
+	return teachingReadmodelMapper.ToClassTrendRespPtr(trend), nil
 }
 
 func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error) {
@@ -284,9 +285,9 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	studentItems := toStudentItems(students)
-	summaryDTO := toClassSummary(summary)
-	trendDTO := toClassTrend(trend)
+	studentItems := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(students))
+	summaryDTO := teachingReadmodelMapper.ToClassSummaryPtr(summary)
+	trendDTO := teachingReadmodelMapper.ToClassTrendRespPtr(trend)
 
 	items := make([]dto.TeacherClassReviewItem, 0, 4)
 	riskStudents := selectRiskStudents(studentItems, 3)
@@ -322,7 +323,7 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 			Title:    "优先补薄弱维度",
 			Detail:   fmt.Sprintf("%s 是当前最集中的薄弱项，涉及 %d 名学生，建议本周统一布置该维度基础题。", weakDimension, len(weakStudents)),
 			Accent:   "primary",
-			Students: toReviewStudentRefs(limitStudents(weakStudents, 3)),
+			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(limitStudents(weakStudents, 3))),
 		}
 		if len(weakStudents) >= 3 {
 			item.Accent = "warning"
@@ -339,7 +340,7 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 			Title:    "先跟进重点学生",
 			Detail:   fmt.Sprintf("建议教师先跟进 %s，并优先布置推荐题做补强训练。", joinStudentNames(riskStudents)),
 			Accent:   "primary",
-			Students: toReviewStudentRefs(riskStudents),
+			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(riskStudents)),
 		}
 		if recommendation := s.firstStudentRecommendation(ctx, riskStudents, 1); recommendation != nil {
 			item.Recommendation = recommendation
@@ -427,7 +428,7 @@ func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TimelineResp{Events: toTimelineEvents(events)}, nil
+	return &dto.TimelineResp{Events: commonmapper.NonNilSlice(teachingReadmodelMapper.ToTimelineEvents(events))}, nil
 }
 
 func (s *QueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
@@ -513,43 +514,6 @@ func (s *QueryService) ensureClassAccess(ctx context.Context, requesterID int64,
 	return nil
 }
 
-func toClassItems(items []readmodelports.ClassItem) []dto.TeacherClassItem {
-	if len(items) == 0 {
-		return []dto.TeacherClassItem{}
-	}
-	return teachingReadmodelMapper.ToClassItems(items)
-}
-
-func toStudentItems(items []readmodelports.StudentItem) []dto.TeacherStudentItem {
-	if len(items) == 0 {
-		return []dto.TeacherStudentItem{}
-	}
-	return teachingReadmodelMapper.ToStudentItems(items)
-}
-
-func toClassSummary(summary *readmodelports.ClassSummary) *dto.TeacherClassSummaryResp {
-	if summary == nil {
-		return nil
-	}
-	mapped := teachingReadmodelMapper.ToClassSummary(*summary)
-	return &mapped
-}
-
-func toClassTrend(trend *readmodelports.ClassTrend) *dto.TeacherClassTrendResp {
-	if trend == nil {
-		return nil
-	}
-	mapped := teachingReadmodelMapper.ToClassTrendResp(*trend)
-	return &mapped
-}
-
-func toTimelineEvents(events []readmodelports.TimelineEventRecord) []dto.TimelineEvent {
-	if len(events) == 0 {
-		return []dto.TimelineEvent{}
-	}
-	return teachingReadmodelMapper.ToTimelineEvents(events)
-}
-
 func toProgressBreakdownMap(rows []readmodelports.ProgressRow) map[string]dto.ProgressBreakdown {
 	if len(rows) == 0 {
 		return map[string]dto.ProgressBreakdown{}
@@ -631,13 +595,6 @@ func limitStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherSt
 		return students
 	}
 	return students[:limit]
-}
-
-func toReviewStudentRefs(students []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
-	if len(students) == 0 {
-		return []dto.TeacherReviewStudentRef{}
-	}
-	return teachingReadmodelMapper.ToReviewStudentRefs(students)
 }
 
 func joinStudentNames(students []dto.TeacherStudentItem) string {

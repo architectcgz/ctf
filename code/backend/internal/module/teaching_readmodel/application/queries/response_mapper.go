@@ -17,7 +17,9 @@ type teachingReadmodelResponseMapper interface {
 	ToClassItems(source []readmodelports.ClassItem) []dto.TeacherClassItem
 	ToStudentItems(source []readmodelports.StudentItem) []dto.TeacherStudentItem
 	ToClassSummary(source readmodelports.ClassSummary) dto.TeacherClassSummaryResp
+	ToClassSummaryPtr(source *readmodelports.ClassSummary) *dto.TeacherClassSummaryResp
 	ToClassTrendResp(source readmodelports.ClassTrend) dto.TeacherClassTrendResp
+	ToClassTrendRespPtr(source *readmodelports.ClassTrend) *dto.TeacherClassTrendResp
 	ToTimelineEvents(source []readmodelports.TimelineEventRecord) []dto.TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
 }
