@@ -77,6 +77,23 @@ func (c *teachingReadmodelResponseMapperImpl) ToStudentItems(source []ports.Stud
 	}
 	return dtoTeacherStudentItemList
 }
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem {
+	var dtoTeacherRecommendationItem dto.TeacherRecommendationItem
+	dtoTeacherRecommendationItem.ChallengeID = source.ID
+	dtoTeacherRecommendationItem.Title = source.Title
+	dtoTeacherRecommendationItem.Category = source.Category
+	dtoTeacherRecommendationItem.Difficulty = source.Difficulty
+	dtoTeacherRecommendationItem.Reason = source.Reason
+	return dtoTeacherRecommendationItem
+}
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem {
+	var pDtoTeacherRecommendationItem *dto.TeacherRecommendationItem
+	if source != nil {
+		dtoTeacherRecommendationItem := c.ToTeacherRecommendationItem((*source))
+		pDtoTeacherRecommendationItem = &dtoTeacherRecommendationItem
+	}
+	return pDtoTeacherRecommendationItem
+}
 func (c *teachingReadmodelResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []dto.TimelineEvent {
 	var dtoTimelineEventList []dto.TimelineEvent
 	if source != nil {

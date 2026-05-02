@@ -402,19 +402,14 @@ func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterI
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-
 	items := make([]dto.TeacherRecommendationItem, 0, len(result.Challenges))
 	for _, challenge := range result.Challenges {
-		items = append(items, dto.TeacherRecommendationItem{
-			ChallengeID: challenge.ID,
-			Title:       challenge.Title,
-			Category:    challenge.Category,
-			Difficulty:  challenge.Difficulty,
-			Reason:      challenge.Reason,
-		})
+		if challenge == nil {
+			continue
+		}
+		items = append(items, *teachingReadmodelMapper.ToTeacherRecommendationItemPtr(challenge))
 	}
-
-	return items, nil
+	return commonmapper.NonNilSlice(items), nil
 }
 
 func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error) {
@@ -644,14 +639,7 @@ func (s *QueryService) firstStudentRecommendation(ctx context.Context, students 
 		if result == nil || len(result.Challenges) == 0 || result.Challenges[0] == nil {
 			continue
 		}
-		recommendation := result.Challenges[0]
-		return &dto.TeacherRecommendationItem{
-			ChallengeID: recommendation.ID,
-			Title:       recommendation.Title,
-			Category:    recommendation.Category,
-			Difficulty:  recommendation.Difficulty,
-			Reason:      recommendation.Reason,
-		}
+		return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(result.Challenges[0])
 	}
 	return nil
 }

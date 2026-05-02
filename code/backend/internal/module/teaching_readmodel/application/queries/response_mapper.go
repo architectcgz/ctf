@@ -22,6 +22,9 @@ type teachingReadmodelResponseMapper interface {
 	ToClassTrendRespPtr(source *readmodelports.ClassTrend) *dto.TeacherClassTrendResp
 	ToTimelineEvents(source []readmodelports.TimelineEventRecord) []dto.TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
+	// goverter:map ID ChallengeID
+	ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem
+	ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem
 }
 
 var teachingReadmodelMapper teachingReadmodelResponseMapper
