@@ -21,16 +21,20 @@ import (
 type ContestAWDServiceService struct {
 	repo                 contestports.AWDServiceStore
 	contestRepo          contestports.ContestLookupRepository
-	contestChallengeRepo contestports.ContestChallengeRepository
+	contestChallengeRepo contestChallengeRelationRepository
 	challengeRepo        challengecontracts.ContestChallengeContract
 	awdChallengeRepo     challengeports.AWDChallengeQueryRepository
 	redis                *redislib.Client
 }
 
+type contestChallengeRelationRepository interface {
+	contestports.ContestChallengeWriteRepository
+}
+
 func NewContestAWDServiceService(
 	repo contestports.AWDServiceStore,
 	contestRepo contestports.ContestLookupRepository,
-	contestChallengeRepo contestports.ContestChallengeRepository,
+	contestChallengeRepo contestChallengeRelationRepository,
 	challengeRepo challengecontracts.ContestChallengeContract,
 	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
 	redis *redislib.Client,

@@ -6,13 +6,13 @@ import (
 )
 
 type ChallengeService struct {
-	repo          contestports.ContestChallengeRepository
+	repo          contestports.ContestChallengeReadRepository
 	challengeRepo challengecontracts.ContestChallengeContract
 	contestRepo   contestports.ContestLookupRepository
-	awdRepo       contestports.AWDServiceStore
+	awdRepo       contestports.ContestChallengeAWDServiceListRepository
 }
 
-func NewChallengeService(repo contestports.ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.ContestLookupRepository, awdRepo contestports.AWDServiceStore) *ChallengeService {
+func NewChallengeService(repo contestports.ContestChallengeReadRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.ContestLookupRepository, awdRepo contestports.ContestChallengeAWDServiceListRepository) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,

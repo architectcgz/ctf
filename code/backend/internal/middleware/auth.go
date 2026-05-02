@@ -12,8 +12,8 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-func Auth(tokenService authcontracts.TokenService, cookieName string, users ...identitycontracts.UserRepository) gin.HandlerFunc {
-	var userRepo identitycontracts.UserRepository
+func Auth(tokenService authcontracts.TokenService, cookieName string, users ...identitycontracts.UserLookupRepository) gin.HandlerFunc {
+	var userRepo identitycontracts.UserLookupRepository
 	if len(users) > 0 {
 		userRepo = users[0]
 	}

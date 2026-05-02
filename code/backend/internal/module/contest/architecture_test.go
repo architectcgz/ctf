@@ -266,6 +266,18 @@ func TestPortsDoNotDeclareWideTeamParticipationOrSubmissionRepositories(t *testi
 	}
 }
 
+func TestPortsDoNotDeclareWideContestChallengeRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "challenge.go"))
+	if err != nil {
+		t.Fatalf("read contest challenge ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type ContestChallengeRepository interface") {
+		t.Fatalf("contest ports must not declare the legacy wide ContestChallengeRepository interface")
+	}
+}
+
 func TestRuntimeOwnsContestWiring(t *testing.T) {
 	t.Parallel()
 
