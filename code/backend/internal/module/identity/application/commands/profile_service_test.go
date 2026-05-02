@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
@@ -92,7 +91,7 @@ func TestProfileServiceChangePasswordSuccess(t *testing.T) {
 		},
 	}, zap.NewNop())
 
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+	err := service.ChangePassword(context.Background(), user.ID, identitycontracts.ChangePasswordInput{
 		OldPassword: "Password123",
 		NewPassword: "Password456",
 	})
@@ -125,7 +124,7 @@ func TestProfileServiceChangePasswordOldPasswordInvalid(t *testing.T) {
 		},
 	}, zap.NewNop())
 
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+	err := service.ChangePassword(context.Background(), user.ID, identitycontracts.ChangePasswordInput{
 		OldPassword: "wrong-password",
 		NewPassword: "Password456",
 	})
@@ -152,7 +151,7 @@ func TestProfileServiceChangePasswordRejectsSamePassword(t *testing.T) {
 		},
 	}, zap.NewNop())
 
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+	err := service.ChangePassword(context.Background(), user.ID, identitycontracts.ChangePasswordInput{
 		OldPassword: "Password123",
 		NewPassword: "Password123",
 	})

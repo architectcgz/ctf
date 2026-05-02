@@ -10,6 +10,11 @@ type ProfileQueryService interface {
 	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
 }
 
+type ChangePasswordInput struct {
+	OldPassword string
+	NewPassword string
+}
+
 type ProfileCommandService interface {
-	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
+	ChangePassword(ctx context.Context, userID int64, req ChangePasswordInput) error
 }

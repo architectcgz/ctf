@@ -16,6 +16,7 @@ import (
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -26,7 +27,7 @@ type authCommandService interface {
 }
 
 type profileCommandService interface {
-	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
+	ChangePassword(ctx context.Context, userID int64, req identitycontracts.ChangePasswordInput) error
 }
 
 type profileQueryService interface {
@@ -201,7 +202,10 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
+	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, identitycontracts.ChangePasswordInput{
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	}); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
 			Action:       model.AuditActionUpdate,

@@ -6,7 +6,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
@@ -28,7 +27,7 @@ func NewProfileService(users identitycontracts.UserRepository, log *zap.Logger) 
 	}
 }
 
-func (s *ProfileService) ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error {
+func (s *ProfileService) ChangePassword(ctx context.Context, userID int64, req identitycontracts.ChangePasswordInput) error {
 	user, err := s.users.FindByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, identitycontracts.ErrUserNotFound) {
