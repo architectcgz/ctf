@@ -5,6 +5,7 @@ export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWo
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
 export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'
 export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
+export { default as TeacherAWDReviewContestRowCta } from './TeacherAWDReviewContestRowCta.vue'
 export { default as TeacherAWDReviewContestHead } from './TeacherAWDReviewContestHead.vue'
 export { default as TeacherAWDReviewDirectoryState } from './TeacherAWDReviewDirectoryState.vue'
 export { default as TeacherAWDReviewDirectorySection } from './TeacherAWDReviewDirectorySection.vue'

@@ -9,6 +9,7 @@ import awdReviewIndexFiltersSource from '@/widgets/teacher-awd-review/TeacherAWD
 import awdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestHead.vue?raw'
 import awdReviewContestRowSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRow.vue?raw'
+import awdReviewContestRowCtaSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRowCta.vue?raw'
 import awdReviewDirectoryStateSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectoryState.vue?raw'
 
 describe('Teacher AWD review index workspace extraction', () => {
@@ -37,6 +38,8 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewDirectoryStateSource).toContain('title="AWD复盘目录加载失败"')
     expect(awdReviewContestHeadSource).toContain('class="teacher-directory-head"')
     expect(awdReviewContestHeadSource).toContain("AWD_REVIEW_DIRECTORY_HEADERS")
+    expect(awdReviewContestRowSource).toContain('<TeacherAWDReviewContestRowCta')
     expect(awdReviewContestRowSource).toContain('class="teacher-directory-row"')
+    expect(awdReviewContestRowCtaSource).toContain('class="teacher-directory-row-cta"')
   })
 })

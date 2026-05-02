@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ArrowRight } from 'lucide-vue-next'
-
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { formatDate } from '@/utils/format'
+import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
 
 defineProps<{
   contest: TeacherAWDReviewContestItemData
@@ -58,10 +57,7 @@ const emit = defineEmits<{
       </span>
     </div>
 
-    <div class="teacher-directory-row-cta">
-      <span>进入复盘</span>
-      <ArrowRight class="h-4 w-4" />
-    </div>
+    <TeacherAWDReviewContestRowCta />
   </button>
 </template>
 
@@ -154,15 +150,6 @@ const emit = defineEmits<{
 .teacher-directory-chip-muted {
   background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
   color: var(--journal-muted);
-}
-
-.teacher-directory-row-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  color: var(--journal-accent-strong);
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
 }
 
 @media (max-width: 1080px) {
