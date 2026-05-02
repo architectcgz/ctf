@@ -68,13 +68,8 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 		s.logger.Warn("查询用户名失败", zap.Int64("userID", userID), zap.Error(userErr))
 	}
 
-	info := &dto.UserScoreInfo{
-		UserID:      userScore.UserID,
-		Username:    userProfiles[userID].Username,
-		TotalScore:  userScore.TotalScore,
-		SolvedCount: userScore.SolvedCount,
-		Rank:        userScore.Rank,
-	}
+	info := practiceQueryResponseMapperInst.ToUserScoreInfoBasePtr(userScore)
+	info.Username = userProfiles[userID].Username
 
 	data, _ := json.Marshal(info)
 	s.redis.Set(ctx, cacheKey, data, s.config.CacheTTL)
@@ -102,14 +97,12 @@ func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*dto.Rankin
 
 	result := make([]*dto.RankingItem, 0, len(scores))
 	for idx, score := range scores {
-		result = append(result, &dto.RankingItem{
-			Rank:        idx + 1,
-			UserID:      score.UserID,
-			Username:    userProfiles[score.UserID].Username,
-			TotalScore:  score.TotalScore,
-			SolvedCount: score.SolvedCount,
-			ClassName:   userProfiles[score.UserID].ClassName,
-		})
+		scoreCopy := score
+		item := practiceQueryResponseMapperInst.ToRankingItemBasePtr(&scoreCopy)
+		item.Rank = idx + 1
+		item.Username = userProfiles[score.UserID].Username
+		item.ClassName = userProfiles[score.UserID].ClassName
+		result = append(result, item)
 	}
 
 	return result, nil
