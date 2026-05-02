@@ -80,8 +80,9 @@ describe('PlatformInstanceManagement', () => {
   })
 
   it('应保留当前后台实例页样式并复用 teacher 实例接口', async () => {
-    expect(adminInstanceManageSource).toContain("from '@/api/teacher'")
-    expect(adminInstanceManageSource).toContain("from '@/composables/useDestructiveConfirm'")
+    expect(adminInstanceManageSource).toContain("usePlatformInstanceManagementPage } from '@/features/platform-users'")
+    expect(adminInstanceManageSource).not.toContain("from '@/api/teacher'")
+    expect(adminInstanceManageSource).not.toContain("from '@/composables/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useAdminDestructiveConfirm'")
     expect(adminInstanceManageSource).toContain(
