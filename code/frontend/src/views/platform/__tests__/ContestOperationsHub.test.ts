@@ -95,6 +95,11 @@ describe('ContestOperationsHub', () => {
     expect(wrapper.text()).toContain('进入运维台')
   })
 
+  it('路由页应仅负责组合，不直接耦合赛事运维目录请求流程', () => {
+    expect(contestOperationsHubSource).toContain('useContestOperationsHubPage')
+    expect(contestOperationsHubSource).not.toContain("from '@/api/admin/contests'")
+  })
+
   it('routes to the per-contest operations workspace from the directory entry', async () => {
     const wrapper = mount(ContestOperationsHub)
     await flushPromises()

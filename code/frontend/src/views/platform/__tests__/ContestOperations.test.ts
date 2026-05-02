@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperations from '../ContestOperations.vue'
+import contestOperationsSource from '../ContestOperations.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -81,6 +82,11 @@ describe('ContestOperations', () => {
     expect(wrapper.text()).not.toContain('返回')
     expect(wrapper.text()).not.toContain('进入竞赛工作室')
     expect(pushMock).not.toHaveBeenCalled()
+  })
+
+  it('路由页应仅负责组合，不直接耦合单场赛事查询流程', () => {
+    expect(contestOperationsSource).toContain('useContestOperationsPage')
+    expect(contestOperationsSource).not.toContain("from '@/api/admin/contests'")
   })
 
   it('父页不再提供实例编排 tab，panel=instances 仍直接显示轮次态势', async () => {
