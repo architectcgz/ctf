@@ -14,6 +14,12 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :queries
 type adminUserResponseMapper interface {
+	// goverter:ignore Avatar
+	// goverter:ignore Name
+	// goverter:ignore ClassName
+	ToAuthUserBase(source model.User) dto.AuthUser
+	ToAuthUserBasePtr(source *model.User) *dto.AuthUser
+
 	// goverter:ignore Name
 	// goverter:ignore Email
 	// goverter:ignore StudentNo

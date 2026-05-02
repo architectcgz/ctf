@@ -26,3 +26,18 @@ func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *dt
 	}
 	return pDtoAdminUserResp
 }
+func (c *adminUserResponseMapperImpl) ToAuthUserBase(source model.User) dto.AuthUser {
+	var dtoAuthUser dto.AuthUser
+	dtoAuthUser.ID = source.ID
+	dtoAuthUser.Username = source.Username
+	dtoAuthUser.Role = source.Role
+	return dtoAuthUser
+}
+func (c *adminUserResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *dto.AuthUser {
+	var pDtoAuthUser *dto.AuthUser
+	if source != nil {
+		dtoAuthUser := c.ToAuthUserBase((*source))
+		pDtoAuthUser = &dtoAuthUser
+	}
+	return pDtoAuthUser
+}

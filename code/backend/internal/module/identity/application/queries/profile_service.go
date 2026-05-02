@@ -3,11 +3,11 @@ package queries
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,20 +35,8 @@ func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*dto.Aut
 }
 
 func buildAuthUser(user *model.User) dto.AuthUser {
-	var name *string
-	if strings.TrimSpace(user.Name) != "" {
-		name = &user.Name
-	}
-	var className *string
-	if strings.TrimSpace(user.ClassName) != "" {
-		className = &user.ClassName
-	}
-
-	return dto.AuthUser{
-		ID:        user.ID,
-		Username:  user.Username,
-		Role:      user.Role,
-		Name:      name,
-		ClassName: className,
-	}
+	resp := adminUserMapper.ToAuthUserBasePtr(user)
+	resp.Name = commonmapper.NormalizeOptionalTrimmedString(user.Name)
+	resp.ClassName = commonmapper.NormalizeOptionalTrimmedString(user.ClassName)
+	return *resp
 }
