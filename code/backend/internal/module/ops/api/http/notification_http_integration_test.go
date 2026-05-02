@@ -123,7 +123,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 		t.Fatal("expected consumed ticket to be rejected on second use")
 	}
 
-	if err := env.notificationService.SendNotification(context.Background(), user.ID, &dto.NotificationReq{
+	if err := env.notificationService.SendNotification(context.Background(), user.ID, opscmd.SendNotificationInput{
 		Type:    model.NotificationTypeSystem,
 		Title:   "比赛开始提醒",
 		Content: "Practice 模块将于 10 分钟后维护",

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
@@ -144,7 +143,7 @@ func (s *challengePublishNotificationSender) SendChallengePublishCheckResult(ctx
 		content = fmt.Sprintf("《%s》未通过平台自检：%s", challengeTitle, failureSummary)
 	}
 	link := fmt.Sprintf("/admin/challenges/%d", challengeID)
-	return s.service.SendNotification(ctx, userID, &dto.NotificationReq{
+	return s.service.SendNotification(ctx, userID, opscmd.SendNotificationInput{
 		Type:    model.NotificationTypeChallenge,
 		Title:   title,
 		Content: content,

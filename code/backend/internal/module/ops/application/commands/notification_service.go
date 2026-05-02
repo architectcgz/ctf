@@ -56,7 +56,7 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
 	}
 	link := fmt.Sprintf("/challenges/%d", payload.ChallengeID)
-	return s.SendNotification(ctx, payload.UserID, &dto.NotificationReq{
+	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
 		Type:    "challenge",
 		Title:   "题目解出",
 		Content: fmt.Sprintf("你已成功提交题目 #%d 的 Flag，获得 %d 分。", payload.ChallengeID, payload.Points),
@@ -64,7 +64,7 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 	})
 }
 
-func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req *dto.NotificationReq) error {
+func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req SendNotificationInput) error {
 	notification := &model.Notification{
 		UserID:  userID,
 		Type:    req.Type,
@@ -86,8 +86,8 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 	return nil
 }
 
-func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req *dto.AdminNotificationPublishReq) (*dto.AdminNotificationPublishResp, error) {
-	if req == nil || req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
+func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req PublishAdminNotificationInput) (*dto.AdminNotificationPublishResp, error) {
+	if req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
 		return nil, errcode.ErrInvalidParams
 	}
 
@@ -200,7 +200,7 @@ func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
 	}
 }
 
-func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule dto.NotificationAudienceRuleReq) ([]int64, error) {
+func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule NotificationAudienceRuleInput) ([]int64, error) {
 	switch rule.Type {
 	case dto.NotificationAudienceTypeAll:
 		userIDs, err := s.repo.ListAllUserIDs(ctx)
