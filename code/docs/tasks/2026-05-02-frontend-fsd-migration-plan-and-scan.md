@@ -1103,6 +1103,22 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AE 子项（AWD 配置页保存提交流程拆分）
+- 新增 `features/contest-awd-config/model/useAwdCheckerSaveFlow.ts`，承接：
+  - 保存中状态控制（`saving`）
+  - checker payload 组装与保存请求
+  - 试跑 token 绑定保存分支
+  - 保存成功后的提示与页面刷新
+- `useContestAwdConfigPage.ts` 改为组合调用该模块，移除内联保存提交流程。
+- `useContestAwdConfigPage.ts` 行数下降（本批由 300 降至 279）。
+- 补充 source 边界断言：`ContestAwdConfig.test.ts` 增加 `useAwdCheckerSaveFlow` 导入断言与 `updateContestAWDService` 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

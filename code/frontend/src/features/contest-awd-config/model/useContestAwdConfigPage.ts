@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   getContest,
   listContestAWDServices,
-  updateContestAWDService,
 } from '@/api/admin/contests'
 import type {
   AdminContestAWDServiceData,
@@ -13,21 +12,19 @@ import type {
 } from '@/api/contracts'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
-import { useToast } from '@/composables/useToast'
 import { useAwdChallengeSelection } from './useAwdChallengeSelection'
 import { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
 import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'
+import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'
 
 export function useContestAwdConfigPage() {
   const route = useRoute()
   const router = useRouter()
-  const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const contestId = computed(() => String(route.params.id ?? ''))
   const loading = ref(true)
   const refreshing = ref(false)
-  const saving = ref(false)
   const loadError = ref('')
   const contest = ref<ContestDetailData | null>(null)
   const services = ref<AdminContestAWDServiceData[]>([])
@@ -93,6 +90,17 @@ export function useContestAwdConfigPage() {
     syncingDraft,
     validateConfig,
     buildCurrentCheckerConfig,
+  })
+  const { handleSave, saving } = useAwdCheckerSaveFlow({
+    contestId,
+    selectedService,
+    selectedCheckerType,
+    canAttachPreviewToken,
+    previewToken,
+    form,
+    validateConfig,
+    buildCurrentCheckerConfig,
+    reloadPage: () => loadPage(false),
   })
 
   const { summarizeCheckResult, getCheckStatusLabel, getPrimaryAccessURL } =
@@ -205,35 +213,6 @@ export function useContestAwdConfigPage() {
       params: { id: contestId.value },
       query: { panel: 'awd-config' },
     })
-  }
-
-  async function handleSave() {
-    if (
-      saving.value ||
-      !selectedService.value ||
-      !selectedCheckerType.value ||
-      !validateConfig()
-    ) {
-      return
-    }
-    saving.value = true
-    try {
-      await updateContestAWDService(contestId.value, selectedService.value.id, {
-        checker_type: selectedCheckerType.value,
-        checker_config: buildCurrentCheckerConfig(),
-        awd_sla_score: form.sla_score,
-        awd_defense_score: form.defense_score,
-        ...(canAttachPreviewToken.value
-          ? { awd_checker_preview_token: previewToken.value }
-          : {}),
-      })
-      toast.success(canAttachPreviewToken.value ? '配置与试跑结果已保存' : '配置已保存')
-      await loadPage(false)
-    } catch (error) {
-      toast.error(error instanceof Error && error.message.trim() ? error.message : '保存 AWD 配置失败')
-    } finally {
-      saving.value = false
-    }
   }
 
   watch(selectedService, (service) => {
