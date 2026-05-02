@@ -184,6 +184,18 @@ func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *model.Contest) 
 	}
 	return pDtoContestResp
 }
+func (c *contestResponseMapperImpl) ToSubmissionResp(source submissionRespSource) dto.SubmissionResp {
+	var dtoSubmissionResp dto.SubmissionResp
+	dtoSubmissionResp.IsCorrect = source.IsCorrect
+	dtoSubmissionResp.Status = source.Status
+	dtoSubmissionResp.Points = source.Points
+	dtoSubmissionResp.SubmittedAt = CopyTime(source.SubmittedAt)
+	return dtoSubmissionResp
+}
+func (c *contestResponseMapperImpl) ToSubmissionRespPtr(source submissionRespSource) *dto.SubmissionResp {
+	dtoSubmissionResp := c.ToSubmissionResp(source)
+	return &dtoSubmissionResp
+}
 func (c *contestResponseMapperImpl) ToTeamRespBase(source model.Team) dto.TeamResp {
 	var dtoTeamResp dto.TeamResp
 	dtoTeamResp.ID = source.ID

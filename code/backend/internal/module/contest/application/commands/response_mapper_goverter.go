@@ -7,6 +7,13 @@ import (
 	"ctf-platform/internal/model"
 )
 
+type submissionRespSource struct {
+	IsCorrect   bool
+	Status      string
+	Points      int
+	SubmittedAt time.Time
+}
+
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
 // goverter:converter
@@ -60,6 +67,11 @@ type contestResponseMapper interface {
 	// goverter:ignore Username
 	ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp
 	ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *dto.ContestRegistrationResp
+
+	// goverter:ignore Message
+	// goverter:ignore InstanceShutdownAt
+	ToSubmissionResp(source submissionRespSource) dto.SubmissionResp
+	ToSubmissionRespPtr(source submissionRespSource) *dto.SubmissionResp
 }
 
 var contestResponseMapperInst contestResponseMapper

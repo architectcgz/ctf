@@ -22,9 +22,9 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 		return nil, err
 	}
 
-	return &dto.SubmissionResp{
+	return contestResponseMapperInst.ToSubmissionRespPtr(submissionRespSource{
 		IsCorrect:   true,
 		Points:      finalScore,
 		SubmittedAt: submission.SubmittedAt,
-	}, nil
+	}), nil
 }
