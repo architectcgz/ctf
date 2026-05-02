@@ -27,7 +27,7 @@ import {
   clampCanvasPosition,
   normalizeCanvasPositions,
   type CanvasNodePosition,
-} from '@/components/platform/topology/topologyLayout'
+} from './topologyLayout'
 import {
   createDraftFromTemplate,
   createDraftFromTopology,
@@ -42,8 +42,8 @@ import {
   type TopologyLinkDraft,
   type TopologyNodeDraft,
   type TopologyPolicyDraft,
-} from '@/components/platform/topology/topologyDraft'
-import type { CanvasInteractionMode } from '@/components/platform/topology/TopologyCanvasBoard.vue'
+} from './topologyDraft'
+import type { CanvasInteractionMode } from './topologyTypes'
 
 export type TopologyStudioMode = 'challenge' | 'template-library'
 

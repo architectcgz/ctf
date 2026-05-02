@@ -424,6 +424,25 @@ npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.t
 npm run typecheck
 ```
 
+### 已完成：Batch F3 子项（topology helper/type 迁移）
+- 新增 feature 内部模块：
+  - `features/challenge-topology-studio/model/topologyLayout.ts`
+  - `features/challenge-topology-studio/model/topologyDraft.ts`
+  - `features/challenge-topology-studio/model/topologyTypes.ts`
+- `useChallengeTopologyStudioPage.ts` 已改为使用 feature 内部模块，不再反向依赖：
+  - `@/components/platform/topology/topologyLayout`
+  - `@/components/platform/topology/topologyDraft`
+  - `@/components/platform/topology/TopologyCanvasBoard.vue`（类型）
+- 补充边界断言：
+  - 新增 `features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts`
+
+验证：
+```bash
+rg -n "from ['\"]@/components/platform/topology" code/frontend/src/features/challenge-topology-studio --glob '*.ts'
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
