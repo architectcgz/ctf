@@ -1043,6 +1043,20 @@ npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AA 子项（题目详情个人题解流程拆分）
+- 新增 `features/challenge-detail/model/useChallengeWriteupSubmissionFlow.ts`，承接：
+  - 个人题解加载
+  - 题解草稿/发布保存
+  - 题解表单状态 hydrate/reset
+- `useChallengeDetailInteractions.ts` 改为组合调用该模块，移除内联个人题解加载与保存实现。
+- `useChallengeDetailInteractions.ts` 行数下降（本批由 318 降至 260）。
+
+验证：
+```bash
+npm run test:run -- src/views/challenges/__tests__/ChallengeDetail.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
