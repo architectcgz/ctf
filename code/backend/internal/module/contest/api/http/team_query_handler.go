@@ -74,16 +74,8 @@ func teamResultToDTO(item *contestqry.TeamResult) *dto.TeamResp {
 	if item == nil {
 		return nil
 	}
-	return &dto.TeamResp{
-		ID:          item.ID,
-		ContestID:   item.ContestID,
-		Name:        item.Name,
-		CaptainID:   item.CaptainID,
-		InviteCode:  item.InviteCode,
-		MaxMembers:  item.MaxMembers,
-		MemberCount: item.MemberCount,
-		CreatedAt:   item.CreatedAt,
-	}
+	mapped := contestRequestMapper.ToTeamResp(*item)
+	return &mapped
 }
 
 func teamMemberResultsToDTO(items []*contestqry.TeamMemberResult) []*dto.TeamMemberResp {
@@ -93,11 +85,8 @@ func teamMemberResultsToDTO(items []*contestqry.TeamMemberResult) []*dto.TeamMem
 			result = append(result, nil)
 			continue
 		}
-		result = append(result, &dto.TeamMemberResp{
-			UserID:   item.UserID,
-			Username: item.Username,
-			JoinedAt: item.JoinedAt,
-		})
+		mapped := contestRequestMapper.ToTeamMemberResp(*item)
+		result = append(result, &mapped)
 	}
 	return result
 }

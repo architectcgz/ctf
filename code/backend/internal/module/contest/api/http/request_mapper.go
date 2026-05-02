@@ -37,6 +37,11 @@ type ContestRequestMapper interface {
 	ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput
 	ToListAWDTrafficEventsInput(source dto.ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput
 	ToAWDCheckerPreviewResp(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
+	ToContestResp(source contestqry.ContestResult) dto.ContestResp
+	ToTeamResp(source contestqry.TeamResult) dto.TeamResp
+	ToTeamMemberResp(source contestqry.TeamMemberResult) dto.TeamMemberResp
+	ToContestChallengeResp(source contestqry.ContestChallengeResult) dto.ContestChallengeResp
+	ToContestChallengeInfo(source contestqry.ContestChallengeInfoResult) dto.ContestChallengeInfo
 }
 
 var contestRequestMapper ContestRequestMapper

@@ -51,18 +51,8 @@ func contestResultToDTO(item *contestqry.ContestResult) *dto.ContestResp {
 	if item == nil {
 		return nil
 	}
-	return &dto.ContestResp{
-		ID:          item.ID,
-		Title:       item.Title,
-		Description: item.Description,
-		Mode:        item.Mode,
-		StartTime:   item.StartTime,
-		EndTime:     item.EndTime,
-		FreezeTime:  item.FreezeTime,
-		Status:      item.Status,
-		CreatedAt:   item.CreatedAt,
-		UpdatedAt:   item.UpdatedAt,
-	}
+	mapped := contestRequestMapper.ToContestResp(*item)
+	return &mapped
 }
 
 func contestResultsToDTO(items []*contestqry.ContestResult) []*dto.ContestResp {

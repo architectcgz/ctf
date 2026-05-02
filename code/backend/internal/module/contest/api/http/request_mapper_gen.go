@@ -33,6 +33,55 @@ func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source dto.AddCont
 	}
 	return commandsAddContestChallengeInput
 }
+func (c *ContestRequestMapperImpl) ToContestChallengeInfo(source queries.ContestChallengeInfoResult) dto.ContestChallengeInfo {
+	var dtoContestChallengeInfo dto.ContestChallengeInfo
+	dtoContestChallengeInfo.ID = source.ID
+	dtoContestChallengeInfo.ChallengeID = source.ChallengeID
+	if source.AWDChallengeID != nil {
+		xint64 := *source.AWDChallengeID
+		dtoContestChallengeInfo.AWDChallengeID = &xint64
+	}
+	if source.AWDServiceID != nil {
+		xint642 := *source.AWDServiceID
+		dtoContestChallengeInfo.AWDServiceID = &xint642
+	}
+	dtoContestChallengeInfo.Title = source.Title
+	dtoContestChallengeInfo.Category = source.Category
+	dtoContestChallengeInfo.Difficulty = source.Difficulty
+	dtoContestChallengeInfo.Points = source.Points
+	dtoContestChallengeInfo.Order = source.Order
+	dtoContestChallengeInfo.SolvedCount = source.SolvedCount
+	dtoContestChallengeInfo.IsSolved = source.IsSolved
+	return dtoContestChallengeInfo
+}
+func (c *ContestRequestMapperImpl) ToContestChallengeResp(source queries.ContestChallengeResult) dto.ContestChallengeResp {
+	var dtoContestChallengeResp dto.ContestChallengeResp
+	dtoContestChallengeResp.ID = source.ID
+	dtoContestChallengeResp.ContestID = source.ContestID
+	dtoContestChallengeResp.ChallengeID = source.ChallengeID
+	dtoContestChallengeResp.Title = source.Title
+	dtoContestChallengeResp.Category = source.Category
+	dtoContestChallengeResp.Difficulty = source.Difficulty
+	dtoContestChallengeResp.Points = source.Points
+	dtoContestChallengeResp.Order = source.Order
+	dtoContestChallengeResp.IsVisible = source.IsVisible
+	dtoContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoContestChallengeResp
+}
+func (c *ContestRequestMapperImpl) ToContestResp(source queries.ContestResult) dto.ContestResp {
+	var dtoContestResp dto.ContestResp
+	dtoContestResp.ID = source.ID
+	dtoContestResp.Title = source.Title
+	dtoContestResp.Description = source.Description
+	dtoContestResp.Mode = source.Mode
+	dtoContestResp.StartTime = CopyTime(source.StartTime)
+	dtoContestResp.EndTime = CopyTime(source.EndTime)
+	dtoContestResp.FreezeTime = CopyTimePtr(source.FreezeTime)
+	dtoContestResp.Status = source.Status
+	dtoContestResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoContestResp
+}
 func (c *ContestRequestMapperImpl) ToCreateAWDRoundInput(source dto.CreateAWDRoundReq) commands.CreateAWDRoundInput {
 	var commandsCreateAWDRoundInput commands.CreateAWDRoundInput
 	commandsCreateAWDRoundInput.RoundNumber = source.RoundNumber
@@ -173,6 +222,25 @@ func (c *ContestRequestMapperImpl) ToSubmitAttackInput(source dto.SubmitAWDAttac
 	commandsSubmitAttackInput.VictimTeamID = source.VictimTeamID
 	commandsSubmitAttackInput.Flag = source.Flag
 	return commandsSubmitAttackInput
+}
+func (c *ContestRequestMapperImpl) ToTeamMemberResp(source queries.TeamMemberResult) dto.TeamMemberResp {
+	var dtoTeamMemberResp dto.TeamMemberResp
+	dtoTeamMemberResp.UserID = source.UserID
+	dtoTeamMemberResp.Username = source.Username
+	dtoTeamMemberResp.JoinedAt = CopyTime(source.JoinedAt)
+	return dtoTeamMemberResp
+}
+func (c *ContestRequestMapperImpl) ToTeamResp(source queries.TeamResult) dto.TeamResp {
+	var dtoTeamResp dto.TeamResp
+	dtoTeamResp.ID = source.ID
+	dtoTeamResp.ContestID = source.ContestID
+	dtoTeamResp.Name = source.Name
+	dtoTeamResp.CaptainID = source.CaptainID
+	dtoTeamResp.InviteCode = source.InviteCode
+	dtoTeamResp.MaxMembers = source.MaxMembers
+	dtoTeamResp.MemberCount = source.MemberCount
+	dtoTeamResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoTeamResp
 }
 func (c *ContestRequestMapperImpl) ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) commands.UpdateContestAWDServiceInput {
 	var commandsUpdateContestAWDServiceInput commands.UpdateContestAWDServiceInput

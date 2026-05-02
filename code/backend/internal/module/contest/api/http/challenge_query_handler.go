@@ -34,18 +34,8 @@ func contestChallengeResultsToDTO(items []*contestqry.ContestChallengeResult) []
 			result = append(result, nil)
 			continue
 		}
-		result = append(result, &dto.ContestChallengeResp{
-			ID:          item.ID,
-			ContestID:   item.ContestID,
-			ChallengeID: item.ChallengeID,
-			Title:       item.Title,
-			Category:    item.Category,
-			Difficulty:  item.Difficulty,
-			Points:      item.Points,
-			Order:       item.Order,
-			IsVisible:   item.IsVisible,
-			CreatedAt:   item.CreatedAt,
-		})
+		mapped := contestRequestMapper.ToContestChallengeResp(*item)
+		result = append(result, &mapped)
 	}
 	return result
 }
@@ -57,19 +47,8 @@ func contestChallengeInfoResultsToDTO(items []*contestqry.ContestChallengeInfoRe
 			result = append(result, nil)
 			continue
 		}
-		result = append(result, &dto.ContestChallengeInfo{
-			ID:             item.ID,
-			ChallengeID:    item.ChallengeID,
-			AWDChallengeID: item.AWDChallengeID,
-			AWDServiceID:   item.AWDServiceID,
-			Title:          item.Title,
-			Category:       item.Category,
-			Difficulty:     item.Difficulty,
-			Points:         item.Points,
-			Order:          item.Order,
-			SolvedCount:    item.SolvedCount,
-			IsSolved:       item.IsSolved,
-		})
+		mapped := contestRequestMapper.ToContestChallengeInfo(*item)
+		result = append(result, &mapped)
 	}
 	return result
 }
