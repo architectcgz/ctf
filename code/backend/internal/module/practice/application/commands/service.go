@@ -338,11 +338,11 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 			continue
 		}
 		seen[key] = struct{}{}
-		resp.Instances = append(resp.Instances, &dto.AdminAWDInstanceItemResp{
+		resp.Instances = append(resp.Instances, practiceCommandResponseMapperInst.ToAdminAWDInstanceItemRespPtr(adminAWDInstanceItemRespSource{
 			TeamID:    *instance.TeamID,
 			ServiceID: *instance.ServiceID,
 			Instance:  domain.InstanceRespFromModel(instance),
-		})
+		}))
 	}
 	return resp, nil
 }
@@ -356,11 +356,11 @@ func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID
 	if err != nil {
 		return nil, err
 	}
-	return &dto.AdminAWDInstanceItemResp{
+	return practiceCommandResponseMapperInst.ToAdminAWDInstanceItemRespPtr(adminAWDInstanceItemRespSource{
 		TeamID:    teamID,
 		ServiceID: serviceID,
 		Instance:  instance,
-	}, nil
+	}), nil
 }
 
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {

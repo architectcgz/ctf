@@ -7,9 +7,16 @@ import (
 	"ctf-platform/internal/model"
 )
 
+type adminAWDInstanceItemRespSource struct {
+	TeamID    int64
+	ServiceID int64
+	Instance  *dto.InstanceResp
+}
+
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
 // goverter:converter
+// goverter:enum:unknown @ignore
 // goverter:extend CopyTime
 // goverter:extend CopyTimePtr
 // goverter:output:file ./response_mapper_goverter_gen.go
@@ -45,6 +52,9 @@ type practiceCommandResponseMapper interface {
 	// goverter:ignore Answer
 	ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp
 	ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *dto.ChallengeSubmissionRecordResp
+
+	ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) dto.AdminAWDInstanceItemResp
+	ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp
 }
 
 var practiceCommandResponseMapperInst practiceCommandResponseMapper

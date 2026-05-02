@@ -10,6 +10,17 @@ import (
 
 type practiceCommandResponseMapperImpl struct{}
 
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) dto.AdminAWDInstanceItemResp {
+	var dtoAdminAWDInstanceItemResp dto.AdminAWDInstanceItemResp
+	dtoAdminAWDInstanceItemResp.TeamID = source.TeamID
+	dtoAdminAWDInstanceItemResp.ServiceID = source.ServiceID
+	dtoAdminAWDInstanceItemResp.Instance = c.pDtoInstanceRespToPDtoInstanceResp(source.Instance)
+	return dtoAdminAWDInstanceItemResp
+}
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp {
+	dtoAdminAWDInstanceItemResp := c.ToAdminAWDInstanceItemResp(source)
+	return &dtoAdminAWDInstanceItemResp
+}
 func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp {
 	var dtoAdminAWDInstanceServiceResp dto.AdminAWDInstanceServiceResp
 	dtoAdminAWDInstanceServiceResp.ServiceID = source.ID
@@ -99,4 +110,51 @@ func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemR
 		pDtoTeacherManualReviewSubmissionItemResp = &dtoTeacherManualReviewSubmissionItemResp
 	}
 	return pDtoTeacherManualReviewSubmissionItemResp
+}
+func (c *practiceCommandResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
+	var modelInstanceSharing model.InstanceSharing
+	switch source {
+	case model.InstanceSharingPerTeam:
+		modelInstanceSharing = model.InstanceSharingPerTeam
+	case model.InstanceSharingPerUser:
+		modelInstanceSharing = model.InstanceSharingPerUser
+	case model.InstanceSharingShared:
+		modelInstanceSharing = model.InstanceSharingShared
+	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
+	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
+	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
+	default: // ignored
+	}
+	return modelInstanceSharing
+}
+func (c *practiceCommandResponseMapperImpl) pDtoInstanceAccessInfoToPDtoInstanceAccessInfo(source *dto.InstanceAccessInfo) *dto.InstanceAccessInfo {
+	var pDtoInstanceAccessInfo *dto.InstanceAccessInfo
+	if source != nil {
+		var dtoInstanceAccessInfo dto.InstanceAccessInfo
+		dtoInstanceAccessInfo.Protocol = (*source).Protocol
+		dtoInstanceAccessInfo.Host = (*source).Host
+		dtoInstanceAccessInfo.Port = (*source).Port
+		dtoInstanceAccessInfo.Command = (*source).Command
+		pDtoInstanceAccessInfo = &dtoInstanceAccessInfo
+	}
+	return pDtoInstanceAccessInfo
+}
+func (c *practiceCommandResponseMapperImpl) pDtoInstanceRespToPDtoInstanceResp(source *dto.InstanceResp) *dto.InstanceResp {
+	var pDtoInstanceResp *dto.InstanceResp
+	if source != nil {
+		var dtoInstanceResp dto.InstanceResp
+		dtoInstanceResp.ID = (*source).ID
+		dtoInstanceResp.ChallengeID = (*source).ChallengeID
+		dtoInstanceResp.Status = (*source).Status
+		dtoInstanceResp.ShareScope = c.modelInstanceSharingToModelInstanceSharing((*source).ShareScope)
+		dtoInstanceResp.AccessURL = (*source).AccessURL
+		dtoInstanceResp.Access = c.pDtoInstanceAccessInfoToPDtoInstanceAccessInfo((*source).Access)
+		dtoInstanceResp.ExpiresAt = CopyTime((*source).ExpiresAt)
+		dtoInstanceResp.ExtendCount = (*source).ExtendCount
+		dtoInstanceResp.MaxExtends = (*source).MaxExtends
+		dtoInstanceResp.RemainingExtends = (*source).RemainingExtends
+		dtoInstanceResp.CreatedAt = CopyTime((*source).CreatedAt)
+		pDtoInstanceResp = &dtoInstanceResp
+	}
+	return pDtoInstanceResp
 }
