@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -54,7 +53,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{
 		Title:           "Test Challenge",
 		Description:     "Test",
 		Category:        "web",
@@ -85,7 +84,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	_, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
+	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{
 		ImageID: 999,
 	})
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
@@ -100,7 +99,7 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{
 		Title:       "No Target Challenge",
 		Description: "No target required",
 		Category:    "misc",
@@ -144,7 +143,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -189,7 +188,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(nil, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
-	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {

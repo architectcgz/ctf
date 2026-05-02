@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 )
 
 type challengeImportHandlerCommandStub struct {
@@ -17,11 +18,11 @@ type challengeImportHandlerCommandStub struct {
 	getChallengeImportFn   func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
 }
 
-func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*dto.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
+func (s challengeImportHandlerCommandStub) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateChallengeInput) error {
 	return nil
 }
 

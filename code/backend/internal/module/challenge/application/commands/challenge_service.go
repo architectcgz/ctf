@@ -88,7 +88,7 @@ func firstChallengeNotificationSender(senders []ChallengeNotificationSender) Cha
 	return senders[0]
 }
 
-func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*dto.ChallengeResp, error) {
 	if req.ImageID > 0 {
 		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -111,7 +111,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 		CreatedBy:       &actorUserID,
 	}
 
-	hints, err := domain.NormalizeHintModels(req.Hints)
+	hints, err := domain.NormalizeHintModels(toChallengeHintReqs(req.Hints))
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
+func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateChallengeInput) error {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -167,7 +167,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *d
 	}
 
 	replaceHints := req.Hints != nil
-	hints, err := domain.NormalizeHintModels(req.Hints)
+	hints, err := domain.NormalizeHintModels(toChallengeHintReqs(req.Hints))
 	if err != nil {
 		return err
 	}
@@ -187,6 +187,21 @@ func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing
 	default:
 		return model.InstanceSharingPerUser
 	}
+}
+
+func toChallengeHintReqs(hints []ChallengeHintInput) []dto.ChallengeHintReq {
+	if hints == nil {
+		return nil
+	}
+	resp := make([]dto.ChallengeHintReq, 0, len(hints))
+	for _, hint := range hints {
+		resp = append(resp, dto.ChallengeHintReq{
+			Level:   hint.Level,
+			Title:   hint.Title,
+			Content: hint.Content,
+		})
+	}
+	return resp
 }
 
 func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, challenge *model.Challenge) error {
