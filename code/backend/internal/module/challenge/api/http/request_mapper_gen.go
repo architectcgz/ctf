@@ -22,6 +22,13 @@ func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source dto.Create
 	commandsCreateAWDChallengeInput.DeploymentMode = source.DeploymentMode
 	return commandsCreateAWDChallengeInput
 }
+func (c *ChallengeRequestMapperImpl) ToCreateImageInput(source dto.CreateImageReq) commands.CreateImageInput {
+	var commandsCreateImageInput commands.CreateImageInput
+	commandsCreateImageInput.Name = source.Name
+	commandsCreateImageInput.Tag = source.Tag
+	commandsCreateImageInput.Description = source.Description
+	return commandsCreateImageInput
+}
 func (c *ChallengeRequestMapperImpl) ToListAWDChallengesInput(source dto.AWDChallengeQuery) queries.ListAWDChallengesInput {
 	var queriesListAWDChallengesInput queries.ListAWDChallengesInput
 	queriesListAWDChallengesInput.Keyword = source.Keyword
@@ -30,6 +37,14 @@ func (c *ChallengeRequestMapperImpl) ToListAWDChallengesInput(source dto.AWDChal
 	queriesListAWDChallengesInput.Page = source.Page
 	queriesListAWDChallengesInput.Size = source.Size
 	return queriesListAWDChallengesInput
+}
+func (c *ChallengeRequestMapperImpl) ToListImagesInput(source dto.ImageQuery) queries.ListImagesInput {
+	var queriesListImagesInput queries.ListImagesInput
+	queriesListImagesInput.Name = source.Name
+	queriesListImagesInput.Status = source.Status
+	queriesListImagesInput.Page = source.Page
+	queriesListImagesInput.Size = source.Size
+	return queriesListImagesInput
 }
 func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source dto.UpdateAWDChallengeReq) commands.UpdateAWDChallengeInput {
 	var commandsUpdateAWDChallengeInput commands.UpdateAWDChallengeInput
@@ -42,4 +57,13 @@ func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source dto.Update
 	commandsUpdateAWDChallengeInput.DeploymentMode = source.DeploymentMode
 	commandsUpdateAWDChallengeInput.Status = source.Status
 	return commandsUpdateAWDChallengeInput
+}
+func (c *ChallengeRequestMapperImpl) ToUpdateImageInput(source dto.UpdateImageReq) commands.UpdateImageInput {
+	var commandsUpdateImageInput commands.UpdateImageInput
+	if source.Description != nil {
+		xstring := *source.Description
+		commandsUpdateImageInput.Description = &xstring
+	}
+	commandsUpdateImageInput.Status = source.Status
+	return commandsUpdateImageInput
 }

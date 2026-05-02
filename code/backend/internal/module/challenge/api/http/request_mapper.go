@@ -15,6 +15,9 @@ type ChallengeRequestMapper interface {
 	ToCreateAWDChallengeInput(source dto.CreateAWDChallengeReq) challengecmd.CreateAWDChallengeInput
 	ToUpdateAWDChallengeInput(source dto.UpdateAWDChallengeReq) challengecmd.UpdateAWDChallengeInput
 	ToListAWDChallengesInput(source dto.AWDChallengeQuery) challengeqry.ListAWDChallengesInput
+	ToCreateImageInput(source dto.CreateImageReq) challengecmd.CreateImageInput
+	ToUpdateImageInput(source dto.UpdateImageReq) challengecmd.UpdateImageInput
+	ToListImagesInput(source dto.ImageQuery) challengeqry.ListImagesInput
 }
 
 var challengeRequestMapper ChallengeRequestMapper

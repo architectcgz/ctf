@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	"ctf-platform/internal/validation"
 )
 
@@ -37,7 +38,7 @@ func (s stubImageQueryService) GetImage(ctx context.Context, id int64) (*dto.Ima
 	return &dto.ImageResp{}, nil
 }
 
-func (s stubImageQueryService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error) {
+func (s stubImageQueryService) ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*dto.PageResult[*dto.ImageResp], error) {
 	return &dto.PageResult[*dto.ImageResp]{}, nil
 }
 

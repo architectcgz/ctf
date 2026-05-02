@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -26,7 +27,7 @@ type imageCommandService interface {
 
 type imageQueryService interface {
 	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error)
+	ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*dto.PageResult[*dto.ImageResp], error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {
@@ -40,7 +41,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateImage(c.Request.Context(), createImageInputFromDTO(&req))
+	resp, err := h.commands.CreateImage(c.Request.Context(), challengeRequestMapper.ToCreateImageInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -72,7 +73,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListImages(c.Request.Context(), &query)
+	result, err := h.queries.ListImages(c.Request.Context(), challengeRequestMapper.ToListImagesInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -94,33 +95,12 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateImage(c.Request.Context(), id, updateImageInputFromDTO(&req)); err != nil {
+	if err := h.commands.UpdateImage(c.Request.Context(), id, challengeRequestMapper.ToUpdateImageInput(req)); err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	response.Success(c, nil)
-}
-
-func createImageInputFromDTO(req *dto.CreateImageReq) challengecmd.CreateImageInput {
-	if req == nil {
-		return challengecmd.CreateImageInput{}
-	}
-	return challengecmd.CreateImageInput{
-		Name:        req.Name,
-		Tag:         req.Tag,
-		Description: req.Description,
-	}
-}
-
-func updateImageInputFromDTO(req *dto.UpdateImageReq) challengecmd.UpdateImageInput {
-	if req == nil {
-		return challengecmd.UpdateImageInput{}
-	}
-	return challengecmd.UpdateImageInput{
-		Description: req.Description,
-		Status:      req.Status,
-	}
 }
 
 func (h *ImageHandler) DeleteImage(c *gin.Context) {
