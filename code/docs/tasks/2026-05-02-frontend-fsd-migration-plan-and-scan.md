@@ -558,6 +558,21 @@ npm run test:run -- src/features/__tests__/featureBoundaries.test.ts src/views/_
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（contest-awd-admin 支撑模块拆分）
+- 新增 `features/contest-awd-admin/model/awdAdminSupport.ts`，收口纯支撑能力：
+  - 过滤器/覆盖弹窗状态类型与默认构造
+  - 轮次选中持久化（sessionStorage）
+  - round 选择策略 `pickRoundId`
+  - readiness 阻断错误识别与通用错误文案归一
+  - 空实例编排数据构造
+- `usePlatformContestAwd.ts` 已移除上述内联定义，主 composable 代码聚焦在数据流与动作编排。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
