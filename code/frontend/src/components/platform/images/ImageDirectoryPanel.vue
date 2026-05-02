@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar, {
-  type WorkspaceDirectorySortOption,
-} from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 
 interface Props {
   list: AdminImageListItem[]

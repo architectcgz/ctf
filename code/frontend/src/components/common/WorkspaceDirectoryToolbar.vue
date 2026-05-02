@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import { ChevronDown, Filter, Search } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-
-export interface WorkspaceDirectorySortOption {
-  key: string
-  label: string
-  icon?: Component
-}
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 
 const props = withDefaults(
   defineProps<{

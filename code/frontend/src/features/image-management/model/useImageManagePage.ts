@@ -8,7 +8,7 @@ import {
   type AdminImagePayload,
 } from '@/api/admin/authoring'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
-import type { WorkspaceDirectorySortOption } from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'

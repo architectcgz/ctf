@@ -13,9 +13,8 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import WorkspaceDirectoryToolbar, {
-  type WorkspaceDirectorySortOption,
-} from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import {
   Book,
   CheckCircle,

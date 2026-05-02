@@ -349,6 +349,29 @@ npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.t
 npm run typecheck
 ```
 
+### 已完成：Batch F1（通用目录排序类型下沉）
+- 新增实体层类型出口：
+  - `entities/workspace-directory/model/sort.ts`
+  - `entities/workspace-directory/model/index.ts`
+  - `entities/workspace-directory/index.ts`
+- `WorkspaceDirectorySortOption` 已从 `WorkspaceDirectoryToolbar.vue` 抽离，改由实体层提供。
+- 已替换依赖点：
+  - `features/audit-log/model/useAuditLogPage.ts`
+  - `features/image-management/model/useImageManagePage.ts`
+  - `features/platform-challenges/model/useChallengeManagePage.ts`
+  - `components/platform/audit/AuditLogDirectoryPanel.vue`
+  - `components/platform/images/ImageDirectoryPanel.vue`
+  - `components/platform/challenge/ChallengeManageDirectoryPanel.vue`
+- 结果：`features/*` 不再从 `@/components/common/WorkspaceDirectoryToolbar.vue` 导入排序类型。
+
+验证：
+```bash
+rg -n "WorkspaceDirectorySortOption.*@/components/common/WorkspaceDirectoryToolbar" code/frontend/src --glob '*.{ts,vue}'
+rg -n "from '@/components/common/WorkspaceDirectoryToolbar.vue'" code/frontend/src/features --glob '*.ts'
+npm run test:run -- src/views/platform/__tests__/ChallengeManage.test.ts src/views/platform/__tests__/ImageManage.test.ts src/views/platform/__tests__/AuditLog.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
