@@ -309,6 +309,20 @@ npm run test:run -- src/components/platform/__tests__/ContestChallengeOrchestrat
 npm run typecheck
 ```
 
+### 已完成：Batch E2（题解管理面板 API 收口）
+- 新增 `features/challenge-writeup-editor/model/useChallengeWriteupManagement.ts`，承接 `ChallengeWriteupManagePanel` 的题解目录加载、学员题解分页、删除流程、生命周期触发和派生目录行数据。
+- `ChallengeWriteupManagePanel.vue` 已收敛为展示 + 导航交互层，不再直接依赖：
+  - `@/api/admin/authoring`
+  - `@/api/teacher`
+- 补充 source 边界断言：
+  - `views/platform/__tests__/ChallengeWriteupManagePanel.test.ts` 新增 `useChallengeWriteupManagement` 引用断言与 API import 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ChallengeWriteupManagePanel.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
