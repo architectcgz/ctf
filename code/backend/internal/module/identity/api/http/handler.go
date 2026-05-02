@@ -8,13 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type adminCommandService interface {
-	CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error)
-	UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error)
+	CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*dto.AdminUserResp, error)
+	UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*dto.AdminUserResp, error)
 	DeleteUser(ctx context.Context, userID int64) error
 	ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error)
 }
@@ -57,7 +58,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.CreateUser(c.Request.Context(), &req)
+	user, err := h.commands.CreateUser(c.Request.Context(), createUserInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -73,12 +74,45 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.UpdateUser(c.Request.Context(), userID, &req)
+	user, err := h.commands.UpdateUser(c.Request.Context(), userID, updateUserInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, gin.H{"user": user})
+}
+
+func createUserInputFromDTO(req *dto.CreateAdminUserReq) identitycontracts.CreateUserInput {
+	if req == nil {
+		return identitycontracts.CreateUserInput{}
+	}
+	return identitycontracts.CreateUserInput{
+		Username:  req.Username,
+		Password:  req.Password,
+		Name:      req.Name,
+		Email:     req.Email,
+		StudentNo: req.StudentNo,
+		TeacherNo: req.TeacherNo,
+		ClassName: req.ClassName,
+		Role:      req.Role,
+		Status:    req.Status,
+	}
+}
+
+func updateUserInputFromDTO(req *dto.UpdateAdminUserReq) identitycontracts.UpdateUserInput {
+	if req == nil {
+		return identitycontracts.UpdateUserInput{}
+	}
+	return identitycontracts.UpdateUserInput{
+		Password:  req.Password,
+		Name:      req.Name,
+		Email:     req.Email,
+		StudentNo: req.StudentNo,
+		TeacherNo: req.TeacherNo,
+		ClassName: req.ClassName,
+		Role:      req.Role,
+		Status:    req.Status,
+	}
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {
