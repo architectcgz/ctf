@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  ArrowLeft,
-  Download,
-  FileDown,
   Trophy,
 } from 'lucide-vue-next'
 
@@ -20,6 +17,7 @@ import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/Tea
 import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
+import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
@@ -107,34 +105,15 @@ const summaryItems = computed(() => [
         </template>
 
         <template #actions>
-          <button
-            type="button"
-            class="teacher-btn teacher-btn--ghost"
-            @click="emit('openIndex')"
-          >
-            <ArrowLeft class="h-4 w-4" />
-            返回列表
-          </button>
-          <button
-            data-testid="awd-review-export-archive"
-            type="button"
-            class="teacher-btn teacher-btn--ghost"
-            :disabled="loading || !review || exporting === 'archive'"
-            @click="emit('exportArchive')"
-          >
-            <Download class="h-4 w-4" />
-            归档导出
-          </button>
-          <button
-            data-testid="awd-review-export-report"
-            type="button"
-            class="teacher-btn teacher-btn--primary"
-            :disabled="loading || !review || exporting === 'report' || !canExportReport"
-            @click="emit('exportReport')"
-          >
-            <FileDown class="h-4 w-4" />
-            生成评估报告
-          </button>
+          <TeacherAWDReviewWorkspaceActions
+            :loading="loading"
+            :has-review="Boolean(review)"
+            :exporting="exporting"
+            :can-export-report="canExportReport"
+            @open-index="emit('openIndex')"
+            @export-archive="emit('exportArchive')"
+            @export-report="emit('exportReport')"
+          />
         </template>
       </TeacherAWDReviewWorkspaceHeader>
 
