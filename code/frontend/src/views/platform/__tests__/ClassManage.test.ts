@@ -38,7 +38,8 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应使用后台工作台目录组件而不是教师端班级目录壳层', async () => {
-    expect(adminClassManageSource).toContain("from '@/api/teacher'")
+    expect(adminClassManageSource).toContain("usePlatformClassManagementPage } from '@/features/platform-users'")
+    expect(adminClassManageSource).not.toContain("from '@/api/teacher'")
     expect(adminClassManageSource).not.toContain("from '@/api/admin'")
     expect(adminClassManageSource).not.toContain('getAdminClasses')
     expect(adminClassManageSource).toContain(
