@@ -1525,6 +1525,24 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/fe
 npm run typecheck
 ```
 
+### 已完成：Batch BE 子项（P3 兼容桥接与视图展示适配收尾）
+- `topology` 兼容转发层已清理：
+  - 删除 `components/platform/topology/topologyDraft.ts`
+  - 删除 `components/platform/topology/topologyLayout.ts`
+  - `TopologyCanvasBoard.vue`、`TopologyNodeEditor.vue`、`TopologyNodeSection.vue`、`TopologyNetworkSection.vue`、`TopologyConnectivitySections.vue`、`ChallengeTopologyStudioPage.vue` 改为直接依赖 `features/challenge-topology-studio/model` 的 public API。
+- `features/challenge-topology-studio/model/index.ts` 已补齐 `topologyDraft/topologyLayout` 导出，供 legacy 组件通过 feature public API 取类型和纯函数。
+- 新增 `components/dashboard/student/dashboardPanelRegistry.ts`，承接学生仪表盘 panel 组件映射。
+- `views/dashboard/DashboardView.vue` 改为复用 `dashboardPanelRegistry`，移除本地 panel registry / resolver。
+- `features/auth/model/useLoginPage.ts` 新增 `submitWithFallback` 暴露。
+- `views/auth/LoginView.vue` 改为直接调用 feature 暴露的兜底提交方法，移除本地 `submitWithFallback` 适配函数。
+- 扩展 `LoginView.test.ts` 与 `DashboardView.test.ts` 的 source 断言，锁定路由页不再回退到本地适配函数。
+
+验证：
+```bash
+npm run test:run -- src/views/auth/__tests__/LoginView.test.ts src/views/dashboard/__tests__/DashboardView.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

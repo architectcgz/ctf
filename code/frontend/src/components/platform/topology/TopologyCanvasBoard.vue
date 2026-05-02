@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, useTemplateRef } from 'vue'
 
-import type { CanvasNodePosition, TopologyCanvasGraph } from './topologyLayout'
+import type { CanvasNodePosition, TopologyCanvasGraph } from '@/features/challenge-topology-studio/model'
 
 interface CanvasEdgePath {
   id: string

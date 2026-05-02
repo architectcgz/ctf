@@ -126,6 +126,10 @@ export function useLoginPage() {
     }
   }
 
+  function submitWithFallback(fallbackValues?: SubmitFallbackValues) {
+    return onSubmit(fallbackValues)
+  }
+
   return {
     form,
     loading,
@@ -134,5 +138,6 @@ export function useLoginPage() {
     clearSubmitError,
     handleHeroProbe,
     onSubmit,
+    submitWithFallback,
   }
 }

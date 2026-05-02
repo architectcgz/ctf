@@ -68,6 +68,23 @@ vi.mock('@/features/auth', () => ({
           loading.value = false
         }
       },
+      submitWithFallback: async (fallbackValues?: { username?: string; password?: string }) => {
+        const username = form.username.trim() || fallbackValues?.username?.trim() || ''
+        const password = form.password || fallbackValues?.password || ''
+        if (loading.value || !username || !password) return
+        loading.value = true
+        submitError.value = ''
+        try {
+          await authMocks.login(
+            { username, password },
+            routeState.query.redirect ? routeState.query.redirect : undefined
+          )
+        } catch (err) {
+          submitError.value = err instanceof Error ? err.message : '身份验证失败，请核对信息'
+        } finally {
+          loading.value = false
+        }
+      },
     }
   },
 }))
@@ -151,7 +168,9 @@ describe('LoginView', () => {
 
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(loginViewSource).toContain('useLoginPage')
+    expect(loginViewSource).toContain('submitWithFallback')
     expect(loginViewSource).not.toContain('useLoginViewPage')
+    expect(loginViewSource).not.toContain('function submitWithFallback(')
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
     expect(loginViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"')

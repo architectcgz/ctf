@@ -175,7 +175,10 @@ describe('DashboardView', () => {
 
   it('路由页应仅负责组合，不直接耦合学生仪表盘查询流程', () => {
     expect(dashboardViewSource).toContain('useStudentDashboardPage')
+    expect(dashboardViewSource).toContain('dashboardPanelRegistry')
     expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
+    expect(dashboardViewSource).not.toContain('const dashboardPanelComponents')
+    expect(dashboardViewSource).not.toContain('function resolveDashboardPanelComponent(')
     expect(dashboardViewSource).not.toContain('Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])')
     expect(studentDashboardPageSource).not.toContain(
       "from '@/components/dashboard/student/StudentOverviewPage.vue'"

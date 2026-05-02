@@ -21,7 +21,12 @@
 
     <form
       class="auth-login-form"
-      @submit.prevent="submitWithFallback"
+      @submit.prevent="
+        submitWithFallback({
+          username: usernameInput?.value,
+          password: passwordInput?.value,
+        })
+      "
     >
       <div class="auth-field">
         <label
@@ -37,7 +42,12 @@
             class="ui-control"
             placeholder="输入您的登录名"
             @input="clearSubmitError"
-            @keyup.enter="submitWithFallback"
+            @keyup.enter="
+              submitWithFallback({
+                username: usernameInput?.value,
+                password: passwordInput?.value,
+              })
+            "
           >
         </div>
       </div>
@@ -103,17 +113,17 @@ import { useTemplateRef } from 'vue'
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
 import { useLoginPage } from '@/features/auth'
 
-const { form, loading, submitError, probeMessage, clearSubmitError, handleHeroProbe, onSubmit } =
-  useLoginPage()
+const {
+  form,
+  loading,
+  submitError,
+  probeMessage,
+  clearSubmitError,
+  handleHeroProbe,
+  submitWithFallback,
+} = useLoginPage()
 const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
-
-function submitWithFallback() {
-  return onSubmit({
-    username: usernameInput.value?.value,
-    password: passwordInput.value?.value,
-  })
-}
 </script>
 
 <style scoped>
