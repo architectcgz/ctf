@@ -3,6 +3,7 @@ package identity
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -95,6 +96,18 @@ func TestContractsDoNotDependOnGinGORMOrConcreteLayers(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/identity/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/identity/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/identity/application/queries")
+	}
+}
+
+func TestContractsDoNotDeclareWideUserRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("contracts", "auth.go"))
+	if err != nil {
+		t.Fatalf("read identity auth contracts file: %v", err)
+	}
+	if strings.Contains(string(content), "type UserRepository interface") {
+		t.Fatalf("identity contracts must not declare the legacy wide UserRepository interface")
 	}
 }
 

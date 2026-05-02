@@ -12,13 +12,18 @@ import (
 )
 
 type ProfileService struct {
-	users identitycontracts.UserRepository
+	users profileCommandRepository
 	log   *zap.Logger
+}
+
+type profileCommandRepository interface {
+	identitycontracts.UserLookupRepository
+	identitycontracts.UserPasswordRepository
 }
 
 var _ identitycontracts.ProfileCommandService = (*ProfileService)(nil)
 
-func NewProfileService(users identitycontracts.UserRepository, log *zap.Logger) *ProfileService {
+func NewProfileService(users profileCommandRepository, log *zap.Logger) *ProfileService {
 	if log == nil {
 		log = zap.NewNop()
 	}

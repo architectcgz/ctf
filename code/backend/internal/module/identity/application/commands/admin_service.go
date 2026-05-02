@@ -17,13 +17,18 @@ import (
 )
 
 type AdminService struct {
-	repo identitycontracts.UserRepository
+	repo adminCommandRepository
 	log  *zap.Logger
+}
+
+type adminCommandRepository interface {
+	identitycontracts.UserLookupRepository
+	identitycontracts.UserWriteRepository
 }
 
 var _ identitycontracts.AdminCommandService = (*AdminService)(nil)
 
-func NewAdminService(repo identitycontracts.UserRepository, log *zap.Logger) *AdminService {
+func NewAdminService(repo adminCommandRepository, log *zap.Logger) *AdminService {
 	if log == nil {
 		log = zap.NewNop()
 	}

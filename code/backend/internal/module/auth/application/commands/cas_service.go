@@ -35,10 +35,16 @@ type CASService interface {
 
 type casService struct {
 	config       config.CASConfig
-	users        identitycontracts.UserRepository
+	users        casUserRepository
 	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	httpClient   *http.Client
+}
+
+type casUserRepository interface {
+	identitycontracts.UserLookupRepository
+	identitycontracts.UserWriteRepository
+	identitycontracts.UserProfileRepository
 }
 
 type casValidateResponse struct {
@@ -75,7 +81,7 @@ type casPrincipal struct {
 	TeacherNo string
 }
 
-func NewCASService(cfg config.CASConfig, users identitycontracts.UserRepository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASService {
+func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASService {
 	if log == nil {
 		log = zap.NewNop()
 	}

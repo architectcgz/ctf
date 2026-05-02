@@ -23,13 +23,19 @@ type Service interface {
 }
 
 type service struct {
-	users        identitycontracts.UserRepository
+	users        authUserRepository
 	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	loginPolicy  config.RateLimitPolicyConfig
 }
 
-func NewService(users identitycontracts.UserRepository, tokenService authcontracts.TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
+type authUserRepository interface {
+	identitycontracts.UserLookupRepository
+	identitycontracts.UserWriteRepository
+	identitycontracts.UserLoginStateRepository
+}
+
+func NewService(users authUserRepository, tokenService authcontracts.TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
 	if log == nil {
 		log = zap.NewNop()
 	}

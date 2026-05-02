@@ -24,7 +24,14 @@ type Repository struct {
 	db *gorm.DB
 }
 
-var _ identitycontracts.UserRepository = (*Repository)(nil)
+var (
+	_ identitycontracts.UserListRepository       = (*Repository)(nil)
+	_ identitycontracts.UserLookupRepository     = (*Repository)(nil)
+	_ identitycontracts.UserWriteRepository      = (*Repository)(nil)
+	_ identitycontracts.UserPasswordRepository   = (*Repository)(nil)
+	_ identitycontracts.UserLoginStateRepository = (*Repository)(nil)
+	_ identitycontracts.UserProfileRepository    = (*Repository)(nil)
+)
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}

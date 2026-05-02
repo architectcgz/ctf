@@ -13,14 +13,14 @@ import (
 )
 
 type AdminService struct {
-	repo       identitycontracts.UserRepository
+	repo       identitycontracts.UserListRepository
 	pagination config.PaginationConfig
 	log        *zap.Logger
 }
 
 var _ identitycontracts.AdminQueryService = (*AdminService)(nil)
 
-func NewAdminService(repo identitycontracts.UserRepository, pagination config.PaginationConfig, log *zap.Logger) *AdminService {
+func NewAdminService(repo identitycontracts.UserListRepository, pagination config.PaginationConfig, log *zap.Logger) *AdminService {
 	if log == nil {
 		log = zap.NewNop()
 	}

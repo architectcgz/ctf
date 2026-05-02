@@ -12,12 +12,12 @@ import (
 )
 
 type ProfileService struct {
-	users identitycontracts.UserRepository
+	users identitycontracts.UserLookupRepository
 }
 
 var _ identitycontracts.ProfileQueryService = (*ProfileService)(nil)
 
-func NewProfileService(users identitycontracts.UserRepository) *ProfileService {
+func NewProfileService(users identitycontracts.UserLookupRepository) *ProfileService {
 	return &ProfileService{users: users}
 }
 
