@@ -1324,6 +1324,22 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch AS 子项（教师看板概览派生构建拆分）
+- 新增 `features/teacher-dashboard/model/teacherDashboardOverviewBuilders.ts`，承接：
+  - `overviewDescription` 构建
+  - `metaPills` 构建
+  - `overviewMetrics` 构建
+  - `interventionTips` 与 `teachingAdvice` 构建
+- `useTeacherDashboardMetrics.ts` 改为组合调用该模块，移除内联概览与建议文案构建逻辑。
+- 新增边界测试：`useTeacherDashboardMetricsBoundary.test.ts`，锁定主模块已接入 overview builders。
+- `useTeacherDashboardMetrics.ts` 行数下降（本批由 233 降至 193）。
+
+验证：
+```bash
+npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts src/features/teacher-dashboard/model/useTeacherDashboardMetricsBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
