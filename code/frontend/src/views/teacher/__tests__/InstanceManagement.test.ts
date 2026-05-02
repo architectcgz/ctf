@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import InstanceManagement from '../InstanceManagement.vue'
+import instanceManagementViewSource from '../InstanceManagement.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -116,6 +117,12 @@ describe('InstanceManagement', () => {
     expect(wrapper.findAll('button').some((node) => node.text().includes('查询实例'))).toBe(false)
     expect(wrapper.text()).not.toContain('实例筛选')
     expect(wrapper.text()).not.toContain('支持按班级、用户名或学号关键字筛选，也可用学号精确筛选。')
+  })
+
+  it('路由页应仅负责组合，不直接依赖页面级流程细节', () => {
+    expect(instanceManagementViewSource).toContain('useTeacherInstanceManagementPage')
+    expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
+    expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {
