@@ -22,8 +22,8 @@ import (
 )
 
 type authCommandService interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error)
+	Register(ctx context.Context, req authcmd.RegisterInput) (*dto.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req authcmd.LoginInput) (*dto.LoginResp, *authcontracts.Session, error)
 }
 
 type profileCommandService interface {
@@ -97,7 +97,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Register(c.Request.Context(), req)
+	resp, session, err := h.commands.Register(c.Request.Context(), registerInputFromDTO(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -114,7 +114,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Login(c.Request.Context(), req)
+	resp, session, err := h.commands.Login(c.Request.Context(), loginInputFromDTO(req))
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -147,6 +147,28 @@ func (h *Handler) Login(c *gin.Context) {
 		UserAgent: userAgentPtr(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
+}
+
+func registerInputFromDTO(req *dto.RegisterReq) authcmd.RegisterInput {
+	if req == nil {
+		return authcmd.RegisterInput{}
+	}
+	return authcmd.RegisterInput{
+		Username:  req.Username,
+		Password:  req.Password,
+		Email:     req.Email,
+		ClassName: req.ClassName,
+	}
+}
+
+func loginInputFromDTO(req *dto.LoginReq) authcmd.LoginInput {
+	if req == nil {
+		return authcmd.LoginInput{}
+	}
+	return authcmd.LoginInput{
+		Username: req.Username,
+		Password: req.Password,
+	}
 }
 
 func (h *Handler) Logout(c *gin.Context) {
