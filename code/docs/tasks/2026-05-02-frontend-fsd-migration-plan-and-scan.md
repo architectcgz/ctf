@@ -772,6 +772,21 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（画布交互动作拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyCanvasActions.ts`，承接：
+  - 画布节点选中/连线选中
+  - 画布创建节点/创建连线（link/policy）
+  - 节点编辑器聚焦与交互模式切换
+  - 删除选中项流程（含确认）
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该模块，移除内联 canvas 交互动作。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 595 降至 499）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

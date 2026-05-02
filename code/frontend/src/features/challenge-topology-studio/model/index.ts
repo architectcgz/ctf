@@ -1,4 +1,5 @@
 export { useChallengeTopologyStudioPage } from './useChallengeTopologyStudioPage'
+export { useTopologyCanvasActions } from './useTopologyCanvasActions'
 export { useTopologyDataLoader } from './useTopologyDataLoader'
 export { useTopologyEdgeEditing } from './useTopologyEdgeEditing'
 export { useTopologyInteractionBindings } from './useTopologyInteractionBindings'
