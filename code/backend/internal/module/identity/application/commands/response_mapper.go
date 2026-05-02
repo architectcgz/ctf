@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"strings"
 	"time"
 
 	"ctf-platform/internal/dto"
@@ -26,23 +25,6 @@ type adminUserResponseMapper interface {
 }
 
 var adminUserMapper adminUserResponseMapper
-
-func normalizeOptionalString(value string) *string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	return &value
-}
-
-func singleRole(role string) []string {
-	return []string{role}
-}
-
-func copyTimeToPtr(value time.Time) *time.Time {
-	copied := value
-	return &copied
-}
 
 func CopyTime(value time.Time) time.Time {
 	return value
