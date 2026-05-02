@@ -25,3 +25,31 @@ func (c *authCommandResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *d
 	}
 	return pDtoAuthUser
 }
+func (c *authCommandResponseMapperImpl) ToLoginResp(source loginRespSource) dto.LoginResp {
+	var dtoLoginResp dto.LoginResp
+	dtoLoginResp.User = c.dtoAuthUserToDtoAuthUser(source.User)
+	return dtoLoginResp
+}
+func (c *authCommandResponseMapperImpl) ToLoginRespPtr(source loginRespSource) *dto.LoginResp {
+	dtoLoginResp := c.ToLoginResp(source)
+	return &dtoLoginResp
+}
+func (c *authCommandResponseMapperImpl) dtoAuthUserToDtoAuthUser(source dto.AuthUser) dto.AuthUser {
+	var dtoAuthUser dto.AuthUser
+	dtoAuthUser.ID = source.ID
+	dtoAuthUser.Username = source.Username
+	dtoAuthUser.Role = source.Role
+	if source.Avatar != nil {
+		xstring := *source.Avatar
+		dtoAuthUser.Avatar = &xstring
+	}
+	if source.Name != nil {
+		xstring2 := *source.Name
+		dtoAuthUser.Name = &xstring2
+	}
+	if source.ClassName != nil {
+		xstring3 := *source.ClassName
+		dtoAuthUser.ClassName = &xstring3
+	}
+	return dtoAuthUser
+}

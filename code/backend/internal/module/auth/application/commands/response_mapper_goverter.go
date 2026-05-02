@@ -7,6 +7,10 @@ import (
 	"ctf-platform/internal/model"
 )
 
+type loginRespSource struct {
+	User dto.AuthUser
+}
+
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
 // goverter:converter
@@ -19,6 +23,9 @@ type authCommandResponseMapper interface {
 	// goverter:ignore ClassName
 	ToAuthUserBase(source model.User) dto.AuthUser
 	ToAuthUserBasePtr(source *model.User) *dto.AuthUser
+
+	ToLoginResp(source loginRespSource) dto.LoginResp
+	ToLoginRespPtr(source loginRespSource) *dto.LoginResp
 }
 
 var authCommandResponseMapperInst authCommandResponseMapper

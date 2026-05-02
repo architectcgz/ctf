@@ -145,9 +145,7 @@ func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.Lo
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.LoginResp{
-		User: buildAuthUser(user),
-	}, session, nil
+	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil
 }
 
 func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now time.Time) (bool, error) {
