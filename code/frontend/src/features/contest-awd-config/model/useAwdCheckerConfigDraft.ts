@@ -14,13 +14,14 @@ import {
   createLegacyProbeDraft,
   createScriptCheckerDraft,
   createTCPStandardDraft,
-  getHTTPStandardPresetDraft,
   type AWDCheckerFieldErrorKey,
   type AWDHTTPStandardDraft,
   type AWDLegacyProbeDraft,
   type AWDScriptCheckerDraft,
   type AWDTCPStandardDraft,
 } from './awdCheckerConfigSupport'
+import { useAwdCheckerDraftHydration } from './useAwdCheckerDraftHydration'
+import { useAwdTcpStepActions } from './useAwdTcpStepActions'
 
 interface UseAwdCheckerConfigDraftOptions {
   selectedService: ComputedRef<AdminContestAWDServiceData | null>
@@ -117,85 +118,22 @@ export function useAwdCheckerConfigDraft(options: UseAwdCheckerConfigDraftOption
       fieldErrors[key] = ''
     }
   }
-
-  function assignHTTPDraft(next: AWDHTTPStandardDraft) {
-    httpStandardDraft.put_flag = { ...next.put_flag }
-    httpStandardDraft.get_flag = { ...next.get_flag }
-    httpStandardDraft.havoc = { ...next.havoc }
-  }
-
-  function assignTCPDraft(next: AWDTCPStandardDraft) {
-    tcpStandardDraft.timeout_ms = next.timeout_ms
-    tcpStandardDraft.steps.splice(
-      0,
-      tcpStandardDraft.steps.length,
-      ...next.steps.map((step) => ({ ...step }))
-    )
-    expandedTCPCheckerStepIndex.value = null
-  }
-
-  function assignScriptDraft(next: AWDScriptCheckerDraft) {
-    scriptCheckerDraft.runtime = next.runtime
-    scriptCheckerDraft.entry = next.entry
-    scriptCheckerDraft.timeout_sec = next.timeout_sec
-    scriptCheckerDraft.args_text = next.args_text
-    scriptCheckerDraft.env_text = next.env_text
-    scriptCheckerDraft.output = next.output
-  }
-
-  function hydrateServiceDraft(service: AdminContestAWDServiceData | null) {
-    syncingDraft.value = true
-    clearErrors()
-    form.sla_score = service?.sla_score ?? 1
-    form.defense_score = service?.defense_score ?? 2
-    legacyProbeDraft.health_path = createLegacyProbeDraft(service?.checker_config).health_path
-    assignHTTPDraft(createHTTPStandardDraft(service?.checker_config))
-    assignTCPDraft(createTCPStandardDraft(service?.checker_config))
-    assignScriptDraft(createScriptCheckerDraft(service?.checker_config))
-    syncingDraft.value = false
-  }
-
-  function applyHTTPPreset(presetId: string) {
-    assignHTTPDraft(getHTTPStandardPresetDraft(presetId))
-  }
-
-  function addTCPCheckerStep() {
-    tcpStandardDraft.steps.push({
-      send: '',
-      send_template: '',
-      send_hex: '',
-      expect_contains: '',
-      expect_regex: '',
-      timeout_ms: 3000,
+  const { hydrateServiceDraft, applyHTTPPreset, applyFieldErrors } = useAwdCheckerDraftHydration({
+    form,
+    legacyProbeDraft,
+    httpStandardDraft,
+    tcpStandardDraft,
+    scriptCheckerDraft,
+    fieldErrors,
+    expandedTCPCheckerStepIndex,
+    syncingDraft,
+    clearErrors,
+  })
+  const { addTCPCheckerStep, removeTCPCheckerStep, toggleTCPCheckerStep, summarizeTCPCheckerStep } =
+    useAwdTcpStepActions({
+      tcpStandardDraft,
+      expandedTCPCheckerStepIndex,
     })
-    expandedTCPCheckerStepIndex.value = tcpStandardDraft.steps.length - 1
-  }
-
-  function removeTCPCheckerStep(index: number) {
-    if (tcpStandardDraft.steps.length <= 1) return
-    tcpStandardDraft.steps.splice(index, 1)
-    if (expandedTCPCheckerStepIndex.value === null) return
-    expandedTCPCheckerStepIndex.value = Math.min(
-      expandedTCPCheckerStepIndex.value,
-      tcpStandardDraft.steps.length - 1
-    )
-  }
-
-  function toggleTCPCheckerStep(index: number) {
-    expandedTCPCheckerStepIndex.value =
-      expandedTCPCheckerStepIndex.value === index ? null : index
-  }
-
-  function summarizeTCPCheckerStep(step: AWDTCPStandardDraft['steps'][number]): string {
-    const send = step.send_template || step.send || step.send_hex
-    const expect = step.expect_contains || step.expect_regex
-    const parts = [
-      send ? `发送 ${send}` : '',
-      expect ? `期望 ${expect}` : '',
-      Number.isInteger(step.timeout_ms) && step.timeout_ms > 0 ? `${step.timeout_ms}ms` : '',
-    ].filter(Boolean)
-    return parts.length > 0 ? parts.join(' · ') : '未配置收发规则'
-  }
 
   function buildCurrentCheckerConfig(strict = true): Record<string, unknown> {
     switch (selectedCheckerType.value) {
@@ -243,9 +181,7 @@ export function useAwdCheckerConfigDraft(options: UseAwdCheckerConfigDraftOption
         result = buildLegacyProbeCheckerConfig(legacyProbeDraft)
         break
     }
-    for (const [key, value] of Object.entries(result.errors)) {
-      fieldErrors[key as AWDCheckerFieldErrorKey] = value || ''
-    }
+    applyFieldErrors(result.errors)
     return Object.values(fieldErrors).every((value) => !value)
   }
 

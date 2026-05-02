@@ -1,4 +1,7 @@
 import type { AWDCheckerType } from '@/api/contracts'
+import { buildScriptCheckerConfig } from './awdCheckerScriptConfigSupport'
+import { buildTCPStandardCheckerConfig } from './awdCheckerTcpConfigSupport'
+export { buildScriptCheckerConfig, buildTCPStandardCheckerConfig }
 
 export const AWD_HTTP_METHOD_OPTIONS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
 
@@ -500,139 +503,6 @@ export function buildHTTPStandardCheckerConfig(
 
   return {
     config,
-    errors,
-  }
-}
-
-export function buildScriptCheckerConfig(
-  draft: AWDScriptCheckerDraft,
-  strict = true
-): AWDCheckerBuildResult {
-  const errors: Partial<Record<AWDCheckerFieldErrorKey, string>> = {}
-  const entry = draft.entry.trim()
-  if (!entry && strict) {
-    errors.script_entry = '入口文件不能为空'
-  }
-  if (entry.startsWith('/') || entry.includes('..')) {
-    errors.script_entry = '入口文件必须是题目包内相对路径'
-  }
-  if (!Number.isInteger(draft.timeout_sec) || draft.timeout_sec <= 0 || draft.timeout_sec > 60) {
-    errors.script_timeout = '超时时间必须是 1-60 秒'
-  }
-
-  const args = draft.args_text
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
-
-  let env: Record<string, string> = {}
-  const envText = draft.env_text.trim()
-  if (envText) {
-    try {
-      const parsed = JSON.parse(envText)
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        errors.script_env_text = '环境变量必须是 JSON 对象'
-      } else {
-        env = Object.fromEntries(
-          Object.entries(parsed as Record<string, unknown>).map(([key, value]) => [
-            key,
-            String(value),
-          ])
-        )
-      }
-    } catch {
-      errors.script_env_text = '环境变量必须是合法 JSON'
-    }
-  }
-
-  return {
-    config: {
-      runtime: draft.runtime.trim() || 'python3',
-      entry,
-      timeout_sec:
-        Number.isInteger(draft.timeout_sec) && draft.timeout_sec > 0 ? draft.timeout_sec : 10,
-      args,
-      ...(Object.keys(env).length > 0 ? { env } : {}),
-      output: draft.output,
-    },
-    errors,
-  }
-}
-
-export function buildTCPStandardCheckerConfig(
-  draft: AWDTCPStandardDraft,
-  strict = true
-): AWDCheckerBuildResult {
-  const errors: Partial<Record<AWDCheckerFieldErrorKey, string>> = {}
-  if (!Number.isInteger(draft.timeout_ms) || draft.timeout_ms <= 0 || draft.timeout_ms > 60000) {
-    errors.tcp_timeout = '超时时间必须是 1-60000 毫秒'
-  }
-
-  const steps = draft.steps
-    .map((step) => ({
-      send: step.send,
-      send_template: step.send_template,
-      send_hex: step.send_hex.trim(),
-      expect_contains: step.expect_contains,
-      expect_regex: step.expect_regex,
-      timeout_ms: step.timeout_ms,
-    }))
-    .filter(
-      (step) =>
-        step.send ||
-        step.send_template ||
-        step.send_hex ||
-        step.expect_contains ||
-        step.expect_regex
-    )
-
-  if (steps.length === 0 && strict) {
-    errors.tcp_steps = '至少需要一个 TCP 步骤'
-  }
-
-  for (const step of steps) {
-    const sendFieldCount = [step.send, step.send_template, step.send_hex].filter(Boolean).length
-    const hasExpectation = Boolean(step.expect_contains || step.expect_regex)
-    if (sendFieldCount === 0 && !hasExpectation && strict) {
-      errors.tcp_steps = '每个步骤至少需要发送内容或期望结果'
-    }
-    if (step.send_hex && (step.send || step.send_template) && strict) {
-      errors.tcp_steps = 'send_hex 不能与 send 或 send_template 同时填写'
-    }
-    if (step.send && step.send_template && strict) {
-      errors.tcp_steps = 'send 不能与 send_template 同时填写'
-    }
-    if (
-      !Number.isInteger(step.timeout_ms) ||
-      step.timeout_ms < 0 ||
-      step.timeout_ms > 60000
-    ) {
-      errors.tcp_steps = '步骤超时时间必须是 0-60000 毫秒'
-    }
-    if (step.expect_regex) {
-      try {
-        new RegExp(step.expect_regex)
-      } catch {
-        errors.tcp_steps = 'expect_regex 必须是合法正则'
-      }
-    }
-  }
-
-  return {
-    config: {
-      timeout_ms:
-        Number.isInteger(draft.timeout_ms) && draft.timeout_ms > 0 ? draft.timeout_ms : 3000,
-      steps: steps.map((step) => ({
-        ...(step.send ? { send: step.send } : {}),
-        ...(step.send_template ? { send_template: step.send_template } : {}),
-        ...(step.send_hex ? { send_hex: step.send_hex } : {}),
-        ...(step.expect_contains ? { expect_contains: step.expect_contains } : {}),
-        ...(step.expect_regex ? { expect_regex: step.expect_regex } : {}),
-        ...(Number.isInteger(step.timeout_ms) && step.timeout_ms > 0
-          ? { timeout_ms: step.timeout_ms }
-          : {}),
-      })),
-    },
     errors,
   }
 }

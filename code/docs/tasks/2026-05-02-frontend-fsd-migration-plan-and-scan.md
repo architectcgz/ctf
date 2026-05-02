@@ -1450,6 +1450,81 @@ npm run test:run -- src/features/admin-notification-publisher/model/useAdminNoti
 npm run typecheck
 ```
 
+### 已完成：Batch BA 子项（竞赛详情页选择/倒计时/数据加载拆分）
+- 新增 `features/contest-detail/model/useContestDetailSelectionSync.ts`，承接：
+  - query 轮询题目 id 归一化（`normalizeContestChallengeId`）
+  - 题目选择与 query 同步入口（`syncSelectedChallengeFromQuery`）
+- 新增 `features/contest-detail/model/useContestDetailCountdown.ts`，承接：
+  - 开赛/结束倒计时计算
+  - 倒计时定时器启动与销毁
+- 新增 `features/contest-detail/model/useContestDetailDataLoader.ts`，承接：
+  - 页面主数据并发加载
+  - 竞态 token 控制
+  - 公告刷新与错误策略
+- `useContestDetailPage.ts` 改为组合上述子模块，移除内联加载、倒计时与 query 归一化逻辑。
+- 新增边界测试：`useContestDetailPageBoundary.test.ts`。
+
+验证：
+```bash
+npm run test:run -- src/views/contests/__tests__/ContestDetail.test.ts src/features/contest-detail/model/useContestDetailPageBoundary.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch BB 子项（题目包导入上传流程与错误归一化拆分）
+- 新增 `features/challenge-package-import/model/challengeImportErrorSupport.ts`，承接：
+  - API 校验错误归一化
+  - 通用错误文案友好化
+  - validation issue 文案格式化
+- 新增 `features/challenge-package-import/model/challengeImportUploadFlow.ts`，承接：
+  - 导入队列刷新
+  - 单文件上传预览流程
+  - 多文件并发预览流程
+  - 上传结果轨迹记录
+- `useChallengePackageImport.ts` 改为聚焦预览读取、提交导入与流程编排，不再内联上传细节。
+- 新增边界测试：`useChallengePackageImportBoundary.test.ts`。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ChallengeImportManage.test.ts src/views/platform/__tests__/ChallengeImportPreview.test.ts src/components/platform/__tests__/ChallengePackageImportReview.test.ts src/features/challenge-package-import/model/useChallengePackageImportBoundary.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch BC 子项（学生仪表盘数据加载与面板绑定拆分）
+- 新增 `features/student-dashboard/model/studentDashboardTypes.ts`，沉淀 dashboard 面板类型。
+- 新增 `features/student-dashboard/model/useStudentDashboardData.ts`，承接：
+  - 学生仪表盘数据加载与角色跳转
+  - 指标派生（完成率、推荐数、动态数、高亮卡片）
+- 新增 `features/student-dashboard/model/useStudentDashboardPanelBindings.ts`，承接：
+  - 各 panel 的 `props/action` 绑定映射
+- `useStudentDashboardPage.ts` 改为组合 route tab + data + panel binding 三层职责。
+- 新增边界测试：`useStudentDashboardPageBoundary.test.ts`。
+
+验证：
+```bash
+npm run test:run -- src/views/dashboard/__tests__/DashboardView.test.ts src/features/student-dashboard/model/useStudentDashboardPageBoundary.test.ts
+npm run typecheck
+```
+
+### 已完成：Batch BD 子项（AWD checker draft/support 拆分）
+- 新增 `features/contest-awd-config/model/useAwdCheckerDraftHydration.ts`，承接：
+  - 选中服务草稿回填
+  - HTTP 预设应用
+  - checker 字段错误回填
+- 新增 `features/contest-awd-config/model/useAwdTcpStepActions.ts`，承接：
+  - TCP step 新增/删除/展开切换
+  - TCP step 摘要文案
+- 新增 `features/contest-awd-config/model/awdCheckerScriptConfigSupport.ts`，承接 script checker 构建与校验。
+- 新增 `features/contest-awd-config/model/awdCheckerTcpConfigSupport.ts`，承接 tcp checker 构建与校验。
+- `awdCheckerConfigSupport.ts` 改为组合 script/tcp 构建模块。
+- `useAwdCheckerConfigDraft.ts` 改为组合 hydration 与 tcp step actions。
+- 新增边界测试：`useAwdCheckerConfigDraftBoundary.test.ts`。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/features/contest-awd-config/model/useAwdCheckerConfigDraftBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
