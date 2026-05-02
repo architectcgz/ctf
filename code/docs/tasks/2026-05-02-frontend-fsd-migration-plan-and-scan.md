@@ -527,6 +527,21 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/co
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（topology 校验/节点创建纯逻辑抽离）
+- `features/challenge-topology-studio/model/topologyDraft.ts` 新增：
+  - `buildTopologyDraftValidationIssues`
+  - `createUniqueNodeDraft`
+- `useChallengeTopologyStudioPage.ts` 已改为复用上述纯函数，删除本地重复逻辑：
+  - 草稿校验问题计算由内联实现改为 `buildTopologyDraftValidationIssues(draft)`
+  - `addNode` 与 `handleCanvasCreateNode` 的唯一 key 生成、默认网络挂载逻辑统一到 `createUniqueNodeDraft`
+- 结果：主 composable 行为不变，但纯逻辑的可复用性与后续继续拆分（payload/loader/editor 子模块）的基础已就绪。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

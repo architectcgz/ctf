@@ -31,11 +31,12 @@ import {
 import {
   createDraftFromTemplate,
   createDraftFromTopology,
+  createUniqueNodeDraft,
   createEmptyLinkDraft,
   createEmptyNetworkDraft,
-  createEmptyNodeDraft,
   createEmptyPolicyDraft,
   createEmptyTopologyDraft,
+  buildTopologyDraftValidationIssues,
   serializeEnvironmentTemplateDraft,
   serializeTopologyDraft,
   type TopologyEditorDraft,
@@ -205,52 +206,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     }
     return '未选中节点或边，可直接点击画布元素进入编辑'
   })
-  const draftValidationIssues = computed(() => {
-    const issues: string[] = []
-    const trimmedNodeKeys = draft.value.nodes.map((node) => node.key.trim()).filter(Boolean)
-    const trimmedNetworkKeys = draft.value.networks
-      .map((network) => network.key.trim())
-      .filter(Boolean)
-    const duplicateNodeKeys = trimmedNodeKeys.filter(
-      (key, index) => trimmedNodeKeys.indexOf(key) !== index
-    )
-    const duplicateNetworkKeys = trimmedNetworkKeys.filter(
-      (key, index) => trimmedNetworkKeys.indexOf(key) !== index
-    )
-
-    if (duplicateNodeKeys.length > 0) {
-      issues.push(`节点 Key 重复：${Array.from(new Set(duplicateNodeKeys)).join('、')}`)
-    }
-    if (duplicateNetworkKeys.length > 0) {
-      issues.push(`网络 Key 重复：${Array.from(new Set(duplicateNetworkKeys)).join('、')}`)
-    }
-    if (!draft.value.nodes.some((node) => node.key === draft.value.entry_node_key)) {
-      issues.push('入口节点未指向现有节点')
-    }
-    if (draft.value.nodes.some((node) => node.network_keys.length === 0)) {
-      issues.push('存在未挂载任何网络的节点')
-    }
-    if (
-      draft.value.links.some(
-        (link) =>
-          !draft.value.nodes.some((node) => node.key === link.from_node_key) ||
-          !draft.value.nodes.some((node) => node.key === link.to_node_key)
-      )
-    ) {
-      issues.push('存在引用不存在节点的逻辑连线')
-    }
-    if (
-      draft.value.policies.some(
-        (policy) =>
-          !draft.value.nodes.some((node) => node.key === policy.source_node_key) ||
-          !draft.value.nodes.some((node) => node.key === policy.target_node_key)
-      )
-    ) {
-      issues.push('存在引用不存在节点的链路策略')
-    }
-
-    return issues
-  })
+  const draftValidationIssues = computed(() => buildTopologyDraftValidationIssues(draft.value))
   const selectedTemplateSummary = computed(() => {
     if (!selectedTemplate.value) {
       return '尚未选中模板，可从下方模板库载入到当前草稿。'
@@ -516,18 +472,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   }
 
   function addNode() {
-    const nodeCount = draft.value.nodes.length
-    const next = createEmptyNodeDraft(nodeCount + 1)
-
-    const existingKeys = new Set(draft.value.nodes.map((n) => n.key))
-    let counter = nodeCount + 1
-    while (existingKeys.has(next.key)) {
-      counter++
-      next.key = `node-${counter}`
-      next.name = `节点 ${counter}`
-    }
-
-    next.network_keys = [draft.value.networks[0]?.key || 'default']
+    const next = createUniqueNodeDraft(draft.value)
     draft.value.nodes.push(next)
 
     if (!draft.value.entry_node_key) {
@@ -594,21 +539,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   }
 
   function handleCanvasCreateNode(position: CanvasNodePosition) {
-    const nodeCount = draft.value.nodes.length
-    const next = createEmptyNodeDraft(nodeCount + 1)
-
-    // Ensure key is truly unique to avoid key collision watch overhead
-    const existingKeys = new Set(draft.value.nodes.map((n) => n.key))
-    let finalKey = next.key
-    let counter = nodeCount + 1
-    while (existingKeys.has(finalKey)) {
-      counter++
-      finalKey = `node-${counter}`
-    }
-    next.key = finalKey
-    next.name = `节点 ${counter}`
-
-    next.network_keys = [draft.value.networks[0]?.key || 'default']
+    const next = createUniqueNodeDraft(draft.value)
 
     // Batch position and node update
     nodePositions.value[next.key] = clampCanvasPosition(position)
