@@ -5,6 +5,7 @@ import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
+import TeacherAWDReviewDirectorySection from './TeacherAWDReviewDirectorySection.vue'
 import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
 import TeacherAWDReviewIndexFilters from './TeacherAWDReviewIndexFilters.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
@@ -103,31 +104,18 @@ const summaryItems = computed(() => [
         </template>
       </TeacherAWDReviewSummaryPanel>
 
-      <section
-        class="workspace-directory-section teacher-directory-section"
-        aria-label="AWD 赛事目录"
+      <TeacherAWDReviewDirectorySection
+        :total-count="contests.length"
       >
-        <header class="list-heading">
-          <div>
-            <div class="journal-note-label">
-              Review Directory
-            </div>
-            <h3 class="list-heading__title">
-              赛事目录
-            </h3>
-          </div>
-          <div class="teacher-directory-meta">
-            共 {{ contests.length }} 场赛事
-          </div>
-        </header>
-
-        <TeacherAWDReviewIndexFilters
-          :status-options="statusOptions"
-          :status-filter="statusFilter"
-          :keyword-filter="keywordFilter"
-          @update-status-filter="emit('updateStatusFilter', $event)"
-          @update-keyword-filter="emit('updateKeywordFilter', $event)"
-        />
+        <template #filters>
+          <TeacherAWDReviewIndexFilters
+            :status-options="statusOptions"
+            :status-filter="statusFilter"
+            :keyword-filter="keywordFilter"
+            @update-status-filter="emit('updateStatusFilter', $event)"
+            @update-keyword-filter="emit('updateKeywordFilter', $event)"
+          />
+        </template>
 
         <TeacherAWDReviewDirectoryState
           :loading="loading"
@@ -147,7 +135,7 @@ const summaryItems = computed(() => [
             />
           </section>
         </TeacherAWDReviewDirectoryState>
-      </section>
+      </TeacherAWDReviewDirectorySection>
     </div>
   </TeacherAWDReviewSurfaceShell>
 </template>
@@ -170,30 +158,13 @@ const summaryItems = computed(() => [
   color: var(--journal-accent, var(--color-primary));
 }
 
-.teacher-directory-section {
-  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
-}
-
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
 .teacher-directory {
   display: flex;
   flex-direction: column;
 }
 
-.teacher-directory-meta {
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
-}
-
 @media (max-width: 1080px) {
-  .teacher-topbar,
-  .list-heading {
+  .teacher-topbar {
     align-items: flex-start;
     flex-direction: column;
   }

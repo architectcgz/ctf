@@ -7,3 +7,4 @@ export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndex
 export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
 export { default as TeacherAWDReviewContestHead } from './TeacherAWDReviewContestHead.vue'
 export { default as TeacherAWDReviewDirectoryState } from './TeacherAWDReviewDirectoryState.vue'
+export { default as TeacherAWDReviewDirectorySection } from './TeacherAWDReviewDirectorySection.vue'

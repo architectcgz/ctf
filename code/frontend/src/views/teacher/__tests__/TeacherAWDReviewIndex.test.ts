@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 import teacherAwdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
+import teacherAwdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -124,19 +125,20 @@ describe('TeacherAWDReviewIndex', () => {
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewIndexFilters')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewDirectorySection')
+    expect(teacherAwdReviewDirectorySectionSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('class="list-heading"')
+    expect(teacherAwdReviewDirectorySectionSource).toContain('class="list-heading"')
     expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-title')
     expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('teacher-controls-copy')
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface-subtle\)\s*84%,\s*transparent\);/s
     )
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*box-shadow:\s*0 10px 24px var\(--color-shadow-soft\);/s
     )
   })
