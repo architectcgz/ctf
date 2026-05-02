@@ -45,6 +45,7 @@ import {
   type TopologyPolicyDraft,
 } from './topologyDraft'
 import type { CanvasInteractionMode } from './topologyTypes'
+import { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
 
 export type TopologyStudioMode = 'challenge' | 'template-library'
 
@@ -64,10 +65,20 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   const topology = ref<ChallengeTopologyData | null>(null)
   const images = ref<AdminImageListItem[]>([])
   const templates = ref<EnvironmentTemplateData[]>([])
-  const templateKeyword = ref('')
-  const selectedTemplateId = ref<string | null>(null)
-  const templateName = ref('')
-  const templateDescription = ref('')
+  const {
+    templateKeyword,
+    selectedTemplateId,
+    templateName,
+    templateDescription,
+    canSaveTemplate,
+    selectedTemplate,
+    selectedTemplateSummary,
+    resetTemplateForm,
+    clearTemplateSelection,
+    reconcileTemplateSelection,
+  } = useTopologyTemplateSelection({
+    templates,
+  })
   const draft = ref<TopologyEditorDraft>(createEmptyTopologyDraft())
   const selectedNodeKey = ref<string | null>(null)
   const selectedEdgeId = ref<string | null>(null)
@@ -83,10 +94,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     }))
   )
 
-  const canSaveTemplate = computed(() => templateName.value.trim().length > 0)
-  const selectedTemplate = computed(
-    () => templates.value.find((item) => item.id === selectedTemplateId.value) || null
-  )
   const pageHeader = computed(() => ({
     eyebrow: isTemplateLibraryMode.value ? 'Template Library' : 'Topology Studio',
     title: isTemplateLibraryMode.value ? '环境模板库' : '拓扑编排台',
@@ -207,12 +214,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     return '未选中节点或边，可直接点击画布元素进入编辑'
   })
   const draftValidationIssues = computed(() => buildTopologyDraftValidationIssues(draft.value))
-  const selectedTemplateSummary = computed(() => {
-    if (!selectedTemplate.value) {
-      return '尚未选中模板，可从下方模板库载入到当前草稿。'
-    }
-    return `${selectedTemplate.value.name} · 节点 ${selectedTemplate.value.nodes.length} · 网络 ${selectedTemplate.value.networks?.length || 0} · 使用 ${selectedTemplate.value.usage_count}`
-  })
 
   const topologySummary = computed(() => ({
     networks: draft.value.networks.length,
@@ -373,12 +374,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     }
   }
 
-  function resetTemplateForm(template?: EnvironmentTemplateData | null) {
-    selectedTemplateId.value = template?.id || null
-    templateName.value = template?.name || ''
-    templateDescription.value = template?.description || ''
-  }
-
   function applyTopologyDraft(next: TopologyEditorDraft) {
     draft.value = next
     nodePositions.value = normalizeCanvasPositions(next, nodePositions.value)
@@ -390,12 +385,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   async function loadTemplates() {
     templates.value = await getEnvironmentTemplates(templateKeyword.value.trim() || undefined)
-    if (
-      selectedTemplateId.value &&
-      !templates.value.some((item) => item.id === selectedTemplateId.value)
-    ) {
-      resetTemplateForm(null)
-    }
+    reconcileTemplateSelection()
   }
 
   async function loadPageData() {
@@ -785,10 +775,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     } finally {
       templateBusy.value = false
     }
-  }
-
-  function clearTemplateSelection() {
-    resetTemplateForm(null)
   }
 
   function isEditingTarget(target: EventTarget | null): boolean {

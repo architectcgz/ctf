@@ -659,6 +659,20 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（模板选择状态拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyTemplateSelection.ts`，承接：
+  - 模板选择状态（keyword/id/name/description）
+  - `selectedTemplate` / `canSaveTemplate` / `selectedTemplateSummary` 派生
+  - 模板表单 reset / clear / reconcile
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该子模块，移除内联模板选择与表单状态逻辑。
+- `useChallengeTopologyStudioPage.ts` 行数进一步下降（本批由 930 降至 916）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
