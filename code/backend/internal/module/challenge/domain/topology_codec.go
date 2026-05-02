@@ -162,24 +162,13 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*dto.ChallengeTopolog
 		}
 		baseline = topologySpecRespFromSpec(item.EntryNodeKey, baselineSpec)
 	}
-	return &dto.ChallengeTopologyResp{
-		ID:                   item.ID,
-		ChallengeID:          item.ChallengeID,
-		TemplateID:           item.TemplateID,
-		EntryNodeKey:         item.EntryNodeKey,
-		Networks:             topologyNetworkRespList(spec.Networks),
-		Nodes:                topologyNodeRespList(spec.Nodes),
-		Links:                topologyLinkRespList(spec.Links),
-		Policies:             topologyTrafficPolicyRespList(spec.Policies),
-		SourceType:           item.SourceType,
-		SourcePath:           item.SourcePath,
-		SyncStatus:           item.SyncStatus,
-		PackageRevisionID:    item.PackageRevisionID,
-		LastExportRevisionID: item.LastExportRevisionID,
-		PackageBaseline:      baseline,
-		CreatedAt:            item.CreatedAt,
-		UpdatedAt:            item.UpdatedAt,
-	}, nil
+	resp := challengeResponseMapperInst.ToChallengeTopologyRespBase(item)
+	resp.Networks = topologyNetworkRespList(spec.Networks)
+	resp.Nodes = topologyNodeRespList(spec.Nodes)
+	resp.Links = topologyLinkRespList(spec.Links)
+	resp.Policies = topologyTrafficPolicyRespList(spec.Policies)
+	resp.PackageBaseline = baseline
+	return resp, nil
 }
 
 func TopologySpecRespFromEncoded(entryNodeKey string, raw string) (*dto.TopologySpecResp, error) {
@@ -199,100 +188,35 @@ func TemplateRespFromModel(item *model.EnvironmentTemplate) (*dto.EnvironmentTem
 	if err != nil {
 		return nil, err
 	}
-	return &dto.EnvironmentTemplateResp{
-		ID:           item.ID,
-		Name:         item.Name,
-		Description:  item.Description,
-		EntryNodeKey: item.EntryNodeKey,
-		Networks:     topologyNetworkRespList(spec.Networks),
-		Nodes:        topologyNodeRespList(spec.Nodes),
-		Links:        topologyLinkRespList(spec.Links),
-		Policies:     topologyTrafficPolicyRespList(spec.Policies),
-		UsageCount:   item.UsageCount,
-		CreatedAt:    item.CreatedAt,
-		UpdatedAt:    item.UpdatedAt,
-	}, nil
+	resp := challengeResponseMapperInst.ToEnvironmentTemplateRespBase(item)
+	resp.Networks = topologyNetworkRespList(spec.Networks)
+	resp.Nodes = topologyNodeRespList(spec.Nodes)
+	resp.Links = topologyLinkRespList(spec.Links)
+	resp.Policies = topologyTrafficPolicyRespList(spec.Policies)
+	return resp, nil
 }
 
 func topologyNodeRespList(nodes []model.TopologyNode) []dto.TopologyNodeResp {
-	items := make([]dto.TopologyNodeResp, 0, len(nodes))
-	for _, node := range nodes {
-		var resources *dto.TopologyResourcesResp
-		if node.Resources != nil {
-			resources = &dto.TopologyResourcesResp{
-				CPUQuota:  node.Resources.CPUQuota,
-				MemoryMB:  node.Resources.MemoryMB,
-				PidsLimit: node.Resources.PidsLimit,
-			}
-		}
-		items = append(items, dto.TopologyNodeResp{
-			Key:             node.Key,
-			Name:            node.Name,
-			ImageID:         node.ImageID,
-			ServicePort:     node.ServicePort,
-			ServiceProtocol: node.ServiceProtocol,
-			InjectFlag:      node.InjectFlag,
-			Tier:            node.Tier,
-			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
-			Env:             node.Env,
-			Resources:       resources,
-		})
-	}
-	return items
+	return challengeResponseMapperInst.ToTopologyNodeRespList(nodes)
 }
 
 func topologyNetworkRespList(networks []model.TopologyNetwork) []dto.TopologyNetworkResp {
-	items := make([]dto.TopologyNetworkResp, 0, len(networks))
-	for _, network := range networks {
-		items = append(items, dto.TopologyNetworkResp{
-			Key:      network.Key,
-			Name:     network.Name,
-			CIDR:     network.CIDR,
-			Internal: network.Internal,
-		})
-	}
-	return items
+	return challengeResponseMapperInst.ToTopologyNetworkRespList(networks)
 }
 
 func topologyLinkRespList(links []model.TopologyLink) []dto.TopologyLinkResp {
-	items := make([]dto.TopologyLinkResp, 0, len(links))
-	for _, link := range links {
-		items = append(items, dto.TopologyLinkResp{
-			FromNodeKey: link.FromNodeKey,
-			ToNodeKey:   link.ToNodeKey,
-		})
-	}
-	return items
+	return challengeResponseMapperInst.ToTopologyLinkRespList(links)
 }
 
 func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp {
-	items := make([]dto.TopologyTrafficPolicyResp, 0, len(policies))
-	for _, policy := range policies {
-		items = append(items, dto.TopologyTrafficPolicyResp{
-			SourceNodeKey: policy.SourceNodeKey,
-			TargetNodeKey: policy.TargetNodeKey,
-			Action:        policy.Action,
-			Protocol:      policy.Protocol,
-			Ports:         append([]int(nil), policy.Ports...),
-		})
-	}
-	return items
+	return challengeResponseMapperInst.ToTopologyTrafficPolicyRespList(policies)
 }
 
 func ChallengePackageRevisionRespFromModel(item *model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
-	return dto.ChallengePackageRevisionResp{
-		ID:                 item.ID,
-		RevisionNo:         item.RevisionNo,
-		SourceType:         item.SourceType,
-		ParentRevisionID:   item.ParentRevisionID,
-		PackageSlug:        item.PackageSlug,
-		ArchivePath:        item.ArchivePath,
-		SourceDir:          item.SourceDir,
-		TopologySourcePath: item.TopologySourcePath,
-		CreatedBy:          item.CreatedBy,
-		CreatedAt:          item.CreatedAt,
-		UpdatedAt:          item.UpdatedAt,
+	if item == nil {
+		return dto.ChallengePackageRevisionResp{}
 	}
+	return challengeResponseMapperInst.ToChallengePackageRevisionResp(*item)
 }
 
 func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology) *dto.ChallengeImportTopologyResp {
@@ -301,34 +225,22 @@ func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology)
 	}
 	nodes := make([]dto.ChallengeImportTopologyNodeResp, 0, len(item.Nodes))
 	for _, node := range item.Nodes {
-		nodes = append(nodes, dto.ChallengeImportTopologyNodeResp{
-			Key:         node.Key,
-			Name:        node.Name,
-			ImageRef:    strings.TrimSpace(node.Image.Ref),
-			ServicePort: node.ServicePort,
-			InjectFlag:  node.InjectFlag,
-			Tier:        node.Tier,
-			NetworkKeys: append([]string(nil), node.NetworkKeys...),
-			Env:         node.Env,
-		})
+		mapped := challengeResponseMapperInst.ToChallengeImportTopologyNodeRespBase(node)
+		mapped.ImageRef = strings.TrimSpace(node.Image.Ref)
+		nodes = append(nodes, mapped)
 	}
-	return &dto.ChallengeImportTopologyResp{
-		Source:       item.Source,
-		EntryNodeKey: item.EntryNodeKey,
-		Networks:     topologyNetworkRespList(importedTopologyNetworkList(item.Networks)),
-		Nodes:        nodes,
-		Links:        topologyLinkRespList(importedTopologyLinkList(item.Links)),
-		Policies:     topologyTrafficPolicyRespList(importedTopologyPolicyList(item.Policies)),
-	}
+	resp := challengeResponseMapperInst.ToChallengeImportTopologyRespBase(*item)
+	resp.Networks = topologyNetworkRespList(importedTopologyNetworkList(item.Networks))
+	resp.Nodes = nodes
+	resp.Links = topologyLinkRespList(importedTopologyLinkList(item.Links))
+	resp.Policies = topologyTrafficPolicyRespList(importedTopologyPolicyList(item.Policies))
+	return resp
 }
 
 func ChallengePackageFileRespList(items []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
 	resp := make([]dto.ChallengePackageFileResp, 0, len(items))
 	for _, item := range items {
-		resp = append(resp, dto.ChallengePackageFileResp{
-			Path: item.Path,
-			Size: item.Size,
-		})
+		resp = append(resp, challengeResponseMapperInst.ToChallengePackageFileResp(item))
 	}
 	return resp
 }
@@ -338,51 +250,25 @@ func ChallengePackageFileRespListFromRevisionFiles(items []dto.ChallengePackageF
 }
 
 func topologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *dto.TopologySpecResp {
-	return &dto.TopologySpecResp{
-		EntryNodeKey: entryNodeKey,
-		Networks:     topologyNetworkRespList(spec.Networks),
-		Nodes:        topologyNodeRespList(spec.Nodes),
-		Links:        topologyLinkRespList(spec.Links),
-		Policies:     topologyTrafficPolicyRespList(spec.Policies),
-	}
+	resp := challengeResponseMapperInst.ToTopologySpecRespBase(spec)
+	resp.EntryNodeKey = entryNodeKey
+	resp.Networks = topologyNetworkRespList(spec.Networks)
+	resp.Nodes = topologyNodeRespList(spec.Nodes)
+	resp.Links = topologyLinkRespList(spec.Links)
+	resp.Policies = topologyTrafficPolicyRespList(spec.Policies)
+	return resp
 }
 
 func importedTopologyNetworkList(items []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
-	resp := make([]model.TopologyNetwork, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, model.TopologyNetwork{
-			Key:      item.Key,
-			Name:     item.Name,
-			CIDR:     item.CIDR,
-			Internal: item.Internal,
-		})
-	}
-	return resp
+	return challengeResponseMapperInst.ToImportedTopologyNetworkList(items)
 }
 
 func importedTopologyLinkList(items []ChallengePackageTopologyLink) []model.TopologyLink {
-	resp := make([]model.TopologyLink, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, model.TopologyLink{
-			FromNodeKey: item.FromNodeKey,
-			ToNodeKey:   item.ToNodeKey,
-		})
-	}
-	return resp
+	return challengeResponseMapperInst.ToImportedTopologyLinkList(items)
 }
 
 func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
-	resp := make([]model.TopologyTrafficPolicy, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, model.TopologyTrafficPolicy{
-			SourceNodeKey: item.SourceNodeKey,
-			TargetNodeKey: item.TargetNodeKey,
-			Action:        item.Action,
-			Protocol:      item.Protocol,
-			Ports:         append([]int(nil), item.Ports...),
-		})
-	}
-	return resp
+	return challengeResponseMapperInst.ToImportedTopologyPolicyList(items)
 }
 
 func normalizeTopologyNetworks(networks []dto.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {

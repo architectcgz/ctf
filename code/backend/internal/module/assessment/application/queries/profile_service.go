@@ -3,7 +3,6 @@ package queries
 import (
 	"context"
 	"strings"
-	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -28,29 +27,7 @@ func (s *ProfileService) GetSkillProfile(ctx context.Context, userID int64) (*dt
 	if len(profiles) == 0 {
 		return assessmentdomain.BuildEmptyProfile(userID), nil
 	}
-
-	dimensionMap := make(map[string]float64)
-	var latestUpdate time.Time
-	for _, profile := range profiles {
-		dimensionMap[profile.Dimension] = profile.Score
-		if profile.UpdatedAt.After(latestUpdate) {
-			latestUpdate = profile.UpdatedAt
-		}
-	}
-
-	dimensions := make([]*dto.SkillDimension, 0, len(model.AllDimensions))
-	for _, dim := range model.AllDimensions {
-		dimensions = append(dimensions, &dto.SkillDimension{
-			Dimension: dim,
-			Score:     dimensionMap[dim],
-		})
-	}
-
-	return &dto.SkillProfileResp{
-		UserID:     userID,
-		Dimensions: dimensions,
-		UpdatedAt:  latestUpdate.Format(time.RFC3339),
-	}, nil
+	return assessmentdomain.BuildSkillProfile(userID, profiles), nil
 }
 
 func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {

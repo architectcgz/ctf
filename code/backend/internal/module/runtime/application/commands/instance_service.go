@@ -150,18 +150,9 @@ func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
-	return &dto.InstanceResp{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		ShareScope:       inst.ShareScope,
-		AccessURL:        inst.AccessURL,
-		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
-	}
+	resp := runtimeCommandResponseMapperInst.ToInstanceResp(inst)
+	resp.RemainingExtends = runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount)
+	return resp
 }
 
 func normalizeContext(ctx context.Context) context.Context {

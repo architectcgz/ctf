@@ -254,31 +254,7 @@ func (s *Service) GetSkillProfile(ctx context.Context, userID int64) (*dto.Skill
 		return assessmentdomain.BuildEmptyProfile(userID), nil
 	}
 
-	// 构建维度得分映射
-	dimensionMap := make(map[string]float64)
-	var latestUpdate time.Time
-
-	for _, p := range profiles {
-		dimensionMap[p.Dimension] = p.Score
-		if p.UpdatedAt.After(latestUpdate) {
-			latestUpdate = p.UpdatedAt
-		}
-	}
-
-	// 填充所有维度（缺失的默认为 0）
-	dimensions := make([]*dto.SkillDimension, 0, len(model.AllDimensions))
-	for _, dim := range model.AllDimensions {
-		dimensions = append(dimensions, &dto.SkillDimension{
-			Dimension: dim,
-			Score:     dimensionMap[dim], // 不存在时为 0
-		})
-	}
-
-	return &dto.SkillProfileResp{
-		UserID:     userID,
-		Dimensions: dimensions,
-		UpdatedAt:  latestUpdate.Format(time.RFC3339),
-	}, nil
+	return assessmentdomain.BuildSkillProfile(userID, profiles), nil
 }
 
 func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {

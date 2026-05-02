@@ -44,62 +44,30 @@ func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHin
 }
 
 func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *dto.ChallengeResp {
-	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
+	resp := challengeResponseMapperInst.ToChallengeResp(challenge)
+	if len(hints) == 0 {
+		return resp
+	}
+	resp.Hints = make([]*dto.ChallengeHintAdminResp, 0, len(hints))
 	for _, hint := range hints {
-		adminHints = append(adminHints, &dto.ChallengeHintAdminResp{
-			ID:      hint.ID,
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		})
+		resp.Hints = append(resp.Hints, challengeResponseMapperInst.ToChallengeHintAdminResp(hint))
 	}
-
-	return &dto.ChallengeResp{
-		ID:              challenge.ID,
-		Title:           challenge.Title,
-		Description:     challenge.Description,
-		Category:        challenge.Category,
-		Difficulty:      challenge.Difficulty,
-		Points:          challenge.Points,
-		ImageID:         challenge.ImageID,
-		AttachmentURL:   challenge.AttachmentURL,
-		InstanceSharing: challenge.InstanceSharing,
-		Hints:           adminHints,
-		Status:          challenge.Status,
-		CreatedBy:       challenge.CreatedBy,
-		CreatedAt:       challenge.CreatedAt,
-		UpdatedAt:       challenge.UpdatedAt,
-	}
+	return resp
 }
 
 func AWDChallengeRespFromModel(challenge *model.AWDChallenge) *dto.AWDChallengeResp {
 	if challenge == nil {
 		return nil
 	}
-	return &dto.AWDChallengeResp{
-		ID:               challenge.ID,
-		Name:             challenge.Name,
-		Slug:             challenge.Slug,
-		Category:         challenge.Category,
-		Difficulty:       challenge.Difficulty,
-		Description:      challenge.Description,
-		ServiceType:      string(challenge.ServiceType),
-		DeploymentMode:   string(challenge.DeploymentMode),
-		Version:          challenge.Version,
-		Status:           string(challenge.Status),
-		ReadinessStatus:  string(challenge.ReadinessStatus),
-		CheckerType:      string(challenge.CheckerType),
-		CheckerConfig:    parseTemplateConfigMap(challenge.CheckerConfig),
-		FlagMode:         strings.TrimSpace(challenge.FlagMode),
-		FlagConfig:       parseTemplateConfigMap(challenge.FlagConfig),
-		DefenseEntryMode: strings.TrimSpace(challenge.DefenseEntryMode),
-		AccessConfig:     parseTemplateConfigMap(challenge.AccessConfig),
-		RuntimeConfig:    parseTemplateConfigMap(challenge.RuntimeConfig),
-		CreatedBy:        challenge.CreatedBy,
-		LastVerifiedAt:   challenge.LastVerifiedAt,
-		UpdatedAt:        challenge.UpdatedAt,
-		CreatedAt:        challenge.CreatedAt,
-	}
+	resp := challengeResponseMapperInst.ToAWDChallengeResp(challenge)
+	resp.CheckerType = strings.TrimSpace(string(challenge.CheckerType))
+	resp.CheckerConfig = parseTemplateConfigMap(challenge.CheckerConfig)
+	resp.FlagMode = strings.TrimSpace(challenge.FlagMode)
+	resp.FlagConfig = parseTemplateConfigMap(challenge.FlagConfig)
+	resp.DefenseEntryMode = strings.TrimSpace(challenge.DefenseEntryMode)
+	resp.AccessConfig = parseTemplateConfigMap(challenge.AccessConfig)
+	resp.RuntimeConfig = parseTemplateConfigMap(challenge.RuntimeConfig)
+	return resp
 }
 
 func parseTemplateConfigMap(raw string) map[string]any {
@@ -117,17 +85,9 @@ func parseTemplateConfigMap(raw string) map[string]any {
 }
 
 func ImageRespFromModel(image *model.Image) *dto.ImageResp {
-	return &dto.ImageResp{
-		ID:            image.ID,
-		Name:          image.Name,
-		Tag:           image.Tag,
-		Description:   image.Description,
-		Size:          image.Size,
-		SizeFormatted: FormatImageSize(image.Size),
-		Status:        image.Status,
-		CreatedAt:     image.CreatedAt,
-		UpdatedAt:     image.UpdatedAt,
-	}
+	resp := challengeResponseMapperInst.ToImageResp(image)
+	resp.SizeFormatted = FormatImageSize(image.Size)
+	return resp
 }
 
 func FormatImageSize(size int64) string {
@@ -149,68 +109,26 @@ func FormatImageSize(size int64) string {
 }
 
 func TagRespFromModel(tag *model.Tag) *dto.TagResp {
-	return &dto.TagResp{
-		ID:          tag.ID,
-		Name:        tag.Name,
-		Type:        tag.Type,
-		Description: tag.Description,
-		CreatedAt:   tag.CreatedAt,
-	}
+	return challengeResponseMapperInst.ToTagResp(tag)
 }
 
 func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
-	return &dto.AdminChallengeWriteupResp{
-		ID:            item.ID,
-		ChallengeID:   item.ChallengeID,
-		Title:         item.Title,
-		Content:       item.Content,
-		Visibility:    item.Visibility,
-		CreatedBy:     item.CreatedBy,
-		IsRecommended: item.IsRecommended,
-		RecommendedAt: item.RecommendedAt,
-		RecommendedBy: item.RecommendedBy,
-		CreatedAt:     item.CreatedAt,
-		UpdatedAt:     item.UpdatedAt,
-	}
+	return challengeResponseMapperInst.ToAdminChallengeWriteupResp(item)
 }
 
 func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
-	return &dto.SubmissionWriteupResp{
-		ID:               item.ID,
-		UserID:           item.UserID,
-		ChallengeID:      item.ChallengeID,
-		ContestID:        item.ContestID,
-		Title:            item.Title,
-		Content:          item.Content,
-		SubmissionStatus: item.SubmissionStatus,
-		VisibilityStatus: item.VisibilityStatus,
-		IsRecommended:    item.IsRecommended,
-		RecommendedAt:    item.RecommendedAt,
-		RecommendedBy:    item.RecommendedBy,
-		PublishedAt:      item.PublishedAt,
-		CreatedAt:        item.CreatedAt,
-		UpdatedAt:        item.UpdatedAt,
-	}
+	return challengeResponseMapperInst.ToSubmissionWriteupResp(item)
 }
 
 func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
-	return &dto.TeacherSubmissionWriteupItemResp{
-		ID:               item.Submission.ID,
-		UserID:           item.Submission.UserID,
-		StudentUsername:  item.StudentUsername,
-		StudentName:      item.StudentName,
-		StudentNo:        item.StudentNo,
-		ClassName:        item.ClassName,
-		ChallengeID:      item.Submission.ChallengeID,
-		ChallengeTitle:   item.ChallengeTitle,
-		Title:            item.Submission.Title,
-		ContentPreview:   buildContentPreview(item.Submission.Content),
-		SubmissionStatus: item.Submission.SubmissionStatus,
-		VisibilityStatus: item.Submission.VisibilityStatus,
-		IsRecommended:    item.Submission.IsRecommended,
-		PublishedAt:      item.Submission.PublishedAt,
-		UpdatedAt:        item.Submission.UpdatedAt,
-	}
+	resp := challengeResponseMapperInst.ToTeacherSubmissionWriteupItemRespBase(&item.Submission)
+	resp.StudentUsername = item.StudentUsername
+	resp.StudentName = item.StudentName
+	resp.StudentNo = item.StudentNo
+	resp.ClassName = item.ClassName
+	resp.ChallengeTitle = item.ChallengeTitle
+	resp.ContentPreview = buildContentPreview(item.Submission.Content)
+	return resp
 }
 
 func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp {
@@ -226,35 +144,16 @@ func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSub
 }
 
 func RecommendedSolutionRespFromRecord(item challengeports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp {
-	return &dto.RecommendedChallengeSolutionResp{
-		ID:            item.SourceType + "-" + strconv.FormatInt(item.SourceID, 10),
-		SourceType:    item.SourceType,
-		SourceID:      item.SourceID,
-		ChallengeID:   item.ChallengeID,
-		Title:         item.Title,
-		Content:       item.Content,
-		AuthorName:    item.AuthorName,
-		IsRecommended: item.IsRecommended,
-		RecommendedAt: item.RecommendedAt,
-		UpdatedAt:     item.UpdatedAt,
-	}
+	resp := challengeResponseMapperInst.ToRecommendedChallengeSolutionRespBase(item)
+	resp.ID = item.SourceType + "-" + strconv.FormatInt(item.SourceID, 10)
+	return resp
 }
 
 func CommunitySolutionRespFromRecord(item challengeports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp {
-	return &dto.CommunityChallengeSolutionResp{
-		ID:               item.Submission.ID,
-		ChallengeID:      item.Submission.ChallengeID,
-		UserID:           item.Submission.UserID,
-		Title:            item.Submission.Title,
-		Content:          item.Submission.Content,
-		ContentPreview:   buildContentPreview(item.Submission.Content),
-		AuthorName:       item.AuthorName,
-		SubmissionStatus: item.Submission.SubmissionStatus,
-		VisibilityStatus: item.Submission.VisibilityStatus,
-		IsRecommended:    item.Submission.IsRecommended,
-		PublishedAt:      item.Submission.PublishedAt,
-		UpdatedAt:        item.Submission.UpdatedAt,
-	}
+	resp := challengeResponseMapperInst.ToCommunityChallengeSolutionRespBase(&item.Submission)
+	resp.ContentPreview = buildContentPreview(item.Submission.Content)
+	resp.AuthorName = item.AuthorName
+	return resp
 }
 
 func buildContentPreview(content string) string {

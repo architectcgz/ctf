@@ -8,30 +8,11 @@ import (
 )
 
 func ContestRespFromModel(contest *model.Contest) *dto.ContestResp {
-	return &dto.ContestResp{
-		ID:          contest.ID,
-		Title:       contest.Title,
-		Description: contest.Description,
-		Mode:        contest.Mode,
-		StartTime:   NormalizeContestTime(contest.StartTime),
-		EndTime:     NormalizeContestTime(contest.EndTime),
-		FreezeTime:  NormalizeContestTimePtr(contest.FreezeTime),
-		Status:      contest.Status,
-		CreatedAt:   NormalizeContestTime(contest.CreatedAt),
-		UpdatedAt:   NormalizeContestTime(contest.UpdatedAt),
-	}
+	return contestResponseMapperInst.ToContestResp(contest)
 }
 
 func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
-	resp := &dto.ContestChallengeResp{
-		ID:          cc.ID,
-		ContestID:   cc.ContestID,
-		ChallengeID: cc.ChallengeID,
-		Points:      cc.Points,
-		Order:       cc.Order,
-		IsVisible:   cc.IsVisible,
-		CreatedAt:   cc.CreatedAt,
-	}
+	resp := contestResponseMapperInst.ToContestChallengeResp(cc)
 	if challenge != nil {
 		resp.Title = challenge.Title
 		resp.Category = challenge.Category
@@ -44,26 +25,15 @@ func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	if item == nil {
 		return nil
 	}
-	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(ParseAWDCheckerConfig(item.RuntimeConfig))
+	resp := contestResponseMapperInst.ToContestAWDServiceResp(item)
+	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(resp.RuntimeConfig)
 	snapshot, _ := model.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
-	return &dto.ContestAWDServiceResp{
-		ID:                item.ID,
-		ContestID:         item.ContestID,
-		AWDChallengeID:    item.AWDChallengeID,
-		Title:             snapshot.Name,
-		Category:          snapshot.Category,
-		Difficulty:        snapshot.Difficulty,
-		DisplayName:       item.DisplayName,
-		Order:             item.Order,
-		IsVisible:         item.IsVisible,
-		ScoreConfig:       ParseAWDCheckerConfig(item.ScoreConfig),
-		RuntimeConfig:     runtimeConfig,
-		ValidationState:   NormalizeAWDCheckerValidationState(string(item.ValidationState)),
-		LastPreviewAt:     item.LastPreviewAt,
-		LastPreviewResult: ParseAWDCheckerPreviewResult(item.LastPreviewResult),
-		CreatedAt:         item.CreatedAt,
-		UpdatedAt:         item.UpdatedAt,
-	}
+	resp.Title = snapshot.Name
+	resp.Category = snapshot.Category
+	resp.Difficulty = snapshot.Difficulty
+	resp.RuntimeConfig = runtimeConfig
+	resp.ValidationState = NormalizeAWDCheckerValidationState(string(item.ValidationState))
+	return resp
 }
 
 func parseContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWDCheckerType {
@@ -142,14 +112,7 @@ func parseContestAWDServiceScore(scoreConfig map[string]any, key string) (int, b
 }
 
 func TeamRespFromModel(team *model.Team, memberCount int) *dto.TeamResp {
-	return &dto.TeamResp{
-		ID:          team.ID,
-		ContestID:   team.ContestID,
-		Name:        team.Name,
-		CaptainID:   team.CaptainID,
-		InviteCode:  team.InviteCode,
-		MaxMembers:  team.MaxMembers,
-		MemberCount: memberCount,
-		CreatedAt:   team.CreatedAt,
-	}
+	resp := contestResponseMapperInst.ToTeamResp(team)
+	resp.MemberCount = memberCount
+	return resp
 }

@@ -15,19 +15,38 @@ type DimensionScore struct {
 }
 
 func BuildEmptyProfile(userID int64) *dto.SkillProfileResp {
+	return BuildSkillProfile(userID, nil)
+}
+
+func BuildSkillProfile(userID int64, profiles []*model.SkillProfile) *dto.SkillProfileResp {
 	dimensions := make([]*dto.SkillDimension, 0, len(model.AllDimensions))
+	dimensionMap := make(map[string]float64, len(profiles))
+	var latestUpdate time.Time
+	for _, profile := range profiles {
+		if profile == nil {
+			continue
+		}
+		dimensionMap[profile.Dimension] = profile.Score
+		if profile.UpdatedAt.After(latestUpdate) {
+			latestUpdate = profile.UpdatedAt
+		}
+	}
 	for _, dim := range model.AllDimensions {
 		dimensions = append(dimensions, &dto.SkillDimension{
 			Dimension: dim,
-			Score:     0,
+			Score:     dimensionMap[dim],
 		})
 	}
 
-	return &dto.SkillProfileResp{
+	resp := &dto.SkillProfileResp{
 		UserID:     userID,
 		Dimensions: dimensions,
 		UpdatedAt:  "",
 	}
+	if !latestUpdate.IsZero() {
+		resp.UpdatedAt = latestUpdate.Format(time.RFC3339)
+	}
+	return resp
 }
 
 func NormalizeAssessmentConfig(cfg config.AssessmentConfig) config.AssessmentConfig {

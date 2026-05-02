@@ -22,6 +22,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	"ctf-platform/internal/shared/mapperutil"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -1130,10 +1131,7 @@ func buildReportExportData(reportID int64, status string, expiresAt time.Time) *
 }
 
 func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData {
-	resp := &dto.ReportExportData{
-		ReportID: report.ID,
-		Status:   report.Status,
-	}
+	resp := assessmentCommandResponseMapperInst.ToReportExportDataBase(report)
 	if report.Status == model.ReportStatusReady {
 		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)
 		resp.DownloadURL = &downloadURL
@@ -1142,9 +1140,8 @@ func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData 
 			resp.ExpiresAt = &expires
 		}
 	}
-	if report.Status == model.ReportStatusFailed && report.ErrorMsg != nil && strings.TrimSpace(*report.ErrorMsg) != "" {
-		message := strings.TrimSpace(*report.ErrorMsg)
-		resp.ErrorMessage = &message
+	if report.Status == model.ReportStatusFailed {
+		resp.ErrorMessage = mapperutil.NormalizeOptionalString(report.ErrorMsg)
 	}
 	return resp
 }
