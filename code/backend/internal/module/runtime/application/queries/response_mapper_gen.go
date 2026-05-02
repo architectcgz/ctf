@@ -27,6 +27,14 @@ func (c *instanceResponseMapperImpl) ToInstanceInfo(source ports.UserVisibleInst
 	dtoInstanceInfo.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoInstanceInfo
 }
+func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *ports.UserVisibleInstanceRow) *dto.InstanceInfo {
+	var pDtoInstanceInfo *dto.InstanceInfo
+	if source != nil {
+		dtoInstanceInfo := c.ToInstanceInfo((*source))
+		pDtoInstanceInfo = &dtoInstanceInfo
+	}
+	return pDtoInstanceInfo
+}
 func (c *instanceResponseMapperImpl) ToTeacherInstanceItem(source ports.TeacherInstanceRow) dto.TeacherInstanceItem {
 	var dtoTeacherInstanceItem dto.TeacherInstanceItem
 	dtoTeacherInstanceItem.ID = source.ID
@@ -46,6 +54,14 @@ func (c *instanceResponseMapperImpl) ToTeacherInstanceItem(source ports.TeacherI
 	dtoTeacherInstanceItem.MaxExtends = source.MaxExtends
 	dtoTeacherInstanceItem.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTeacherInstanceItem
+}
+func (c *instanceResponseMapperImpl) ToTeacherInstanceItemPtr(source *ports.TeacherInstanceRow) *dto.TeacherInstanceItem {
+	var pDtoTeacherInstanceItem *dto.TeacherInstanceItem
+	if source != nil {
+		dtoTeacherInstanceItem := c.ToTeacherInstanceItem((*source))
+		pDtoTeacherInstanceItem = &dtoTeacherInstanceItem
+	}
+	return pDtoTeacherInstanceItem
 }
 func (c *instanceResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing

@@ -105,13 +105,13 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 	if inst.ContestMode == model.ContestModeAWD {
 		accessURL = ""
 	}
-	mapped := runtimeResponseMapper.ToInstanceInfo(inst)
-	mapped.Status = visibleInstanceStatus(inst.Status, inst.ExpiresAt, now)
-	mapped.AccessURL = accessURL
-	mapped.Access = dto.BuildInstanceAccessInfo(accessURL)
-	mapped.RemainingTime = runtimedomain.RemainingTime(inst.ExpiresAt, now)
-	mapped.RemainingExtends = runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount)
-	return &mapped
+	resp := runtimeResponseMapper.ToInstanceInfoPtr(&inst)
+	resp.Status = visibleInstanceStatus(inst.Status, inst.ExpiresAt, now)
+	resp.AccessURL = accessURL
+	resp.Access = dto.BuildInstanceAccessInfo(accessURL)
+	resp.RemainingTime = runtimedomain.RemainingTime(inst.ExpiresAt, now)
+	resp.RemainingExtends = runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount)
+	return resp
 }
 
 func visibleInstanceStatus(status string, expiresAt, now time.Time) string {

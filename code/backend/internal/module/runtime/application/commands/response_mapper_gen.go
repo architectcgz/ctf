@@ -23,6 +23,14 @@ func (c *instanceResponseMapperImpl) ToInstanceResp(source model.Instance) dto.I
 	dtoInstanceResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoInstanceResp
 }
+func (c *instanceResponseMapperImpl) ToInstanceRespPtr(source *model.Instance) *dto.InstanceResp {
+	var pDtoInstanceResp *dto.InstanceResp
+	if source != nil {
+		dtoInstanceResp := c.ToInstanceResp((*source))
+		pDtoInstanceResp = &dtoInstanceResp
+	}
+	return pDtoInstanceResp
+}
 func (c *instanceResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
 	switch source {

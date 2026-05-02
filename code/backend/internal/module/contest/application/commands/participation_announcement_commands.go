@@ -33,8 +33,7 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 	if err := s.repo.CreateAnnouncement(ctx, item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	mapped := contestResponseMapperInst.ToContestAnnouncementRespBase(*item)
-	result := &mapped
+	result := contestResponseMapperInst.ToContestAnnouncementRespBasePtr(item)
 	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
 		Type: "contest.announcement.created",
 		Payload: map[string]any{

@@ -49,7 +49,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	mapped := contestResponseMapperInst.ToContestRegistrationRespBase(*registration)
-	mapped.Username = user.Username
-	return &mapped, nil
+	resp := contestResponseMapperInst.ToContestRegistrationRespBasePtr(registration)
+	resp.Username = user.Username
+	return resp, nil
 }

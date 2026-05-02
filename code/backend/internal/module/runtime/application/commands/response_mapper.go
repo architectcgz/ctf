@@ -18,6 +18,7 @@ type instanceResponseMapper interface {
 	// goverter:ignore Access
 	// goverter:ignore RemainingExtends
 	ToInstanceResp(source model.Instance) dto.InstanceResp
+	ToInstanceRespPtr(source *model.Instance) *dto.InstanceResp
 }
 
 var runtimeResponseMapper instanceResponseMapper

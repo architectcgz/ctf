@@ -21,11 +21,13 @@ type instanceResponseMapper interface {
 	// goverter:ignore RemainingTime
 	// goverter:ignore RemainingExtends
 	ToInstanceInfo(source runtimeports.UserVisibleInstanceRow) dto.InstanceInfo
+	ToInstanceInfoPtr(source *runtimeports.UserVisibleInstanceRow) *dto.InstanceInfo
 
 	// goverter:ignore Status
 	// goverter:ignore Access
 	// goverter:ignore RemainingTime
 	ToTeacherInstanceItem(source runtimeports.TeacherInstanceRow) dto.TeacherInstanceItem
+	ToTeacherInstanceItemPtr(source *runtimeports.TeacherInstanceRow) *dto.TeacherInstanceItem
 }
 
 var runtimeResponseMapper instanceResponseMapper
