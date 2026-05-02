@@ -61,19 +61,8 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 }
 
 func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
-	var content *string
-	if notification.Content != "" {
-		content = &notification.Content
-	}
-
-	return dto.NotificationInfo{
-		ID:        notification.ID,
-		Type:      notification.Type,
-		Title:     notification.Title,
-		Content:   content,
-		Unread:    !notification.IsRead,
-		Link:      notification.Link,
-		CreatedAt: notification.CreatedAt,
-		ReadAt:    notification.ReadAt,
-	}
+	mapped := notificationMapper.ToNotificationInfo(*notification)
+	mapped.Content = notificationContent(notification.Content)
+	mapped.Unread = !notification.IsRead
+	return mapped
 }
