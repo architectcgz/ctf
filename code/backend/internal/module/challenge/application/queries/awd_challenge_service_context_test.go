@@ -82,7 +82,7 @@ func TestAWDChallengeQueryServiceListChallengesPropagatesContextToRepository(t *
 	service := NewAWDChallengeQueryService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListChallenges(ctx, &dto.AWDChallengeQuery{Page: 1, Size: 10})
+	resp, err := service.ListChallenges(ctx, ListAWDChallengesInput{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("ListChallenges() error = %v", err)
 	}

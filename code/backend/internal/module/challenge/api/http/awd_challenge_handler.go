@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -32,7 +33,7 @@ type awdChallengeCommandService interface {
 
 type awdChallengeQueryService interface {
 	GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error)
-	ListChallenges(ctx context.Context, req *dto.AWDChallengeQuery) (*dto.AWDChallengePageResp, error)
+	ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error)
 }
 
 func NewAWDChallengeHandler(commands awdChallengeCommandService, queries awdChallengeQueryService) *AWDChallengeHandler {
@@ -45,27 +46,12 @@ func (h *AWDChallengeHandler) CreateChallenge(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, createAWDChallengeInputFromDTO(&req))
+	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeRequestMapper.ToCreateAWDChallengeInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, resp)
-}
-
-func createAWDChallengeInputFromDTO(req *dto.CreateAWDChallengeReq) challengecmd.CreateAWDChallengeInput {
-	if req == nil {
-		return challengecmd.CreateAWDChallengeInput{}
-	}
-	return challengecmd.CreateAWDChallengeInput{
-		Name:           req.Name,
-		Slug:           req.Slug,
-		Category:       req.Category,
-		Difficulty:     req.Difficulty,
-		Description:    req.Description,
-		ServiceType:    req.ServiceType,
-		DeploymentMode: req.DeploymentMode,
-	}
 }
 
 func (h *AWDChallengeHandler) GetChallenge(c *gin.Context) {
@@ -88,7 +74,7 @@ func (h *AWDChallengeHandler) ListChallenges(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.queries.ListChallenges(c.Request.Context(), &req)
+	resp, err := h.queries.ListChallenges(c.Request.Context(), challengeRequestMapper.ToListAWDChallengesInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -107,28 +93,12 @@ func (h *AWDChallengeHandler) UpdateChallenge(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpdateChallenge(c.Request.Context(), id, updateAWDChallengeInputFromDTO(&req))
+	resp, err := h.commands.UpdateChallenge(c.Request.Context(), id, challengeRequestMapper.ToUpdateAWDChallengeInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, resp)
-}
-
-func updateAWDChallengeInputFromDTO(req *dto.UpdateAWDChallengeReq) challengecmd.UpdateAWDChallengeInput {
-	if req == nil {
-		return challengecmd.UpdateAWDChallengeInput{}
-	}
-	return challengecmd.UpdateAWDChallengeInput{
-		Name:           req.Name,
-		Slug:           req.Slug,
-		Category:       req.Category,
-		Difficulty:     req.Difficulty,
-		Description:    req.Description,
-		ServiceType:    req.ServiceType,
-		DeploymentMode: req.DeploymentMode,
-		Status:         req.Status,
-	}
 }
 
 func (h *AWDChallengeHandler) DeleteChallenge(c *gin.Context) {
