@@ -6,6 +6,8 @@ export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSumma
 export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'
 export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
 export { default as TeacherAWDReviewContestRowCta } from './TeacherAWDReviewContestRowCta.vue'
+export { default as TeacherAWDReviewContestRowMetrics } from './TeacherAWDReviewContestRowMetrics.vue'
+export { default as TeacherAWDReviewContestRowStatusTags } from './TeacherAWDReviewContestRowStatusTags.vue'
 export { default as TeacherAWDReviewContestHead } from './TeacherAWDReviewContestHead.vue'
 export { default as TeacherAWDReviewContestDirectory } from './TeacherAWDReviewContestDirectory.vue'
 export { default as TeacherAWDReviewDirectoryState } from './TeacherAWDReviewDirectoryState.vue'

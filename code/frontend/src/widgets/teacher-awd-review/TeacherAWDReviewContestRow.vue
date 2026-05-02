@@ -6,6 +6,8 @@ import {
   type AwdReviewDirectoryColumnKey,
 } from './model/directory'
 import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
+import TeacherAWDReviewContestRowMetrics from './TeacherAWDReviewContestRowMetrics.vue'
+import TeacherAWDReviewContestRowStatusTags from './TeacherAWDReviewContestRowStatusTags.vue'
 
 defineProps<{
   contest: TeacherAWDReviewContestItemData
@@ -46,27 +48,24 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
     </div>
 
     <div :class="rowClassByKey.rounds">
-      <span>{{
-        contest.current_round ? `第 ${contest.current_round} 轮` : '未开始'
-      }}</span>
-      <span>共 {{ contest.round_count }} 轮</span>
+      <TeacherAWDReviewContestRowMetrics
+        :primary="contest.current_round ? `第 ${contest.current_round} 轮` : '未开始'"
+        :secondary="`共 ${contest.round_count} 轮`"
+      />
     </div>
 
     <div :class="rowClassByKey.teams">
-      <span>{{ contest.team_count }} 支队伍</span>
-      <span>{{ contest.mode.toUpperCase() }}</span>
+      <TeacherAWDReviewContestRowMetrics
+        :primary="`${contest.team_count} 支队伍`"
+        :secondary="contest.mode.toUpperCase()"
+      />
     </div>
 
     <div :class="rowClassByKey.status">
-      <span class="teacher-directory-chip">
-        {{ contestStatusLabel(contest.status) }}
-      </span>
-      <span
-        class="teacher-directory-chip"
-        :class="contest.export_ready ? '' : 'teacher-directory-chip-muted'"
-      >
-        {{ contest.export_ready ? '可导出' : '实时复盘' }}
-      </span>
+      <TeacherAWDReviewContestRowStatusTags
+        :status-label="contestStatusLabel(contest.status)"
+        :export-ready="contest.export_ready"
+      />
     </div>
 
     <div :class="rowClassByKey.action">
@@ -136,38 +135,8 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
 }
 
-.teacher-directory-row-metrics {
-  display: grid;
-  gap: var(--space-1);
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
-}
-
-.teacher-directory-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
 .teacher-directory-row-action {
   justify-self: end;
-}
-
-.teacher-directory-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.7rem;
-  padding: 0 var(--space-2-5);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: var(--font-size-0-75);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
 }
 
 @media (max-width: 1080px) {
