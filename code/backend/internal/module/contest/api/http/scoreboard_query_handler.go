@@ -3,7 +3,6 @@ package http
 import (
 	"strconv"
 
-	"ctf-platform/internal/dto"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
@@ -49,13 +48,5 @@ func (h *Handler) getScoreboard(c *gin.Context, live bool) {
 		return
 	}
 
-	response.Success(c, scoreboardResultToDTO(scoreboard))
-}
-
-func scoreboardResultToDTO(item *contestqry.ScoreboardResult) *dto.ScoreboardResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToScoreboardResp(*item)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToScoreboardRespPtr(scoreboard))
 }

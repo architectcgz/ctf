@@ -1,8 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -15,13 +13,5 @@ func (h *AWDHandler) GetReadiness(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdReadinessResultToDTO(resp))
-}
-
-func awdReadinessResultToDTO(result *contestqry.AWDReadinessResult) *dto.AWDReadinessResp {
-	if result == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToAWDReadinessResp(*result)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToAWDReadinessRespPtr(resp))
 }

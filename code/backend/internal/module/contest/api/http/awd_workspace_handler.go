@@ -2,8 +2,6 @@ package http
 
 import (
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +15,5 @@ func (h *AWDHandler) GetUserWorkspace(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdWorkspaceResultToDTO(resp))
-}
-
-func awdWorkspaceResultToDTO(item *contestqry.AWDWorkspaceResult) *dto.ContestAWDWorkspaceResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToAWDWorkspaceResp(*item)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToAWDWorkspaceRespPtr(resp))
 }

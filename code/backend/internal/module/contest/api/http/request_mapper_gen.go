@@ -104,6 +104,14 @@ func (c *ContestRequestMapperImpl) ToAWDReadinessResp(source queries.AWDReadines
 	}
 	return dtoAWDReadinessResp
 }
+func (c *ContestRequestMapperImpl) ToAWDReadinessRespPtr(source *queries.AWDReadinessResult) *dto.AWDReadinessResp {
+	var pDtoAWDReadinessResp *dto.AWDReadinessResp
+	if source != nil {
+		dtoAWDReadinessResp := c.ToAWDReadinessResp((*source))
+		pDtoAWDReadinessResp = &dtoAWDReadinessResp
+	}
+	return pDtoAWDReadinessResp
+}
 func (c *ContestRequestMapperImpl) ToAWDRoundResp(source queries.AWDRoundResult) dto.AWDRoundResp {
 	var dtoAWDRoundResp dto.AWDRoundResp
 	dtoAWDRoundResp.ID = source.ID
@@ -139,6 +147,14 @@ func (c *ContestRequestMapperImpl) ToAWDRoundSummaryResp(source queries.AWDRound
 		}
 	}
 	return dtoAWDRoundSummaryResp
+}
+func (c *ContestRequestMapperImpl) ToAWDRoundSummaryRespPtr(source *queries.AWDRoundSummaryResult) *dto.AWDRoundSummaryResp {
+	var pDtoAWDRoundSummaryResp *dto.AWDRoundSummaryResp
+	if source != nil {
+		dtoAWDRoundSummaryResp := c.ToAWDRoundSummaryResp((*source))
+		pDtoAWDRoundSummaryResp = &dtoAWDRoundSummaryResp
+	}
+	return pDtoAWDRoundSummaryResp
 }
 func (c *ContestRequestMapperImpl) ToAWDTeamServiceResp(source queries.AWDTeamServiceResult) dto.AWDTeamServiceResp {
 	var dtoAWDTeamServiceResp dto.AWDTeamServiceResp
@@ -182,6 +198,14 @@ func (c *ContestRequestMapperImpl) ToAWDTrafficEventPageResp(source queries.AWDT
 	dtoAWDTrafficEventPageResp.Page = source.Page
 	dtoAWDTrafficEventPageResp.PageSize = source.PageSize
 	return dtoAWDTrafficEventPageResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficEventPageRespPtr(source *queries.AWDTrafficEventPageResult) *dto.AWDTrafficEventPageResp {
+	var pDtoAWDTrafficEventPageResp *dto.AWDTrafficEventPageResp
+	if source != nil {
+		dtoAWDTrafficEventPageResp := c.ToAWDTrafficEventPageResp((*source))
+		pDtoAWDTrafficEventPageResp = &dtoAWDTrafficEventPageResp
+	}
+	return pDtoAWDTrafficEventPageResp
 }
 func (c *ContestRequestMapperImpl) ToAWDTrafficEventResp(source queries.AWDTrafficEventResult) dto.AWDTrafficEventResp {
 	var dtoAWDTrafficEventResp dto.AWDTrafficEventResp
@@ -255,6 +279,14 @@ func (c *ContestRequestMapperImpl) ToAWDTrafficSummaryResp(source queries.AWDTra
 	}
 	return dtoAWDTrafficSummaryResp
 }
+func (c *ContestRequestMapperImpl) ToAWDTrafficSummaryRespPtr(source *queries.AWDTrafficSummaryResult) *dto.AWDTrafficSummaryResp {
+	var pDtoAWDTrafficSummaryResp *dto.AWDTrafficSummaryResp
+	if source != nil {
+		dtoAWDTrafficSummaryResp := c.ToAWDTrafficSummaryResp((*source))
+		pDtoAWDTrafficSummaryResp = &dtoAWDTrafficSummaryResp
+	}
+	return pDtoAWDTrafficSummaryResp
+}
 func (c *ContestRequestMapperImpl) ToAWDTrafficTopChallengeResp(source queries.AWDTrafficTopChallengeResult) dto.AWDTrafficTopChallengeResp {
 	var dtoAWDTrafficTopChallengeResp dto.AWDTrafficTopChallengeResp
 	dtoAWDTrafficTopChallengeResp.AWDChallengeID = source.AWDChallengeID
@@ -323,6 +355,14 @@ func (c *ContestRequestMapperImpl) ToAWDWorkspaceResp(source queries.AWDWorkspac
 		}
 	}
 	return dtoContestAWDWorkspaceResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceRespPtr(source *queries.AWDWorkspaceResult) *dto.ContestAWDWorkspaceResp {
+	var pDtoContestAWDWorkspaceResp *dto.ContestAWDWorkspaceResp
+	if source != nil {
+		dtoContestAWDWorkspaceResp := c.ToAWDWorkspaceResp((*source))
+		pDtoContestAWDWorkspaceResp = &dtoContestAWDWorkspaceResp
+	}
+	return pDtoContestAWDWorkspaceResp
 }
 func (c *ContestRequestMapperImpl) ToAWDWorkspaceServiceResp(source queries.AWDWorkspaceServiceResult) dto.ContestAWDWorkspaceServiceResp {
 	var dtoContestAWDWorkspaceServiceResp dto.ContestAWDWorkspaceServiceResp
@@ -490,6 +530,14 @@ func (c *ContestRequestMapperImpl) ToContestMyProgressResp(source queries.Partic
 	}
 	return dtoContestMyProgressResp
 }
+func (c *ContestRequestMapperImpl) ToContestMyProgressRespPtr(source *queries.ParticipationProgressResult) *dto.ContestMyProgressResp {
+	var pDtoContestMyProgressResp *dto.ContestMyProgressResp
+	if source != nil {
+		dtoContestMyProgressResp := c.ToContestMyProgressResp((*source))
+		pDtoContestMyProgressResp = &dtoContestMyProgressResp
+	}
+	return pDtoContestMyProgressResp
+}
 func (c *ContestRequestMapperImpl) ToContestRegistrationResp(source queries.ContestRegistrationResult) dto.ContestRegistrationResp {
 	var dtoContestRegistrationResp dto.ContestRegistrationResp
 	dtoContestRegistrationResp.ID = source.ID
@@ -534,12 +582,20 @@ func (c *ContestRequestMapperImpl) ToContestResp(source queries.ContestResult) d
 	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestResp
 }
+func (c *ContestRequestMapperImpl) ToContestRespPtr(source *queries.ContestResult) *dto.ContestResp {
+	var pDtoContestResp *dto.ContestResp
+	if source != nil {
+		dtoContestResp := c.ToContestResp((*source))
+		pDtoContestResp = &dtoContestResp
+	}
+	return pDtoContestResp
+}
 func (c *ContestRequestMapperImpl) ToContestResps(source []*queries.ContestResult) []*dto.ContestResp {
 	var pDtoContestRespList []*dto.ContestResp
 	if source != nil {
 		pDtoContestRespList = make([]*dto.ContestResp, len(source))
 		for i := 0; i < len(source); i++ {
-			pDtoContestRespList[i] = c.pQueriesContestResultToPDtoContestResp(source[i])
+			pDtoContestRespList[i] = c.ToContestRespPtr(source[i])
 		}
 	}
 	return pDtoContestRespList
@@ -657,6 +713,14 @@ func (c *ContestRequestMapperImpl) ToMyTeamResp(source queries.MyTeamResult) dto
 	dtoMyTeamResp.Members = c.ToTeamMemberResps(source.Members)
 	return dtoMyTeamResp
 }
+func (c *ContestRequestMapperImpl) ToMyTeamRespPtr(source *queries.MyTeamResult) *dto.MyTeamResp {
+	var pDtoMyTeamResp *dto.MyTeamResp
+	if source != nil {
+		dtoMyTeamResp := c.ToMyTeamResp((*source))
+		pDtoMyTeamResp = &dtoMyTeamResp
+	}
+	return pDtoMyTeamResp
+}
 func (c *ContestRequestMapperImpl) ToPreviewCheckerInput(source dto.PreviewAWDCheckerReq) commands.PreviewCheckerInput {
 	var commandsPreviewCheckerInput commands.PreviewCheckerInput
 	commandsPreviewCheckerInput.AWDChallengeID = source.AWDChallengeID
@@ -675,6 +739,14 @@ func (c *ContestRequestMapperImpl) ToRegistrationPageResp(source queries.Registr
 	dtoPageResult.Page = source.Page
 	dtoPageResult.Size = source.Size
 	return dtoPageResult
+}
+func (c *ContestRequestMapperImpl) ToRegistrationPageRespPtr(source *queries.RegistrationPageResult[*queries.ContestRegistrationResult]) *dto.PageResult[*dto.ContestRegistrationResp] {
+	var pDtoPageResult *dto.PageResult[*dto.ContestRegistrationResp]
+	if source != nil {
+		dtoPageResult := c.ToRegistrationPageResp((*source))
+		pDtoPageResult = &dtoPageResult
+	}
+	return pDtoPageResult
 }
 func (c *ContestRequestMapperImpl) ToReviewRegistrationInput(source dto.ReviewContestRegistrationReq) commands.ReviewRegistrationInput {
 	var commandsReviewRegistrationInput commands.ReviewRegistrationInput
@@ -718,6 +790,14 @@ func (c *ContestRequestMapperImpl) ToScoreboardResp(source queries.ScoreboardRes
 	dtoScoreboardResp.Scoreboard = c.pQueriesScoreboardPageResultToPDtoScoreboardPage(source.Scoreboard)
 	dtoScoreboardResp.Frozen = source.Frozen
 	return dtoScoreboardResp
+}
+func (c *ContestRequestMapperImpl) ToScoreboardRespPtr(source *queries.ScoreboardResult) *dto.ScoreboardResp {
+	var pDtoScoreboardResp *dto.ScoreboardResp
+	if source != nil {
+		dtoScoreboardResp := c.ToScoreboardResp((*source))
+		pDtoScoreboardResp = &dtoScoreboardResp
+	}
+	return pDtoScoreboardResp
 }
 func (c *ContestRequestMapperImpl) ToStringAnyMap(source map[string]interface{}) map[string]interface{} {
 	var mapStringUnknown map[string]interface{}
@@ -764,12 +844,20 @@ func (c *ContestRequestMapperImpl) ToTeamResp(source queries.TeamResult) dto.Tea
 	dtoTeamResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTeamResp
 }
+func (c *ContestRequestMapperImpl) ToTeamRespPtr(source *queries.TeamResult) *dto.TeamResp {
+	var pDtoTeamResp *dto.TeamResp
+	if source != nil {
+		dtoTeamResp := c.ToTeamResp((*source))
+		pDtoTeamResp = &dtoTeamResp
+	}
+	return pDtoTeamResp
+}
 func (c *ContestRequestMapperImpl) ToTeamResps(source []*queries.TeamResult) []*dto.TeamResp {
 	var pDtoTeamRespList []*dto.TeamResp
 	if source != nil {
 		pDtoTeamRespList = make([]*dto.TeamResp, len(source))
 		for i := 0; i < len(source); i++ {
-			pDtoTeamRespList[i] = c.pQueriesTeamResultToPDtoTeamResp(source[i])
+			pDtoTeamRespList[i] = c.ToTeamRespPtr(source[i])
 		}
 	}
 	return pDtoTeamRespList
@@ -1035,14 +1123,6 @@ func (c *ContestRequestMapperImpl) pQueriesContestRegistrationResultToPDtoContes
 	}
 	return pDtoContestRegistrationResp
 }
-func (c *ContestRequestMapperImpl) pQueriesContestResultToPDtoContestResp(source *queries.ContestResult) *dto.ContestResp {
-	var pDtoContestResp *dto.ContestResp
-	if source != nil {
-		dtoContestResp := c.ToContestResp((*source))
-		pDtoContestResp = &dtoContestResp
-	}
-	return pDtoContestResp
-}
 func (c *ContestRequestMapperImpl) pQueriesContestSolvedProgressResultToPDtoContestSolvedProgressItem(source *queries.ContestSolvedProgressResult) *dto.ContestSolvedProgressItem {
 	var pDtoContestSolvedProgressItem *dto.ContestSolvedProgressItem
 	if source != nil {
@@ -1091,14 +1171,6 @@ func (c *ContestRequestMapperImpl) pQueriesTeamMemberResultToPDtoTeamMemberResp(
 		pDtoTeamMemberResp = &dtoTeamMemberResp
 	}
 	return pDtoTeamMemberResp
-}
-func (c *ContestRequestMapperImpl) pQueriesTeamResultToPDtoTeamResp(source *queries.TeamResult) *dto.TeamResp {
-	var pDtoTeamResp *dto.TeamResp
-	if source != nil {
-		dtoTeamResp := c.ToTeamResp((*source))
-		pDtoTeamResp = &dtoTeamResp
-	}
-	return pDtoTeamResp
 }
 func (c *ContestRequestMapperImpl) queriesAWDAttackLogResultToPDtoAWDAttackLogResp(source queries.AWDAttackLogResult) *dto.AWDAttackLogResp {
 	dtoAWDAttackLogResp := c.ToAWDAttackLogResp(source)

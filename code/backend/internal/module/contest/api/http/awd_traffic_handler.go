@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -16,7 +15,7 @@ func (h *AWDHandler) GetTrafficSummary(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdTrafficSummaryResultToDTO(resp))
+	response.Success(c, contestRequestMapper.ToAWDTrafficSummaryRespPtr(resp))
 }
 
 func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
@@ -33,21 +32,5 @@ func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdTrafficEventPageResultToDTO(resp))
-}
-
-func awdTrafficEventPageResultToDTO(result *contestqry.AWDTrafficEventPageResult) *dto.AWDTrafficEventPageResp {
-	if result == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToAWDTrafficEventPageResp(*result)
-	return &mapped
-}
-
-func awdTrafficSummaryResultToDTO(item *contestqry.AWDTrafficSummaryResult) *dto.AWDTrafficSummaryResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToAWDTrafficSummaryResp(*item)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToAWDTrafficEventPageRespPtr(resp))
 }

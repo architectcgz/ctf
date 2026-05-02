@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -25,8 +23,8 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"team":    teamResultToDTO(teamResp),
-		"members": teamMemberResultsToDTO(members),
+		"team":    contestRequestMapper.ToTeamRespPtr(teamResp),
+		"members": contestRequestMapper.ToTeamMemberResps(members),
 	})
 }
 
@@ -43,7 +41,7 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, teamResultsToDTO(teams))
+	response.Success(c, contestRequestMapper.ToTeamResps(teams))
 }
 
 func (h *TeamHandler) GetMyTeam(c *gin.Context) {
@@ -59,29 +57,5 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, myTeamResultToDTO(team))
-}
-
-func teamResultsToDTO(items []*contestqry.TeamResult) []*dto.TeamResp {
-	return contestRequestMapper.ToTeamResps(items)
-}
-
-func teamResultToDTO(item *contestqry.TeamResult) *dto.TeamResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToTeamResp(*item)
-	return &mapped
-}
-
-func teamMemberResultsToDTO(items []*contestqry.TeamMemberResult) []*dto.TeamMemberResp {
-	return contestRequestMapper.ToTeamMemberResps(items)
-}
-
-func myTeamResultToDTO(item *contestqry.MyTeamResult) *dto.MyTeamResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToMyTeamResp(*item)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToMyTeamRespPtr(team))
 }

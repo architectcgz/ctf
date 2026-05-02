@@ -15,7 +15,7 @@ func (h *Handler) GetContest(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestResultToDTO(resp))
+	response.Success(c, contestRequestMapper.ToContestRespPtr(resp))
 }
 
 func (h *Handler) ListContests(c *gin.Context) {
@@ -44,17 +44,5 @@ func (h *Handler) ListContests(c *gin.Context) {
 		size = 20
 	}
 
-	response.Page(c, contestResultsToDTO(contests), total, page, size)
-}
-
-func contestResultToDTO(item *contestqry.ContestResult) *dto.ContestResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToContestResp(*item)
-	return &mapped
-}
-
-func contestResultsToDTO(items []*contestqry.ContestResult) []*dto.ContestResp {
-	return contestRequestMapper.ToContestResps(items)
+	response.Page(c, contestRequestMapper.ToContestResps(contests), total, page, size)
 }

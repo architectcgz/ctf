@@ -31,7 +31,7 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRegistrationPageResultToDTO(items))
+	response.Success(c, contestRequestMapper.ToRegistrationPageRespPtr(items))
 }
 
 func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
@@ -45,7 +45,7 @@ func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestAnnouncementResultsToDTO(items))
+	response.Success(c, contestRequestMapper.ToContestAnnouncementResps(items))
 }
 
 func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
@@ -59,25 +59,5 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, participationProgressResultToDTO(item))
-}
-
-func contestAnnouncementResultsToDTO(items []*contestqry.ContestAnnouncementResult) []*dto.ContestAnnouncementResp {
-	return contestRequestMapper.ToContestAnnouncementResps(items)
-}
-
-func participationProgressResultToDTO(item *contestqry.ParticipationProgressResult) *dto.ContestMyProgressResp {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToContestMyProgressResp(*item)
-	return &mapped
-}
-
-func contestRegistrationPageResultToDTO(item *contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult]) *dto.PageResult[*dto.ContestRegistrationResp] {
-	if item == nil {
-		return nil
-	}
-	mapped := contestRequestMapper.ToRegistrationPageResp(*item)
-	return &mapped
+	response.Success(c, contestRequestMapper.ToContestMyProgressRespPtr(item))
 }

@@ -41,12 +41,15 @@ type ContestRequestMapper interface {
 	// goverter:ignore LastPreviewResult
 	ToContestAWDServiceResp(source contestqry.ContestAWDServiceResult) dto.ContestAWDServiceResp
 	ToContestResp(source contestqry.ContestResult) dto.ContestResp
+	ToContestRespPtr(source *contestqry.ContestResult) *dto.ContestResp
 	ToContestResps(source []*contestqry.ContestResult) []*dto.ContestResp
 	ToTeamResp(source contestqry.TeamResult) dto.TeamResp
+	ToTeamRespPtr(source *contestqry.TeamResult) *dto.TeamResp
 	ToTeamResps(source []*contestqry.TeamResult) []*dto.TeamResp
 	ToTeamMemberResp(source contestqry.TeamMemberResult) dto.TeamMemberResp
 	ToTeamMemberResps(source []*contestqry.TeamMemberResult) []*dto.TeamMemberResp
 	ToMyTeamResp(source contestqry.MyTeamResult) dto.MyTeamResp
+	ToMyTeamRespPtr(source *contestqry.MyTeamResult) *dto.MyTeamResp
 	ToContestChallengeResp(source contestqry.ContestChallengeResult) dto.ContestChallengeResp
 	ToContestChallengeResps(source []*contestqry.ContestChallengeResult) []*dto.ContestChallengeResp
 	ToContestChallengeInfo(source contestqry.ContestChallengeInfoResult) dto.ContestChallengeInfo
@@ -62,23 +65,31 @@ type ContestRequestMapper interface {
 	ToContestAnnouncementResps(source []*contestqry.ContestAnnouncementResult) []*dto.ContestAnnouncementResp
 	ToContestSolvedProgressItem(source contestqry.ContestSolvedProgressResult) dto.ContestSolvedProgressItem
 	ToContestMyProgressResp(source contestqry.ParticipationProgressResult) dto.ContestMyProgressResp
+	ToContestMyProgressRespPtr(source *contestqry.ParticipationProgressResult) *dto.ContestMyProgressResp
 	ToContestRegistrationResp(source contestqry.ContestRegistrationResult) dto.ContestRegistrationResp
 	ToContestRegistrationResps(source []*contestqry.ContestRegistrationResult) []*dto.ContestRegistrationResp
 	ToRegistrationPageResp(source contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult]) dto.PageResult[*dto.ContestRegistrationResp]
+	ToRegistrationPageRespPtr(source *contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult]) *dto.PageResult[*dto.ContestRegistrationResp]
 	ToAWDReadinessItemResp(source contestqry.AWDReadinessItem) dto.AWDReadinessItemResp
 	ToAWDReadinessResp(source contestqry.AWDReadinessResult) dto.AWDReadinessResp
+	ToAWDReadinessRespPtr(source *contestqry.AWDReadinessResult) *dto.AWDReadinessResp
 	ToAWDWorkspaceResp(source contestqry.AWDWorkspaceResult) dto.ContestAWDWorkspaceResp
+	ToAWDWorkspaceRespPtr(source *contestqry.AWDWorkspaceResult) *dto.ContestAWDWorkspaceResp
+	ToAWDRoundSummaryRespPtr(source *contestqry.AWDRoundSummaryResult) *dto.AWDRoundSummaryResp
 	// goverter:ignore RequestID
 	ToAWDTrafficEventResp(source contestqry.AWDTrafficEventResult) dto.AWDTrafficEventResp
 	ToAWDTrafficEventPageResp(source contestqry.AWDTrafficEventPageResult) dto.AWDTrafficEventPageResp
+	ToAWDTrafficEventPageRespPtr(source *contestqry.AWDTrafficEventPageResult) *dto.AWDTrafficEventPageResp
 	ToAWDTrafficTrendBucketResp(source contestqry.AWDTrafficTrendBucketResult) dto.AWDTrafficTrendBucketResp
 	ToAWDTrafficTopTeamResp(source contestqry.AWDTrafficTopTeamResult) dto.AWDTrafficTopTeamResp
 	ToAWDTrafficTopChallengeResp(source contestqry.AWDTrafficTopChallengeResult) dto.AWDTrafficTopChallengeResp
 	ToAWDTrafficTopPathResp(source contestqry.AWDTrafficTopPathResult) dto.AWDTrafficTopPathResp
 	ToAWDTrafficSummaryResp(source contestqry.AWDTrafficSummaryResult) dto.AWDTrafficSummaryResp
+	ToAWDTrafficSummaryRespPtr(source *contestqry.AWDTrafficSummaryResult) *dto.AWDTrafficSummaryResp
 	ToScoreboardContestInfo(source contestqry.ScoreboardContestResult) dto.ScoreboardContestInfo
 	ToScoreboardItem(source contestqry.ScoreboardItemResult) dto.ScoreboardItem
 	ToScoreboardResp(source contestqry.ScoreboardResult) dto.ScoreboardResp
+	ToScoreboardRespPtr(source *contestqry.ScoreboardResult) *dto.ScoreboardResp
 	ToAWDWorkspaceTeamResp(source contestqry.AWDWorkspaceTeamResult) dto.ContestAWDWorkspaceTeamResp
 	ToAWDWorkspaceServiceResp(source contestqry.AWDWorkspaceServiceResult) dto.ContestAWDWorkspaceServiceResp
 	ToAWDWorkspaceTargetTeamResp(source contestqry.AWDWorkspaceTargetTeamResult) dto.ContestAWDWorkspaceTargetTeamResp

@@ -36,7 +36,7 @@ func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideRe
 	if c == nil || snapshot == nil || trace == nil || !trace.Allowed() || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
 		return
 	}
-	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, awdReadinessResultToDTO(snapshot), err))
+	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, contestRequestMapper.ToAWDReadinessRespPtr(snapshot), err))
 }
 
 func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req contestcmd.UpdateContestInput) bool {
