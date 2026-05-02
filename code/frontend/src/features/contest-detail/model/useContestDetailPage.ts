@@ -5,7 +5,6 @@ import {
   getContestChallenges,
   getContestDetail,
   getMyTeam,
-  submitContestFlag,
 } from '@/api/contest'
 import type {
   ContestAnnouncement,
@@ -16,6 +15,7 @@ import type {
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 import { formatDuration } from '@/utils/format'
+import { useContestFlagSubmission } from './useContestFlagSubmission'
 import { useContestTeamActions } from './useContestTeamActions'
 
 interface UseContestDetailPageOptions {
@@ -53,10 +53,20 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   const announcementsError = ref('')
   const loading = ref(false)
   const countdown = ref('')
-  const selectedChallenge = ref<ContestChallengeItem | null>(null)
-  const flagInput = ref('')
-  const submitting = ref(false)
-  const submitResult = ref<SubmitFlagData | null>(null)
+  const {
+    selectedChallenge,
+    flagInput,
+    submitting,
+    submitResult,
+    clearSubmissionState,
+    syncSelectedChallengeById,
+    selectChallenge,
+    submitFlagAction,
+  } = useContestFlagSubmission({
+    contest,
+    challenges,
+    onSelectedChallengeChange: options.onSelectedChallengeChange,
+  })
 
   let countdownTimer: number | null = null
   let requestToken = 0
@@ -79,11 +89,7 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
 
   function syncSelectedChallengeFromQuery() {
     const challengeId = requestedChallengeId()
-    selectedChallenge.value = challengeId
-      ? challenges.value.find((challenge) => challenge.id === challengeId) ?? null
-      : null
-    flagInput.value = ''
-    submitResult.value = null
+    syncSelectedChallengeById(challengeId)
   }
 
   function stopCountdown() {
@@ -215,8 +221,7 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
       team.value = teamData
       challenges.value = challengesData
       syncSelectedChallengeFromQuery()
-      flagInput.value = ''
-      submitResult.value = null
+      clearSubmissionState()
 
       if (announcementsData) {
         announcements.value = announcementsData
@@ -239,67 +244,6 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
       if (currentToken === requestToken) {
         loading.value = false
       }
-    }
-  }
-
-  function selectChallenge(challenge: ContestChallengeItem) {
-    selectedChallenge.value = challenge
-    flagInput.value = ''
-    submitResult.value = null
-    options.onSelectedChallengeChange?.(challenge.id)
-  }
-
-  function buildContestSubmitMessage(result: SubmitFlagData): string {
-    if (result.is_correct) {
-      return `正确！+${result.points ?? 0} 分`
-    }
-    return 'Flag 错误，请重试'
-  }
-
-  async function submitFlagAction() {
-    if (submitting.value) {
-      return
-    }
-
-    const flag = flagInput.value.trim()
-    if (!flag) {
-      toast.warning('请输入 Flag')
-      return
-    }
-    if (flag.length < 5 || flag.length > 200) {
-      toast.warning('Flag 长度应在 5-200 字符之间')
-      return
-    }
-    if (!selectedChallenge.value || !contest.value) {
-      return
-    }
-
-    submitting.value = true
-    submitResult.value = null
-
-    try {
-      const result = await submitContestFlag(contest.value.id, selectedChallenge.value.id, flag)
-      submitResult.value = {
-        ...result,
-        message: buildContestSubmitMessage(result),
-      }
-
-      if (result.is_correct) {
-        const solvedChallengeId = selectedChallenge.value.id
-        challenges.value = challenges.value.map((challenge) =>
-          challenge.id === solvedChallengeId ? { ...challenge, is_solved: true } : challenge
-        )
-        selectedChallenge.value = {
-          ...selectedChallenge.value,
-          is_solved: true,
-        }
-        flagInput.value = ''
-      }
-    } catch (error) {
-      console.error(error)
-      toast.error(error instanceof Error ? error.message : '提交失败，请稍后重试')
-    } finally {
-      submitting.value = false
     }
   }
 

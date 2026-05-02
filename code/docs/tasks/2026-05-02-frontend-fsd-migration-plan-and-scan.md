@@ -970,6 +970,20 @@ npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/compo
 npm run typecheck
 ```
 
+### 已完成：Batch V 子项（竞赛详情 Flag 提交流程拆分）
+- 新增 `features/contest-detail/model/useContestFlagSubmission.ts`，承接：
+  - 题目选择后提交流程状态（`selectedChallenge`、`flagInput`、`submitting`、`submitResult`）
+  - Flag 字段校验与提交流程
+  - 正确提交后的题目解出态同步
+- `useContestDetailPage.ts` 改为组合调用该模块，移除内联提交命令式逻辑。
+- `useContestDetailPage.ts` 行数下降（本批由 355 降至 299）。
+
+验证：
+```bash
+npm run test:run -- src/views/contests/__tests__/ContestDetail.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
