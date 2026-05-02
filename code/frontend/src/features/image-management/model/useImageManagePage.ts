@@ -1,20 +1,16 @@
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { ArrowDownWideNarrow, Calendar, SortAsc } from 'lucide-vue-next'
 
-import {
-  createImage,
-  deleteImage,
-  getImages,
-} from '@/api/admin/authoring'
+import { getImages } from '@/api/admin/authoring'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
 import {
   createEmptyImageCreateForm,
   type ImageCreateForm,
 } from '@/entities/image'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
-import { useToast } from '@/composables/useToast'
+import { useImageManageAutoRefresh } from './useImageManageAutoRefresh'
+import { useImageManageMutations } from './useImageManageMutations'
 
 type ImageSortKey = 'created_at' | 'name' | 'tag'
 type ImageSortOption = WorkspaceDirectorySortOption & {
@@ -61,18 +57,14 @@ const sortOptions: ImageSortOption[] = [
 ]
 
 export function useImageManagePage() {
-  const toast = useToast()
   const dialogVisible = ref(false)
   const activeImage = ref<AdminImageListItem | null>(null)
-  const creating = ref(false)
   const keyword = ref('')
   const statusFilter = ref<ImageStatus | ''>('')
   const form = reactive<ImageCreateForm>(createEmptyImageCreateForm())
 
   const { list, total, page, pageSize, loading, changePage, refresh } = usePagination(getImages)
   const sortConfig = ref<ImageSortOption>(sortOptions[0]!)
-
-  let pollTimer: number | null = null
 
   const hasActiveImages = computed(() =>
     list.value.some((row) => row.status === 'pending' || row.status === 'building')
@@ -114,9 +106,10 @@ export function useImageManagePage() {
   })
   const filteredTotal = computed(() => filteredRows.value.length)
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
-  const refreshHint = computed(() =>
-    hasActiveImages.value ? '构建中镜像会每 10 秒自动刷新' : '当前无进行中镜像，可手动刷新'
-  )
+  const { refreshHint } = useImageManageAutoRefresh({
+    hasActiveImages,
+    refresh,
+  })
   const statusSummary = computed<ImageStatusSummaryItem[]>(() => {
     const counts = {
       available: 0,
@@ -143,62 +136,11 @@ export function useImageManagePage() {
 
     return summary
   })
-
-  function stopPolling() {
-    if (pollTimer !== null) {
-      clearInterval(pollTimer)
-      pollTimer = null
-    }
-  }
-
-  function startPolling() {
-    if (pollTimer !== null) return
-    pollTimer = window.setInterval(() => {
-      void refresh()
-    }, 10000)
-  }
-
-  async function handleCreate() {
-    if (creating.value) {
-      return
-    }
-
-    if (!form.name || !form.tag) {
-      toast.error('请填写完整信息')
-      return
-    }
-
-    creating.value = true
-    try {
-      await createImage(form)
-      toast.success('镜像创建成功')
-      dialogVisible.value = false
-      Object.assign(form, createEmptyImageCreateForm())
-      await refresh()
-    } catch {
-      toast.error('创建失败')
-    } finally {
-      creating.value = false
-    }
-  }
-
-  async function handleDelete(id: string) {
-    const confirmed = await confirmDestructiveAction({
-      message: '确定要删除此镜像吗？',
-    })
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await deleteImage(id)
-      toast.success('删除成功')
-      await refresh()
-    } catch (error) {
-      const message = error instanceof Error && error.message.trim() ? error.message : '删除失败'
-      toast.error(message)
-    }
-  }
+  const { creating, handleCreate, handleDelete } = useImageManageMutations({
+    form,
+    dialogVisible,
+    refresh,
+  })
 
   function openDetail(row: AdminImageListItem): void {
     activeImage.value = row
@@ -260,26 +202,6 @@ export function useImageManagePage() {
       minute: '2-digit',
     }).format(date)
   }
-
-  watch(
-    hasActiveImages,
-    (active) => {
-      if (active) {
-        startPolling()
-        return
-      }
-      stopPolling()
-    },
-    { immediate: true }
-  )
-
-  onMounted(() => {
-    void refresh()
-  })
-
-  onUnmounted(() => {
-    stopPolling()
-  })
 
   return {
     activeImage,

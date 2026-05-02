@@ -1238,6 +1238,25 @@ npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AN 子项（镜像管理页面动作与轮询拆分）
+- 新增 `features/image-management/model/useImageManageMutations.ts`，承接：
+  - 创建镜像提交
+  - 删除镜像确认与提交流程
+  - 创建中状态控制（`creating`）
+- 新增 `features/image-management/model/useImageManageAutoRefresh.ts`，承接：
+  - 构建中镜像轮询启动/停止
+  - 页面挂载初次刷新
+  - 轮询提示文案派生（`refreshHint`）
+- `useImageManagePage.ts` 改为组合调用上述模块，移除内联 mutation 与轮询细节。
+- `useImageManagePage.ts` 行数下降（本批由 317 降至 238）。
+- 补充 source 边界断言：`ImageManage.test.ts` 增加 `useImageManagePage` 已接入两段新 composable 且不再内联 `createImage/deleteImage` 的断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
