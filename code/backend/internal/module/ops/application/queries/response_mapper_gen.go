@@ -23,3 +23,11 @@ func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notific
 	dtoNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
 	return dtoNotificationInfo
 }
+func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo {
+	var pDtoNotificationInfo *dto.NotificationInfo
+	if source != nil {
+		dtoNotificationInfo := c.ToNotificationInfo((*source))
+		pDtoNotificationInfo = &dtoNotificationInfo
+	}
+	return pDtoNotificationInfo
+}

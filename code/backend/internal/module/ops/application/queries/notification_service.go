@@ -62,8 +62,8 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 }
 
 func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
-	mapped := notificationMapper.ToNotificationInfo(*notification)
-	mapped.Content = commonmapper.NormalizeOptionalString(notification.Content)
-	mapped.Unread = !notification.IsRead
-	return mapped
+	resp := notificationMapper.ToNotificationInfoPtr(notification)
+	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Unread = !notification.IsRead
+	return *resp
 }

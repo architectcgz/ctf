@@ -90,11 +90,11 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	now := time.Now()
 	result := make([]dto.TeacherInstanceItem, len(items))
 	for idx, item := range items {
-		mapped := runtimeResponseMapper.ToTeacherInstanceItem(item)
-		mapped.Status = visibleInstanceStatus(item.Status, item.ExpiresAt, now)
-		mapped.Access = dto.BuildInstanceAccessInfo(item.AccessURL)
-		mapped.RemainingTime = runtimedomain.RemainingTime(item.ExpiresAt, now)
-		result[idx] = mapped
+		resp := runtimeResponseMapper.ToTeacherInstanceItemPtr(&item)
+		resp.Status = visibleInstanceStatus(item.Status, item.ExpiresAt, now)
+		resp.Access = dto.BuildInstanceAccessInfo(item.AccessURL)
+		resp.RemainingTime = runtimedomain.RemainingTime(item.ExpiresAt, now)
+		result[idx] = *resp
 	}
 
 	return result, nil

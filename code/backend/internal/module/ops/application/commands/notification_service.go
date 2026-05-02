@@ -184,10 +184,10 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 }
 
 func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
-	mapped := notificationMapper.ToNotificationInfo(*notification)
-	mapped.Content = commonmapper.NormalizeOptionalString(notification.Content)
-	mapped.Unread = !notification.IsRead
-	return mapped
+	resp := notificationMapper.ToNotificationInfoPtr(notification)
+	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Unread = !notification.IsRead
+	return *resp
 }
 
 func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule NotificationAudienceRuleInput) ([]int64, error) {

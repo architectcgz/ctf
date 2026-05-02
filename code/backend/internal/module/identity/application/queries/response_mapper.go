@@ -22,6 +22,7 @@ type adminUserResponseMapper interface {
 	// goverter:ignore Roles
 	// goverter:ignore UpdatedAt
 	ToAdminUserResp(source model.User) dto.AdminUserResp
+	ToAdminUserRespPtr(source *model.User) *dto.AdminUserResp
 }
 
 var adminUserMapper adminUserResponseMapper

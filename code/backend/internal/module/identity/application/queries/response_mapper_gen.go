@@ -18,3 +18,11 @@ func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) dto.Adm
 	dtoAdminUserResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoAdminUserResp
 }
+func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *dto.AdminUserResp {
+	var pDtoAdminUserResp *dto.AdminUserResp
+	if source != nil {
+		dtoAdminUserResp := c.ToAdminUserResp((*source))
+		pDtoAdminUserResp = &dtoAdminUserResp
+	}
+	return pDtoAdminUserResp
+}

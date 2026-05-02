@@ -18,6 +18,7 @@ type notificationResponseMapper interface {
 	// goverter:ignore Content
 	// goverter:ignore Unread
 	ToNotificationInfo(source model.Notification) dto.NotificationInfo
+	ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo
 }
 
 var notificationMapper notificationResponseMapper
