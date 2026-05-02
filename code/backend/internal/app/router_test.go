@@ -706,7 +706,7 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		"challengeCommandRepo",
 		"*challengeinfra.Repository",
 		"challengeQueryRepo",
-		"challengeports.ChallengeQueryRepository",
+		"*challengeinfra.Repository",
 		"flagRepo",
 		"challengeports.ChallengeFlagRepository",
 		"imageUsageRepo",

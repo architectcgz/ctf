@@ -102,6 +102,7 @@ func TestPortsDoNotDeclareWideChallengeRepository(t *testing.T) {
 	}
 	forbiddenInterfaces := []string{
 		"type ChallengeCommandRepository interface",
+		"type ChallengeQueryRepository interface",
 		"type ChallengeWriteupRepository interface",
 		"type ChallengeTopologyRepository interface",
 		"type ImageRepository interface",

@@ -50,4 +50,7 @@ func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *dto.Chall
 	return nil, 0, nil
 }
 
-var _ challengeports.ChallengeQueryRepository = (*ctxOnlyChallengeQueryRepository)(nil)
+var _ challengeports.ChallengeReadRepository = (*ctxOnlyChallengeQueryRepository)(nil)
+var _ challengeports.ChallengePublishedRepository = (*ctxOnlyChallengeQueryRepository)(nil)
+var _ challengeports.ChallengeStatsRepository = (*ctxOnlyChallengeQueryRepository)(nil)
+var _ challengeports.ChallengeBatchStatsRepository = (*ctxOnlyChallengeQueryRepository)(nil)

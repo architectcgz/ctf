@@ -35,17 +35,26 @@ type ChallengeFlagRepository interface {
 	Update(ctx context.Context, challenge *model.Challenge) error
 }
 
-type ChallengeQueryRepository interface {
+type ChallengeReadRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
+}
+
+type ChallengePublishedRepository interface {
+	ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+}
+
+type ChallengeStatsRepository interface {
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCount(ctx context.Context, challengeID int64) (int64, error)
 	GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error)
+}
+
+type ChallengeBatchStatsRepository interface {
 	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
 	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 	BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
-	ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 
 type AWDChallengeCommandRepository interface {

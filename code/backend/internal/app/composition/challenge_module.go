@@ -41,7 +41,7 @@ type challengeModuleDeps struct {
 	imageStore              challengecontracts.ImageStore
 	imageRepo               *challengeinfra.ImageRepository
 	challengeCommandRepo    *challengeinfra.Repository
-	challengeQueryRepo      challengeports.ChallengeQueryRepository
+	challengeQueryRepo      *challengeinfra.Repository
 	awdChallengeCommandRepo challengeports.AWDChallengeCommandRepository
 	awdChallengeQueryRepo   challengeports.AWDChallengeQueryRepository
 	flagRepo                challengeports.ChallengeFlagRepository
