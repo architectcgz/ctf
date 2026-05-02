@@ -6,10 +6,44 @@ package domain
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	ports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeResponseMapperImpl struct{}
 
+func (c *challengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp {
+	var dtoAWDChallengeResp dto.AWDChallengeResp
+	dtoAWDChallengeResp.ID = source.ID
+	dtoAWDChallengeResp.Name = source.Name
+	dtoAWDChallengeResp.Slug = source.Slug
+	dtoAWDChallengeResp.Category = source.Category
+	dtoAWDChallengeResp.Difficulty = source.Difficulty
+	dtoAWDChallengeResp.Description = source.Description
+	dtoAWDChallengeResp.ServiceType = string(source.ServiceType)
+	dtoAWDChallengeResp.DeploymentMode = string(source.DeploymentMode)
+	dtoAWDChallengeResp.Version = source.Version
+	dtoAWDChallengeResp.Status = string(source.Status)
+	dtoAWDChallengeResp.ReadinessStatus = string(source.ReadinessStatus)
+	dtoAWDChallengeResp.CheckerType = string(source.CheckerType)
+	dtoAWDChallengeResp.FlagMode = source.FlagMode
+	dtoAWDChallengeResp.DefenseEntryMode = source.DefenseEntryMode
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		dtoAWDChallengeResp.CreatedBy = &xint64
+	}
+	dtoAWDChallengeResp.LastVerifiedAt = CopyTimePtr(source.LastVerifiedAt)
+	dtoAWDChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	dtoAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoAWDChallengeResp
+}
+func (c *challengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp {
+	var pDtoAWDChallengeResp *dto.AWDChallengeResp
+	if source != nil {
+		dtoAWDChallengeResp := c.ToAWDChallengeRespBase((*source))
+		pDtoAWDChallengeResp = &dtoAWDChallengeResp
+	}
+	return pDtoAWDChallengeResp
+}
 func (c *challengeResponseMapperImpl) ToAdminChallengeWriteupResp(source model.ChallengeWriteup) dto.AdminChallengeWriteupResp {
 	var dtoAdminChallengeWriteupResp dto.AdminChallengeWriteupResp
 	dtoAdminChallengeWriteupResp.ID = source.ID
@@ -54,6 +88,98 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.
 		pDtoChallengeHintAdminResp = &dtoChallengeHintAdminResp
 	}
 	return pDtoChallengeHintAdminResp
+}
+func (c *challengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge) dto.ChallengeResp {
+	var dtoChallengeResp dto.ChallengeResp
+	dtoChallengeResp.ID = source.ID
+	dtoChallengeResp.Title = source.Title
+	dtoChallengeResp.Description = source.Description
+	dtoChallengeResp.Category = source.Category
+	dtoChallengeResp.Difficulty = source.Difficulty
+	dtoChallengeResp.Points = source.Points
+	dtoChallengeResp.ImageID = source.ImageID
+	dtoChallengeResp.AttachmentURL = source.AttachmentURL
+	dtoChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	dtoChallengeResp.Status = source.Status
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		dtoChallengeResp.CreatedBy = &xint64
+	}
+	dtoChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoChallengeResp
+}
+func (c *challengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp {
+	var pDtoChallengeResp *dto.ChallengeResp
+	if source != nil {
+		dtoChallengeResp := c.ToChallengeRespBase((*source))
+		pDtoChallengeResp = &dtoChallengeResp
+	}
+	return pDtoChallengeResp
+}
+func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBase(source ports.CommunitySolutionRecord) dto.CommunityChallengeSolutionResp {
+	var dtoCommunityChallengeSolutionResp dto.CommunityChallengeSolutionResp
+	dtoCommunityChallengeSolutionResp.ID = source.Submission.ID
+	dtoCommunityChallengeSolutionResp.ChallengeID = source.Submission.ChallengeID
+	dtoCommunityChallengeSolutionResp.UserID = source.Submission.UserID
+	dtoCommunityChallengeSolutionResp.Title = source.Submission.Title
+	dtoCommunityChallengeSolutionResp.Content = source.Submission.Content
+	dtoCommunityChallengeSolutionResp.AuthorName = source.AuthorName
+	dtoCommunityChallengeSolutionResp.SubmissionStatus = source.Submission.SubmissionStatus
+	dtoCommunityChallengeSolutionResp.VisibilityStatus = source.Submission.VisibilityStatus
+	dtoCommunityChallengeSolutionResp.IsRecommended = source.Submission.IsRecommended
+	dtoCommunityChallengeSolutionResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
+	dtoCommunityChallengeSolutionResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
+	return dtoCommunityChallengeSolutionResp
+}
+func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBasePtr(source *ports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp {
+	var pDtoCommunityChallengeSolutionResp *dto.CommunityChallengeSolutionResp
+	if source != nil {
+		dtoCommunityChallengeSolutionResp := c.ToCommunityChallengeSolutionRespBase((*source))
+		pDtoCommunityChallengeSolutionResp = &dtoCommunityChallengeSolutionResp
+	}
+	return pDtoCommunityChallengeSolutionResp
+}
+func (c *challengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.ImageResp {
+	var dtoImageResp dto.ImageResp
+	dtoImageResp.ID = source.ID
+	dtoImageResp.Name = source.Name
+	dtoImageResp.Tag = source.Tag
+	dtoImageResp.Description = source.Description
+	dtoImageResp.Size = source.Size
+	dtoImageResp.Status = source.Status
+	dtoImageResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoImageResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoImageResp
+}
+func (c *challengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *dto.ImageResp {
+	var pDtoImageResp *dto.ImageResp
+	if source != nil {
+		dtoImageResp := c.ToImageRespBase((*source))
+		pDtoImageResp = &dtoImageResp
+	}
+	return pDtoImageResp
+}
+func (c *challengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBase(source ports.RecommendedSolutionRecord) dto.RecommendedChallengeSolutionResp {
+	var dtoRecommendedChallengeSolutionResp dto.RecommendedChallengeSolutionResp
+	dtoRecommendedChallengeSolutionResp.SourceType = source.SourceType
+	dtoRecommendedChallengeSolutionResp.SourceID = source.SourceID
+	dtoRecommendedChallengeSolutionResp.ChallengeID = source.ChallengeID
+	dtoRecommendedChallengeSolutionResp.Title = source.Title
+	dtoRecommendedChallengeSolutionResp.Content = source.Content
+	dtoRecommendedChallengeSolutionResp.AuthorName = source.AuthorName
+	dtoRecommendedChallengeSolutionResp.IsRecommended = source.IsRecommended
+	dtoRecommendedChallengeSolutionResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
+	dtoRecommendedChallengeSolutionResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoRecommendedChallengeSolutionResp
+}
+func (c *challengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBasePtr(source *ports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp {
+	var pDtoRecommendedChallengeSolutionResp *dto.RecommendedChallengeSolutionResp
+	if source != nil {
+		dtoRecommendedChallengeSolutionResp := c.ToRecommendedChallengeSolutionRespBase((*source))
+		pDtoRecommendedChallengeSolutionResp = &dtoRecommendedChallengeSolutionResp
+	}
+	return pDtoRecommendedChallengeSolutionResp
 }
 func (c *challengeResponseMapperImpl) ToSubmissionWriteupResp(source model.SubmissionWriteup) dto.SubmissionWriteupResp {
 	var dtoSubmissionWriteupResp dto.SubmissionWriteupResp
@@ -103,4 +229,60 @@ func (c *challengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagRe
 		pDtoTagResp = &dtoTagResp
 	}
 	return pDtoTagResp
+}
+func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailResp(source ports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupDetailResp {
+	var dtoTeacherSubmissionWriteupDetailResp dto.TeacherSubmissionWriteupDetailResp
+	dtoTeacherSubmissionWriteupDetailResp.SubmissionWriteupResp = c.ToSubmissionWriteupResp(source.Submission)
+	dtoTeacherSubmissionWriteupDetailResp.StudentUsername = source.StudentUsername
+	dtoTeacherSubmissionWriteupDetailResp.StudentName = source.StudentName
+	dtoTeacherSubmissionWriteupDetailResp.StudentNo = source.StudentNo
+	dtoTeacherSubmissionWriteupDetailResp.ClassName = source.ClassName
+	dtoTeacherSubmissionWriteupDetailResp.ChallengeTitle = source.ChallengeTitle
+	return dtoTeacherSubmissionWriteupDetailResp
+}
+func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailRespPtr(source ports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp {
+	dtoTeacherSubmissionWriteupDetailResp := c.ToTeacherSubmissionWriteupDetailResp(source)
+	return &dtoTeacherSubmissionWriteupDetailResp
+}
+func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBase(source ports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupItemResp {
+	var dtoTeacherSubmissionWriteupItemResp dto.TeacherSubmissionWriteupItemResp
+	dtoTeacherSubmissionWriteupItemResp.ID = source.Submission.ID
+	dtoTeacherSubmissionWriteupItemResp.UserID = source.Submission.UserID
+	dtoTeacherSubmissionWriteupItemResp.StudentUsername = source.StudentUsername
+	dtoTeacherSubmissionWriteupItemResp.StudentName = source.StudentName
+	dtoTeacherSubmissionWriteupItemResp.StudentNo = source.StudentNo
+	dtoTeacherSubmissionWriteupItemResp.ClassName = source.ClassName
+	dtoTeacherSubmissionWriteupItemResp.ChallengeID = source.Submission.ChallengeID
+	dtoTeacherSubmissionWriteupItemResp.ChallengeTitle = source.ChallengeTitle
+	dtoTeacherSubmissionWriteupItemResp.Title = source.Submission.Title
+	dtoTeacherSubmissionWriteupItemResp.SubmissionStatus = source.Submission.SubmissionStatus
+	dtoTeacherSubmissionWriteupItemResp.VisibilityStatus = source.Submission.VisibilityStatus
+	dtoTeacherSubmissionWriteupItemResp.IsRecommended = source.Submission.IsRecommended
+	dtoTeacherSubmissionWriteupItemResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
+	dtoTeacherSubmissionWriteupItemResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
+	return dtoTeacherSubmissionWriteupItemResp
+}
+func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBasePtr(source *ports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
+	var pDtoTeacherSubmissionWriteupItemResp *dto.TeacherSubmissionWriteupItemResp
+	if source != nil {
+		dtoTeacherSubmissionWriteupItemResp := c.ToTeacherSubmissionWriteupItemRespBase((*source))
+		pDtoTeacherSubmissionWriteupItemResp = &dtoTeacherSubmissionWriteupItemResp
+	}
+	return pDtoTeacherSubmissionWriteupItemResp
+}
+func (c *challengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
+	var modelInstanceSharing model.InstanceSharing
+	switch source {
+	case model.InstanceSharingPerTeam:
+		modelInstanceSharing = model.InstanceSharingPerTeam
+	case model.InstanceSharingPerUser:
+		modelInstanceSharing = model.InstanceSharingPerUser
+	case model.InstanceSharingShared:
+		modelInstanceSharing = model.InstanceSharingShared
+	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
+	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
+	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
+	default: // ignored
+	}
+	return modelInstanceSharing
 }
