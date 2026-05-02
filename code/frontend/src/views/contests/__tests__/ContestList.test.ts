@@ -46,6 +46,12 @@ describe('ContestList', () => {
     expect(wrapper.find('.contest-row-title').attributes('title')).toBe('2026 春季校园 CTF 挑战赛')
   })
 
+  it('路由页应仅负责组合，不直接耦合竞赛列表查询流程', () => {
+    expect(contestListSource).toContain('useContestListPage')
+    expect(contestListSource).not.toContain("from '@/api/contest'")
+    expect(contestListSource).not.toContain('usePagination(getContests)')
+  })
+
   it('应该为竞赛列表长标题保留省略样式和完整悬浮提示', () => {
     expect(contestListSource).toMatch(/class="contest-row-title"[\s\S]*:title="contest\.title"/s)
     expect(contestListSource).toMatch(
