@@ -1340,6 +1340,22 @@ npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts src/fea
 npm run typecheck
 ```
 
+### 已完成：Batch AT 子项（平台 AWD 题目导入流程拆分）
+- 新增 `features/platform-awd-challenges/model/useAwdChallengeImportFlow.ts`，承接：
+  - 导入队列加载
+  - 题目包预览上传
+  - 预览提交导入
+  - 上传结果轨迹记录与状态管理（`uploading/queueLoading/uploadResults`）
+- `usePlatformAwdChallenges.ts` 改为组合调用该模块，移除内联导入流程实现。
+- 新增边界测试：`usePlatformAwdChallengesBoundary.test.ts`，锁定主组合器不再回退到内联导入流程函数。
+- `usePlatformAwdChallenges.ts` 行数下降（本批由 300 降至 238）。
+
+验证：
+```bash
+npm run test:run -- src/features/platform-awd-challenges/model/usePlatformAwdChallenges.test.ts src/features/platform-awd-challenges/model/usePlatformAwdChallengesBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
