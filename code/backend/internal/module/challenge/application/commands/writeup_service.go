@@ -23,7 +23,7 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 	return &WriteupService{repo: repo}
 }
 
-func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error) {
+func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req UpsertOfficialWriteupInput) (*dto.AdminChallengeWriteupResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -71,7 +71,7 @@ func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
 	return s.repo.DeleteWriteupByChallengeID(ctx, challengeID)
 }
 
-func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req UpsertSubmissionWriteupInput) (*dto.SubmissionWriteupResp, error) {
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

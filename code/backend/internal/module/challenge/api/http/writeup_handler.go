@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/response"
 )
 
@@ -17,8 +18,8 @@ type WriteupHandler struct {
 }
 
 type writeupCommandService interface {
-	Upsert(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
-	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
+	Upsert(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertOfficialWriteupInput) (*dto.AdminChallengeWriteupResp, error)
+	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertSubmissionWriteupInput) (*dto.SubmissionWriteupResp, error)
 	RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	UnrecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
@@ -53,12 +54,23 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.Upsert(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.Upsert(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, upsertOfficialWriteupInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, resp)
+}
+
+func upsertOfficialWriteupInputFromDTO(req *dto.UpsertChallengeWriteupReq) challengecmd.UpsertOfficialWriteupInput {
+	if req == nil {
+		return challengecmd.UpsertOfficialWriteupInput{}
+	}
+	return challengecmd.UpsertOfficialWriteupInput{
+		Title:      req.Title,
+		Content:    req.Content,
+		Visibility: req.Visibility,
+	}
 }
 
 func (h *WriteupHandler) GetAdmin(c *gin.Context) {
@@ -141,12 +153,23 @@ func (h *WriteupHandler) UpsertSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpsertSubmission(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.UpsertSubmission(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, upsertSubmissionWriteupInputFromDTO(&req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, resp)
+}
+
+func upsertSubmissionWriteupInputFromDTO(req *dto.UpsertSubmissionWriteupReq) challengecmd.UpsertSubmissionWriteupInput {
+	if req == nil {
+		return challengecmd.UpsertSubmissionWriteupInput{}
+	}
+	return challengecmd.UpsertSubmissionWriteupInput{
+		Title:            req.Title,
+		Content:          req.Content,
+		SubmissionStatus: req.SubmissionStatus,
+	}
 }
 
 func (h *WriteupHandler) GetMySubmission(c *gin.Context) {

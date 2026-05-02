@@ -180,7 +180,7 @@ func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.Upsert(ctx, 11, 7, &dto.UpsertChallengeWriteupReq{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
+	resp, err := service.Upsert(ctx, 11, 7, UpsertOfficialWriteupInput{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
 	if err != nil {
 		t.Fatalf("Upsert() error = %v", err)
 	}
@@ -273,7 +273,7 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertSubmission(ctx, 11, 7, &dto.UpsertSubmissionWriteupReq{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
+	resp, err := service.UpsertSubmission(ctx, 11, 7, UpsertSubmissionWriteupInput{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
 	if err != nil {
 		t.Fatalf("UpsertSubmission() error = %v", err)
 	}
