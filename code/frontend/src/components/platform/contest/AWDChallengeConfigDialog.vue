@@ -19,7 +19,7 @@ import {
   type ContestAwdPreviewProgressEvent,
 } from '@/features/awd-inspector'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
-import { runAwdCheckerPreview } from '@/features/contest-awd-config/model/useAwdCheckerPreview'
+import { runAwdCheckerPreview } from '@/features/contest-awd-config'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
   AWD_HTTP_METHOD_OPTIONS,
@@ -38,7 +38,7 @@ import {
   type AWDLegacyProbeDraft,
   type AWDScriptCheckerDraft,
   type AWDTCPStandardDraft,
-} from '@/features/contest-awd-config/model/awdCheckerConfigSupport'
+} from '@/features/contest-awd-config'
 import {
   AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL,
   AWD_CHECKER_PREVIEW_PROGRESS_PHASES,

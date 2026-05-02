@@ -787,6 +787,21 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch I 子项（跨 slice 深导入边界固化）
+- 在 `src/features/__tests__/featureBoundaries.test.ts` 新增运行时代码边界断言：
+  - 禁止通过 `@/features/*/model/*` 深导入其他 feature 的内部实现。
+  - 同 feature 内部 `model` 相互引用仍允许，避免误伤同 slice 局部模块化。
+- `AWDChallengeConfigDialog.vue` 改为通过 `@/features/contest-awd-config` 公共入口导入，不再深导入该 feature 的 `model` 私有路径。
+- `duplicateActionGuardAudit.test.ts` 同步更新断言：
+  - 正向要求使用 `@/features/contest-awd-config` 公共入口。
+  - 负向要求不出现 `@/features/contest-awd-config/model/` 深导入。
+
+验证：
+```bash
+npm run test:run -- src/features/__tests__/featureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/platform/__tests__/ContestAwdConfig.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
