@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 )
@@ -27,29 +26,7 @@ func (h *AWDHandler) UpsertServiceCheck(c *gin.Context) {
 }
 
 func awdTeamServiceResultsToDTO(results []contestqry.AWDTeamServiceResult) []*dto.AWDTeamServiceResp {
-	resp := make([]*dto.AWDTeamServiceResp, 0, len(results))
-	for i := range results {
-		item := results[i]
-		resp = append(resp, &dto.AWDTeamServiceResp{
-			ID:                item.ID,
-			RoundID:           item.RoundID,
-			TeamID:            item.TeamID,
-			TeamName:          item.TeamName,
-			ServiceID:         item.ServiceID,
-			ServiceName:       item.ServiceName,
-			AWDChallengeID:    item.AWDChallengeID,
-			AWDChallengeTitle: item.AWDChallengeTitle,
-			ServiceStatus:     item.ServiceStatus,
-			CheckResult:       item.CheckResult,
-			CheckerType:       model.AWDCheckerType(item.CheckerType),
-			AttackReceived:    item.AttackReceived,
-			SLAScore:          item.SLAScore,
-			DefenseScore:      item.DefenseScore,
-			AttackScore:       item.AttackScore,
-			UpdatedAt:         item.UpdatedAt,
-		})
-	}
-	return resp
+	return contestRequestMapper.ToAWDTeamServiceResps(results)
 }
 
 func (h *AWDHandler) ListServices(c *gin.Context) {

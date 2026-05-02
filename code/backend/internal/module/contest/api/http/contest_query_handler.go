@@ -56,9 +56,5 @@ func contestResultToDTO(item *contestqry.ContestResult) *dto.ContestResp {
 }
 
 func contestResultsToDTO(items []*contestqry.ContestResult) []*dto.ContestResp {
-	result := make([]*dto.ContestResp, 0, len(items))
-	for _, item := range items {
-		result = append(result, contestResultToDTO(item))
-	}
-	return result
+	return contestRequestMapper.ToContestResps(items)
 }

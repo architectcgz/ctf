@@ -13,14 +13,356 @@ import (
 
 type ContestRequestMapperImpl struct{}
 
+func (c *ContestRequestMapperImpl) ToAWDAttackLogResp(source queries.AWDAttackLogResult) dto.AWDAttackLogResp {
+	var dtoAWDAttackLogResp dto.AWDAttackLogResp
+	dtoAWDAttackLogResp.ID = source.ID
+	dtoAWDAttackLogResp.RoundID = source.RoundID
+	dtoAWDAttackLogResp.AttackerTeamID = source.AttackerTeamID
+	dtoAWDAttackLogResp.AttackerTeam = source.AttackerTeam
+	dtoAWDAttackLogResp.VictimTeamID = source.VictimTeamID
+	dtoAWDAttackLogResp.VictimTeam = source.VictimTeam
+	dtoAWDAttackLogResp.ServiceID = source.ServiceID
+	dtoAWDAttackLogResp.AWDChallengeID = source.AWDChallengeID
+	dtoAWDAttackLogResp.AttackType = source.AttackType
+	dtoAWDAttackLogResp.Source = source.Source
+	dtoAWDAttackLogResp.SubmittedFlag = source.SubmittedFlag
+	dtoAWDAttackLogResp.IsSuccess = source.IsSuccess
+	dtoAWDAttackLogResp.ScoreGained = source.ScoreGained
+	dtoAWDAttackLogResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoAWDAttackLogResp
+}
+func (c *ContestRequestMapperImpl) ToAWDAttackLogResps(source []queries.AWDAttackLogResult) []*dto.AWDAttackLogResp {
+	var pDtoAWDAttackLogRespList []*dto.AWDAttackLogResp
+	if source != nil {
+		pDtoAWDAttackLogRespList = make([]*dto.AWDAttackLogResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoAWDAttackLogRespList[i] = c.queriesAWDAttackLogResultToPDtoAWDAttackLogResp(source[i])
+		}
+	}
+	return pDtoAWDAttackLogRespList
+}
 func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewResp(source domain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp {
 	var dtoAWDCheckerPreviewResp dto.AWDCheckerPreviewResp
-	dtoAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	dtoAWDCheckerPreviewResp.CheckerType = model.AWDCheckerType(source.CheckerType)
 	dtoAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
 	dtoAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
 	dtoAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source.PreviewContext)
 	dtoAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
 	return dtoAWDCheckerPreviewResp
+}
+func (c *ContestRequestMapperImpl) ToAWDReadinessItemResp(source queries.AWDReadinessItem) dto.AWDReadinessItemResp {
+	var dtoAWDReadinessItemResp dto.AWDReadinessItemResp
+	dtoAWDReadinessItemResp.ServiceID = source.ServiceID
+	dtoAWDReadinessItemResp.AWDChallengeID = source.AWDChallengeID
+	dtoAWDReadinessItemResp.Title = source.Title
+	dtoAWDReadinessItemResp.CheckerType = model.AWDCheckerType(source.CheckerType)
+	dtoAWDReadinessItemResp.ValidationState = source.ValidationState
+	dtoAWDReadinessItemResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
+	if source.LastAccessURL != nil {
+		xstring := *source.LastAccessURL
+		dtoAWDReadinessItemResp.LastAccessURL = &xstring
+	}
+	dtoAWDReadinessItemResp.BlockingReason = source.BlockingReason
+	return dtoAWDReadinessItemResp
+}
+func (c *ContestRequestMapperImpl) ToAWDReadinessResp(source queries.AWDReadinessResult) dto.AWDReadinessResp {
+	var dtoAWDReadinessResp dto.AWDReadinessResp
+	dtoAWDReadinessResp.ContestID = source.ContestID
+	dtoAWDReadinessResp.Ready = source.Ready
+	dtoAWDReadinessResp.TotalChallenges = source.TotalChallenges
+	dtoAWDReadinessResp.PassedChallenges = source.PassedChallenges
+	dtoAWDReadinessResp.PendingChallenges = source.PendingChallenges
+	dtoAWDReadinessResp.FailedChallenges = source.FailedChallenges
+	dtoAWDReadinessResp.StaleChallenges = source.StaleChallenges
+	dtoAWDReadinessResp.MissingCheckerChallenges = source.MissingCheckerChallenges
+	dtoAWDReadinessResp.BlockingCount = source.BlockingCount
+	if source.BlockingActions != nil {
+		dtoAWDReadinessResp.BlockingActions = make([]string, len(source.BlockingActions))
+		for i := 0; i < len(source.BlockingActions); i++ {
+			dtoAWDReadinessResp.BlockingActions[i] = source.BlockingActions[i]
+		}
+	}
+	if source.GlobalBlockingReasons != nil {
+		dtoAWDReadinessResp.GlobalBlockingReasons = make([]string, len(source.GlobalBlockingReasons))
+		for j := 0; j < len(source.GlobalBlockingReasons); j++ {
+			dtoAWDReadinessResp.GlobalBlockingReasons[j] = source.GlobalBlockingReasons[j]
+		}
+	}
+	if source.Items != nil {
+		dtoAWDReadinessResp.Items = make([]*dto.AWDReadinessItemResp, len(source.Items))
+		for k := 0; k < len(source.Items); k++ {
+			dtoAWDReadinessResp.Items[k] = c.queriesAWDReadinessItemToPDtoAWDReadinessItemResp(source.Items[k])
+		}
+	}
+	return dtoAWDReadinessResp
+}
+func (c *ContestRequestMapperImpl) ToAWDRoundResp(source queries.AWDRoundResult) dto.AWDRoundResp {
+	var dtoAWDRoundResp dto.AWDRoundResp
+	dtoAWDRoundResp.ID = source.ID
+	dtoAWDRoundResp.ContestID = source.ContestID
+	dtoAWDRoundResp.RoundNumber = source.RoundNumber
+	dtoAWDRoundResp.Status = source.Status
+	dtoAWDRoundResp.StartedAt = CopyTimePtr(source.StartedAt)
+	dtoAWDRoundResp.EndedAt = CopyTimePtr(source.EndedAt)
+	dtoAWDRoundResp.AttackScore = source.AttackScore
+	dtoAWDRoundResp.DefenseScore = source.DefenseScore
+	dtoAWDRoundResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoAWDRoundResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoAWDRoundResp
+}
+func (c *ContestRequestMapperImpl) ToAWDRoundResps(source []queries.AWDRoundResult) []*dto.AWDRoundResp {
+	var pDtoAWDRoundRespList []*dto.AWDRoundResp
+	if source != nil {
+		pDtoAWDRoundRespList = make([]*dto.AWDRoundResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoAWDRoundRespList[i] = c.queriesAWDRoundResultToPDtoAWDRoundResp(source[i])
+		}
+	}
+	return pDtoAWDRoundRespList
+}
+func (c *ContestRequestMapperImpl) ToAWDRoundSummaryResp(source queries.AWDRoundSummaryResult) dto.AWDRoundSummaryResp {
+	var dtoAWDRoundSummaryResp dto.AWDRoundSummaryResp
+	dtoAWDRoundSummaryResp.Round = c.pQueriesAWDRoundResultToPDtoAWDRoundResp(source.Round)
+	dtoAWDRoundSummaryResp.Metrics = c.pQueriesAWDRoundMetricsResultToPDtoAWDRoundMetrics(source.Metrics)
+	if source.Items != nil {
+		dtoAWDRoundSummaryResp.Items = make([]*dto.AWDRoundSummaryItem, len(source.Items))
+		for i := 0; i < len(source.Items); i++ {
+			dtoAWDRoundSummaryResp.Items[i] = c.pQueriesAWDRoundSummaryItemResultToPDtoAWDRoundSummaryItem(source.Items[i])
+		}
+	}
+	return dtoAWDRoundSummaryResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTeamServiceResp(source queries.AWDTeamServiceResult) dto.AWDTeamServiceResp {
+	var dtoAWDTeamServiceResp dto.AWDTeamServiceResp
+	dtoAWDTeamServiceResp.ID = source.ID
+	dtoAWDTeamServiceResp.RoundID = source.RoundID
+	dtoAWDTeamServiceResp.TeamID = source.TeamID
+	dtoAWDTeamServiceResp.TeamName = source.TeamName
+	dtoAWDTeamServiceResp.ServiceID = source.ServiceID
+	dtoAWDTeamServiceResp.ServiceName = source.ServiceName
+	dtoAWDTeamServiceResp.AWDChallengeID = source.AWDChallengeID
+	dtoAWDTeamServiceResp.AWDChallengeTitle = source.AWDChallengeTitle
+	dtoAWDTeamServiceResp.ServiceStatus = source.ServiceStatus
+	dtoAWDTeamServiceResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
+	dtoAWDTeamServiceResp.CheckerType = model.AWDCheckerType(source.CheckerType)
+	dtoAWDTeamServiceResp.AttackReceived = source.AttackReceived
+	dtoAWDTeamServiceResp.SLAScore = source.SLAScore
+	dtoAWDTeamServiceResp.DefenseScore = source.DefenseScore
+	dtoAWDTeamServiceResp.AttackScore = source.AttackScore
+	dtoAWDTeamServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoAWDTeamServiceResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTeamServiceResps(source []queries.AWDTeamServiceResult) []*dto.AWDTeamServiceResp {
+	var pDtoAWDTeamServiceRespList []*dto.AWDTeamServiceResp
+	if source != nil {
+		pDtoAWDTeamServiceRespList = make([]*dto.AWDTeamServiceResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoAWDTeamServiceRespList[i] = c.queriesAWDTeamServiceResultToPDtoAWDTeamServiceResp(source[i])
+		}
+	}
+	return pDtoAWDTeamServiceRespList
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficEventPageResp(source queries.AWDTrafficEventPageResult) dto.AWDTrafficEventPageResp {
+	var dtoAWDTrafficEventPageResp dto.AWDTrafficEventPageResp
+	if source.List != nil {
+		dtoAWDTrafficEventPageResp.List = make([]*dto.AWDTrafficEventResp, len(source.List))
+		for i := 0; i < len(source.List); i++ {
+			dtoAWDTrafficEventPageResp.List[i] = c.queriesAWDTrafficEventResultToPDtoAWDTrafficEventResp(source.List[i])
+		}
+	}
+	dtoAWDTrafficEventPageResp.Total = source.Total
+	dtoAWDTrafficEventPageResp.Page = source.Page
+	dtoAWDTrafficEventPageResp.PageSize = source.PageSize
+	return dtoAWDTrafficEventPageResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficEventResp(source queries.AWDTrafficEventResult) dto.AWDTrafficEventResp {
+	var dtoAWDTrafficEventResp dto.AWDTrafficEventResp
+	dtoAWDTrafficEventResp.ID = source.ID
+	dtoAWDTrafficEventResp.ContestID = source.ContestID
+	dtoAWDTrafficEventResp.RoundID = source.RoundID
+	dtoAWDTrafficEventResp.AttackerTeamID = source.AttackerTeamID
+	dtoAWDTrafficEventResp.AttackerTeam = source.AttackerTeam
+	dtoAWDTrafficEventResp.AttackerTeamName = source.AttackerTeamName
+	dtoAWDTrafficEventResp.VictimTeamID = source.VictimTeamID
+	dtoAWDTrafficEventResp.VictimTeam = source.VictimTeam
+	dtoAWDTrafficEventResp.VictimTeamName = source.VictimTeamName
+	dtoAWDTrafficEventResp.ServiceID = source.ServiceID
+	dtoAWDTrafficEventResp.AWDChallengeID = source.AWDChallengeID
+	dtoAWDTrafficEventResp.AWDChallengeTitle = source.AWDChallengeTitle
+	dtoAWDTrafficEventResp.Method = source.Method
+	dtoAWDTrafficEventResp.Path = source.Path
+	dtoAWDTrafficEventResp.StatusCode = source.StatusCode
+	dtoAWDTrafficEventResp.StatusGroup = source.StatusGroup
+	dtoAWDTrafficEventResp.IsError = source.IsError
+	dtoAWDTrafficEventResp.Source = source.Source
+	dtoAWDTrafficEventResp.OccurredAt = CopyTime(source.OccurredAt)
+	return dtoAWDTrafficEventResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficSummaryResp(source queries.AWDTrafficSummaryResult) dto.AWDTrafficSummaryResp {
+	var dtoAWDTrafficSummaryResp dto.AWDTrafficSummaryResp
+	dtoAWDTrafficSummaryResp.Round = c.pQueriesAWDRoundResultToPDtoAWDRoundResp(source.Round)
+	dtoAWDTrafficSummaryResp.ContestID = source.ContestID
+	dtoAWDTrafficSummaryResp.RoundID = source.RoundID
+	dtoAWDTrafficSummaryResp.TotalRequests = source.TotalRequests
+	dtoAWDTrafficSummaryResp.ActiveAttackerTeams = source.ActiveAttackerTeams
+	dtoAWDTrafficSummaryResp.TargetedTeams = source.TargetedTeams
+	dtoAWDTrafficSummaryResp.ErrorRequests = source.ErrorRequests
+	dtoAWDTrafficSummaryResp.UniquePathCount = source.UniquePathCount
+	dtoAWDTrafficSummaryResp.LatestEventAt = CopyTimePtr(source.LatestEventAt)
+	if source.Trend != nil {
+		dtoAWDTrafficSummaryResp.Trend = make([]*dto.AWDTrafficTrendBucketResp, len(source.Trend))
+		for i := 0; i < len(source.Trend); i++ {
+			dtoAWDTrafficSummaryResp.Trend[i] = c.pQueriesAWDTrafficTrendBucketResultToPDtoAWDTrafficTrendBucketResp(source.Trend[i])
+		}
+	}
+	if source.TopAttackers != nil {
+		dtoAWDTrafficSummaryResp.TopAttackers = make([]*dto.AWDTrafficTopTeamResp, len(source.TopAttackers))
+		for j := 0; j < len(source.TopAttackers); j++ {
+			dtoAWDTrafficSummaryResp.TopAttackers[j] = c.pQueriesAWDTrafficTopTeamResultToPDtoAWDTrafficTopTeamResp(source.TopAttackers[j])
+		}
+	}
+	if source.TopVictims != nil {
+		dtoAWDTrafficSummaryResp.TopVictims = make([]*dto.AWDTrafficTopTeamResp, len(source.TopVictims))
+		for k := 0; k < len(source.TopVictims); k++ {
+			dtoAWDTrafficSummaryResp.TopVictims[k] = c.pQueriesAWDTrafficTopTeamResultToPDtoAWDTrafficTopTeamResp(source.TopVictims[k])
+		}
+	}
+	if source.TopChallenges != nil {
+		dtoAWDTrafficSummaryResp.TopChallenges = make([]*dto.AWDTrafficTopChallengeResp, len(source.TopChallenges))
+		for l := 0; l < len(source.TopChallenges); l++ {
+			dtoAWDTrafficSummaryResp.TopChallenges[l] = c.pQueriesAWDTrafficTopChallengeResultToPDtoAWDTrafficTopChallengeResp(source.TopChallenges[l])
+		}
+	}
+	if source.TopPaths != nil {
+		dtoAWDTrafficSummaryResp.TopPaths = make([]*dto.AWDTrafficTopPathResp, len(source.TopPaths))
+		for m := 0; m < len(source.TopPaths); m++ {
+			dtoAWDTrafficSummaryResp.TopPaths[m] = c.pQueriesAWDTrafficTopPathResultToPDtoAWDTrafficTopPathResp(source.TopPaths[m])
+		}
+	}
+	if source.TopErrorPaths != nil {
+		dtoAWDTrafficSummaryResp.TopErrorPaths = make([]*dto.AWDTrafficTopPathResp, len(source.TopErrorPaths))
+		for n := 0; n < len(source.TopErrorPaths); n++ {
+			dtoAWDTrafficSummaryResp.TopErrorPaths[n] = c.pQueriesAWDTrafficTopPathResultToPDtoAWDTrafficTopPathResp(source.TopErrorPaths[n])
+		}
+	}
+	return dtoAWDTrafficSummaryResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficTopChallengeResp(source queries.AWDTrafficTopChallengeResult) dto.AWDTrafficTopChallengeResp {
+	var dtoAWDTrafficTopChallengeResp dto.AWDTrafficTopChallengeResp
+	dtoAWDTrafficTopChallengeResp.AWDChallengeID = source.AWDChallengeID
+	dtoAWDTrafficTopChallengeResp.AWDChallengeTitle = source.AWDChallengeTitle
+	dtoAWDTrafficTopChallengeResp.RequestCount = source.RequestCount
+	dtoAWDTrafficTopChallengeResp.ErrorCount = source.ErrorCount
+	return dtoAWDTrafficTopChallengeResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficTopPathResp(source queries.AWDTrafficTopPathResult) dto.AWDTrafficTopPathResp {
+	var dtoAWDTrafficTopPathResp dto.AWDTrafficTopPathResp
+	dtoAWDTrafficTopPathResp.Path = source.Path
+	dtoAWDTrafficTopPathResp.RequestCount = source.RequestCount
+	dtoAWDTrafficTopPathResp.ErrorCount = source.ErrorCount
+	dtoAWDTrafficTopPathResp.LastStatusCode = source.LastStatusCode
+	return dtoAWDTrafficTopPathResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficTopTeamResp(source queries.AWDTrafficTopTeamResult) dto.AWDTrafficTopTeamResp {
+	var dtoAWDTrafficTopTeamResp dto.AWDTrafficTopTeamResp
+	dtoAWDTrafficTopTeamResp.TeamID = source.TeamID
+	dtoAWDTrafficTopTeamResp.TeamName = source.TeamName
+	dtoAWDTrafficTopTeamResp.RequestCount = source.RequestCount
+	dtoAWDTrafficTopTeamResp.ErrorCount = source.ErrorCount
+	return dtoAWDTrafficTopTeamResp
+}
+func (c *ContestRequestMapperImpl) ToAWDTrafficTrendBucketResp(source queries.AWDTrafficTrendBucketResult) dto.AWDTrafficTrendBucketResp {
+	var dtoAWDTrafficTrendBucketResp dto.AWDTrafficTrendBucketResp
+	dtoAWDTrafficTrendBucketResp.BucketStart = CopyTime(source.BucketStart)
+	dtoAWDTrafficTrendBucketResp.RequestCount = source.RequestCount
+	dtoAWDTrafficTrendBucketResp.ErrorCount = source.ErrorCount
+	return dtoAWDTrafficTrendBucketResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceRecentEventResp(source queries.AWDWorkspaceRecentEventResult) dto.ContestAWDWorkspaceRecentEventResp {
+	var dtoContestAWDWorkspaceRecentEventResp dto.ContestAWDWorkspaceRecentEventResp
+	dtoContestAWDWorkspaceRecentEventResp.ID = source.ID
+	dtoContestAWDWorkspaceRecentEventResp.Direction = source.Direction
+	dtoContestAWDWorkspaceRecentEventResp.ServiceID = source.ServiceID
+	dtoContestAWDWorkspaceRecentEventResp.AWDChallengeID = source.AWDChallengeID
+	dtoContestAWDWorkspaceRecentEventResp.PeerTeamID = source.PeerTeamID
+	dtoContestAWDWorkspaceRecentEventResp.PeerTeamName = source.PeerTeamName
+	dtoContestAWDWorkspaceRecentEventResp.IsSuccess = source.IsSuccess
+	dtoContestAWDWorkspaceRecentEventResp.ScoreGained = source.ScoreGained
+	dtoContestAWDWorkspaceRecentEventResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoContestAWDWorkspaceRecentEventResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceResp(source queries.AWDWorkspaceResult) dto.ContestAWDWorkspaceResp {
+	var dtoContestAWDWorkspaceResp dto.ContestAWDWorkspaceResp
+	dtoContestAWDWorkspaceResp.ContestID = source.ContestID
+	dtoContestAWDWorkspaceResp.CurrentRound = c.pQueriesAWDRoundResultToPDtoAWDRoundResp(source.CurrentRound)
+	dtoContestAWDWorkspaceResp.MyTeam = c.pQueriesAWDWorkspaceTeamResultToPDtoContestAWDWorkspaceTeamResp(source.MyTeam)
+	if source.Services != nil {
+		dtoContestAWDWorkspaceResp.Services = make([]*dto.ContestAWDWorkspaceServiceResp, len(source.Services))
+		for i := 0; i < len(source.Services); i++ {
+			dtoContestAWDWorkspaceResp.Services[i] = c.pQueriesAWDWorkspaceServiceResultToPDtoContestAWDWorkspaceServiceResp(source.Services[i])
+		}
+	}
+	if source.Targets != nil {
+		dtoContestAWDWorkspaceResp.Targets = make([]*dto.ContestAWDWorkspaceTargetTeamResp, len(source.Targets))
+		for j := 0; j < len(source.Targets); j++ {
+			dtoContestAWDWorkspaceResp.Targets[j] = c.pQueriesAWDWorkspaceTargetTeamResultToPDtoContestAWDWorkspaceTargetTeamResp(source.Targets[j])
+		}
+	}
+	if source.RecentEvents != nil {
+		dtoContestAWDWorkspaceResp.RecentEvents = make([]*dto.ContestAWDWorkspaceRecentEventResp, len(source.RecentEvents))
+		for k := 0; k < len(source.RecentEvents); k++ {
+			dtoContestAWDWorkspaceResp.RecentEvents[k] = c.pQueriesAWDWorkspaceRecentEventResultToPDtoContestAWDWorkspaceRecentEventResp(source.RecentEvents[k])
+		}
+	}
+	return dtoContestAWDWorkspaceResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceServiceResp(source queries.AWDWorkspaceServiceResult) dto.ContestAWDWorkspaceServiceResp {
+	var dtoContestAWDWorkspaceServiceResp dto.ContestAWDWorkspaceServiceResp
+	dtoContestAWDWorkspaceServiceResp.ServiceID = source.ServiceID
+	dtoContestAWDWorkspaceServiceResp.AWDChallengeID = source.AWDChallengeID
+	dtoContestAWDWorkspaceServiceResp.InstanceID = source.InstanceID
+	dtoContestAWDWorkspaceServiceResp.InstanceStatus = source.InstanceStatus
+	dtoContestAWDWorkspaceServiceResp.AccessURL = source.AccessURL
+	dtoContestAWDWorkspaceServiceResp.ServiceStatus = source.ServiceStatus
+	dtoContestAWDWorkspaceServiceResp.OperationStatus = source.OperationStatus
+	dtoContestAWDWorkspaceServiceResp.OperationType = source.OperationType
+	dtoContestAWDWorkspaceServiceResp.OperationReason = source.OperationReason
+	if source.OperationSLABillable != nil {
+		xbool := *source.OperationSLABillable
+		dtoContestAWDWorkspaceServiceResp.OperationSLABillable = &xbool
+	}
+	dtoContestAWDWorkspaceServiceResp.CheckerType = model.AWDCheckerType(source.CheckerType)
+	dtoContestAWDWorkspaceServiceResp.AttackReceived = source.AttackReceived
+	dtoContestAWDWorkspaceServiceResp.SLAScore = source.SLAScore
+	dtoContestAWDWorkspaceServiceResp.DefenseScore = source.DefenseScore
+	dtoContestAWDWorkspaceServiceResp.AttackScore = source.AttackScore
+	dtoContestAWDWorkspaceServiceResp.UpdatedAt = CopyTimePtr(source.UpdatedAt)
+	return dtoContestAWDWorkspaceServiceResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceTargetServiceResp(source queries.AWDWorkspaceTargetServiceResult) dto.ContestAWDWorkspaceTargetServiceResp {
+	var dtoContestAWDWorkspaceTargetServiceResp dto.ContestAWDWorkspaceTargetServiceResp
+	dtoContestAWDWorkspaceTargetServiceResp.ServiceID = source.ServiceID
+	dtoContestAWDWorkspaceTargetServiceResp.AWDChallengeID = source.AWDChallengeID
+	dtoContestAWDWorkspaceTargetServiceResp.Reachable = source.Reachable
+	return dtoContestAWDWorkspaceTargetServiceResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceTargetTeamResp(source queries.AWDWorkspaceTargetTeamResult) dto.ContestAWDWorkspaceTargetTeamResp {
+	var dtoContestAWDWorkspaceTargetTeamResp dto.ContestAWDWorkspaceTargetTeamResp
+	dtoContestAWDWorkspaceTargetTeamResp.TeamID = source.TeamID
+	dtoContestAWDWorkspaceTargetTeamResp.TeamName = source.TeamName
+	if source.Services != nil {
+		dtoContestAWDWorkspaceTargetTeamResp.Services = make([]*dto.ContestAWDWorkspaceTargetServiceResp, len(source.Services))
+		for i := 0; i < len(source.Services); i++ {
+			dtoContestAWDWorkspaceTargetTeamResp.Services[i] = c.pQueriesAWDWorkspaceTargetServiceResultToPDtoContestAWDWorkspaceTargetServiceResp(source.Services[i])
+		}
+	}
+	return dtoContestAWDWorkspaceTargetTeamResp
+}
+func (c *ContestRequestMapperImpl) ToAWDWorkspaceTeamResp(source queries.AWDWorkspaceTeamResult) dto.ContestAWDWorkspaceTeamResp {
+	var dtoContestAWDWorkspaceTeamResp dto.ContestAWDWorkspaceTeamResp
+	dtoContestAWDWorkspaceTeamResp.TeamID = source.TeamID
+	dtoContestAWDWorkspaceTeamResp.TeamName = source.TeamName
+	return dtoContestAWDWorkspaceTeamResp
 }
 func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source dto.AddContestChallengeReq) commands.AddContestChallengeInput {
 	var commandsAddContestChallengeInput commands.AddContestChallengeInput
@@ -32,6 +374,43 @@ func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source dto.AddCont
 		commandsAddContestChallengeInput.IsVisible = &xbool
 	}
 	return commandsAddContestChallengeInput
+}
+func (c *ContestRequestMapperImpl) ToContestAWDServiceResp(source queries.ContestAWDServiceResult) dto.ContestAWDServiceResp {
+	var dtoContestAWDServiceResp dto.ContestAWDServiceResp
+	dtoContestAWDServiceResp.ID = source.ID
+	dtoContestAWDServiceResp.ContestID = source.ContestID
+	dtoContestAWDServiceResp.AWDChallengeID = source.AWDChallengeID
+	dtoContestAWDServiceResp.Title = source.Title
+	dtoContestAWDServiceResp.Category = source.Category
+	dtoContestAWDServiceResp.Difficulty = source.Difficulty
+	dtoContestAWDServiceResp.DisplayName = source.DisplayName
+	dtoContestAWDServiceResp.Order = source.Order
+	dtoContestAWDServiceResp.IsVisible = source.IsVisible
+	dtoContestAWDServiceResp.ScoreConfig = c.ToStringAnyMap(source.ScoreConfig)
+	dtoContestAWDServiceResp.RuntimeConfig = c.ToStringAnyMap(source.RuntimeConfig)
+	dtoContestAWDServiceResp.ValidationState = model.AWDCheckerValidationState(source.ValidationState)
+	dtoContestAWDServiceResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
+	dtoContestAWDServiceResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoContestAWDServiceResp
+}
+func (c *ContestRequestMapperImpl) ToContestAnnouncementResp(source queries.ContestAnnouncementResult) dto.ContestAnnouncementResp {
+	var dtoContestAnnouncementResp dto.ContestAnnouncementResp
+	dtoContestAnnouncementResp.ID = source.ID
+	dtoContestAnnouncementResp.Title = source.Title
+	dtoContestAnnouncementResp.Content = source.Content
+	dtoContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
+	return dtoContestAnnouncementResp
+}
+func (c *ContestRequestMapperImpl) ToContestAnnouncementResps(source []*queries.ContestAnnouncementResult) []*dto.ContestAnnouncementResp {
+	var pDtoContestAnnouncementRespList []*dto.ContestAnnouncementResp
+	if source != nil {
+		pDtoContestAnnouncementRespList = make([]*dto.ContestAnnouncementResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoContestAnnouncementRespList[i] = c.pQueriesContestAnnouncementResultToPDtoContestAnnouncementResp(source[i])
+		}
+	}
+	return pDtoContestAnnouncementRespList
 }
 func (c *ContestRequestMapperImpl) ToContestChallengeInfo(source queries.ContestChallengeInfoResult) dto.ContestChallengeInfo {
 	var dtoContestChallengeInfo dto.ContestChallengeInfo
@@ -54,6 +433,16 @@ func (c *ContestRequestMapperImpl) ToContestChallengeInfo(source queries.Contest
 	dtoContestChallengeInfo.IsSolved = source.IsSolved
 	return dtoContestChallengeInfo
 }
+func (c *ContestRequestMapperImpl) ToContestChallengeInfos(source []*queries.ContestChallengeInfoResult) []*dto.ContestChallengeInfo {
+	var pDtoContestChallengeInfoList []*dto.ContestChallengeInfo
+	if source != nil {
+		pDtoContestChallengeInfoList = make([]*dto.ContestChallengeInfo, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoContestChallengeInfoList[i] = c.pQueriesContestChallengeInfoResultToPDtoContestChallengeInfo(source[i])
+		}
+	}
+	return pDtoContestChallengeInfoList
+}
 func (c *ContestRequestMapperImpl) ToContestChallengeResp(source queries.ContestChallengeResult) dto.ContestChallengeResp {
 	var dtoContestChallengeResp dto.ContestChallengeResp
 	dtoContestChallengeResp.ID = source.ID
@@ -68,6 +457,61 @@ func (c *ContestRequestMapperImpl) ToContestChallengeResp(source queries.Contest
 	dtoContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoContestChallengeResp
 }
+func (c *ContestRequestMapperImpl) ToContestChallengeResps(source []*queries.ContestChallengeResult) []*dto.ContestChallengeResp {
+	var pDtoContestChallengeRespList []*dto.ContestChallengeResp
+	if source != nil {
+		pDtoContestChallengeRespList = make([]*dto.ContestChallengeResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoContestChallengeRespList[i] = c.pQueriesContestChallengeResultToPDtoContestChallengeResp(source[i])
+		}
+	}
+	return pDtoContestChallengeRespList
+}
+func (c *ContestRequestMapperImpl) ToContestMyProgressResp(source queries.ParticipationProgressResult) dto.ContestMyProgressResp {
+	var dtoContestMyProgressResp dto.ContestMyProgressResp
+	dtoContestMyProgressResp.ContestID = source.ContestID
+	if source.TeamID != nil {
+		xint64 := *source.TeamID
+		dtoContestMyProgressResp.TeamID = &xint64
+	}
+	if source.Solved != nil {
+		dtoContestMyProgressResp.Solved = make([]*dto.ContestSolvedProgressItem, len(source.Solved))
+		for i := 0; i < len(source.Solved); i++ {
+			dtoContestMyProgressResp.Solved[i] = c.pQueriesContestSolvedProgressResultToPDtoContestSolvedProgressItem(source.Solved[i])
+		}
+	}
+	return dtoContestMyProgressResp
+}
+func (c *ContestRequestMapperImpl) ToContestRegistrationResp(source queries.ContestRegistrationResult) dto.ContestRegistrationResp {
+	var dtoContestRegistrationResp dto.ContestRegistrationResp
+	dtoContestRegistrationResp.ID = source.ID
+	dtoContestRegistrationResp.ContestID = source.ContestID
+	dtoContestRegistrationResp.UserID = source.UserID
+	dtoContestRegistrationResp.Username = source.Username
+	if source.TeamID != nil {
+		xint64 := *source.TeamID
+		dtoContestRegistrationResp.TeamID = &xint64
+	}
+	dtoContestRegistrationResp.Status = source.Status
+	if source.ReviewedBy != nil {
+		xint642 := *source.ReviewedBy
+		dtoContestRegistrationResp.ReviewedBy = &xint642
+	}
+	dtoContestRegistrationResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
+	dtoContestRegistrationResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoContestRegistrationResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoContestRegistrationResp
+}
+func (c *ContestRequestMapperImpl) ToContestRegistrationResps(source []*queries.ContestRegistrationResult) []*dto.ContestRegistrationResp {
+	var pDtoContestRegistrationRespList []*dto.ContestRegistrationResp
+	if source != nil {
+		pDtoContestRegistrationRespList = make([]*dto.ContestRegistrationResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoContestRegistrationRespList[i] = c.pQueriesContestRegistrationResultToPDtoContestRegistrationResp(source[i])
+		}
+	}
+	return pDtoContestRegistrationRespList
+}
 func (c *ContestRequestMapperImpl) ToContestResp(source queries.ContestResult) dto.ContestResp {
 	var dtoContestResp dto.ContestResp
 	dtoContestResp.ID = source.ID
@@ -81,6 +525,23 @@ func (c *ContestRequestMapperImpl) ToContestResp(source queries.ContestResult) d
 	dtoContestResp.CreatedAt = CopyTime(source.CreatedAt)
 	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestResp
+}
+func (c *ContestRequestMapperImpl) ToContestResps(source []*queries.ContestResult) []*dto.ContestResp {
+	var pDtoContestRespList []*dto.ContestResp
+	if source != nil {
+		pDtoContestRespList = make([]*dto.ContestResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoContestRespList[i] = c.pQueriesContestResultToPDtoContestResp(source[i])
+		}
+	}
+	return pDtoContestRespList
+}
+func (c *ContestRequestMapperImpl) ToContestSolvedProgressItem(source queries.ContestSolvedProgressResult) dto.ContestSolvedProgressItem {
+	var dtoContestSolvedProgressItem dto.ContestSolvedProgressItem
+	dtoContestSolvedProgressItem.ContestChallengeID = source.ContestChallengeID
+	dtoContestSolvedProgressItem.SolvedAt = CopyTime(source.SolvedAt)
+	dtoContestSolvedProgressItem.PointsEarned = source.PointsEarned
+	return dtoContestSolvedProgressItem
 }
 func (c *ContestRequestMapperImpl) ToCreateAWDRoundInput(source dto.CreateAWDRoundReq) commands.CreateAWDRoundInput {
 	var commandsCreateAWDRoundInput commands.CreateAWDRoundInput
@@ -179,6 +640,15 @@ func (c *ContestRequestMapperImpl) ToListAWDTrafficEventsInput(source dto.ListAW
 	queriesListAWDTrafficEventsInput.Size = source.Size
 	return queriesListAWDTrafficEventsInput
 }
+func (c *ContestRequestMapperImpl) ToMyTeamResp(source queries.MyTeamResult) dto.MyTeamResp {
+	var dtoMyTeamResp dto.MyTeamResp
+	dtoMyTeamResp.ID = source.ID
+	dtoMyTeamResp.Name = source.Name
+	dtoMyTeamResp.InviteCode = source.InviteCode
+	dtoMyTeamResp.CaptainID = source.CaptainID
+	dtoMyTeamResp.Members = c.ToTeamMemberResps(source.Members)
+	return dtoMyTeamResp
+}
 func (c *ContestRequestMapperImpl) ToPreviewCheckerInput(source dto.PreviewAWDCheckerReq) commands.PreviewCheckerInput {
 	var commandsPreviewCheckerInput commands.PreviewCheckerInput
 	commandsPreviewCheckerInput.AWDChallengeID = source.AWDChallengeID
@@ -189,6 +659,14 @@ func (c *ContestRequestMapperImpl) ToPreviewCheckerInput(source dto.PreviewAWDCh
 	commandsPreviewCheckerInput.PreviewFlag = source.PreviewFlag
 	commandsPreviewCheckerInput.PreviewRequestID = source.PreviewRequestID
 	return commandsPreviewCheckerInput
+}
+func (c *ContestRequestMapperImpl) ToRegistrationPageResp(source queries.RegistrationPageResult[*queries.ContestRegistrationResult]) dto.PageResult[*dto.ContestRegistrationResp] {
+	var dtoPageResult dto.PageResult[*dto.ContestRegistrationResp]
+	dtoPageResult.List = c.ToContestRegistrationResps(source.List)
+	dtoPageResult.Total = source.Total
+	dtoPageResult.Page = source.Page
+	dtoPageResult.Size = source.Size
+	return dtoPageResult
 }
 func (c *ContestRequestMapperImpl) ToReviewRegistrationInput(source dto.ReviewContestRegistrationReq) commands.ReviewRegistrationInput {
 	var commandsReviewRegistrationInput commands.ReviewRegistrationInput
@@ -206,6 +684,32 @@ func (c *ContestRequestMapperImpl) ToRunCurrentRoundChecksInput(source dto.RunCu
 		commandsRunCurrentRoundChecksInput.OverrideReason = &xstring
 	}
 	return commandsRunCurrentRoundChecksInput
+}
+func (c *ContestRequestMapperImpl) ToScoreboardContestInfo(source queries.ScoreboardContestResult) dto.ScoreboardContestInfo {
+	var dtoScoreboardContestInfo dto.ScoreboardContestInfo
+	dtoScoreboardContestInfo.ID = source.ID
+	dtoScoreboardContestInfo.Title = source.Title
+	dtoScoreboardContestInfo.Status = source.Status
+	dtoScoreboardContestInfo.StartedAt = CopyTime(source.StartedAt)
+	dtoScoreboardContestInfo.EndsAt = CopyTime(source.EndsAt)
+	return dtoScoreboardContestInfo
+}
+func (c *ContestRequestMapperImpl) ToScoreboardItem(source queries.ScoreboardItemResult) dto.ScoreboardItem {
+	var dtoScoreboardItem dto.ScoreboardItem
+	dtoScoreboardItem.Rank = source.Rank
+	dtoScoreboardItem.TeamID = source.TeamID
+	dtoScoreboardItem.TeamName = source.TeamName
+	dtoScoreboardItem.Score = source.Score
+	dtoScoreboardItem.SolvedCount = source.SolvedCount
+	dtoScoreboardItem.LastSubmissionAt = CopyTimePtr(source.LastSubmissionAt)
+	return dtoScoreboardItem
+}
+func (c *ContestRequestMapperImpl) ToScoreboardResp(source queries.ScoreboardResult) dto.ScoreboardResp {
+	var dtoScoreboardResp dto.ScoreboardResp
+	dtoScoreboardResp.Contest = c.pQueriesScoreboardContestResultToPDtoScoreboardContestInfo(source.Contest)
+	dtoScoreboardResp.Scoreboard = c.pQueriesScoreboardPageResultToPDtoScoreboardPage(source.Scoreboard)
+	dtoScoreboardResp.Frozen = source.Frozen
+	return dtoScoreboardResp
 }
 func (c *ContestRequestMapperImpl) ToStringAnyMap(source map[string]interface{}) map[string]interface{} {
 	var mapStringUnknown map[string]interface{}
@@ -230,6 +734,16 @@ func (c *ContestRequestMapperImpl) ToTeamMemberResp(source queries.TeamMemberRes
 	dtoTeamMemberResp.JoinedAt = CopyTime(source.JoinedAt)
 	return dtoTeamMemberResp
 }
+func (c *ContestRequestMapperImpl) ToTeamMemberResps(source []*queries.TeamMemberResult) []*dto.TeamMemberResp {
+	var pDtoTeamMemberRespList []*dto.TeamMemberResp
+	if source != nil {
+		pDtoTeamMemberRespList = make([]*dto.TeamMemberResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoTeamMemberRespList[i] = c.pQueriesTeamMemberResultToPDtoTeamMemberResp(source[i])
+		}
+	}
+	return pDtoTeamMemberRespList
+}
 func (c *ContestRequestMapperImpl) ToTeamResp(source queries.TeamResult) dto.TeamResp {
 	var dtoTeamResp dto.TeamResp
 	dtoTeamResp.ID = source.ID
@@ -241,6 +755,16 @@ func (c *ContestRequestMapperImpl) ToTeamResp(source queries.TeamResult) dto.Tea
 	dtoTeamResp.MemberCount = source.MemberCount
 	dtoTeamResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTeamResp
+}
+func (c *ContestRequestMapperImpl) ToTeamResps(source []*queries.TeamResult) []*dto.TeamResp {
+	var pDtoTeamRespList []*dto.TeamResp
+	if source != nil {
+		pDtoTeamRespList = make([]*dto.TeamResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pDtoTeamRespList[i] = c.pQueriesTeamResultToPDtoTeamResp(source[i])
+		}
+	}
+	return pDtoTeamRespList
 }
 func (c *ContestRequestMapperImpl) ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) commands.UpdateContestAWDServiceInput {
 	var commandsUpdateContestAWDServiceInput commands.UpdateContestAWDServiceInput
@@ -347,18 +871,244 @@ func (c *ContestRequestMapperImpl) domainAWDCheckerPreviewContextToDtoAWDChecker
 	dtoAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
 	return dtoAWDCheckerPreviewContextResp
 }
-func (c *ContestRequestMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
-	var modelAWDCheckerType model.AWDCheckerType
-	switch source {
-	case model.AWDCheckerTypeHTTPStandard:
-		modelAWDCheckerType = model.AWDCheckerTypeHTTPStandard
-	case model.AWDCheckerTypeLegacyProbe:
-		modelAWDCheckerType = model.AWDCheckerTypeLegacyProbe
-	case model.AWDCheckerTypeScript:
-		modelAWDCheckerType = model.AWDCheckerTypeScript
-	case model.AWDCheckerTypeTCPStandard:
-		modelAWDCheckerType = model.AWDCheckerTypeTCPStandard
-	default: // ignored
+func (c *ContestRequestMapperImpl) pQueriesAWDRoundMetricsResultToPDtoAWDRoundMetrics(source *queries.AWDRoundMetricsResult) *dto.AWDRoundMetrics {
+	var pDtoAWDRoundMetrics *dto.AWDRoundMetrics
+	if source != nil {
+		var dtoAWDRoundMetrics dto.AWDRoundMetrics
+		dtoAWDRoundMetrics.TotalServiceCount = (*source).TotalServiceCount
+		dtoAWDRoundMetrics.ServiceUpCount = (*source).ServiceUpCount
+		dtoAWDRoundMetrics.ServiceDownCount = (*source).ServiceDownCount
+		dtoAWDRoundMetrics.ServiceCompromisedCount = (*source).ServiceCompromisedCount
+		dtoAWDRoundMetrics.AttackedServiceCount = (*source).AttackedServiceCount
+		dtoAWDRoundMetrics.DefenseSuccessCount = (*source).DefenseSuccessCount
+		dtoAWDRoundMetrics.TotalAttackCount = (*source).TotalAttackCount
+		dtoAWDRoundMetrics.SuccessfulAttackCount = (*source).SuccessfulAttackCount
+		dtoAWDRoundMetrics.FailedAttackCount = (*source).FailedAttackCount
+		dtoAWDRoundMetrics.SchedulerCheckCount = (*source).SchedulerCheckCount
+		dtoAWDRoundMetrics.ManualCurrentRoundChecks = (*source).ManualCurrentRoundChecks
+		dtoAWDRoundMetrics.ManualSelectedRoundChecks = (*source).ManualSelectedRoundChecks
+		dtoAWDRoundMetrics.ManualServiceCheckCount = (*source).ManualServiceCheckCount
+		dtoAWDRoundMetrics.SubmissionAttackCount = (*source).SubmissionAttackCount
+		dtoAWDRoundMetrics.ManualAttackLogCount = (*source).ManualAttackLogCount
+		dtoAWDRoundMetrics.LegacyAttackLogCount = (*source).LegacyAttackLogCount
+		pDtoAWDRoundMetrics = &dtoAWDRoundMetrics
 	}
-	return modelAWDCheckerType
+	return pDtoAWDRoundMetrics
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDRoundResultToPDtoAWDRoundResp(source *queries.AWDRoundResult) *dto.AWDRoundResp {
+	var pDtoAWDRoundResp *dto.AWDRoundResp
+	if source != nil {
+		dtoAWDRoundResp := c.ToAWDRoundResp((*source))
+		pDtoAWDRoundResp = &dtoAWDRoundResp
+	}
+	return pDtoAWDRoundResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDRoundSummaryItemResultToPDtoAWDRoundSummaryItem(source *queries.AWDRoundSummaryItemResult) *dto.AWDRoundSummaryItem {
+	var pDtoAWDRoundSummaryItem *dto.AWDRoundSummaryItem
+	if source != nil {
+		var dtoAWDRoundSummaryItem dto.AWDRoundSummaryItem
+		dtoAWDRoundSummaryItem.TeamID = (*source).TeamID
+		dtoAWDRoundSummaryItem.TeamName = (*source).TeamName
+		dtoAWDRoundSummaryItem.ServiceUpCount = (*source).ServiceUpCount
+		dtoAWDRoundSummaryItem.ServiceDownCount = (*source).ServiceDownCount
+		dtoAWDRoundSummaryItem.ServiceCompromisedCount = (*source).ServiceCompromisedCount
+		dtoAWDRoundSummaryItem.SLAScore = (*source).SLAScore
+		dtoAWDRoundSummaryItem.DefenseScore = (*source).DefenseScore
+		dtoAWDRoundSummaryItem.AttackScore = (*source).AttackScore
+		dtoAWDRoundSummaryItem.SuccessfulAttackCount = (*source).SuccessfulAttackCount
+		dtoAWDRoundSummaryItem.SuccessfulBreachCount = (*source).SuccessfulBreachCount
+		dtoAWDRoundSummaryItem.UniqueAttackersAgainst = (*source).UniqueAttackersAgainst
+		dtoAWDRoundSummaryItem.TotalScore = (*source).TotalScore
+		pDtoAWDRoundSummaryItem = &dtoAWDRoundSummaryItem
+	}
+	return pDtoAWDRoundSummaryItem
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDTrafficTopChallengeResultToPDtoAWDTrafficTopChallengeResp(source *queries.AWDTrafficTopChallengeResult) *dto.AWDTrafficTopChallengeResp {
+	var pDtoAWDTrafficTopChallengeResp *dto.AWDTrafficTopChallengeResp
+	if source != nil {
+		dtoAWDTrafficTopChallengeResp := c.ToAWDTrafficTopChallengeResp((*source))
+		pDtoAWDTrafficTopChallengeResp = &dtoAWDTrafficTopChallengeResp
+	}
+	return pDtoAWDTrafficTopChallengeResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDTrafficTopPathResultToPDtoAWDTrafficTopPathResp(source *queries.AWDTrafficTopPathResult) *dto.AWDTrafficTopPathResp {
+	var pDtoAWDTrafficTopPathResp *dto.AWDTrafficTopPathResp
+	if source != nil {
+		dtoAWDTrafficTopPathResp := c.ToAWDTrafficTopPathResp((*source))
+		pDtoAWDTrafficTopPathResp = &dtoAWDTrafficTopPathResp
+	}
+	return pDtoAWDTrafficTopPathResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDTrafficTopTeamResultToPDtoAWDTrafficTopTeamResp(source *queries.AWDTrafficTopTeamResult) *dto.AWDTrafficTopTeamResp {
+	var pDtoAWDTrafficTopTeamResp *dto.AWDTrafficTopTeamResp
+	if source != nil {
+		dtoAWDTrafficTopTeamResp := c.ToAWDTrafficTopTeamResp((*source))
+		pDtoAWDTrafficTopTeamResp = &dtoAWDTrafficTopTeamResp
+	}
+	return pDtoAWDTrafficTopTeamResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDTrafficTrendBucketResultToPDtoAWDTrafficTrendBucketResp(source *queries.AWDTrafficTrendBucketResult) *dto.AWDTrafficTrendBucketResp {
+	var pDtoAWDTrafficTrendBucketResp *dto.AWDTrafficTrendBucketResp
+	if source != nil {
+		dtoAWDTrafficTrendBucketResp := c.ToAWDTrafficTrendBucketResp((*source))
+		pDtoAWDTrafficTrendBucketResp = &dtoAWDTrafficTrendBucketResp
+	}
+	return pDtoAWDTrafficTrendBucketResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDWorkspaceRecentEventResultToPDtoContestAWDWorkspaceRecentEventResp(source *queries.AWDWorkspaceRecentEventResult) *dto.ContestAWDWorkspaceRecentEventResp {
+	var pDtoContestAWDWorkspaceRecentEventResp *dto.ContestAWDWorkspaceRecentEventResp
+	if source != nil {
+		dtoContestAWDWorkspaceRecentEventResp := c.ToAWDWorkspaceRecentEventResp((*source))
+		pDtoContestAWDWorkspaceRecentEventResp = &dtoContestAWDWorkspaceRecentEventResp
+	}
+	return pDtoContestAWDWorkspaceRecentEventResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDWorkspaceServiceResultToPDtoContestAWDWorkspaceServiceResp(source *queries.AWDWorkspaceServiceResult) *dto.ContestAWDWorkspaceServiceResp {
+	var pDtoContestAWDWorkspaceServiceResp *dto.ContestAWDWorkspaceServiceResp
+	if source != nil {
+		dtoContestAWDWorkspaceServiceResp := c.ToAWDWorkspaceServiceResp((*source))
+		pDtoContestAWDWorkspaceServiceResp = &dtoContestAWDWorkspaceServiceResp
+	}
+	return pDtoContestAWDWorkspaceServiceResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDWorkspaceTargetServiceResultToPDtoContestAWDWorkspaceTargetServiceResp(source *queries.AWDWorkspaceTargetServiceResult) *dto.ContestAWDWorkspaceTargetServiceResp {
+	var pDtoContestAWDWorkspaceTargetServiceResp *dto.ContestAWDWorkspaceTargetServiceResp
+	if source != nil {
+		dtoContestAWDWorkspaceTargetServiceResp := c.ToAWDWorkspaceTargetServiceResp((*source))
+		pDtoContestAWDWorkspaceTargetServiceResp = &dtoContestAWDWorkspaceTargetServiceResp
+	}
+	return pDtoContestAWDWorkspaceTargetServiceResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDWorkspaceTargetTeamResultToPDtoContestAWDWorkspaceTargetTeamResp(source *queries.AWDWorkspaceTargetTeamResult) *dto.ContestAWDWorkspaceTargetTeamResp {
+	var pDtoContestAWDWorkspaceTargetTeamResp *dto.ContestAWDWorkspaceTargetTeamResp
+	if source != nil {
+		dtoContestAWDWorkspaceTargetTeamResp := c.ToAWDWorkspaceTargetTeamResp((*source))
+		pDtoContestAWDWorkspaceTargetTeamResp = &dtoContestAWDWorkspaceTargetTeamResp
+	}
+	return pDtoContestAWDWorkspaceTargetTeamResp
+}
+func (c *ContestRequestMapperImpl) pQueriesAWDWorkspaceTeamResultToPDtoContestAWDWorkspaceTeamResp(source *queries.AWDWorkspaceTeamResult) *dto.ContestAWDWorkspaceTeamResp {
+	var pDtoContestAWDWorkspaceTeamResp *dto.ContestAWDWorkspaceTeamResp
+	if source != nil {
+		dtoContestAWDWorkspaceTeamResp := c.ToAWDWorkspaceTeamResp((*source))
+		pDtoContestAWDWorkspaceTeamResp = &dtoContestAWDWorkspaceTeamResp
+	}
+	return pDtoContestAWDWorkspaceTeamResp
+}
+func (c *ContestRequestMapperImpl) pQueriesContestAnnouncementResultToPDtoContestAnnouncementResp(source *queries.ContestAnnouncementResult) *dto.ContestAnnouncementResp {
+	var pDtoContestAnnouncementResp *dto.ContestAnnouncementResp
+	if source != nil {
+		dtoContestAnnouncementResp := c.ToContestAnnouncementResp((*source))
+		pDtoContestAnnouncementResp = &dtoContestAnnouncementResp
+	}
+	return pDtoContestAnnouncementResp
+}
+func (c *ContestRequestMapperImpl) pQueriesContestChallengeInfoResultToPDtoContestChallengeInfo(source *queries.ContestChallengeInfoResult) *dto.ContestChallengeInfo {
+	var pDtoContestChallengeInfo *dto.ContestChallengeInfo
+	if source != nil {
+		dtoContestChallengeInfo := c.ToContestChallengeInfo((*source))
+		pDtoContestChallengeInfo = &dtoContestChallengeInfo
+	}
+	return pDtoContestChallengeInfo
+}
+func (c *ContestRequestMapperImpl) pQueriesContestChallengeResultToPDtoContestChallengeResp(source *queries.ContestChallengeResult) *dto.ContestChallengeResp {
+	var pDtoContestChallengeResp *dto.ContestChallengeResp
+	if source != nil {
+		dtoContestChallengeResp := c.ToContestChallengeResp((*source))
+		pDtoContestChallengeResp = &dtoContestChallengeResp
+	}
+	return pDtoContestChallengeResp
+}
+func (c *ContestRequestMapperImpl) pQueriesContestRegistrationResultToPDtoContestRegistrationResp(source *queries.ContestRegistrationResult) *dto.ContestRegistrationResp {
+	var pDtoContestRegistrationResp *dto.ContestRegistrationResp
+	if source != nil {
+		dtoContestRegistrationResp := c.ToContestRegistrationResp((*source))
+		pDtoContestRegistrationResp = &dtoContestRegistrationResp
+	}
+	return pDtoContestRegistrationResp
+}
+func (c *ContestRequestMapperImpl) pQueriesContestResultToPDtoContestResp(source *queries.ContestResult) *dto.ContestResp {
+	var pDtoContestResp *dto.ContestResp
+	if source != nil {
+		dtoContestResp := c.ToContestResp((*source))
+		pDtoContestResp = &dtoContestResp
+	}
+	return pDtoContestResp
+}
+func (c *ContestRequestMapperImpl) pQueriesContestSolvedProgressResultToPDtoContestSolvedProgressItem(source *queries.ContestSolvedProgressResult) *dto.ContestSolvedProgressItem {
+	var pDtoContestSolvedProgressItem *dto.ContestSolvedProgressItem
+	if source != nil {
+		dtoContestSolvedProgressItem := c.ToContestSolvedProgressItem((*source))
+		pDtoContestSolvedProgressItem = &dtoContestSolvedProgressItem
+	}
+	return pDtoContestSolvedProgressItem
+}
+func (c *ContestRequestMapperImpl) pQueriesScoreboardContestResultToPDtoScoreboardContestInfo(source *queries.ScoreboardContestResult) *dto.ScoreboardContestInfo {
+	var pDtoScoreboardContestInfo *dto.ScoreboardContestInfo
+	if source != nil {
+		dtoScoreboardContestInfo := c.ToScoreboardContestInfo((*source))
+		pDtoScoreboardContestInfo = &dtoScoreboardContestInfo
+	}
+	return pDtoScoreboardContestInfo
+}
+func (c *ContestRequestMapperImpl) pQueriesScoreboardItemResultToPDtoScoreboardItem(source *queries.ScoreboardItemResult) *dto.ScoreboardItem {
+	var pDtoScoreboardItem *dto.ScoreboardItem
+	if source != nil {
+		dtoScoreboardItem := c.ToScoreboardItem((*source))
+		pDtoScoreboardItem = &dtoScoreboardItem
+	}
+	return pDtoScoreboardItem
+}
+func (c *ContestRequestMapperImpl) pQueriesScoreboardPageResultToPDtoScoreboardPage(source *queries.ScoreboardPageResult) *dto.ScoreboardPage {
+	var pDtoScoreboardPage *dto.ScoreboardPage
+	if source != nil {
+		var dtoScoreboardPage dto.ScoreboardPage
+		if (*source).List != nil {
+			dtoScoreboardPage.List = make([]*dto.ScoreboardItem, len((*source).List))
+			for i := 0; i < len((*source).List); i++ {
+				dtoScoreboardPage.List[i] = c.pQueriesScoreboardItemResultToPDtoScoreboardItem((*source).List[i])
+			}
+		}
+		dtoScoreboardPage.Total = (*source).Total
+		dtoScoreboardPage.Page = (*source).Page
+		dtoScoreboardPage.PageSize = (*source).PageSize
+		pDtoScoreboardPage = &dtoScoreboardPage
+	}
+	return pDtoScoreboardPage
+}
+func (c *ContestRequestMapperImpl) pQueriesTeamMemberResultToPDtoTeamMemberResp(source *queries.TeamMemberResult) *dto.TeamMemberResp {
+	var pDtoTeamMemberResp *dto.TeamMemberResp
+	if source != nil {
+		dtoTeamMemberResp := c.ToTeamMemberResp((*source))
+		pDtoTeamMemberResp = &dtoTeamMemberResp
+	}
+	return pDtoTeamMemberResp
+}
+func (c *ContestRequestMapperImpl) pQueriesTeamResultToPDtoTeamResp(source *queries.TeamResult) *dto.TeamResp {
+	var pDtoTeamResp *dto.TeamResp
+	if source != nil {
+		dtoTeamResp := c.ToTeamResp((*source))
+		pDtoTeamResp = &dtoTeamResp
+	}
+	return pDtoTeamResp
+}
+func (c *ContestRequestMapperImpl) queriesAWDAttackLogResultToPDtoAWDAttackLogResp(source queries.AWDAttackLogResult) *dto.AWDAttackLogResp {
+	dtoAWDAttackLogResp := c.ToAWDAttackLogResp(source)
+	return &dtoAWDAttackLogResp
+}
+func (c *ContestRequestMapperImpl) queriesAWDReadinessItemToPDtoAWDReadinessItemResp(source queries.AWDReadinessItem) *dto.AWDReadinessItemResp {
+	dtoAWDReadinessItemResp := c.ToAWDReadinessItemResp(source)
+	return &dtoAWDReadinessItemResp
+}
+func (c *ContestRequestMapperImpl) queriesAWDRoundResultToPDtoAWDRoundResp(source queries.AWDRoundResult) *dto.AWDRoundResp {
+	dtoAWDRoundResp := c.ToAWDRoundResp(source)
+	return &dtoAWDRoundResp
+}
+func (c *ContestRequestMapperImpl) queriesAWDTeamServiceResultToPDtoAWDTeamServiceResp(source queries.AWDTeamServiceResult) *dto.AWDTeamServiceResp {
+	dtoAWDTeamServiceResp := c.ToAWDTeamServiceResp(source)
+	return &dtoAWDTeamServiceResp
+}
+func (c *ContestRequestMapperImpl) queriesAWDTrafficEventResultToPDtoAWDTrafficEventResp(source queries.AWDTrafficEventResult) *dto.AWDTrafficEventResp {
+	dtoAWDTrafficEventResp := c.ToAWDTrafficEventResp(source)
+	return &dtoAWDTrafficEventResp
 }

@@ -63,72 +63,21 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 }
 
 func contestAnnouncementResultsToDTO(items []*contestqry.ContestAnnouncementResult) []*dto.ContestAnnouncementResp {
-	result := make([]*dto.ContestAnnouncementResp, 0, len(items))
-	for _, item := range items {
-		if item == nil {
-			result = append(result, nil)
-			continue
-		}
-		result = append(result, &dto.ContestAnnouncementResp{
-			ID:        item.ID,
-			Title:     item.Title,
-			Content:   item.Content,
-			CreatedAt: item.CreatedAt,
-		})
-	}
-	return result
+	return contestRequestMapper.ToContestAnnouncementResps(items)
 }
 
 func participationProgressResultToDTO(item *contestqry.ParticipationProgressResult) *dto.ContestMyProgressResp {
 	if item == nil {
 		return nil
 	}
-	result := &dto.ContestMyProgressResp{
-		ContestID: item.ContestID,
-		TeamID:    item.TeamID,
-		Solved:    make([]*dto.ContestSolvedProgressItem, 0, len(item.Solved)),
-	}
-	for _, solved := range item.Solved {
-		if solved == nil {
-			result.Solved = append(result.Solved, nil)
-			continue
-		}
-		result.Solved = append(result.Solved, &dto.ContestSolvedProgressItem{
-			ContestChallengeID: solved.ContestChallengeID,
-			SolvedAt:           solved.SolvedAt,
-			PointsEarned:       solved.PointsEarned,
-		})
-	}
-	return result
+	mapped := contestRequestMapper.ToContestMyProgressResp(*item)
+	return &mapped
 }
 
 func contestRegistrationPageResultToDTO(item *contestqry.RegistrationPageResult[*contestqry.ContestRegistrationResult]) *dto.PageResult[*dto.ContestRegistrationResp] {
 	if item == nil {
 		return nil
 	}
-	result := &dto.PageResult[*dto.ContestRegistrationResp]{
-		List:  make([]*dto.ContestRegistrationResp, 0, len(item.List)),
-		Total: item.Total,
-		Page:  item.Page,
-		Size:  item.Size,
-	}
-	for _, registration := range item.List {
-		if registration == nil {
-			result.List = append(result.List, nil)
-			continue
-		}
-		result.List = append(result.List, &dto.ContestRegistrationResp{
-			ID:         registration.ID,
-			ContestID:  registration.ContestID,
-			UserID:     registration.UserID,
-			Username:   registration.Username,
-			TeamID:     registration.TeamID,
-			Status:     registration.Status,
-			ReviewedBy: registration.ReviewedBy,
-			ReviewedAt: registration.ReviewedAt,
-			CreatedAt:  registration.CreatedAt,
-			UpdatedAt:  registration.UpdatedAt,
-		})
-	}
-	return result
+	mapped := contestRequestMapper.ToRegistrationPageResp(*item)
+	return &mapped
 }

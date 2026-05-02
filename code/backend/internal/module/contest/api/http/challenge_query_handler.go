@@ -28,29 +28,11 @@ func (h *ChallengeHandler) ListChallenges(c *gin.Context) {
 }
 
 func contestChallengeResultsToDTO(items []*contestqry.ContestChallengeResult) []*dto.ContestChallengeResp {
-	result := make([]*dto.ContestChallengeResp, 0, len(items))
-	for _, item := range items {
-		if item == nil {
-			result = append(result, nil)
-			continue
-		}
-		mapped := contestRequestMapper.ToContestChallengeResp(*item)
-		result = append(result, &mapped)
-	}
-	return result
+	return contestRequestMapper.ToContestChallengeResps(items)
 }
 
 func contestChallengeInfoResultsToDTO(items []*contestqry.ContestChallengeInfoResult) []*dto.ContestChallengeInfo {
-	result := make([]*dto.ContestChallengeInfo, 0, len(items))
-	for _, item := range items {
-		if item == nil {
-			result = append(result, nil)
-			continue
-		}
-		mapped := contestRequestMapper.ToContestChallengeInfo(*item)
-		result = append(result, &mapped)
-	}
-	return result
+	return contestRequestMapper.ToContestChallengeInfos(items)
 }
 
 func (h *ChallengeHandler) ListAdminChallenges(c *gin.Context) {

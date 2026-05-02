@@ -2,7 +2,6 @@ package http
 
 import (
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
@@ -24,24 +23,9 @@ func contestAWDServiceResultsToDTO(results []contestqry.ContestAWDServiceResult)
 	resp := make([]*dto.ContestAWDServiceResp, 0, len(results))
 	for i := range results {
 		item := results[i]
-		resp = append(resp, &dto.ContestAWDServiceResp{
-			ID:                item.ID,
-			ContestID:         item.ContestID,
-			AWDChallengeID:    item.AWDChallengeID,
-			Title:             item.Title,
-			Category:          item.Category,
-			Difficulty:        item.Difficulty,
-			DisplayName:       item.DisplayName,
-			Order:             item.Order,
-			IsVisible:         item.IsVisible,
-			ScoreConfig:       item.ScoreConfig,
-			RuntimeConfig:     item.RuntimeConfig,
-			ValidationState:   model.AWDCheckerValidationState(item.ValidationState),
-			LastPreviewAt:     item.LastPreviewAt,
-			LastPreviewResult: awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw)),
-			CreatedAt:         item.CreatedAt,
-			UpdatedAt:         item.UpdatedAt,
-		})
+		mapped := contestRequestMapper.ToContestAWDServiceResp(item)
+		mapped.LastPreviewResult = awdCheckerPreviewResultToDTO(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw))
+		resp = append(resp, &mapped)
 	}
 	return resp
 }

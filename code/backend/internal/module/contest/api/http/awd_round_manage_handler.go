@@ -35,23 +35,7 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 }
 
 func awdRoundResultsToDTO(results []contestqry.AWDRoundResult) []*dto.AWDRoundResp {
-	resp := make([]*dto.AWDRoundResp, 0, len(results))
-	for i := range results {
-		round := results[i]
-		resp = append(resp, &dto.AWDRoundResp{
-			ID:           round.ID,
-			ContestID:    round.ContestID,
-			RoundNumber:  round.RoundNumber,
-			Status:       round.Status,
-			StartedAt:    round.StartedAt,
-			EndedAt:      round.EndedAt,
-			AttackScore:  round.AttackScore,
-			DefenseScore: round.DefenseScore,
-			CreatedAt:    round.CreatedAt,
-			UpdatedAt:    round.UpdatedAt,
-		})
-	}
-	return resp
+	return contestRequestMapper.ToAWDRoundResps(results)
 }
 
 func (h *AWDHandler) ListRounds(c *gin.Context) {

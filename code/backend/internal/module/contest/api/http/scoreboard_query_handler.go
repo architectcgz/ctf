@@ -56,39 +56,6 @@ func scoreboardResultToDTO(item *contestqry.ScoreboardResult) *dto.ScoreboardRes
 	if item == nil {
 		return nil
 	}
-	result := &dto.ScoreboardResp{
-		Frozen: item.Frozen,
-	}
-	if item.Contest != nil {
-		result.Contest = &dto.ScoreboardContestInfo{
-			ID:        item.Contest.ID,
-			Title:     item.Contest.Title,
-			Status:    item.Contest.Status,
-			StartedAt: item.Contest.StartedAt,
-			EndsAt:    item.Contest.EndsAt,
-		}
-	}
-	if item.Scoreboard != nil {
-		result.Scoreboard = &dto.ScoreboardPage{
-			List:     make([]*dto.ScoreboardItem, 0, len(item.Scoreboard.List)),
-			Total:    item.Scoreboard.Total,
-			Page:     item.Scoreboard.Page,
-			PageSize: item.Scoreboard.PageSize,
-		}
-		for _, scoreboardItem := range item.Scoreboard.List {
-			if scoreboardItem == nil {
-				result.Scoreboard.List = append(result.Scoreboard.List, nil)
-				continue
-			}
-			result.Scoreboard.List = append(result.Scoreboard.List, &dto.ScoreboardItem{
-				Rank:             scoreboardItem.Rank,
-				TeamID:           scoreboardItem.TeamID,
-				TeamName:         scoreboardItem.TeamName,
-				Score:            scoreboardItem.Score,
-				SolvedCount:      scoreboardItem.SolvedCount,
-				LastSubmissionAt: scoreboardItem.LastSubmissionAt,
-			})
-		}
-	}
-	return result
+	mapped := contestRequestMapper.ToScoreboardResp(*item)
+	return &mapped
 }

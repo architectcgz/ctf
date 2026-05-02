@@ -27,27 +27,7 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 }
 
 func awdAttackLogResultsToDTO(results []contestqry.AWDAttackLogResult) []*dto.AWDAttackLogResp {
-	resp := make([]*dto.AWDAttackLogResp, 0, len(results))
-	for i := range results {
-		item := results[i]
-		resp = append(resp, &dto.AWDAttackLogResp{
-			ID:             item.ID,
-			RoundID:        item.RoundID,
-			AttackerTeamID: item.AttackerTeamID,
-			AttackerTeam:   item.AttackerTeam,
-			VictimTeamID:   item.VictimTeamID,
-			VictimTeam:     item.VictimTeam,
-			ServiceID:      item.ServiceID,
-			AWDChallengeID: item.AWDChallengeID,
-			AttackType:     item.AttackType,
-			Source:         item.Source,
-			SubmittedFlag:  item.SubmittedFlag,
-			IsSuccess:      item.IsSuccess,
-			ScoreGained:    item.ScoreGained,
-			CreatedAt:      item.CreatedAt,
-		})
-	}
-	return resp
+	return contestRequestMapper.ToAWDAttackLogResps(results)
 }
 
 func (h *AWDHandler) SubmitAttack(c *gin.Context) {

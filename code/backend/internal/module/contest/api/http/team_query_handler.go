@@ -63,11 +63,7 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 }
 
 func teamResultsToDTO(items []*contestqry.TeamResult) []*dto.TeamResp {
-	result := make([]*dto.TeamResp, 0, len(items))
-	for _, item := range items {
-		result = append(result, teamResultToDTO(item))
-	}
-	return result
+	return contestRequestMapper.ToTeamResps(items)
 }
 
 func teamResultToDTO(item *contestqry.TeamResult) *dto.TeamResp {
@@ -79,27 +75,13 @@ func teamResultToDTO(item *contestqry.TeamResult) *dto.TeamResp {
 }
 
 func teamMemberResultsToDTO(items []*contestqry.TeamMemberResult) []*dto.TeamMemberResp {
-	result := make([]*dto.TeamMemberResp, 0, len(items))
-	for _, item := range items {
-		if item == nil {
-			result = append(result, nil)
-			continue
-		}
-		mapped := contestRequestMapper.ToTeamMemberResp(*item)
-		result = append(result, &mapped)
-	}
-	return result
+	return contestRequestMapper.ToTeamMemberResps(items)
 }
 
-func myTeamResultToDTO(item *contestqry.MyTeamResult) gin.H {
+func myTeamResultToDTO(item *contestqry.MyTeamResult) *dto.MyTeamResp {
 	if item == nil {
 		return nil
 	}
-	return gin.H{
-		"id":              item.ID,
-		"name":            item.Name,
-		"invite_code":     item.InviteCode,
-		"captain_user_id": item.CaptainID,
-		"members":         teamMemberResultsToDTO(item.Members),
-	}
+	mapped := contestRequestMapper.ToMyTeamResp(*item)
+	return &mapped
 }
