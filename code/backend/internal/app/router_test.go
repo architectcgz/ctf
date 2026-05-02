@@ -45,6 +45,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	"ctf-platform/pkg/errcode"
 )
@@ -310,7 +311,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeInstanceRepository", reflect.TypeOf((*practiceports.InstanceRepository)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeInstanceRepository", reflect.TypeOf(&runtimeinfra.Repository{}))
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeRuntimeProbe", reflect.TypeOf((*challengeports.ChallengeRuntimeProbe)(nil)).Elem())
@@ -461,7 +462,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"repo",
 		"*runtimeinfra.Repository",
 		"practiceInstanceRepo",
-		"practiceports.InstanceRepository",
+		"*runtimeinfra.Repository",
 		"instanceCommands",
 		"runtimeHTTPCommandService",
 		"instanceQueries",
@@ -794,7 +795,7 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	expected := []string{
 		"type practiceModuleExternalDeps struct",
 		"instanceRepo",
-		"practiceports.InstanceRepository",
+		"*runtimeinfra.Repository",
 		"runtimeService",
 		"practiceports.RuntimeInstanceService",
 		"runtime.PracticeInstanceRepository",
@@ -957,7 +958,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"practiceports.InstanceRepository",
+		"*runtimeinfra.Repository",
 		"practiceports.RuntimeInstanceService",
 		"contestports.AWDContainerFileWriter",
 	}

@@ -9,6 +9,7 @@ import (
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type PracticeModule struct {
@@ -23,7 +24,7 @@ type practiceModuleDeps struct {
 }
 
 type practiceModuleExternalDeps struct {
-	instanceRepo   practiceports.InstanceRepository
+	instanceRepo   *runtimeinfra.Repository
 	runtimeService practiceports.RuntimeInstanceService
 	challengeRepo  practiceRuntimeChallengeContract
 	imageStore     practiceRuntimeImageStore

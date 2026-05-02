@@ -46,7 +46,12 @@ func (ctxOnlyInstanceRepository) CountInstancesByStatus(context.Context, []strin
 	return 0, nil
 }
 
-var _ practiceports.InstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticeInstanceLookupRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticeInstanceRuntimeWriteRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticeInstanceAWDOperationRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticeInstanceStatusRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticePendingInstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ practiceports.PracticeInstanceStatsRepository = (*ctxOnlyInstanceRepository)(nil)
 
 type ctxOnlyPracticeCommandTxRepository struct{}
 

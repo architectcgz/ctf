@@ -51,11 +51,20 @@ type practiceCommandRepository interface {
 	practiceports.PracticeManualReviewCommandRepository
 }
 
+type practiceInstanceCommandRepository interface {
+	practiceports.PracticeInstanceLookupRepository
+	practiceports.PracticeInstanceRuntimeWriteRepository
+	practiceports.PracticeInstanceAWDOperationRepository
+	practiceports.PracticeInstanceStatusRepository
+	practiceports.PracticePendingInstanceRepository
+	practiceports.PracticeInstanceStatsRepository
+}
+
 type Service struct {
 	repo              practiceCommandRepository
 	challengeRepo     challengecontracts.PracticeChallengeContract
 	imageRepo         challengecontracts.ImageStore
-	instanceRepo      practiceports.InstanceRepository
+	instanceRepo      practiceInstanceCommandRepository
 	runtimeService    practiceports.RuntimeInstanceService
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
@@ -80,7 +89,7 @@ func NewService(
 	repo practiceCommandRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo challengecontracts.ImageStore,
-	instanceRepo practiceports.InstanceRepository,
+	instanceRepo practiceInstanceCommandRepository,
 	runtimeService practiceports.RuntimeInstanceService,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,

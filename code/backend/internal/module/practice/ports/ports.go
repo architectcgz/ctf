@@ -119,15 +119,30 @@ type PracticeRankingRepository interface {
 	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error)
 }
 
-type InstanceRepository interface {
+type PracticeInstanceLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
-	UpdateRuntime(ctx context.Context, instance *model.Instance) error
-	FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
-	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
-	ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error)
+}
+
+type PracticeInstanceRuntimeWriteRepository interface {
+	UpdateRuntime(ctx context.Context, instance *model.Instance) error
+	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
+}
+
+type PracticeInstanceAWDOperationRepository interface {
+	FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
+}
+
+type PracticeInstanceStatusRepository interface {
+	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
+}
+
+type PracticePendingInstanceRepository interface {
+	ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error)
+}
+
+type PracticeInstanceStatsRepository interface {
 	CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 }
 

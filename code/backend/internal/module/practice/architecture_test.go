@@ -100,6 +100,9 @@ func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
 	if strings.Contains(string(content), "type PracticeRepository interface") {
 		t.Fatalf("practice ports must not declare the legacy wide PracticeRepository interface")
 	}
+	if strings.Contains(string(content), "type InstanceRepository interface") {
+		t.Fatalf("practice ports must not declare the wide InstanceRepository interface")
+	}
 }
 
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {

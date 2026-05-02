@@ -63,7 +63,7 @@ type runtimeDefenseWorkbenchRuntime interface {
 type RuntimeModule struct {
 	Handler *runtimehttp.Handler
 
-	PracticeInstanceRepository practiceports.InstanceRepository
+	PracticeInstanceRepository *runtimeinfra.Repository
 	PracticeRuntimeService     practiceports.RuntimeInstanceService
 	ChallengeImageRuntime      challengeports.ImageRuntime
 	ChallengeRuntimeProbe      challengeports.ChallengeRuntimeProbe
@@ -84,7 +84,7 @@ type runtimeHTTPDeps struct {
 }
 
 type runtimePracticeDeps struct {
-	instanceRepository practiceports.InstanceRepository
+	instanceRepository *runtimeinfra.Repository
 	runtimeService     practiceports.RuntimeInstanceService
 }
 
@@ -104,7 +104,7 @@ type runtimeContestDeps struct {
 
 type runtimeModuleDeps struct {
 	repo                  *runtimeinfra.Repository
-	practiceInstanceRepo  practiceports.InstanceRepository
+	practiceInstanceRepo  *runtimeinfra.Repository
 	instanceCommands      runtimeHTTPCommandService
 	instanceQueries       runtimeHTTPQueryService
 	countRunningQuery     opsports.RuntimeQuery
