@@ -62,27 +62,25 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
 
 ## 当前未完成项
 
-### P0：业务生命周期仍在 route view 中
+### 已完成（P0）
 - `src/views/platform/ContestManage.vue`
-  - 当前仍由 route view 执行 `onMounted(() => refresh())`。
-  - route view 还持有创建后切回列表、公告抽屉状态、状态筛选 setter 等页面流程。
-  - 建议新增 `features/platform-contests/model/useContestManagePage.ts`，由它组合 `usePlatformContests`、`requestedPanel`、公告抽屉状态和创建后跳转逻辑。
+  - 已新增 `features/platform-contests/model/useContestManagePage.ts`。
+  - `onMounted` 刷新、创建后面板切换、公告抽屉状态、筛选 setter 和 dialog open change 已下沉。
 - `src/views/platform/UserManage.vue`
-  - 当前仍由 route view 执行 `onMounted(() => refresh())`。
-  - 删除确认流程仍在 route view 中，且直接使用 `confirmDestructiveAction`。
-  - 建议新增 `features/platform-users/model/usePlatformUserManagePage.ts`，由它组合 `usePlatformUsers`、筛选 setter、弹窗关闭和删除确认流程。
+  - 已新增 `features/platform-users/model/usePlatformUserManagePage.ts`。
+  - `onMounted` 刷新、删除确认、筛选 setter 和 dialog open change 已下沉。
 - `src/views/platform/AWDChallengeLibrary.vue`
-  - 当前仍由 route view 执行 `onMounted(() => refresh())`。
-  - 筛选 setter 和弹窗关闭逻辑仍在 route view 中。
-  - 建议扩展现有 `useAwdChallengeLibraryPage`，让它组合 `usePlatformAwdChallenges`、导入页跳转、列表刷新和筛选 setter。
+  - 已扩展 `useAwdChallengeLibraryPage` 为页面组合 owner。
+  - `onMounted` 刷新、筛选 setter、dialog open change 已下沉。
 - `src/views/platform/AWDChallengeImport.vue`
-  - 当前仍由 route view 执行 `onMounted(() => refreshImportQueue())`。
-  - 建议新增 `useAwdChallengeImportPage` 或扩展 AWD 题库 page composable，把导入队列加载和导入动作下沉。
+  - 已新增 `useAwdChallengeImportPage`。
+  - `onMounted` 导入队列刷新已下沉。
 
-### P1：展示状态仍在 route view 中，需要评估后再迁移
+### 剩余（P1）
 - `src/views/scoreboard/ScoreboardView.vue`
   - `watch(sections)` 和 `watch(contestTotalPages)` 只处理本地分页复位与页码裁剪。
-  - 目前可判定为 UI 展示状态，优先级低；若继续收口，建议新增 `useScoreboardContestDirectoryPage`，承接竞赛榜分页、汇总指标、日期格式化和 CSS class 派生。
+  - 仍持有分页展示 helper（`formatDateTime`、`formatContestWindow`、`sectionAccentStyle`、`getRowClass`、`getRankPillClass`、`getCardDescription`）。
+  - 若继续收口，建议新增 `useScoreboardContestDirectoryPage`，承接分页与展示派生逻辑。
 - `src/views/instances/InstanceList.vue`
   - `watch(showWarning)` 用于 warning dialog 焦点管理，属于 UI 可访问性状态。
   - 可保留在 view，或下沉为 `useInstanceWarningFocus` 这类局部 UI composable；不建议放入业务 feature 核心模型。
@@ -90,30 +88,7 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
   - `onMounted` 只负责控制台提示；不是业务数据加载。
   - 可保留，除非后续要把登录页彩蛋/控制台提示整体抽成 `useLoginProbeConsolePage`。
 
-### P2：类型与展示 helper 仍留在 route view
-- `src/views/platform/ContestManage.vue`
-  - 仍从 `@/api/contracts` 导入 `ContestDetailData` 作为公告抽屉状态类型。
-  - 若 P0 新增 `useContestManagePage`，应一并把该类型依赖从 route view 移到 feature。
-- `src/views/scoreboard/ScoreboardView.vue`
-  - 仍从 `@/api/contracts` 导入 `ContestStatus`，并在 route view 中持有 `formatDateTime`、`formatContestWindow`、`sectionAccentStyle`、`getRowClass`、`getRankPillClass`、`getCardDescription`。
-  - 若 P1 迁移 scoreboard 展示状态，应一并把这些 helper 放入 feature model 或局部 presentation helper。
-
 ## 后续迁移批次
-
-### Batch A：平台竞赛管理页
-- 目标文件：`ContestManage.vue`、`features/platform-contests/model/index.ts`、新增 `useContestManagePage.ts`、对应 `ContestManage.test.ts` 或 source 边界测试。
-- 迁移内容：`refresh onMounted`、状态筛选 setter、创建后切回列表、公告抽屉状态、dialog open change。
-- 验收：`ContestManage.vue` 不再直接 `onMounted`，不再直接持有 `ContestDetailData`，只消费 `useContestManagePage`。
-
-### Batch B：平台用户管理页
-- 目标文件：`UserManage.vue`、`features/platform-users/model/index.ts`、新增 `usePlatformUserManagePage.ts`、对应测试。
-- 迁移内容：`refresh onMounted`、筛选 setter、删除确认流程、dialog open change。
-- 验收：`UserManage.vue` 不再直接 `onMounted`，不再直接 import `confirmDestructiveAction`。
-
-### Batch C：AWD 题库与导入页
-- 目标文件：`AWDChallengeLibrary.vue`、`AWDChallengeImport.vue`、`features/platform-awd-challenges/model/*`、对应测试。
-- 迁移内容：列表页刷新、导入队列刷新、筛选 setter、dialog open change、导入页 page composable。
-- 验收：两个 route view 不再直接 `onMounted`，只消费 `useAwdChallengeLibraryPage` / `useAwdChallengeImportPage`。
 
 ### Batch D：低优先级展示收口
 - 目标文件：`ScoreboardView.vue`、`InstanceList.vue`、必要时 `LoginView.vue`。
