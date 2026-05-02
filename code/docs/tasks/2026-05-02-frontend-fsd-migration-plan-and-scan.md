@@ -884,6 +884,20 @@ npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/compo
 npm run typecheck
 ```
 
+### 已完成：Batch P 子项（竞赛详情页队伍动作流程拆分）
+- 新增 `features/contest-detail/model/useContestTeamActions.ts`，承接：
+  - 创建队伍弹窗状态与提交流程
+  - 加入队伍弹窗状态与提交流程
+  - 踢出队员确认与提交动作
+- `useContestDetailPage.ts` 改为组合调用该模块，移除内联队伍动作流程细节。
+- `useContestDetailPage.ts` 行数下降（本批由 438 降至 355）。
+
+验证：
+```bash
+npm run test:run -- src/views/contests/__tests__/ContestDetail.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
