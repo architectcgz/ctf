@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -210,8 +211,12 @@ describe('TeacherStudentReviewArchive', () => {
   })
 
   it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
-    expect(reviewArchiveSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(reviewArchiveSource).not.toContain('<ElButton')
+    expect(reviewArchiveSource).toContain(
+      "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+    )
+    expect(reviewArchiveSource).toContain('<TeacherReviewArchiveWorkspace')
+    expect(reviewArchiveWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
