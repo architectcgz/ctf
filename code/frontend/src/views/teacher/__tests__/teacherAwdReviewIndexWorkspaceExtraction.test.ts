@@ -8,6 +8,7 @@ import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWD
 import awdReviewIndexFiltersSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexFilters.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestHead.vue?raw'
 import awdReviewContestRowSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRow.vue?raw'
+import awdReviewDirectoryStateSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectoryState.vue?raw'
 
 describe('Teacher AWD review index workspace extraction', () => {
   it('目录页路由应收敛为 widget 组合层', () => {
@@ -22,12 +23,14 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewIndexFilters')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewDirectoryState')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestHead')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestRow')
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
     expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
     expect(awdReviewIndexFiltersSource).toContain('class="teacher-directory-filters"')
+    expect(awdReviewDirectoryStateSource).toContain('title="AWD复盘目录加载失败"')
     expect(awdReviewContestHeadSource).toContain('class="teacher-directory-head"')
     expect(awdReviewContestRowSource).toContain('class="teacher-directory-row"')
   })

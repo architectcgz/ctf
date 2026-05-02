@@ -6,3 +6,4 @@ export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSumma
 export { default as TeacherAWDReviewIndexFilters } from './TeacherAWDReviewIndexFilters.vue'
 export { default as TeacherAWDReviewContestRow } from './TeacherAWDReviewContestRow.vue'
 export { default as TeacherAWDReviewContestHead } from './TeacherAWDReviewContestHead.vue'
+export { default as TeacherAWDReviewDirectoryState } from './TeacherAWDReviewDirectoryState.vue'

@@ -3,9 +3,9 @@ import { computed } from 'vue'
 import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
+import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
 import TeacherAWDReviewIndexFilters from './TeacherAWDReviewIndexFilters.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
@@ -129,57 +129,24 @@ const summaryItems = computed(() => [
           @update-keyword-filter="emit('updateKeywordFilter', $event)"
         />
 
-        <div
-          v-if="loading"
-          class="teacher-skeleton-list workspace-directory-loading"
+        <TeacherAWDReviewDirectoryState
+          :loading="loading"
+          :error="error"
+          :has-contests="hasContests"
+          @reload="emit('reload')"
         >
-          <div
-            v-for="index in 3"
-            :key="index"
-            class="h-28 animate-pulse rounded-[22px] bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]"
-          />
-        </div>
+          <section class="teacher-directory">
+            <TeacherAWDReviewContestHead />
 
-        <AppEmpty
-          v-else-if="error"
-          class="teacher-empty-state workspace-directory-empty"
-          icon="AlertTriangle"
-          title="AWD复盘目录加载失败"
-          :description="error"
-        >
-          <template #action>
-            <button
-              type="button"
-              class="teacher-btn teacher-btn--primary"
-              @click="emit('reload')"
-            >
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
-        <AppEmpty
-          v-else-if="!hasContests"
-          class="teacher-empty-state workspace-directory-empty"
-          icon="Waypoints"
-          title="暂无 AWD 赛事"
-          description="当前还没有可进入复盘的 AWD 赛事。"
-        />
-
-        <section
-          v-else
-          class="teacher-directory"
-        >
-          <TeacherAWDReviewContestHead />
-
-          <TeacherAWDReviewContestRow
-            v-for="contest in contests"
-            :key="contest.id"
-            :contest="contest"
-            :contest-status-label="contestStatusLabel"
-            @open-contest="emit('openContest', $event)"
-          />
-        </section>
+            <TeacherAWDReviewContestRow
+              v-for="contest in contests"
+              :key="contest.id"
+              :contest="contest"
+              :contest-status-label="contestStatusLabel"
+              @open-contest="emit('openContest', $event)"
+            />
+          </section>
+        </TeacherAWDReviewDirectoryState>
       </section>
     </div>
   </TeacherAWDReviewSurfaceShell>
@@ -212,11 +179,6 @@ const summaryItems = computed(() => [
   font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
-}
-
-.teacher-skeleton-list {
-  display: grid;
-  gap: var(--space-3);
 }
 
 .teacher-directory {
