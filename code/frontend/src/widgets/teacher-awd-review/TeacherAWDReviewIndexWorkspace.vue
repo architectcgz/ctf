@@ -7,6 +7,10 @@ import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
+import {
+  buildTeacherAwdReviewIndexSummaryItems,
+  TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY,
+} from './model/presentation'
 
 interface ContestSummary {
   totalCount: number
@@ -40,36 +44,22 @@ const emit = defineEmits<{
   updateKeywordFilter: [keyword: string]
 }>()
 
-const summaryItems = computed(() => [
-  {
-    label: '赛事数量',
-    value: props.contestSummary.totalCount,
-    hint: '当前可进入 AWD 复盘的赛事总数',
-  },
-  {
-    label: '进行中',
-    value: props.contestSummary.runningCount,
-    hint: '仍在持续产出实时攻防信号的赛事',
-  },
-  {
-    label: '可导出教师报告',
-    value: props.contestSummary.exportReadyCount,
-    hint: '已结束并允许生成教师复盘报告的赛事',
-  },
-])
+const summaryItems = computed(() =>
+  buildTeacherAwdReviewIndexSummaryItems(props.contestSummary)
+)
 </script>
 
 <template>
   <TeacherAWDReviewSurfaceShell>
     <div class="teacher-page">
       <TeacherAWDReviewWorkspaceHeader
-        overline="AWD Review"
-        title="AWD复盘"
+        :overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"
+        :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.title"
         header-class="awd-review-index-header"
         overline-class="awd-review-index-overline"
       >
         <template #description>
-          集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
+          {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.description }}
         </template>
 
         <template #actions>
@@ -78,7 +68,7 @@ const summaryItems = computed(() => [
             class="teacher-btn teacher-btn--ghost"
             @click="emit('openDashboard')"
           >
-            教学概览
+            {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction }}
           </button>
           <button
             type="button"
@@ -86,13 +76,13 @@ const summaryItems = computed(() => [
             @click="emit('refresh')"
           >
             <RefreshCcw class="h-4 w-4" />
-            刷新目录
+            {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.refreshDirectoryAction }}
           </button>
         </template>
       </TeacherAWDReviewWorkspaceHeader>
 
       <TeacherAWDReviewSummaryPanel
-        title="Review Snapshot"
+        :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle"
         :items="summaryItems"
       >
         <template #title-prefix>

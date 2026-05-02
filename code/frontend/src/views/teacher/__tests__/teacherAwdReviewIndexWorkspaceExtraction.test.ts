@@ -28,6 +28,8 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
+    expect(awdReviewIndexWorkspaceSource).toContain('buildTeacherAwdReviewIndexSummaryItems')
+    expect(awdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
     expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')

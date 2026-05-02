@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildTeacherAwdReviewIndexSummaryItems,
   buildTeacherAwdReviewSummaryItems,
+  TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY,
   TEACHER_AWD_REVIEW_WORKSPACE_COPY,
 } from './presentation'
 
@@ -45,5 +47,20 @@ describe('teacher awd review widget presentation', () => {
     expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline).toBe('AWD Review')
     expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.title).toBe('AWD复盘')
     expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix).toContain('多维复盘攻防实战过程')
+  })
+
+  it('应生成目录页摘要项与文案出口', () => {
+    const items = buildTeacherAwdReviewIndexSummaryItems({
+      totalCount: 10,
+      runningCount: 4,
+      exportReadyCount: 6,
+    })
+
+    expect(items).toHaveLength(3)
+    expect(items[0].label).toBe('赛事数量')
+    expect(items[1].value).toBe(4)
+    expect(items[2].value).toBe(6)
+    expect(TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle).toBe('Review Snapshot')
+    expect(TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction).toBe('教学概览')
   })
 })
