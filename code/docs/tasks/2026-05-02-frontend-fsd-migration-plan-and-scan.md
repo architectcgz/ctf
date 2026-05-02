@@ -1372,6 +1372,24 @@ npm run test:run -- src/features/awd-inspector/model/useAwdInspectorExports.test
 npm run typecheck
 ```
 
+### 已完成：Batch AV 子项（赛事大屏轮次选择与快照加载拆分）
+- 新增 `features/contest-projector/model/useProjectorRoundSelection.ts`，承接：
+  - 运行中轮次选择（`chooseLiveRound`）
+  - 展示轮次选择（`chooseDisplayRound`）
+  - 跟随模式切换（`enableAutoFollow`）
+- 新增 `features/contest-projector/model/useProjectorRoundSnapshotLoader.ts`，承接：
+  - 轮次快照并发加载（服务、攻击、摘要、流量）
+  - 请求版本检查与过期请求丢弃
+  - 快照清空（`clearRoundSnapshot`）
+- `useContestProjectorData.ts` 改为组合上述两个子模块，移除内联轮次与快照流程，主模块保留数据编排与对外动作暴露。
+- 扩展边界测试：`useContestProjectorBoundary.test.ts` 新增 source 断言，锁定 `useContestProjectorData` 必须引用拆分子模块且不回退到内联实现。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-projector/model/useContestProjectorData.test.ts src/features/contest-projector/model/useContestProjectorBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

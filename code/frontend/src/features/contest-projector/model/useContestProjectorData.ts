@@ -2,11 +2,7 @@ import { computed, ref } from 'vue'
 
 import {
   getAdminContestLiveScoreboard,
-  getContestAWDRoundSummary,
-  getContestAWDRoundTrafficSummary,
   getContests,
-  listContestAWDRoundAttacks,
-  listContestAWDRoundServices,
   listContestAWDRounds,
 } from '@/api/admin/contests'
 import type {
@@ -19,6 +15,8 @@ import type {
   ContestScoreboardData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { useProjectorRoundSelection } from './useProjectorRoundSelection'
+import { useProjectorRoundSnapshotLoader } from './useProjectorRoundSnapshotLoader'
 
 export function useContestProjectorData() {
   const toast = useToast()
@@ -56,6 +54,16 @@ export function useContestProjectorData() {
   )
   const scoreboardRows = computed(() => scoreboard.value?.scoreboard.list ?? [])
   const selectedRound = computed(() => rounds.value.find((item) => item.id === selectedRoundId.value) ?? null)
+  const { chooseDisplayRound, enableAutoFollow } = useProjectorRoundSelection({
+    roundAutoFollow,
+    selectedRoundId,
+  })
+  const { loadRoundSnapshot, clearRoundSnapshot } = useProjectorRoundSnapshotLoader({
+    services,
+    attacks,
+    roundSummary,
+    trafficSummary,
+  })
 
   function chooseInitialContest(): void {
     const preferred =
@@ -64,48 +72,6 @@ export function useContestProjectorData() {
       projectorContests.value[0] ??
       null
     selectedContestId.value = preferred?.id ?? ''
-  }
-
-  function chooseLiveRound(nextRounds: AWDRoundData[]): AWDRoundData | null {
-    return nextRounds.find((item) => item.status === 'running') ?? nextRounds[nextRounds.length - 1] ?? null
-  }
-
-  function chooseDisplayRound(nextRounds: AWDRoundData[]): AWDRoundData | null {
-    if (!roundAutoFollow.value && selectedRoundId.value) {
-      const manualRound = nextRounds.find((item) => item.id === selectedRoundId.value)
-      if (manualRound) {
-        return manualRound
-      }
-      roundAutoFollow.value = true
-    }
-    return chooseLiveRound(nextRounds)
-  }
-
-  async function loadRoundSnapshot(
-    contestId: string,
-    roundId: string,
-    requestToken: number
-  ): Promise<void> {
-    const [nextServices, nextAttacks, nextRoundSummary, nextTrafficSummary] = await Promise.all([
-      listContestAWDRoundServices(contestId, roundId),
-      listContestAWDRoundAttacks(contestId, roundId),
-      getContestAWDRoundSummary(contestId, roundId),
-      getContestAWDRoundTrafficSummary(contestId, roundId),
-    ])
-    if (requestToken !== scoreboardRequestToken) {
-      return
-    }
-    services.value = nextServices
-    attacks.value = nextAttacks
-    roundSummary.value = nextRoundSummary
-    trafficSummary.value = nextTrafficSummary
-  }
-
-  function clearRoundSnapshot(): void {
-    services.value = []
-    attacks.value = []
-    roundSummary.value = null
-    trafficSummary.value = null
   }
 
   async function loadScoreboard(contestId = selectedContestId.value): Promise<void> {
@@ -132,7 +98,7 @@ export function useContestProjectorData() {
       selectedRoundId.value = preferredRound?.id ?? ''
 
       if (preferredRound) {
-        await loadRoundSnapshot(contestId, preferredRound.id, requestToken)
+        await loadRoundSnapshot(contestId, preferredRound.id, requestToken, (token) => token !== scoreboardRequestToken)
         if (requestToken !== scoreboardRequestToken) {
           return
         }
@@ -211,7 +177,12 @@ export function useContestProjectorData() {
     selectedRoundId.value = targetRound.id
     loadingScoreboard.value = true
     try {
-      await loadRoundSnapshot(selectedContestId.value, targetRound.id, requestToken)
+      await loadRoundSnapshot(
+        selectedContestId.value,
+        targetRound.id,
+        requestToken,
+        (token) => token !== scoreboardRequestToken
+      )
       if (requestToken !== scoreboardRequestToken) {
         return
       }
@@ -233,10 +204,9 @@ export function useContestProjectorData() {
   }
 
   async function followCurrentRound(): Promise<void> {
-    if (roundAutoFollow.value) {
+    if (!enableAutoFollow()) {
       return
     }
-    roundAutoFollow.value = true
     await loadScoreboard()
   }
 
