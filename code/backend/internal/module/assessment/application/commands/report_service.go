@@ -1122,9 +1122,9 @@ func buildReportExportData(reportID int64, status string, expiresAt time.Time) *
 }
 
 func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData {
-	resp := &dto.ReportExportData{
-		ReportID: report.ID,
-		Status:   report.Status,
+	resp := assessmentCommandResponseMapperInst.ToReportExportDataBasePtr(report)
+	if resp == nil {
+		return nil
 	}
 	if report.Status == model.ReportStatusReady {
 		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)
