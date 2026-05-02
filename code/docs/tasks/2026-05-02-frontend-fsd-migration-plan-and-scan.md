@@ -1072,6 +1072,21 @@ npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts s
 npm run typecheck
 ```
 
+### 已完成：Batch AC 子项（AWD 快照刷新加载流程拆分）
+- 新增 `features/contest-awd-admin/model/useAwdContestSnapshotLoader.ts`，承接：
+  - 赛事维度快照并发刷新（rounds/teams/services/readiness/orchestration）
+  - 非 AWD 赛事分支下的状态清理
+  - round 选择跟随与请求竞态 token 防护
+  - 刷新后 round detail 衔接调用
+- `usePlatformContestAwd.ts` 改为组合调用该模块，移除内联快照刷新细节。
+- `usePlatformContestAwd.ts` 行数下降（本批由 317 降至 252）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

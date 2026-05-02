@@ -1,12 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
 
-import {
-  getContestAWDReadiness,
-  getContestAWDInstanceOrchestration,
-  listContestTeams,
-  listContestAWDRounds,
-  listContestAWDServices,
-} from '@/api/admin/contests'
 import type {
   AWDRoundData,
   AdminChallengeListItem,
@@ -14,15 +7,13 @@ import type {
   AdminContestTeamData,
   ContestDetailData,
 } from '@/api/contracts'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 import {
   createEmptyInstanceOrchestration,
-  loadStoredSelectedRoundId,
-  pickRoundId,
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
 import { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
+import { useAwdContestSnapshotLoader } from './useAwdContestSnapshotLoader'
 import { useAwdLifecycleBindings } from './useAwdLifecycleBindings'
 import { useAwdRoundDetailState } from './useAwdRoundDetailState'
 import { useAwdRoundOperations } from './useAwdRoundOperations'
@@ -123,9 +114,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     return selectedRound.value?.status === 'running'
   })
 
-  let roundsRequestToken = 0
-  let syncingSelectedRound = false
-
   async function applyTrafficFilters(
     patch: Partial<
       Pick<
@@ -152,75 +140,22 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     resetTrafficFiltersState()
     await refreshTrafficEvents(selectedRoundId.value)
   }
-
-  async function refresh(preferredRoundId?: string) {
-    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
-      rounds.value = []
-      selectedRoundId.value = null
-      resetTrafficFiltersState()
-      teams.value = []
-      challengeLinks.value = []
-      instanceOrchestration.value = createEmptyInstanceOrchestration()
-      readiness.value = null
-      loadingReadiness.value = false
-      loadingInstanceOrchestration.value = false
-      closeOverrideDialog()
-      clearRoundDetail()
-      return
-    }
-
-    const requestToken = ++roundsRequestToken
-    loadingRounds.value = true
-    loadingReadiness.value = true
-    loadingInstanceOrchestration.value = true
-    try {
-      const previousSelectedRound = selectedRound.value
-      const wasFollowingRunningRound = previousSelectedRound?.status === 'running'
-      const storedRoundId = loadStoredSelectedRoundId(selectedContest.value.id)
-      const [
-        nextRounds,
-        nextTeams,
-        nextContestAWDServices,
-        nextInstanceOrchestration,
-        nextReadiness,
-      ] = await Promise.all([
-        listContestAWDRounds(selectedContest.value.id),
-        listContestTeams(selectedContest.value.id),
-        listContestAWDServices(selectedContest.value.id),
-        getContestAWDInstanceOrchestration(selectedContest.value.id),
-        getContestAWDReadiness(selectedContest.value.id),
-      ])
-      if (requestToken !== roundsRequestToken) {
-        return
-      }
-
-      rounds.value = nextRounds
-      instanceOrchestration.value = nextInstanceOrchestration
-      teams.value = nextTeams
-      challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextContestAWDServices)
-      readiness.value = nextReadiness
-      let nextPreferredRoundId = preferredRoundId || storedRoundId || undefined
-      if (wasFollowingRunningRound) {
-        const previousRoundStillRunning = nextRounds.some(
-          (item) => item.id === previousSelectedRound?.id && item.status === 'running'
-        )
-        if (!previousRoundStillRunning) {
-          nextPreferredRoundId =
-            nextRounds.find((item) => item.status === 'running')?.id || nextPreferredRoundId
-        }
-      }
-      syncingSelectedRound = true
-      selectedRoundId.value = pickRoundId(nextRounds, selectedRoundId.value, nextPreferredRoundId)
-      syncingSelectedRound = false
-      await refreshRoundDetail(selectedRoundId.value)
-    } finally {
-      if (requestToken === roundsRequestToken) {
-        loadingRounds.value = false
-        loadingReadiness.value = false
-        loadingInstanceOrchestration.value = false
-      }
-    }
-  }
+  const { refresh, isSyncingSelectedRound } = useAwdContestSnapshotLoader({
+    selectedContest,
+    rounds,
+    selectedRoundId,
+    teams,
+    challengeLinks,
+    instanceOrchestration,
+    readiness,
+    loadingRounds,
+    loadingReadiness,
+    loadingInstanceOrchestration,
+    closeOverrideDialog,
+    clearRoundDetail,
+    refreshRoundDetail,
+    resetTrafficFiltersState,
+  })
 
   const {
     checking,
@@ -256,7 +191,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     },
     clearRoundDetail,
     resetTrafficFiltersState,
-    isSyncingSelectedRound: () => syncingSelectedRound,
+    isSyncingSelectedRound,
   })
 
   return {
