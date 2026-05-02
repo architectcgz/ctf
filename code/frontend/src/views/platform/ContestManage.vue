@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-
-import type { ContestDetailData } from '@/api/contracts'
 import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
 import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
-import { usePlatformContests } from '@/features/platform-contests'
+import { useContestManagePage } from '@/features/platform-contests'
 
 const {
   list,
@@ -26,58 +23,20 @@ const {
   awdStartOverrideDialogState,
   prepareCreateContest,
   openEditDialog,
-  closeDialog,
-  closeAWDStartOverrideDialog,
   confirmAWDStartOverride,
   saveContest,
-} = usePlatformContests()
-
-const awdContests = computed(() => list.value.filter((item) => item.mode === 'awd'))
-const requestedPanel = ref<'overview' | 'list' | 'create' | null>(null)
-const requestedPanelVersion = ref(0)
-const announcementDrawerOpen = ref(false)
-const activeAnnouncementContest = ref<ContestDetailData | null>(null)
-
-onMounted(() => {
-  void refresh()
-})
-
-function updateStatusFilter(value: typeof statusFilter.value) {
-  statusFilter.value = value
-}
-
-function requestContestPanel(panel: 'overview' | 'list' | 'create') {
-  requestedPanel.value = panel
-  requestedPanelVersion.value += 1
-}
-
-function handleDialogOpenChange(value: boolean) {
-  if (!value) {
-    closeDialog()
-  }
-}
-
-function handleAwdStartOverrideDialogOpenChange(value: boolean) {
-  if (!value) {
-    closeAWDStartOverrideDialog()
-  }
-}
-
-function openAnnouncementDrawer(contest: ContestDetailData): void {
-  activeAnnouncementContest.value = contest
-  announcementDrawerOpen.value = true
-}
-
-function closeAnnouncementDrawer(): void {
-  announcementDrawerOpen.value = false
-}
-
-async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0]): Promise<void> {
-  const result = await saveContest(draft)
-  if (result === 'create') {
-    requestContestPanel('list')
-  }
-}
+  awdContests,
+  requestedPanel,
+  requestedPanelVersion,
+  announcementDrawerOpen,
+  activeAnnouncementContest,
+  updateStatusFilter,
+  handleDialogOpenChange,
+  handleAwdStartOverrideDialogOpenChange,
+  openAnnouncementDrawer,
+  closeAnnouncementDrawer,
+  handleCreateContestSave,
+} = useContestManagePage()
 </script>
 
 <template>
