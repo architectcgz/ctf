@@ -16,9 +16,13 @@ import (
 // goverter:output:package :domain
 type challengeResponseMapper interface {
 	ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp
+	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp
 	ToTagResp(source model.Tag) dto.TagResp
+	ToTagRespPtr(source *model.Tag) *dto.TagResp
 	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) dto.AdminChallengeWriteupResp
+	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp
 	ToSubmissionWriteupResp(source model.SubmissionWriteup) dto.SubmissionWriteupResp
+	ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *dto.SubmissionWriteupResp
 }
 
 var challengeResponseMapperInst challengeResponseMapper

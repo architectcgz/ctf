@@ -46,8 +46,7 @@ func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHin
 func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *dto.ChallengeResp {
 	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
 	for _, hint := range hints {
-		mapped := challengeResponseMapperInst.ToChallengeHintAdminResp(*hint)
-		adminHints = append(adminHints, &mapped)
+		adminHints = append(adminHints, challengeResponseMapperInst.ToChallengeHintAdminRespPtr(hint))
 	}
 
 	return &dto.ChallengeResp{
@@ -145,18 +144,15 @@ func FormatImageSize(size int64) string {
 }
 
 func TagRespFromModel(tag *model.Tag) *dto.TagResp {
-	mapped := challengeResponseMapperInst.ToTagResp(*tag)
-	return &mapped
+	return challengeResponseMapperInst.ToTagRespPtr(tag)
 }
 
 func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
-	mapped := challengeResponseMapperInst.ToAdminChallengeWriteupResp(*item)
-	return &mapped
+	return challengeResponseMapperInst.ToAdminChallengeWriteupRespPtr(item)
 }
 
 func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
-	mapped := challengeResponseMapperInst.ToSubmissionWriteupResp(*item)
-	return &mapped
+	return challengeResponseMapperInst.ToSubmissionWriteupRespPtr(item)
 }
 
 func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {

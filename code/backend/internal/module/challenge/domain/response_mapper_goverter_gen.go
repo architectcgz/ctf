@@ -31,6 +31,14 @@ func (c *challengeResponseMapperImpl) ToAdminChallengeWriteupResp(source model.C
 	dtoAdminChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoAdminChallengeWriteupResp
 }
+func (c *challengeResponseMapperImpl) ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
+	var pDtoAdminChallengeWriteupResp *dto.AdminChallengeWriteupResp
+	if source != nil {
+		dtoAdminChallengeWriteupResp := c.ToAdminChallengeWriteupResp((*source))
+		pDtoAdminChallengeWriteupResp = &dtoAdminChallengeWriteupResp
+	}
+	return pDtoAdminChallengeWriteupResp
+}
 func (c *challengeResponseMapperImpl) ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp {
 	var dtoChallengeHintAdminResp dto.ChallengeHintAdminResp
 	dtoChallengeHintAdminResp.ID = source.ID
@@ -38,6 +46,14 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminResp(source model.Chal
 	dtoChallengeHintAdminResp.Title = source.Title
 	dtoChallengeHintAdminResp.Content = source.Content
 	return dtoChallengeHintAdminResp
+}
+func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp {
+	var pDtoChallengeHintAdminResp *dto.ChallengeHintAdminResp
+	if source != nil {
+		dtoChallengeHintAdminResp := c.ToChallengeHintAdminResp((*source))
+		pDtoChallengeHintAdminResp = &dtoChallengeHintAdminResp
+	}
+	return pDtoChallengeHintAdminResp
 }
 func (c *challengeResponseMapperImpl) ToSubmissionWriteupResp(source model.SubmissionWriteup) dto.SubmissionWriteupResp {
 	var dtoSubmissionWriteupResp dto.SubmissionWriteupResp
@@ -63,6 +79,14 @@ func (c *challengeResponseMapperImpl) ToSubmissionWriteupResp(source model.Submi
 	dtoSubmissionWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoSubmissionWriteupResp
 }
+func (c *challengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
+	var pDtoSubmissionWriteupResp *dto.SubmissionWriteupResp
+	if source != nil {
+		dtoSubmissionWriteupResp := c.ToSubmissionWriteupResp((*source))
+		pDtoSubmissionWriteupResp = &dtoSubmissionWriteupResp
+	}
+	return pDtoSubmissionWriteupResp
+}
 func (c *challengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
 	var dtoTagResp dto.TagResp
 	dtoTagResp.ID = source.ID
@@ -71,4 +95,12 @@ func (c *challengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
 	dtoTagResp.Description = source.Description
 	dtoTagResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTagResp
+}
+func (c *challengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagResp {
+	var pDtoTagResp *dto.TagResp
+	if source != nil {
+		dtoTagResp := c.ToTagResp((*source))
+		pDtoTagResp = &dtoTagResp
+	}
+	return pDtoTagResp
 }
