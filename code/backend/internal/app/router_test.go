@@ -762,27 +762,25 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceModuleDeps struct",
-		"commandRepo",
-		"practiceports.PracticeCommandRepository",
-		"scoreRepo",
-		"practiceports.PracticeScoreRepository",
-		"rankingRepo",
-		"practiceports.PracticeRankingRepository",
+		"type PracticeModule = practiceruntime.Module",
+		"practiceruntime.Build(",
+		"practiceruntime.Deps{",
+		"runtime.PracticeInstanceRepository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("practice composition should declare typed deps marker %s", marker)
+			t.Fatalf("practice composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"repo := practiceinfra.NewRepository(db)",
-		"*practiceinfra.Repository",
+		"type practiceModuleDeps struct",
+		"practiceinfra.NewRepository(",
+		"buildPracticeHandler(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("practice composition deps should not keep concrete practice repository marker %s", marker)
+			t.Fatalf("practice composition should not keep wiring marker %s", marker)
 		}
 	}
 }
@@ -797,33 +795,26 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceModuleExternalDeps struct",
-		"instanceRepo",
-		"practiceports.InstanceRepository",
-		"runtimeService",
-		"practiceports.RuntimeInstanceService",
+		"practiceruntime.Deps{",
 		"runtime.PracticeInstanceRepository",
 		"runtime.PracticeRuntimeService",
-		"challengeRepo",
-		"practiceRuntimeChallengeContract",
-		"imageStore",
-		"practiceRuntimeImageStore",
-		"assessment",
-		"practiceRuntimeAssessmentService",
+		"challenge.Catalog",
+		"challenge.ImageStore",
+		"assessment.ProfileService",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("practice composition should declare typed cross-module deps marker %s", marker)
+			t.Fatalf("practice composition should declare runtime deps marker %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"runtime.practice.instanceRepository",
-		"runtime.practice.runtimeService",
+		"type practiceModuleExternalDeps struct",
+		"buildPracticeModuleExternalDeps(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("practice composition should not keep runtime private marker %s", marker)
+			t.Fatalf("practice composition should not keep glue marker %s", marker)
 		}
 	}
 }
@@ -838,9 +829,9 @@ func TestBuildPracticeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildPracticeModuleDeps(",
-		"buildPracticeModuleExternalDeps(",
-		"buildPracticeHandler(",
+		"practiceruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

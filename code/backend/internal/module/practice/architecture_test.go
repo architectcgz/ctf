@@ -102,6 +102,77 @@ func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
 	}
 }
 
+func TestRuntimeOwnsPracticeWiring(t *testing.T) {
+	t.Parallel()
+
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/practice/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/practice/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/practice/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/practice/api/http")
+}
+
+func TestRuntimeUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read practice runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"commandRepo    practiceports.PracticeCommandRepository",
+		"scoreRepo      practiceports.PracticeScoreRepository",
+		"rankingRepo    practiceports.PracticeRankingRepository",
+		"instanceRepo   practiceports.InstanceRepository",
+		"runtimeService practiceports.RuntimeInstanceService",
+		"challengeRepo  challengecontracts.PracticeChallengeContract",
+		"imageStore     challengecontracts.ImageStore",
+		"assessment     assessmentcontracts.ProfileService",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"repo *practiceinfra.Repository",
+		"type practiceModuleDeps struct",
+		"type practiceModuleExternalDeps struct",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice runtime should not keep composition glue marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read practice runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"newModuleDeps(",
+		"buildHandler(",
+		"practicehttp.NewHandler(",
+		"service.StartBackgroundTasks(",
+		"service.SetEventBus(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice runtime should delegate through %s", marker)
+		}
+	}
+}
+
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 	t.Parallel()
 
@@ -117,6 +188,28 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
