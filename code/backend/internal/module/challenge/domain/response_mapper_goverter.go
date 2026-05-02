@@ -21,6 +21,23 @@ type challengeResponseMapper interface {
 	ToChallengeRespBase(source model.Challenge) dto.ChallengeResp
 	ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp
 
+	// goverter:ignore Networks
+	// goverter:ignore Nodes
+	// goverter:ignore Links
+	// goverter:ignore Policies
+	// goverter:ignore PackageBaseline
+	// goverter:ignore PackageFiles
+	// goverter:ignore PackageRevisions
+	ToChallengeTopologyRespBase(source model.ChallengeTopology) dto.ChallengeTopologyResp
+	ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *dto.ChallengeTopologyResp
+
+	// goverter:ignore Networks
+	// goverter:ignore Nodes
+	// goverter:ignore Links
+	// goverter:ignore Policies
+	ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) dto.EnvironmentTemplateResp
+	ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *dto.EnvironmentTemplateResp
+
 	// goverter:ignore CheckerConfig FlagConfig AccessConfig RuntimeConfig
 	ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp
 	ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp
@@ -62,6 +79,29 @@ type challengeResponseMapper interface {
 
 	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp
 	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp
+
+	ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp
+	ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp
+
+	ToTopologyNetworkResp(source model.TopologyNetwork) dto.TopologyNetworkResp
+	ToTopologyNetworkResps(source []model.TopologyNetwork) []dto.TopologyNetworkResp
+	ToTopologyNodeResp(source model.TopologyNode) dto.TopologyNodeResp
+	ToTopologyNodeResps(source []model.TopologyNode) []dto.TopologyNodeResp
+	ToTopologyLinkResp(source model.TopologyLink) dto.TopologyLinkResp
+	ToTopologyLinkResps(source []model.TopologyLink) []dto.TopologyLinkResp
+	ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) dto.TopologyTrafficPolicyResp
+	ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp
+
+	ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork
+	ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork
+	ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink
+	ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []model.TopologyLink
+	ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) model.TopologyTrafficPolicy
+	ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy
+
+	// goverter:map Image.Ref ImageRef
+	ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) dto.ChallengeImportTopologyNodeResp
+	ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []dto.ChallengeImportTopologyNodeResp
 
 	// goverter:map Submission.ID ID
 	// goverter:map Submission.ChallengeID ChallengeID

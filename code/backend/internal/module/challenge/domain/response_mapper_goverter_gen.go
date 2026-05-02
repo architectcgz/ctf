@@ -89,6 +89,54 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.
 	}
 	return pDtoChallengeHintAdminResp
 }
+func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) dto.ChallengeImportTopologyNodeResp {
+	var dtoChallengeImportTopologyNodeResp dto.ChallengeImportTopologyNodeResp
+	dtoChallengeImportTopologyNodeResp.Key = source.Key
+	dtoChallengeImportTopologyNodeResp.Name = source.Name
+	dtoChallengeImportTopologyNodeResp.ImageRef = source.Image.Ref
+	dtoChallengeImportTopologyNodeResp.ServicePort = source.ServicePort
+	dtoChallengeImportTopologyNodeResp.InjectFlag = source.InjectFlag
+	dtoChallengeImportTopologyNodeResp.Tier = source.Tier
+	if source.NetworkKeys != nil {
+		dtoChallengeImportTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
+		for i := 0; i < len(source.NetworkKeys); i++ {
+			dtoChallengeImportTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
+		}
+	}
+	if source.Env != nil {
+		dtoChallengeImportTopologyNodeResp.Env = make(map[string]string, len(source.Env))
+		for key, value := range source.Env {
+			dtoChallengeImportTopologyNodeResp.Env[key] = value
+		}
+	}
+	return dtoChallengeImportTopologyNodeResp
+}
+func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []dto.ChallengeImportTopologyNodeResp {
+	var dtoChallengeImportTopologyNodeRespList []dto.ChallengeImportTopologyNodeResp
+	if source != nil {
+		dtoChallengeImportTopologyNodeRespList = make([]dto.ChallengeImportTopologyNodeResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoChallengeImportTopologyNodeRespList[i] = c.ToChallengeImportTopologyNodeRespBase(source[i])
+		}
+	}
+	return dtoChallengeImportTopologyNodeRespList
+}
+func (c *challengeResponseMapperImpl) ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp {
+	var dtoChallengePackageFileResp dto.ChallengePackageFileResp
+	dtoChallengePackageFileResp.Path = source.Path
+	dtoChallengePackageFileResp.Size = source.Size
+	return dtoChallengePackageFileResp
+}
+func (c *challengeResponseMapperImpl) ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
+	var dtoChallengePackageFileRespList []dto.ChallengePackageFileResp
+	if source != nil {
+		dtoChallengePackageFileRespList = make([]dto.ChallengePackageFileResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoChallengePackageFileRespList[i] = c.ToChallengePackageFileResp(source[i])
+		}
+	}
+	return dtoChallengePackageFileRespList
+}
 func (c *challengeResponseMapperImpl) ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
 	var dtoChallengePackageRevisionResp dto.ChallengePackageRevisionResp
 	dtoChallengePackageRevisionResp.ID = source.ID
@@ -146,6 +194,38 @@ func (c *challengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Chall
 	}
 	return pDtoChallengeResp
 }
+func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBase(source model.ChallengeTopology) dto.ChallengeTopologyResp {
+	var dtoChallengeTopologyResp dto.ChallengeTopologyResp
+	dtoChallengeTopologyResp.ID = source.ID
+	dtoChallengeTopologyResp.ChallengeID = source.ChallengeID
+	if source.TemplateID != nil {
+		xint64 := *source.TemplateID
+		dtoChallengeTopologyResp.TemplateID = &xint64
+	}
+	dtoChallengeTopologyResp.EntryNodeKey = source.EntryNodeKey
+	dtoChallengeTopologyResp.SourceType = source.SourceType
+	dtoChallengeTopologyResp.SourcePath = source.SourcePath
+	dtoChallengeTopologyResp.SyncStatus = source.SyncStatus
+	if source.PackageRevisionID != nil {
+		xint642 := *source.PackageRevisionID
+		dtoChallengeTopologyResp.PackageRevisionID = &xint642
+	}
+	if source.LastExportRevisionID != nil {
+		xint643 := *source.LastExportRevisionID
+		dtoChallengeTopologyResp.LastExportRevisionID = &xint643
+	}
+	dtoChallengeTopologyResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoChallengeTopologyResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoChallengeTopologyResp
+}
+func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *dto.ChallengeTopologyResp {
+	var pDtoChallengeTopologyResp *dto.ChallengeTopologyResp
+	if source != nil {
+		dtoChallengeTopologyResp := c.ToChallengeTopologyRespBase((*source))
+		pDtoChallengeTopologyResp = &dtoChallengeTopologyResp
+	}
+	return pDtoChallengeTopologyResp
+}
 func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBase(source ports.CommunitySolutionRecord) dto.CommunityChallengeSolutionResp {
 	var dtoCommunityChallengeSolutionResp dto.CommunityChallengeSolutionResp
 	dtoCommunityChallengeSolutionResp.ID = source.Submission.ID
@@ -169,6 +249,25 @@ func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBasePtr(so
 	}
 	return pDtoCommunityChallengeSolutionResp
 }
+func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) dto.EnvironmentTemplateResp {
+	var dtoEnvironmentTemplateResp dto.EnvironmentTemplateResp
+	dtoEnvironmentTemplateResp.ID = source.ID
+	dtoEnvironmentTemplateResp.Name = source.Name
+	dtoEnvironmentTemplateResp.Description = source.Description
+	dtoEnvironmentTemplateResp.EntryNodeKey = source.EntryNodeKey
+	dtoEnvironmentTemplateResp.UsageCount = source.UsageCount
+	dtoEnvironmentTemplateResp.CreatedAt = CopyTime(source.CreatedAt)
+	dtoEnvironmentTemplateResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return dtoEnvironmentTemplateResp
+}
+func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *dto.EnvironmentTemplateResp {
+	var pDtoEnvironmentTemplateResp *dto.EnvironmentTemplateResp
+	if source != nil {
+		dtoEnvironmentTemplateResp := c.ToEnvironmentTemplateRespBase((*source))
+		pDtoEnvironmentTemplateResp = &dtoEnvironmentTemplateResp
+	}
+	return pDtoEnvironmentTemplateResp
+}
 func (c *challengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.ImageResp {
 	var dtoImageResp dto.ImageResp
 	dtoImageResp.ID = source.ID
@@ -188,6 +287,64 @@ func (c *challengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *d
 		pDtoImageResp = &dtoImageResp
 	}
 	return pDtoImageResp
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink {
+	var modelTopologyLink model.TopologyLink
+	modelTopologyLink.FromNodeKey = source.FromNodeKey
+	modelTopologyLink.ToNodeKey = source.ToNodeKey
+	return modelTopologyLink
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []model.TopologyLink {
+	var modelTopologyLinkList []model.TopologyLink
+	if source != nil {
+		modelTopologyLinkList = make([]model.TopologyLink, len(source))
+		for i := 0; i < len(source); i++ {
+			modelTopologyLinkList[i] = c.ToImportedTopologyLink(source[i])
+		}
+	}
+	return modelTopologyLinkList
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork {
+	var modelTopologyNetwork model.TopologyNetwork
+	modelTopologyNetwork.Key = source.Key
+	modelTopologyNetwork.Name = source.Name
+	modelTopologyNetwork.CIDR = source.CIDR
+	modelTopologyNetwork.Internal = source.Internal
+	return modelTopologyNetwork
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
+	var modelTopologyNetworkList []model.TopologyNetwork
+	if source != nil {
+		modelTopologyNetworkList = make([]model.TopologyNetwork, len(source))
+		for i := 0; i < len(source); i++ {
+			modelTopologyNetworkList[i] = c.ToImportedTopologyNetwork(source[i])
+		}
+	}
+	return modelTopologyNetworkList
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
+	var modelTopologyTrafficPolicyList []model.TopologyTrafficPolicy
+	if source != nil {
+		modelTopologyTrafficPolicyList = make([]model.TopologyTrafficPolicy, len(source))
+		for i := 0; i < len(source); i++ {
+			modelTopologyTrafficPolicyList[i] = c.ToImportedTopologyPolicy(source[i])
+		}
+	}
+	return modelTopologyTrafficPolicyList
+}
+func (c *challengeResponseMapperImpl) ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) model.TopologyTrafficPolicy {
+	var modelTopologyTrafficPolicy model.TopologyTrafficPolicy
+	modelTopologyTrafficPolicy.SourceNodeKey = source.SourceNodeKey
+	modelTopologyTrafficPolicy.TargetNodeKey = source.TargetNodeKey
+	modelTopologyTrafficPolicy.Action = source.Action
+	modelTopologyTrafficPolicy.Protocol = source.Protocol
+	if source.Ports != nil {
+		modelTopologyTrafficPolicy.Ports = make([]int, len(source.Ports))
+		for i := 0; i < len(source.Ports); i++ {
+			modelTopologyTrafficPolicy.Ports[i] = source.Ports[i]
+		}
+	}
+	return modelTopologyTrafficPolicy
 }
 func (c *challengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBase(source ports.RecommendedSolutionRecord) dto.RecommendedChallengeSolutionResp {
 	var dtoRecommendedChallengeSolutionResp dto.RecommendedChallengeSolutionResp
@@ -299,6 +456,98 @@ func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBasePtr(
 	}
 	return pDtoTeacherSubmissionWriteupItemResp
 }
+func (c *challengeResponseMapperImpl) ToTopologyLinkResp(source model.TopologyLink) dto.TopologyLinkResp {
+	var dtoTopologyLinkResp dto.TopologyLinkResp
+	dtoTopologyLinkResp.FromNodeKey = source.FromNodeKey
+	dtoTopologyLinkResp.ToNodeKey = source.ToNodeKey
+	return dtoTopologyLinkResp
+}
+func (c *challengeResponseMapperImpl) ToTopologyLinkResps(source []model.TopologyLink) []dto.TopologyLinkResp {
+	var dtoTopologyLinkRespList []dto.TopologyLinkResp
+	if source != nil {
+		dtoTopologyLinkRespList = make([]dto.TopologyLinkResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoTopologyLinkRespList[i] = c.ToTopologyLinkResp(source[i])
+		}
+	}
+	return dtoTopologyLinkRespList
+}
+func (c *challengeResponseMapperImpl) ToTopologyNetworkResp(source model.TopologyNetwork) dto.TopologyNetworkResp {
+	var dtoTopologyNetworkResp dto.TopologyNetworkResp
+	dtoTopologyNetworkResp.Key = source.Key
+	dtoTopologyNetworkResp.Name = source.Name
+	dtoTopologyNetworkResp.CIDR = source.CIDR
+	dtoTopologyNetworkResp.Internal = source.Internal
+	return dtoTopologyNetworkResp
+}
+func (c *challengeResponseMapperImpl) ToTopologyNetworkResps(source []model.TopologyNetwork) []dto.TopologyNetworkResp {
+	var dtoTopologyNetworkRespList []dto.TopologyNetworkResp
+	if source != nil {
+		dtoTopologyNetworkRespList = make([]dto.TopologyNetworkResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoTopologyNetworkRespList[i] = c.ToTopologyNetworkResp(source[i])
+		}
+	}
+	return dtoTopologyNetworkRespList
+}
+func (c *challengeResponseMapperImpl) ToTopologyNodeResp(source model.TopologyNode) dto.TopologyNodeResp {
+	var dtoTopologyNodeResp dto.TopologyNodeResp
+	dtoTopologyNodeResp.Key = source.Key
+	dtoTopologyNodeResp.Name = source.Name
+	dtoTopologyNodeResp.ImageID = source.ImageID
+	dtoTopologyNodeResp.ServicePort = source.ServicePort
+	dtoTopologyNodeResp.ServiceProtocol = source.ServiceProtocol
+	dtoTopologyNodeResp.InjectFlag = source.InjectFlag
+	dtoTopologyNodeResp.Tier = source.Tier
+	if source.NetworkKeys != nil {
+		dtoTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
+		for i := 0; i < len(source.NetworkKeys); i++ {
+			dtoTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
+		}
+	}
+	if source.Env != nil {
+		dtoTopologyNodeResp.Env = make(map[string]string, len(source.Env))
+		for key, value := range source.Env {
+			dtoTopologyNodeResp.Env[key] = value
+		}
+	}
+	dtoTopologyNodeResp.Resources = c.pModelTopologyResourcesToPDtoTopologyResourcesResp(source.Resources)
+	return dtoTopologyNodeResp
+}
+func (c *challengeResponseMapperImpl) ToTopologyNodeResps(source []model.TopologyNode) []dto.TopologyNodeResp {
+	var dtoTopologyNodeRespList []dto.TopologyNodeResp
+	if source != nil {
+		dtoTopologyNodeRespList = make([]dto.TopologyNodeResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoTopologyNodeRespList[i] = c.ToTopologyNodeResp(source[i])
+		}
+	}
+	return dtoTopologyNodeRespList
+}
+func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) dto.TopologyTrafficPolicyResp {
+	var dtoTopologyTrafficPolicyResp dto.TopologyTrafficPolicyResp
+	dtoTopologyTrafficPolicyResp.SourceNodeKey = source.SourceNodeKey
+	dtoTopologyTrafficPolicyResp.TargetNodeKey = source.TargetNodeKey
+	dtoTopologyTrafficPolicyResp.Action = source.Action
+	dtoTopologyTrafficPolicyResp.Protocol = source.Protocol
+	if source.Ports != nil {
+		dtoTopologyTrafficPolicyResp.Ports = make([]int, len(source.Ports))
+		for i := 0; i < len(source.Ports); i++ {
+			dtoTopologyTrafficPolicyResp.Ports[i] = source.Ports[i]
+		}
+	}
+	return dtoTopologyTrafficPolicyResp
+}
+func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp {
+	var dtoTopologyTrafficPolicyRespList []dto.TopologyTrafficPolicyResp
+	if source != nil {
+		dtoTopologyTrafficPolicyRespList = make([]dto.TopologyTrafficPolicyResp, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoTopologyTrafficPolicyRespList[i] = c.ToTopologyTrafficPolicyResp(source[i])
+		}
+	}
+	return dtoTopologyTrafficPolicyRespList
+}
 func (c *challengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
 	switch source {
@@ -314,4 +563,15 @@ func (c *challengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing
 	default: // ignored
 	}
 	return modelInstanceSharing
+}
+func (c *challengeResponseMapperImpl) pModelTopologyResourcesToPDtoTopologyResourcesResp(source *model.TopologyResources) *dto.TopologyResourcesResp {
+	var pDtoTopologyResourcesResp *dto.TopologyResourcesResp
+	if source != nil {
+		var dtoTopologyResourcesResp dto.TopologyResourcesResp
+		dtoTopologyResourcesResp.CPUQuota = (*source).CPUQuota
+		dtoTopologyResourcesResp.MemoryMB = (*source).MemoryMB
+		dtoTopologyResourcesResp.PidsLimit = (*source).PidsLimit
+		pDtoTopologyResourcesResp = &dtoTopologyResourcesResp
+	}
+	return pDtoTopologyResourcesResp
 }
