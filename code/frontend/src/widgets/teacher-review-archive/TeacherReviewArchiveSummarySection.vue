@@ -4,7 +4,10 @@ import { computed } from 'vue'
 import type { ReviewArchiveData } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 import { formatDate } from '@/utils/format'
-import { REVIEW_ARCHIVE_SUMMARY_COPY } from './model/presentation'
+import {
+  buildReviewArchiveSummaryCards,
+  REVIEW_ARCHIVE_SUMMARY_COPY,
+} from './model/presentation'
 
 const props = defineProps<{
   archive: ReviewArchiveData
@@ -25,6 +28,16 @@ const formattedLastActivity = computed(() => {
 const rankedSkillDimensions = computed(() =>
   [...props.archive.skill_profile.dimensions].sort((left, right) => right.value - left.value)
 )
+
+const summaryCards = computed(() =>
+  buildReviewArchiveSummaryCards({
+    solvedRate: solvedRate.value,
+    totalSolved: props.archive.summary.total_solved,
+    totalChallenges: props.archive.summary.total_challenges,
+    correctSubmissionCount: props.archive.summary.correct_submission_count,
+    formattedLastActivity: formattedLastActivity.value,
+  })
+)
 </script>
 
 <template>
@@ -34,38 +47,23 @@ const rankedSkillDimensions = computed(() =>
       :subtitle="REVIEW_ARCHIVE_SUMMARY_COPY.summarySubtitle"
     >
       <div class="summary-grid metric-panel-grid metric-panel-default-surface">
-        <article class="summary-card summary-card--primary metric-panel-card">
+        <article
+          v-for="card in summaryCards"
+          :key="card.key"
+          class="summary-card metric-panel-card"
+          :class="`summary-card--${card.tone}`"
+        >
           <div class="summary-card__label metric-panel-label">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateLabel }}
+            {{ card.label }}
           </div>
-          <div class="summary-card__value metric-panel-value">
-            {{ solvedRate }}%
+          <div
+            class="summary-card__value metric-panel-value"
+            :class="card.valueClass"
+          >
+            {{ card.value }}
           </div>
           <div class="summary-card__hint metric-panel-helper">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateHintPrefix }}
-            {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}
-          </div>
-        </article>
-        <article class="summary-card summary-card--warning metric-panel-card">
-          <div class="summary-card__label metric-panel-label">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionLabel }}
-          </div>
-          <div class="summary-card__value metric-panel-value">
-            {{ archive.summary.correct_submission_count }}
-          </div>
-          <div class="summary-card__hint metric-panel-helper">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionHint }}
-          </div>
-        </article>
-        <article class="summary-card summary-card--neutral metric-panel-card">
-          <div class="summary-card__label metric-panel-label">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityLabel }}
-          </div>
-          <div class="summary-card__value summary-card__value--time metric-panel-value">
-            {{ formattedLastActivity }}
-          </div>
-          <div class="summary-card__hint metric-panel-helper">
-            {{ REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityHint }}
+            {{ card.hint }}
           </div>
         </article>
       </div>

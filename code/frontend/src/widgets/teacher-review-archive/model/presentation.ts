@@ -17,3 +17,51 @@ export const REVIEW_ARCHIVE_SUMMARY_COPY = {
   skillTitle: '能力画像',
   skillSubtitle: '优先识别当前最强与最弱的训练维度。',
 } as const
+
+type ReviewArchiveSummaryCardTone = 'primary' | 'warning' | 'neutral'
+
+export interface ReviewArchiveSummaryCardSchema {
+  key: 'solved_rate' | 'correct_submission' | 'latest_activity'
+  tone: ReviewArchiveSummaryCardTone
+  label: string
+  value: string | number
+  hint: string
+  valueClass?: string
+}
+
+interface ReviewArchiveSummaryCardInput {
+  solvedRate: number
+  totalSolved: number
+  totalChallenges: number
+  correctSubmissionCount: number
+  formattedLastActivity: string
+}
+
+export function buildReviewArchiveSummaryCards(
+  input: ReviewArchiveSummaryCardInput
+): ReviewArchiveSummaryCardSchema[] {
+  return [
+    {
+      key: 'solved_rate',
+      tone: 'primary',
+      label: REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateLabel,
+      value: `${input.solvedRate}%`,
+      hint: `${REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateHintPrefix} ${input.totalSolved} / ${input.totalChallenges}`,
+    },
+    {
+      key: 'correct_submission',
+      tone: 'warning',
+      label: REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionLabel,
+      value: input.correctSubmissionCount,
+      hint: REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionHint,
+    },
+    {
+      key: 'latest_activity',
+      tone: 'neutral',
+      label: REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityLabel,
+      value: input.formattedLastActivity,
+      hint: REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityHint,
+      valueClass: 'summary-card__value--time',
+    },
+  ]
+}
