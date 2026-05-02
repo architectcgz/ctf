@@ -57,8 +57,7 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
 - `src/views/platform/UserManage.vue`
 - `src/views/platform/AWDChallengeLibrary.vue`
 - `src/views/platform/AWDChallengeImport.vue`
-- `src/views/instances/InstanceList.vue`
-- `src/views/scoreboard/ScoreboardView.vue`（本地分页重置）
+- `src/views/auth/LoginView.vue`（控制台提示）
 
 ## 当前未完成项
 
@@ -77,23 +76,21 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
   - `onMounted` 导入队列刷新已下沉。
 
 ### 剩余（P1）
-- `src/views/scoreboard/ScoreboardView.vue`
-  - `watch(sections)` 和 `watch(contestTotalPages)` 只处理本地分页复位与页码裁剪。
-  - 仍持有分页展示 helper（`formatDateTime`、`formatContestWindow`、`sectionAccentStyle`、`getRowClass`、`getRankPillClass`、`getCardDescription`）。
-  - 若继续收口，建议新增 `useScoreboardContestDirectoryPage`，承接分页与展示派生逻辑。
-- `src/views/instances/InstanceList.vue`
-  - `watch(showWarning)` 用于 warning dialog 焦点管理，属于 UI 可访问性状态。
-  - 可保留在 view，或下沉为 `useInstanceWarningFocus` 这类局部 UI composable；不建议放入业务 feature 核心模型。
 - `src/views/auth/LoginView.vue`
   - `onMounted` 只负责控制台提示；不是业务数据加载。
   - 可保留，除非后续要把登录页彩蛋/控制台提示整体抽成 `useLoginProbeConsolePage`。
 
 ## 后续迁移批次
 
-### Batch D：低优先级展示收口
-- 目标文件：`ScoreboardView.vue`、`InstanceList.vue`、必要时 `LoginView.vue`。
-- 迁移内容：scoreboard 本地分页和展示 helper；instance warning 焦点管理；login console/probe 副作用。
-- 验收：只迁移能明确降低 route view 复杂度的部分；纯局部 UI 状态可保留并在文档中标记为 accepted exception。
+### Batch D：低优先级展示收口（已完成）
+- `ScoreboardView.vue`
+  - 已新增 `features/scoreboard/model/useScoreboardContestDirectoryPage.ts`。
+  - 本地分页 `watch` 与展示 helper 已下沉。
+- `InstanceList.vue`
+  - 已新增 `features/instance-list/model/useInstanceWarningFocus.ts`。
+  - warning 弹窗焦点管理 `watch` 已下沉。
+- 剩余建议
+  - `LoginView.vue` 的控制台提示 `onMounted` 建议保留为 accepted exception。
 
 ## 每批验证要求
 1. 运行本批相关 vitest。

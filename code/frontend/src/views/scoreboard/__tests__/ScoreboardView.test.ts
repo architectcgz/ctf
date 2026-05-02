@@ -170,9 +170,11 @@ describe('ScoreboardView', () => {
 
   it('排行榜路由页应仅做组合，不直接持有路由查询tab编排逻辑', () => {
     expect(scoreboardSource).toContain('useScoreboardRoutePage')
+    expect(scoreboardSource).toContain('useScoreboardContestDirectoryPage')
     expect(scoreboardSource).not.toContain('useRouteQueryTabs')
     expect(scoreboardSource).not.toContain('useRoute')
     expect(scoreboardSource).not.toContain('useRouter')
+    expect(scoreboardSource).not.toContain('watch(')
   })
 
   it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {

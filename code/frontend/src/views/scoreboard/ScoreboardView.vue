@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import type { ContestStatus } from '@/api/contracts'
-import { useScoreboardRoutePage, useScoreboardView } from '@/features/scoreboard'
-import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
+import {
+  useScoreboardContestDirectoryPage,
+  useScoreboardRoutePage,
+  useScoreboardView,
+} from '@/features/scoreboard'
+import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
-const CONTEST_PAGE_SIZE = 6
 const { panelTabs, activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   useScoreboardRoutePage()
 
@@ -25,99 +26,28 @@ const {
   sections,
   selectionHint,
 } = useScoreboardView()
-const contestCount = computed(() => sections.value.length)
-const runningCount = computed(
-  () => sections.value.filter((section) => section.contest.status === 'running').length
-)
-const frozenCount = computed(() => sections.value.filter((section) => section.frozen).length)
-const endedCount = computed(
-  () => sections.value.filter((section) => section.contest.status === 'ended').length
-)
-const contestPage = ref(1)
-const contestTotalPages = computed(() =>
-  Math.max(1, Math.ceil(sections.value.length / CONTEST_PAGE_SIZE))
-)
-const contestPageStartIndex = computed(() => (contestPage.value - 1) * CONTEST_PAGE_SIZE)
-const paginatedSections = computed(() =>
-  sections.value.slice(
-    contestPageStartIndex.value,
-    contestPageStartIndex.value + CONTEST_PAGE_SIZE
-  )
-)
-const emptyTitle = computed(() =>
-  selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
-)
-const pointsEmptyTitle = computed(() =>
-  rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
-)
-
-watch(
-  () => sections.value,
-  () => {
-    contestPage.value = 1
-  }
-)
-
-watch(contestTotalPages, (totalPages) => {
-  if (contestPage.value > totalPages) {
-    contestPage.value = totalPages
-  }
+const {
+  contestCount,
+  runningCount,
+  frozenCount,
+  endedCount,
+  contestPage,
+  contestTotalPages,
+  contestPageStartIndex,
+  paginatedSections,
+  emptyTitle,
+  pointsEmptyTitle,
+  formatContestWindow,
+  sectionAccentStyle,
+  getRowClass,
+  getRankPillClass,
+  getCardDescription,
+  changeContestPage,
+} = useScoreboardContestDirectoryPage({
+  sections,
+  selectionHint,
+  rankingError,
 })
-
-function formatDateTime(value?: string): string {
-  if (!value) return '未记录'
-  return new Date(value).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function formatContestWindow(startsAt: string, endsAt: string): string {
-  return `${formatDateTime(startsAt)} ~ ${formatDateTime(endsAt)}`
-}
-
-function sectionAccentStyle(status: ContestStatus): Record<string, string> {
-  return { '--scoreboard-accent': getContestAccentColor(status) }
-}
-
-function getRowClass(rank: number): string {
-  if (rank === 1) return 'sb-row sb-row--top1'
-  if (rank === 2) return 'sb-row sb-row--top2'
-  if (rank === 3) return 'sb-row sb-row--top3'
-  return 'sb-row'
-}
-
-function getRankPillClass(rank: number): string[] {
-  return [
-    'sb-rank-pill',
-    rank === 1 ? 'sb-rank-pill--top1' : '',
-    rank === 2 ? 'sb-rank-pill--top2' : '',
-    rank === 3 ? 'sb-rank-pill--top3' : '',
-  ]
-}
-
-function getCardDescription(
-  status: ContestStatus,
-  frozen: boolean
-): string {
-  if (frozen || status === 'frozen') {
-    return '封榜阶段先展示竞赛入口，进入后查看冻结前排名。'
-  }
-
-  if (status === 'running') {
-    return '进行中竞赛进入详情后支持实时刷新，提交后榜单会自动更新。'
-  }
-
-  return '历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。'
-}
-
-function changeContestPage(page: number): void {
-  contestPage.value = page
-}
 </script>
 
 <template>

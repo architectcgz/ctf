@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { ref } from 'vue'
 
 import {
   EXTEND_DURATION_SECONDS,
@@ -10,6 +10,7 @@ import {
   getInstanceWaitingHint,
   isInstanceManualActionAllowed,
   useInstanceListPage,
+  useInstanceWarningFocus,
 } from '@/features/instance-list'
 
 const {
@@ -29,7 +30,6 @@ const {
 } = useInstanceListPage()
 
 const warningCloseButton = ref<HTMLButtonElement | null>(null)
-let previouslyFocusedElement: HTMLElement | null = null
 
 function formatInstanceAccess(instance: {
   access_url?: string
@@ -49,19 +49,7 @@ function canOpenInstanceInBrowser(instance: {
 }): boolean {
   return Boolean(instance.access_url) && instance.access?.protocol !== 'tcp'
 }
-
-watch(showWarning, async (visible) => {
-  if (visible) {
-    previouslyFocusedElement =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null
-    await nextTick()
-    warningCloseButton.value?.focus()
-    return
-  }
-
-  previouslyFocusedElement?.focus()
-  previouslyFocusedElement = null
-})
+useInstanceWarningFocus({ showWarning, warningCloseButton })
 </script>
 
 <template>
