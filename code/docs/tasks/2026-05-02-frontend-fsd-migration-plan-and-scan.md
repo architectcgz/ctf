@@ -617,6 +617,20 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G3 子项（challenge 选择状态拆分）
+- 新增 `features/contest-awd-config/model/useAwdChallengeSelection.ts`，承接：
+  - `selectedServiceId`/`selectedService`/`selectedCheckerType` 状态与派生
+  - service query 读取与 URL 同步
+  - service 列表排序与选中项 reconcile
+- `useContestAwdConfigPage.ts` 改为组合调用该子模块，移除内联 query/service 选择细节。
+- `useContestAwdConfigPage.ts` 行数进一步下降（本批由 383 降至 347）。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

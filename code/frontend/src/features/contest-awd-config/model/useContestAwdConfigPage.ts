@@ -16,6 +16,7 @@ import type {
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
+import { useAwdChallengeSelection } from './useAwdChallengeSelection'
 import { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
 
 export function useContestAwdConfigPage() {
@@ -32,7 +33,6 @@ export function useContestAwdConfigPage() {
   const loadError = ref('')
   const contest = ref<ContestDetailData | null>(null)
   const services = ref<AdminContestAWDServiceData[]>([])
-  const selectedServiceId = ref('')
   const previewResult = ref<AWDCheckerPreviewData | null>(null)
   const previewError = ref('')
   const previewToken = ref('')
@@ -44,12 +44,20 @@ export function useContestAwdConfigPage() {
 
   let loadVersion = 0
 
-  const selectedService = computed(
-    () => services.value.find((service) => service.id === selectedServiceId.value) || null
-  )
-  const selectedCheckerType = computed<AWDCheckerType | undefined>(
-    () => selectedService.value?.checker_type
-  )
+  const {
+    selectedServiceId,
+    selectedService,
+    selectedCheckerType,
+    sortedServices,
+    readServiceQuery,
+    reconcileSelectedServiceId,
+    selectService,
+  } = useAwdChallengeSelection({
+    contestId,
+    route,
+    router,
+    services,
+  })
   const {
     AWD_HTTP_METHOD_OPTIONS,
     AWD_HTTP_STANDARD_PRESETS,
@@ -77,12 +85,6 @@ export function useContestAwdConfigPage() {
     selectedCheckerType,
   })
 
-  const sortedServices = computed(() =>
-    [...services.value].sort(
-      (left, right) =>
-        left.order - right.order || left.display_name.localeCompare(right.display_name)
-    )
-  )
   const canAttachPreviewToken = computed(
     () => Boolean(previewToken.value) && previewSignature.value === currentSignature.value
   )
@@ -168,23 +170,6 @@ export function useContestAwdConfigPage() {
     return Number.isFinite(next) && next > 0 ? next : undefined
   }
 
-  function readServiceQuery(): string {
-    const value = route.query.service
-    if (Array.isArray(value)) {
-      return String(value[0] ?? '')
-    }
-    return typeof value === 'string' ? value : ''
-  }
-
-  function syncServiceQuery(serviceId: string) {
-    if (!serviceId || readServiceQuery() === serviceId) return
-    void router.replace({
-      name: 'ContestAWDConfig',
-      params: { id: contestId.value },
-      query: { ...route.query, service: serviceId },
-    })
-  }
-
   function clearPreviewState() {
     previewResult.value = null
     previewError.value = ''
@@ -208,19 +193,7 @@ export function useContestAwdConfigPage() {
       contest.value = contestDetail
       services.value = serviceList
       setBreadcrumbDetailTitle(contestDetail.title)
-      const requestedServiceId = readServiceQuery()
-      const selectedServiceStillExists = serviceList.some(
-        (service) => service.id === selectedServiceId.value
-      )
-      const requestedServiceExists = serviceList.some(
-        (service) => service.id === requestedServiceId
-      )
-      if (!selectedServiceId.value || !selectedServiceStillExists) {
-        selectedServiceId.value = requestedServiceExists
-          ? requestedServiceId
-          : serviceList[0]?.id || ''
-      }
-      syncServiceQuery(selectedServiceId.value)
+      reconcileSelectedServiceId()
       loadError.value = ''
     } catch (error) {
       if (version !== loadVersion) return
@@ -232,15 +205,6 @@ export function useContestAwdConfigPage() {
         refreshing.value = false
       }
     }
-  }
-
-  function selectService(service: AdminContestAWDServiceData) {
-    selectedServiceId.value = service.id
-    void router.replace({
-      name: 'ContestAWDConfig',
-      params: { id: contestId.value },
-      query: { service: service.id },
-    })
   }
 
   function goBackToStudio() {
