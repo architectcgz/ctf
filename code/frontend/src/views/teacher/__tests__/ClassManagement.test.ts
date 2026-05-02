@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import ClassManagement from '../ClassManagement.vue'
+import classManagementViewSource from '../ClassManagement.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -283,6 +284,15 @@ describe('ClassManagement', () => {
     expect(classManagementSource).toContain('<p class="teacher-copy workspace-page-copy">')
     expect(classManagementSource).not.toContain('teacher-surface-eyebrow journal-eyebrow')
     expect(classManagementSource).not.toContain('workspace-tab-heading__title')
+  })
+
+  it('页面应通过 feature model 获取班级目录状态，不再直接耦合 teacher api', () => {
+    expect(classManagementViewSource).toContain(
+      "import { useTeacherClassManagementPage } from '@/features/teacher-class-management'"
+    )
+    expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
+    expect(classManagementViewSource).not.toContain('getClasses')
+    expect(classManagementViewSource).not.toContain('const totalPages = computed')
   })
 
   it('点击导出班级报告时应打开上下文对话框', async () => {
