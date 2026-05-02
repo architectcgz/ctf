@@ -2,6 +2,7 @@ export { default as TeacherAWDReviewWorkspace } from './TeacherAWDReviewWorkspac
 export { default as TeacherAWDReviewIndexWorkspace } from './TeacherAWDReviewIndexWorkspace.vue'
 export { default as TeacherAWDReviewWorkspaceState } from './TeacherAWDReviewWorkspaceState.vue'
 export { default as TeacherAWDReviewWorkspaceActions } from './TeacherAWDReviewWorkspaceActions.vue'
+export { default as TeacherAWDReviewStatusChip } from './TeacherAWDReviewStatusChip.vue'
 export { default as TeacherAWDReviewSurfaceShell } from './TeacherAWDReviewSurfaceShell.vue'
 export { default as TeacherAWDReviewWorkspaceHeader } from './TeacherAWDReviewWorkspaceHeader.vue'
 export { default as TeacherAWDReviewSummaryPanel } from './TeacherAWDReviewSummaryPanel.vue'
