@@ -157,24 +157,33 @@ type ImageQueryRepository interface {
 	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 }
 
-type EnvironmentTemplateRepository interface {
+type EnvironmentTemplateCommandRepository interface {
 	Create(ctx context.Context, template *model.EnvironmentTemplate) error
 	Update(ctx context.Context, template *model.EnvironmentTemplate) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type EnvironmentTemplateQueryRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+}
+
+type EnvironmentTemplateUsageRepository interface {
 	IncrementUsage(ctx context.Context, id int64) error
 }
 
-type TagRepository interface {
+type TagCommandRepository interface {
 	Create(ctx context.Context, tag *model.Tag) error
-	List(ctx context.Context, tagType string) ([]*model.Tag, error)
 	FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error)
 	AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error
 	DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error
-	FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 	Delete(ctx context.Context, id int64) error
 	CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error)
+}
+
+type TagQueryRepository interface {
+	List(ctx context.Context, tagType string) ([]*model.Tag, error)
+	FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 }
 
 type ImageRuntime interface {

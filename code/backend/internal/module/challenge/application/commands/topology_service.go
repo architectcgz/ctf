@@ -17,7 +17,7 @@ import (
 
 type TopologyService struct {
 	repo         topologyCommandRepository
-	templateRepo challengeports.EnvironmentTemplateRepository
+	templateRepo topologyTemplateCommandRepository
 	imageRepo    challengeports.ImageQueryRepository
 }
 
@@ -27,7 +27,13 @@ type topologyCommandRepository interface {
 	challengeports.ChallengeTopologyWriteRepository
 }
 
-func NewTopologyService(repo topologyCommandRepository, templateRepo challengeports.EnvironmentTemplateRepository, imageRepo challengeports.ImageQueryRepository) *TopologyService {
+type topologyTemplateCommandRepository interface {
+	challengeports.EnvironmentTemplateCommandRepository
+	challengeports.EnvironmentTemplateQueryRepository
+	challengeports.EnvironmentTemplateUsageRepository
+}
+
+func NewTopologyService(repo topologyCommandRepository, templateRepo topologyTemplateCommandRepository, imageRepo challengeports.ImageQueryRepository) *TopologyService {
 	return &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,

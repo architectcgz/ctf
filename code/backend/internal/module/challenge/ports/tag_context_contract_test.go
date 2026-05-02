@@ -41,4 +41,5 @@ func (ctxOnlyTagRepository) CountChallengesByTagID(context.Context, int64) (int6
 	return 0, nil
 }
 
-var _ challengeports.TagRepository = (*ctxOnlyTagRepository)(nil)
+var _ challengeports.TagCommandRepository = (*ctxOnlyTagRepository)(nil)
+var _ challengeports.TagQueryRepository = (*ctxOnlyTagRepository)(nil)

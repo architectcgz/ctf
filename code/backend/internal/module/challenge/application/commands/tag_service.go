@@ -11,10 +11,14 @@ import (
 )
 
 type TagService struct {
-	repo challengeports.TagRepository
+	repo tagCommandRepository
 }
 
-func NewTagService(repo challengeports.TagRepository) *TagService {
+type tagCommandRepository interface {
+	challengeports.TagCommandRepository
+}
+
+func NewTagService(repo tagCommandRepository) *TagService {
 	return &TagService{repo: repo}
 }
 

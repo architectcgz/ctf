@@ -48,7 +48,7 @@ type challengeModuleDeps struct {
 	imageUsageRepo          challengeports.ChallengeImageUsageRepository
 	topologyRepo            *challengeinfra.Repository
 	writeupRepo             *challengeinfra.Repository
-	templateRepo            challengeports.EnvironmentTemplateRepository
+	templateRepo            *challengeinfra.TemplateRepository
 	imageRuntime            challengeports.ImageRuntime
 	runtimeProbe            challengeports.ChallengeRuntimeProbe
 }

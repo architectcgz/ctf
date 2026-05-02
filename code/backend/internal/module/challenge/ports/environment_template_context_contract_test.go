@@ -33,4 +33,6 @@ func (ctxOnlyEnvironmentTemplateRepository) IncrementUsage(context.Context, int6
 	return nil
 }
 
-var _ challengeports.EnvironmentTemplateRepository = (*ctxOnlyEnvironmentTemplateRepository)(nil)
+var _ challengeports.EnvironmentTemplateCommandRepository = (*ctxOnlyEnvironmentTemplateRepository)(nil)
+var _ challengeports.EnvironmentTemplateQueryRepository = (*ctxOnlyEnvironmentTemplateRepository)(nil)
+var _ challengeports.EnvironmentTemplateUsageRepository = (*ctxOnlyEnvironmentTemplateRepository)(nil)

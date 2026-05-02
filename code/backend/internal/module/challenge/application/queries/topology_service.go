@@ -19,7 +19,7 @@ import (
 type TopologyService struct {
 	repo                topologyQueryRepository
 	packageRevisionRepo challengeports.ChallengePackageRevisionRepository
-	templateRepo        challengeports.EnvironmentTemplateRepository
+	templateRepo        challengeports.EnvironmentTemplateQueryRepository
 }
 
 type topologyQueryRepository interface {
@@ -29,7 +29,7 @@ type topologyQueryRepository interface {
 
 func NewTopologyService(
 	repo topologyQueryRepository,
-	templateRepo challengeports.EnvironmentTemplateRepository,
+	templateRepo challengeports.EnvironmentTemplateQueryRepository,
 	packageRevisionRepos ...challengeports.ChallengePackageRevisionRepository,
 ) *TopologyService {
 	service := &TopologyService{
