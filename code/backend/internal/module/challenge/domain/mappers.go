@@ -46,12 +46,8 @@ func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHin
 func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *dto.ChallengeResp {
 	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
 	for _, hint := range hints {
-		adminHints = append(adminHints, &dto.ChallengeHintAdminResp{
-			ID:      hint.ID,
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		})
+		mapped := challengeResponseMapperInst.ToChallengeHintAdminResp(*hint)
+		adminHints = append(adminHints, &mapped)
 	}
 
 	return &dto.ChallengeResp{
@@ -149,48 +145,18 @@ func FormatImageSize(size int64) string {
 }
 
 func TagRespFromModel(tag *model.Tag) *dto.TagResp {
-	return &dto.TagResp{
-		ID:          tag.ID,
-		Name:        tag.Name,
-		Type:        tag.Type,
-		Description: tag.Description,
-		CreatedAt:   tag.CreatedAt,
-	}
+	mapped := challengeResponseMapperInst.ToTagResp(*tag)
+	return &mapped
 }
 
 func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
-	return &dto.AdminChallengeWriteupResp{
-		ID:            item.ID,
-		ChallengeID:   item.ChallengeID,
-		Title:         item.Title,
-		Content:       item.Content,
-		Visibility:    item.Visibility,
-		CreatedBy:     item.CreatedBy,
-		IsRecommended: item.IsRecommended,
-		RecommendedAt: item.RecommendedAt,
-		RecommendedBy: item.RecommendedBy,
-		CreatedAt:     item.CreatedAt,
-		UpdatedAt:     item.UpdatedAt,
-	}
+	mapped := challengeResponseMapperInst.ToAdminChallengeWriteupResp(*item)
+	return &mapped
 }
 
 func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
-	return &dto.SubmissionWriteupResp{
-		ID:               item.ID,
-		UserID:           item.UserID,
-		ChallengeID:      item.ChallengeID,
-		ContestID:        item.ContestID,
-		Title:            item.Title,
-		Content:          item.Content,
-		SubmissionStatus: item.SubmissionStatus,
-		VisibilityStatus: item.VisibilityStatus,
-		IsRecommended:    item.IsRecommended,
-		RecommendedAt:    item.RecommendedAt,
-		RecommendedBy:    item.RecommendedBy,
-		PublishedAt:      item.PublishedAt,
-		CreatedAt:        item.CreatedAt,
-		UpdatedAt:        item.UpdatedAt,
-	}
+	mapped := challengeResponseMapperInst.ToSubmissionWriteupResp(*item)
+	return &mapped
 }
 
 func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
