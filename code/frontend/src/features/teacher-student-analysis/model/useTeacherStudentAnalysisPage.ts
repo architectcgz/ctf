@@ -39,6 +39,7 @@ import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 import {
+  resolveClassManagementRouteName,
   resolveClassStudentsRouteName,
   resolveStudentAnalysisRouteName,
   resolveStudentReviewArchiveRouteName,
@@ -306,6 +307,17 @@ export function useTeacherStudentAnalysisPage() {
     })
   }
 
+  function openClassManagement(): void {
+    router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+  }
+
+  function openClassStudents(): void {
+    router.push({
+      name: resolveClassStudentsRouteName(authStore.user?.role),
+      params: { className: selectedClassName.value },
+    })
+  }
+
   function selectStudent(studentId: string): void {
     router.push({
       name: resolveStudentAnalysisRouteName(authStore.user?.role),
@@ -444,7 +456,6 @@ export function useTeacherStudentAnalysisPage() {
   })
 
   return {
-    router,
     classes,
     students,
     selectedClassName,
@@ -472,6 +483,8 @@ export function useTeacherStudentAnalysisPage() {
     solvedRate,
     weakDimensions,
     initialize,
+    openClassManagement,
+    openClassStudents,
     selectClass,
     selectStudent,
     openChallenge,
