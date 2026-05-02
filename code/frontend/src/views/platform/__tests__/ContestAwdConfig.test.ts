@@ -152,6 +152,10 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigPageSource).not.toContain(
       "from '@/components/platform/contest/awdCheckerConfigSupport'"
     )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'"
+    )
+    expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
   })
 
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {

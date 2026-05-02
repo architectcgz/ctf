@@ -1,5 +1,5 @@
 export { useContestAwdConfigPage } from './useContestAwdConfigPage'
 export { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
 export { useAwdChallengeSelection } from './useAwdChallengeSelection'
-export { runAwdCheckerPreview } from './useAwdCheckerPreview'
+export { runAwdCheckerPreview, useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'
 export * from './awdCheckerConfigSupport'

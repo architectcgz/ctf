@@ -1,15 +1,13 @@
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
   getContest,
   listContestAWDServices,
-  runContestAWDCheckerPreview,
   updateContestAWDService,
 } from '@/api/admin/contests'
 import type {
   AdminContestAWDServiceData,
-  AWDCheckerPreviewData,
   AWDCheckerType,
   ContestDetailData,
 } from '@/api/contracts'
@@ -18,6 +16,7 @@ import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadc
 import { useToast } from '@/composables/useToast'
 import { useAwdChallengeSelection } from './useAwdChallengeSelection'
 import { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
+import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'
 
 export function useContestAwdConfigPage() {
   const route = useRoute()
@@ -29,18 +28,9 @@ export function useContestAwdConfigPage() {
   const loading = ref(true)
   const refreshing = ref(false)
   const saving = ref(false)
-  const previewing = ref(false)
   const loadError = ref('')
   const contest = ref<ContestDetailData | null>(null)
   const services = ref<AdminContestAWDServiceData[]>([])
-  const previewResult = ref<AWDCheckerPreviewData | null>(null)
-  const previewError = ref('')
-  const previewToken = ref('')
-  const previewSignature = ref('')
-  const previewForm = reactive({
-    access_url: '',
-    preview_flag: 'flag{preview}',
-  })
 
   let loadVersion = 0
 
@@ -85,9 +75,25 @@ export function useContestAwdConfigPage() {
     selectedCheckerType,
   })
 
-  const canAttachPreviewToken = computed(
-    () => Boolean(previewToken.value) && previewSignature.value === currentSignature.value
-  )
+  const {
+    canAttachPreviewToken,
+    clearPreviewState,
+    handlePreview,
+    handleSignatureChange,
+    previewError,
+    previewForm,
+    previewResult,
+    previewToken,
+    previewing,
+  } = useAwdCheckerPreviewFlow({
+    contestId,
+    selectedService,
+    selectedCheckerType,
+    currentSignature,
+    syncingDraft,
+    validateConfig,
+    buildCurrentCheckerConfig,
+  })
 
   const { summarizeCheckResult, getCheckStatusLabel, getPrimaryAccessURL } =
     useAwdCheckResultPresentation({
@@ -165,20 +171,6 @@ export function useContestAwdConfigPage() {
     }
   }
 
-  function readNumericID(value: string): number | undefined {
-    const next = Number(value)
-    return Number.isFinite(next) && next > 0 ? next : undefined
-  }
-
-  function clearPreviewState() {
-    previewResult.value = null
-    previewError.value = ''
-    previewToken.value = ''
-    previewSignature.value = ''
-    previewForm.access_url = ''
-    previewForm.preview_flag = 'flag{preview}'
-  }
-
   async function loadPage(initial = false) {
     if (!contestId.value) return
     const version = ++loadVersion
@@ -213,43 +205,6 @@ export function useContestAwdConfigPage() {
       params: { id: contestId.value },
       query: { panel: 'awd-config' },
     })
-  }
-
-  async function handlePreview() {
-    if (
-      previewing.value ||
-      !selectedService.value ||
-      !selectedCheckerType.value ||
-      !validateConfig()
-    ) {
-      return
-    }
-    previewing.value = true
-    previewError.value = ''
-    previewResult.value = null
-    previewToken.value = ''
-    previewSignature.value = ''
-    try {
-      const result = await runContestAWDCheckerPreview(contestId.value, {
-        ...(readNumericID(selectedService.value.id)
-          ? { service_id: readNumericID(selectedService.value.id) }
-          : {}),
-        awd_challenge_id: Number(selectedService.value.awd_challenge_id),
-        checker_type: selectedCheckerType.value,
-        checker_config: buildCurrentCheckerConfig(),
-        ...(previewForm.access_url.trim()
-          ? { access_url: previewForm.access_url.trim() }
-          : {}),
-        preview_flag: previewForm.preview_flag.trim() || undefined,
-      })
-      previewResult.value = result
-      previewToken.value = result.preview_token || ''
-      previewSignature.value = currentSignature.value
-    } catch (error) {
-      previewError.value = error instanceof Error && error.message.trim() ? error.message : '试跑失败'
-    } finally {
-      previewing.value = false
-    }
   }
 
   async function handleSave() {
@@ -287,9 +242,7 @@ export function useContestAwdConfigPage() {
   })
 
   watch(currentSignature, (next, previous) => {
-    if (!syncingDraft.value && previous && next !== previewSignature.value) {
-      previewToken.value = ''
-    }
+    handleSignatureChange(next, previous)
   })
 
   onMounted(() => {

@@ -1087,6 +1087,22 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch AD 子项（AWD 配置页预览流程拆分）
+- 升级 `features/contest-awd-config/model/useAwdCheckerPreview.ts`，新增 `useAwdCheckerPreviewFlow`，承接：
+  - 试跑状态与表单状态（`previewing/previewResult/previewError/previewToken/previewForm`）
+  - 预览 token 与配置签名关联校验（`canAttachPreviewToken`）
+  - 签名变化后的 token 失效处理（`handleSignatureChange`）
+  - 试跑请求构造与错误分支处理
+- `useContestAwdConfigPage.ts` 改为组合调用该模块，移除内联试跑状态和请求实现。
+- `useContestAwdConfigPage.ts` 行数下降（本批由 347 降至 300）。
+- 补充 source 边界断言：`ContestAwdConfig.test.ts` 增加 `useAwdCheckerPreviewFlow` 导入断言与 `runContestAWDCheckerPreview` 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
