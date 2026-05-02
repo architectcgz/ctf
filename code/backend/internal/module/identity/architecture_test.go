@@ -3,6 +3,7 @@ package identity
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -96,6 +97,70 @@ func TestContractsDoNotDependOnGinGORMOrConcreteLayers(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/identity/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/identity/application/queries")
 	}
+}
+
+func TestRuntimeOwnsIdentityWiring(t *testing.T) {
+	t.Parallel()
+
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/identity/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/identity/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/identity/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/identity/api/http")
+}
+
+func TestRuntimeUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read identity runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"users        identitycontracts.UserRepository",
+		"tokenService identitycontracts.Authenticator",
+		"identityhttp.NewHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("identity runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"type identityModuleDeps struct",
+		"identityinfra.NewRepository(root.DB())",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("identity runtime should not keep composition glue marker %s", marker)
+		}
+	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {

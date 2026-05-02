@@ -1014,25 +1014,26 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type identityModuleDeps struct",
-		"users",
-		"identitycontracts.UserRepository",
-		"tokenService",
-		"identitycontracts.Authenticator",
+		"type IdentityModule = identityruntime.Module",
+		"identityruntime.Build(",
+		"identityruntime.Deps{",
+		"Config:       root.Config()",
+		"TokenService: authinfra.NewTokenService(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("identity composition should declare typed deps marker %s", marker)
+			t.Fatalf("identity composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"users := identityinfra.NewRepository(db)",
-		"identityinfra.NewRepository(db)",
+		"type identityModuleDeps struct",
+		"identityinfra.NewRepository(",
+		"identitycmd.NewAuthenticatorService(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("identity composition should not keep concrete marker %s", marker)
+			t.Fatalf("identity composition should not keep wiring marker %s", marker)
 		}
 	}
 }
