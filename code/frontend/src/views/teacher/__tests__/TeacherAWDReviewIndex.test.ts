@@ -78,6 +78,7 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
     expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
+    expect(teacherAwdReviewIndexSource).not.toContain('router.push({ name: \'TeacherDashboard\' })')
     expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.status ===')
     expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.export_ready)')
   })

@@ -3,7 +3,6 @@ import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'
 import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
 
 const {
-  router,
   loading,
   error,
   contests,
@@ -12,13 +11,10 @@ const {
   statusOptions,
   contestSummary,
   loadContests,
+  openDashboard,
   openContest,
   contestStatusLabel,
 } = useTeacherAwdReviewIndex()
-
-function openDashboard(): void {
-  router.push({ name: 'TeacherDashboard' })
-}
 </script>
 
 <template>

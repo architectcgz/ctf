@@ -268,6 +268,10 @@ export function useTeacherAwdReviewDetail() {
     })
   }
 
+  function openReviewIndex(): void {
+    router.push({ name: 'TeacherAWDReviewIndex' })
+  }
+
   function openTeam(team: TeacherAWDReviewTeamItemData): void {
     selectedTeamId.value = team.team_id
   }
@@ -306,7 +310,6 @@ export function useTeacherAwdReviewDetail() {
   })
 
   return {
-    router,
     route,
     polling,
     loading,
@@ -326,6 +329,7 @@ export function useTeacherAwdReviewDetail() {
     selectedTeamAttacks,
     selectedTeamTraffic,
     canExportReport,
+    openReviewIndex,
     loadReview,
     setRound,
     openTeam,

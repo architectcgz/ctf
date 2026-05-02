@@ -139,6 +139,7 @@ describe('TeacherAWDReviewDetail', () => {
     expect(awdReviewDetailSource).not.toContain('const summaryStats = computed')
     expect(awdReviewDetailSource).not.toContain('function contestStatusLabel')
     expect(awdReviewDetailSource).not.toContain('function formatServiceRef')
+    expect(awdReviewDetailSource).not.toContain("router.push({ name: 'TeacherAWDReviewIndex' })")
   })
 
   it('默认显示整场总览，并在进行中赛事上禁用教师报告导出', async () => {

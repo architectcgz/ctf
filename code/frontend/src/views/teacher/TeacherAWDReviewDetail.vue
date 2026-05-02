@@ -3,7 +3,6 @@ import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'
 import { useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'
 
 const {
-  router,
   polling,
   loading,
   error,
@@ -20,6 +19,7 @@ const {
   selectedTeamAttacks,
   selectedTeamTraffic,
   canExportReport,
+  openReviewIndex,
   loadReview,
   setRound,
   openTeam,
@@ -29,10 +29,6 @@ const {
   exportArchive,
   exportReport,
 } = useTeacherAwdReviewDetail()
-
-function openReviewIndex(): void {
-  router.push({ name: 'TeacherAWDReviewIndex' })
-}
 </script>
 
 <template>
