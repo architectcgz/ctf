@@ -8,13 +8,19 @@ import (
 	"ctf-platform/internal/model"
 )
 
-type ChallengeCommandRepository interface {
+type ChallengeWriteRepository interface {
 	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	Update(ctx context.Context, challenge *model.Challenge) error
 	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type ChallengeInstanceUsageRepository interface {
 	HasRunningInstances(ctx context.Context, challengeID int64) (bool, error)
+}
+
+type ChallengePublishCheckRepository interface {
 	CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
 	FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
 	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)

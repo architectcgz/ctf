@@ -40,7 +40,7 @@ type challengeModuleDeps struct {
 	catalog                 challengecontracts.ChallengeContract
 	imageStore              challengecontracts.ImageStore
 	imageRepo               *challengeinfra.ImageRepository
-	challengeCommandRepo    challengeports.ChallengeCommandRepository
+	challengeCommandRepo    *challengeinfra.Repository
 	challengeQueryRepo      challengeports.ChallengeQueryRepository
 	awdChallengeCommandRepo challengeports.AWDChallengeCommandRepository
 	awdChallengeQueryRepo   challengeports.AWDChallengeQueryRepository

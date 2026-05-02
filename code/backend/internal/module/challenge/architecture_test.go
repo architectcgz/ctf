@@ -101,6 +101,7 @@ func TestPortsDoNotDeclareWideChallengeRepository(t *testing.T) {
 		t.Fatalf("challenge ports must not declare the legacy wide ChallengeRepository interface")
 	}
 	forbiddenInterfaces := []string{
+		"type ChallengeCommandRepository interface",
 		"type ChallengeWriteupRepository interface",
 		"type ChallengeTopologyRepository interface",
 		"type ImageRepository interface",

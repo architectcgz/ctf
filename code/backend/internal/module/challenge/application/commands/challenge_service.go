@@ -31,9 +31,15 @@ type ChallengeNotificationSender interface {
 	SendChallengePublishCheckResult(ctx context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error
 }
 
+type challengeCommandRepository interface {
+	challengeports.ChallengeWriteRepository
+	challengeports.ChallengeInstanceUsageRepository
+	challengeports.ChallengePublishCheckRepository
+}
+
 type ChallengeService struct {
 	db            *gorm.DB
-	repo          challengeports.ChallengeCommandRepository
+	repo          challengeCommandRepository
 	imageRepo     challengeports.ImageQueryRepository
 	topologyRepo  challengeports.ChallengeTopologyReadRepository
 	packageRepo   challengeports.ChallengePackageRevisionRepository
@@ -45,7 +51,7 @@ type ChallengeService struct {
 
 func NewChallengeService(
 	db *gorm.DB,
-	repo challengeports.ChallengeCommandRepository,
+	repo challengeCommandRepository,
 	imageRepo challengeports.ImageQueryRepository,
 	topologyRepo challengeports.ChallengeTopologyReadRepository,
 	packageRepo challengeports.ChallengePackageRevisionRepository,

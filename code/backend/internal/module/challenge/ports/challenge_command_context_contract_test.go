@@ -62,4 +62,6 @@ func (ctxOnlyChallengeCommandRepository) UpdatePublishCheckJob(context.Context, 
 	return nil
 }
 
-var _ challengeports.ChallengeCommandRepository = (*ctxOnlyChallengeCommandRepository)(nil)
+var _ challengeports.ChallengeWriteRepository = (*ctxOnlyChallengeCommandRepository)(nil)
+var _ challengeports.ChallengeInstanceUsageRepository = (*ctxOnlyChallengeCommandRepository)(nil)
+var _ challengeports.ChallengePublishCheckRepository = (*ctxOnlyChallengeCommandRepository)(nil)

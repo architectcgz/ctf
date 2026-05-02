@@ -40,7 +40,7 @@ func (s *stubChallengeNotificationSender) SendChallengePublishCheckResult(_ cont
 	return nil
 }
 
-func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
+func newTestService(repo challengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
 	return NewChallengeService(nil, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
 }
 
