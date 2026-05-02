@@ -443,6 +443,17 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch F3 子项（student-dashboard 类型解耦）
+- `useStudentDashboardPage.ts` 已去除 `@/components/dashboard/student/types` 导入，改为 feature 内部本地类型声明。
+- 结果：`features/*` 运行时代码中的 `@/components/*` 反向依赖已清零（剩余命中仅为边界测试源码字符串断言）。
+
+验证：
+```bash
+rg -n "from ['\"]@/components/" code/frontend/src/features --glob '*.{ts,vue}'
+npm run test:run -- src/views/dashboard/__tests__/DashboardView.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

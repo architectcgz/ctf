@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FileChartColumnIncreasing, Rocket, ShieldAlert } from 'lucide-vue-next'
 
@@ -9,7 +9,6 @@ import type {
   SkillProfileData,
   TimelineEvent,
 } from '@/api/contracts'
-import type { DashboardHighlightItem } from '@/components/dashboard/student/types'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
@@ -20,6 +19,13 @@ export type DashboardPanelKey =
   | 'recommendation'
   | 'timeline'
   | 'difficulty'
+
+interface DashboardHighlightItem {
+  label: string
+  value: string
+  description: string
+  icon: Component
+}
 
 export function useStudentDashboardPage() {
   const authStore = useAuthStore()
