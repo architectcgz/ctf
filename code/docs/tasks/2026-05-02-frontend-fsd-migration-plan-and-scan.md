@@ -688,6 +688,19 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch G1 子项（模板应用动作拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologyTemplateApply.ts`，承接：
+  - 模板载入草稿
+  - 模板应用到题目拓扑（含覆盖确认）
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该子模块，移除内联模板应用流程。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 849 降至 833）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

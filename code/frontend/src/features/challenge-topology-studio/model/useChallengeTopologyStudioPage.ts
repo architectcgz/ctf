@@ -26,7 +26,6 @@ import {
   type CanvasNodePosition,
 } from './topologyLayout'
 import {
-  createDraftFromTemplate,
   createDraftFromTopology,
   createUniqueNodeDraft,
   createEmptyLinkDraft,
@@ -41,6 +40,7 @@ import {
   type TopologyPolicyDraft,
 } from './topologyDraft'
 import type { CanvasInteractionMode } from './topologyTypes'
+import { useTopologyTemplateApply } from './useTopologyTemplateApply'
 import { useTopologyTemplateSelection } from './useTopologyTemplateSelection'
 import { useTopologyTemplateMutations } from './useTopologyTemplateMutations'
 
@@ -401,6 +401,15 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       resetTemplateForm,
       loadTemplates,
     })
+  const { loadTemplateIntoDraft, handleApplyTemplate } = useTopologyTemplateApply({
+    challengeId: options.challengeId,
+    templateBusy,
+    applyTopologyDraft,
+    resetTemplateForm,
+    onAfterApplied: async () => {
+      await reloadAll()
+    },
+  })
 
   async function loadPageData() {
     loading.value = true
@@ -622,31 +631,6 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   function addPolicy() {
     draft.value.policies = [...draft.value.policies, createEmptyPolicyDraft()]
-  }
-
-  function loadTemplateIntoDraft(template: EnvironmentTemplateData) {
-    applyTopologyDraft(createDraftFromTemplate(template))
-    resetTemplateForm(template)
-    toast.success('模板已载入编辑器草稿')
-  }
-
-  async function handleApplyTemplate(template: EnvironmentTemplateData) {
-    const confirmed = await confirmDestructiveAction({
-      title: '应用模板',
-      message: `确认将模板“${template.name}”应用到当前题目吗？已保存拓扑会被模板覆盖。`,
-      confirmButtonText: '确认覆盖',
-    })
-    if (!confirmed) {
-      return
-    }
-    templateBusy.value = true
-    try {
-      await saveChallengeTopology(options.challengeId, { template_id: Number(template.id) })
-      toast.success('模板已应用到题目')
-      await reloadAll()
-    } finally {
-      templateBusy.value = false
-    }
   }
 
   async function handleSaveTopology() {
