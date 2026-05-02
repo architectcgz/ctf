@@ -22,6 +22,7 @@ type practiceCommandResponseMapper interface {
 	// goverter:ignore Answer
 	// goverter:ignore ReviewerName
 	ToTeacherManualReviewSubmissionDetailRespBase(source model.Submission) dto.TeacherManualReviewSubmissionDetailResp
+	ToTeacherManualReviewSubmissionDetailRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionDetailResp
 
 	// goverter:ignore StudentUsername
 	// goverter:ignore StudentName
@@ -29,10 +30,12 @@ type practiceCommandResponseMapper interface {
 	// goverter:ignore ChallengeTitle
 	// goverter:ignore AnswerPreview
 	ToTeacherManualReviewSubmissionItemRespBase(source model.Submission) dto.TeacherManualReviewSubmissionItemResp
+	ToTeacherManualReviewSubmissionItemRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionItemResp
 
 	// goverter:ignore Status
 	// goverter:ignore Answer
 	ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp
+	ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *dto.ChallengeSubmissionRecordResp
 }
 
 var practiceCommandResponseMapperInst practiceCommandResponseMapper

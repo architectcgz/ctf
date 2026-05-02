@@ -16,6 +16,14 @@ func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(
 	dtoChallengeSubmissionRecordResp.SubmittedAt = CopyTime(source.SubmittedAt)
 	return dtoChallengeSubmissionRecordResp
 }
+func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *dto.ChallengeSubmissionRecordResp {
+	var pDtoChallengeSubmissionRecordResp *dto.ChallengeSubmissionRecordResp
+	if source != nil {
+		dtoChallengeSubmissionRecordResp := c.ToChallengeSubmissionRecordRespBase((*source))
+		pDtoChallengeSubmissionRecordResp = &dtoChallengeSubmissionRecordResp
+	}
+	return pDtoChallengeSubmissionRecordResp
+}
 func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionDetailRespBase(source model.Submission) dto.TeacherManualReviewSubmissionDetailResp {
 	var dtoTeacherManualReviewSubmissionDetailResp dto.TeacherManualReviewSubmissionDetailResp
 	dtoTeacherManualReviewSubmissionDetailResp.ID = source.ID
@@ -34,6 +42,14 @@ func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionDetai
 	dtoTeacherManualReviewSubmissionDetailResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoTeacherManualReviewSubmissionDetailResp
 }
+func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionDetailRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionDetailResp {
+	var pDtoTeacherManualReviewSubmissionDetailResp *dto.TeacherManualReviewSubmissionDetailResp
+	if source != nil {
+		dtoTeacherManualReviewSubmissionDetailResp := c.ToTeacherManualReviewSubmissionDetailRespBase((*source))
+		pDtoTeacherManualReviewSubmissionDetailResp = &dtoTeacherManualReviewSubmissionDetailResp
+	}
+	return pDtoTeacherManualReviewSubmissionDetailResp
+}
 func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemRespBase(source model.Submission) dto.TeacherManualReviewSubmissionItemResp {
 	var dtoTeacherManualReviewSubmissionItemResp dto.TeacherManualReviewSubmissionItemResp
 	dtoTeacherManualReviewSubmissionItemResp.ID = source.ID
@@ -44,4 +60,12 @@ func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemR
 	dtoTeacherManualReviewSubmissionItemResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
 	dtoTeacherManualReviewSubmissionItemResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoTeacherManualReviewSubmissionItemResp
+}
+func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionItemResp {
+	var pDtoTeacherManualReviewSubmissionItemResp *dto.TeacherManualReviewSubmissionItemResp
+	if source != nil {
+		dtoTeacherManualReviewSubmissionItemResp := c.ToTeacherManualReviewSubmissionItemRespBase((*source))
+		pDtoTeacherManualReviewSubmissionItemResp = &dtoTeacherManualReviewSubmissionItemResp
+	}
+	return pDtoTeacherManualReviewSubmissionItemResp
 }

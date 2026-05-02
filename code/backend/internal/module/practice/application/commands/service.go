@@ -1281,14 +1281,14 @@ func manualReviewDetailRespFromRecord(
 	record practiceports.TeacherManualReviewSubmissionRecord,
 	submission model.Submission,
 ) *dto.TeacherManualReviewSubmissionDetailResp {
-	mapped := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionDetailRespBase(submission)
-	mapped.StudentUsername = record.StudentUsername
-	mapped.StudentName = record.StudentName
-	mapped.ClassName = record.ClassName
-	mapped.ChallengeTitle = record.ChallengeTitle
-	mapped.Answer = submission.Flag
-	mapped.ReviewerName = record.ReviewerName
-	return &mapped
+	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionDetailRespBasePtr(&submission)
+	resp.StudentUsername = record.StudentUsername
+	resp.StudentName = record.StudentName
+	resp.ClassName = record.ClassName
+	resp.ChallengeTitle = record.ChallengeTitle
+	resp.Answer = submission.Flag
+	resp.ReviewerName = record.ReviewerName
+	return resp
 }
 
 func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReviewSubmissionRecord) *dto.TeacherManualReviewSubmissionItemResp {
@@ -1296,13 +1296,13 @@ func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReview
 	if len([]rune(answerPreview)) > 80 {
 		answerPreview = string([]rune(answerPreview)[:80]) + "..."
 	}
-	mapped := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionItemRespBase(record.Submission)
-	mapped.StudentUsername = record.StudentUsername
-	mapped.StudentName = record.StudentName
-	mapped.ClassName = record.ClassName
-	mapped.ChallengeTitle = record.ChallengeTitle
-	mapped.AnswerPreview = answerPreview
-	return &mapped
+	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionItemRespBasePtr(&record.Submission)
+	resp.StudentUsername = record.StudentUsername
+	resp.StudentName = record.StudentName
+	resp.ClassName = record.ClassName
+	resp.ChallengeTitle = record.ChallengeTitle
+	resp.AnswerPreview = answerPreview
+	return resp
 }
 
 func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.ChallengeSubmissionRecordResp {
@@ -1316,10 +1316,10 @@ func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.Challeng
 		status = dto.SubmissionStatusCorrect
 	}
 
-	mapped := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBase(item)
-	mapped.Status = status
-	mapped.Answer = answer
-	return &mapped
+	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBasePtr(&item)
+	resp.Status = status
+	resp.Answer = answer
+	return resp
 }
 
 func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
