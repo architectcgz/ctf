@@ -707,35 +707,26 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type challengeModuleDeps struct",
-		"challengeCommandRepo",
-		"challengeports.ChallengeCommandRepository",
-		"challengeQueryRepo",
-		"challengeports.ChallengeQueryRepository",
-		"flagRepo",
-		"challengeports.ChallengeFlagRepository",
-		"imageUsageRepo",
-		"challengeports.ChallengeImageUsageRepository",
-		"topologyRepo",
-		"challengeports.ChallengeTopologyRepository",
-		"writeupRepo",
-		"challengeports.ChallengeWriteupRepository",
+		"type ChallengeModule = challengeruntime.Module",
+		"challengeruntime.Build(",
+		"challengeruntime.Deps{",
+		"buildChallengeNotificationSender(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("challenge composition should declare typed deps marker %s", marker)
+			t.Fatalf("challenge composition should delegate to runtime through %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"challengeRepo *challengeinfra.Repository",
-		"imageRepo *challengeinfra.ImageRepository",
-		"templateRepo *challengeinfra.TemplateRepository",
-		"runtime.challenge.imageRuntime",
+		"type challengeModuleDeps struct",
+		"challengeinfra.NewRepository(",
+		"challengeinfra.NewImageRepository(",
+		"challengeinfra.NewTemplateRepository(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("challenge composition deps should not keep concrete repository field %s", marker)
+			t.Fatalf("challenge composition should not keep wiring marker %s", marker)
 		}
 	}
 }
@@ -750,11 +741,9 @@ func TestBuildChallengeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildChallengeImageHandler(",
-		"buildChallengeCoreHandler(",
-		"buildChallengeFlagHandler(",
-		"buildChallengeTopologyHandler(",
-		"buildChallengeWriteupHandler(",
+		"challengeruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
