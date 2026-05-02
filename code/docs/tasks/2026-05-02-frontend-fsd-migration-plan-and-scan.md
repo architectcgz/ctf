@@ -292,6 +292,23 @@ rg -n "\b(computed|function|const [A-Za-z0-9_]+ = \(|async function)\b" code/fro
   - `features/model` 不允许导入 `@/components/*`，少量迁移期间例外需要在测试中白名单并写明截止批次。
 - 将本文件的“下一批扫描命令”同步到 `frontend-sliced-architecture` skill 的 reference，作为之后新项目或新页面评审清单。
 
+## 下一批方案执行进展
+
+### 已完成：Batch E1（竞赛题目编排面板 API 收口）
+- 新增 `features/contest-workbench/model/useContestChallengeOrchestration.ts`，承接原 `ContestChallengeOrchestrationPanel` 内部的数据加载、保存、移除、弹层触发、生命周期与错误处理。
+- `ContestChallengeOrchestrationPanel.vue` 已改为路由/组件组合层，不再直接依赖：
+  - `@/api/admin/contests`
+  - `@/api/admin/authoring`
+  - `@/api/request`
+- 补充 source 边界断言：
+  - `components/platform/__tests__/contestChallengeOrchestrationExtraction.test.ts` 新增对 `useContestChallengeOrchestration` 的引用断言与 API import 禁止断言。
+
+验证：
+```bash
+npm run test:run -- src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/platform/__tests__/contestChallengeOrchestrationExtraction.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
