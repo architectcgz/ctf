@@ -802,6 +802,21 @@ npm run test:run -- src/features/__tests__/featureBoundaries.test.ts src/views/_
 npm run typecheck
 ```
 
+### 已完成：Batch J 子项（拓扑选中态与草稿应用逻辑拆分）
+- 新增 `features/challenge-topology-studio/model/useTopologySelectionState.ts`，承接：
+  - 当前选中节点/边的派生（`selectedNodeDraft`、`selectedEdgeMeta`、`selectedLinkDraft`、`selectedPolicyDraft`）
+  - 选中边源/目标/kind 派生与 `selectedCanvasSummary`
+  - `applyTopologyDraft` 与 `syncEntryNode` 草稿应用流程
+  - 节点端口快捷更新、节点网络勾选切换
+- `useChallengeTopologyStudioPage.ts` 改为组合调用该子模块，移除内联选中态与草稿同步细节。
+- `useChallengeTopologyStudioPage.ts` 行数继续下降（本批由 499 降至 418）。
+
+验证：
+```bash
+npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTopologyStudioBoundary.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
