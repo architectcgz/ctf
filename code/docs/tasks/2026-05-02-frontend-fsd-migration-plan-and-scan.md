@@ -913,6 +913,20 @@ npm run test:run -- src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts s
 npm run typecheck
 ```
 
+### 已完成：Batch R 子项（实例页告警状态流拆分）
+- 新增 `features/instance-list/model/useInstanceWarningState.ts`，承接：
+  - 运行实例剩余时间倒计时更新
+  - 临期阈值告警触发
+  - 告警弹窗关闭 / Esc 关闭 / 告警内延时动作
+- `useInstanceListPage.ts` 改为组合调用该模块，移除内联告警状态流程。
+- `useInstanceListPage.ts` 行数下降（本批由 386 降至 352）。
+
+验证：
+```bash
+npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

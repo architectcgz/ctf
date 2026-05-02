@@ -10,6 +10,7 @@ import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
 import { useClipboard } from '@/composables/useClipboard'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
+import { useInstanceWarningState } from './useInstanceWarningState'
 
 export const MAX_INSTANCES = 3
 export const WARNING_THRESHOLD_SECONDS = 300
@@ -144,8 +145,6 @@ export function useInstanceListPage() {
 
   const loading = ref(false)
   const instances = ref<InstanceViewModel[]>([])
-  const showWarning = ref(false)
-  const warningInstance = ref<InstanceViewModel | null>(null)
   const warnedInstances = new Set<string>()
 
   let timer: number | null = null
@@ -305,53 +304,20 @@ export function useInstanceListPage() {
       toast.error(message)
     }
   }
-
-  async function extendFromWarning() {
-    if (warningInstance.value) {
-      await extendTime(warningInstance.value.id)
-    }
-    showWarning.value = false
-  }
-
-  function closeWarning() {
-    showWarning.value = false
-  }
-
-  function handleEscKey(event: KeyboardEvent) {
-    if (event.key === 'Escape' && showWarning.value) {
-      showWarning.value = false
-    }
-  }
-
-  function updateCountdown() {
-    const now = Date.now()
-
-    instances.value = instances.value.map((instance) => {
-      if (instance.status !== 'running') {
-        return instance
-      }
-      if (!isInstanceManualActionAllowed(instance)) {
-        return instance
-      }
-
-      const remaining = Math.max(
-        0,
-        Math.floor((new Date(instance.expires_at).getTime() - now) / 1000)
-      )
-      const next = {
-        ...instance,
-        remaining,
-      }
-
-      if (remaining < WARNING_THRESHOLD_SECONDS && !warnedInstances.has(instance.id)) {
-        warnedInstances.add(instance.id)
-        warningInstance.value = next
-        showWarning.value = true
-      }
-
-      return next
-    })
-  }
+  const {
+    showWarning,
+    warningInstance,
+    updateCountdown,
+    extendFromWarning,
+    closeWarning,
+    handleEscKey,
+  } = useInstanceWarningState({
+    instances,
+    warnedInstances,
+    warningThresholdSeconds: WARNING_THRESHOLD_SECONDS,
+    canManualAction: isInstanceManualActionAllowed,
+    onExtendInstance: extendTime,
+  })
 
   onMounted(() => {
     void refresh()
