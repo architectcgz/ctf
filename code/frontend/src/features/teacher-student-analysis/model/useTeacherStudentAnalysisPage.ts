@@ -25,13 +25,8 @@ import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
-import {
-  resolveClassManagementRouteName,
-  resolveClassStudentsRouteName,
-  resolveStudentAnalysisRouteName,
-  resolveStudentReviewArchiveRouteName,
-} from '@/utils/teachingWorkspaceRouting'
 import { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
+import { useTeacherStudentAnalysisNavigation } from './useTeacherStudentAnalysisNavigation'
 import { useTeacherSubmissionReviewFlows } from './useTeacherSubmissionReviewFlows'
 
 export function useTeacherStudentAnalysisPage() {
@@ -201,49 +196,19 @@ export function useTeacherStudentAnalysisPage() {
       error.value = '加载学员分析失败，请稍后重试'
     }
   }
-
-  function selectClass(className: string): void {
-    router.push({
-      name: resolveClassStudentsRouteName(authStore.user?.role),
-      params: { className },
-    })
-  }
-
-  function openClassManagement(): void {
-    router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
-  }
-
-  function openClassStudents(): void {
-    router.push({
-      name: resolveClassStudentsRouteName(authStore.user?.role),
-      params: { className: selectedClassName.value },
-    })
-  }
-
-  function selectStudent(studentId: string): void {
-    router.push({
-      name: resolveStudentAnalysisRouteName(authStore.user?.role),
-      params: {
-        className: selectedClassName.value,
-        studentId,
-      },
-    })
-  }
-
-  function openChallenge(challengeId: string): void {
-    router.push(`/challenges/${challengeId}`)
-  }
-
-  function openReviewArchivePage(): void {
-    if (!selectedStudentId.value || !selectedClassName.value) return
-    router.push({
-      name: resolveStudentReviewArchiveRouteName(authStore.user?.role),
-      params: {
-        className: selectedClassName.value,
-        studentId: selectedStudentId.value,
-      },
-    })
-  }
+  const {
+    selectClass,
+    openClassManagement,
+    openClassStudents,
+    selectStudent,
+    openChallenge,
+    openReviewArchivePage,
+  } = useTeacherStudentAnalysisNavigation({
+    router,
+    getRole: () => authStore.user?.role,
+    selectedClassName,
+    selectedStudentId,
+  })
 
   watch(
     () => [route.params.className, route.params.studentId],
