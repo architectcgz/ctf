@@ -18,7 +18,6 @@ import {
   listContestAWDRounds,
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
-  startContestAWDTeamServiceInstance,
   updateContestAWDService,
 } from '@/api/admin/contests'
 import type {
@@ -29,7 +28,6 @@ import type {
   AWDTrafficSummaryData,
   AWDTeamServiceData,
   AdminChallengeListItem,
-  AdminContestAWDInstanceOrchestrationData,
   AdminContestChallengeData,
   AdminContestTeamData,
   ContestDetailData,
@@ -47,6 +45,7 @@ import {
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
+import { useAwdServiceOperations } from './useAwdServiceOperations'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
@@ -74,21 +73,28 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
-  const instanceOrchestration = ref<AdminContestAWDInstanceOrchestrationData>(
-    createEmptyInstanceOrchestration()
-  )
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
   const loadingTrafficSummary = ref(false)
   const loadingTrafficEvents = ref(false)
   const loadingChallengeCatalog = ref(false)
-  const loadingInstanceOrchestration = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
   const savingChallengeConfig = ref(false)
-  const startingInstanceKey = ref<string | null>(null)
+
+  const {
+    instanceOrchestration,
+    loadingInstanceOrchestration,
+    startingInstanceKey,
+    refreshInstanceOrchestration,
+    startTeamServiceInstance,
+    startTeamAllServices,
+    startAllTeamServices,
+  } = useAwdServiceOperations({
+    selectedContest,
+  })
 
   const {
     readiness,
@@ -146,116 +152,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     }
     const nextServices = await listContestAWDServices(selectedContest.value.id)
     challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextServices)
-  }
-
-  function findInstanceItem(teamId: string, serviceId: string) {
-    return instanceOrchestration.value.instances.find(
-      (item) => item.team_id === teamId && item.service_id === serviceId && item.instance
-    )
-  }
-
-  async function refreshInstanceOrchestration() {
-    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
-      instanceOrchestration.value = createEmptyInstanceOrchestration()
-      return
-    }
-
-    loadingInstanceOrchestration.value = true
-    try {
-      instanceOrchestration.value = await getContestAWDInstanceOrchestration(selectedContest.value.id)
-    } finally {
-      loadingInstanceOrchestration.value = false
-    }
-  }
-
-  async function startTeamServiceInstance(teamId: string, serviceId: string) {
-    if (!selectedContest.value || startingInstanceKey.value) {
-      return
-    }
-
-    const instanceKey = `${teamId}:${serviceId}`
-    startingInstanceKey.value = instanceKey
-    try {
-      await startContestAWDTeamServiceInstance(selectedContest.value.id, {
-        team_id: teamId,
-        service_id: serviceId,
-      })
-      toast.success('队伍服务实例已启动')
-      await refreshInstanceOrchestration()
-    } catch (error) {
-      toast.error(humanizeRequestError(error, '启动队伍服务实例失败'))
-    } finally {
-      startingInstanceKey.value = null
-    }
-  }
-
-  async function startTeamAllServices(teamId: string) {
-    if (!selectedContest.value || startingInstanceKey.value) {
-      return
-    }
-
-    const serviceIds = instanceOrchestration.value.services
-      .filter((service) => service.is_visible)
-      .map((service) => service.service_id)
-      .filter((serviceId) => !findInstanceItem(teamId, serviceId))
-    if (serviceIds.length === 0) {
-      toast.success('该队伍服务实例已全部启动')
-      return
-    }
-
-    startingInstanceKey.value = `team:${teamId}`
-    try {
-      for (const serviceId of serviceIds) {
-        await startContestAWDTeamServiceInstance(selectedContest.value.id, {
-          team_id: teamId,
-          service_id: serviceId,
-        })
-      }
-      toast.success('队伍服务实例已批量启动')
-      await refreshInstanceOrchestration()
-    } catch (error) {
-      toast.error(humanizeRequestError(error, '批量启动队伍服务实例失败'))
-      await refreshInstanceOrchestration()
-    } finally {
-      startingInstanceKey.value = null
-    }
-  }
-
-  async function startAllTeamServices() {
-    if (!selectedContest.value || startingInstanceKey.value) {
-      return
-    }
-
-    const targets = instanceOrchestration.value.teams.flatMap((team) =>
-      instanceOrchestration.value.services
-        .filter((service) => service.is_visible)
-        .filter((service) => !findInstanceItem(team.team_id, service.service_id))
-        .map((service) => ({
-          teamId: team.team_id,
-          serviceId: service.service_id,
-        }))
-    )
-    if (targets.length === 0) {
-      toast.success('所有队伍服务实例已启动')
-      return
-    }
-
-    startingInstanceKey.value = 'all'
-    try {
-      for (const target of targets) {
-        await startContestAWDTeamServiceInstance(selectedContest.value.id, {
-          team_id: target.teamId,
-          service_id: target.serviceId,
-        })
-      }
-      toast.success('全部队伍服务实例已批量启动')
-      await refreshInstanceOrchestration()
-    } catch (error) {
-      toast.error(humanizeRequestError(error, '批量启动全部实例失败'))
-      await refreshInstanceOrchestration()
-    } finally {
-      startingInstanceKey.value = null
-    }
   }
 
   async function refreshRoundDetail(roundId = selectedRoundId.value) {

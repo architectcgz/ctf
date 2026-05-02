@@ -601,6 +601,22 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（实例编排操作拆分）
+- 新增 `features/contest-awd-admin/model/useAwdServiceOperations.ts`，承接：
+  - 实例编排数据刷新
+  - 单队伍单服务启动
+  - 单队伍批量服务启动
+  - 全队伍全服务批量启动
+  - 相关 loading / action key 状态
+- `usePlatformContestAwd.ts` 改为组合调用 `useAwdServiceOperations`，移除内联实例操作细节。
+- `usePlatformContestAwd.ts` 行数继续下降（本批由 753 降至 649）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
