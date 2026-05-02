@@ -25,6 +25,14 @@ func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source model.AWDAttac
 	dtoAWDAttackLogResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoAWDAttackLogResp
 }
+func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *dto.AWDAttackLogResp {
+	var pDtoAWDAttackLogResp *dto.AWDAttackLogResp
+	if source != nil {
+		dtoAWDAttackLogResp := c.ToAWDAttackLogRespBase((*source))
+		pDtoAWDAttackLogResp = &dtoAWDAttackLogResp
+	}
+	return pDtoAWDAttackLogResp
+}
 func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp {
 	var dtoAWDRoundResp dto.AWDRoundResp
 	dtoAWDRoundResp.ID = source.ID
@@ -63,6 +71,14 @@ func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source model.AWDTea
 	dtoAWDTeamServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoAWDTeamServiceResp
 }
+func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *dto.AWDTeamServiceResp {
+	var pDtoAWDTeamServiceResp *dto.AWDTeamServiceResp
+	if source != nil {
+		dtoAWDTeamServiceResp := c.ToAWDTeamServiceRespBase((*source))
+		pDtoAWDTeamServiceResp = &dtoAWDTeamServiceResp
+	}
+	return pDtoAWDTeamServiceResp
+}
 func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source model.ContestAWDService) dto.ContestAWDServiceResp {
 	var dtoContestAWDServiceResp dto.ContestAWDServiceResp
 	dtoContestAWDServiceResp.ID = source.ID
@@ -76,6 +92,14 @@ func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source model.Con
 	dtoContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestAWDServiceResp
 }
+func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *dto.ContestAWDServiceResp {
+	var pDtoContestAWDServiceResp *dto.ContestAWDServiceResp
+	if source != nil {
+		dtoContestAWDServiceResp := c.ToContestAWDServiceRespBase((*source))
+		pDtoContestAWDServiceResp = &dtoContestAWDServiceResp
+	}
+	return pDtoContestAWDServiceResp
+}
 func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.ContestAnnouncement) dto.ContestAnnouncementResp {
 	var dtoContestAnnouncementResp dto.ContestAnnouncementResp
 	dtoContestAnnouncementResp.ID = source.ID
@@ -83,6 +107,14 @@ func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.C
 	dtoContestAnnouncementResp.Content = source.Content
 	dtoContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoContestAnnouncementResp
+}
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *dto.ContestAnnouncementResp {
+	var pDtoContestAnnouncementResp *dto.ContestAnnouncementResp
+	if source != nil {
+		dtoContestAnnouncementResp := c.ToContestAnnouncementRespBase((*source))
+		pDtoContestAnnouncementResp = &dtoContestAnnouncementResp
+	}
+	return pDtoContestAnnouncementResp
 }
 func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source model.ContestChallenge) dto.ContestChallengeResp {
 	var dtoContestChallengeResp dto.ContestChallengeResp
@@ -94,6 +126,14 @@ func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source model.Cont
 	dtoContestChallengeResp.IsVisible = source.IsVisible
 	dtoContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoContestChallengeResp
+}
+func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *model.ContestChallenge) *dto.ContestChallengeResp {
+	var pDtoContestChallengeResp *dto.ContestChallengeResp
+	if source != nil {
+		dtoContestChallengeResp := c.ToContestChallengeRespBase((*source))
+		pDtoContestChallengeResp = &dtoContestChallengeResp
+	}
+	return pDtoContestChallengeResp
 }
 func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp {
 	var dtoContestRegistrationResp dto.ContestRegistrationResp
@@ -114,6 +154,14 @@ func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source model.C
 	dtoContestRegistrationResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestRegistrationResp
 }
+func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *dto.ContestRegistrationResp {
+	var pDtoContestRegistrationResp *dto.ContestRegistrationResp
+	if source != nil {
+		dtoContestRegistrationResp := c.ToContestRegistrationRespBase((*source))
+		pDtoContestRegistrationResp = &dtoContestRegistrationResp
+	}
+	return pDtoContestRegistrationResp
+}
 func (c *contestResponseMapperImpl) ToContestRespBase(source model.Contest) dto.ContestResp {
 	var dtoContestResp dto.ContestResp
 	dtoContestResp.ID = source.ID
@@ -128,6 +176,14 @@ func (c *contestResponseMapperImpl) ToContestRespBase(source model.Contest) dto.
 	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestResp
 }
+func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *model.Contest) *dto.ContestResp {
+	var pDtoContestResp *dto.ContestResp
+	if source != nil {
+		dtoContestResp := c.ToContestRespBase((*source))
+		pDtoContestResp = &dtoContestResp
+	}
+	return pDtoContestResp
+}
 func (c *contestResponseMapperImpl) ToTeamRespBase(source model.Team) dto.TeamResp {
 	var dtoTeamResp dto.TeamResp
 	dtoTeamResp.ID = source.ID
@@ -138,6 +194,14 @@ func (c *contestResponseMapperImpl) ToTeamRespBase(source model.Team) dto.TeamRe
 	dtoTeamResp.MaxMembers = source.MaxMembers
 	dtoTeamResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTeamResp
+}
+func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *model.Team) *dto.TeamResp {
+	var pDtoTeamResp *dto.TeamResp
+	if source != nil {
+		dtoTeamResp := c.ToTeamRespBase((*source))
+		pDtoTeamResp = &dtoTeamResp
+	}
+	return pDtoTeamResp
 }
 func (c *contestResponseMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
 	var modelAWDCheckerType model.AWDCheckerType

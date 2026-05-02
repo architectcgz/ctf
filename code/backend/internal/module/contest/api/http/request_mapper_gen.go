@@ -442,6 +442,14 @@ func (c *ContestRequestMapperImpl) ToContestAWDServiceResp(source queries.Contes
 	dtoContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoContestAWDServiceResp
 }
+func (c *ContestRequestMapperImpl) ToContestAWDServiceRespPtr(source *queries.ContestAWDServiceResult) *dto.ContestAWDServiceResp {
+	var pDtoContestAWDServiceResp *dto.ContestAWDServiceResp
+	if source != nil {
+		dtoContestAWDServiceResp := c.ToContestAWDServiceResp((*source))
+		pDtoContestAWDServiceResp = &dtoContestAWDServiceResp
+	}
+	return pDtoContestAWDServiceResp
+}
 func (c *ContestRequestMapperImpl) ToContestAnnouncementResp(source queries.ContestAnnouncementResult) dto.ContestAnnouncementResp {
 	var dtoContestAnnouncementResp dto.ContestAnnouncementResp
 	dtoContestAnnouncementResp.ID = source.ID

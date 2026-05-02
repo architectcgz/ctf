@@ -40,6 +40,7 @@ type ContestRequestMapper interface {
 	ToAWDCheckerPreviewRespPtr(source *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp
 	// goverter:ignore LastPreviewResult
 	ToContestAWDServiceResp(source contestqry.ContestAWDServiceResult) dto.ContestAWDServiceResp
+	ToContestAWDServiceRespPtr(source *contestqry.ContestAWDServiceResult) *dto.ContestAWDServiceResp
 	ToContestResp(source contestqry.ContestResult) dto.ContestResp
 	ToContestRespPtr(source *contestqry.ContestResult) *dto.ContestResp
 	ToContestResps(source []*contestqry.ContestResult) []*dto.ContestResp

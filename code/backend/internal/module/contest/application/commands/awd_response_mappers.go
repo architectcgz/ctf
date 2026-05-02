@@ -7,11 +7,10 @@ import (
 )
 
 func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
-	if record == nil {
+	resp := contestResponseMapperInst.ToAWDTeamServiceRespBasePtr(record)
+	if resp == nil {
 		return nil
 	}
-	mapped := contestResponseMapperInst.ToAWDTeamServiceRespBase(*record)
-	resp := &mapped
 	resp.TeamName = teamName
 	resp.CheckResult = contestdomain.ParseAWDCheckResult(record.CheckResult)
 	if len(serviceName) > 0 {
@@ -22,12 +21,12 @@ func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 }
 
 func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *dto.AWDAttackLogResp {
-	if record == nil {
+	resp := contestResponseMapperInst.ToAWDAttackLogRespBasePtr(record)
+	if resp == nil {
 		return nil
 	}
-	mapped := contestResponseMapperInst.ToAWDAttackLogRespBase(*record)
-	mapped.AttackerTeam = attackerTeam
-	mapped.VictimTeam = victimTeam
-	mapped.Source = contestdomain.NormalizeAWDAttackSource(record.Source)
-	return &mapped
+	resp.AttackerTeam = attackerTeam
+	resp.VictimTeam = victimTeam
+	resp.Source = contestdomain.NormalizeAWDAttackSource(record.Source)
+	return resp
 }

@@ -23,9 +23,9 @@ func contestAWDServiceResultsToDTO(results []contestqry.ContestAWDServiceResult)
 	resp := make([]*dto.ContestAWDServiceResp, 0, len(results))
 	for i := range results {
 		item := results[i]
-		mapped := contestRequestMapper.ToContestAWDServiceResp(item)
+		mapped := contestRequestMapper.ToContestAWDServiceRespPtr(&item)
 		mapped.LastPreviewResult = contestRequestMapper.ToAWDCheckerPreviewRespPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw))
-		resp = append(resp, &mapped)
+		resp = append(resp, mapped)
 	}
 	return resp
 }

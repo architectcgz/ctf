@@ -9,18 +9,23 @@ import (
 )
 
 func contestRespFromModel(contest *model.Contest) *dto.ContestResp {
-	mapped := contestResponseMapperInst.ToContestRespBase(*contest)
-	mapped.StartTime = contestdomain.NormalizeContestTime(mapped.StartTime)
-	mapped.EndTime = contestdomain.NormalizeContestTime(mapped.EndTime)
-	mapped.FreezeTime = contestdomain.NormalizeContestTimePtr(mapped.FreezeTime)
-	mapped.CreatedAt = contestdomain.NormalizeContestTime(mapped.CreatedAt)
-	mapped.UpdatedAt = contestdomain.NormalizeContestTime(mapped.UpdatedAt)
-	return &mapped
+	resp := contestResponseMapperInst.ToContestRespBasePtr(contest)
+	if resp == nil {
+		return nil
+	}
+	resp.StartTime = contestdomain.NormalizeContestTime(resp.StartTime)
+	resp.EndTime = contestdomain.NormalizeContestTime(resp.EndTime)
+	resp.FreezeTime = contestdomain.NormalizeContestTimePtr(resp.FreezeTime)
+	resp.CreatedAt = contestdomain.NormalizeContestTime(resp.CreatedAt)
+	resp.UpdatedAt = contestdomain.NormalizeContestTime(resp.UpdatedAt)
+	return resp
 }
 
 func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
-	mapped := contestResponseMapperInst.ToContestChallengeRespBase(*cc)
-	resp := &mapped
+	resp := contestResponseMapperInst.ToContestChallengeRespBasePtr(cc)
+	if resp == nil {
+		return nil
+	}
 	if challenge != nil {
 		resp.Title = challenge.Title
 		resp.Category = challenge.Category
@@ -30,26 +35,29 @@ func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.
 }
 
 func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestAWDServiceResp {
-	if item == nil {
+	resp := contestResponseMapperInst.ToContestAWDServiceRespBasePtr(item)
+	if resp == nil {
 		return nil
 	}
-	mapped := contestResponseMapperInst.ToContestAWDServiceRespBase(*item)
 	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig))
 	snapshot, _ := model.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
-	mapped.Title = snapshot.Name
-	mapped.Category = snapshot.Category
-	mapped.Difficulty = snapshot.Difficulty
-	mapped.ScoreConfig = contestdomain.ParseAWDCheckerConfig(item.ScoreConfig)
-	mapped.RuntimeConfig = runtimeConfig
-	mapped.ValidationState = contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))
-	mapped.LastPreviewResult = awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
-	return &mapped
+	resp.Title = snapshot.Name
+	resp.Category = snapshot.Category
+	resp.Difficulty = snapshot.Difficulty
+	resp.ScoreConfig = contestdomain.ParseAWDCheckerConfig(item.ScoreConfig)
+	resp.RuntimeConfig = runtimeConfig
+	resp.ValidationState = contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))
+	resp.LastPreviewResult = awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
+	return resp
 }
 
 func teamRespFromModel(team *model.Team, memberCount int) *dto.TeamResp {
-	mapped := contestResponseMapperInst.ToTeamRespBase(*team)
-	mapped.MemberCount = memberCount
-	return &mapped
+	resp := contestResponseMapperInst.ToTeamRespBasePtr(team)
+	if resp == nil {
+		return nil
+	}
+	resp.MemberCount = memberCount
+	return resp
 }
 
 func sanitizeContestAWDServiceRuntimeConfig(runtimeConfig map[string]any) map[string]any {
