@@ -50,20 +50,8 @@ func awdCheckerPreviewResultToDTO(item *contestdomain.AWDCheckerPreviewResult) *
 	if item == nil {
 		return nil
 	}
-	return &dto.AWDCheckerPreviewResp{
-		CheckerType:   item.CheckerType,
-		ServiceStatus: item.ServiceStatus,
-		CheckResult:   item.CheckResult,
-		PreviewContext: dto.AWDCheckerPreviewContextResp{
-			ServiceID:      item.PreviewContext.ServiceID,
-			AccessURL:      item.PreviewContext.AccessURL,
-			PreviewFlag:    item.PreviewContext.PreviewFlag,
-			RoundNumber:    item.PreviewContext.RoundNumber,
-			TeamID:         item.PreviewContext.TeamID,
-			AWDChallengeID: item.PreviewContext.AWDChallengeID,
-		},
-		PreviewToken: item.PreviewToken,
-	}
+	mapped := contestRequestMapper.ToAWDCheckerPreviewResp(*item)
+	return &mapped
 }
 
 func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {

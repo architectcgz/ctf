@@ -6,11 +6,13 @@ import (
 	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
 // goverter:converter
+// goverter:enum:unknown @ignore
 // goverter:extend ConvertAny
 // goverter:extend CopyTime
 // goverter:extend CopyTimePtr
@@ -34,6 +36,7 @@ type ContestRequestMapper interface {
 	ToCreateContestAWDServiceInput(source dto.CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput
 	ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput
 	ToListAWDTrafficEventsInput(source dto.ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput
+	ToAWDCheckerPreviewResp(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
 }
 
 var contestRequestMapper ContestRequestMapper

@@ -5,12 +5,23 @@ package http
 
 import (
 	dto "ctf-platform/internal/dto"
+	model "ctf-platform/internal/model"
 	commands "ctf-platform/internal/module/contest/application/commands"
 	queries "ctf-platform/internal/module/contest/application/queries"
+	domain "ctf-platform/internal/module/contest/domain"
 )
 
 type ContestRequestMapperImpl struct{}
 
+func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewResp(source domain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp {
+	var dtoAWDCheckerPreviewResp dto.AWDCheckerPreviewResp
+	dtoAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	dtoAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
+	dtoAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
+	dtoAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source.PreviewContext)
+	dtoAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
+	return dtoAWDCheckerPreviewResp
+}
 func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source dto.AddContestChallengeReq) commands.AddContestChallengeInput {
 	var commandsAddContestChallengeInput commands.AddContestChallengeInput
 	commandsAddContestChallengeInput.ChallengeID = source.ChallengeID
@@ -257,4 +268,29 @@ func (c *ContestRequestMapperImpl) ToUpsertServiceCheckInput(source dto.UpsertAW
 	commandsUpsertServiceCheckInput.ServiceStatus = source.ServiceStatus
 	commandsUpsertServiceCheckInput.CheckResult = c.ToStringAnyMap(source.CheckResult)
 	return commandsUpsertServiceCheckInput
+}
+func (c *ContestRequestMapperImpl) domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source domain.AWDCheckerPreviewContext) dto.AWDCheckerPreviewContextResp {
+	var dtoAWDCheckerPreviewContextResp dto.AWDCheckerPreviewContextResp
+	dtoAWDCheckerPreviewContextResp.ServiceID = source.ServiceID
+	dtoAWDCheckerPreviewContextResp.AccessURL = source.AccessURL
+	dtoAWDCheckerPreviewContextResp.PreviewFlag = source.PreviewFlag
+	dtoAWDCheckerPreviewContextResp.RoundNumber = source.RoundNumber
+	dtoAWDCheckerPreviewContextResp.TeamID = source.TeamID
+	dtoAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
+	return dtoAWDCheckerPreviewContextResp
+}
+func (c *ContestRequestMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
+	var modelAWDCheckerType model.AWDCheckerType
+	switch source {
+	case model.AWDCheckerTypeHTTPStandard:
+		modelAWDCheckerType = model.AWDCheckerTypeHTTPStandard
+	case model.AWDCheckerTypeLegacyProbe:
+		modelAWDCheckerType = model.AWDCheckerTypeLegacyProbe
+	case model.AWDCheckerTypeScript:
+		modelAWDCheckerType = model.AWDCheckerTypeScript
+	case model.AWDCheckerTypeTCPStandard:
+		modelAWDCheckerType = model.AWDCheckerTypeTCPStandard
+	default: // ignored
+	}
+	return modelAWDCheckerType
 }
