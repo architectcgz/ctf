@@ -1,18 +1,16 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
 import {
-  createContestAWDService,
   createContestAWDRound,
   createContestAWDAttackLog,
   createContestAWDServiceCheck,
   getContestAWDReadiness,
   getContestAWDInstanceOrchestration,
-  listContestAWDServices,
   listContestTeams,
   listContestAWDRounds,
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
-  updateContestAWDService,
+  listContestAWDServices,
 } from '@/api/admin/contests'
 import type {
   AWDAttackLogData,
@@ -35,6 +33,7 @@ import {
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
+import { useAwdChallengeLinkOperations } from './useAwdChallengeLinkOperations'
 import { useAwdRoundDetailState } from './useAwdRoundDetailState'
 import { useAwdServiceOperations } from './useAwdServiceOperations'
 import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
@@ -54,7 +53,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     resetTrafficFiltersState,
   } = useAwdTrafficFilterState()
   const teams = ref<AdminContestTeamData[]>([])
-  const challengeLinks = ref<AdminContestChallengeData[]>([])
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
   const loadingRounds = ref(false)
   const loadingChallengeCatalog = ref(false)
@@ -62,7 +60,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
-  const savingChallengeConfig = ref(false)
 
   const {
     instanceOrchestration,
@@ -74,6 +71,19 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     startAllTeamServices,
   } = useAwdServiceOperations({
     selectedContest,
+  })
+  const {
+    challengeLinks,
+    savingChallengeConfig,
+    refreshChallengeLinks,
+    createChallengeLink,
+    updateChallengeLink,
+  } = useAwdChallengeLinkOperations({
+    selectedContest,
+    onAfterMutate: async () => {
+      await refreshInstanceOrchestration()
+      await refreshReadiness()
+    },
   })
   const {
     services,
@@ -132,15 +142,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   let roundsRequestToken = 0
   let syncingSelectedRound = false
   let autoRefreshTimer: number | null = null
-
-  async function refreshChallengeLinks() {
-    if (!selectedContest.value) {
-      challengeLinks.value = []
-      return
-    }
-    const nextServices = await listContestAWDServices(selectedContest.value.id)
-    challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextServices)
-  }
 
   async function applyTrafficFilters(
     patch: Partial<
@@ -336,102 +337,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       await refreshRoundDetail(selectedRoundId.value)
     } finally {
       savingAttackLog.value = false
-    }
-  }
-
-  async function createChallengeLink(payload: {
-    challenge_id: number
-    awd_challenge_id?: number
-    points: number
-    order?: number
-    is_visible?: boolean
-    awd_checker_type?: AdminContestChallengeData['awd_checker_type']
-    awd_checker_config?: Record<string, unknown>
-    awd_sla_score?: number
-    awd_defense_score?: number
-    awd_checker_preview_token?: string
-  }) {
-    if (!selectedContest.value) {
-      return
-    }
-    if (!payload.awd_challenge_id) {
-      toast.error('请选择 AWD 题目')
-      return
-    }
-
-    savingChallengeConfig.value = true
-    try {
-      await createContestAWDService(selectedContest.value.id, {
-        awd_challenge_id: payload.awd_challenge_id,
-        points: payload.points,
-        order: payload.order,
-        is_visible: payload.is_visible,
-        checker_type: payload.awd_checker_type,
-        checker_config: payload.awd_checker_config,
-        awd_sla_score: payload.awd_sla_score,
-        awd_defense_score: payload.awd_defense_score,
-        awd_checker_preview_token: payload.awd_checker_preview_token,
-      })
-      toast.success('赛事题目已关联')
-      await refreshChallengeLinks()
-      await refreshInstanceOrchestration()
-      await refreshReadiness()
-    } finally {
-      savingChallengeConfig.value = false
-    }
-  }
-
-  async function updateChallengeLink(
-    challengeId: string,
-    payload: {
-      awd_challenge_id?: number
-      points?: number
-      order?: number
-      is_visible?: boolean
-      awd_checker_type?: AdminContestChallengeData['awd_checker_type']
-      awd_checker_config?: Record<string, unknown>
-      awd_sla_score?: number
-      awd_defense_score?: number
-      awd_checker_preview_token?: string
-    }
-  ) {
-    if (!selectedContest.value) {
-      return
-    }
-
-    savingChallengeConfig.value = true
-    try {
-      const currentChallenge = challengeLinks.value.find((item) => item.challenge_id === challengeId)
-      const currentAWDChallengeID = Number(currentChallenge?.awd_challenge_id || 0) || undefined
-      const awdChallengeID = payload.awd_challenge_id ?? currentAWDChallengeID
-      const points = payload.points ?? currentChallenge?.points
-      const order = payload.order ?? currentChallenge?.order
-      const isVisible = payload.is_visible ?? currentChallenge?.is_visible
-
-      if (awdChallengeID && points !== undefined) {
-        const nextPayload = {
-          awd_challenge_id: awdChallengeID,
-          points,
-          order,
-          is_visible: isVisible,
-          checker_type: payload.awd_checker_type,
-          checker_config: payload.awd_checker_config,
-          awd_sla_score: payload.awd_sla_score,
-          awd_defense_score: payload.awd_defense_score,
-          awd_checker_preview_token: payload.awd_checker_preview_token,
-        }
-        if (currentChallenge?.awd_service_id) {
-          await updateContestAWDService(selectedContest.value.id, currentChallenge.awd_service_id, nextPayload)
-        } else {
-          await createContestAWDService(selectedContest.value.id, nextPayload)
-        }
-      }
-      toast.success('题目配置已更新')
-      await refreshChallengeLinks()
-      await refreshInstanceOrchestration()
-      await refreshReadiness()
-    } finally {
-      savingChallengeConfig.value = false
     }
   }
 

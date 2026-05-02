@@ -645,6 +645,20 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（题目关联操作拆分）
+- 新增 `features/contest-awd-admin/model/useAwdChallengeLinkOperations.ts`，承接：
+  - AWD 题目关联创建
+  - AWD 题目关联更新
+  - 关联列表刷新与保存 loading 状态
+- `usePlatformContestAwd.ts` 改为组合调用该子模块，不再内联 challenge link 增改细节。
+- `usePlatformContestAwd.ts` 行数继续下降（本批由 556 降至 461）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
