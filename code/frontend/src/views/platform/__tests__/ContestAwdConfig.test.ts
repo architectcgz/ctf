@@ -158,6 +158,7 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigPageSource).toContain(
       "import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'"
     )
+    expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")
     expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
     expect(contestAwdConfigPageSource).not.toContain('updateContestAWDService')
   })

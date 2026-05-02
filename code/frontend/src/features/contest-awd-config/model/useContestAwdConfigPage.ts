@@ -7,13 +7,18 @@ import {
 } from '@/api/admin/contests'
 import type {
   AdminContestAWDServiceData,
-  AWDCheckerType,
   ContestDetailData,
 } from '@/api/contracts'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAwdChallengeSelection } from './useAwdChallengeSelection'
 import { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
+import {
+  formatAwdCheckDateTime,
+  getAwdCheckerTypeLabel,
+  getAwdProtocolLabel,
+  getAwdValidationLabel,
+} from './awdCheckerLabels'
 import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'
 import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'
 
@@ -105,7 +110,7 @@ export function useContestAwdConfigPage() {
 
   const { summarizeCheckResult, getCheckStatusLabel, getPrimaryAccessURL } =
     useAwdCheckResultPresentation({
-      formatDateTime,
+      formatDateTime: formatAwdCheckDateTime,
     })
   const previewSummary = computed(() =>
     previewResult.value
@@ -123,61 +128,6 @@ export function useContestAwdConfigPage() {
         })
       : ''
   )
-
-  function formatDateTime(value?: string): string {
-    if (!value) return '未记录'
-    return new Date(value).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  function getCheckerTypeLabel(value?: AWDCheckerType): string {
-    switch (value) {
-      case 'http_standard':
-        return 'HTTP 标准 Checker'
-      case 'tcp_standard':
-        return 'TCP 标准 Checker'
-      case 'script_checker':
-        return '脚本 Checker'
-      case 'legacy_probe':
-        return '基础探活'
-      default:
-        return '未声明 Checker'
-    }
-  }
-
-  function getProtocolLabel(value?: AWDCheckerType): string {
-    switch (value) {
-      case 'http_standard':
-        return 'Web HTTP'
-      case 'tcp_standard':
-        return 'Binary TCP'
-      case 'script_checker':
-        return '题目包脚本'
-      case 'legacy_probe':
-        return '基础探活'
-      default:
-        return '题目包未声明'
-    }
-  }
-
-  function getValidationLabel(value?: AdminContestAWDServiceData['validation_state']): string {
-    switch (value) {
-      case 'passed':
-        return '已通过'
-      case 'failed':
-        return '未通过'
-      case 'stale':
-        return '待重验'
-      case 'pending':
-      default:
-        return '待验证'
-    }
-  }
 
   async function loadPage(initial = false) {
     if (!contestId.value) return
@@ -243,9 +193,9 @@ export function useContestAwdConfigPage() {
     fieldErrors,
     form,
     getCheckStatusLabel,
-    getCheckerTypeLabel,
-    getProtocolLabel,
-    getValidationLabel,
+    getCheckerTypeLabel: getAwdCheckerTypeLabel,
+    getProtocolLabel: getAwdProtocolLabel,
+    getValidationLabel: getAwdValidationLabel,
     goBackToStudio,
     handlePreview,
     handleSave,

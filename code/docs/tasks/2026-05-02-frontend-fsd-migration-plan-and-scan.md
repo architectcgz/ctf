@@ -1119,6 +1119,22 @@ npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
 npm run typecheck
 ```
 
+### 已完成：Batch AF 子项（AWD 配置展示标签纯函数下沉）
+- 新增 `features/contest-awd-config/model/awdCheckerLabels.ts`，承接：
+  - checker 类型标签映射
+  - 协议标签映射
+  - 校验状态标签映射
+  - 检查时间格式化
+- `useContestAwdConfigPage.ts` 改为复用纯函数模块，移除内联展示映射函数。
+- `useContestAwdConfigPage.ts` 行数下降（本批由 279 降至 229）。
+- 补充 source 边界断言：`ContestAwdConfig.test.ts` 增加 `awdCheckerLabels` 导入断言。
+
+验证：
+```bash
+npm run test:run -- src/views/platform/__tests__/ContestAwdConfig.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
