@@ -349,11 +349,11 @@ describe('TeacherAWDReviewDetail', () => {
     expect(collectTestIdTexts('awd-review-drawer-traffic-service-id')).toContain('Service #7009')
   })
 
-  it('轮次切换区应交由独立组件承接，页面保留组合层职责', () => {
+  it('页面应通过 widget 组合复盘工作区，不直接承载复盘区块模板', () => {
     expect(awdReviewDetailSource).toContain(
-      "import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'"
+      "import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'"
     )
-    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewRoundSelector')
+    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-title')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-copy')
     expect(awdReviewDetailSource).not.toContain(

@@ -7,7 +7,7 @@ import studentManagementSource from '@/components/teacher/student-management/Stu
 import dashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
-import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -142,10 +142,10 @@ describe('teacher base surface alignment', () => {
     expect(awdReviewIndexSource).toContain('metric-panel-grid')
     expect(awdReviewIndexSource).toContain('metric-panel-card')
     expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
-    expect(awdReviewDetailSource).toContain('metric-panel-default-surface')
-    expect(awdReviewDetailSource).toContain('metric-panel-grid')
-    expect(awdReviewDetailSource).toContain('metric-panel-card')
-    expect(awdReviewDetailSource).not.toContain('teacher-summary-item')
+    expect(awdReviewWorkspaceSource).toContain('metric-panel-default-surface')
+    expect(awdReviewWorkspaceSource).toContain('metric-panel-grid')
+    expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
 
     expect(teacherSurfaceSource).not.toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(teacherSurfaceSource).not.toContain(
@@ -172,11 +172,11 @@ describe('teacher base surface alignment', () => {
     expect(awdReviewIndexSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(awdReviewIndexSource).not.toContain('rounded-[30px]')
 
-    expect(awdReviewDetailSource).toContain('teacher-management-shell')
-    expect(awdReviewDetailSource).toContain('workspace-shell')
-    expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
-    expect(awdReviewDetailSource).not.toMatch(/^\.teacher-hero\s*\{/m)
-    expect(awdReviewDetailSource).not.toMatch(/^\.teacher-summary\s*\{/m)
-    expect(awdReviewDetailSource).not.toContain('rounded-[30px]')
+    expect(awdReviewWorkspaceSource).toContain('teacher-management-shell')
+    expect(awdReviewWorkspaceSource).toContain('workspace-shell')
+    expect(awdReviewWorkspaceSource).not.toContain('.teacher-btn {')
+    expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+    expect(awdReviewWorkspaceSource).not.toContain('rounded-[30px]')
   })
 })

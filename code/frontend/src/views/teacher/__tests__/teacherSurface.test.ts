@@ -8,7 +8,7 @@ import studentAnalysisSource from '@/components/teacher/class-management/Student
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
-import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -33,7 +33,7 @@ const teacherManagementSources = [
   ['StudentManagementPage.vue', studentManagementSource],
   ['TeacherInstanceManagementPage.vue', instanceManagementSource],
   ['TeacherAWDReviewIndex.vue', awdReviewIndexSource],
-  ['TeacherAWDReviewDetail.vue', awdReviewDetailSource],
+  ['TeacherAWDReviewWorkspace.vue', awdReviewWorkspaceSource],
 ] as const
 
 const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sourceName, source]) =>

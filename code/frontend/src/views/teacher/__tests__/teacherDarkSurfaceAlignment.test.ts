@@ -6,7 +6,7 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
-import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -26,7 +26,7 @@ describe('teacher dark surface alignment', () => {
     expect(studentManagementSource).toContain('teacher-surface')
     expect(instanceManagementSource).toContain('teacher-surface')
     expect(awdReviewIndexSource).toContain('teacher-surface')
-    expect(awdReviewDetailSource).toContain('teacher-surface')
+    expect(awdReviewWorkspaceSource).toContain('teacher-surface')
   })
 
   it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {
@@ -51,10 +51,10 @@ describe('teacher dark surface alignment', () => {
     expect(awdReviewIndexSource).toContain('teacher-actions')
     expect(awdReviewIndexSource).toContain('metric-panel-card')
     expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
-    expect(awdReviewDetailSource).toContain('workspace-overline')
-    expect(awdReviewDetailSource).toContain('teacher-actions')
-    expect(awdReviewDetailSource).toContain('metric-panel-card')
-    expect(awdReviewDetailSource).not.toContain('teacher-summary-item')
+    expect(awdReviewWorkspaceSource).toContain('workspace-overline')
+    expect(awdReviewWorkspaceSource).toContain('teacher-actions')
+    expect(awdReviewWorkspaceSource).toContain('metric-panel-card')
+    expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
   })
 
   it('class management should not leak element-plus primary plain button chrome', () => {
@@ -102,10 +102,10 @@ describe('teacher dark surface alignment', () => {
     expect(awdReviewIndexSource).not.toContain('rgba(255, 255, 255')
     expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
 
-    expect(awdReviewDetailSource).not.toContain('--journal-ink: var(--color-text-primary);')
-    expect(awdReviewDetailSource).not.toContain('#ffffff')
-    expect(awdReviewDetailSource).not.toContain('#f8fafc')
-    expect(awdReviewDetailSource).not.toContain('rgba(255, 255, 255')
-    expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
+    expect(awdReviewWorkspaceSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewWorkspaceSource).not.toContain('#ffffff')
+    expect(awdReviewWorkspaceSource).not.toContain('#f8fafc')
+    expect(awdReviewWorkspaceSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewWorkspaceSource).not.toContain('.teacher-btn {')
   })
 })
