@@ -76,6 +76,10 @@ function collectSourceFiles(directory: string): string[] {
   })
 }
 
+function isTestFile(filePath: string): boolean {
+  return filePath.endsWith('.test.ts') || filePath.endsWith('.spec.ts')
+}
+
 describe('feature boundaries', () => {
   it('route views and components import migrated feature models through feature public APIs', () => {
     const violations = checkedRoots
@@ -86,6 +90,19 @@ describe('feature boundaries', () => {
           .filter((importPath) => source.includes(importPath))
           .map((importPath) => `${relative(sourceRoot, filePath)} -> ${importPath}`)
       })
+
+    expect(violations).toEqual([])
+  })
+
+  it('feature runtime sources should not import components layer', () => {
+    const featuresRoot = join(sourceRoot, 'features')
+    const violations = collectSourceFiles(featuresRoot)
+      .filter((filePath) => !isTestFile(filePath))
+      .filter((filePath) => {
+        const source = readFileSync(filePath, 'utf-8')
+        return /from\s+['"]@\/components\//.test(source)
+      })
+      .map((filePath) => relative(sourceRoot, filePath))
 
     expect(violations).toEqual([])
   })

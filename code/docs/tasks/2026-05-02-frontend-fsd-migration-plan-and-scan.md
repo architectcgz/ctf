@@ -542,6 +542,22 @@ npm run test:run -- src/features/challenge-topology-studio/model/useChallengeTop
 npm run typecheck
 ```
 
+### 已完成：Batch I 子项（边界自动化落地）
+- 新增 `views` 架构边界测试：
+  - `views/__tests__/routeViewArchitectureBoundary.test.ts`
+  - 规则 1：`views` 运行时代码禁止直接导入 `@/api/*`（`@/api/contracts` 类型导入除外）
+  - 规则 2：`views` 运行时代码禁止直接使用 `useRoute/useRouter/router.push/router.replace/useRouteQueryTabs`
+- 扩展 `features` 边界测试：
+  - `features/__tests__/featureBoundaries.test.ts` 新增规则
+  - `features` 运行时代码禁止导入 `@/components/*`（测试文件除外）
+- 结果：将本轮迁移目标从“人工扫描结论”升级为“可执行回归约束”。
+
+验证：
+```bash
+npm run test:run -- src/features/__tests__/featureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
