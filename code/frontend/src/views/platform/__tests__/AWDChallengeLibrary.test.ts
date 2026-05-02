@@ -23,54 +23,72 @@ const actionMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/platform-awd-challenges', () => ({
-  useAwdChallengeLibraryPage: () => ({
-    openImportPage: openImportPageMock,
-  }),
-  usePlatformAwdChallenges: () => ({
-    list: ref([
-      {
-        id: '1',
-        name: 'Bank Portal AWD',
-        slug: 'bank-portal-awd',
+  useAwdChallengeLibraryPage: () => {
+    actionMocks.refresh()
+    return {
+      list: ref([
+        {
+          id: '1',
+          name: 'Bank Portal AWD',
+          slug: 'bank-portal-awd',
+          category: 'web',
+          difficulty: 'hard',
+          description: 'desc',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: 'v1',
+          status: 'draft',
+          readiness_status: 'pending',
+          created_at: '2026-04-17T08:00:00.000Z',
+          updated_at: '2026-04-17T09:00:00.000Z',
+        },
+      ]),
+      total: ref(1),
+      page: ref(1),
+      pageSize: ref(20),
+      loading: ref(false),
+      keyword: ref(''),
+      serviceTypeFilter: ref(''),
+      statusFilter: ref(''),
+      dialogOpen: ref(false),
+      dialogMode: ref<'create' | 'edit'>('create'),
+      saving: ref(false),
+      uploading: ref(false),
+      queueLoading: ref(false),
+      importQueue: ref([]),
+      uploadResults: ref([]),
+      selectedImportFileName: ref(''),
+      formDraft: ref({
+        name: '',
+        slug: '',
         category: 'web',
-        difficulty: 'hard',
-        description: 'desc',
+        difficulty: 'medium',
+        description: '',
         service_type: 'web_http',
         deployment_mode: 'single_container',
-        version: 'v1',
         status: 'draft',
-        readiness_status: 'pending',
-        created_at: '2026-04-17T08:00:00.000Z',
-        updated_at: '2026-04-17T09:00:00.000Z',
-      },
-    ]),
-    total: ref(1),
-    page: ref(1),
-    pageSize: ref(20),
-    loading: ref(false),
-    keyword: ref(''),
-    serviceTypeFilter: ref(''),
-    statusFilter: ref(''),
-    dialogOpen: ref(false),
-    dialogMode: ref<'create' | 'edit'>('create'),
-    saving: ref(false),
-    uploading: ref(false),
-    queueLoading: ref(false),
-    importQueue: ref([]),
-    uploadResults: ref([]),
-    selectedImportFileName: ref(''),
-    formDraft: ref({
-      name: '',
-      slug: '',
-      category: 'web',
-      difficulty: 'medium',
-      description: '',
-      service_type: 'web_http',
-      deployment_mode: 'single_container',
-      status: 'draft',
-    }),
-    ...actionMocks,
-  }),
+      }),
+      updateKeyword: vi.fn(),
+      updateServiceTypeFilter: vi.fn(),
+      updateStatusFilter: vi.fn(),
+      handleDialogOpenChange: vi.fn(),
+      openImportPage: openImportPageMock,
+      ...actionMocks,
+    }
+  },
+  useAwdChallengeImportPage: () => {
+    actionMocks.refreshImportQueue()
+    return {
+      uploading: ref(false),
+      queueLoading: ref(false),
+      importQueue: ref([]),
+      uploadResults: ref([]),
+      selectedImportFileName: ref(''),
+      refreshImportQueue: actionMocks.refreshImportQueue,
+      selectImportPackages: actionMocks.selectImportPackages,
+      commitImportPreview: actionMocks.commitImportPreview,
+    }
+  },
 }))
 
 beforeEach(() => {
@@ -99,6 +117,7 @@ describe('AWDChallengeLibrary', () => {
     expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
     expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
     expect(awdChallengeLibrarySource).not.toContain('useRouter')
+    expect(awdChallengeLibrarySource).not.toContain('usePlatformAwdChallenges')
   })
 })
 
@@ -114,5 +133,7 @@ describe('AWDChallengeImport', () => {
   it('renders the import page mode without a route-level spacing wrapper', () => {
     expect(awdChallengeImportSource).toContain('mode="import"')
     expect(awdChallengeImportSource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeImportSource).toContain('useAwdChallengeImportPage')
+    expect(awdChallengeImportSource).not.toContain('onMounted(')
   })
 })

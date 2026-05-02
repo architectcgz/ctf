@@ -1,4 +1,5 @@
 export { useAwdChallengeLibraryPage } from './model'
+export { useAwdChallengeImportPage } from './model'
 export { usePlatformAwdChallenges } from './model'
 export type {
   PlatformAwdChallengeFormDraft,
