@@ -38,7 +38,6 @@ import type {
 import { useToast } from '@/composables/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 import {
-  createDefaultTrafficFilters,
   createEmptyInstanceOrchestration,
   humanizeRequestError,
   isAWDReadinessBlockedError,
@@ -48,6 +47,7 @@ import {
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
 import { useAwdReadinessDecision } from './useAwdReadinessDecision'
+import { useAwdTrafficFilterState } from './useAwdTrafficFilterState'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 
@@ -61,7 +61,14 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const trafficSummary = ref<AWDTrafficSummaryData | null>(null)
   const trafficEvents = ref<AWDTrafficEventData[]>([])
   const trafficEventsTotal = ref(0)
-  const trafficFilters = ref<AWDTrafficFilterState>(createDefaultTrafficFilters())
+  const {
+    trafficFilters,
+    buildTrafficEventsParams,
+    applyTrafficFiltersPatch,
+    setTrafficPageState,
+    syncTrafficPagination,
+    resetTrafficFiltersState,
+  } = useAwdTrafficFilterState()
   const scoreboardRows = ref<ScoreboardRow[]>([])
   const scoreboardFrozen = ref(false)
   const teams = ref<AdminContestTeamData[]>([])
@@ -130,20 +137,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     trafficEventsTotal.value = 0
     scoreboardRows.value = []
     scoreboardFrozen.value = false
-  }
-
-  function getTrafficEventsParams() {
-    const filters = trafficFilters.value
-    return {
-      attacker_team_id: filters.attacker_team_id || undefined,
-      victim_team_id: filters.victim_team_id || undefined,
-      service_id: filters.service_id || undefined,
-      awd_challenge_id: filters.awd_challenge_id || undefined,
-      status_group: filters.status_group === 'all' ? undefined : filters.status_group,
-      path_keyword: filters.path_keyword.trim() || undefined,
-      page: filters.page,
-      page_size: filters.page_size,
-    }
   }
 
   async function refreshChallengeLinks() {
@@ -291,7 +284,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
         listContestAWDRoundTrafficEvents(
           selectedContest.value.id,
           roundId,
-          getTrafficEventsParams()
+          buildTrafficEventsParams()
         ),
         getAdminContestLiveScoreboard(selectedContest.value.id, { page: 1, page_size: 10 }),
       ])
@@ -306,11 +299,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       trafficSummary.value = nextTrafficSummary
       trafficEvents.value = nextTrafficEvents.list
       trafficEventsTotal.value = nextTrafficEvents.total
-      trafficFilters.value = {
-        ...trafficFilters.value,
-        page: nextTrafficEvents.page,
-        page_size: nextTrafficEvents.page_size,
-      }
+      syncTrafficPagination(nextTrafficEvents.page, nextTrafficEvents.page_size)
       scoreboardRows.value = nextScoreboard.scoreboard.list
       scoreboardFrozen.value = nextScoreboard.frozen
     } finally {
@@ -335,18 +324,14 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       const result = await listContestAWDRoundTrafficEvents(
         selectedContest.value.id,
         roundId,
-        getTrafficEventsParams()
+        buildTrafficEventsParams()
       )
       if (requestToken !== trafficEventsRequestToken) {
         return
       }
       trafficEvents.value = result.list
       trafficEventsTotal.value = result.total
-      trafficFilters.value = {
-        ...trafficFilters.value,
-        page: result.page,
-        page_size: result.page_size,
-      }
+      syncTrafficPagination(result.page, result.page_size)
     } finally {
       if (requestToken === trafficEventsRequestToken) {
         loadingTrafficEvents.value = false
@@ -367,25 +352,17 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       >
     >
   ) {
-    trafficFilters.value = {
-      ...trafficFilters.value,
-      ...patch,
-      page: 1,
-    }
+    applyTrafficFiltersPatch(patch)
     await refreshTrafficEvents(selectedRoundId.value)
   }
 
   async function setTrafficPage(page: number) {
-    const normalizedPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
-    trafficFilters.value = {
-      ...trafficFilters.value,
-      page: normalizedPage,
-    }
+    setTrafficPageState(page)
     await refreshTrafficEvents(selectedRoundId.value)
   }
 
   async function resetTrafficFilters() {
-    trafficFilters.value = createDefaultTrafficFilters()
+    resetTrafficFiltersState()
     await refreshTrafficEvents(selectedRoundId.value)
   }
 
@@ -393,7 +370,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
       rounds.value = []
       selectedRoundId.value = null
-      trafficFilters.value = createDefaultTrafficFilters()
+      resetTrafficFiltersState()
       teams.value = []
       challengeLinks.value = []
       instanceOrchestration.value = createEmptyInstanceOrchestration()
@@ -659,7 +636,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     () => selectedContest.value?.id || null,
     async (nextContestId, previousContestId) => {
       if (nextContestId !== previousContestId) {
-        trafficFilters.value = createDefaultTrafficFilters()
+        resetTrafficFiltersState()
       }
       await refresh()
     },

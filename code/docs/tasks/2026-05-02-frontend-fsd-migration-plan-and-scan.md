@@ -587,6 +587,20 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（traffic 过滤状态拆分）
+- 新增 `features/contest-awd-admin/model/useAwdTrafficFilterState.ts`，承接：
+  - 流量筛选状态 `trafficFilters`
+  - traffic events 查询参数构造
+  - patch/page/pagination/reset 的状态更新
+- `usePlatformContestAwd.ts` 改为通过该子模块维护 traffic filter 状态，不再内联相关细节。
+- `usePlatformContestAwd.ts` 行数继续下降（本批由 776 降至 753）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。
