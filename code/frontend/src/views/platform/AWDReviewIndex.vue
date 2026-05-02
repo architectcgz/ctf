@@ -18,8 +18,16 @@ interface PlatformAwdReviewRow {
   contestCode: string
 }
 
-const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
-  useTeacherAwdReviewIndex()
+const {
+  loading,
+  error,
+  contests,
+  filters,
+  hasContests,
+  loadContests,
+  openPlatformOverview,
+  openContest,
+} = useTeacherAwdReviewIndex()
 
 const hasActiveFilters = computed(() => Boolean(filters.value.status || filters.value.keyword.trim()))
 const runningCount = computed(() => contests.value.filter((item) => item.status === 'running').length)
@@ -46,7 +54,7 @@ function resetFilters(): void {
         :contest-count="contests.length"
         :running-count="runningCount"
         :export-ready-count="exportReadyCount"
-        @back="router.push({ name: 'PlatformOverview' })"
+        @back="openPlatformOverview"
         @refresh="loadContests"
       />
 

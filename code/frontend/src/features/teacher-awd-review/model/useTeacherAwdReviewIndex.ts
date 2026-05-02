@@ -79,6 +79,10 @@ export function useTeacherAwdReviewIndex() {
     router.push({ name: 'TeacherDashboard' })
   }
 
+  function openPlatformOverview(): void {
+    router.push({ name: 'PlatformOverview' })
+  }
+
   function contestStatusLabel(status: string): string {
     switch (status) {
       case 'running':
@@ -110,7 +114,6 @@ export function useTeacherAwdReviewIndex() {
   })
 
   return {
-    router,
     loading,
     error,
     contests,
@@ -120,6 +123,7 @@ export function useTeacherAwdReviewIndex() {
     contestSummary,
     loadContests,
     openDashboard,
+    openPlatformOverview,
     openContest,
     contestStatusLabel,
   }
