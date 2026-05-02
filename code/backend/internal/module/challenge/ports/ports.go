@@ -58,19 +58,40 @@ type ChallengeImageUsageRepository interface {
 	CountByImageID(ctx context.Context, imageID int64) (int64, error)
 }
 
-type ChallengeWriteupRepository interface {
+type ChallengeWriteupChallengeLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+}
+
+type ChallengeWriteupUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+}
+
+type ChallengeAdminWriteupRepository interface {
 	FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error
+}
+
+type ChallengeReleasedWriteupRepository interface {
 	FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+}
+
+type ChallengeWriteupSolveStatusRepository interface {
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
+}
+
+type ChallengeSubmissionWriteupRepository interface {
 	FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
 	UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error
+}
+
+type ChallengeTeacherSubmissionWriteupRepository interface {
 	GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
 	ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+}
+
+type ChallengeSolutionQueryRepository interface {
 	ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
 	ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
@@ -103,9 +124,15 @@ type CommunitySolutionRecord struct {
 	ChallengeTitle string
 }
 
-type ChallengeTopologyRepository interface {
+type ChallengeTopologyChallengeLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+}
+
+type ChallengeTopologyReadRepository interface {
 	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+}
+
+type ChallengeTopologyWriteRepository interface {
 	UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error
 }
@@ -117,13 +144,17 @@ type ChallengePackageRevisionRepository interface {
 	ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error)
 }
 
-type ImageRepository interface {
+type ImageCommandRepository interface {
 	Create(ctx context.Context, image *model.Image) error
 	FindByID(ctx context.Context, id int64) (*model.Image, error)
 	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
-	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 	Update(ctx context.Context, image *model.Image) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type ImageQueryRepository interface {
+	FindByID(ctx context.Context, id int64) (*model.Image, error)
+	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 }
 
 type EnvironmentTemplateRepository interface {

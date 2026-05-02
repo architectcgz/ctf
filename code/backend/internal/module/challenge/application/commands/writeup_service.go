@@ -16,10 +16,19 @@ import (
 )
 
 type WriteupService struct {
-	repo challengeports.ChallengeWriteupRepository
+	repo writeupCommandRepository
 }
 
-func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupService {
+type writeupCommandRepository interface {
+	challengeports.ChallengeWriteupChallengeLookupRepository
+	challengeports.ChallengeWriteupUserLookupRepository
+	challengeports.ChallengeAdminWriteupRepository
+	challengeports.ChallengeWriteupSolveStatusRepository
+	challengeports.ChallengeSubmissionWriteupRepository
+	challengeports.ChallengeTeacherSubmissionWriteupRepository
+}
+
+func NewWriteupService(repo writeupCommandRepository) *WriteupService {
 	return &WriteupService{repo: repo}
 }
 
@@ -316,7 +325,7 @@ func (s *WriteupService) loadCommunityWriteupForModeration(ctx context.Context, 
 
 func ensureTeacherCanModerateCommunityWriteup(
 	ctx context.Context,
-	repo challengeports.ChallengeWriteupRepository,
+	repo challengeports.ChallengeWriteupUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,

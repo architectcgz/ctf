@@ -23,7 +23,7 @@ type OpsModule struct {
 }
 
 type opsModuleDeps struct {
-	auditRepo        opsports.AuditRepository
+	auditRepo        *opsinfra.AuditRepository
 	riskRepo         opsports.RiskRepository
 	runtimeQuery     opsports.RuntimeQuery
 	runtimeStats     opsports.RuntimeStatsProvider
@@ -31,7 +31,7 @@ type opsModuleDeps struct {
 }
 
 type opsNotificationDeps struct {
-	notificationRepo opsports.NotificationRepository
+	notificationRepo *opsinfra.NotificationRepository
 	broadcaster      opsports.NotificationBroadcaster
 	webSocketManager *websocketpkg.Manager
 }

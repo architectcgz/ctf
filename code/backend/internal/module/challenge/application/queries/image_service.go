@@ -13,11 +13,11 @@ import (
 )
 
 type ImageService struct {
-	repo   challengeports.ImageRepository
+	repo   challengeports.ImageQueryRepository
 	config *config.Config
 }
 
-func NewImageService(repo challengeports.ImageRepository, config *config.Config) *ImageService {
+func NewImageService(repo challengeports.ImageQueryRepository, config *config.Config) *ImageService {
 	return &ImageService{
 		repo:   repo,
 		config: config,

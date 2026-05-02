@@ -7,6 +7,7 @@ import (
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 )
 
 type AuthModule struct {
@@ -14,7 +15,7 @@ type AuthModule struct {
 }
 
 type authModuleDeps struct {
-	users           identitycontracts.UserRepository
+	users           *identityinfra.Repository
 	tokenService    authcontracts.TokenService
 	profileCommands identitycontracts.ProfileCommandService
 	profileQueries  identitycontracts.ProfileQueryService
@@ -53,7 +54,7 @@ func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*Aut
 
 func buildAuthModuleDeps(ops *OpsModule, identity *IdentityModule) authModuleDeps {
 	return authModuleDeps{
-		users:           identity.Users,
+		users:           identity.userRepo,
 		tokenService:    identity.TokenService,
 		profileCommands: identity.ProfileCommands,
 		profileQueries:  identity.ProfileQueries,

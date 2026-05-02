@@ -33,4 +33,5 @@ func (ctxOnlyImageRepository) Delete(context.Context, int64) error {
 	return nil
 }
 
-var _ challengeports.ImageRepository = (*ctxOnlyImageRepository)(nil)
+var _ challengeports.ImageCommandRepository = (*ctxOnlyImageRepository)(nil)
+var _ challengeports.ImageQueryRepository = (*ctxOnlyImageRepository)(nil)

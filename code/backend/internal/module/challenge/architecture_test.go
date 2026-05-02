@@ -100,6 +100,16 @@ func TestPortsDoNotDeclareWideChallengeRepository(t *testing.T) {
 	if strings.Contains(string(content), "type ChallengeRepository interface") {
 		t.Fatalf("challenge ports must not declare the legacy wide ChallengeRepository interface")
 	}
+	forbiddenInterfaces := []string{
+		"type ChallengeWriteupRepository interface",
+		"type ChallengeTopologyRepository interface",
+		"type ImageRepository interface",
+	}
+	for _, forbidden := range forbiddenInterfaces {
+		if strings.Contains(string(content), forbidden) {
+			t.Fatalf("challenge ports must not declare wide interface %s", forbidden)
+		}
+	}
 }
 
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {

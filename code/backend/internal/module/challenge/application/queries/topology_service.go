@@ -17,18 +17,27 @@ import (
 )
 
 type TopologyService struct {
-	repo                challengeports.ChallengeTopologyRepository
+	repo                topologyQueryRepository
 	packageRevisionRepo challengeports.ChallengePackageRevisionRepository
 	templateRepo        challengeports.EnvironmentTemplateRepository
 }
 
-func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templateRepo challengeports.EnvironmentTemplateRepository) *TopologyService {
+type topologyQueryRepository interface {
+	challengeports.ChallengeTopologyChallengeLookupRepository
+	challengeports.ChallengeTopologyReadRepository
+}
+
+func NewTopologyService(
+	repo topologyQueryRepository,
+	templateRepo challengeports.EnvironmentTemplateRepository,
+	packageRevisionRepos ...challengeports.ChallengePackageRevisionRepository,
+) *TopologyService {
 	service := &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,
 	}
-	if packageRevisionRepo, ok := repo.(challengeports.ChallengePackageRevisionRepository); ok {
-		service.packageRevisionRepo = packageRevisionRepo
+	if len(packageRevisionRepos) > 0 {
+		service.packageRevisionRepo = packageRevisionRepos[0]
 	}
 	return service
 }

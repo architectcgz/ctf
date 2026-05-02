@@ -4,7 +4,6 @@ import (
 	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	readmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 )
 
 type TeachingReadmodelModule struct {
@@ -13,7 +12,7 @@ type TeachingReadmodelModule struct {
 }
 
 type teachingReadmodelModuleDeps struct {
-	repo readmodelports.Repository
+	repo *readmodelinfra.Repository
 }
 
 func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *TeachingReadmodelModule {

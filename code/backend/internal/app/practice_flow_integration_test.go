@@ -806,6 +806,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		challengeRepo,
 		imageRepo,
 		challengeRepo,
+		challengeRepo,
 		nil,
 		challengecmd.SelfCheckConfig{
 			RuntimeCreateTimeout: cfg.Container.CreateTimeout,

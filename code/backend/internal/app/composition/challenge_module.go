@@ -39,15 +39,15 @@ type ChallengeModule struct {
 type challengeModuleDeps struct {
 	catalog                 challengecontracts.ChallengeContract
 	imageStore              challengecontracts.ImageStore
-	imageRepo               challengeports.ImageRepository
+	imageRepo               *challengeinfra.ImageRepository
 	challengeCommandRepo    challengeports.ChallengeCommandRepository
 	challengeQueryRepo      challengeports.ChallengeQueryRepository
 	awdChallengeCommandRepo challengeports.AWDChallengeCommandRepository
 	awdChallengeQueryRepo   challengeports.AWDChallengeQueryRepository
 	flagRepo                challengeports.ChallengeFlagRepository
 	imageUsageRepo          challengeports.ChallengeImageUsageRepository
-	topologyRepo            challengeports.ChallengeTopologyRepository
-	writeupRepo             challengeports.ChallengeWriteupRepository
+	topologyRepo            *challengeinfra.Repository
+	writeupRepo             *challengeinfra.Repository
 	templateRepo            challengeports.EnvironmentTemplateRepository
 	imageRuntime            challengeports.ImageRuntime
 	runtimeProbe            challengeports.ChallengeRuntimeProbe
@@ -169,6 +169,7 @@ func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps, ops *OpsMod
 		deps.challengeCommandRepo,
 		deps.imageRepo,
 		deps.topologyRepo,
+		deps.topologyRepo,
 		deps.runtimeProbe,
 		challengecmd.SelfCheckConfig{
 			RuntimeCreateTimeout:     root.Config().Container.CreateTimeout,
@@ -199,7 +200,7 @@ func buildChallengeFlagHandler(cfg *config.Config, deps challengeModuleDeps) (*c
 
 func buildChallengeTopologyHandler(deps challengeModuleDeps) *challengehttp.TopologyHandler {
 	topologyCommandService := challengecmd.NewTopologyService(deps.topologyRepo, deps.templateRepo, deps.imageRepo)
-	topologyQueryService := challengeqry.NewTopologyService(deps.topologyRepo, deps.templateRepo)
+	topologyQueryService := challengeqry.NewTopologyService(deps.topologyRepo, deps.templateRepo, deps.topologyRepo)
 	return challengehttp.NewTopologyHandler(topologyCommandService, topologyQueryService)
 }
 

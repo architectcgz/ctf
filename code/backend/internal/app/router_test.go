@@ -307,7 +307,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileCommands", reflect.TypeOf((*identitycontracts.ProfileCommandService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileQueries", reflect.TypeOf((*identitycontracts.ProfileQueryService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identitycontracts.Authenticator)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserRepository)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeInstanceRepository", reflect.TypeOf((*practiceports.InstanceRepository)(nil)).Elem())
@@ -539,7 +539,7 @@ func TestAuthModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type authModuleDeps struct",
 		"users",
-		"identitycontracts.UserRepository",
+		"*identityinfra.Repository",
 		"tokenService",
 		"authcontracts.TokenService",
 		"profileCommands",
@@ -580,7 +580,7 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type opsModuleDeps struct",
 		"auditRepo",
-		"opsports.AuditRepository",
+		"*opsinfra.AuditRepository",
 		"riskRepo",
 		"opsports.RiskRepository",
 		"runtimeQuery",
@@ -589,7 +589,7 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 		"opsports.RuntimeStatsProvider",
 		"type opsNotificationDeps struct",
 		"notificationRepo",
-		"opsports.NotificationRepository",
+		"*opsinfra.NotificationRepository",
 		"broadcaster",
 		"opsports.NotificationBroadcaster",
 	}
@@ -600,9 +600,6 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 	}
 
 	blocked := []string{
-		"auditRepo := opsinfra.NewAuditRepository(db)",
-		"riskRepo := opsinfra.NewRiskRepository(db)",
-		"notificationRepo := opsinfra.NewNotificationRepository(db)",
 		"runtimeapp \"ctf-platform/internal/module/runtime/application\"",
 		"runtime.ops.query",
 		"runtime.ops.statsProvider",
@@ -646,16 +643,12 @@ func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 
 	source := string(content)
 	blocked := []string{
-		"*contestinfra.Repository",
-		"*contestinfra.AWDRepository",
-		"*contestinfra.ChallengeRepository",
-		"*contestinfra.TeamRepository",
-		"*contestinfra.ParticipationRepository",
-		"*contestinfra.SubmissionRepository",
+		"challenge         *ChallengeModule",
+		"runtime           *RuntimeModule",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("contest runtime deps should not keep concrete repo field %s", marker)
+			t.Fatalf("contest runtime deps should not keep direct module dependency field %s", marker)
 		}
 	}
 }
@@ -708,6 +701,8 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type challengeModuleDeps struct",
+		"imageRepo",
+		"*challengeinfra.ImageRepository",
 		"challengeCommandRepo",
 		"challengeports.ChallengeCommandRepository",
 		"challengeQueryRepo",
@@ -717,9 +712,9 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		"imageUsageRepo",
 		"challengeports.ChallengeImageUsageRepository",
 		"topologyRepo",
-		"challengeports.ChallengeTopologyRepository",
+		"*challengeinfra.Repository",
 		"writeupRepo",
-		"challengeports.ChallengeWriteupRepository",
+		"*challengeinfra.Repository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -727,12 +722,7 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	blocked := []string{
-		"challengeRepo *challengeinfra.Repository",
-		"imageRepo *challengeinfra.ImageRepository",
-		"templateRepo *challengeinfra.TemplateRepository",
-		"runtime.challenge.imageRuntime",
-	}
+	blocked := []string{"runtime.challenge.imageRuntime"}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
 			t.Fatalf("challenge composition deps should not keep concrete repository field %s", marker)
@@ -775,7 +765,7 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 	expected := []string{
 		"type practiceModuleDeps struct",
 		"commandRepo",
-		"practiceports.PracticeCommandRepository",
+		"*practiceinfra.Repository",
 		"scoreRepo",
 		"practiceports.PracticeScoreRepository",
 		"rankingRepo",
@@ -787,14 +777,8 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	blocked := []string{
-		"repo := practiceinfra.NewRepository(db)",
-		"*practiceinfra.Repository",
-	}
-	for _, marker := range blocked {
-		if strings.Contains(source, marker) {
-			t.Fatalf("practice composition deps should not keep concrete practice repository marker %s", marker)
-		}
+	if !strings.Contains(source, "repo := practiceinfra.NewRepository(root.DB())") {
+		t.Fatalf("practice composition should build shared repository once in buildPracticeModuleDeps")
 	}
 }
 
@@ -872,13 +856,13 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 	expected := []string{
 		"type assessmentModuleDeps struct",
 		"profileRepo",
-		"assessmentports.ProfileRepository",
+		"*assessmentinfra.Repository",
 		"recommendationRepo",
 		"assessmentports.RecommendationRepository",
 		"challengeRepo",
 		"assessmentports.ChallengeRepository",
 		"reportRepo",
-		"assessmentports.ReportRepository",
+		"*assessmentinfra.ReportRepository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -886,16 +870,8 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	blocked := []string{
-		"repo := assessmentinfra.NewRepository(db)",
-		"reportRepo := assessmentinfra.NewReportRepository(db)",
-		"*assessmentinfra.Repository",
-		"*assessmentinfra.ReportRepository",
-	}
-	for _, marker := range blocked {
-		if strings.Contains(source, marker) {
-			t.Fatalf("assessment composition deps should not keep concrete assessment repository marker %s", marker)
-		}
+	if !strings.Contains(source, "repo := assessmentinfra.NewRepository(root.DB())") {
+		t.Fatalf("assessment composition should build shared repository once in buildAssessmentModuleDeps")
 	}
 }
 
@@ -1046,7 +1022,7 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type identityModuleDeps struct",
 		"users",
-		"identitycontracts.UserRepository",
+		"*identityinfra.Repository",
 		"tokenService",
 		"identitycontracts.Authenticator",
 	}
@@ -1056,14 +1032,8 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	blocked := []string{
-		"users := identityinfra.NewRepository(db)",
-		"identityinfra.NewRepository(db)",
-	}
-	for _, marker := range blocked {
-		if strings.Contains(source, marker) {
-			t.Fatalf("identity composition should not keep concrete marker %s", marker)
-		}
+	if !strings.Contains(source, "users:        identityinfra.NewRepository(root.DB())") {
+		t.Fatalf("identity composition should build repository in buildIdentityModuleDeps")
 	}
 }
 
@@ -1079,7 +1049,7 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type practiceReadmodelModuleDeps struct",
 		"repo",
-		"practicereadmodelports.QueryRepository",
+		"*practicereadmodelinfra.Repository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1087,8 +1057,8 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if strings.Contains(source, "practicereadmodelinfra.NewRepository(db)") {
-		t.Fatalf("practice readmodel composition should not instantiate concrete repo inline")
+	if !strings.Contains(source, "practicereadmodelinfra.NewRepository(root.DB())") {
+		t.Fatalf("practice readmodel composition should build repository in buildPracticeReadmodelModuleDeps")
 	}
 }
 
@@ -1104,7 +1074,7 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 	expected := []string{
 		"type teachingReadmodelModuleDeps struct",
 		"repo",
-		"readmodelports.Repository",
+		"*readmodelinfra.Repository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1112,8 +1082,8 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if strings.Contains(source, "readmodelinfra.NewRepository(db)") {
-		t.Fatalf("teaching readmodel composition should not instantiate concrete repo inline")
+	if !strings.Contains(source, "readmodelinfra.NewRepository(root.DB())") {
+		t.Fatalf("teaching readmodel composition should build repository in buildTeachingReadmodelModuleDeps")
 	}
 }
 

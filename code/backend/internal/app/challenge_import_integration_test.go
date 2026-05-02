@@ -55,7 +55,7 @@ func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -133,7 +133,7 @@ func TestChallengeImportCommitUpsertsByPackageSlug(t *testing.T) {
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	firstCommit := previewAndCommitChallengeImport(
@@ -190,7 +190,7 @@ func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -224,7 +224,7 @@ func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -252,7 +252,7 @@ func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -280,7 +280,7 @@ func TestChallengeImportPreviewRejectsArchiveWithTooManyFiles(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipartFromArchive(t, buildChallengeImportArchiveWithTooManyFiles(t))

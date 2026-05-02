@@ -15,10 +15,21 @@ import (
 )
 
 type WriteupService struct {
-	repo challengeports.ChallengeWriteupRepository
+	repo writeupQueryRepository
 }
 
-func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupService {
+type writeupQueryRepository interface {
+	challengeports.ChallengeWriteupChallengeLookupRepository
+	challengeports.ChallengeWriteupUserLookupRepository
+	challengeports.ChallengeAdminWriteupRepository
+	challengeports.ChallengeReleasedWriteupRepository
+	challengeports.ChallengeWriteupSolveStatusRepository
+	challengeports.ChallengeSubmissionWriteupRepository
+	challengeports.ChallengeTeacherSubmissionWriteupRepository
+	challengeports.ChallengeSolutionQueryRepository
+}
+
+func NewWriteupService(repo writeupQueryRepository) *WriteupService {
 	return &WriteupService{repo: repo}
 }
 
@@ -201,7 +212,7 @@ func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID,
 
 func normalizeTeacherSubmissionQuery(
 	ctx context.Context,
-	repo challengeports.ChallengeWriteupRepository,
+	repo challengeports.ChallengeWriteupUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
 	query *dto.TeacherSubmissionWriteupQuery,
@@ -236,7 +247,7 @@ func normalizeTeacherSubmissionQuery(
 
 func ensureTeacherCanAccessQueryRecord(
 	ctx context.Context,
-	repo challengeports.ChallengeWriteupRepository,
+	repo challengeports.ChallengeWriteupUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,

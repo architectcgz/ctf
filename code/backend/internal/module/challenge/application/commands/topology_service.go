@@ -16,12 +16,18 @@ import (
 )
 
 type TopologyService struct {
-	repo         challengeports.ChallengeTopologyRepository
+	repo         topologyCommandRepository
 	templateRepo challengeports.EnvironmentTemplateRepository
-	imageRepo    challengeports.ImageRepository
+	imageRepo    challengeports.ImageQueryRepository
 }
 
-func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templateRepo challengeports.EnvironmentTemplateRepository, imageRepo challengeports.ImageRepository) *TopologyService {
+type topologyCommandRepository interface {
+	challengeports.ChallengeTopologyChallengeLookupRepository
+	challengeports.ChallengeTopologyReadRepository
+	challengeports.ChallengeTopologyWriteRepository
+}
+
+func NewTopologyService(repo topologyCommandRepository, templateRepo challengeports.EnvironmentTemplateRepository, imageRepo challengeports.ImageQueryRepository) *TopologyService {
 	return &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,

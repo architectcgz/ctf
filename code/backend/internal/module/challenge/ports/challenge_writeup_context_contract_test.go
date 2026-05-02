@@ -67,4 +67,11 @@ func (ctxOnlyChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(con
 	return nil, 0, nil
 }
 
-var _ challengeports.ChallengeWriteupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeWriteupChallengeLookupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeWriteupUserLookupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeAdminWriteupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeReleasedWriteupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeWriteupSolveStatusRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeSubmissionWriteupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeTeacherSubmissionWriteupRepository = (*ctxOnlyChallengeWriteupRepository)(nil)
+var _ challengeports.ChallengeSolutionQueryRepository = (*ctxOnlyChallengeWriteupRepository)(nil)

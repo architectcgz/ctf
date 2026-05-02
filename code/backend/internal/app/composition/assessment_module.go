@@ -23,10 +23,10 @@ type AssessmentModule struct {
 }
 
 type assessmentModuleDeps struct {
-	profileRepo        assessmentports.ProfileRepository
+	profileRepo        *assessmentinfra.Repository
 	recommendationRepo assessmentports.RecommendationRepository
-	reportRepo         assessmentports.ReportRepository
-	awdReviewRepo      assessmentports.TeacherAWDReviewRepository
+	reportRepo         *assessmentinfra.ReportRepository
+	awdReviewRepo      *assessmentinfra.TeacherAWDReviewRepository
 }
 
 type assessmentModuleExternalDeps struct {

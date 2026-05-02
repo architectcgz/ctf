@@ -25,7 +25,9 @@ func (ctxOnlyChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(c
 	return nil
 }
 
-var _ challengeports.ChallengeTopologyRepository = (*ctxOnlyChallengeTopologyRepository)(nil)
+var _ challengeports.ChallengeTopologyChallengeLookupRepository = (*ctxOnlyChallengeTopologyRepository)(nil)
+var _ challengeports.ChallengeTopologyReadRepository = (*ctxOnlyChallengeTopologyRepository)(nil)
+var _ challengeports.ChallengeTopologyWriteRepository = (*ctxOnlyChallengeTopologyRepository)(nil)
 
 type ctxOnlyChallengePackageRevisionRepository struct{}
 

@@ -34,8 +34,8 @@ type ChallengeNotificationSender interface {
 type ChallengeService struct {
 	db            *gorm.DB
 	repo          challengeports.ChallengeCommandRepository
-	imageRepo     challengeports.ImageRepository
-	topologyRepo  challengeports.ChallengeTopologyRepository
+	imageRepo     challengeports.ImageQueryRepository
+	topologyRepo  challengeports.ChallengeTopologyReadRepository
 	packageRepo   challengeports.ChallengePackageRevisionRepository
 	runtimeProbe  challengeports.ChallengeRuntimeProbe
 	notifications ChallengeNotificationSender
@@ -46,8 +46,9 @@ type ChallengeService struct {
 func NewChallengeService(
 	db *gorm.DB,
 	repo challengeports.ChallengeCommandRepository,
-	imageRepo challengeports.ImageRepository,
-	topologyRepo challengeports.ChallengeTopologyRepository,
+	imageRepo challengeports.ImageQueryRepository,
+	topologyRepo challengeports.ChallengeTopologyReadRepository,
+	packageRepo challengeports.ChallengePackageRevisionRepository,
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
 	cfg SelfCheckConfig,
 	logger *zap.Logger,
@@ -70,13 +71,11 @@ func NewChallengeService(
 		repo:          repo,
 		imageRepo:     imageRepo,
 		topologyRepo:  topologyRepo,
+		packageRepo:   packageRepo,
 		runtimeProbe:  runtimeProbe,
 		notifications: firstChallengeNotificationSender(notifications),
 		selfCheckCfg:  cfg,
 		logger:        logger,
-	}
-	if packageRepo, ok := topologyRepo.(challengeports.ChallengePackageRevisionRepository); ok {
-		service.packageRepo = packageRepo
 	}
 	return service
 }

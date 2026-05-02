@@ -40,8 +40,8 @@ func (s *stubChallengeNotificationSender) SendChallengePublishCheckResult(_ cont
 	return nil
 }
 
-func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
-	return NewChallengeService(nil, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
+	return NewChallengeService(nil, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {
@@ -187,7 +187,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(nil, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(nil, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
 		InstanceSharing: model.InstanceSharingShared,
@@ -285,7 +285,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		},
 	}
 	notifier := &stubChallengeNotificationSender{}
-	service := NewChallengeService(db, repo, imageRepo, repo, probe, SelfCheckConfig{
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
@@ -358,7 +358,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	notifier := &stubChallengeNotificationSender{}
-	service := NewChallengeService(db, repo, imageRepo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
@@ -429,7 +429,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
 	notifier := &stubChallengeNotificationSender{}
-	service := NewChallengeService(db, repo, imageRepo, repo, probe, SelfCheckConfig{
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
@@ -504,7 +504,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
 	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {

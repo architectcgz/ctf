@@ -4,7 +4,6 @@ import (
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
-	practicereadmodelports "ctf-platform/internal/module/practice_readmodel/ports"
 )
 
 type PracticeReadmodelModule struct {
@@ -13,7 +12,7 @@ type PracticeReadmodelModule struct {
 }
 
 type practiceReadmodelModuleDeps struct {
-	repo practicereadmodelports.QueryRepository
+	repo *practicereadmodelinfra.Repository
 }
 
 func BuildPracticeReadmodelModule(root *Root) *PracticeReadmodelModule {

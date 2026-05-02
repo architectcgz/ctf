@@ -111,7 +111,7 @@ func TestCommitChallengeImportRestoresSoftDeletedChallenge(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -204,7 +204,7 @@ func TestCommitChallengeImportPersistsRuntimeServiceTarget(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -287,7 +287,7 @@ func TestCommitChallengeImportClearsLegacyPublishCheckJobs(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -386,7 +386,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "bank-portal")
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
@@ -478,7 +478,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "exportable-bank")
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
