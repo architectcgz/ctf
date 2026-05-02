@@ -372,6 +372,26 @@ npm run test:run -- src/views/platform/__tests__/ChallengeManage.test.ts src/vie
 npm run typecheck
 ```
 
+### 已完成：Batch F2（student dashboard 组件映射上移）
+- `features/student-dashboard/model/useStudentDashboardPage.ts` 不再导入：
+  - `StudentOverviewPage.vue`
+  - `StudentRecommendationPage.vue`
+  - `StudentCategoryProgressPage.vue`
+  - `StudentTimelinePage.vue`
+  - `StudentDifficultyPage.vue`
+- 组件映射已上移到 `views/dashboard/DashboardView.vue`，feature model 仅保留：
+  - tab 元数据
+  - panel 绑定数据 `resolveDashboardPanelBindings`
+  - 页面流程与导航行为
+- 补充边界断言：
+  - `views/dashboard/__tests__/DashboardView.test.ts` 新增 `useStudentDashboardPage.ts` 不允许导入上述 `.vue` 面板组件的断言。
+
+验证：
+```bash
+npm run test:run -- src/views/dashboard/__tests__/DashboardView.test.ts src/views/dashboard/__tests__/dashboardPanelExtraction.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

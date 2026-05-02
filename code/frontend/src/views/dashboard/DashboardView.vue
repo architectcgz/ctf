@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { useStudentDashboardPage } from '@/features/student-dashboard'
+import StudentCategoryProgressPage from '@/components/dashboard/student/StudentCategoryProgressPage.vue'
+import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficultyPage.vue'
+import StudentOverviewPage from '@/components/dashboard/student/StudentOverviewPage.vue'
+import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
+import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
+import { useStudentDashboardPage, type DashboardPanelKey } from '@/features/student-dashboard'
 
 const {
   loading,
@@ -11,9 +16,20 @@ const {
   switchPanel,
   handleTabKeydown,
   loadDashboard,
-  resolveDashboardPanelComponent,
   resolveDashboardPanelBindings,
 } = useStudentDashboardPage()
+
+const dashboardPanelComponents: Record<DashboardPanelKey, unknown> = {
+  overview: StudentOverviewPage,
+  recommendation: StudentRecommendationPage,
+  category: StudentCategoryProgressPage,
+  timeline: StudentTimelinePage,
+  difficulty: StudentDifficultyPage,
+}
+
+function resolveDashboardPanelComponent(panelKey: DashboardPanelKey): unknown {
+  return dashboardPanelComponents[panelKey]
+}
 </script>
 
 <template>

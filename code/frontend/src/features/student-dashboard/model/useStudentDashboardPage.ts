@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, type Component } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FileChartColumnIncreasing, Rocket, ShieldAlert } from 'lucide-vue-next'
 
@@ -9,17 +9,17 @@ import type {
   SkillProfileData,
   TimelineEvent,
 } from '@/api/contracts'
-import StudentCategoryProgressPage from '@/components/dashboard/student/StudentCategoryProgressPage.vue'
-import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficultyPage.vue'
-import StudentOverviewPage from '@/components/dashboard/student/StudentOverviewPage.vue'
-import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
-import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import type { DashboardHighlightItem } from '@/components/dashboard/student/types'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 
-type DashboardPanelKey = 'overview' | 'category' | 'recommendation' | 'timeline' | 'difficulty'
+export type DashboardPanelKey =
+  | 'overview'
+  | 'category'
+  | 'recommendation'
+  | 'timeline'
+  | 'difficulty'
 
 export function useStudentDashboardPage() {
   const authStore = useAuthStore()
@@ -148,21 +148,6 @@ export function useStudentDashboardPage() {
     router.push(`/challenges/${challengeId}`)
   }
 
-  function resolveDashboardPanelComponent(panelKey: DashboardPanelKey): Component {
-    switch (panelKey) {
-      case 'overview':
-        return StudentOverviewPage
-      case 'recommendation':
-        return StudentRecommendationPage
-      case 'category':
-        return StudentCategoryProgressPage
-      case 'timeline':
-        return StudentTimelinePage
-      case 'difficulty':
-        return StudentDifficultyPage
-    }
-  }
-
   function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<string, unknown> {
     switch (panelKey) {
       case 'overview':
@@ -228,7 +213,6 @@ export function useStudentDashboardPage() {
     switchPanel,
     handleTabKeydown,
     loadDashboard,
-    resolveDashboardPanelComponent,
     resolveDashboardPanelBindings,
   }
 }

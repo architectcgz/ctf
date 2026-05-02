@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '../DashboardView.vue'
 import dashboardViewSource from '../DashboardView.vue?raw'
+import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -176,6 +177,21 @@ describe('DashboardView', () => {
     expect(dashboardViewSource).toContain('useStudentDashboardPage')
     expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
     expect(dashboardViewSource).not.toContain('Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])')
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentOverviewPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentRecommendationPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentCategoryProgressPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentTimelinePage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
+    )
   })
 
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {
