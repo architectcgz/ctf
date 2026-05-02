@@ -573,6 +573,20 @@ npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.t
 npm run typecheck
 ```
 
+### 已完成：Batch G2 子项（readiness 决策流拆分）
+- 新增 `features/contest-awd-admin/model/useAwdReadinessDecision.ts`，承接：
+  - readiness 拉取与 loading 状态
+  - override dialog 生命周期（打开、关闭、确认）
+  - 被阻断操作的强制放行决策分支
+- `usePlatformContestAwd.ts` 改为组装调用该子模块，不再内联 override 决策细节。
+- `usePlatformContestAwd.ts` 行数进一步下降（本批由 864 降至 776）。
+
+验证：
+```bash
+npm run test:run -- src/features/contest-awd-admin/model/usePlatformContestAwd.test.ts
+npm run typecheck
+```
+
 ## 每批验证要求
 1. 运行本批相关 vitest。
 2. 运行 `npm run typecheck`。

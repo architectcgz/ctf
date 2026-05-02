@@ -23,8 +23,6 @@ import {
 } from '@/api/admin/contests'
 import type {
   AWDAttackLogData,
-  AWDReadinessAction,
-  AWDReadinessData,
   AWDRoundData,
   AWDRoundSummaryData,
   AWDTrafficEventData,
@@ -40,7 +38,6 @@ import type {
 import { useToast } from '@/composables/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 import {
-  createDefaultOverrideDialogState,
   createDefaultTrafficFilters,
   createEmptyInstanceOrchestration,
   humanizeRequestError,
@@ -48,9 +45,9 @@ import {
   loadStoredSelectedRoundId,
   persistSelectedRoundId,
   pickRoundId,
-  type AWDReadinessOverrideDialogState,
   type AWDTrafficFilterState,
 } from './awdAdminSupport'
+import { useAwdReadinessDecision } from './useAwdReadinessDecision'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 
@@ -73,23 +70,33 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const instanceOrchestration = ref<AdminContestAWDInstanceOrchestrationData>(
     createEmptyInstanceOrchestration()
   )
-  const readiness = ref<AWDReadinessData | null>(null)
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
   const loadingTrafficSummary = ref(false)
   const loadingTrafficEvents = ref(false)
   const loadingChallengeCatalog = ref(false)
   const loadingInstanceOrchestration = ref(false)
-  const loadingReadiness = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
   const savingChallengeConfig = ref(false)
   const startingInstanceKey = ref<string | null>(null)
-  const overrideDialogState = ref<AWDReadinessOverrideDialogState>(
-    createDefaultOverrideDialogState()
-  )
+
+  const {
+    readiness,
+    loadingReadiness,
+    overrideDialogState,
+    refreshReadiness,
+    openOverrideDialog,
+    closeOverrideDialog,
+    confirmOverrideAction,
+  } = useAwdReadinessDecision({
+    selectedContest,
+    onAfterOverride: async (preferredRoundId?: string) => {
+      await refresh(preferredRoundId)
+    },
+  })
 
   const selectedRound = computed(
     () => rounds.value.find((item) => item.id === selectedRoundId.value) || null
@@ -136,101 +143,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       path_keyword: filters.path_keyword.trim() || undefined,
       page: filters.page,
       page_size: filters.page_size,
-    }
-  }
-
-  function resetOverrideDialog() {
-    overrideDialogState.value = createDefaultOverrideDialogState()
-  }
-
-  async function refreshReadiness() {
-    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
-      readiness.value = null
-      resetOverrideDialog()
-      return null
-    }
-
-    loadingReadiness.value = true
-    try {
-      const nextReadiness = await getContestAWDReadiness(selectedContest.value.id)
-      readiness.value = nextReadiness
-      return nextReadiness
-    } finally {
-      loadingReadiness.value = false
-    }
-  }
-
-  async function openOverrideDialog(
-    action: Extract<AWDReadinessAction, 'create_round' | 'run_current_round_check'>,
-    title: string,
-    pendingRoundPayload?: AWDReadinessOverrideDialogState['pendingRoundPayload']
-  ) {
-    const snapshot = await refreshReadiness()
-    overrideDialogState.value = {
-      open: true,
-      action,
-      title,
-      readiness: snapshot || readiness.value,
-      confirmLoading: false,
-      pendingRoundPayload,
-    }
-  }
-
-  function closeOverrideDialog() {
-    resetOverrideDialog()
-  }
-
-  async function confirmOverrideAction(reason: string) {
-    if (!selectedContest.value) {
-      return
-    }
-
-    const normalizedReason = reason.trim()
-    const currentAction = overrideDialogState.value.action
-    const currentTitle = overrideDialogState.value.title
-    const pendingRoundPayload = overrideDialogState.value.pendingRoundPayload
-    if (!normalizedReason || !currentAction) {
-      return
-    }
-
-    overrideDialogState.value = {
-      ...overrideDialogState.value,
-      confirmLoading: true,
-    }
-
-    try {
-      if (currentAction === 'create_round' && pendingRoundPayload) {
-        const round = await createContestAWDRound(selectedContest.value.id, {
-          ...pendingRoundPayload,
-          force_override: true,
-          override_reason: normalizedReason,
-        })
-        toast.success(`第 ${round.round_number} 轮已创建`)
-        resetOverrideDialog()
-        await refresh(round.id)
-        return
-      }
-
-      const result = await runContestAWDCurrentRoundCheck(selectedContest.value.id, {
-        force_override: true,
-        override_reason: normalizedReason,
-      })
-      toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
-      resetOverrideDialog()
-      await refresh(result.round.id)
-    } catch (error) {
-      if (isAWDReadinessBlockedError(error)) {
-        await openOverrideDialog(currentAction, currentTitle || '强制继续', pendingRoundPayload)
-        return
-      }
-      toast.error(humanizeRequestError(error, '执行强制放行失败'))
-    } finally {
-      if (overrideDialogState.value.open) {
-        overrideDialogState.value = {
-          ...overrideDialogState.value,
-          confirmLoading: false,
-        }
-      }
     }
   }
 
@@ -488,7 +400,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       readiness.value = null
       loadingReadiness.value = false
       loadingInstanceOrchestration.value = false
-      resetOverrideDialog()
+      closeOverrideDialog()
       clearRoundDetail()
       return
     }
