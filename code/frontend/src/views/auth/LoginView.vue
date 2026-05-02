@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, reactive, ref, useTemplateRef } from 'vue'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
@@ -127,7 +127,7 @@ function showProbeMessage(message: string) {
   }, 3000)
 }
 
-onMounted(() => {
+function emitLoginConsoleHints() {
   // eslint-disable-next-line no-console
   console.log(
     '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
@@ -165,7 +165,8 @@ onMounted(() => {
     'font-weight: bold;',
     ''
   )
-})
+}
+emitLoginConsoleHints()
 
 onBeforeUnmount(() => {
   if (probeMessageTimer) {

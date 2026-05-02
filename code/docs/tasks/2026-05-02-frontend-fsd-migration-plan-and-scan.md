@@ -49,17 +49,11 @@ rg -n "from ['\"]@/api/" code/frontend/src/views/**/*.vue
 ### 3) 视图层生命周期扫描（用于下一轮收口）
 命令：
 ```bash
-rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
+rg -n "onMounted\(|watch\(|useEffect\(" code/frontend/src/views --glob '*.{vue,tsx,jsx}'
 ```
-当前命中：
-- `src/views/auth/LoginView.vue`（控制台提示与彩蛋提示时序）
-- `src/views/platform/ContestManage.vue`
-- `src/views/platform/UserManage.vue`
-- `src/views/platform/AWDChallengeLibrary.vue`
-- `src/views/platform/AWDChallengeImport.vue`
-- `src/views/auth/LoginView.vue`（控制台提示）
+结果：无命中（已清零）。
 
-## 当前未完成项
+## 当前状态
 
 ### 已完成（P0）
 - `src/views/platform/ContestManage.vue`
@@ -75,13 +69,6 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
   - 已新增 `useAwdChallengeImportPage`。
   - `onMounted` 导入队列刷新已下沉。
 
-### 剩余（P1）
-- `src/views/auth/LoginView.vue`
-  - `onMounted` 只负责控制台提示；不是业务数据加载。
-  - 可保留，除非后续要把登录页彩蛋/控制台提示整体抽成 `useLoginProbeConsolePage`。
-
-## 后续迁移批次
-
 ### Batch D：低优先级展示收口（已完成）
 - `ScoreboardView.vue`
   - 已新增 `features/scoreboard/model/useScoreboardContestDirectoryPage.ts`。
@@ -89,8 +76,8 @@ rg -n "onMounted\(|watch\(" code/frontend/src/views/**/*.vue
 - `InstanceList.vue`
   - 已新增 `features/instance-list/model/useInstanceWarningFocus.ts`。
   - warning 弹窗焦点管理 `watch` 已下沉。
-- 剩余建议
-  - `LoginView.vue` 的控制台提示 `onMounted` 建议保留为 accepted exception。
+- `LoginView.vue`
+  - 控制台提示已改为 setup 阶段函数调用，不再使用 `onMounted`。
 
 ## 每批验证要求
 1. 运行本批相关 vitest。
