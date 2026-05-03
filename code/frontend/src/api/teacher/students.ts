@@ -6,10 +6,33 @@ import type {
   ReportExportData,
   ReviewArchiveData,
   SkillProfileData,
+  TeacherAttackSessionResponseData,
   TeacherEvidenceData,
   TimelineEvent,
 } from '../contracts'
 import { normalizeSkillProfile, type RawSkillProfileResponse } from '@/utils/skillProfile'
+
+export interface TeacherAttackSessionQuery {
+  mode?: 'practice' | 'jeopardy' | 'awd'
+  challenge_id?: string
+  contest_id?: string
+  round_id?: string
+  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
+  with_events?: boolean
+  limit?: number
+  offset?: number
+}
+
+export interface TeacherEvidenceQuery {
+  challenge_id?: string
+  contest_id?: string
+  round_id?: string
+  event_type?: string
+  from?: string
+  to?: string
+  limit?: number
+  offset?: number
+}
 
 interface RawTimelineItem {
   type: string
@@ -96,6 +119,38 @@ interface RawTeacherEvidenceResponse {
   }>
 }
 
+interface RawTeacherAttackSessionResponse extends Omit<TeacherAttackSessionResponseData, 'sessions'> {
+  sessions: Array<
+    Omit<TeacherAttackSessionResponseData['sessions'][number], 'student_id' | 'team_id' | 'challenge_id' | 'contest_id' | 'round_id' | 'service_id' | 'victim_team_id' | 'events'> & {
+      student_id: string | number
+      team_id?: string | number
+      challenge_id?: string | number
+      contest_id?: string | number
+      round_id?: string | number
+      service_id?: string | number
+      victim_team_id?: string | number
+      events?: Array<
+        Omit<
+          NonNullable<TeacherAttackSessionResponseData['sessions'][number]['events']>[number],
+          'actor' | 'target'
+        > & {
+          actor: {
+            user_id: string | number
+            team_id?: string | number
+          }
+          target: {
+            challenge_id?: string | number
+            contest_id?: string | number
+            round_id?: string | number
+            service_id?: string | number
+            victim_team_id?: string | number
+          }
+        }
+      >
+    }
+  >
+}
+
 function normalizeTimelineEvent(item: RawTimelineItem): TimelineEvent {
   return {
     id: `${item.type}-${item.challenge_id}-${item.timestamp}`,
@@ -171,10 +226,23 @@ export async function getStudentTimeline(id: string): Promise<TimelineEvent[]> {
   return payload.events.map(normalizeTimelineEvent)
 }
 
-export async function getStudentEvidence(id: string): Promise<TeacherEvidenceData> {
+export async function getStudentEvidence(
+  id: string,
+  query: TeacherEvidenceQuery = {}
+): Promise<TeacherEvidenceData> {
   const payload = await request<RawTeacherEvidenceResponse>({
     method: 'GET',
     url: `/teacher/students/${encodeURIComponent(id)}/evidence`,
+    params: {
+      challenge_id: query.challenge_id,
+      contest_id: query.contest_id,
+      round_id: query.round_id,
+      event_type: query.event_type,
+      from: query.from,
+      to: query.to,
+      limit: query.limit,
+      offset: query.offset,
+    },
   })
 
   return {
@@ -185,6 +253,61 @@ export async function getStudentEvidence(id: string): Promise<TeacherEvidenceDat
     events: payload.events.map((item) => ({
       ...item,
       challenge_id: String(item.challenge_id),
+    })),
+  }
+}
+
+function optionalId(value: string | number | undefined): string | undefined {
+  return value === undefined ? undefined : String(value)
+}
+
+export async function getStudentAttackSessions(
+  id: string,
+  query: TeacherAttackSessionQuery = {}
+): Promise<TeacherAttackSessionResponseData> {
+  const payload = await request<RawTeacherAttackSessionResponse>({
+    method: 'GET',
+    url: `/teacher/students/${encodeURIComponent(id)}/attack-sessions`,
+    params: {
+      mode: query.mode,
+      challenge_id: query.challenge_id,
+      contest_id: query.contest_id,
+      round_id: query.round_id,
+      result: query.result,
+      with_events: query.with_events,
+      limit: query.limit,
+      offset: query.offset,
+    },
+  })
+
+  return {
+    summary: payload.summary,
+    sessions: payload.sessions.map((session) => ({
+      ...session,
+      id: String(session.id),
+      student_id: String(session.student_id),
+      team_id: optionalId(session.team_id),
+      challenge_id: optionalId(session.challenge_id),
+      contest_id: optionalId(session.contest_id),
+      round_id: optionalId(session.round_id),
+      service_id: optionalId(session.service_id),
+      victim_team_id: optionalId(session.victim_team_id),
+      events: session.events?.map((event) => ({
+        ...event,
+        id: String(event.id),
+        session_id: optionalId(event.session_id),
+        actor: {
+          user_id: String(event.actor.user_id),
+          team_id: optionalId(event.actor.team_id),
+        },
+        target: {
+          challenge_id: optionalId(event.target.challenge_id),
+          contest_id: optionalId(event.target.contest_id),
+          round_id: optionalId(event.target.round_id),
+          service_id: optionalId(event.target.service_id),
+          victim_team_id: optionalId(event.target.victim_team_id),
+        },
+      })),
     })),
   }
 }

@@ -18,6 +18,10 @@ const {
   recommendations,
   timeline,
   evidence,
+  attackSessions,
+  reviewChallengeOptions,
+  reviewWorkspaceLoading,
+  reviewWorkspaceQuery,
   writeupSubmissions,
   writeupPage,
   writeupTotal,
@@ -43,6 +47,7 @@ const {
   moderateWriteup,
   reviewManualReview,
   changeWriteupPage,
+  updateReviewWorkspaceFilters,
 } = useTeacherStudentAnalysisPage()
 </script>
 
@@ -62,6 +67,10 @@ const {
     :recommendations="recommendations"
     :timeline="timeline"
     :evidence="evidence"
+    :attack-sessions="attackSessions"
+    :review-challenge-options="reviewChallengeOptions"
+    :review-workspace-loading="reviewWorkspaceLoading"
+    :review-workspace-query="reviewWorkspaceQuery"
     :writeup-submissions="writeupSubmissions"
     :writeup-page="writeupPage"
     :writeup-total="writeupTotal"
@@ -86,6 +95,7 @@ const {
     @moderate-writeup="moderateWriteup"
     @review-manual-review="reviewManualReview"
     @change-writeup-page="changeWriteupPage"
+    @update-review-workspace-filters="updateReviewWorkspaceFilters"
   />
   <TeacherClassReportExportDialog
     v-model="reportDialogVisible"

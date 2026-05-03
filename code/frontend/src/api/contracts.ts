@@ -883,6 +883,68 @@ export interface TeacherEvidenceData {
   events: TeacherEvidenceEventData[]
 }
 
+export interface TeacherAttackActorData {
+  user_id: ID
+  team_id?: ID
+}
+
+export interface TeacherAttackTargetData {
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  service_id?: ID
+  victim_team_id?: ID
+}
+
+export interface TeacherAttackEventData {
+  id: ID
+  session_id?: ID
+  type: string
+  stage: string
+  source: string
+  occurred_at: ISODateTime
+  actor: TeacherAttackActorData
+  target: TeacherAttackTargetData
+  summary: string
+  meta?: Record<string, unknown>
+  capture_available: boolean
+  capture_ref?: Record<string, unknown>
+}
+
+export interface TeacherAttackSessionData {
+  id: ID
+  mode: 'practice' | 'jeopardy' | 'awd' | string
+  student_id: ID
+  team_id?: ID
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  service_id?: ID
+  victim_team_id?: ID
+  title: string
+  started_at: ISODateTime
+  ended_at: ISODateTime
+  result: 'success' | 'failed' | 'in_progress' | 'unknown' | string
+  event_count: number
+  capture_count: number
+  events?: TeacherAttackEventData[]
+}
+
+export interface TeacherAttackSessionSummaryData {
+  total_sessions: number
+  success_count: number
+  failed_count: number
+  in_progress_count: number
+  unknown_count: number
+  event_count: number
+  capture_available_count: number
+}
+
+export interface TeacherAttackSessionResponseData {
+  summary: TeacherAttackSessionSummaryData
+  sessions: TeacherAttackSessionData[]
+}
+
 export interface TeacherInstanceItem {
   id: ID
   student_id: ID

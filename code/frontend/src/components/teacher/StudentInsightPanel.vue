@@ -8,10 +8,13 @@ import PagePaginationControls from '@/components/common/PagePaginationControls.v
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
+import { TeacherStudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'
+import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
+  TeacherAttackSessionResponseData,
   TeacherEvidenceData,
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
@@ -38,6 +41,10 @@ const props = defineProps<{
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
+  attackSessions: TeacherAttackSessionResponseData | null
+  reviewChallengeOptions: Array<{ value: string; label: string }>
+  reviewWorkspaceLoading: boolean
+  reviewWorkspaceQuery: TeacherAttackSessionQuery
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
   writeupPage: number
   writeupTotal: number
@@ -66,6 +73,7 @@ const emit = defineEmits<{
     },
   ]
   changeWriteupPage: [page: number]
+  updateReviewWorkspaceFilters: [payload: Partial<TeacherAttackSessionQuery>]
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
@@ -656,110 +664,17 @@ function isManualReviewVisible(): boolean {
         <SectionCard
           v-if="isSectionVisible('evidence')"
           class="insight-tab-section-card"
-          title="攻防证据链"
-          subtitle="教师按关键动作查看该学员的利用过程。"
+          title="复盘工作台"
+          subtitle="按攻击会话查看访问、请求、提交和复盘输出。"
         >
-          <AppEmpty
-            v-if="!evidence || evidence.events.length === 0"
-            title="暂无证据链数据"
-            description="当前学员还没有可用于复盘的攻击过程记录。"
-            icon="NotebookText"
+          <TeacherStudentReviewWorkspace
+            :evidence="evidence"
+            :attack-sessions="attackSessions"
+            :challenge-options="reviewChallengeOptions"
+            :loading="reviewWorkspaceLoading"
+            :query="reviewWorkspaceQuery"
+            @update-filters="emit('updateReviewWorkspaceFilters', $event)"
           />
-
-          <template v-else>
-            <div
-              class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
-            >
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  总事件数
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ evidence.summary.total_events }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  纳入教师复盘的动作总数
-                </div>
-              </article>
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  利用请求
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ evidence.summary.proxy_request_count }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  经平台代理的利用请求次数
-                </div>
-              </article>
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  提交次数
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ evidence.summary.submit_count }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  当前题目的提交动作统计
-                </div>
-              </article>
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  成功次数
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ evidence.summary.success_count }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  提交命中或利用成功的次数
-                </div>
-              </article>
-            </div>
-
-            <div class="mt-5 space-y-3">
-              <AppCard
-                v-for="(event, index) in evidence.events"
-                :key="`${event.type}-${event.challenge_id}-${event.timestamp}-${index}`"
-                variant="panel"
-                accent="neutral"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">
-                      {{ event.title }}
-                    </div>
-                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                      {{ event.detail }}
-                    </div>
-                    <div
-                      class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
-                    >
-                      <span class="insight-meta-pill rounded-full border px-2.5 py-1">
-                        {{ String(event.meta?.event_stage || 'trace') }}
-                      </span>
-                      <span
-                        v-if="typeof event.meta?.method === 'string'"
-                        class="insight-meta-pill rounded-full border px-2.5 py-1"
-                      >
-                        {{ String(event.meta?.method) }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="text-right text-xs text-[var(--color-text-secondary)]">
-                    <div>{{ new Date(event.timestamp).toLocaleDateString('zh-CN') }}</div>
-                    <div class="mt-1">
-                      {{
-                        new Date(event.timestamp).toLocaleTimeString('zh-CN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      }}
-                    </div>
-                  </div>
-                </div>
-              </AppCard>
-            </div>
-          </template>
         </SectionCard>
 
         <StudentTimelinePage
@@ -870,11 +785,6 @@ function isManualReviewVisible(): boolean {
   border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
   border-radius: 0;
   background: color-mix(in srgb, var(--journal-surface-subtle) 48%, transparent);
-}
-
-.insight-meta-pill {
-  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
 .insight-manual-input {

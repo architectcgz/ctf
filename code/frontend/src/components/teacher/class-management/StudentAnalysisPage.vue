@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
+  TeacherAttackSessionResponseData,
   TeacherEvidenceData,
   TeacherClassItem,
   TeacherManualReviewSubmissionDetailData,
@@ -29,6 +31,10 @@ const props = defineProps<{
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
+  attackSessions: TeacherAttackSessionResponseData | null
+  reviewChallengeOptions: Array<{ value: string; label: string }>
+  reviewWorkspaceLoading: boolean
+  reviewWorkspaceQuery: TeacherAttackSessionQuery
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
   writeupPage: number
   writeupTotal: number
@@ -64,6 +70,7 @@ const emit = defineEmits<{
     },
   ]
   changeWriteupPage: [page: number]
+  updateReviewWorkspaceFilters: [payload: Partial<TeacherAttackSessionQuery>]
 }>()
 
 type WorkspaceTab =
@@ -285,6 +292,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :recommendations="recommendations"
             :timeline="timeline"
             :evidence="evidence"
+            :attack-sessions="attackSessions"
+            :review-challenge-options="reviewChallengeOptions"
+            :review-workspace-loading="reviewWorkspaceLoading"
+            :review-workspace-query="reviewWorkspaceQuery"
             :writeup-submissions="writeupSubmissions"
             :writeup-page="writeupPage"
             :writeup-total="writeupTotal"
@@ -301,6 +312,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @moderate-writeup="emit('moderateWriteup', $event)"
             @review-manual-review="emit('reviewManualReview', $event)"
             @change-writeup-page="emit('changeWriteupPage', $event)"
+            @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
           />
         </section>
       </main>

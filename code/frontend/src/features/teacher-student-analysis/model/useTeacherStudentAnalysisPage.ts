@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   getClasses,
   getClassStudents,
-  getStudentEvidence,
   getStudentProgress,
   getStudentRecommendations,
   getStudentSkillProfile,
@@ -17,7 +16,6 @@ import type {
   RecommendationItem,
   SkillProfileData,
   TeacherClassItem,
-  TeacherEvidenceData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -26,6 +24,7 @@ import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadc
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 import { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
+import { useTeacherReviewWorkspace } from './useTeacherReviewWorkspace'
 import { useTeacherStudentAnalysisNavigation } from './useTeacherStudentAnalysisNavigation'
 import { useTeacherSubmissionReviewFlows } from './useTeacherSubmissionReviewFlows'
 
@@ -50,7 +49,17 @@ export function useTeacherStudentAnalysisPage() {
   const skillProfile = ref<SkillProfileData | null>(null)
   const recommendations = ref<RecommendationItem[]>([])
   const timeline = ref<TimelineEvent[]>([])
-  const evidence = ref<TeacherEvidenceData | null>(null)
+  const {
+    evidence,
+    attackSessions,
+    reviewChallengeOptions,
+    reviewWorkspaceLoading,
+    sessionQuery,
+    loadReviewWorkspace,
+    reloadAttackSessions,
+    resetReviewWorkspace,
+    setSessionQuery,
+  } = useTeacherReviewWorkspace()
   const {
     writeupSubmissions,
     writeupPage,
@@ -106,6 +115,47 @@ export function useTeacherStudentAnalysisPage() {
     return String(route.params.studentId || '')
   }
 
+  function syncReviewWorkspaceQueryFromRoute(): void {
+    const nextQuery = reviewWorkspaceQueryFromRoute()
+
+    setSessionQuery({
+      with_events: true,
+      limit: 20,
+      offset: 0,
+      ...nextQuery,
+    })
+  }
+
+  function reviewWorkspaceQueryFromRoute(): Partial<typeof sessionQuery.value> {
+    return {
+      mode:
+        route.query.reviewMode === 'practice' ||
+        route.query.reviewMode === 'jeopardy' ||
+        route.query.reviewMode === 'awd'
+          ? route.query.reviewMode
+          : undefined,
+      result:
+        route.query.reviewResult === 'success' ||
+        route.query.reviewResult === 'failed' ||
+        route.query.reviewResult === 'in_progress' ||
+        route.query.reviewResult === 'unknown'
+          ? route.query.reviewResult
+          : undefined,
+      challenge_id:
+        typeof route.query.reviewChallengeId === 'string' && route.query.reviewChallengeId.trim()
+          ? route.query.reviewChallengeId.trim()
+          : undefined,
+    }
+  }
+
+  function reviewWorkspaceQueryMatchesState(nextQuery: Partial<typeof sessionQuery.value>): boolean {
+    return (
+      (nextQuery.mode || undefined) === (sessionQuery.value.mode || undefined) &&
+      (nextQuery.result || undefined) === (sessionQuery.value.result || undefined) &&
+      (nextQuery.challenge_id || undefined) === (sessionQuery.value.challenge_id || undefined)
+    )
+  }
+
   async function loadClasses(): Promise<void> {
     loadingClasses.value = true
     try {
@@ -138,7 +188,7 @@ export function useTeacherStudentAnalysisPage() {
       skillProfile.value = null
       recommendations.value = []
       timeline.value = []
-      evidence.value = null
+      resetReviewWorkspace()
       resetSubmissionReviewState()
       selectedStudentId.value = ''
       return
@@ -153,7 +203,7 @@ export function useTeacherStudentAnalysisPage() {
         nextProfile,
         nextRecommendations,
         nextTimeline,
-        nextEvidence,
+        _reviewWorkspaceLoaded,
         nextWriteups,
         nextManualReviews,
       ] = await Promise.all([
@@ -161,7 +211,7 @@ export function useTeacherStudentAnalysisPage() {
         getStudentSkillProfile(studentId),
         getStudentRecommendations(studentId),
         getStudentTimeline(studentId),
-        getStudentEvidence(studentId),
+        loadReviewWorkspace(studentId),
         getTeacherWriteupSubmissions({
           student_id: studentId,
           submission_status: 'published',
@@ -175,7 +225,7 @@ export function useTeacherStudentAnalysisPage() {
       skillProfile.value = nextProfile
       recommendations.value = nextRecommendations
       timeline.value = nextTimeline
-      evidence.value = nextEvidence
+      void _reviewWorkspaceLoaded
       applyWriteupPagePayload(nextWriteups)
       manualReviewSubmissions.value = nextManualReviews.list
       activeManualReview.value = null
@@ -188,6 +238,7 @@ export function useTeacherStudentAnalysisPage() {
     error.value = null
 
     try {
+      syncReviewWorkspaceQueryFromRoute()
       await loadClasses()
       await loadStudents()
       await loadStudentDetails()
@@ -195,6 +246,39 @@ export function useTeacherStudentAnalysisPage() {
       console.error('加载学员分析失败:', err)
       error.value = '加载学员分析失败，请稍后重试'
     }
+  }
+
+  async function updateReviewWorkspaceFilters(
+    nextQuery: Partial<{
+      challenge_id: string
+      mode: 'practice' | 'jeopardy' | 'awd'
+      result: 'success' | 'failed' | 'in_progress' | 'unknown'
+    }>
+  ): Promise<void> {
+    const studentId = selectedStudentId.value || studentIdFromRoute()
+    const mergedQuery = {
+      ...sessionQuery.value,
+      ...nextQuery,
+      offset: 0,
+    }
+
+    setSessionQuery(mergedQuery)
+
+    await router.replace({
+      query: {
+        ...route.query,
+        reviewMode: mergedQuery.mode || undefined,
+        reviewResult: mergedQuery.result || undefined,
+        reviewChallengeId: mergedQuery.challenge_id || undefined,
+      },
+    })
+
+    if (Object.prototype.hasOwnProperty.call(nextQuery, 'challenge_id')) {
+      await loadReviewWorkspace(studentId)
+      return
+    }
+
+    await reloadAttackSessions(studentId)
   }
   const {
     selectClass,
@@ -214,6 +298,28 @@ export function useTeacherStudentAnalysisPage() {
     () => [route.params.className, route.params.studentId],
     () => {
       void initialize()
+    }
+  )
+
+  watch(
+    () => [route.query.reviewMode, route.query.reviewResult, route.query.reviewChallengeId],
+    () => {
+      const studentId = selectedStudentId.value || studentIdFromRoute()
+      if (!studentId) return
+
+      const nextQuery = reviewWorkspaceQueryFromRoute()
+      if (reviewWorkspaceQueryMatchesState(nextQuery)) {
+        return
+      }
+      const challengeChanged =
+        (nextQuery.challenge_id || undefined) !== (sessionQuery.value.challenge_id || undefined)
+
+      syncReviewWorkspaceQueryFromRoute()
+      if (challengeChanged) {
+        void loadReviewWorkspace(studentId)
+        return
+      }
+      void reloadAttackSessions(studentId)
     }
   )
 
@@ -250,6 +356,10 @@ export function useTeacherStudentAnalysisPage() {
     recommendations,
     timeline,
     evidence,
+    attackSessions,
+    reviewChallengeOptions,
+    reviewWorkspaceLoading,
+    reviewWorkspaceQuery: sessionQuery,
     writeupSubmissions,
     writeupPage,
     writeupPageSize,
@@ -276,5 +386,6 @@ export function useTeacherStudentAnalysisPage() {
     moderateWriteup,
     reviewManualReview,
     changeWriteupPage,
+    updateReviewWorkspaceFilters,
   }
 }

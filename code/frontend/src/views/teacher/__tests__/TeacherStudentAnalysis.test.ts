@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { reactive } from 'vue'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
@@ -8,12 +9,14 @@ import studentAnalysisPageSource from '@/components/teacher/class-management/Stu
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
-const routeMock = {
+const replaceMock = vi.fn()
+const routeMock = reactive({
   params: {
     className: 'Class A',
     studentId: 'stu-1',
   },
-}
+  query: {},
+})
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -23,6 +26,7 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentRecommendations: vi.fn(),
   getStudentTimeline: vi.fn(),
   getStudentEvidence: vi.fn(),
+  getStudentAttackSessions: vi.fn(),
   getTeacherWriteupSubmissions: vi.fn(),
   recommendTeacherCommunityWriteup: vi.fn(),
   unrecommendTeacherCommunityWriteup: vi.fn(),
@@ -38,7 +42,7 @@ vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
-    useRouter: () => ({ push: pushMock }),
+    useRouter: () => ({ push: pushMock, replace: replaceMock }),
     useRoute: () => routeMock,
   }
 })
@@ -57,8 +61,10 @@ describe('TeacherStudentAnalysis', () => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
+    replaceMock.mockReset()
     routeMock.params.className = 'Class A'
     routeMock.params.studentId = 'stu-1'
+    routeMock.query = {}
 
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
@@ -167,6 +173,50 @@ describe('TeacherStudentAnalysis', () => {
           detail: '经平台代理发起 POST /login，请求返回 200，携带请求摘要',
           timestamp: '2026-03-11T09:42:00Z',
           meta: { event_stage: 'exploit', method: 'POST' },
+        },
+      ],
+    })
+    teacherApiMocks.getStudentAttackSessions.mockResolvedValue({
+      summary: {
+        total_sessions: 1,
+        success_count: 1,
+        failed_count: 0,
+        in_progress_count: 0,
+        unknown_count: 0,
+        event_count: 3,
+        capture_available_count: 0,
+      },
+      sessions: [
+        {
+          id: 'sess-1',
+          mode: 'practice',
+          student_id: 'stu-1',
+          challenge_id: '11',
+          title: 'web-1',
+          started_at: '2026-03-11T09:40:00Z',
+          ended_at: '2026-03-11T10:00:00Z',
+          result: 'success',
+          event_count: 3,
+          capture_count: 0,
+          events: [
+            {
+              id: 'evt-1',
+              session_id: 'sess-1',
+              type: 'instance_proxy_request',
+              stage: 'exploit',
+              source: 'audit_logs',
+              occurred_at: '2026-03-11T09:42:00Z',
+              actor: { user_id: 'stu-1' },
+              target: { challenge_id: '11' },
+              summary: '经平台代理发起 POST /login，请求返回 200，携带请求摘要',
+              meta: {
+                request_method: 'POST',
+                target_path: '/login',
+                status_code: 200,
+              },
+              capture_available: false,
+            },
+          ],
         },
       ],
     })
@@ -324,20 +374,25 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('访问攻击目标')
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
-    expect(wrapper.text()).toContain('攻防证据链')
+    expect(wrapper.text()).toContain('复盘工作台')
     expect(wrapper.text()).toContain('人工审核题')
     expect(wrapper.text()).toContain('misc-essay')
     expect(wrapper.text()).toContain('从回显到 flag')
-    expect(wrapper.text()).toContain('总事件数')
-    expect(wrapper.text()).toContain('5')
-    expect(wrapper.text()).toContain('利用请求')
+    expect(wrapper.text()).toContain('会话数')
+    expect(wrapper.text()).toContain('事件数')
+    expect(wrapper.text()).toContain('实操请求')
     expect(wrapper.text()).toContain('POST /login')
     expect(wrapper.text()).toContain('社区题解状态')
     expect(wrapper.text()).toContain('推荐题解')
     expect(wrapper.text()).toContain('已公开')
     expect(wrapper.text()).toContain('取消推荐')
 
-    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
+    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {})
+    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+      with_events: true,
+      limit: 20,
+      offset: 0,
+    })
     expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
       student_id: 'stu-1',
       submission_status: 'published',
@@ -433,6 +488,125 @@ describe('TeacherStudentAnalysis', () => {
         studentId: 'stu-1',
       },
     })
+  })
+
+  it('切换复盘筛选时应只刷新攻击会话查询', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    teacherApiMocks.getStudentAttackSessions.mockClear()
+
+    const selects = wrapper.findAll('select')
+    await selects[1].setValue('awd')
+    await flushPromises()
+    await selects[2].setValue('failed')
+    await flushPromises()
+
+    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(1, 'stu-1', {
+      with_events: true,
+      limit: 20,
+      offset: 0,
+      mode: 'awd',
+    })
+    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(2, 'stu-1', {
+      with_events: true,
+      limit: 20,
+      offset: 0,
+      mode: 'awd',
+      result: 'failed',
+    })
+    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledTimes(1)
+    expect(replaceMock).toHaveBeenNthCalledWith(1, {
+      query: {
+        reviewMode: 'awd',
+        reviewResult: undefined,
+        reviewChallengeId: undefined,
+      },
+    })
+    expect(replaceMock).toHaveBeenNthCalledWith(2, {
+      query: {
+        reviewMode: 'awd',
+        reviewResult: 'failed',
+        reviewChallengeId: undefined,
+      },
+    })
+  })
+
+  it('切换题目筛选时应刷新证据和攻击会话，并同步到路由 query', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    teacherApiMocks.getStudentAttackSessions.mockClear()
+    teacherApiMocks.getStudentEvidence.mockClear()
+
+    const selects = wrapper.findAll('select')
+    await selects[0].setValue('11')
+    await flushPromises()
+
+    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {
+      challenge_id: '11',
+    })
+    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+      with_events: true,
+      limit: 20,
+      offset: 0,
+      challenge_id: '11',
+    })
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        reviewMode: undefined,
+        reviewResult: undefined,
+        reviewChallengeId: '11',
+      },
+    })
+  })
+
+  it('路由 query 回退到新的复盘筛选时应只刷新复盘区', async () => {
+    mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    teacherApiMocks.getStudentEvidence.mockClear()
+    teacherApiMocks.getStudentAttackSessions.mockClear()
+    teacherApiMocks.getStudentProgress.mockClear()
+    teacherApiMocks.getStudentTimeline.mockClear()
+
+    routeMock.query = {
+      reviewMode: 'awd',
+      reviewResult: 'failed',
+    }
+    await flushPromises()
+
+    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+      with_events: true,
+      limit: 20,
+      offset: 0,
+      mode: 'awd',
+      result: 'failed',
+    })
+    expect(teacherApiMocks.getStudentEvidence).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getStudentProgress).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getStudentTimeline).not.toHaveBeenCalled()
   })
 
   it('应采用顶部 tabs 工作区壳层而不是把所有内容堆叠在主页面，并去掉页面内重复顶栏', async () => {

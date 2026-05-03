@@ -1,5 +1,6 @@
 export { useTeacherStudentAnalysisPage } from './useTeacherStudentAnalysisPage'
 export { useTeacherInterventionRecommendations } from './useTeacherInterventionRecommendations'
 export { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
+export { useTeacherReviewWorkspace } from './useTeacherReviewWorkspace'
 export { useTeacherStudentAnalysisNavigation } from './useTeacherStudentAnalysisNavigation'
 export { useTeacherSubmissionReviewFlows } from './useTeacherSubmissionReviewFlows'

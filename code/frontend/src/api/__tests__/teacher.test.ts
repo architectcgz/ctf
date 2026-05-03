@@ -11,6 +11,8 @@ import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
   getClasses,
+  getStudentAttackSessions,
+  getStudentEvidence,
   getStudentsDirectory,
   getTeacherAWDReview,
   getTeacherWriteupSubmissions,
@@ -224,6 +226,181 @@ describe('teacher api contract', () => {
         status: 'running',
         keyword: '春季',
       },
+    })
+  })
+
+  it('获取学员攻击会话时应透传筛选参数并标准化标识字段', async () => {
+    requestMock.mockResolvedValue({
+      summary: {
+        total_sessions: 1,
+        success_count: 1,
+        failed_count: 0,
+        in_progress_count: 0,
+        unknown_count: 0,
+        event_count: 2,
+        capture_available_count: 0,
+      },
+      sessions: [
+        {
+          id: 9,
+          mode: 'awd',
+          student_id: 12,
+          team_id: 5,
+          challenge_id: 18,
+          contest_id: 3,
+          round_id: 7,
+          service_id: 11,
+          victim_team_id: 19,
+          title: 'bank-portal',
+          started_at: '2026-05-03T10:00:00Z',
+          ended_at: '2026-05-03T10:05:00Z',
+          result: 'success',
+          event_count: 2,
+          capture_count: 0,
+          events: [
+            {
+              id: 21,
+              session_id: 9,
+              type: 'awd_attack_submission',
+              stage: 'exploit',
+              source: 'awd_attack_logs',
+              occurred_at: '2026-05-03T10:04:00Z',
+              actor: {
+                user_id: 12,
+                team_id: 5,
+              },
+              target: {
+                challenge_id: 18,
+                contest_id: 3,
+                round_id: 7,
+                service_id: 11,
+                victim_team_id: 19,
+              },
+              summary: 'AWD 攻击提交成功',
+              capture_available: false,
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await getStudentAttackSessions('stu-1', {
+      mode: 'awd',
+      contest_id: '3',
+      round_id: '7',
+      result: 'success',
+      with_events: true,
+      limit: 10,
+      offset: 20,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/students/stu-1/attack-sessions',
+      params: {
+        mode: 'awd',
+        challenge_id: undefined,
+        contest_id: '3',
+        round_id: '7',
+        result: 'success',
+        with_events: true,
+        limit: 10,
+        offset: 20,
+      },
+    })
+    expect(result.sessions[0]).toMatchObject({
+      id: '9',
+      student_id: '12',
+      team_id: '5',
+      challenge_id: '18',
+      contest_id: '3',
+      round_id: '7',
+      service_id: '11',
+      victim_team_id: '19',
+    })
+    expect(result.sessions[0].events?.[0]).toMatchObject({
+      id: '21',
+      session_id: '9',
+      actor: {
+        user_id: '12',
+        team_id: '5',
+      },
+      target: {
+        challenge_id: '18',
+        contest_id: '3',
+        round_id: '7',
+        service_id: '11',
+        victim_team_id: '19',
+      },
+    })
+  })
+
+  it('获取学员证据时应透传筛选参数并标准化标识字段', async () => {
+    requestMock.mockResolvedValue({
+      summary: {
+        total_events: 2,
+        proxy_request_count: 1,
+        submit_count: 1,
+        success_count: 1,
+        challenge_id: 5,
+      },
+      events: [
+        {
+          type: 'instance_proxy_request',
+          challenge_id: 5,
+          title: 'web-1',
+          detail: 'POST /login 200',
+          timestamp: '2026-05-03T10:00:00Z',
+          meta: {
+            request_method: 'POST',
+          },
+        },
+      ],
+    })
+
+    const result = await getStudentEvidence('stu-1', {
+      challenge_id: '5',
+      event_type: 'instance_proxy_request',
+      from: '2026-05-03T09:00:00Z',
+      to: '2026-05-03T11:00:00Z',
+      limit: 10,
+      offset: 20,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/students/stu-1/evidence',
+      params: {
+        challenge_id: '5',
+        contest_id: undefined,
+        round_id: undefined,
+        event_type: 'instance_proxy_request',
+        from: '2026-05-03T09:00:00Z',
+        to: '2026-05-03T11:00:00Z',
+        limit: 10,
+        offset: 20,
+      },
+    })
+    expect(result).toEqual({
+      summary: {
+        total_events: 2,
+        proxy_request_count: 1,
+        submit_count: 1,
+        success_count: 1,
+        challenge_id: '5',
+      },
+      events: [
+        {
+          type: 'instance_proxy_request',
+          challenge_id: '5',
+          title: 'web-1',
+          detail: 'POST /login 200',
+          timestamp: '2026-05-03T10:00:00Z',
+          meta: {
+            request_method: 'POST',
+          },
+        },
+      ],
     })
   })
 
