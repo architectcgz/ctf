@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -15,6 +17,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -27,7 +30,7 @@ func (s *stubContestRepository) FindByID(context.Context, int64) (*model.Contest
 func (s *stubContestRepository) Update(context.Context, *model.Contest) error { return nil }
 
 func TestContestServiceCreateContestRejectsInvalidTimeRange(t *testing.T) {
-	service := contestcmd.NewContestService(&stubContestRepository{}, nil, zap.NewNop())
+	service := contestcmd.NewContestService(&stubContestRepository{}, nil, nil, zap.NewNop())
 
 	_, err := service.CreateContest(context.Background(), &dto.CreateContestReq{
 		Title:     "contest",
@@ -218,11 +221,111 @@ func TestContestServiceUpdateContestDoesNotGateNonAWDStatusUpdate(t *testing.T) 
 	}
 }
 
+func TestContestServiceUpdateContestRecordsManualStatusTransition(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &model.Contest{
+		ID:            806,
+		Title:         "manual-transition",
+		Mode:          model.ContestModeJeopardy,
+		Status:        model.ContestStatusRegistration,
+		StatusVersion: 0,
+		StartTime:     now.Add(-time.Minute),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+
+	resp, err := service.UpdateContest(context.Background(), 806, &dto.UpdateContestReq{
+		Status: strPtr(model.ContestStatusRunning),
+	})
+	if err != nil {
+		t.Fatalf("UpdateContest() error = %v", err)
+	}
+	if resp.Status != model.ContestStatusRunning {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+
+	var contest model.Contest
+	if err := db.First(&contest, 806).Error; err != nil {
+		t.Fatalf("load contest: %v", err)
+	}
+	if contest.StatusVersion != 1 {
+		t.Fatalf("expected status_version 1, got %d", contest.StatusVersion)
+	}
+
+	var transition model.ContestStatusTransition
+	if err := db.Where("contest_id = ? AND status_version = ?", 806, 1).First(&transition).Error; err != nil {
+		t.Fatalf("load transition record: %v", err)
+	}
+	if transition.Reason != contestdomain.ContestStatusTransitionReasonManualUpdate {
+		t.Fatalf("unexpected transition reason: %+v", transition)
+	}
+	if transition.SideEffectStatus != contestdomain.ContestStatusTransitionSideEffectSucceeded {
+		t.Fatalf("unexpected side effect status: %+v", transition)
+	}
+}
+
+func TestContestServiceUpdateContestManualFreezeCreatesFrozenSnapshot(t *testing.T) {
+	mini, redisClient := newContestCommandRedisForTest(t)
+	service, db := newContestCommandServiceForTestWithRedis(t, redisClient)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &model.Contest{
+		ID:            807,
+		Title:         "manual-freeze",
+		Mode:          model.ContestModeJeopardy,
+		Status:        model.ContestStatusRunning,
+		StatusVersion: 1,
+		StartTime:     now.Add(-time.Hour),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+	if err := redisClient.ZAdd(context.Background(), rediskeys.RankContestTeamKey(807), redis.Z{Score: 42, Member: "team-1"}).Err(); err != nil {
+		t.Fatalf("seed live scoreboard: %v", err)
+	}
+
+	resp, err := service.UpdateContest(context.Background(), 807, &dto.UpdateContestReq{
+		Status: strPtr(model.ContestStatusFrozen),
+	})
+	if err != nil {
+		t.Fatalf("UpdateContest() error = %v", err)
+	}
+	if resp.Status != model.ContestStatusFrozen {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+	if !mini.Exists(rediskeys.RankContestFrozenKey(807)) {
+		t.Fatal("expected frozen snapshot key to be created")
+	}
+}
+
 func newContestCommandServiceForTest(t *testing.T) (*contestcmd.ContestService, *gorm.DB) {
+	return newContestCommandServiceForTestWithRedis(t, nil)
+}
+
+func newContestCommandServiceForTestWithRedis(t *testing.T, redisClient *redis.Client) (*contestcmd.ContestService, *gorm.DB) {
 	t.Helper()
 
 	db := contesttestsupport.SetupAWDTestDB(t)
-	return contestcmd.NewContestService(contestinfra.NewRepository(db), contestinfra.NewAWDRepository(db), zap.NewNop()), db
+	return contestcmd.NewContestService(contestinfra.NewRepository(db), contestinfra.NewAWDRepository(db), redisClient, zap.NewNop()), db
+}
+
+func newContestCommandRedisForTest(t *testing.T) (*miniredis.Miniredis, *redis.Client) {
+	t.Helper()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+	return mini, redisClient
 }
 
 func createContestForUpdateTest(t *testing.T, db *gorm.DB, contest *model.Contest) {

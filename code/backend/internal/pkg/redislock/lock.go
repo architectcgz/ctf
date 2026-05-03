@@ -16,6 +16,15 @@ else
 end
 `
 
+const refreshScript = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+	-- Only the current token holder may extend the lease.
+	return redis.call("pexpire", KEYS[1], ARGV[2])
+else
+	return 0
+end
+`
+
 type Lock struct {
 	client *redislib.Client
 	key    string
@@ -55,6 +64,25 @@ func (l *Lock) Release(ctx context.Context) (bool, error) {
 
 	released, ok := result.(int64)
 	return ok && released > 0, nil
+}
+
+func (l *Lock) Refresh(ctx context.Context, ttl time.Duration) (bool, error) {
+	if l == nil || l.client == nil || l.key == "" || l.token == "" || ttl <= 0 {
+		return false, nil
+	}
+
+	ttlMillis := ttl.Milliseconds()
+	if ttlMillis <= 0 {
+		ttlMillis = 1
+	}
+
+	result, err := l.client.Eval(ctx, refreshScript, []string{l.key}, l.token, ttlMillis).Result()
+	if err != nil {
+		return false, err
+	}
+
+	refreshed, ok := result.(int64)
+	return ok && refreshed > 0, nil
 }
 
 func (l *Lock) Key() string {

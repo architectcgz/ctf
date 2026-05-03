@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 type ContestWriteRepository interface {
@@ -35,5 +36,5 @@ type ContestScoreboardAdminRepository interface {
 
 type ContestStatusRepository interface {
 	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
-	UpdateStatus(ctx context.Context, id int64, status string) error
+	ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
 }

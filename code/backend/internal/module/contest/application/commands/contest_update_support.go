@@ -23,7 +23,7 @@ func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*m
 
 func validateContestUpdateRequest(contest *model.Contest, req *dto.UpdateContestReq) error {
 	if req.Status != nil && *req.Status != contest.Status {
-		if !domain.IsValidTransition(contest.Status, *req.Status) {
+		if err := domain.ValidateStatusTransition(contest.Status, *req.Status); err != nil {
 			return errcode.ErrInvalidStatusTransition
 		}
 	}
@@ -68,6 +68,9 @@ func applyContestUpdateFields(contest *model.Contest, req *dto.UpdateContestReq)
 		return errcode.ErrInvalidTimeRange
 	}
 	if req.Status != nil {
+		if *req.Status != contest.Status {
+			contest.StatusVersion++
+		}
 		contest.Status = *req.Status
 	}
 

@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/contest/domain"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 	ctfws "ctf-platform/pkg/websocket"
 )
@@ -18,35 +15,30 @@ import (
 func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error {
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
-		if err == domain.ErrContestNotFound {
+		if err == contestdomain.ErrContestNotFound {
 			return errcode.ErrContestNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if !now.Before(contest.EndTime) {
 		return errcode.ErrContestEnded
 	}
 
 	freezeTime := contest.EndTime.Add(-time.Duration(minutesBeforeEnd) * time.Minute)
 	contest.FreezeTime = &freezeTime
-	snapshotCreated := false
+	previousStatus := contest.Status
+	previousVersion := contest.StatusVersion
 	if !now.Before(freezeTime) {
 		contest.Status = model.ContestStatusFrozen
-		if err := s.createSnapshotFromLive(ctx, contestID); err != nil {
+		contest.StatusVersion++
+		contest.UpdatedAt = now
+		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
 			return err
 		}
-		snapshotCreated = true
-	}
-
-	if err := s.repo.Update(ctx, contest); err != nil {
-		if snapshotCreated {
-			if rollbackErr := s.redis.Del(ctx, rediskeys.RankContestFrozenKey(contestID)).Err(); rollbackErr != nil {
-				return errcode.ErrInternal.WithCause(fmt.Errorf("update contest freeze state: %w; rollback frozen snapshot: %v", err, rollbackErr))
-			}
-		}
-		return err
+	} else if err := s.repo.Update(ctx, contest); err != nil {
+		return errcode.ErrInternal.WithCause(err)
 	}
 
 	broadcastContestRealtimeEvent(s.broadcaster, contestports.ScoreboardChannel(contestID), ctfws.Envelope{
@@ -61,7 +53,7 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contestID int64) error {
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
-		if err == domain.ErrContestNotFound {
+		if err == contestdomain.ErrContestNotFound {
 			return errcode.ErrContestNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
@@ -72,15 +64,18 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	}
 
 	contest.FreezeTime = nil
-	if contest.Status == model.ContestStatusFrozen && time.Now().Before(contest.EndTime) {
+	previousStatus := contest.Status
+	previousVersion := contest.StatusVersion
+	now := time.Now().UTC()
+	if contest.Status == model.ContestStatusFrozen && now.Before(contest.EndTime) {
 		contest.Status = model.ContestStatusRunning
-	}
-	if err := s.redis.Del(ctx, rediskeys.RankContestFrozenKey(contestID)).Err(); err != nil {
+		contest.StatusVersion++
+		contest.UpdatedAt = now
+		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
+			return err
+		}
+	} else if err := s.repo.Update(ctx, contest); err != nil {
 		return errcode.ErrInternal.WithCause(err)
-	}
-
-	if err := s.repo.Update(ctx, contest); err != nil {
-		return err
 	}
 
 	broadcastContestRealtimeEvent(s.broadcaster, contestports.ScoreboardChannel(contestID), ctfws.Envelope{
@@ -92,14 +87,47 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	return nil
 }
 
-func (s *ScoreboardAdminService) createSnapshotFromLive(ctx context.Context, contestID int64) error {
-	srcKey := rediskeys.RankContestTeamKey(contestID)
-	dstKey := rediskeys.RankContestFrozenKey(contestID)
-	if err := s.redis.ZUnionStore(ctx, dstKey, &redislib.ZStore{
-		Keys:    []string{srcKey},
-		Weights: []float64{1},
-	}).Err(); err != nil {
+func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *model.Contest, fromStatus string, fromVersion int64) error {
+	if contest == nil {
+		return errcode.ErrContestNotFound
+	}
+	if s.transition == nil {
+		return errcode.ErrInternal.WithCause(fmt.Errorf("scoreboard transition repository unavailable"))
+	}
+
+	result, err := s.transition.UpdateContestWithStatusTransition(ctx, contest, contestdomain.ContestStatusTransition{
+		ContestID:         contest.ID,
+		FromStatus:        fromStatus,
+		ToStatus:          contest.Status,
+		FromStatusVersion: fromVersion,
+		Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
+		OccurredAt:        contest.UpdatedAt.UTC(),
+		AppliedBy:         "scoreboard_admin_service",
+	})
+	if err != nil {
+		if err == contestdomain.ErrContestNotFound {
+			return errcode.ErrContestNotFound
+		}
 		return errcode.ErrInternal.WithCause(err)
+	}
+	if !result.Applied {
+		return errcode.New(errcode.ErrConflict.Code, "竞赛状态已变化，请刷新后重试", errcode.ErrConflict.HTTPStatus)
+	}
+	contest.StatusVersion = result.StatusVersion
+
+	// 封榜/解封同样会改写缓存快照，因此这里也必须留下可回放的 transition record。
+	if err := s.sideEffects.Run(ctx, result); err != nil {
+		if result.RecordID > 0 {
+			if markErr := s.transition.MarkTransitionSideEffectsFailed(ctx, result.RecordID, err); markErr != nil {
+				return errcode.ErrInternal.WithCause(fmt.Errorf("run scoreboard transition side effects: %w; mark failed: %v", err, markErr))
+			}
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if result.RecordID > 0 {
+		if err := s.transition.MarkTransitionSideEffectsSucceeded(ctx, result.RecordID); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
 	}
 	return nil
 }

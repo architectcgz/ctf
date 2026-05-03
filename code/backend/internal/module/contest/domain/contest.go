@@ -10,7 +10,7 @@ var validStatusTransitions = map[string][]string{
 	model.ContestStatusDraft:        {model.ContestStatusRegistration},
 	model.ContestStatusRegistration: {model.ContestStatusDraft, model.ContestStatusRunning},
 	model.ContestStatusRunning:      {model.ContestStatusFrozen, model.ContestStatusEnded},
-	model.ContestStatusFrozen:       {model.ContestStatusEnded},
+	model.ContestStatusFrozen:       {model.ContestStatusRunning, model.ContestStatusEnded},
 	model.ContestStatusEnded:        {},
 }
 

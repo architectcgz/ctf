@@ -7,17 +7,22 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/module/contest/application/statusmachine"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type StatusUpdater struct {
-	repo      contestports.ContestStatusRepository
-	awdRepo   contestports.AWDReadinessQuery
-	redis     *redislib.Client
-	log       *zap.Logger
-	interval  time.Duration
-	batchSize int
-	lockTTL   time.Duration
+	repo         contestports.ContestStatusRepository
+	transitioner contestStatusTransitioner
+	recorder     contestStatusTransitionRecorder
+	replayer     contestStatusTransitionReplayer
+	sideEffects  *statusmachine.SideEffectRunner
+	awdRepo      contestports.AWDReadinessQuery
+	redis        *redislib.Client
+	log          *zap.Logger
+	interval     time.Duration
+	batchSize    int
+	lockTTL      time.Duration
 }
 
 func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger, awdRepos ...contestports.AWDReadinessQuery) *StatusUpdater {
@@ -31,14 +36,26 @@ func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib
 	if len(awdRepos) > 0 {
 		awdRepo = awdRepos[0]
 	}
+	var recorder contestStatusTransitionRecorder
+	if repoRecorder, ok := any(repo).(contestStatusTransitionRecorder); ok {
+		recorder = repoRecorder
+	}
+	var replayer contestStatusTransitionReplayer
+	if repoReplayer, ok := any(repo).(contestStatusTransitionReplayer); ok {
+		replayer = repoReplayer
+	}
 	return &StatusUpdater{
-		repo:      repo,
-		awdRepo:   awdRepo,
-		redis:     redis,
-		log:       log,
-		interval:  interval,
-		batchSize: batchSize,
-		lockTTL:   lockTTL,
+		repo:         repo,
+		transitioner: newContestStatusTransitionService(repo),
+		recorder:     recorder,
+		replayer:     replayer,
+		sideEffects:  statusmachine.NewSideEffectRunner(redis),
+		awdRepo:      awdRepo,
+		redis:        redis,
+		log:          log,
+		interval:     interval,
+		batchSize:    batchSize,
+		lockTTL:      lockTTL,
 	}
 }
 

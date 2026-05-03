@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -11,12 +12,12 @@ import (
 )
 
 func (r *Repository) Create(ctx context.Context, contest *model.Contest) error {
-	return r.db.WithContext(ctx).Create(contest).Error
+	return r.dbWithContext(ctx).Create(contest).Error
 }
 
 func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
 	var contest model.Contest
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&contest).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&contest).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, contestdomain.ErrContestNotFound
@@ -27,14 +28,38 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, er
 }
 
 func (r *Repository) Update(ctx context.Context, contest *model.Contest) error {
-	return r.db.WithContext(ctx).Save(contest).Error
+	if contest == nil {
+		return contestdomain.ErrContestNotFound
+	}
+	updatedAt := time.Now().UTC()
+	contest.UpdatedAt = updatedAt
+
+	updateResult := r.dbWithContext(ctx).
+		Model(&model.Contest{}).
+		Where("id = ? AND deleted_at IS NULL", contest.ID).
+		Updates(map[string]any{
+			"title":       contest.Title,
+			"description": contest.Description,
+			"mode":        contest.Mode,
+			"start_time":  contest.StartTime,
+			"end_time":    contest.EndTime,
+			"freeze_time": contest.FreezeTime,
+			"updated_at":  updatedAt,
+		})
+	if updateResult.Error != nil {
+		return updateResult.Error
+	}
+	if updateResult.RowsAffected == 0 {
+		return contestdomain.ErrContestNotFound
+	}
+	return nil
 }
 
 func (r *Repository) List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error) {
 	var contests []*model.Contest
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&model.Contest{})
+	query := r.dbWithContext(ctx).Model(&model.Contest{})
 	if status != nil {
 		query = query.Where("status = ?", *status)
 	}
