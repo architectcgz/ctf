@@ -153,7 +153,7 @@
 - Modify only if needed: no production code in this task unless removing accidental duplication
 - Test: none
 
-- [ ] **Step 1: Capture current status**
+- [x] **Step 1: Capture current status**
 
 Run:
 
@@ -164,7 +164,7 @@ git -C /home/azhi/workspace/projects/ctf diff --stat
 
 Expected: list current design docs and implementation files already touched.
 
-- [ ] **Step 2: Classify existing changes**
+- [x] **Step 2: Classify existing changes**
 
 Record in working notes:
 
@@ -172,7 +172,7 @@ Record in working notes:
 - belongs to attack session replay evolution
 - unrelated or accidental
 
-- [ ] **Step 3: Check large-file risk**
+- [x] **Step 3: Check large-file risk**
 
 Run:
 
@@ -184,7 +184,7 @@ wc -l code/frontend/src/components/teacher/StudentInsightPanel.vue \
 
 Expected: confirm `StudentInsightPanel.vue` and `StudentAnalysisPage.vue` require extraction before adding more UI.
 
-- [ ] **Step 4: Commit boundary note**
+- [x] **Step 4: Commit boundary note**
 
 Do not commit yet if previous changes are unreviewed. Use this task to decide the smallest reviewable first patch.
 
@@ -198,7 +198,7 @@ Do not commit yet if previous changes are unreviewed. Use this task to decide th
 - Modify: `code/backend/internal/module/teaching_readmodel/api/http/handler.go`
 - Test: `code/backend/internal/app/practice_flow_integration_test.go`
 
-- [ ] **Step 1: Write or extend failing API contract test**
+- [x] **Step 1: Write or extend failing API contract test**
 
 Add coverage for:
 
@@ -209,7 +209,7 @@ Add coverage for:
 
 Expected before implementation: unsupported filters either ignored or not represented in response.
 
-- [ ] **Step 2: Extend DTO query**
+- [x] **Step 2: Extend DTO query**
 
 Add fields:
 
@@ -228,7 +228,7 @@ type TeacherEvidenceQuery struct {
 
 Use UTC normalization before repository calls.
 
-- [ ] **Step 3: Replace repository signature**
+- [x] **Step 3: Replace repository signature**
 
 Prefer a repository query struct over adding many parameters:
 
@@ -245,7 +245,7 @@ type EvidenceQuery struct {
 }
 ```
 
-- [ ] **Step 4: Run backend focused tests**
+- [x] **Step 4: Run backend focused tests**
 
 Run:
 
@@ -269,7 +269,7 @@ Expected: PASS.
 - Modify: `code/backend/internal/module/teaching_readmodel/application/queries/service.go`
 - Test: add focused repository/service tests if feasible, otherwise extend integration flow.
 
-- [ ] **Step 1: Add tests for event source coverage**
+- [x] **Step 1: Add tests for event source coverage**
 
 Cover at least:
 
@@ -278,7 +278,7 @@ Cover at least:
 - team-level AWD fallback uses `meta.scope = "team"`.
 - `writeup` and `manual_review` appear with review metadata.
 
-- [ ] **Step 2: Extract small builder helpers**
+- [x] **Step 2: Extract small builder helpers**
 
 Keep helpers private to repository or move to a focused file only if it reduces file size materially:
 
@@ -290,7 +290,7 @@ Keep helpers private to repository or move to a focused file only if it reduces 
 - `appendAWDAttackEvidence`
 - `appendAWDTrafficEvidence`
 
-- [ ] **Step 3: Normalize meta**
+- [x] **Step 3: Normalize meta**
 
 Required canonical keys:
 
@@ -306,7 +306,7 @@ Required canonical keys:
 - `score_gained`
 - `scope`
 
-- [ ] **Step 4: Run backend package tests**
+- [x] **Step 4: Run backend package tests**
 
 Run:
 
@@ -333,7 +333,7 @@ Expected: PASS.
 - Test: `code/backend/internal/app/router_test.go`
 - Test: focused service tests for session grouping if possible.
 
-- [ ] **Step 1: Test grouping rules**
+- [x] **Step 1: Test grouping rules**
 
 Cover:
 
@@ -342,7 +342,7 @@ Cover:
 - awd: `student/team + contest_id + service_id + victim_team_id`
 - split when event gap exceeds `1h`
 
-- [ ] **Step 2: Test result derivation**
+- [x] **Step 2: Test result derivation**
 
 Cases:
 
@@ -352,11 +352,11 @@ Cases:
 - access/proxy only -> `in_progress`
 - writeup/manual review only -> `unknown`
 
-- [ ] **Step 3: Ensure `with_events=false` works**
+- [x] **Step 3: Ensure `with_events=false` works**
 
 Expected: response includes summary and session cards, omits event arrays.
 
-- [ ] **Step 4: Run focused backend tests**
+- [x] **Step 4: Run focused backend tests**
 
 Run:
 
@@ -384,7 +384,7 @@ Expected: PASS.
 - Test: `code/frontend/src/api/__tests__/teacher.test.ts`
 - Test: create `code/frontend/src/features/teacher-student-analysis/model/useTeacherReviewWorkspace.test.ts` if project test harness supports composable tests.
 
-- [ ] **Step 1: Add API normalization tests**
+- [x] **Step 1: Add API normalization tests**
 
 Cover numeric ID normalization for sessions/events and query serialization for:
 
@@ -397,7 +397,7 @@ Cover numeric ID normalization for sessions/events and query serialization for:
 - `limit`
 - `offset`
 
-- [ ] **Step 2: Implement query-aware API functions**
+- [x] **Step 2: Implement query-aware API functions**
 
 Use typed query objects:
 
@@ -414,7 +414,7 @@ export interface TeacherAttackSessionQuery {
 }
 ```
 
-- [ ] **Step 3: Extract review workspace state**
+- [x] **Step 3: Extract review workspace state**
 
 `useTeacherReviewWorkspace` owns:
 
@@ -425,11 +425,11 @@ export interface TeacherAttackSessionQuery {
 - observation items
 - optional route query sync
 
-- [ ] **Step 4: Keep page composable as orchestrator**
+- [x] **Step 4: Keep page composable as orchestrator**
 
 `useTeacherStudentAnalysisPage` should load core student data and delegate review workspace behavior instead of accumulating more state.
 
-- [ ] **Step 5: Run frontend tests**
+- [x] **Step 5: Run frontend tests**
 
 Run:
 
@@ -459,7 +459,7 @@ Expected: PASS.
 - Modify: `code/frontend/src/components/teacher/StudentInsightPanel.vue`
 - Test: `code/frontend/src/widgets/teacher-student-review-workspace/*.test.ts`
 
-- [ ] **Step 1: Move presentation helpers first**
+- [x] **Step 1: Move presentation helpers first**
 
 Move and test:
 
@@ -469,7 +469,7 @@ Move and test:
 - `eventMetaItems`
 - `sessionPathSummary`
 
-- [ ] **Step 2: Create session list and event timeline**
+- [x] **Step 2: Create session list and event timeline**
 
 Keep props narrow:
 
@@ -480,11 +480,11 @@ defineProps<{
 }>()
 ```
 
-- [ ] **Step 3: Replace inline section in `StudentInsightPanel.vue`**
+- [x] **Step 3: Replace inline section in `StudentInsightPanel.vue`**
 
 `StudentInsightPanel.vue` should render one workspace component inside the existing tab section. Do not add more long template branches.
 
-- [ ] **Step 4: Add component tests**
+- [x] **Step 4: Add component tests**
 
 Cover:
 
@@ -493,7 +493,7 @@ Cover:
 - session result label
 - event meta pills for proxy/AWD/writeup/manual review
 
-- [ ] **Step 5: Run targeted frontend tests**
+- [x] **Step 5: Run targeted frontend tests**
 
 Run:
 
@@ -519,7 +519,7 @@ Expected: PASS.
 - Modify: `code/frontend/src/widgets/teacher-student-review-workspace/TeacherReviewObservationStrip.vue`
 - Test: presentation/composable tests.
 
-- [ ] **Step 1: Implement filters**
+- [x] **Step 1: Implement filters**
 
 First version supports:
 
@@ -530,7 +530,7 @@ First version supports:
 
 Defer complex date picker unless the existing design system has a matching compact control.
 
-- [ ] **Step 2: Implement observation derivation**
+- [x] **Step 2: Implement observation derivation**
 
 Observation keys:
 
@@ -540,11 +540,11 @@ Observation keys:
 - `success_without_writeup`
 - `awd_success_without_review_material`
 
-- [ ] **Step 3: Add tests for observation derivation**
+- [x] **Step 3: Add tests for observation derivation**
 
 Use fixture sessions/events and assert stable observation output.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run:
 
@@ -570,7 +570,7 @@ Expected: PASS.
 - Modify tests: `code/backend/internal/module/assessment/infrastructure/report_repository_test.go`
 - Modify tests: `code/backend/internal/module/assessment/application/commands/report_service_test.go`
 
-- [ ] **Step 1: Identify current archive evidence builder**
+- [x] **Step 1: Identify current archive evidence builder**
 
 Run:
 
@@ -578,7 +578,7 @@ Run:
 rg -n "BuildStudentReviewArchive|GetStudentEvidence|ReviewArchiveEvidence" code/backend/internal/module/assessment
 ```
 
-- [ ] **Step 2: Decide reuse level**
+- [x] **Step 2: Decide reuse level**
 
 Preferred:
 
@@ -588,7 +588,7 @@ Acceptable phase-one fallback:
 
 - duplicate query remains, but event types, canonical meta keys, summary counts and AWD inclusion match `teaching_readmodel`.
 
-- [ ] **Step 3: Add archive alignment tests**
+- [x] **Step 3: Add archive alignment tests**
 
 Cover:
 
@@ -596,7 +596,7 @@ Cover:
 - proxy meta uses `request_method` / `target_path` / `status_code`.
 - submit/success counts match realtime evidence for same fixture.
 
-- [ ] **Step 4: Run assessment tests**
+- [x] **Step 4: Run assessment tests**
 
 Run:
 
@@ -620,7 +620,7 @@ Expected: PASS.
 - Create review evidence after review: `docs/reviews/{frontend|backend|general}/2026-05-03-teaching-review-optimization-review-*.md`
 - Update this plan checklist as tasks complete.
 
-- [ ] **Step 1: Backend full targeted verification**
+- [x] **Step 1: Backend full targeted verification**
 
 Run:
 
@@ -631,7 +631,7 @@ go test ./internal/module/teaching_readmodel/... ./internal/module/assessment/..
 
 Expected: PASS.
 
-- [ ] **Step 2: Frontend targeted verification**
+- [x] **Step 2: Frontend targeted verification**
 
 Run:
 
@@ -643,7 +643,7 @@ npm run typecheck
 
 Expected: PASS.
 
-- [ ] **Step 3: Independent review**
+- [x] **Step 3: Independent review**
 
 Use `code-reviewer` with focus:
 
@@ -659,7 +659,7 @@ Archive review result under:
 docs/reviews/general/2026-05-03-teaching-review-optimization-review-implementation.md
 ```
 
-- [ ] **Step 4: Fix material findings**
+- [x] **Step 4: Fix material findings**
 
 For each P0/P1/P2 review finding:
 
@@ -667,7 +667,7 @@ For each P0/P1/P2 review finding:
 - rerun impacted verification
 - update review evidence or add follow-up note
 
-- [ ] **Step 5: Final status**
+- [x] **Step 5: Final status**
 
 Report:
 
