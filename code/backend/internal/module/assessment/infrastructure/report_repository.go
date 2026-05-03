@@ -12,6 +12,8 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	"ctf-platform/internal/teaching/evidence"
 )
 
 type ReportRepository struct {
@@ -494,7 +496,7 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 	return rows, err
 }
 
-func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64, query readmodelports.EvidenceQuery) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
 	events := make([]assessmentdomain.ReviewArchiveEvidenceEvent, 0)
 
 	accessRows := make([]struct {
@@ -511,23 +513,19 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		Joins("JOIN instances i ON i.id = a.resource_id").
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_access")
-	if challengeID != nil {
-		accessQuery = accessQuery.Where("i.challenge_id = ?", *challengeID)
+	if query.ChallengeID != nil {
+		accessQuery = accessQuery.Where("i.challenge_id = ?", *query.ChallengeID)
 	}
 	if err := accessQuery.Order("a.created_at ASC").Scan(&accessRows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range accessRows {
-		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:        "instance_access",
+		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewInstanceAccessEvent(evidence.InstanceAccessInput{
+			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
-			Detail:      "访问攻击目标",
-			Meta: map[string]any{
-				"event_stage": "access",
-			},
-		})
+		})))
 	}
 
 	proxyRows := make([]struct {
@@ -546,23 +544,20 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		Joins("JOIN instances i ON i.id = a.resource_id").
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_proxy_request")
-	if challengeID != nil {
-		proxyQuery = proxyQuery.Where("i.challenge_id = ?", *challengeID)
+	if query.ChallengeID != nil {
+		proxyQuery = proxyQuery.Where("i.challenge_id = ?", *query.ChallengeID)
 	}
 	if err := proxyQuery.Order("a.created_at ASC").Scan(&proxyRows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range proxyRows {
-		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:        "instance_proxy_request",
+		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewProxyRequestEvent(evidence.ProxyRequestInput{
+			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
-			Detail:      row.Detail,
-			Meta: map[string]any{
-				"event_stage": "exploit",
-			},
-		})
+			RawDetail:   row.Detail,
+		})))
 	}
 
 	submissionRows := make([]struct {
@@ -583,79 +578,151 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			"CASE WHEN s.is_correct THEN '提交命中 Flag' ELSE '提交未命中 Flag' END AS detail",
 		}, ", ")).
 		Joins("LEFT JOIN challenges c ON c.id = s.challenge_id").
-		Where("s.user_id = ? AND s.contest_id IS NULL", userID)
-	if challengeID != nil {
-		submissionQuery = submissionQuery.Where("s.challenge_id = ?", *challengeID)
+		Where("s.user_id = ?", userID)
+	if query.ChallengeID != nil {
+		submissionQuery = submissionQuery.Where("s.challenge_id = ?", *query.ChallengeID)
 	}
 	if err := submissionQuery.Order("s.submitted_at ASC").Scan(&submissionRows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range submissionRows {
-		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:        "challenge_submission",
+		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewChallengeSubmissionEvent(evidence.ChallengeSubmissionInput{
+			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
-			Detail:      row.Detail,
-			Meta: map[string]any{
-				"event_stage": "submit",
-				"is_correct":  row.IsCorrect,
-				"points":      row.Points,
-			},
-		})
+			IsCorrect:   row.IsCorrect,
+			Points:      row.Points,
+		})))
 	}
 
 	awdRows := make([]struct {
+		ContestID         int64     `gorm:"column:contest_id"`
 		RoundID           int64     `gorm:"column:round_id"`
+		TeamID            int64     `gorm:"column:team_id"`
 		VictimTeamID      int64     `gorm:"column:victim_team_id"`
 		VictimTeamName    string    `gorm:"column:victim_team_name"`
+		ServiceID         int64     `gorm:"column:service_id"`
 		AWDChallengeID    int64     `gorm:"column:awd_challenge_id"`
 		AWDChallengeTitle string    `gorm:"column:awd_challenge_title"`
 		Timestamp         time.Time `gorm:"column:timestamp"`
 		IsSuccess         bool      `gorm:"column:is_success"`
 		ScoreGained       int       `gorm:"column:score_gained"`
-		Detail            string    `gorm:"column:detail"`
+		SubmittedByUserID *int64    `gorm:"column:submitted_by_user_id"`
+		Source            string    `gorm:"column:source"`
 	}, 0)
+	awdWhere := "al.submitted_by_user_id = ?"
+	awdArgs := []any{userID}
+	if r.db.Migrator().HasTable("team_members") {
+		awdWhere += " OR al.attacker_team_id IN (SELECT tm.team_id FROM team_members tm WHERE tm.user_id = ?)"
+		awdArgs = append(awdArgs, userID)
+	}
 	awdQuery := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
 		Select(strings.Join([]string{
+			"ar.contest_id AS contest_id",
 			"al.round_id AS round_id",
+			"al.attacker_team_id AS team_id",
 			"al.victim_team_id AS victim_team_id",
 			"COALESCE(vt.name, '') AS victim_team_name",
+			"al.service_id AS service_id",
 			"al.awd_challenge_id AS awd_challenge_id",
 			"COALESCE(ac.name, '') AS awd_challenge_title",
 			"al.created_at AS timestamp",
 			"al.is_success AS is_success",
 			"al.score_gained AS score_gained",
-			reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained") + " AS detail",
+			"al.submitted_by_user_id AS submitted_by_user_id",
+			"al.source AS source",
 		}, ", ")).
+		Joins("JOIN awd_rounds ar ON ar.id = al.round_id").
 		Joins("LEFT JOIN awd_challenges ac ON ac.id = al.awd_challenge_id").
 		Joins("LEFT JOIN teams vt ON vt.id = al.victim_team_id").
-		Where("al.submitted_by_user_id = ? AND al.source = ?", userID, model.AWDAttackSourceSubmission)
-	if challengeID != nil {
-		awdQuery = awdQuery.Where("al.awd_challenge_id = ?", *challengeID)
+		Where(awdWhere, awdArgs...)
+	if query.ChallengeID != nil {
+		awdQuery = awdQuery.Where("al.awd_challenge_id = ?", *query.ChallengeID)
 	}
 	if err := awdQuery.Order("al.created_at ASC").Scan(&awdRows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range awdRows {
-		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:              "awd_attack_submission",
+		scope := "team"
+		if row.SubmittedByUserID != nil && *row.SubmittedByUserID == userID {
+			scope = "student"
+		}
+		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
+			UserID:            userID,
+			TeamID:            &row.TeamID,
+			ContestID:         &row.ContestID,
+			RoundID:           &row.RoundID,
+			ServiceID:         &row.ServiceID,
+			VictimTeamID:      &row.VictimTeamID,
 			AWDChallengeID:    row.AWDChallengeID,
 			AWDChallengeTitle: row.AWDChallengeTitle,
-			Title:             row.AWDChallengeTitle,
+			VictimTeamName:    row.VictimTeamName,
 			Timestamp:         row.Timestamp,
-			Detail:            row.Detail,
-			Meta: map[string]any{
-				"event_stage":         "exploit",
-				"is_success":          row.IsSuccess,
-				"score_gained":        row.ScoreGained,
-				"round_id":            row.RoundID,
-				"victim_team_id":      row.VictimTeamID,
-				"victim_team_name":    row.VictimTeamName,
-				"awd_challenge_id":    row.AWDChallengeID,
-				"awd_challenge_title": row.AWDChallengeTitle,
-			},
-		})
+			IsSuccess:         row.IsSuccess,
+			ScoreGained:       row.ScoreGained,
+			Scope:             scope,
+			AttackSource:      row.Source,
+		})))
+	}
+
+	if r.db.Migrator().HasTable("awd_traffic_events") && r.db.Migrator().HasTable("team_members") {
+		trafficRows := make([]struct {
+			ContestID         int64     `gorm:"column:contest_id"`
+			RoundID           int64     `gorm:"column:round_id"`
+			TeamID            int64     `gorm:"column:team_id"`
+			VictimTeamID      int64     `gorm:"column:victim_team_id"`
+			VictimTeamName    string    `gorm:"column:victim_team_name"`
+			ServiceID         int64     `gorm:"column:service_id"`
+			AWDChallengeID    int64     `gorm:"column:awd_challenge_id"`
+			AWDChallengeTitle string    `gorm:"column:awd_challenge_title"`
+			Method            string    `gorm:"column:method"`
+			Path              string    `gorm:"column:path"`
+			StatusCode        int       `gorm:"column:status_code"`
+			Timestamp         time.Time `gorm:"column:timestamp"`
+		}, 0)
+		trafficQuery := r.db.WithContext(ctx).Table("awd_traffic_events AS te").
+			Select(strings.Join([]string{
+				"te.contest_id AS contest_id",
+				"te.round_id AS round_id",
+				"te.attacker_team_id AS team_id",
+				"te.victim_team_id AS victim_team_id",
+				"COALESCE(vt.name, '') AS victim_team_name",
+				"te.service_id AS service_id",
+				"te.awd_challenge_id AS awd_challenge_id",
+				"COALESCE(ac.name, '') AS awd_challenge_title",
+				"te.method AS method",
+				"te.path AS path",
+				"te.status_code AS status_code",
+				"te.created_at AS timestamp",
+			}, ", ")).
+			Joins("JOIN team_members tm ON tm.contest_id = te.contest_id AND tm.team_id = te.attacker_team_id").
+			Joins("LEFT JOIN awd_challenges ac ON ac.id = te.awd_challenge_id").
+			Joins("LEFT JOIN teams vt ON vt.id = te.victim_team_id").
+			Where("tm.user_id = ?", userID)
+		if query.ChallengeID != nil {
+			trafficQuery = trafficQuery.Where("te.awd_challenge_id = ?", *query.ChallengeID)
+		}
+		if err := trafficQuery.Order("te.created_at ASC").Limit(500).Scan(&trafficRows).Error; err != nil {
+			return nil, err
+		}
+		for _, row := range trafficRows {
+			events = append(events, toReviewArchiveEvidenceEvent(evidence.NewAWDTrafficEvent(evidence.AWDTrafficInput{
+				UserID:            userID,
+				TeamID:            &row.TeamID,
+				ContestID:         &row.ContestID,
+				RoundID:           &row.RoundID,
+				ServiceID:         &row.ServiceID,
+				VictimTeamID:      &row.VictimTeamID,
+				AWDChallengeID:    row.AWDChallengeID,
+				AWDChallengeTitle: row.AWDChallengeTitle,
+				VictimTeamName:    row.VictimTeamName,
+				Method:            row.Method,
+				Path:              row.Path,
+				StatusCode:        row.StatusCode,
+				Timestamp:         row.Timestamp,
+			})))
+		}
 	}
 
 	sort.Slice(events, func(i, j int) bool {
@@ -731,4 +798,17 @@ func parseAggregateTime(raw string) *time.Time {
 		}
 	}
 	return nil
+}
+
+func toReviewArchiveEvidenceEvent(event evidence.Event) assessmentdomain.ReviewArchiveEvidenceEvent {
+	return assessmentdomain.ReviewArchiveEvidenceEvent{
+		Type:              event.Type,
+		ChallengeID:       event.ChallengeID,
+		AWDChallengeID:    event.AWDChallengeID,
+		AWDChallengeTitle: event.AWDChallengeTitle,
+		Title:             event.Title,
+		Timestamp:         event.Timestamp,
+		Detail:            event.Detail,
+		Meta:              event.Meta,
+	}
 }
