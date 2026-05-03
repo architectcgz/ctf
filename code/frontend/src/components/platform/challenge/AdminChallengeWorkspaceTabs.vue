@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
+import type { AdminChallengeListItem } from '@/api/contracts'
 import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'
 import ChallengeWriteupManagePanel from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue'
+import type {
+  PlatformChallengeFlagDraft,
+  PlatformChallengeFlagDraftPatch,
+} from '@/features/platform-challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 
@@ -19,14 +23,7 @@ defineProps<{
   setTabButtonRef: (key: ChallengePanelKey, element: HTMLButtonElement | null) => void
   challenge: AdminChallengeListItem | null
   downloadingAttachment: boolean
-  flagConfigSummary: string
-  flagDraftSummary: string
-  flagType: FlagType
-  flagValue: string
-  flagRegex: string
-  flagPrefix: string
-  saving: boolean
-  isSharedInstanceChallenge: boolean
+  flagDraft: PlatformChallengeFlagDraft
   challengeId: string
 }>()
 
@@ -35,10 +32,7 @@ const emit = defineEmits<{
   keydown: [payload: { event: KeyboardEvent; index: number }]
   downloadAttachment: []
   saveFlagConfig: []
-  'update:flag-type': [value: FlagType]
-  'update:flag-value': [value: string]
-  'update:flag-regex': [value: string]
-  'update:flag-prefix': [value: string]
+  'update:flag-draft': [value: PlatformChallengeFlagDraftPatch]
 }>()
 
 function handleSelect(panel: ChallengePanelKey): void {
@@ -95,20 +89,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         :aria-hidden="activePanel === 'detail' ? 'false' : 'true'"
         :challenge="challenge"
         :downloading-attachment="downloadingAttachment"
-        :flag-config-summary="flagConfigSummary"
-        :flag-draft-summary="flagDraftSummary"
-        :flag-type="flagType"
-        :flag-value="flagValue"
-        :flag-regex="flagRegex"
-        :flag-prefix="flagPrefix"
-        :saving="saving"
-        :is-shared-instance-challenge="isSharedInstanceChallenge"
+        :flag-draft="flagDraft"
         @download-attachment="emit('downloadAttachment')"
         @save-flag-config="emit('saveFlagConfig')"
-        @update:flag-type="emit('update:flag-type', $event)"
-        @update:flag-value="emit('update:flag-value', $event)"
-        @update:flag-regex="emit('update:flag-regex', $event)"
-        @update:flag-prefix="emit('update:flag-prefix', $event)"
+        @update:flag-draft="emit('update:flag-draft', $event)"
       />
 
       <section

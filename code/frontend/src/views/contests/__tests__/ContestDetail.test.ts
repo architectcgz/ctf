@@ -194,6 +194,16 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('比赛开始')
   })
 
+  it('页面应通过 feature route model 获取路由与派生状态，不再直接管理 tab 和 contest 可见性逻辑', () => {
+    expect(contestDetailSource).toContain("useContestDetailRoutePage } from '@/features/contest-detail'")
+    expect(contestDetailSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
+    expect(contestDetailSource).not.toContain("from '@/stores/auth'")
+    expect(contestDetailSource).not.toContain("from '@/utils/contest'")
+    expect(contestDetailSource).not.toContain('const workspaceTabOrder')
+    expect(contestDetailSource).not.toContain('const contestAccentStyle = computed')
+    expect(contestDetailSource).not.toContain('const contestAccessible = computed')
+  })
+
   it('不应该向学生暴露草稿竞赛详情或报名入口', async () => {
     contestApiMocks.getContestDetail.mockResolvedValueOnce({
       id: '1',

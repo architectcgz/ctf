@@ -7,6 +7,7 @@ import topologyConnectivitySectionsSource from '@/components/platform/topology/T
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
+import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -199,6 +200,12 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-management-shell')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface-workspace-bg')
+  })
+
+  it('路由壳页应仅做组合，不直接绑定路由实例', () => {
+    expect(challengeTopologyStudioRouteSource).toContain('useChallengeTopologyStudioRoutePage')
+    expect(challengeTopologyStudioRouteSource).not.toContain('useRoute')
+    expect(challengeTopologyStudioRouteSource).not.toContain('useRouter')
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {

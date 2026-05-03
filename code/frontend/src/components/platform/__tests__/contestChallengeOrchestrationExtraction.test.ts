@@ -7,6 +7,17 @@ describe('contest challenge orchestration extraction', () => {
   it('ContestChallengeOrchestrationPanel 应将汇总条和 AWD 筛选条下沉到独立子组件，而不是继续在父组件里内联整段结构', () => {
     expect(contestChallengeOrchestrationPanelSource).toContain('<ContestChallengeSummaryStrip')
     expect(contestChallengeOrchestrationPanelSource).toContain('<ContestChallengeFilterStrip')
+    expect(contestChallengeOrchestrationPanelSource).toContain(
+      "from '@/features/contest-workbench'"
+    )
+    expect(contestChallengeOrchestrationPanelSource).toContain('useContestChallengeOrchestration')
+    expect(contestChallengeOrchestrationPanelSource).not.toContain(
+      "from '@/api/admin/contests'"
+    )
+    expect(contestChallengeOrchestrationPanelSource).not.toContain(
+      "from '@/api/admin/authoring'"
+    )
+    expect(contestChallengeOrchestrationPanelSource).not.toContain("from '@/api/request'")
     expect(contestChallengeOrchestrationPanelSource).not.toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary"'
     )

@@ -2,19 +2,15 @@ import { computed, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import {
-  commitAdminAwdChallengeImport,
   createAdminAwdChallenge,
   deleteAdminAwdChallenge,
-  listAdminAwdChallengeImports,
   listAdminAwdChallenges,
-  previewAdminAwdChallengeImport,
   updateAdminAwdChallenge,
   type AdminAwdChallengeCreatePayload,
   type AdminAwdChallengeUpdatePayload,
 } from '@/api/admin/awd-authoring'
 import { ApiError } from '@/api/request'
 import type {
-  AdminAwdChallengeImportPreview,
   AdminAwdChallengeData,
   AWDDeploymentMode,
   AWDChallengeStatus,
@@ -25,6 +21,7 @@ import type {
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
+import { useAwdChallengeImportFlow } from './useAwdChallengeImportFlow'
 
 type AwdServiceTypeFilter = AWDServiceType | ''
 type AwdServiceStatusFilter = AWDChallengeStatus | ''
@@ -82,11 +79,6 @@ export function usePlatformAwdChallenges() {
   const saving = ref(false)
   const editingChallengeId = ref<string | null>(null)
   const formDraft = ref<PlatformAwdChallengeFormDraft>(createEmptyDraft())
-  const uploading = ref(false)
-  const queueLoading = ref(false)
-  const selectedImportFileName = ref('')
-  const importQueue = ref<AdminAwdChallengeImportPreview[]>([])
-  const uploadResults = ref<PlatformAwdChallengeImportUploadResult[]>([])
 
   const pagination = usePagination<AdminAwdChallengeData>(({ page, page_size }) =>
     listAdminAwdChallenges({
@@ -141,79 +133,25 @@ export function usePlatformAwdChallenges() {
     dialogOpen.value = false
   }
 
-  function appendUploadResult(result: Omit<PlatformAwdChallengeImportUploadResult, 'id' | 'createdAt'>) {
-    uploadResults.value = [
-      {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        createdAt: new Date().toISOString(),
-        ...result,
-      },
-      ...uploadResults.value,
-    ].slice(0, 8)
-  }
-
-  async function refreshImportQueue() {
-    queueLoading.value = true
-    try {
-      importQueue.value = await listAdminAwdChallengeImports()
-    } catch (error) {
-      toast.error(humanizeRequestError(error, '加载 AWD 导入队列失败'))
-    } finally {
-      queueLoading.value = false
-    }
-  }
-
-  async function selectImportPackages(files: File[]) {
-    if (files.length === 0) {
-      return null
-    }
-
-    uploading.value = true
-    let latestSuccess: AdminAwdChallengeImportPreview | null = null
-
-    try {
-      for (const file of files) {
-        selectedImportFileName.value = file.name
-        try {
-          const preview = await previewAdminAwdChallengeImport(file)
-          latestSuccess = preview
-          appendUploadResult({
-            status: 'success',
-            fileName: file.name,
-            message: 'AWD 题目包解析完成，已进入待确认导入队列。',
-          })
-        } catch (error) {
-          appendUploadResult({
-            status: 'error',
-            fileName: file.name,
-            message: humanizeRequestError(error, 'AWD 题目包解析失败'),
-          })
-        }
-      }
-
-      if (latestSuccess) {
-        toast.success('AWD 题目包解析完成')
-      } else {
-        toast.error('AWD 题目包解析失败')
-      }
-      await refreshImportQueue()
-      return latestSuccess
-    } finally {
-      uploading.value = false
-    }
-  }
-
-  async function commitImportPreview(preview: AdminAwdChallengeImportPreview) {
-    try {
-      const result = await commitAdminAwdChallengeImport(preview.id)
-      toast.success(`已导入题目 ${result.challenge.name}`)
-      await Promise.all([pagination.refresh(), refreshImportQueue()])
-      return result
-    } catch (error) {
-      toast.error(humanizeRequestError(error, '导入 AWD 题目失败'))
-      return null
-    }
-  }
+  const {
+    uploading,
+    queueLoading,
+    selectedImportFileName,
+    importQueue,
+    uploadResults,
+    refreshImportQueue,
+    selectImportPackages,
+    commitImportPreview,
+  } = useAwdChallengeImportFlow({
+    refreshChallenges: pagination.refresh,
+    humanizeRequestError,
+    notifySuccess: (message) => {
+      toast.success(message)
+    },
+    notifyError: (message) => {
+      toast.error(message)
+    },
+  })
 
   async function saveChallenge(draft: PlatformAwdChallengeFormDraft) {
     saving.value = true

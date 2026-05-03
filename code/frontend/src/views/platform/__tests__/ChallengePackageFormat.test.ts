@@ -47,4 +47,9 @@ describe('ChallengePackageFormat', () => {
       "import ChallengePackageFormatGuidePanel from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue'"
     )
   })
+
+  it('路由页应仅负责组合，不直接耦合返回跳转细节', () => {
+    expect(challengePackageFormatSource).toContain('useChallengePackageFormatPage')
+    expect(challengePackageFormatSource).not.toContain('useRouter')
+  })
 })

@@ -1,3 +1,6 @@
 export { usePlatformUsers } from './model'
+export { usePlatformUserManagePage } from './model'
+export { usePlatformClassManagementPage } from './model'
+export { usePlatformStudentManagementPage } from './model'
+export { usePlatformInstanceManagementPage } from './model'
 export type { PlatformUserFormDraft } from './model'
-

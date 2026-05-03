@@ -4,7 +4,7 @@ import { Plus } from 'lucide-vue-next'
 
 import SectionCard from '@/components/common/SectionCard.vue'
 import type { AdminImageListItem } from '@/api/contracts'
-import type { TopologyNetworkDraft, TopologyNodeDraft } from './topologyDraft'
+import type { TopologyNetworkDraft, TopologyNodeDraft } from '@/features/challenge-topology-studio/model'
 
 const TopologyNodeEditor = defineAsyncComponent(() => import('./TopologyNodeEditor.vue'))
 

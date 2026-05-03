@@ -1,20 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useTeacherStudentAnalysisPage } from '@/features/teacher-student-analysis'
-import { useAuthStore } from '@/stores/auth'
-import {
-  resolveClassManagementRouteName,
-  resolveClassStudentsRouteName,
-} from '@/utils/teachingWorkspaceRouting'
-
-const reportDialogVisible = ref(false)
-const authStore = useAuthStore()
 
 const {
-  router,
   classes,
   students,
   selectedClassName,
@@ -38,12 +27,16 @@ const {
   activeManualReview,
   manualReviewLoading,
   manualReviewSaving,
+  reportDialogVisible,
   solvedRate,
   weakDimensions,
   initialize,
+  openClassManagement,
+  openClassStudents,
   selectClass,
   selectStudent,
   openChallenge,
+  openClassReportDialog,
   openReviewArchivePage,
   handleExportReviewArchive,
   openManualReview,
@@ -51,10 +44,6 @@ const {
   reviewManualReview,
   changeWriteupPage,
 } = useTeacherStudentAnalysisPage()
-
-function openClassReportDialog(): void {
-  reportDialogVisible.value = true
-}
 </script>
 
 <template>
@@ -85,15 +74,8 @@ function openClassReportDialog(): void {
     :solved-rate="solvedRate"
     :weak-dimensions="weakDimensions"
     @retry="initialize"
-    @open-class-management="
-      router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
-    "
-    @open-class-students="
-      router.push({
-        name: resolveClassStudentsRouteName(authStore.user?.role),
-        params: { className: selectedClassName },
-      })
-    "
+    @open-class-management="openClassManagement"
+    @open-class-students="openClassStudents"
     @open-report-export="openClassReportDialog"
     @open-review-archive="openReviewArchivePage"
     @export-review-archive="handleExportReviewArchive"

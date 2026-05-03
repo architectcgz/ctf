@@ -37,4 +37,12 @@ describe('challenge detail solution tabs extraction', () => {
     expect(challengeDetailInteractionsSource).not.toContain('text-[var(--color-danger)]')
     expect(challengeActionAsideSource).not.toContain('text-[var(--color-success)]')
   })
+
+  it('题目详情展示层应复用 challenge entity 的分类与难度展示规则，不再在 feature 内重复定义', () => {
+    expect(challengeDetailPresentationSource).not.toContain('buildMetaPillStyle')
+    expect(challengeDetailPresentationSource).not.toContain("from '@/entities/challenge'")
+    expect(challengeDetailPresentationSource).not.toContain('function getCategoryLabel(')
+    expect(challengeDetailPresentationSource).not.toContain('function getCategoryColor(')
+    expect(challengeDetailPresentationSource).not.toContain('function getDifficultyLabel(')
+  })
 })

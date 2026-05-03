@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { ArrowLeft, Shield } from 'lucide-vue-next'
+import { useContestAwdDefenseWorkbenchPage } from '@/features/contest-awd-workspace'
 
-const route = useRoute()
-const contestId = computed(() => String(route.params.id ?? ''))
+const { backLink } = useContestAwdDefenseWorkbenchPage()
 </script>
 
 <template>
   <section class="workspace-shell journal-shell journal-shell-user awd-defense-page">
     <RouterLink
       class="defense-back-link"
-      :to="{ name: 'ContestDetail', params: { id: contestId }, query: { panel: 'challenges' } }"
+      :to="backLink"
     >
       <ArrowLeft class="defense-icon" />
       <span>返回战场</span>

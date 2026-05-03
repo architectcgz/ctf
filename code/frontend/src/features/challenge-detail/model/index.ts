@@ -5,5 +5,7 @@ export {
   type ChallengeSubmissionRecordStatus,
 } from './useChallengeDetailPresentation'
 export { useChallengeDetailPage } from './useChallengeDetailPage'
+export { useChallengeDetailDataLoader } from './useChallengeDetailDataLoader'
 export { useChallengeDetailInteractions } from './useChallengeDetailInteractions'
 export { useChallengeInstance } from './useChallengeInstance'
+export { useChallengeWriteupSubmissionFlow } from './useChallengeWriteupSubmissionFlow'

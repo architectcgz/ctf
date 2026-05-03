@@ -1,2 +1,1 @@
-export { useChallengeWriteupEditorPage } from './model'
-
+export { useChallengeWriteupEditorPage, useChallengeWriteupManagement } from './model'

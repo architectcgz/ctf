@@ -1,15 +1,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import {
-  destroyInstance as apiDestroyInstance,
-  extendInstance,
-  getMyInstances,
-  requestInstanceAccess,
-} from '@/api/instance'
+import { getMyInstances } from '@/api/instance'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
-import { useClipboard } from '@/composables/useClipboard'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
+import { useInstanceOperations } from './useInstanceOperations'
+import { useInstanceWarningState } from './useInstanceWarningState'
 
 export const MAX_INSTANCES = 3
 export const WARNING_THRESHOLD_SECONDS = 300
@@ -122,14 +117,27 @@ export function getInstanceWaitingHint(
   return details.join('，')
 }
 
+export function formatInstanceAccessDisplay(
+  instance: Pick<InstanceListItem, 'access_url' | 'access' | 'ssh_info'>
+): string {
+  return (
+    instance.access?.command ||
+    instance.access_url ||
+    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+  )
+}
+
+export function canOpenInstanceInBrowser(
+  instance: Pick<InstanceListItem, 'access_url' | 'access'>
+): boolean {
+  return Boolean(instance.access_url) && instance.access?.protocol !== 'tcp'
+}
+
 export function useInstanceListPage() {
   const toast = useToast()
-  const { copy } = useClipboard()
 
   const loading = ref(false)
   const instances = ref<InstanceViewModel[]>([])
-  const showWarning = ref(false)
-  const warningInstance = ref<InstanceViewModel | null>(null)
   const warnedInstances = new Set<string>()
 
   let timer: number | null = null
@@ -202,140 +210,32 @@ export function useInstanceListPage() {
     }
   }
 
-  async function copyAddress(address: string) {
-    if (!address) {
-      return
-    }
-    await copy(address)
-  }
-
-  async function extendTime(id: string) {
-    const target = instances.value.find((instance) => instance.id === id)
-    if (target && !isInstanceManualActionAllowed(target)) {
-      toast.error(
-        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动延时'
-      )
-      return
-    }
-    try {
-      const result = await extendInstance(id)
-      if (result) {
-        instances.value = instances.value.map((instance) =>
-          instance.id === id
-            ? {
-                ...instance,
-                remaining: calculateRemaining(result.expires_at),
-                expires_at: result.expires_at,
-                remaining_extends: result.remaining_extends,
-              }
-            : instance
-        )
-        warnedInstances.delete(id)
-      } else {
-        await loadInstances()
-      }
-    } catch (error) {
-      console.error('延时失败:', error)
-      toast.error('延时失败，请稍后重试')
-    }
-  }
-
-  async function openTarget(id: string) {
-    try {
-      const result = await requestInstanceAccess(id)
-      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
-      if (command) {
-        await copy(command)
-        toast.info('TCP 连接命令已复制')
-        return
-      }
-      window.open(result.access_url, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      console.error('打开目标失败:', error)
-      toast.error('打开目标失败，请稍后重试')
-    }
-  }
-
-  async function destroyInstance(id: string) {
-    const target = instances.value.find((instance) => instance.id === id)
-    if (target && !isInstanceManualActionAllowed(target)) {
-      toast.error(
-        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动销毁'
-      )
-      return
-    }
-    const confirmed = await confirmDestructiveAction({
-      title: '确认销毁实例',
-      message: '确定要销毁该实例吗？此操作不可恢复。',
-      confirmButtonText: '确认销毁',
-      cancelButtonText: '取消',
-    })
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await apiDestroyInstance(id)
-      instances.value = instances.value.filter((instance) => instance.id !== id)
-      warnedInstances.delete(id)
-      if (warningInstance.value?.id === id) {
-        warningInstance.value = null
-        showWarning.value = false
-      }
-    } catch (error) {
-      console.error('销毁失败:', error)
-      const message =
-        error instanceof Error && error.message.trim() ? error.message : '销毁失败，请稍后重试'
-      toast.error(message)
-    }
-  }
-
-  async function extendFromWarning() {
-    if (warningInstance.value) {
-      await extendTime(warningInstance.value.id)
-    }
-    showWarning.value = false
-  }
-
-  function closeWarning() {
-    showWarning.value = false
-  }
-
-  function handleEscKey(event: KeyboardEvent) {
-    if (event.key === 'Escape' && showWarning.value) {
-      showWarning.value = false
-    }
-  }
-
-  function updateCountdown() {
-    const now = Date.now()
-
-    instances.value = instances.value.map((instance) => {
-      if (instance.status !== 'running') {
-        return instance
-      }
-      if (!isInstanceManualActionAllowed(instance)) {
-        return instance
-      }
-
-      const remaining = Math.max(
-        0,
-        Math.floor((new Date(instance.expires_at).getTime() - now) / 1000)
-      )
-      const next = {
-        ...instance,
-        remaining,
-      }
-
-      if (remaining < WARNING_THRESHOLD_SECONDS && !warnedInstances.has(instance.id)) {
-        warnedInstances.add(instance.id)
-        warningInstance.value = next
-        showWarning.value = true
-      }
-
-      return next
-    })
-  }
+  const {
+    showWarning,
+    warningInstance,
+    updateCountdown,
+    extendFromWarning,
+    closeWarning,
+    handleEscKey,
+  } = useInstanceWarningState({
+    instances,
+    warnedInstances,
+    warningThresholdSeconds: WARNING_THRESHOLD_SECONDS,
+    canManualAction: isInstanceManualActionAllowed,
+    onExtendInstance: async (id) => {
+      await extendTime(id)
+    },
+  })
+  const { copyAddress, extendTime, openTarget, destroyInstance } = useInstanceOperations({
+    instances,
+    warnedInstances,
+    warningInstance,
+    showWarning,
+    isInstanceManualActionAllowed,
+    isAWDTeamInstance,
+    calculateRemaining,
+    loadInstances,
+  })
 
   onMounted(() => {
     void refresh()

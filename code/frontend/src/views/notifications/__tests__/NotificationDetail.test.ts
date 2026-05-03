@@ -85,6 +85,12 @@ describe('NotificationDetail', () => {
     expect(store.notifications[0]?.unread).toBe(false)
   })
 
+  it('路由页应仅负责组合，不直接耦合通知详情读取流程', () => {
+    expect(notificationDetailSource).toContain('useNotificationDetailPage')
+    expect(notificationDetailSource).not.toContain("from '@/api/notification'")
+    expect(notificationDetailSource).not.toContain('watch(')
+  })
+
   it('falls back to notifications list api when store does not contain the item', async () => {
     notificationApiMocks.getNotifications.mockResolvedValueOnce({
       list: [

@@ -5,6 +5,8 @@ import ChallengeWriteupEditorPage from '@/components/platform/writeup/ChallengeW
 import ChallengeWriteupViewPage from '@/components/platform/writeup/ChallengeWriteupViewPage.vue'
 import challengeWriteupEditorSource from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue?raw'
 import challengeWriteupViewSource from '@/components/platform/writeup/ChallengeWriteupViewPage.vue?raw'
+import challengeWriteupRouteSource from '../ChallengeWriteup.vue?raw'
+import challengeWriteupViewRouteSource from '../ChallengeWriteupView.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -69,6 +71,15 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 }))
 
 describe('ChallengeWriteupEditorPage', () => {
+  it('路由壳页应仅做组合，不直接绑定路由实例', () => {
+    expect(challengeWriteupRouteSource).toContain('useChallengeWriteupPage')
+    expect(challengeWriteupRouteSource).not.toContain('useRoute')
+    expect(challengeWriteupRouteSource).not.toContain('useRouter')
+    expect(challengeWriteupViewRouteSource).toContain('useChallengeWriteupViewPage')
+    expect(challengeWriteupViewRouteSource).not.toContain('useRoute')
+    expect(challengeWriteupViewRouteSource).not.toContain('useRouter')
+  })
+
   it('题解查看页和编辑页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
     expect(challengeWriteupViewSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(challengeWriteupViewSource).toContain('class="ui-btn ui-btn--primary"')

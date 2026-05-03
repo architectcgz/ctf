@@ -16,6 +16,12 @@ import {
   useChallengeTopologyStudioPage,
   type TopologyStudioMode,
 } from '@/features/challenge-topology-studio'
+import type {
+  TopologyLinkDraft,
+  TopologyNetworkDraft,
+  TopologyNodeDraft,
+  TopologyPolicyDraft,
+} from '@/features/challenge-topology-studio/model'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -28,12 +34,6 @@ import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
-import type {
-  TopologyLinkDraft,
-  TopologyNetworkDraft,
-  TopologyNodeDraft,
-  TopologyPolicyDraft,
-} from './topologyDraft'
 
 const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
 

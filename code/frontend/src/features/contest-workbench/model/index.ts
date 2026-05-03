@@ -1,4 +1,6 @@
 export * from './useContestAwdChallengePicker'
+export * from './useContestChallengeMutations'
+export * from './useContestChallengeOrchestration'
 export * from './useContestChallengePool'
 export * from './useContestEditAwdWorkspace'
 export * from './useContestExportFlow'

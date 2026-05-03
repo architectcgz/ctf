@@ -1,36 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, toRef, watch } from 'vue'
+import { toRef } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Plus, RefreshCw, Trash, Boxes, AlertTriangle, MoreHorizontal } from 'lucide-vue-next'
 
-import {
-  createContestAWDService,
-  createAdminContestChallenge,
-  listAdminContestChallenges,
-  listContestAWDServices,
-  deleteContestAWDService,
-  deleteAdminContestChallenge,
-  updateContestAWDService,
-  updateAdminContestChallenge,
-} from '@/api/admin/contests'
-import { getChallenges } from '@/api/admin/authoring'
 import type {
-  AdminAwdChallengeData,
-  AdminChallengeListItem,
   AdminContestChallengeViewData,
   ContestDetailData,
 } from '@/api/contracts'
-import { ApiError } from '@/api/request'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
-import { useContestAwdChallengePicker } from '@/features/contest-workbench'
-import { useContestChallengePool } from '@/features/contest-workbench'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
-import {
-  mapPlatformContestAwdServicesToChallengeLinks,
-} from '@/utils/platformContestAwdChallengeLinks'
+import { useContestChallengeOrchestration } from '@/features/contest-workbench'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
 import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
@@ -49,27 +29,6 @@ const emit = defineEmits<{
   updated: []
 }>()
 
-const toast = useToast()
-const CHALLENGE_CATALOG_PAGE_SIZE = 100
-const AWD_CHALLENGE_PAGE_SIZE = 20
-const loading = ref(true)
-const saving = ref(false)
-const loadingChallengeCatalog = ref(false)
-const localChallengeLinks = ref<AdminContestChallengeViewData[]>([])
-const localLoadError = ref('')
-const challengeCatalog = ref<AdminChallengeListItem[]>([])
-const dialogOpen = ref(false)
-const dialogMode = ref<'create' | 'edit'>('create')
-const editingChallenge = ref<AdminContestChallengeViewData | null>(null)
-const removingChallengeId = ref<string | null>(null)
-const openActionMenuId = ref<string | null>(null)
-const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
-const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
-const panelLoading = computed(() => (usingExternalChallengeLinks.value ? Boolean(props.loadingExternal) : loading.value))
-const panelLoadError = computed(() =>
-  usingExternalChallengeLinks.value ? props.loadErrorExternal?.trim() ?? '' : localLoadError.value
-)
-
 const {
   visibleItems,
   summaryItems,
@@ -77,47 +36,49 @@ const {
   activeFilter,
   isAwdContest,
   setFilter,
-} = useContestChallengePool(currentChallengeLinks, toRef(props, 'contestMode'))
-const showAwdChallengeFilters = false
-const showChallengeOverflowMenu = false
-
-const panelCopy = computed(() =>
-  isAwdContest.value
-    ? '维护统一题目池，从 AWD 题库选题并完成比赛级分值编排。'
-    : '维护统一题目池，安排题目顺序、分值和可见状态。'
-)
-const emptyState = computed(() => ({
-  title: '暂无关联题目',
-  description: '先从题库里关联题目，再安排顺序。',
-}))
-
-const existingChallengeIdSet = computed(
-  () => new Set(currentChallengeLinks.value.map((item) => String(item.challenge_id)))
-)
-const existingChallengeIds = computed(() => Array.from(existingChallengeIdSet.value))
-const {
-  filters: awdChallengeFilters,
-  list: awdChallengeCatalog,
-  total: awdChallengeTotal,
-  page: awdChallengePage,
-  pageSize: awdChallengePageSize,
-  loading: loadingAwdChallengeCatalog,
-  loadError: awdChallengeLoadError,
-  refresh: refreshAwdChallengeCatalog,
-  changePage: changeAwdChallengePage,
-  setKeyword: setAwdChallengeKeyword,
-  setServiceType: setAwdChallengeServiceType,
-  setDeploymentMode: setAwdChallengeDeploymentMode,
-  setReadinessStatus: setAwdChallengeReadiness,
-} = useContestAwdChallengePicker({
+  showAwdChallengeFilters,
+  showChallengeOverflowMenu,
+  panelCopy,
+  panelLoading,
+  panelLoadError,
+  currentChallengeLinks,
+  emptyState,
   existingChallengeIds,
-  pageSize: AWD_CHALLENGE_PAGE_SIZE,
+  awdChallengeFilters,
+  awdChallengeCatalog,
+  awdChallengePage,
+  awdChallengePageSize,
+  awdChallengeTotal,
+  loadingAwdChallengeCatalog,
+  awdChallengeLoadError,
+  refreshAwdChallengeCatalog,
+  changeAwdChallengePage,
+  setAwdChallengeKeyword,
+  setAwdChallengeServiceType,
+  setAwdChallengeDeploymentMode,
+  setAwdChallengeReadiness,
+  dialogChallengeOptions,
+  dialogOpen,
+  dialogMode,
+  editingChallenge,
+  loadingChallengeCatalog,
+  saving,
+  removingChallengeId,
+  openActionMenuId,
+  refresh,
+  handleCreateAction,
+  openEditDialog,
+  handleSave,
+  handleRemove,
+} = useContestChallengeOrchestration({
+  contestId: toRef(props, 'contestId'),
+  contestMode: toRef(props, 'contestMode'),
+  challengeLinks: toRef(props, 'challengeLinks'),
+  loadingExternal: toRef(props, 'loadingExternal'),
+  loadErrorExternal: toRef(props, 'loadErrorExternal'),
+  createDialogRequestKey: toRef(props, 'createDialogRequestKey'),
+  onUpdated: () => emit('updated'),
 })
-const dialogChallengeOptions = computed(() =>
-  dialogMode.value === 'edit'
-    ? challengeCatalog.value
-    : challengeCatalog.value.filter((item) => !existingChallengeIdSet.value.has(String(item.id)))
-)
 
 function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
@@ -133,258 +94,6 @@ function getChallengePreviewRoute(item: AdminContestChallengeViewData) {
 function getChallengeActionKey(item: AdminContestChallengeViewData): string {
   return item.challenge_id
 }
-
-function humanizeRequestError(error: unknown, fallback: string): string {
-  if (error instanceof ApiError && error.message.trim()) return error.message
-  return (error as Error).message || fallback
-}
-
-async function refresh() {
-  if (usingExternalChallengeLinks.value) {
-    emit('updated')
-    return
-  }
-  loading.value = true
-  try {
-    if (props.contestMode === 'awd') {
-      const nextAwdServices = await listContestAWDServices(props.contestId)
-      localChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
-    } else {
-      localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
-    }
-    localLoadError.value = ''
-  } catch (error) {
-    localLoadError.value = humanizeRequestError(error, '加载失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function ensureChallengeCatalogLoaded() {
-  if (loadingChallengeCatalog.value || challengeCatalog.value.length > 0) return
-  loadingChallengeCatalog.value = true
-  try {
-    const result = await getChallenges(
-      {
-        page: 1,
-        page_size: CHALLENGE_CATALOG_PAGE_SIZE,
-        status: 'published',
-      }
-    )
-    challengeCatalog.value = result.list
-  } catch (error) {
-    toast.error(humanizeRequestError(error, '题库加载失败'))
-  } finally {
-    loadingChallengeCatalog.value = false
-  }
-}
-
-function openCreateDialog() {
-  dialogMode.value = 'create'
-  editingChallenge.value = null
-  dialogOpen.value = true
-  if (isAwdContest.value) {
-    void changeAwdChallengePage(1)
-  } else {
-    void ensureChallengeCatalogLoaded()
-  }
-}
-
-function handleCreateAction() {
-  openCreateDialog()
-}
-
-function openEditDialog(challenge: AdminContestChallengeViewData) {
-  dialogMode.value = 'edit'
-  editingChallenge.value = challenge
-  dialogOpen.value = true
-  if (isAwdContest.value) void refreshAwdChallengeCatalog()
-}
-
-function closeDialog() {
-  dialogOpen.value = false
-  editingChallenge.value = null
-}
-
-interface ContestOrchestrationSavePayload {
-  challenge_id?: number
-  awd_challenge_id?: number
-  awd_challenge_ids?: number[]
-  points: number
-  order: number
-  is_visible: boolean
-  awd_checker_type?: AdminContestChallengeViewData['awd_checker_type']
-  awd_checker_config?: Record<string, unknown>
-  awd_sla_score?: number
-  awd_defense_score?: number
-  awd_checker_preview_token?: string
-}
-
-function summarizeAwdChallengeFailures(awdChallengeIds: number[]): string {
-  const failedNames = awdChallengeIds
-    .map((awdChallengeId) => awdChallengeCatalog.value.find((item) => Number(item.id) === awdChallengeId)?.name || `AWD #${awdChallengeId}`)
-
-  return `部分 AWD 题目关联失败：${failedNames.join('、')}`
-}
-
-function buildAwdServiceCreatePayload(
-  awdChallengeId: number,
-  payload: ContestOrchestrationSavePayload,
-  order: number
-) {
-  const awdChallenge = awdChallengeCatalog.value.find((item) => Number(item.id) === awdChallengeId)
-  const checkerConfig =
-    awdChallenge?.checker_config && typeof awdChallenge.checker_config === 'object'
-      ? awdChallenge.checker_config
-      : undefined
-
-  return {
-    awd_challenge_id: awdChallengeId,
-    points: payload.points,
-    order,
-    is_visible: payload.is_visible,
-    ...(awdChallenge?.checker_type ? { checker_type: awdChallenge.checker_type } : {}),
-    ...(checkerConfig ? { checker_config: checkerConfig } : {}),
-  }
-}
-
-async function handleSave(payload: ContestOrchestrationSavePayload) {
-  saving.value = true
-  try {
-    if (isAwdContest.value) {
-      const awdChallengeIds =
-        dialogMode.value === 'create' && payload.awd_challenge_ids?.length
-          ? payload.awd_challenge_ids
-          : payload.awd_challenge_id
-            ? [payload.awd_challenge_id]
-            : []
-
-      if (awdChallengeIds.length === 0) {
-        toast.error('请选择 AWD 题目')
-        return
-      }
-      if (dialogMode.value === 'create') {
-        const results = await Promise.allSettled(
-          awdChallengeIds.map((awdChallengeId, index) =>
-            createContestAWDService(
-              props.contestId,
-              buildAwdServiceCreatePayload(awdChallengeId, payload, payload.order + index)
-            )
-          )
-        )
-        const failedResults = results.flatMap((result, index) =>
-          result.status === 'rejected'
-            ? [
-                {
-                  awdChallengeId: awdChallengeIds[index],
-                  error: result.reason,
-                },
-              ]
-            : []
-        )
-
-        if (failedResults.length > 0) {
-          const failedIds = failedResults.map(({ awdChallengeId }) => awdChallengeId)
-          const failureMessage = summarizeAwdChallengeFailures(failedIds)
-
-          if (failedResults.length === awdChallengeIds.length) {
-            toast.error(failureMessage)
-            return
-          }
-
-          toast.warning(failureMessage)
-          emit('updated')
-          if (!usingExternalChallengeLinks.value) {
-            await refresh()
-          }
-          return
-        }
-      } else if (editingChallenge.value) {
-        await updateContestAWDService(
-          props.contestId,
-          editingChallenge.value.awd_service_id!,
-          {
-            awd_challenge_id: awdChallengeIds[0],
-            points: payload.points,
-            order: payload.order,
-            is_visible: payload.is_visible,
-          }
-        )
-      }
-    } else if (dialogMode.value === 'create') {
-      await createAdminContestChallenge(
-        props.contestId,
-        {
-          challenge_id: payload.challenge_id!,
-          points: payload.points,
-          order: payload.order,
-          is_visible: payload.is_visible,
-        }
-      )
-    } else if (editingChallenge.value) {
-      await updateAdminContestChallenge(
-        props.contestId,
-        editingChallenge.value.challenge_id,
-        {
-          points: payload.points,
-          order: payload.order,
-          is_visible: payload.is_visible,
-        }
-      )
-    }
-    toast.success('题目已保存')
-    closeDialog()
-    emit('updated')
-    if (!usingExternalChallengeLinks.value) await refresh()
-  } catch (error) {
-    toast.error(humanizeRequestError(error, '保存失败'))
-  } finally {
-    saving.value = false
-  }
-}
-
-async function handleRemove(challenge: AdminContestChallengeViewData) {
-  const confirmed = await confirmDestructiveAction({
-    title: '移除题目',
-    message: `确认将“${getChallengeTitle(challenge)}”从竞赛中移除吗？`,
-  })
-  if (!confirmed) return
-  removingChallengeId.value = challenge.id
-  try {
-    if (props.contestMode === 'awd') {
-      await deleteContestAWDService(props.contestId, challenge.awd_service_id!)
-    } else {
-      await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
-    }
-    toast.success('题目已移除')
-    emit('updated')
-    if (!usingExternalChallengeLinks.value) await refresh()
-  } catch (error) {
-    toast.error(humanizeRequestError(error, '移除失败'))
-  } finally {
-    removingChallengeId.value = null
-  }
-}
-
-onMounted(() => {
-  if (!usingExternalChallengeLinks.value) void refresh()
-})
-
-watch(
-  () => props.createDialogRequestKey,
-  (requestKey, previousRequestKey) => {
-    if (!requestKey || requestKey === previousRequestKey) return
-    handleCreateAction()
-  },
-  { immediate: true }
-)
-
-watch(awdChallengeLoadError, (error, previousError) => {
-  if (!error || error === previousError) {
-    return
-  }
-  toast.error(error)
-})
 </script>
 
 <template>

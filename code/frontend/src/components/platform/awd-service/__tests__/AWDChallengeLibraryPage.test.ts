@@ -200,4 +200,11 @@ describe('AWDChallengeLibraryPage', () => {
     expect(awdChallengeLibraryPageSource).not.toContain('workspace-directory-pagination mt-6')
     expect(awdChallengeLibraryPageSource).not.toContain('class="mt-8"')
   })
+
+  it('AWD 难度列应复用 challenge entity 文本单元，并通过局部 override 保留高强度文案', () => {
+    expect(awdChallengeLibraryPageSource).toContain("ChallengeDifficultyText } from '@/entities/challenge'")
+    expect(awdChallengeLibraryPageSource).toContain('<ChallengeDifficultyText')
+    expect(awdChallengeLibraryPageSource).toContain(":label-overrides=\"{ insane: '高强度' }\"")
+    expect(awdChallengeLibraryPageSource).not.toContain('function getDifficultyLabel(')
+  })
 })

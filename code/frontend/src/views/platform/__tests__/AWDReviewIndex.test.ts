@@ -142,4 +142,9 @@ describe('PlatformAWDReviewIndex', () => {
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
   })
+
+  it('路由壳页应通过 feature 动作处理返回，而不是模板内直接 push', () => {
+    expect(platformAwdReviewIndexSource).toContain('openPlatformOverview')
+    expect(platformAwdReviewIndexSource).not.toContain("router.push({ name: 'PlatformOverview' })")
+  })
 })

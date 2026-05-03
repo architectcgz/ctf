@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { AdminImagePayload } from '@/api/admin/authoring'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import type { ImageCreateForm } from '@/entities/image'
 
 const props = defineProps<{
   open: boolean
   creating: boolean
-  form: AdminImagePayload
+  form: ImageCreateForm
 }>()
 
 const emit = defineEmits<{

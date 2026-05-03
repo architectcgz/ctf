@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAnnouncements from '../ContestAnnouncements.vue'
+import contestAnnouncementsSource from '../ContestAnnouncements.vue?raw'
 import contestAnnouncementsTopbarPanelSource from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue?raw'
 import routerSource from '@/router/index.ts?raw'
 
@@ -109,6 +110,11 @@ describe('ContestAnnouncements', () => {
     expect(wrapper.text()).toContain('2026 春季赛')
     expect(wrapper.text()).toContain('报名提醒')
     expect(wrapper.find('#contest-announcement-submit').exists()).toBe(true)
+  })
+
+  it('路由页应仅负责组合，不直接耦合公告页加载流程', () => {
+    expect(contestAnnouncementsSource).toContain('useContestAnnouncementsPage')
+    expect(contestAnnouncementsSource).not.toContain("from '@/api/admin/contests'")
   })
 
   it('ended 竞赛应显示只读提示，且不显示发布和删除操作', async () => {

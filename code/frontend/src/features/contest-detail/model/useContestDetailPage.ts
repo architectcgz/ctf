@@ -1,15 +1,6 @@
 import { computed, onUnmounted, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import {
-  createTeam,
-  getAnnouncements,
-  getContestChallenges,
-  getContestDetail,
-  getMyTeam,
-  joinTeam,
-  kickTeamMember,
-  submitContestFlag,
-} from '@/api/contest'
+import { getMyTeam } from '@/api/contest'
 import type {
   ContestAnnouncement,
   ContestChallengeItem,
@@ -18,8 +9,11 @@ import type {
   TeamData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { formatDuration } from '@/utils/format'
+import { useContestDetailCountdown } from './useContestDetailCountdown'
+import { useContestDetailDataLoader } from './useContestDetailDataLoader'
+import { useContestDetailSelectionSync } from './useContestDetailSelectionSync'
+import { useContestFlagSubmission } from './useContestFlagSubmission'
+import { useContestTeamActions } from './useContestTeamActions'
 
 interface UseContestDetailPageOptions {
   contestId: MaybeRefOrGetter<string>
@@ -42,7 +36,6 @@ function createEmptyState() {
     showJoinTeam: false,
     teamName: '',
     teamIdInput: '',
-    countdown: '',
   }
 }
 
@@ -55,89 +48,32 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   const announcements = ref<ContestAnnouncement[]>([])
   const announcementsError = ref('')
   const loading = ref(false)
-  const countdown = ref('')
-  const selectedChallenge = ref<ContestChallengeItem | null>(null)
-  const flagInput = ref('')
-  const submitting = ref(false)
-  const submitResult = ref<SubmitFlagData | null>(null)
-  const showCreateTeam = ref(false)
-  const showJoinTeam = ref(false)
-  const teamName = ref('')
-  const teamIdInput = ref('')
-  const creatingTeam = ref(false)
-  const joiningTeam = ref(false)
-
-  let countdownTimer: number | null = null
-  let requestToken = 0
+  const { countdown, startCountdown, stopCountdown } = useContestDetailCountdown({
+    contest,
+  })
+  const {
+    selectedChallenge,
+    flagInput,
+    submitting,
+    submitResult,
+    clearSubmissionState,
+    syncSelectedChallengeById,
+    selectChallenge,
+    submitFlagAction,
+  } = useContestFlagSubmission({
+    contest,
+    challenges,
+    onSelectedChallengeChange: options.onSelectedChallengeChange,
+  })
+  const { syncSelectedChallengeFromQuery } = useContestDetailSelectionSync({
+    selectedChallengeId: options.selectedChallengeId,
+    syncSelectedChallengeById,
+  })
 
   const isCaptain = computed(() => {
     const currentUserId = toValue(options.currentUserId)
     return Boolean(team.value && currentUserId && team.value.captain_user_id === currentUserId)
   })
-
-  function normalizeChallengeId(value: string | null | Array<string | null> | undefined): string {
-    if (Array.isArray(value)) {
-      return value.find((item): item is string => typeof item === 'string' && item.length > 0) ?? ''
-    }
-    return typeof value === 'string' ? value : ''
-  }
-
-  function requestedChallengeId(): string {
-    return normalizeChallengeId(toValue(options.selectedChallengeId))
-  }
-
-  function syncSelectedChallengeFromQuery() {
-    const challengeId = requestedChallengeId()
-    selectedChallenge.value = challengeId
-      ? challenges.value.find((challenge) => challenge.id === challengeId) ?? null
-      : null
-    flagInput.value = ''
-    submitResult.value = null
-  }
-
-  function stopCountdown() {
-    if (countdownTimer) {
-      window.clearInterval(countdownTimer)
-      countdownTimer = null
-    }
-  }
-
-  function updateCountdown() {
-    if (!contest.value) {
-      countdown.value = ''
-      stopCountdown()
-      return
-    }
-
-    const now = Date.now()
-    const start = new Date(contest.value.starts_at).getTime()
-    const end = new Date(contest.value.ends_at).getTime()
-
-    if (now < start) {
-      countdown.value = `距离开始: ${formatDuration(start - now)}`
-      return
-    }
-    if (now < end) {
-      countdown.value = `距离结束: ${formatDuration(end - now)}`
-      return
-    }
-
-    countdown.value = ''
-    stopCountdown()
-  }
-
-  function startCountdown() {
-    stopCountdown()
-    if (!contest.value) {
-      countdown.value = ''
-      return
-    }
-
-    updateCountdown()
-    if (countdown.value) {
-      countdownTimer = window.setInterval(updateCountdown, 1000)
-    }
-  }
 
   function resetPageState() {
     const next = createEmptyState()
@@ -153,7 +89,6 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     showJoinTeam.value = next.showJoinTeam
     teamName.value = next.teamName
     teamIdInput.value = next.teamIdInput
-    countdown.value = next.countdown
   }
 
   async function refreshTeam() {
@@ -163,228 +98,42 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     team.value = await getMyTeam(contest.value.id)
   }
 
-  async function refreshAnnouncements() {
-    if (!contest.value) {
-      return
-    }
-
-    try {
-      announcements.value = await getAnnouncements(contest.value.id)
-      announcementsError.value = ''
-    } catch (error) {
-      announcementsError.value = '公告加载失败，请稍后刷新重试'
-    }
-  }
-
-  async function loadPage() {
-    const contestId = toValue(options.contestId)
-    if (!contestId) {
-      resetPageState()
-      stopCountdown()
-      loading.value = false
-      return
-    }
-
-    const currentToken = ++requestToken
-    loading.value = true
-
-    try {
-      const contestData = await getContestDetail(contestId)
-      const [teamData, challengesData, announcementsData] = await Promise.all([
-        getMyTeam(contestId).catch(() => null),
-        getContestChallenges(contestId).catch(() => []),
-        getAnnouncements(contestId).catch(() => null),
-      ])
-
-      if (currentToken !== requestToken) {
-        return
-      }
-
-      contest.value = contestData
-      team.value = teamData
-      challenges.value = challengesData
-      syncSelectedChallengeFromQuery()
-      flagInput.value = ''
-      submitResult.value = null
-
-      if (announcementsData) {
-        announcements.value = announcementsData
-        announcementsError.value = ''
-      } else {
-        announcements.value = []
-        announcementsError.value = '公告加载失败，请稍后刷新重试'
-      }
-
-      startCountdown()
-    } catch {
-      if (currentToken !== requestToken) {
-        return
-      }
-
-      resetPageState()
-      stopCountdown()
+  const {
+    showCreateTeam,
+    showJoinTeam,
+    teamName,
+    teamIdInput,
+    creatingTeam,
+    joiningTeam,
+    openCreateTeam,
+    closeCreateTeam,
+    createTeamAction,
+    openJoinTeam,
+    closeJoinTeam,
+    joinTeamAction,
+    kickMember,
+  } = useContestTeamActions({
+    contest,
+    team,
+    refreshTeam,
+  })
+  const { loadPage, refreshAnnouncements } = useContestDetailDataLoader({
+    contestId: options.contestId,
+    contest,
+    team,
+    challenges,
+    announcements,
+    announcementsError,
+    loading,
+    resetPageState,
+    startCountdown,
+    stopCountdown,
+    syncSelectedChallengeFromQuery,
+    clearSubmissionState,
+    onLoadFailed: () => {
       toast.error('加载竞赛详情失败，请稍后刷新重试')
-    } finally {
-      if (currentToken === requestToken) {
-        loading.value = false
-      }
-    }
-  }
-
-  function selectChallenge(challenge: ContestChallengeItem) {
-    selectedChallenge.value = challenge
-    flagInput.value = ''
-    submitResult.value = null
-    options.onSelectedChallengeChange?.(challenge.id)
-  }
-
-  function buildContestSubmitMessage(result: SubmitFlagData): string {
-    if (result.is_correct) {
-      return `正确！+${result.points ?? 0} 分`
-    }
-    return 'Flag 错误，请重试'
-  }
-
-  async function submitFlagAction() {
-    if (submitting.value) {
-      return
-    }
-
-    const flag = flagInput.value.trim()
-    if (!flag) {
-      toast.warning('请输入 Flag')
-      return
-    }
-    if (flag.length < 5 || flag.length > 200) {
-      toast.warning('Flag 长度应在 5-200 字符之间')
-      return
-    }
-    if (!selectedChallenge.value || !contest.value) {
-      return
-    }
-
-    submitting.value = true
-    submitResult.value = null
-
-    try {
-      const result = await submitContestFlag(contest.value.id, selectedChallenge.value.id, flag)
-      submitResult.value = {
-        ...result,
-        message: buildContestSubmitMessage(result),
-      }
-
-      if (result.is_correct) {
-        const solvedChallengeId = selectedChallenge.value.id
-        challenges.value = challenges.value.map((challenge) =>
-          challenge.id === solvedChallengeId ? { ...challenge, is_solved: true } : challenge
-        )
-        selectedChallenge.value = {
-          ...selectedChallenge.value,
-          is_solved: true,
-        }
-        flagInput.value = ''
-      }
-    } catch (error) {
-      console.error(error)
-      toast.error(error instanceof Error ? error.message : '提交失败，请稍后重试')
-    } finally {
-      submitting.value = false
-    }
-  }
-
-  function openCreateTeam() {
-    showCreateTeam.value = true
-  }
-
-  function closeCreateTeam() {
-    showCreateTeam.value = false
-    teamName.value = ''
-  }
-
-  async function createTeamAction() {
-    const name = teamName.value.trim()
-    if (!name) {
-      toast.warning('请输入队伍名称')
-      return
-    }
-    if (name.length < 2 || name.length > 50) {
-      toast.warning('队伍名称长度应在 2-50 字符之间')
-      return
-    }
-    if (!contest.value || creatingTeam.value) {
-      return
-    }
-
-    creatingTeam.value = true
-    try {
-      await createTeam(contest.value.id, { name })
-      await refreshTeam()
-      closeCreateTeam()
-      toast.success('创建队伍成功')
-    } catch (error) {
-      console.error(error)
-      toast.error(error instanceof Error ? error.message : '创建队伍失败')
-    } finally {
-      creatingTeam.value = false
-    }
-  }
-
-  function openJoinTeam() {
-    showJoinTeam.value = true
-  }
-
-  function closeJoinTeam() {
-    showJoinTeam.value = false
-    teamIdInput.value = ''
-  }
-
-  async function joinTeamAction() {
-    const teamId = teamIdInput.value.trim()
-    if (!teamId) {
-      toast.warning('请输入队伍 ID')
-      return
-    }
-    if (!contest.value || joiningTeam.value) {
-      return
-    }
-
-    joiningTeam.value = true
-    try {
-      await joinTeam(contest.value.id, teamId)
-      await refreshTeam()
-      closeJoinTeam()
-      toast.success('加入队伍成功')
-    } catch (error) {
-      console.error(error)
-      toast.error(error instanceof Error ? error.message : '加入队伍失败')
-    } finally {
-      joiningTeam.value = false
-    }
-  }
-
-  async function kickMember(userId: string) {
-    if (!contest.value || !team.value) {
-      return
-    }
-
-    const confirmed = await confirmDestructiveAction({
-      title: '踢出成员',
-      message: '确定踢出该成员？',
-      confirmButtonText: '确认踢出',
-    })
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await kickTeamMember(contest.value.id, team.value.id, userId)
-      await refreshTeam()
-      toast.success('已踢出成员')
-    } catch (error) {
-      console.error(error)
-      toast.error(error instanceof Error ? error.message : '踢出成员失败')
-    }
-  }
+    },
+  })
 
   watch(
     () => toValue(options.contestId),

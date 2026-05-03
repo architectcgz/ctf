@@ -6,6 +6,7 @@ import imageCreateModalSource from '@/components/platform/images/ImageCreateModa
 import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
 import imageDirectoryPanelSource from '@/components/platform/images/ImageDirectoryPanel.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
+import imageManagePageSource from '@/features/image-management/model/useImageManagePage.ts?raw'
 import { ApiError } from '@/api/request'
 
 const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
@@ -137,6 +138,8 @@ describe('ImageManage', () => {
     expect(imageCreateModalSource).toContain(
       "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
     )
+    expect(imageCreateModalSource).toContain("from '@/entities/image'")
+    expect(imageCreateModalSource).not.toContain("from '@/api/admin/authoring'")
     expect(imageCreateModalSource).toContain('<AdminSurfaceModal')
     expect(imageCreateModalSource).not.toContain('<ElForm')
     expect(imageCreateModalSource).not.toContain('<ElFormItem')
@@ -146,6 +149,17 @@ describe('ImageManage', () => {
     expect(imageCreateModalSource).toContain('class="ui-control')
     expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--secondary')
     expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--primary')
+    expect(imageManagePageSource).toContain(
+      "import { useImageManageAutoRefresh } from './useImageManageAutoRefresh'"
+    )
+    expect(imageManagePageSource).toContain(
+      "import { useImageManageMutations } from './useImageManageMutations'"
+    )
+    expect(imageManagePageSource).toContain("from './imageManagePresentation'")
+    expect(imageManagePageSource).toContain('filterAndSortImages(')
+    expect(imageManagePageSource).toContain('buildImageStatusSummary(')
+    expect(imageManagePageSource).not.toContain('createImage(')
+    expect(imageManagePageSource).not.toContain('deleteImage(')
   })
 
   it('镜像详情弹窗应抽到独立平台组件并保留后台 surface modal', () => {

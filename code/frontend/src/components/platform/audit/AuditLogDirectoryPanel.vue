@@ -3,10 +3,9 @@ import type { AuditLogItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar, {
-  type WorkspaceDirectorySortOption,
-} from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 
 interface Props {
   rows: AuditLogItem[]

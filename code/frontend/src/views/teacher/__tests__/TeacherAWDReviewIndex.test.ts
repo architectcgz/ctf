@@ -4,6 +4,9 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
+import teacherAwdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
+import teacherAwdReviewContestDirectorySource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestDirectory.vue?raw'
+import teacherAwdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -67,6 +70,19 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).toContain('进入复盘')
   })
 
+  it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
+    expect(teacherAwdReviewIndexSource).toContain("useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'")
+    expect(teacherAwdReviewIndexSource).toContain(
+      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'"
+    )
+    expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
+    expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
+    expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
+    expect(teacherAwdReviewIndexSource).not.toContain('router.push({ name: \'TeacherDashboard\' })')
+    expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.status ===')
+    expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.export_ready)')
+  })
+
   it('应在停止输入后自动筛选，不再依赖显式筛选按钮', async () => {
     const wrapper = mount(TeacherAWDReviewIndex)
 
@@ -110,59 +126,56 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
+    expect(teacherAwdReviewContestDirectorySource).toContain('<TeacherAWDReviewIndexFilters')
+    expect(teacherAwdReviewContestDirectorySource).toContain('<TeacherAWDReviewDirectorySection')
+    expect(teacherAwdReviewDirectorySectionSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
-    expect(teacherAwdReviewIndexSource).toContain('class="list-heading"')
-    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-title')
-    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-copy')
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).toContain('class="list-heading"')
+    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-title')
+    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-copy')
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface-subtle\)\s*84%,\s*transparent\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toMatch(
+    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*box-shadow:\s*0 10px 24px var\(--color-shadow-soft\);/s
     )
   })
 
   it('赛事概览条不应继续保留多余的底部分隔线', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
-      'class="teacher-summary teacher-summary--flat metric-panel-default-surface"'
-    )
-    expect(teacherAwdReviewIndexSource).toMatch(
-      /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
-    )
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
   })
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<header class="teacher-topbar workspace-tab-heading awd-review-index-header">'
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
+      ':overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<div class="teacher-heading workspace-tab-heading__main">'
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
+      ':title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.title"'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<div class="workspace-overline awd-review-index-overline">AWD Review</div>'
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('header-class="awd-review-index-header"')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
+      'overline-class="awd-review-index-overline"'
     )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
-    )
-    expect(teacherAwdReviewIndexSource).toContain('<p class="teacher-copy workspace-page-copy">')
-    expect(teacherAwdReviewIndexSource).toMatch(
+    expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
       /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
     )
-    expect(teacherAwdReviewIndexSource).not.toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
       '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
     )
   })
 
   it('筛选区源码不应继续保留表单提交和应用筛选按钮', () => {
-    expect(teacherAwdReviewIndexSource).not.toContain('@submit.prevent="loadContests"')
-    expect(teacherAwdReviewIndexSource).not.toContain('应用筛选')
-    expect(teacherAwdReviewIndexSource).not.toContain('赛事筛选')
-    expect(teacherAwdReviewIndexSource).not.toContain(
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('@submit.prevent="loadContests"')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('应用筛选')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('赛事筛选')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
       '支持按状态或关键字快速定位要进入的 AWD 赛事。'
     )
   })

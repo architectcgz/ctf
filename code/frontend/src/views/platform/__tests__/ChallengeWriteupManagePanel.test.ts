@@ -91,6 +91,14 @@ describe('ChallengeWriteupManagePanel', () => {
       'class="ui-btn ui-btn--secondary ui-btn--sm"'
     )
     expect(challengeWriteupManagePanelSource).toContain(
+      "from '@/features/challenge-writeup-editor'"
+    )
+    expect(challengeWriteupManagePanelSource).toContain('useChallengeWriteupManagement')
+    expect(challengeWriteupManagePanelSource).not.toContain(
+      "from '@/api/admin/authoring'"
+    )
+    expect(challengeWriteupManagePanelSource).not.toContain("from '@/api/teacher'")
+    expect(challengeWriteupManagePanelSource).toContain(
       "from '@/components/common/menus/CActionMenu.vue'"
     )
     expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item"')

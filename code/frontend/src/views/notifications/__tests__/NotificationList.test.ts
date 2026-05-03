@@ -125,6 +125,12 @@ describe('NotificationList', () => {
     )
   })
 
+  it('路由页应仅负责组合，不直接耦合通知接口与分页流程', () => {
+    expect(notificationListSource).toContain('useNotificationListPage')
+    expect(notificationListSource).not.toContain("from '@/api/notification'")
+    expect(notificationListSource).not.toContain('usePagination<NotificationItem>')
+  })
+
   it('keeps bulk mark-as-read action working on the list page', async () => {
     const { wrapper } = await mountPage()
     const store = useNotificationStore()
@@ -177,8 +183,8 @@ describe('NotificationList', () => {
     expect(notificationListSource).toContain('class="notification-topbar-meta"')
     expect(notificationListSource).toContain('class="notification-head-stats"')
     expect(notificationListSource).toContain('class="notification-head-stat"')
-    expect(notificationListSource).toContain('消息数')
-    expect(notificationListSource).toContain('未读数')
+    expect(notificationListSource).toContain('v-for="stat in headStats"')
+    expect(notificationListSource).toContain('{{ stat.label }}')
     expect(notificationListSource).not.toContain('当前消息概况')
     expect(notificationListSource).not.toContain('本页消息')
     expect(notificationListSource).not.toContain('已读消息')

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportPreview from '../ChallengeImportPreview.vue'
+import challengeImportPreviewSource from '../ChallengeImportPreview.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -87,6 +88,12 @@ describe('ChallengeImportPreview', () => {
 
     expect(adminApiMocks.commitChallengeImport).toHaveBeenCalledWith('import-1')
     expect(pushMock).toHaveBeenCalledWith({ name: 'ChallengeManage' })
+  })
+
+  it('路由页应仅负责组合，不直接耦合路由参数与提交流程', () => {
+    expect(challengeImportPreviewSource).toContain('useChallengeImportPreviewPage')
+    expect(challengeImportPreviewSource).not.toContain('useRoute')
+    expect(challengeImportPreviewSource).not.toContain('useRouter')
   })
 
   it('父页应保留导入预览的返回导航和确认导入 owner', async () => {

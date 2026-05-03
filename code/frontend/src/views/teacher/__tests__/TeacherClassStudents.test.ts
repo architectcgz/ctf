@@ -5,6 +5,7 @@ import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 import TeacherClassStudents from '../TeacherClassStudents.vue'
+import teacherClassStudentsSource from '../TeacherClassStudents.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 
 const pushMock = vi.fn()
@@ -214,6 +215,11 @@ describe('TeacherClassStudents', () => {
       name: 'TeacherStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
+  })
+
+  it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
+    expect(teacherClassStudentsSource).toContain('useTeacherClassStudentsPage')
+    expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
   })
 
   it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {

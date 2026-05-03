@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import TeacherStudentManagement from '../TeacherStudentManagement.vue'
+import teacherStudentManagementSource from '../TeacherStudentManagement.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -204,6 +205,15 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
+  })
+
+  it('页面应通过 feature model 获取学生目录状态，不再直接耦合 teacher api', () => {
+    expect(teacherStudentManagementSource).toContain(
+      "import { useTeacherStudentManagementPage } from '@/features/teacher-student-management'"
+    )
+    expect(teacherStudentManagementSource).not.toContain("from '@/api/teacher'")
+    expect(teacherStudentManagementSource).not.toContain('getStudentsDirectory')
+    expect(teacherStudentManagementSource).not.toContain('const directoryParams = computed')
   })
 
   it('管理员从学生管理返回班级管理时应回到后台班级页', async () => {

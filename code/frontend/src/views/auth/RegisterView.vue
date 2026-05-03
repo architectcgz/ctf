@@ -20,7 +20,7 @@
             autocomplete="username"
             class="ui-control"
             placeholder="设置你的登录账号"
-            @input="submitError = ''"
+            @input="clearSubmitError"
           >
         </div>
       </div>
@@ -38,7 +38,7 @@
             autocomplete="new-password"
             class="ui-control"
             placeholder="建议使用 8 位以上字母数字组合"
-            @input="submitError = ''"
+            @input="clearSubmitError"
           >
         </div>
       </div>
@@ -54,7 +54,7 @@
             v-model="form.class_name"
             class="ui-control"
             placeholder="输入班级全称以自动加入"
-            @input="submitError = ''"
+            @input="clearSubmitError"
           >
         </div>
       </div>
@@ -90,34 +90,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
-import { useAuth } from '@/features/auth'
+import { useRegisterPage } from '@/features/auth'
 
-const { register } = useAuth()
-
-const loading = ref(false)
-const submitError = ref('')
-const form = reactive({ username: '', password: '', class_name: '' })
-
-async function onSubmit() {
-  if (loading.value || !form.username || !form.password) return
-  loading.value = true
-  submitError.value = ''
-  try {
-    await register({
-      username: form.username,
-      password: form.password,
-      class_name: form.class_name.trim() || undefined,
-    })
-  } catch (err) {
-    submitError.value = err instanceof Error && err.message.trim() ? err.message : '注册失败，请稍后重试'
-  } finally {
-    loading.value = false
-  }
-}
+const { form, loading, submitError, clearSubmitError, onSubmit } = useRegisterPage()
 </script>
 
 <style scoped>

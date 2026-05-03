@@ -188,6 +188,11 @@ describe('TeacherDashboard', () => {
     expect(teacherApiMocks.getStudentSkillProfile).not.toHaveBeenCalled()
   })
 
+  it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
+    expect(teacherDashboardSource).toContain('useTeacherDashboardPage')
+    expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
+  })
+
   it('教师概览夜间模式样式应基于主题变量而不是亮色硬编码', () => {
     expect(teacherDashboardPageSource).toMatch(teacherSurfacePattern)
     for (const [sourceName, source] of teacherSurfaceSources) {

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
+import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -347,6 +348,12 @@ describe('TeacherStudentAnalysis', () => {
       student_id: 'stu-1',
       page_size: 6,
     })
+  })
+
+  it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
+    expect(teacherStudentAnalysisSource).toContain('useTeacherStudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
+    expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
   })
 
   it('学员分析头部应只保留姓名标题，不重复显示英文 eyebrow 和用户名 chip', () => {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
+import contestManageSource from '../ContestManage.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import { ApiError } from '@/api/request'
 
@@ -436,6 +437,9 @@ describe('ContestManage', () => {
   })
 
   it('赛事目录筛选应切到共享目录工具栏', () => {
+    expect(contestManageSource).toContain('useContestManagePage')
+    expect(contestManageSource).not.toContain('onMounted(')
+    expect(contestManageSource).not.toContain("from '@/api/contracts'")
     expect(contestOrchestrationSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

@@ -5,8 +5,11 @@ import { describe, expect, it } from 'vitest'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
-import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -25,8 +28,7 @@ describe('teacher dark surface alignment', () => {
     expect(classManagementSource).toContain('teacher-surface')
     expect(studentManagementSource).toContain('teacher-surface')
     expect(instanceManagementSource).toContain('teacher-surface')
-    expect(awdReviewIndexSource).toContain('teacher-surface')
-    expect(awdReviewDetailSource).toContain('teacher-surface')
+    expect(awdReviewSurfaceShellSource).toContain('teacher-surface')
   })
 
   it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {
@@ -47,14 +49,15 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).not.toContain('teacher-summary-item')
     expect(instanceManagementSource).toContain('WorkspaceDataTable')
     expect(instanceManagementSource).toContain('teacher-directory-row')
-    expect(awdReviewIndexSource).toContain('workspace-overline')
-    expect(awdReviewIndexSource).toContain('teacher-actions')
-    expect(awdReviewIndexSource).toContain('metric-panel-card')
-    expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
-    expect(awdReviewDetailSource).toContain('workspace-overline')
-    expect(awdReviewDetailSource).toContain('teacher-actions')
-    expect(awdReviewDetailSource).toContain('metric-panel-card')
-    expect(awdReviewDetailSource).not.toContain('teacher-summary-item')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
+    expect(awdReviewWorkspaceHeaderSource).toContain('class="workspace-overline"')
+    expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-actions"')
+    expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
   })
 
   it('class management should not leak element-plus primary plain button chrome', () => {
@@ -96,16 +99,16 @@ describe('teacher dark surface alignment', () => {
   })
 
   it('awd review pages should not keep page-local teacher token duplication or bright hardcoded surfaces', () => {
-    expect(awdReviewIndexSource).not.toContain('--journal-ink: var(--color-text-primary);')
-    expect(awdReviewIndexSource).not.toContain('#ffffff')
-    expect(awdReviewIndexSource).not.toContain('#f8fafc')
-    expect(awdReviewIndexSource).not.toContain('rgba(255, 255, 255')
-    expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('#ffffff')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('#f8fafc')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewIndexWorkspaceSource).not.toContain('.teacher-btn {')
 
-    expect(awdReviewDetailSource).not.toContain('--journal-ink: var(--color-text-primary);')
-    expect(awdReviewDetailSource).not.toContain('#ffffff')
-    expect(awdReviewDetailSource).not.toContain('#f8fafc')
-    expect(awdReviewDetailSource).not.toContain('rgba(255, 255, 255')
-    expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
+    expect(awdReviewWorkspaceSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewWorkspaceSource).not.toContain('#ffffff')
+    expect(awdReviewWorkspaceSource).not.toContain('#f8fafc')
+    expect(awdReviewWorkspaceSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewWorkspaceSource).not.toContain('.teacher-btn {')
   })
 })

@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
 import AWDChallengeEditorDialog from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue'
 import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { usePlatformAwdChallenges } from '@/features/platform-awd-challenges'
-
-const router = useRouter()
+import { useAwdChallengeLibraryPage } from '@/features/platform-awd-challenges'
 
 const {
   list,
@@ -29,39 +24,18 @@ const {
   selectedImportFileName,
   formDraft,
   openEditDialog,
-  closeDialog,
   refreshImportQueue,
   selectImportPackages,
   commitImportPreview,
   saveChallenge,
   removeChallenge,
-} = usePlatformAwdChallenges()
+  updateKeyword,
+  updateServiceTypeFilter,
+  updateStatusFilter,
+  handleDialogOpenChange,
+  openImportPage,
+} = useAwdChallengeLibraryPage()
 
-onMounted(() => {
-  void refresh()
-})
-
-function updateKeyword(value: string) {
-  keyword.value = value
-}
-
-function updateServiceTypeFilter(value: typeof serviceTypeFilter.value) {
-  serviceTypeFilter.value = value
-}
-
-function updateStatusFilter(value: typeof statusFilter.value) {
-  statusFilter.value = value
-}
-
-function handleDialogOpenChange(value: boolean) {
-  if (!value) {
-    closeDialog()
-  }
-}
-
-function openImportPage() {
-  void router.push({ name: 'PlatformAwdChallengeImport' })
-}
 </script>
 
 <template>

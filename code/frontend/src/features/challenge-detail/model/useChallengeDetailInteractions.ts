@@ -3,15 +3,12 @@ import { ref, type Ref } from 'vue'
 import {
   downloadAttachment as downloadChallengeAttachment,
   getMyChallengeSubmissionRecords,
-  getMyChallengeWriteupSubmission,
   submitFlag,
-  upsertChallengeWriteupSubmission,
 } from '@/api/challenge'
-import type { ChallengeDetailData, SubmissionWriteupData, SubmitFlagData } from '@/api/contracts'
+import type { ChallengeDetailData, SubmitFlagData } from '@/api/contracts'
 import type { ChallengeSubmissionRecordStatus } from './useChallengeDetailPresentation'
 import { useToast } from '@/composables/useToast'
-
-type EditableWriteupStatus = 'draft' | 'published'
+import { useChallengeWriteupSubmissionFlow } from './useChallengeWriteupSubmissionFlow'
 
 interface SubmissionRecordItem {
   id: string
@@ -33,12 +30,7 @@ export function useChallengeDetailInteractions({
 }: UseChallengeDetailInteractionsOptions) {
   const toast = useToast()
 
-  const myWriteup = ref<SubmissionWriteupData | null>(null)
   const submitting = ref(false)
-  const submissionLoading = ref(false)
-  const submissionSaving = ref<EditableWriteupStatus | null>(null)
-  const writeupTitle = ref('')
-  const writeupContent = ref('')
   const flagInput = ref('')
   const expandedHintLevels = ref<number[]>([])
   const submitResult = ref<{
@@ -46,50 +38,28 @@ export function useChallengeDetailInteractions({
     message: string
   } | null>(null)
   const submissionRecords = ref<SubmissionRecordItem[]>([])
-  let latestWriteupRequestId = 0
   let latestSubmissionRecordsRequestId = 0
-
-  function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
-    writeupTitle.value = item?.title ?? ''
-    writeupContent.value = item?.content ?? ''
-  }
+  const {
+    myWriteup,
+    submissionLoading,
+    submissionSaving,
+    writeupTitle,
+    writeupContent,
+    resetWriteupSubmissionState,
+    loadMyWriteupSubmission,
+    saveWriteup,
+  } = useChallengeWriteupSubmissionFlow({
+    challengeId,
+    challenge,
+  })
 
   function resetChallengeInteractions(): void {
-    myWriteup.value = null
+    resetWriteupSubmissionState()
     submitting.value = false
-    submissionLoading.value = false
-    submissionSaving.value = null
-    writeupTitle.value = ''
-    writeupContent.value = ''
     flagInput.value = ''
     expandedHintLevels.value = []
     submitResult.value = null
     submissionRecords.value = []
-  }
-
-  async function loadMyWriteupSubmission(): Promise<void> {
-    const currentChallengeId = challengeId.value
-    if (!currentChallengeId) return
-
-    const requestId = ++latestWriteupRequestId
-    submissionLoading.value = true
-    try {
-      const nextWriteup = await getMyChallengeWriteupSubmission(currentChallengeId)
-      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
-        return
-      }
-      myWriteup.value = nextWriteup
-      hydrateSubmissionForm(myWriteup.value)
-    } catch {
-      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
-        return
-      }
-      toast.error('加载个人题解失败')
-    } finally {
-      if (requestId === latestWriteupRequestId && currentChallengeId === challengeId.value) {
-        submissionLoading.value = false
-      }
-    }
   }
 
   async function loadSubmissionRecords(): Promise<void> {
@@ -264,34 +234,6 @@ export function useChallengeDetailInteractions({
       URL.revokeObjectURL(url)
     } catch {
       toast.error('下载附件失败')
-    }
-  }
-
-  async function saveWriteup(status: EditableWriteupStatus): Promise<void> {
-    if (!challenge.value) return
-    if (!writeupTitle.value.trim() || !writeupContent.value.trim()) {
-      toast.error('请先补全题解标题和正文')
-      return
-    }
-    if (status === 'published' && !challenge.value.is_solved) {
-      toast.error('解题后才能发布到社区')
-      return
-    }
-
-    submissionSaving.value = status
-    try {
-      const saved = await upsertChallengeWriteupSubmission(challenge.value.id, {
-        title: writeupTitle.value.trim(),
-        content: writeupContent.value.trim(),
-        submission_status: status,
-      })
-      myWriteup.value = saved
-      hydrateSubmissionForm(saved)
-      toast.success(status === 'published' ? '题解已发布到社区' : '草稿已保存')
-    } catch {
-      toast.error(status === 'published' ? '发布题解失败' : '保存草稿失败')
-    } finally {
-      submissionSaving.value = null
     }
   }
 

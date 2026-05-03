@@ -1,40 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import AwdReviewHeroPanel from '@/components/platform/awd-review/AwdReviewHeroPanel.vue'
 import AwdReviewDirectoryPanel from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue'
 import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
 
-interface PlatformAwdReviewRow {
-  id: string
-  title: string
-  status: string
-  current_round?: number
-  round_count: number
-  team_count: number
-  mode: string
-  export_ready: boolean
-  latest_evidence_at?: string | null
-  contestCode: string
-}
-
-const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
-  useTeacherAwdReviewIndex()
-
-const hasActiveFilters = computed(() => Boolean(filters.value.status || filters.value.keyword.trim()))
-const runningCount = computed(() => contests.value.filter((item) => item.status === 'running').length)
-const exportReadyCount = computed(() => contests.value.filter((item) => item.export_ready).length)
-const reviewRows = computed<PlatformAwdReviewRow[]>(() =>
-  contests.value.map((contest) => ({
-    ...contest,
-    contestCode: `AWD-${contest.id}`,
-  }))
-)
-
-function resetFilters(): void {
-  filters.value.status = ''
-  filters.value.keyword = ''
-}
+const {
+  loading,
+  error,
+  contests,
+  filters,
+  hasContests,
+  hasActiveFilters,
+  reviewRows,
+  contestSummary,
+  loadContests,
+  resetFilters,
+  openPlatformOverview,
+  openContest,
+} = useTeacherAwdReviewIndex()
 </script>
 
 <template>
@@ -43,10 +25,10 @@ function resetFilters(): void {
   >
     <main class="content-pane admin-awd-review-shell__content">
       <AwdReviewHeroPanel
-        :contest-count="contests.length"
-        :running-count="runningCount"
-        :export-ready-count="exportReadyCount"
-        @back="router.push({ name: 'PlatformOverview' })"
+        :contest-count="contestSummary.totalCount"
+        :running-count="contestSummary.runningCount"
+        :export-ready-count="contestSummary.exportReadyCount"
+        @back="openPlatformOverview"
         @refresh="loadContests"
       />
 

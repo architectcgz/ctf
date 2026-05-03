@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -7,22 +6,12 @@ import ContestProjectorAttackMap from '@/components/platform/contest/projector/C
 import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
 import ContestProjectorHero from '@/components/platform/contest/projector/ContestProjectorHero.vue'
 import ContestProjectorToolbar from '@/components/platform/contest/projector/ContestProjectorToolbar.vue'
-import {
-  formatProjectorTime,
-  getContestStatusLabel,
-  getRoundStatusLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
-import type { ContestProjectorFocusPanel } from '@/components/platform/contest/projector/contestProjectorTypes'
-import { useContestProjectorData } from '@/features/contest-projector'
-import { useContestProjectorDerived } from '@/features/contest-projector'
-import { useToast } from '@/composables/useToast'
-
-const toast = useToast()
-const projectorStageRef = ref<HTMLElement | null>(null)
-const fullscreenActive = ref(false)
-const focusedPanel = ref<ContestProjectorFocusPanel | null>(null)
+import { useContestProjectorPage } from '@/features/contest-projector'
 
 const {
+  projectorStageRef,
+  fullscreenActive,
+  focusedPanel,
   scoreboard,
   rounds,
   services,
@@ -44,11 +33,6 @@ const {
   selectContest,
   selectRound,
   followCurrentRound,
-  startAutoRefresh,
-  stopAutoRefresh,
-} = useContestProjectorData()
-
-const {
   topThreeRows,
   firstBlood,
   latestAttackEvents,
@@ -56,72 +40,18 @@ const {
   serviceHealthRate,
   serviceMatrixRows,
   attackEdges,
-} = useContestProjectorDerived({
-  scoreboardRows,
-  services,
-  attacks,
-  trafficSummary,
-})
-
-const contestTitle = computed(
-  () => selectedContest.value?.title ?? scoreboard.value?.contest.title ?? '未选择赛事'
-)
-const contestStatusLabel = computed(() =>
-  getContestStatusLabel(selectedContest.value?.status ?? scoreboard.value?.contest.status)
-)
-const roundLabel = computed(
-  () =>
-    `R${selectedRound.value?.round_number ?? '--'} · ${getRoundStatusLabel(selectedRound.value?.status)}`
-)
-const topTeamName = computed(() => topThreeRows.value[0]?.team_name ?? '--')
-const successfulAttackCount = computed(
-  () => roundSummary.value?.metrics?.successful_attack_count ?? 0
-)
-const trafficRequestCount = computed(() => trafficSummary.value?.total_request_count ?? 0)
-const abnormalServiceCount = computed(
-  () => serviceStatusCounts.value.down + serviceStatusCounts.value.compromised
-)
-
-function syncFullscreenState(): void {
-  fullscreenActive.value = document.fullscreenElement === projectorStageRef.value
-}
-
-function focusPanel(panel: ContestProjectorFocusPanel): void {
-  focusedPanel.value = panel
-}
-
-function closeFocusPanel(): void {
-  focusedPanel.value = null
-}
-
-async function toggleFullscreen(): Promise<void> {
-  try {
-    if (fullscreenActive.value) {
-      await document.exitFullscreen()
-      return
-    }
-
-    const target = projectorStageRef.value
-    if (!target?.requestFullscreen) {
-      toast.error('当前浏览器不支持全屏展示')
-      return
-    }
-    await target.requestFullscreen()
-  } catch (error) {
-    toast.error('切换全屏失败')
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('fullscreenchange', syncFullscreenState)
-  void loadContests()
-  startAutoRefresh()
-})
-
-onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', syncFullscreenState)
-  stopAutoRefresh()
-})
+  contestTitle,
+  contestStatusLabel,
+  roundLabel,
+  topTeamName,
+  successfulAttackCount,
+  trafficRequestCount,
+  abnormalServiceCount,
+  focusPanel,
+  closeFocusPanel,
+  toggleFullscreen,
+  formatProjectorTime,
+} = useContestProjectorPage()
 </script>
 
 <template>

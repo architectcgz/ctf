@@ -117,6 +117,8 @@ describe('InstanceList', () => {
   })
 
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(instanceListSource).toContain('useInstanceWarningFocus')
+    expect(instanceListSource).not.toContain('watch(showWarning')
     expect(instanceListSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
     expect(instanceListSource).toMatch(
       /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/

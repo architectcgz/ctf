@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
 import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeImportHeroPanel.vue'
 import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import ChallengeImportUploadResultsPanel from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue'
-import { useChallengePackageImport } from '@/features/challenge-package-import'
-
-const router = useRouter()
+import { useChallengeImportManagePage } from '@/features/challenge-package-import'
 
 const {
   uploading,
@@ -16,71 +11,13 @@ const {
   selectedFileName,
   queue,
   uploadResults,
-  refreshQueue,
-  selectPackages,
-} = useChallengePackageImport()
-
-const queueCount = computed(() => queue.value.length)
-
-const categoryLabels = {
-  web: 'Web',
-  pwn: 'Pwn',
-  reverse: '逆向',
-  crypto: '密码',
-  misc: '杂项',
-  forensics: '取证',
-} as const
-
-const difficultyLabels = {
-  beginner: '入门',
-  easy: '简单',
-  medium: '中等',
-  hard: '困难',
-  insane: '地狱',
-} as const
-
-onMounted(() => {
-  void refreshQueue()
-})
-
-async function handleSelectPackage(files: File[]) {
-  const selectedPreview = await selectPackages(files, { parallel: files.length > 1 })
-  if (!selectedPreview?.id) {
-    return
-  }
-
-  await router.push({
-    name: 'PlatformChallengeImportPreview',
-    params: { importId: selectedPreview.id },
-  })
-}
-
-async function openPackageFormatGuide(): Promise<void> {
-  await router.push({ name: 'PlatformChallengePackageFormat' })
-}
-
-async function backToChallenges(): Promise<void> {
-  await router.push({ name: 'ChallengeManage' })
-}
-
-async function inspectImportTask(importId: string): Promise<void> {
-  await router.push({
-    name: 'PlatformChallengeImportPreview',
-    params: { importId },
-  })
-}
-
-function getCategoryLabel(value: string): string {
-  return categoryLabels[value as keyof typeof categoryLabels] ?? '杂项'
-}
-
-function getDifficultyLabel(value: string): string {
-  return difficultyLabels[value as keyof typeof difficultyLabels] ?? '简单'
-}
-
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('zh-CN')
-}
+  queueCount,
+  handleSelectPackage,
+  openPackageFormatGuide,
+  backToChallenges,
+  inspectImportTask,
+  formatDateTime,
+} = useChallengeImportManagePage()
 </script>
 
 <template>
@@ -131,8 +68,6 @@ function formatDateTime(value: string): string {
             :queue-loading="queueLoading"
             :queue-count="queueCount"
             :queue="queue"
-            :get-category-label="getCategoryLabel"
-            :get-difficulty-label="getDifficultyLabel"
             :format-date-time="formatDateTime"
             @inspect="inspectImportTask"
           />

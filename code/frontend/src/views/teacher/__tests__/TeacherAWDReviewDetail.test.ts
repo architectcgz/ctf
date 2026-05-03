@@ -132,6 +132,16 @@ describe('TeacherAWDReviewDetail', () => {
     expect(awdReviewDetailSource).not.toContain('bg-emerald-400')
   })
 
+  it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
+    expect(awdReviewDetailSource).toContain("useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'")
+    expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewDetailSource).not.toContain('const activeContestTitle = computed')
+    expect(awdReviewDetailSource).not.toContain('const summaryStats = computed')
+    expect(awdReviewDetailSource).not.toContain('function contestStatusLabel')
+    expect(awdReviewDetailSource).not.toContain('function formatServiceRef')
+    expect(awdReviewDetailSource).not.toContain("router.push({ name: 'TeacherAWDReviewIndex' })")
+  })
+
   it('默认显示整场总览，并在进行中赛事上禁用教师报告导出', async () => {
     const wrapper = mount(TeacherAWDReviewDetail)
 
@@ -340,15 +350,15 @@ describe('TeacherAWDReviewDetail', () => {
     expect(collectTestIdTexts('awd-review-drawer-traffic-service-id')).toContain('Service #7009')
   })
 
-  it('轮次切换区应并入目录段结构，不再保留独立筛选卡片壳', () => {
+  it('页面应通过 widget 组合复盘工作区，不直接承载复盘区块模板', () => {
     expect(awdReviewDetailSource).toContain(
-      'class="workspace-directory-section teacher-directory-section awd-review-round-section"'
+      "import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'"
     )
-    expect(awdReviewDetailSource).toContain('class="list-heading"')
+    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-title')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-copy')
     expect(awdReviewDetailSource).not.toContain(
-      '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
+      '默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。'
     )
   })
 

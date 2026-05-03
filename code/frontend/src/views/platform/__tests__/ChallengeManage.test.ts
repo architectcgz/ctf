@@ -5,6 +5,7 @@ import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -217,6 +218,12 @@ describe('ChallengeManage', () => {
     )
     expect(combinedSource).toContain('<h2 class="list-heading__title">题目目录</h2>')
     expect(combinedSource).not.toContain('<div class="challenge-manage-directory">')
+  })
+
+  it('平台题目管理展示层应复用 challenge entity 的分类与难度文案规则', () => {
+    expect(challengeManagePresentationSource).toContain("from '@/entities/challenge'")
+    expect(challengeManagePresentationSource).not.toContain('function getCategoryLabel(')
+    expect(challengeManagePresentationSource).not.toContain('function getDifficultyLabel(')
   })
 
   it('题目管理页应复用共享 spacing token，而不是给 summary strip 叠加额外上下 margin', () => {

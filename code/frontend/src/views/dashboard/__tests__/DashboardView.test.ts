@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '../DashboardView.vue'
 import dashboardViewSource from '../DashboardView.vue?raw'
+import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -170,6 +171,30 @@ describe('DashboardView', () => {
 
     const tabTexts = wrapper.findAll('[role="tab"]').map((tab) => tab.text())
     expect(tabTexts).toEqual(['训练总览', '训练队列', '分类补强', '训练记录', '强度推进'])
+  })
+
+  it('路由页应仅负责组合，不直接耦合学生仪表盘查询流程', () => {
+    expect(dashboardViewSource).toContain('useStudentDashboardPage')
+    expect(dashboardViewSource).toContain('dashboardPanelRegistry')
+    expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
+    expect(dashboardViewSource).not.toContain('const dashboardPanelComponents')
+    expect(dashboardViewSource).not.toContain('function resolveDashboardPanelComponent(')
+    expect(dashboardViewSource).not.toContain('Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])')
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentOverviewPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentRecommendationPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentCategoryProgressPage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentTimelinePage.vue'"
+    )
+    expect(studentDashboardPageSource).not.toContain(
+      "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
+    )
   })
 
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {

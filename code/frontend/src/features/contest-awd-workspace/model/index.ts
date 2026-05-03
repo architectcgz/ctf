@@ -1,1 +1,5 @@
+export { useContestAwdDefenseWorkbenchPage } from './useContestAwdDefenseWorkbenchPage'
 export { useContestAWDWorkspace } from './useContestAWDWorkspace'
+export { useAwdWorkspaceAccessActions } from './useAwdWorkspaceAccessActions'
+export { useAwdWorkspaceAttackSubmission } from './useAwdWorkspaceAttackSubmission'
+export { useAwdWorkspaceServiceActions } from './useAwdWorkspaceServiceActions'

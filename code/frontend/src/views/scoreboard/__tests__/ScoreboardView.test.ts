@@ -5,6 +5,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import ScoreboardDetail from '../ScoreboardDetail.vue'
 import ScoreboardView from '../ScoreboardView.vue'
 import scoreboardSource from '../ScoreboardView.vue?raw'
+import scoreboardDetailSource from '../ScoreboardDetail.vue?raw'
 
 function createScoreboardRouter(initialPath = '/scoreboard') {
   const router = createRouter({
@@ -159,6 +160,21 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).not.toContain('报名中竞赛')
     expect(wrapper.find('a[href="/scoreboard/contest-running"]').exists()).toBe(true)
     expect(getScoreboardMock).not.toHaveBeenCalled()
+  })
+
+  it('排行详情路由页应仅负责组合，不直接耦合排行榜详情加载流程', () => {
+    expect(scoreboardDetailSource).toContain('useScoreboardDetailPage')
+    expect(scoreboardDetailSource).not.toContain("from '@/api/contest'")
+    expect(scoreboardDetailSource).not.toContain('watch(')
+  })
+
+  it('排行榜路由页应仅做组合，不直接持有路由查询tab编排逻辑', () => {
+    expect(scoreboardSource).toContain('useScoreboardRoutePage')
+    expect(scoreboardSource).toContain('useScoreboardContestDirectoryPage')
+    expect(scoreboardSource).not.toContain('useRouteQueryTabs')
+    expect(scoreboardSource).not.toContain('useRoute')
+    expect(scoreboardSource).not.toContain('useRouter')
+    expect(scoreboardSource).not.toContain('watch(')
   })
 
   it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {

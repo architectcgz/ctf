@@ -1,4 +1,5 @@
 export * from './useAwdCheckResultPresentation'
+export * from './awdInspectorExportPayloads'
 export * from './useAwdInspectorCoreState'
 export * from './useAwdInspectorDerivedData'
 export * from './useAwdInspectorExports'

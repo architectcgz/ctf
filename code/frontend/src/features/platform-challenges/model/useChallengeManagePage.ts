@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Calendar, SortAsc } from 'lucide-vue-next'
 
-import type { WorkspaceDirectorySortOption } from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { useChallengeManagePresentation } from './useChallengeManagePresentation'
 import { usePlatformChallenges, type PlatformChallengeListRow } from './usePlatformChallenges'
 
@@ -86,8 +86,6 @@ export function useChallengeManagePage() {
 
   const {
     openActionMenuId,
-    getCategoryLabel,
-    getDifficultyLabel,
     closeActionMenu,
     openChallengeDetail,
     openChallengeTopology,
@@ -134,8 +132,6 @@ export function useChallengeManagePage() {
     clearFilters,
     difficultyFilter,
     draftCount,
-    getCategoryLabel,
-    getDifficultyLabel,
     hasActiveFilters,
     hasLoadError,
     keyword,

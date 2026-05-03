@@ -47,11 +47,6 @@
             :challenge="challenge"
             :sanitized-description="sanitizedDescription"
             :score-rail-probe-message="scoreRailProbeMessage"
-            :build-meta-pill-style="buildMetaPillStyle"
-            :get-category-label="getCategoryLabel"
-            :get-category-color="getCategoryColor"
-            :get-difficulty-label="getDifficultyLabel"
-            :get-difficulty-color="getDifficultyColor"
             :is-hint-expanded="isHintExpanded"
             @download-attachment="downloadAttachment"
             @toggle-hint="toggleHint"
@@ -145,7 +140,6 @@ const {
   activeSolution,
   activeSolutionTab,
   activeWorkspaceTab,
-  buildMetaPillStyle,
   challenge,
   changeSubmissionRecordPage,
   displayedSolutionCards,
@@ -155,10 +149,6 @@ const {
   flagInput,
   formatSubmissionTime,
   formatWriteupTime,
-  getCategoryColor,
-  getCategoryLabel,
-  getDifficultyColor,
-  getDifficultyLabel,
   handleScoreRailProbe,
   handleSolutionTabKeydown,
   handleWorkspaceTabKeydown,

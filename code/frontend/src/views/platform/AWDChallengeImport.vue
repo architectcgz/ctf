@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-
 import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { usePlatformAwdChallenges } from '@/features/platform-awd-challenges'
+import { useAwdChallengeImportPage } from '@/features/platform-awd-challenges'
 
 const {
   uploading,
@@ -13,11 +11,7 @@ const {
   refreshImportQueue,
   selectImportPackages,
   commitImportPreview,
-} = usePlatformAwdChallenges()
-
-onMounted(() => {
-  void refreshImportQueue()
-})
+} = useAwdChallengeImportPage()
 </script>
 
 <template>

@@ -1,2 +1,1 @@
-export { useContestDetailPage } from './model'
-
+export { useContestDetailPage, useContestDetailRoutePage, useContestListPage } from './model'

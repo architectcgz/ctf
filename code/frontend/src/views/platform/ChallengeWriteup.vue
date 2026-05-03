@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-
 import ChallengeWriteupEditorPage from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue'
+import { useChallengeWriteupPage } from '@/features/platform-challenges'
 
-const route = useRoute()
-const router = useRouter()
+const { challengeId, backToChallengeDetail } = useChallengeWriteupPage()
 </script>
 
 <template>
   <ChallengeWriteupEditorPage
-    :challenge-id="String(route.params.id || '')"
-    @back="
-      router.push({
-        name: 'PlatformChallengeDetail',
-        params: { id: String(route.params.id || '') },
-        query: { panel: 'writeup' },
-      })
-    "
+    :challenge-id="challengeId"
+    @back="backToChallengeDetail"
   />
 </template>

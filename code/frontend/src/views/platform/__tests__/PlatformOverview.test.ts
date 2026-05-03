@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import adminDashboardPageSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
 import PlatformOverview from '../PlatformOverview.vue'
+import platformOverviewViewSource from '../PlatformOverview.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -62,6 +63,12 @@ describe('PlatformOverview', () => {
     expect(wrapper.text()).toContain('6')
     expect(wrapper.text()).toContain('CPU 持续高于阈值')
     expect(wrapper.text()).toContain('web-01')
+  })
+
+  it('路由页应只做组合，不直接处理平台概览请求与导航', () => {
+    expect(platformOverviewViewSource).toContain('usePlatformOverviewPage')
+    expect(platformOverviewViewSource).not.toContain("from '@/api/admin/platform'")
+    expect(platformOverviewViewSource).not.toContain("router.push({ name: 'AuditLog' })")
   })
 
   it('应该移除页面内 tab，并直接展示总览、当前告警与资源热点三个区块', async () => {

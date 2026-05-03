@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ArrowRight, Search } from 'lucide-vue-next'
+import { Search } from 'lucide-vue-next'
 
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import {
+  ChallengeDirectoryRow,
+} from '@/entities/challenge'
 
 interface Props {
   list: ChallengeListItem[]
@@ -53,51 +56,6 @@ function updateDifficultyFilter(event: Event): void {
   emit('filter-change')
 }
 
-function getCategoryLabel(category: ChallengeCategory): string {
-  const labels: Record<ChallengeCategory, string> = {
-    web: 'Web',
-    pwn: 'Pwn',
-    reverse: '逆向',
-    crypto: '密码',
-    misc: '杂项',
-    forensics: '取证',
-  }
-  return labels[category]
-}
-
-function getCategoryColor(category: ChallengeCategory): string {
-  const map: Record<ChallengeCategory, string> = {
-    web: 'var(--challenge-tone-web)',
-    pwn: 'var(--challenge-tone-pwn)',
-    reverse: 'var(--challenge-tone-reverse)',
-    crypto: 'var(--challenge-tone-crypto)',
-    misc: 'var(--challenge-tone-misc)',
-    forensics: 'var(--challenge-tone-forensics)',
-  }
-  return map[category]
-}
-
-function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
-  const labels: Record<ChallengeDifficulty, string> = {
-    beginner: '入门',
-    easy: '简单',
-    medium: '中等',
-    hard: '困难',
-    insane: '地狱',
-  }
-  return labels[difficulty]
-}
-
-function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-  const map: Record<ChallengeDifficulty, string> = {
-    beginner: 'var(--challenge-diff-beginner)',
-    easy: 'var(--challenge-diff-easy)',
-    medium: 'var(--challenge-diff-medium)',
-    hard: 'var(--challenge-diff-hard)',
-    insane: 'var(--challenge-diff-insane)',
-  }
-  return map[difficulty]
-}
 </script>
 
 <template>
@@ -280,86 +238,12 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
           <span>操作</span>
         </div>
 
-        <button
+        <ChallengeDirectoryRow
           v-for="challenge in list"
           :key="challenge.id"
-          type="button"
-          class="challenge-row"
-          :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
-          :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
-          @click="emit('open-detail', challenge.id)"
-        >
-          <div class="challenge-row-main">
-            <div class="challenge-row-title-group">
-              <h2
-                class="challenge-row-title"
-                :title="challenge.title"
-              >
-                {{ challenge.title }}
-              </h2>
-            </div>
-          </div>
-
-          <div class="challenge-row-points">
-            {{ challenge.points }} pts
-          </div>
-
-          <div class="challenge-row-category">
-            <span
-              class="challenge-chip"
-              :style="{
-                '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
-                '--challenge-chip-color': getCategoryColor(challenge.category),
-              }"
-            >
-              {{ getCategoryLabel(challenge.category) }}
-            </span>
-          </div>
-
-          <div class="challenge-row-difficulty">
-            <span
-              class="challenge-chip"
-              :style="{
-                '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
-                '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
-              }"
-            >
-              {{ getDifficultyLabel(challenge.difficulty) }}
-            </span>
-          </div>
-
-          <div class="challenge-row-tags">
-            <span
-              v-for="tag in challenge.tags.slice(0, 2)"
-              :key="tag"
-              class="challenge-chip challenge-chip-muted"
-            >
-              {{ tag }}
-            </span>
-          </div>
-
-          <div class="challenge-row-status">
-            <span
-              class="challenge-state-chip"
-              :class="challenge.is_solved ? 'challenge-state-chip-solved' : 'challenge-state-chip-ready'"
-            >
-              {{ challenge.is_solved ? '已解出' : '待攻克' }}
-            </span>
-          </div>
-
-          <div class="challenge-row-solved">
-            {{ challenge.solved_count }} 人解出
-          </div>
-
-          <div class="challenge-row-attempts">
-            尝试 {{ challenge.total_attempts }} 次
-          </div>
-
-          <div class="challenge-row-cta">
-            <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
-            <ArrowRight class="h-4 w-4" />
-          </div>
-        </button>
+          :challenge="challenge"
+          @open="emit('open-detail', $event)"
+        />
 
         <div
           v-if="total > 0"
@@ -494,142 +378,6 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
   color: var(--journal-muted);
 }
 
-.challenge-row {
-  display: grid;
-  grid-template-columns: var(--challenge-directory-columns);
-  gap: var(--space-4);
-  align-items: center;
-  width: 100%;
-  padding: var(--space-4-5) 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
-}
-
-.challenge-row:hover,
-.challenge-row:focus-visible {
-  background: color-mix(
-    in srgb,
-    var(--challenge-row-accent, var(--journal-accent)) 5%,
-    transparent
-  );
-  box-shadow: inset 2px 0 0
-    color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 64%, transparent);
-  outline: none;
-}
-
-.challenge-row-main {
-  display: grid;
-  gap: var(--space-2-5);
-  min-width: 0;
-}
-
-.challenge-row-title-group {
-  display: flex;
-  align-items: center;
-}
-
-.challenge-row-title {
-  min-width: 0;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-16);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--journal-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.challenge-row-points {
-  display: flex;
-  align-items: center;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--challenge-row-accent, var(--journal-accent));
-}
-
-.challenge-row-category,
-.challenge-row-difficulty {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.challenge-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.challenge-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 var(--space-2-5);
-  border-radius: 8px;
-  background: var(--challenge-chip-bg, color-mix(in srgb, var(--journal-accent) 10%, transparent));
-  color: var(--challenge-chip-color, var(--journal-accent-strong));
-  font-size: var(--font-size-12);
-  font-weight: 600;
-}
-
-.challenge-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.challenge-row-status {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.challenge-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 var(--space-2-5);
-  border-radius: 8px;
-  font-size: var(--font-size-12);
-  font-weight: 600;
-}
-
-.challenge-state-chip-solved {
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
-  color: color-mix(in srgb, var(--color-success) 84%, var(--journal-ink));
-}
-
-.challenge-state-chip-ready {
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.challenge-row-solved,
-.challenge-row-attempts {
-  display: flex;
-  align-items: center;
-  font-size: var(--font-size-13);
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
-.challenge-row-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--space-1-5);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
-}
-
 .challenge-pagination {
   margin-top: var(--space-6);
   padding-top: var(--space-6);
@@ -649,17 +397,6 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
 @media (max-width: 1180px) {
   .challenge-directory-head {
     display: none;
-  }
-
-  .challenge-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3-5);
-    padding: var(--space-4-5) 0;
-  }
-
-  .challenge-row-status,
-  .challenge-row-cta {
-    justify-content: flex-start;
   }
 }
 

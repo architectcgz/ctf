@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
+import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
 
 describe('ChallengeDetail panel extraction', () => {
   it('应将题目、题解、提交记录、题解编辑和右侧工具区抽到独立 challenge 组件', () => {
@@ -28,5 +29,12 @@ describe('ChallengeDetail panel extraction', () => {
     expect(challengeDetailSource).toContain('<ChallengeSubmissionRecordsPanel')
     expect(challengeDetailSource).toContain('<ChallengeWriteupPanel')
     expect(challengeDetailSource).toContain('<ChallengeActionAside')
+  })
+
+  it('题目面板应把题目 meta 展示继续下沉到 challenge entity ui', () => {
+    expect(challengeQuestionPanelSource).toContain("ChallengeMetaStrip } from '@/entities/challenge'")
+    expect(challengeQuestionPanelSource).toContain('<ChallengeMetaStrip :challenge="challenge" />')
+    expect(challengeQuestionPanelSource).not.toContain(':build-meta-pill-style=')
+    expect(challengeQuestionPanelSource).not.toContain(':get-category-label=')
   })
 })

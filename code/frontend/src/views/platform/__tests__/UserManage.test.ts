@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import UserManage from '../UserManage.vue'
+import userManageSource from '../UserManage.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -250,6 +251,9 @@ describe('UserManage', () => {
 
     await flushPromises()
 
+    expect(userManageSource).toContain('usePlatformUserManagePage')
+    expect(userManageSource).not.toContain('onMounted(')
+    expect(userManageSource).not.toContain('confirmDestructiveAction')
     expect(userGovernanceSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

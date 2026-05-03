@@ -1,31 +1,13 @@
 <script setup lang="ts">
 import { FileText, MoreHorizontal, Users } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
+import { ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin/authoring'
-import { getTeacherWriteupSubmissions } from '@/api/teacher'
-import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
-
-type WriteupDirectoryRow = {
-  key: string
-  source: 'official' | 'student'
-  title: string
-  preview?: string
-  authorPrimary: string
-  authorSecondary?: string
-  authorTertiary?: string
-  studentNo: string
-  statusPrimary: string
-  statusSecondary?: string
-  updatedAt: string
-}
+import { useChallengeWriteupManagement } from '@/features/challenge-writeup-editor'
 
 const props = defineProps<{
   challengeId: string
@@ -33,102 +15,22 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const toast = useToast()
-
-const loading = ref(true)
-const deleting = ref(false)
-const submissionLoading = ref(true)
 const actionMenuOpen = ref(false)
-const writeup = ref<AdminChallengeWriteupData | null>(null)
-const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
-const submissionPage = ref(1)
-const submissionPageSize = ref(6)
-const submissionTotal = ref(0)
-
-const submissionTotalPages = computed(() =>
-  Math.max(1, Math.ceil(submissionTotal.value / Math.max(1, submissionPageSize.value)))
-)
-const officialWriteupCount = computed(() => (writeup.value ? 1 : 0))
-const hasAnyWriteups = computed(() => Boolean(writeup.value) || writeupSubmissions.value.length > 0)
-const directoryRows = computed<WriteupDirectoryRow[]>(() => {
-  const rows: WriteupDirectoryRow[] = []
-
-  if (writeup.value && submissionPage.value === 1) {
-    rows.push({
-      key: `official-${writeup.value.id}`,
-      source: 'official',
-      title: writeup.value.title,
-      authorPrimary: '平台官方',
-      authorSecondary: '独立查看 / 编辑入口',
-      studentNo: '-',
-      statusPrimary: writeup.value.visibility,
-      statusSecondary: writeup.value.is_recommended ? '推荐题解' : '未推荐',
-      updatedAt: formatDate(writeup.value.updated_at),
-    })
-  }
-
-  rows.push(
-    ...writeupSubmissions.value.map((item) => ({
-      key: `student-${item.id}`,
-      source: 'student' as const,
-      title: item.title,
-      preview: item.content_preview,
-      authorPrimary: resolveAuthorName(item),
-      authorSecondary: item.student_username,
-      authorTertiary: resolveClassName(item),
-      studentNo: resolveStudentNo(item),
-      statusPrimary: submissionStatusLabel(item.submission_status),
-      statusSecondary: visibilityStatusLabel(item.visibility_status),
-      updatedAt: formatDate(item.updated_at),
-    }))
-  )
-
-  return rows
+const {
+  loading,
+  deleting,
+  submissionLoading,
+  submissionPage,
+  submissionTotal,
+  submissionTotalPages,
+  officialWriteupCount,
+  hasAnyWriteups,
+  directoryRows,
+  changeSubmissionPage,
+  deleteOfficialWriteup,
+} = useChallengeWriteupManagement({
+  challengeId: toRef(props, 'challengeId'),
 })
-
-async function loadWriteup() {
-  if (!props.challengeId) {
-    writeup.value = null
-    loading.value = false
-    return
-  }
-
-  loading.value = true
-  try {
-    writeup.value = await getChallengeWriteup(props.challengeId)
-  } catch {
-    toast.error('加载题解目录失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function loadWriteupSubmissions(targetPage = 1) {
-  if (!props.challengeId) {
-    writeupSubmissions.value = []
-    submissionPage.value = 1
-    submissionTotal.value = 0
-    submissionLoading.value = false
-    return
-  }
-
-  submissionLoading.value = true
-  try {
-    const payload = await getTeacherWriteupSubmissions({
-      challenge_id: props.challengeId,
-      page: targetPage,
-      page_size: submissionPageSize.value,
-    })
-    writeupSubmissions.value = payload.list
-    submissionPage.value = payload.page
-    submissionPageSize.value = payload.page_size
-    submissionTotal.value = payload.total
-  } catch {
-    toast.error('加载题解投稿失败')
-  } finally {
-    submissionLoading.value = false
-  }
-}
 
 function openWriteup(mode: 'view' | 'edit') {
   if (!props.challengeId) return
@@ -150,86 +52,11 @@ function setActionMenuOpen(nextOpen: boolean) {
 }
 
 async function handleDelete() {
-  if (!props.challengeId || !writeup.value || deleting.value) {
-    return
-  }
-
-  const confirmed = await confirmDestructiveAction({
-    message: '确定删除当前题解吗？删除后学员将无法继续查看。',
-  })
-  if (!confirmed) {
-    return
-  }
-
-  deleting.value = true
-  try {
-    await deleteChallengeWriteup(props.challengeId)
-    writeup.value = null
+  const deleted = await deleteOfficialWriteup()
+  if (deleted) {
     closeActionMenu()
-    toast.success('题解已删除')
-  } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message : '删除题解失败'
-    toast.error(message)
-  } finally {
-    deleting.value = false
   }
 }
-
-async function changeSubmissionPage(page: number) {
-  if (page < 1 || page === submissionPage.value || submissionLoading.value || !props.challengeId) {
-    return
-  }
-
-  await loadWriteupSubmissions(page)
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-  return date.toLocaleString('zh-CN')
-}
-
-function submissionStatusLabel(
-  status: TeacherSubmissionWriteupItemData['submission_status']
-): string {
-  return status === 'draft' ? '草稿' : '已发布'
-}
-
-function visibilityStatusLabel(
-  status: TeacherSubmissionWriteupItemData['visibility_status']
-): string {
-  return status === 'hidden' ? '已隐藏' : '已公开'
-}
-
-function resolveAuthorName(item: TeacherSubmissionWriteupItemData): string {
-  const name = item.student_name?.trim()
-  return name || item.student_username
-}
-
-function resolveStudentNo(item: TeacherSubmissionWriteupItemData): string {
-  const studentNo = item.student_no?.trim()
-  return studentNo || '未设置学号'
-}
-
-function resolveClassName(item: TeacherSubmissionWriteupItemData): string {
-  const className = item.class_name?.trim()
-  return className || '未分班'
-}
-
-watch(
-  () => props.challengeId,
-  () => {
-    void loadWriteup()
-    void loadWriteupSubmissions(1)
-  }
-)
-
-onMounted(() => {
-  void loadWriteup()
-  void loadWriteupSubmissions(1)
-})
 </script>
 
 <template>

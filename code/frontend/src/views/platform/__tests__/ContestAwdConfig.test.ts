@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
+import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -148,6 +149,23 @@ describe('ContestAwdConfig', () => {
     )
     expect(contestAwdConfigSource).toContain('<ContestAwdServiceDirectory')
     expect(contestAwdConfigSource).toContain('<ContestAwdDebugStation')
+    expect(contestAwdConfigPageSource).not.toContain(
+      "from '@/components/platform/contest/awdCheckerConfigSupport'"
+    )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'"
+    )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'"
+    )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'"
+    )
+    expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")
+    expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
+    expect(contestAwdConfigPageSource).not.toContain('updateContestAWDService')
+    expect(contestAwdConfigPageSource).not.toContain('getContest')
+    expect(contestAwdConfigPageSource).not.toContain('listContestAWDServices')
   })
 
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {

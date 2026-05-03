@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin/platform'
 import type { AuditLogItem } from '@/api/contracts'
-import type { WorkspaceDirectorySortOption } from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { useAbortController } from '@/composables/useAbortController'
 
 type AuditSortKey = 'created_at' | 'action' | 'actor'

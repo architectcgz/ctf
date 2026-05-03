@@ -229,6 +229,69 @@ export function createEmptyTopologyDraft(): TopologyEditorDraft {
   }
 }
 
+export function createUniqueNodeDraft(
+  draft: Pick<TopologyEditorDraft, 'nodes' | 'networks'>
+): TopologyNodeDraft {
+  const nodeCount = draft.nodes.length
+  const next = createEmptyNodeDraft(nodeCount + 1)
+
+  const existingKeys = new Set(draft.nodes.map((node) => node.key))
+  let counter = nodeCount + 1
+  while (existingKeys.has(next.key)) {
+    counter++
+    next.key = `node-${counter}`
+    next.name = `节点 ${counter}`
+  }
+
+  next.network_keys = [draft.networks[0]?.key || DEFAULT_NETWORK_KEY]
+  return next
+}
+
+export function buildTopologyDraftValidationIssues(draft: TopologyEditorDraft): string[] {
+  const issues: string[] = []
+  const trimmedNodeKeys = draft.nodes.map((node) => node.key.trim()).filter(Boolean)
+  const trimmedNetworkKeys = draft.networks.map((network) => network.key.trim()).filter(Boolean)
+  const duplicateNodeKeys = trimmedNodeKeys.filter(
+    (key, index) => trimmedNodeKeys.indexOf(key) !== index
+  )
+  const duplicateNetworkKeys = trimmedNetworkKeys.filter(
+    (key, index) => trimmedNetworkKeys.indexOf(key) !== index
+  )
+
+  if (duplicateNodeKeys.length > 0) {
+    issues.push(`节点 Key 重复：${Array.from(new Set(duplicateNodeKeys)).join('、')}`)
+  }
+  if (duplicateNetworkKeys.length > 0) {
+    issues.push(`网络 Key 重复：${Array.from(new Set(duplicateNetworkKeys)).join('、')}`)
+  }
+  if (!draft.nodes.some((node) => node.key === draft.entry_node_key)) {
+    issues.push('入口节点未指向现有节点')
+  }
+  if (draft.nodes.some((node) => node.network_keys.length === 0)) {
+    issues.push('存在未挂载任何网络的节点')
+  }
+  if (
+    draft.links.some(
+      (link) =>
+        !draft.nodes.some((node) => node.key === link.from_node_key) ||
+        !draft.nodes.some((node) => node.key === link.to_node_key)
+    )
+  ) {
+    issues.push('存在引用不存在节点的逻辑连线')
+  }
+  if (
+    draft.policies.some(
+      (policy) =>
+        !draft.nodes.some((node) => node.key === policy.source_node_key) ||
+        !draft.nodes.some((node) => node.key === policy.target_node_key)
+    )
+  ) {
+    issues.push('存在引用不存在节点的链路策略')
+  }
+
+  return issues
+}
+
 export function createDraftFromTopology(
   topology: ChallengeTopologyData | null
 ): TopologyEditorDraft {
