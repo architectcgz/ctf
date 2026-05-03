@@ -27,6 +27,7 @@ type TopologyCreateRequest struct {
 	Policies                   []model.TopologyTrafficPolicy
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
+	ContainerName              string
 }
 
 type TopologyCreateResult struct {

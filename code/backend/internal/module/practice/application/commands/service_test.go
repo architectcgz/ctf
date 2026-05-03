@@ -318,6 +318,25 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 	}
 }
 
+func TestBuildRuntimeContainerNameUsesChallengeSlugAndContestIdentity(t *testing.T) {
+	t.Parallel()
+
+	contestID := int64(8)
+	teamID := int64(15)
+	serviceID := int64(21)
+	packageSlug := "Bank Portal"
+
+	got := buildRuntimeContainerName(&model.Challenge{PackageSlug: &packageSlug}, &model.Instance{
+		ContestID: &contestID,
+		TeamID:    &teamID,
+		ServiceID: &serviceID,
+	})
+	want := "ctf-instance-bank-portal-c8-t15"
+	if got != want {
+		t.Fatalf("expected runtime container name %q, got %q", want, got)
+	}
+}
+
 func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
 	t.Parallel()
 
@@ -2115,6 +2134,9 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 				if req.ReservedHostPort != 0 {
 					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
 				}
+				if req.ContainerName != "ctf-instance-challenge-c7001-t7101" {
+					t.Fatalf("expected awd container name, got %q", req.ContainerName)
+				}
 				if !req.DisableEntryPortPublishing {
 					t.Fatal("expected entry port publishing to be disabled")
 				}
@@ -2212,6 +2234,9 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 				createTopologyCalled = true
 				if req.ReservedHostPort != 0 {
 					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+				}
+				if req.ContainerName != "ctf-instance-challenge-c7003-t7103" {
+					t.Fatalf("expected awd container name, got %q", req.ContainerName)
 				}
 				if !req.DisableEntryPortPublishing {
 					t.Fatal("expected entry port publishing to be disabled")

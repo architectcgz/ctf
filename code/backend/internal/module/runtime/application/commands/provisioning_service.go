@@ -209,7 +209,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 		containerID, err := s.engine.CreateContainer(ctx, &model.ContainerConfig{
 			Image:          node.Image,
-			Name:           buildManagedContainerName(),
+			Name:           buildManagedContainerName(req.ContainerName),
 			Env:            envMapToList(node.Env),
 			Ports:          ports,
 			Labels:         managedContainerLabels(),
@@ -443,7 +443,11 @@ func envMapToList(env map[string]string) []string {
 	return values
 }
 
-func buildManagedContainerName() string {
+func buildManagedContainerName(preferred string) string {
+	preferred = strings.TrimSpace(preferred)
+	if preferred != "" {
+		return preferred
+	}
 	return fmt.Sprintf("%s%d", managedContainerNamePrefix, time.Now().UnixNano())
 }
 
@@ -463,17 +467,11 @@ func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string
 }
 
 func managedContainerLabels() map[string]string {
-	return map[string]string{
-		runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
-		runtimedomain.ChallengeInstanceLabelKey: runtimedomain.ChallengeInstanceLabelValue,
-	}
+	return runtimedomain.ChallengeInstanceLabels()
 }
 
 func managedNetworkLabels() map[string]string {
-	return map[string]string{
-		runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
-		runtimedomain.ChallengeInstanceLabelKey: runtimedomain.ChallengeInstanceLabelValue,
-	}
+	return runtimedomain.ChallengeInstanceLabels()
 }
 
 func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {

@@ -868,6 +868,41 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologyUsesPreferredContainerName(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-named",
+		containerIDs: []string{"web-named"},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	preferredName := "ctf-instance-bank-portal-c8-t15"
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		ContainerName: preferredName,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if engine.createdContainerCfg == nil {
+		t.Fatal("expected container config to be created")
+	}
+	if engine.createdContainerCfg.Name != preferredName {
+		t.Fatalf("expected preferred container name %q, got %q", preferredName, engine.createdContainerCfg.Name)
+	}
+}
+
 func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 	t.Parallel()
 

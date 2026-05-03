@@ -32,7 +32,10 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-const errMsgChallengeNoTarget = "该题目不需要靶机实例"
+const (
+	errMsgChallengeNoTarget    = "该题目不需要靶机实例"
+	runtimeContainerNamePrefix = "ctf-instance-"
+)
 
 type AssessmentService interface {
 	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
@@ -1771,7 +1774,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	if err != nil {
 		return err
 	}
-	applyAWDStableNetworkToTopologyRequest(instance, request)
+	applyAWDStableNetworkToTopologyRequest(instance, chal, request)
 	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -1815,6 +1818,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: isAWDInstance(instance),
+			ContainerName:              buildRuntimeContainerName(chal, instance),
 			Networks:                   networks,
 			Nodes: []practiceports.TopologyCreateNode{
 				{
@@ -1898,10 +1902,11 @@ func buildAWDServiceAlias(instance *model.Instance) string {
 	return fmt.Sprintf("awd-c%d-t%d-s%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
-func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, request *practiceports.TopologyCreateRequest) {
+func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, chal *model.Challenge, request *practiceports.TopologyCreateRequest) {
 	if !isAWDInstance(instance) || request == nil {
 		return
 	}
+	request.ContainerName = buildRuntimeContainerName(chal, instance)
 	entryIndex := -1
 	for idx := range request.Nodes {
 		if request.Nodes[idx].IsEntryPoint {
@@ -1968,6 +1973,53 @@ func usesAWDStableNetworkAlias(instance *model.Instance) bool {
 	}
 	host := parsed.Hostname()
 	return strings.HasPrefix(host, "awd-c")
+}
+
+func buildRuntimeContainerName(chal *model.Challenge, instance *model.Instance) string {
+	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil {
+		return ""
+	}
+	challengeSegment := sanitizeRuntimeContainerSegment(resolveRuntimeChallengeName(chal))
+	if challengeSegment == "" {
+		challengeSegment = "challenge"
+	}
+	return fmt.Sprintf("%s%s-c%d-t%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID)
+}
+
+func resolveRuntimeChallengeName(chal *model.Challenge) string {
+	if chal == nil {
+		return ""
+	}
+	if chal.PackageSlug != nil && strings.TrimSpace(*chal.PackageSlug) != "" {
+		return strings.TrimSpace(*chal.PackageSlug)
+	}
+	return strings.TrimSpace(chal.Title)
+}
+
+func sanitizeRuntimeContainerSegment(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	if value == "" {
+		return ""
+	}
+	var b strings.Builder
+	lastDash := false
+	for _, r := range value {
+		isAlphaNum := (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
+		if isAlphaNum {
+			b.WriteRune(r)
+			lastDash = false
+			continue
+		}
+		if !lastDash {
+			b.WriteByte('-')
+			lastDash = true
+		}
+	}
+	result := strings.Trim(b.String(), "-")
+	if len(result) > 48 {
+		result = strings.Trim(result[:48], "-")
+	}
+	return result
 }
 
 func (s *Service) buildTopologyCreateRequest(
