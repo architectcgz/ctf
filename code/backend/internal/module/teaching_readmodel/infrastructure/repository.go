@@ -365,7 +365,7 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	return events, nil
 }
 
-func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query readmodelports.EvidenceQuery) ([]readmodelports.EvidenceEventRecord, error) {
+func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]readmodelports.EvidenceEventRecord, error) {
 	events := make([]readmodelports.EvidenceEventRecord, 0)
 
 	accessRows := make([]struct {

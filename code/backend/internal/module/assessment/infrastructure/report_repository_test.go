@@ -12,7 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	"ctf-platform/internal/teaching/evidence"
 )
 
 func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
@@ -485,7 +485,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 		t.Fatalf("seed awd logs: %v", err)
 	}
 
-	events, err := repo.GetStudentEvidence(ctx, user.ID, readmodelports.EvidenceQuery{})
+	events, err := repo.GetStudentEvidence(ctx, user.ID, evidence.Query{})
 	if err != nil {
 		t.Fatalf("GetStudentEvidence() error = %v", err)
 	}

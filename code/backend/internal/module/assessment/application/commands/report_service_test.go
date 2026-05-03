@@ -19,7 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -144,7 +144,7 @@ func (r *testReportRepository) GetStudentTimeline(context.Context, int64, int, i
 	return []assessmentdomain.ReviewArchiveTimelineEvent{}, nil
 }
 
-func (r *testReportRepository) GetStudentEvidence(context.Context, int64, readmodelports.EvidenceQuery) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+func (r *testReportRepository) GetStudentEvidence(context.Context, int64, evidence.Query) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
 	if r != nil && r.evidence != nil {
 		return r.evidence, nil
 	}

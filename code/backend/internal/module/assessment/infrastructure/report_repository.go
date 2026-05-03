@@ -12,7 +12,6 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -496,7 +495,7 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 	return rows, err
 }
 
-func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64, query readmodelports.EvidenceQuery) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
 	events := make([]assessmentdomain.ReviewArchiveEvidenceEvent, 0)
 
 	accessRows := make([]struct {

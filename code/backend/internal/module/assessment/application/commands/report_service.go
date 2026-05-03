@@ -22,8 +22,8 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 	"ctf-platform/internal/shared/mapperutil"
+	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -762,7 +762,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, readmodelports.EvidenceQuery{})
+	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, evidence.Query{})
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

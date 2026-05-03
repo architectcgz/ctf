@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	teachingevidence "ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -531,11 +532,11 @@ func (s *QueryService) GetStudentAttackSessions(ctx context.Context, requesterID
 
 const attackSessionGap = time.Hour
 
-func buildEvidenceQuery(query *dto.TeacherEvidenceQuery) readmodelports.EvidenceQuery {
+func buildEvidenceQuery(query *dto.TeacherEvidenceQuery) teachingevidence.Query {
 	if query == nil {
-		return readmodelports.EvidenceQuery{}
+		return teachingevidence.Query{}
 	}
-	return readmodelports.EvidenceQuery{
+	return teachingevidence.Query{
 		ChallengeID: query.ChallengeID,
 		ContestID:   query.ContestID,
 		RoundID:     query.RoundID,
@@ -555,7 +556,7 @@ func normalizeUTC(value *time.Time) *time.Time {
 	return &normalized
 }
 
-func filterEvidenceEvents(events []readmodelports.EvidenceEventRecord, query readmodelports.EvidenceQuery) []readmodelports.EvidenceEventRecord {
+func filterEvidenceEvents(events []readmodelports.EvidenceEventRecord, query teachingevidence.Query) []readmodelports.EvidenceEventRecord {
 	if len(events) == 0 {
 		return events
 	}
@@ -581,7 +582,7 @@ func filterEvidenceEvents(events []readmodelports.EvidenceEventRecord, query rea
 	return filtered
 }
 
-func paginateEvidenceEvents(events []readmodelports.EvidenceEventRecord, query readmodelports.EvidenceQuery) []readmodelports.EvidenceEventRecord {
+func paginateEvidenceEvents(events []readmodelports.EvidenceEventRecord, query teachingevidence.Query) []readmodelports.EvidenceEventRecord {
 	if len(events) == 0 {
 		return []readmodelports.EvidenceEventRecord{}
 	}

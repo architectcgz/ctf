@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/teaching/evidence"
 )
 
 type ClassItem struct {
@@ -57,17 +58,6 @@ type EvidenceEventRecord struct {
 	Meta         map[string]any
 }
 
-type EvidenceQuery struct {
-	ChallengeID *int64
-	ContestID   *int64
-	RoundID     *int64
-	EventType   string
-	From        *time.Time
-	To          *time.Time
-	Limit       int
-	Offset      int
-}
-
 type ClassSummary struct {
 	ClassName          string
 	StudentCount       int64
@@ -113,7 +103,7 @@ type TeachingStudentProfileRepository interface {
 
 type TeachingStudentActivityRepository interface {
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]TimelineEventRecord, error)
-	GetStudentEvidence(ctx context.Context, userID int64, query EvidenceQuery) ([]EvidenceEventRecord, error)
+	GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]EvidenceEventRecord, error)
 }
 
 type TeachingClassInsightRepository interface {
