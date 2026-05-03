@@ -182,6 +182,28 @@ type flowTeacherEvidenceReviewResponse struct {
 	} `json:"events"`
 }
 
+type flowTeacherAttackSessionResponse struct {
+	Summary struct {
+		TotalSessions   int `json:"total_sessions"`
+		SuccessCount    int `json:"success_count"`
+		FailedCount     int `json:"failed_count"`
+		InProgressCount int `json:"in_progress_count"`
+		UnknownCount    int `json:"unknown_count"`
+		EventCount      int `json:"event_count"`
+	} `json:"summary"`
+	Sessions []struct {
+		ID          string `json:"id"`
+		Mode        string `json:"mode"`
+		ChallengeID *int64 `json:"challenge_id"`
+		Result      string `json:"result"`
+		EventCount  int    `json:"event_count"`
+		Events      []struct {
+			ID   string `json:"id"`
+			Type string `json:"type"`
+		} `json:"events"`
+	} `json:"sessions"`
+}
+
 type flowAuditItem struct {
 	Action       string                 `json:"action"`
 	ResourceType string                 `json:"resource_type"`
@@ -600,6 +622,45 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	assertTeacherEvidenceHasEvent(t, evidence.Events, "instance_proxy_request", challenge.ID, "event_stage", "exploit")
 	assertTeacherEvidenceHasEvent(t, evidence.Events, "challenge_submission", challenge.ID, "event_stage", "submit")
 
+	attackSessionsResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/teacher/students/"+strconv.FormatInt(env.student.ID, 10)+"/attack-sessions?challenge_id="+strconv.FormatInt(challenge.ID, 10)+"&mode=practice&result=success&with_events=false",
+		nil,
+		sessionHeaders(adminSession),
+		nil,
+	)
+	if attackSessionsResp.Code != http.StatusOK {
+		t.Fatalf("unexpected attack sessions status: %d body=%s", attackSessionsResp.Code, attackSessionsResp.Body.String())
+	}
+	attackSessionsBody := decodeFlowEnvelope(t, attackSessionsResp)
+	attackSessions := decodeFlowJSON[flowTeacherAttackSessionResponse](t, attackSessionsBody.Data)
+	if attackSessions.Summary.TotalSessions != 1 {
+		t.Fatalf("expected 1 attack session, got %+v", attackSessions.Summary)
+	}
+	if attackSessions.Summary.SuccessCount != 1 {
+		t.Fatalf("expected 1 successful attack session, got %+v", attackSessions.Summary)
+	}
+	if attackSessions.Summary.EventCount < 4 {
+		t.Fatalf("expected aggregated attack session events >= 4, got %+v", attackSessions.Summary)
+	}
+	if len(attackSessions.Sessions) != 1 {
+		t.Fatalf("expected 1 session payload, got %+v", attackSessions.Sessions)
+	}
+	if attackSessions.Sessions[0].Mode != "practice" {
+		t.Fatalf("expected practice mode session, got %+v", attackSessions.Sessions[0])
+	}
+	if attackSessions.Sessions[0].Result != "success" {
+		t.Fatalf("expected successful session, got %+v", attackSessions.Sessions[0])
+	}
+	if attackSessions.Sessions[0].ChallengeID == nil || *attackSessions.Sessions[0].ChallengeID != challenge.ID {
+		t.Fatalf("expected challenge id %d, got %+v", challenge.ID, attackSessions.Sessions[0].ChallengeID)
+	}
+	if attackSessions.Sessions[0].Events != nil {
+		t.Fatalf("expected events to be omitted when with_events=false, got %+v", attackSessions.Sessions[0].Events)
+	}
+
 	auditResp := performFlowJSONRequest(
 		t,
 		env.router,
@@ -919,6 +980,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	teacherGroup := protected.Group("/teacher")
 	teacherGroup.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
 	teacherGroup.GET("/students/:id/evidence", teachingReadmodelHandler.GetStudentEvidence)
+	teacherGroup.GET("/students/:id/attack-sessions", teachingReadmodelHandler.GetStudentAttackSessions)
 
 	t.Cleanup(func() {
 		if sqlDB, sqlErr := db.DB(); sqlErr == nil {

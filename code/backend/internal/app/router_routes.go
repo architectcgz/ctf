@@ -889,6 +889,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
 	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
 	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
+	teacherOrAbove.GET("/students/:id/attack-sessions", deps.teachingReadmodel.Handler.GetStudentAttackSessions)
 	teacherOrAbove.GET("/students/:id/review-archive", deps.assessment.ReportHandler.GetStudentReviewArchive)
 	teacherOrAbove.POST("/students/:id/review-archive/export",
 		audit(middleware.AuditOptions{

@@ -41,12 +41,31 @@ type TimelineEventRecord struct {
 }
 
 type EvidenceEventRecord struct {
-	Type        string
-	ChallengeID int64
-	Title       string
-	Timestamp   time.Time
-	Detail      string
-	Meta        map[string]any
+	Type         string
+	Source       string
+	Stage        string
+	UserID       int64
+	TeamID       *int64
+	ChallengeID  int64
+	ContestID    *int64
+	RoundID      *int64
+	ServiceID    *int64
+	VictimTeamID *int64
+	Title        string
+	Timestamp    time.Time
+	Detail       string
+	Meta         map[string]any
+}
+
+type EvidenceQuery struct {
+	ChallengeID *int64
+	ContestID   *int64
+	RoundID     *int64
+	EventType   string
+	From        *time.Time
+	To          *time.Time
+	Limit       int
+	Offset      int
 }
 
 type ClassSummary struct {
@@ -94,7 +113,7 @@ type TeachingStudentProfileRepository interface {
 
 type TeachingStudentActivityRepository interface {
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]TimelineEventRecord, error)
-	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]EvidenceEventRecord, error)
+	GetStudentEvidence(ctx context.Context, userID int64, query EvidenceQuery) ([]EvidenceEventRecord, error)
 }
 
 type TeachingClassInsightRepository interface {

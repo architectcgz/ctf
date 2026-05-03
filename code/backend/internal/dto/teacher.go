@@ -101,7 +101,14 @@ type TeacherRecommendationItem struct {
 }
 
 type TeacherEvidenceQuery struct {
-	ChallengeID *int64 `form:"challenge_id" binding:"omitempty,min=1"`
+	ChallengeID *int64     `form:"challenge_id" binding:"omitempty,min=1"`
+	ContestID   *int64     `form:"contest_id" binding:"omitempty,min=1"`
+	RoundID     *int64     `form:"round_id" binding:"omitempty,min=1"`
+	EventType   string     `form:"event_type" binding:"omitempty,max=64"`
+	From        *time.Time `form:"from" time_format:"2006-01-02T15:04:05Z07:00"`
+	To          *time.Time `form:"to" time_format:"2006-01-02T15:04:05Z07:00"`
+	Limit       int        `form:"limit" binding:"omitempty,min=1,max=100"`
+	Offset      int        `form:"offset" binding:"omitempty,min=0"`
 }
 
 type TeacherEvidenceSummary struct {
@@ -124,6 +131,79 @@ type TeacherEvidenceEvent struct {
 type TeacherEvidenceResp struct {
 	Summary TeacherEvidenceSummary `json:"summary"`
 	Events  []TeacherEvidenceEvent `json:"events"`
+}
+
+type TeacherAttackSessionQuery struct {
+	Mode        string `form:"mode" binding:"omitempty,oneof=practice jeopardy awd"`
+	ChallengeID *int64 `form:"challenge_id" binding:"omitempty,min=1"`
+	ContestID   *int64 `form:"contest_id" binding:"omitempty,min=1"`
+	RoundID     *int64 `form:"round_id" binding:"omitempty,min=1"`
+	Result      string `form:"result" binding:"omitempty,oneof=success failed in_progress unknown"`
+	WithEvents  *bool  `form:"with_events"`
+	Limit       int    `form:"limit" binding:"omitempty,min=1,max=100"`
+	Offset      int    `form:"offset" binding:"omitempty,min=0"`
+}
+
+type TeacherAttackActor struct {
+	UserID int64  `json:"user_id"`
+	TeamID *int64 `json:"team_id,omitempty"`
+}
+
+type TeacherAttackTarget struct {
+	ChallengeID  *int64 `json:"challenge_id,omitempty"`
+	ContestID    *int64 `json:"contest_id,omitempty"`
+	RoundID      *int64 `json:"round_id,omitempty"`
+	ServiceID    *int64 `json:"service_id,omitempty"`
+	VictimTeamID *int64 `json:"victim_team_id,omitempty"`
+}
+
+type TeacherAttackEvent struct {
+	ID               string                 `json:"id"`
+	SessionID        string                 `json:"session_id,omitempty"`
+	Type             string                 `json:"type"`
+	Stage            string                 `json:"stage"`
+	Source           string                 `json:"source"`
+	OccurredAt       time.Time              `json:"occurred_at"`
+	Actor            TeacherAttackActor     `json:"actor"`
+	Target           TeacherAttackTarget    `json:"target"`
+	Summary          string                 `json:"summary"`
+	Meta             map[string]any         `json:"meta,omitempty"`
+	CaptureAvailable bool                   `json:"capture_available"`
+	CaptureRef       map[string]interface{} `json:"capture_ref,omitempty"`
+}
+
+type TeacherAttackSession struct {
+	ID           string               `json:"id"`
+	Mode         string               `json:"mode"`
+	StudentID    int64                `json:"student_id"`
+	TeamID       *int64               `json:"team_id,omitempty"`
+	ChallengeID  *int64               `json:"challenge_id,omitempty"`
+	ContestID    *int64               `json:"contest_id,omitempty"`
+	RoundID      *int64               `json:"round_id,omitempty"`
+	ServiceID    *int64               `json:"service_id,omitempty"`
+	VictimTeamID *int64               `json:"victim_team_id,omitempty"`
+	Title        string               `json:"title"`
+	StartedAt    time.Time            `json:"started_at"`
+	EndedAt      time.Time            `json:"ended_at"`
+	Result       string               `json:"result"`
+	EventCount   int                  `json:"event_count"`
+	CaptureCount int                  `json:"capture_count"`
+	Events       []TeacherAttackEvent `json:"events,omitempty"`
+}
+
+type TeacherAttackSessionSummary struct {
+	TotalSessions         int `json:"total_sessions"`
+	SuccessCount          int `json:"success_count"`
+	FailedCount           int `json:"failed_count"`
+	InProgressCount       int `json:"in_progress_count"`
+	UnknownCount          int `json:"unknown_count"`
+	EventCount            int `json:"event_count"`
+	CaptureAvailableCount int `json:"capture_available_count"`
+}
+
+type TeacherAttackSessionResp struct {
+	Summary  TeacherAttackSessionSummary `json:"summary"`
+	Sessions []TeacherAttackSession      `json:"sessions"`
 }
 
 type TeacherInstanceQuery struct {

@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 )
 
 func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
@@ -31,7 +32,9 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 		&model.Submission{},
 		&model.AWDRound{},
 		&model.AWDAttackLog{},
+		&model.AWDTrafficEvent{},
 		&model.Team{},
+		&model.TeamMember{},
 		&model.Instance{},
 		&model.AuditLog{},
 	); err != nil {
@@ -482,18 +485,18 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 		t.Fatalf("seed awd logs: %v", err)
 	}
 
-	events, err := repo.GetStudentEvidence(ctx, user.ID, nil)
+	events, err := repo.GetStudentEvidence(ctx, user.ID, readmodelports.EvidenceQuery{})
 	if err != nil {
 		t.Fatalf("GetStudentEvidence() error = %v", err)
 	}
 	if len(events) != 2 {
 		t.Fatalf("expected 2 evidence events, got %+v", events)
 	}
-	if events[0].Type != "awd_attack_submission" || events[0].Detail != "AWD 攻击未命中 green-team" {
+	if events[0].Type != "awd_attack_submission" || events[0].Detail != "AWD 攻击提交未命中" {
 		t.Fatalf("expected first AWD failure evidence, got %+v", events[0])
 	}
-	if events[0].ChallengeID != 0 || events[0].AWDChallengeID != challenge.ID || events[0].Title != challenge.Name {
-		t.Fatalf("expected AWD evidence identity to be separated, got %+v", events[0])
+	if events[0].ChallengeID != challenge.ID || events[0].AWDChallengeID != challenge.ID || events[0].Title != challenge.Name {
+		t.Fatalf("expected AWD evidence identity to align with realtime workspace, got %+v", events[0])
 	}
 	if events[0].Meta["event_stage"] != "exploit" {
 		t.Fatalf("expected exploit stage meta, got %+v", events[0].Meta)
@@ -504,8 +507,11 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	if victimName, ok := events[0].Meta["victim_team_name"].(string); !ok || victimName != "green-team" {
 		t.Fatalf("expected victim team name green-team, got %+v", events[0].Meta)
 	}
+	if scope, ok := events[0].Meta["scope"].(string); !ok || scope != "student" {
+		t.Fatalf("expected scope=student, got %+v", events[0].Meta)
+	}
 
-	if events[1].Type != "awd_attack_submission" || events[1].Detail != "AWD 攻击命中 gold-team，得分 150" {
+	if events[1].Type != "awd_attack_submission" || events[1].Detail != "AWD 攻击提交成功" {
 		t.Fatalf("expected second AWD success evidence, got %+v", events[1])
 	}
 	if score, ok := events[1].Meta["score_gained"].(int); !ok || score != 150 {

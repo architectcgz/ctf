@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 )
 
 type AssessmentProfileLookupRepository interface {
@@ -79,7 +80,7 @@ type AssessmentContestExportRepository interface {
 type AssessmentReviewArchiveRepository interface {
 	CountPublishedChallenges(ctx context.Context) (int64, error)
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error)
-	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error)
+	GetStudentEvidence(ctx context.Context, userID int64, query readmodelports.EvidenceQuery) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error)
 	ListStudentWriteups(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveWriteupItem, error)
 	ListStudentManualReviews(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveManualReviewItem, error)
 }

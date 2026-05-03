@@ -199,3 +199,26 @@ func (h *Handler) GetStudentEvidence(c *gin.Context) {
 
 	response.Success(c, evidence)
 }
+
+func (h *Handler) GetStudentAttackSessions(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	studentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || studentID <= 0 {
+		response.InvalidParams(c, "无效的学员ID")
+		return
+	}
+
+	var req dto.TeacherAttackSessionQuery
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	sessions, err := h.service.GetStudentAttackSessions(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, sessions)
+}
