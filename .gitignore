@@ -14,6 +14,9 @@ docs/*
 !docs/architecture/
 !docs/architecture/*.md
 !docs/contracts/
+!docs/plan/
+!docs/plan/impl-plan/
+!docs/plan/impl-plan/*.md
 !docs/refs/
 !docs/refs/*.md
 !docs/reviews/

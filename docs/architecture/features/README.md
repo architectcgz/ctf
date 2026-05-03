@@ -8,6 +8,8 @@
 
 - `teaching-readmodel-boundary-design.md`：教师兼容层移除与教学读模型边界。
 - `attack-evidence-review-design.md`：攻防证据链与教学复盘。
+- `attack-session-replay-evolution-design.md`：攻击过程还原与全流量回放演进。
+- `teaching-review-optimization-design.md`：教学复盘工作台优化。
 - `contest-ops-enhancement-design.md`：赛事运营增强。
 - `judge-modes-extension-design.md`：判题模式扩展。
 - `community-writeup-and-recommended-solutions-design.md`：社区题解与推荐题解。
