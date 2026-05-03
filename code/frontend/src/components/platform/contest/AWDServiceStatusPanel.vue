@@ -3,16 +3,16 @@ import {
   Activity,
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
   FileDown,
   Info,
-  Layers,
   SearchCheck,
   ShieldCheck,
   ShieldX,
   Zap,
-  ChevronDown
 } from 'lucide-vue-next'
 import { computed } from 'vue'
+import type { AWDTeamServiceData } from '@/api/contracts'
 import type {
   AWDServiceStatusPanelEmits,
   AWDServiceStatusPanelProps,
@@ -29,7 +29,14 @@ const distinctChallengeIds = computed(() => {
 })
 
 const teamMap = computed(() => {
-  const map = new Map<string, { team_name: string, services: Record<string, any> }>()
+  const map = new Map<
+    string,
+    {
+      team_name: string
+      services: Record<string, AWDTeamServiceData>
+    }
+  >()
+
   props.filteredServices.forEach(s => {
     if (!map.has(s.team_id)) {
       map.set(s.team_id, { team_name: s.team_name, services: {} })
@@ -52,6 +59,57 @@ function getServiceCheckActions(checkResult: Record<string, unknown>) {
 
 function getServiceCheckTargets(checkResult: Record<string, unknown>) {
   return props.getCheckTargets(checkResult)
+}
+
+function getChallengeLabel(challengeId: string): string {
+  return props.getChallengeTitle(challengeId) || `题目 ${challengeId}`
+}
+
+function getServiceCellKey(teamId: string, challengeId: string): string {
+  return `${teamId}-${challengeId}`
+}
+
+function getServicePresentationResult(service: AWDTeamServiceData): Record<string, unknown> {
+  return props.getServiceCheckPresentationResult(service)
+}
+
+function getServiceCheckerLabel(service: AWDTeamServiceData): string {
+  const result = getServicePresentationResult(service)
+  return props.getCheckerTypeLabel(result.checker_type || service.checker_type) || '未标注'
+}
+
+function getServiceSourceLabel(service: AWDTeamServiceData): string {
+  const result = getServicePresentationResult(service)
+  return props.getCheckSourceLabel(result.check_source) || '未标注'
+}
+
+function getServiceStatusReasonLabel(service: AWDTeamServiceData): string {
+  const result = getServicePresentationResult(service)
+  const previewPassCount =
+    typeof result.preview_pass_count === 'number' ? result.preview_pass_count : undefined
+  const previewTotalCount =
+    typeof result.preview_total_count === 'number' ? result.preview_total_count : undefined
+
+  if (
+    typeof previewPassCount === 'number' &&
+    typeof previewTotalCount === 'number' &&
+    Number.isFinite(previewPassCount) &&
+    Number.isFinite(previewTotalCount) &&
+    previewTotalCount > 0
+  ) {
+    return `${previewPassCount}/${previewTotalCount} 通过`
+  }
+
+  return props.getCheckStatusLabel(result.status_reason) || '未返回'
+}
+
+function getServiceCheckedAtLabel(service: AWDTeamServiceData): string {
+  const result = getServicePresentationResult(service)
+  const checkedAt =
+    typeof result.checked_at === 'string' && result.checked_at.trim() !== ''
+      ? result.checked_at
+      : service.updated_at
+  return props.formatDateTime(checkedAt)
 }
 </script>
 
@@ -153,7 +211,105 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 
     <div class="matrix-scroll custom-scrollbar">
       <table class="matrix-table">
-        <!-- ... matrix headers and rows ... -->
+        <thead>
+          <tr>
+            <th class="sticky-col header-team">
+              队伍节点
+            </th>
+            <th
+              v-for="challengeId in distinctChallengeIds"
+              :key="challengeId"
+            >
+              {{ getChallengeLabel(challengeId) }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="[teamId, team] in teamMap"
+            :key="teamId"
+          >
+            <td class="sticky-col cell-team">
+              <div class="team-name">
+                {{ team.team_name }}
+              </div>
+            </td>
+            <td
+              v-for="challengeId in distinctChallengeIds"
+              :key="getServiceCellKey(teamId, challengeId)"
+            >
+              <template v-if="team.services[challengeId]">
+                <div
+                  class="status-box"
+                  :class="getServiceStatusClass(team.services[challengeId].service_status)"
+                >
+                  <div
+                    class="status-icon"
+                    :class="getServiceStatusClass(team.services[challengeId].service_status)"
+                  >
+                    <component
+                      :is="
+                        team.services[challengeId].service_status === 'up'
+                          ? CheckCircle2
+                          : team.services[challengeId].service_status === 'compromised'
+                            ? ShieldX
+                            : AlertCircle
+                      "
+                      class="h-4 w-4"
+                    />
+                  </div>
+                  <div class="status-copy">
+                    <div class="status-score">
+                      {{ getServiceStatusLabel(team.services[challengeId].service_status) }}
+                    </div>
+                    <div class="status-meta-grid">
+                      <div class="status-meta-item">
+                        <span class="status-meta-label">Checker</span>
+                        <span class="status-meta-value">
+                          {{ getServiceCheckerLabel(team.services[challengeId]) }}
+                        </span>
+                      </div>
+                      <div class="status-meta-item">
+                        <span class="status-meta-label">来源</span>
+                        <span class="status-meta-value">
+                          {{ getServiceSourceLabel(team.services[challengeId]) }}
+                        </span>
+                      </div>
+                      <div class="status-meta-item">
+                        <span class="status-meta-label">状态</span>
+                        <span class="status-meta-value">
+                          {{ getServiceStatusReasonLabel(team.services[challengeId]) }}
+                        </span>
+                      </div>
+                      <div class="status-meta-item">
+                        <span class="status-meta-label">时间</span>
+                        <span class="status-meta-value">
+                          {{ getServiceCheckedAtLabel(team.services[challengeId]) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div
+                v-else
+                class="status-empty"
+              >
+                N/A
+              </div>
+            </td>
+          </tr>
+          <tr v-if="teamMap.length === 0">
+            <td :colspan="Math.max(distinctChallengeIds.length + 1, 2)">
+              <div class="matrix-empty">
+                <SearchCheck class="h-5 w-5" />
+                <span>
+                  {{ props.services.length === 0 ? '当前轮次还没有服务巡检记录' : '没有找到匹配的服务项' }}
+                </span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
@@ -263,13 +419,42 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .team-name { font-size: 13px; font-weight: 800; color: var(--color-text-primary); }
 
 .status-box {
-  display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.75rem; padding: 0.625rem 0.75rem;
   border-radius: 0.75rem; border: 1px solid transparent; transition: all 0.2s ease;
 }
 .status-box:hover { transform: scale(1.02); box-shadow: var(--color-shadow-soft); }
 .status-icon { width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; }
 .status-score { font-family: var(--font-family-mono); font-size: 14px; font-weight: 900; }
-.status-check { font-size: 10px; font-weight: 600; opacity: 0.8; margin-top: 1px; }
+.status-copy { display: grid; gap: 0.5rem; min-width: 0; }
+.status-score,
+.status-meta-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem 0.75rem;
+}
+.status-meta-item {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+.status-meta-label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-10);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.status-meta-value {
+  color: currentColor;
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  line-height: 1.3;
+}
 
 /* Status variants */
 .status--up { background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg-surface)); border-color: color-mix(in srgb, var(--color-success) 20%, transparent); color: var(--color-success); }
@@ -282,6 +467,16 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .status--compromised .status-icon { background: var(--color-warning-soft); color: var(--color-warning); }
 
 .status-empty { text-align: center; color: var(--color-text-muted); font-family: var(--font-family-mono); font-weight: 800; }
+.matrix-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
 
 .performance-header { border-left: 3px solid var(--color-success); padding-left: 1rem; }
 .health-stack { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
@@ -305,4 +500,10 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
   color: var(--color-text-secondary); cursor: pointer;
 }
 .ops-btn:hover:not(:disabled) { background: var(--color-bg-elevated); color: var(--color-text-primary); }
+
+@media (max-width: 1100px) {
+  .status-meta-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 </style>

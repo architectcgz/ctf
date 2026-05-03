@@ -138,12 +138,15 @@ export interface AWDServiceStatusPanelProps {
   getServiceStatusLabel: (status: AWDTeamServiceData['service_status']) => string
   getServiceStatusClass: (status: AWDTeamServiceData['service_status']) => string
   getCheckSourceLabel: (source: unknown) => string
+  getCheckerTypeLabel: (value: unknown) => string
+  getCheckStatusLabel: (value: unknown) => string
   summarizeCheckResult: (checkResult: Record<string, unknown>) => string
   getCheckActions: (checkResult: Record<string, unknown>) => AWDCheckActionView[]
   getCheckTargets: (checkResult: Record<string, unknown>) => AWDCheckTargetView[]
   getTargetActions: (target: Record<string, unknown> | AWDCheckTargetView) => AWDCheckActionView[]
   getTargetProbeSummary: (checkResult: Record<string, unknown>) => string
   getProbeStatusText: (healthy: boolean, errorCode?: string, error?: string) => string
+  formatDateTime: (value?: string) => string
   formatLatency: (value?: number) => string
   getServiceCheckPresentationResult: (service: AWDTeamServiceData) => Record<string, unknown>
 }
