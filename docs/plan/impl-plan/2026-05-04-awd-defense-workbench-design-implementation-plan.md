@@ -468,7 +468,7 @@ Scope:
 - Keep file saving and command execution forbidden at the HTTP handler.
 - Gate read-only workbench with `container.defense_workbench_readonly_enabled`, default `false`.
 - Require `container.defense_workbench_root` to be an absolute non-root path when the gate is enabled.
-- Development config may enable it for local testing.
+- Development config may enable it for local testing and defaults to `/app`, matching the current AWD challenge image workdir.
 - Frontend shows a compact read-only workbench and treats `403` as unavailable.
 
 Backend rules:
