@@ -188,6 +188,62 @@ extensions:
 	}
 }
 
+func TestParseAWDChallengePackageDirRejectsNestedDockerfile(t *testing.T) {
+	rootDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "app"), 0o755); err != nil {
+		t.Fatalf("create docker/app dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
+		t.Fatalf("write statement.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "app", "Dockerfile"), []byte("FROM python:3.12-slim"), 0o644); err != nil {
+		t.Fatalf("write nested Dockerfile: %v", err)
+	}
+
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-nested-dockerfile
+  title: AWD Nested Dockerfile
+  category: web
+  difficulty: hard
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/awd-nested-dockerfile:v1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: http_standard
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      service_port: 8080
+`
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+
+	if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
+		t.Fatal("expected nested Dockerfile to be rejected")
+	}
+}
+
 func TestParseAWDChallengePackageDirRejectsInvalidScriptCheckerFiles(t *testing.T) {
 	cases := []struct {
 		name      string

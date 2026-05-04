@@ -22,6 +22,7 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 )
 
 type dockerCheckerClient interface {
@@ -114,7 +115,7 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	workDir, err := materializeCheckerFiles(job.Files)
+	workDir, err := materializeCheckerFiles(job.Files, strings.TrimSpace(r.cfg.HostWorkRoot))
 	if err != nil {
 		result.FinishedAt = time.Now()
 		result.Duration = result.FinishedAt.Sub(startedAt)
@@ -267,11 +268,13 @@ func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob,
 		User:            strings.TrimSpace(r.cfg.User),
 		NetworkDisabled: networkDisabled,
 		Labels: map[string]string{
-			"ctf.role":            "checker-sandbox",
-			"ctf.checker.contest": fmt.Sprintf("%d", job.Metadata.ContestID),
-			"ctf.checker.service": fmt.Sprintf("%d", job.Metadata.ServiceID),
-			"ctf.checker.team":    fmt.Sprintf("%d", job.Metadata.TeamID),
-			"ctf.checker.round":   fmt.Sprintf("%d", job.Metadata.RoundNumber),
+			runtimedomain.ProjectLabelKey:     runtimedomain.ProjectLabelValue,
+			runtimedomain.ManagedByLabelKey:   runtimedomain.ManagedByLabelValue,
+			runtimedomain.CheckerRoleLabelKey: runtimedomain.CheckerRoleLabelValue,
+			"ctf.checker.contest":             fmt.Sprintf("%d", job.Metadata.ContestID),
+			"ctf.checker.service":             fmt.Sprintf("%d", job.Metadata.ServiceID),
+			"ctf.checker.team":                fmt.Sprintf("%d", job.Metadata.TeamID),
+			"ctf.checker.round":               fmt.Sprintf("%d", job.Metadata.RoundNumber),
 		},
 		AttachStdout: true,
 		AttachStderr: true,
@@ -304,8 +307,19 @@ func (r *DockerCheckerRunner) collectLogs(ctx context.Context, containerID strin
 	return stdout.String(), stderr.String(), stdout.exceeded || stderr.exceeded
 }
 
-func materializeCheckerFiles(files []contestports.CheckerRunFile) (string, error) {
-	root, err := os.MkdirTemp("", "ctf-checker-*")
+func materializeCheckerFiles(files []contestports.CheckerRunFile, hostWorkRoot string) (string, error) {
+	var (
+		root string
+		err  error
+	)
+	if strings.TrimSpace(hostWorkRoot) == "" {
+		root, err = os.MkdirTemp("", "ctf-checker-*")
+	} else {
+		if err := os.MkdirAll(hostWorkRoot, 0o755); err != nil {
+			return "", err
+		}
+		root, err = os.MkdirTemp(hostWorkRoot, "ctf-checker-*")
+	}
 	if err != nil {
 		return "", err
 	}

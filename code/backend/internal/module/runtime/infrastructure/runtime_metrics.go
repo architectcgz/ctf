@@ -33,7 +33,10 @@ func (e *Engine) RemoveImage(ctx context.Context, imageRef string) error {
 
 func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error) {
 	containers, err := e.cli.ContainerList(ctx, containertypes.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("label", runtimedomain.ManagedByFilter())),
+		Filters: filters.NewArgs(
+			filters.Arg("label", runtimedomain.ProjectFilter()),
+			filters.Arg("label", runtimedomain.ManagedByFilter()),
+		),
 	})
 	if err != nil {
 		return nil, err

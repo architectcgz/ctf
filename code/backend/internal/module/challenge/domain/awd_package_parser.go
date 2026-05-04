@@ -54,6 +54,9 @@ func buildParsedAWDChallengePackage(
 	if title == "" {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.title 不能为空"))
 	}
+	if err := validatePackageDockerfileLayout(rootDir); err != nil {
+		return nil, err
+	}
 
 	statementFile := strings.TrimSpace(manifest.Content.Statement)
 	if statementFile == "" {

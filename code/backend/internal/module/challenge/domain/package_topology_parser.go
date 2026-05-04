@@ -99,6 +99,9 @@ func parseChallengePackageTopology(
 		if strings.TrimSpace(node.Image.Ref) == "" {
 			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 缺少 image.ref", key))
 		}
+		if dockerfile := strings.TrimSpace(node.Image.Dockerfile); dockerfile != "" && filepath.ToSlash(filepath.Clean(dockerfile)) != "docker/Dockerfile" {
+			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 的 image.dockerfile 必须为 docker/Dockerfile", key))
+		}
 		if node.InjectFlag {
 			injectFlagCount++
 		}

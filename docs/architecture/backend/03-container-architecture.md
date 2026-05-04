@@ -1368,6 +1368,30 @@ scripts/registry/deploy-private-registry.sh --config /etc/ctf/private-registry.c
 source "$HOME/ctf-registry/auth/ctf-platform-registry.env"
 ```
 
+这两个文件要看成同一次部署产物：
+
+- `$HOME/ctf-registry/auth/htpasswd`
+- `$HOME/ctf-registry/auth/ctf-platform-registry.env`
+
+如果要重置用户名或密码，必须重新执行 `deploy-private-registry.sh`，让脚本同时更新这两处并按需重建 `ctf-registry` 容器。不要只手改其中一份，否则很容易出现下面这种错位状态：
+
+- 后端环境变量里还是旧用户名或旧密码
+- `ctf-registry` 容器实际加载的是另一份新 `htpasswd`
+- `docker login`、`docker push` 和平台运行时拉取全部返回 `401 Unauthorized`
+
+本地演示如果继续使用仓库默认口径，推荐显式执行：
+
+```bash
+scripts/registry/deploy-private-registry.sh \
+  --name ctf-registry \
+  --port 5000 \
+  --server 127.0.0.1:5000 \
+  --scheme http \
+  --username ctf \
+  --password 123456 \
+  --force-recreate
+```
+
 如果需要手工部署，等价流程如下：
 
 ```bash

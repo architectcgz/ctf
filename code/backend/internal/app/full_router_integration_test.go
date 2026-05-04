@@ -91,6 +91,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.Notification{},
 	&model.SkillProfile{},
 	&model.Contest{},
+	&model.ContestStatusTransition{},
 	&model.ContestChallenge{},
 	&model.ContestAWDService{},
 	&model.ContestRegistration{},

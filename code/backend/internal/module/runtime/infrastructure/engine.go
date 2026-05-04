@@ -587,6 +587,7 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 	containers, err := e.cli.ContainerList(ctx, container.ListOptions{
 		All: true,
 		Filters: filters.NewArgs(
+			filters.Arg("label", runtimedomain.ProjectFilter()),
 			filters.Arg("label", runtimedomain.ManagedByFilter()),
 		),
 	})

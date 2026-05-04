@@ -169,6 +169,104 @@ extensions:
 	}
 }
 
+func TestParseChallengePackageDirRejectsNestedDockerfile(t *testing.T) {
+	t.Parallel()
+
+	rootDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "app"), 0o755); err != nil {
+		t.Fatalf("mkdir docker/app: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("demo statement"), 0o644); err != nil {
+		t.Fatalf("write statement.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "app", "Dockerfile"), []byte("FROM nginx:1.27"), 0o644); err != nil {
+		t.Fatalf("write nested Dockerfile: %v", err)
+	}
+	manifest := `api_version: v1
+kind: challenge
+meta:
+  slug: nested-dockerfile
+  title: Nested Dockerfile
+  category: web
+  difficulty: easy
+  points: 100
+content:
+  statement: statement.md
+flag:
+  type: dynamic
+  prefix: flag
+runtime:
+  type: container
+  image:
+    ref: ctf/nested-dockerfile:v1
+`
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+
+	if _, err := ParseChallengePackageDir(rootDir); err == nil {
+		t.Fatal("expected nested Dockerfile to be rejected")
+	}
+}
+
+func TestParseChallengePackageDirRejectsTopologyNestedDockerfilePath(t *testing.T) {
+	t.Parallel()
+
+	rootDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker"), 0o755); err != nil {
+		t.Fatalf("mkdir docker: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("demo statement"), 0o644); err != nil {
+		t.Fatalf("write statement.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "Dockerfile"), []byte("FROM nginx:1.27"), 0o644); err != nil {
+		t.Fatalf("write Dockerfile: %v", err)
+	}
+	topology := `api_version: v1
+kind: topology
+entry_node_key: web
+nodes:
+  - key: web
+    name: Web
+    image:
+      ref: ctf/demo:web
+      dockerfile: docker/app/Dockerfile
+    service_port: 8080
+`
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "topology.yml"), []byte(topology), 0o644); err != nil {
+		t.Fatalf("write topology.yml: %v", err)
+	}
+	manifest := `api_version: v1
+kind: challenge
+meta:
+  slug: topology-nested-dockerfile
+  title: Topology Nested Dockerfile
+  category: web
+  difficulty: easy
+  points: 100
+content:
+  statement: statement.md
+flag:
+  type: dynamic
+  prefix: flag
+runtime:
+  type: container
+  image:
+    ref: ctf/demo:web
+extensions:
+  topology:
+    enabled: true
+    source: docker/topology.yml
+`
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+
+	if _, err := ParseChallengePackageDir(rootDir); err == nil {
+		t.Fatal("expected topology dockerfile path to be rejected")
+	}
+}
+
 func TestParseChallengePackageDirParsesRuntimeServiceTCP(t *testing.T) {
 	t.Parallel()
 

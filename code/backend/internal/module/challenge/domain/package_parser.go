@@ -50,6 +50,9 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	if title == "" {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.title 不能为空"))
 	}
+	if err := validatePackageDockerfileLayout(rootDir); err != nil {
+		return nil, err
+	}
 
 	statementFile := strings.TrimSpace(manifest.Content.Statement)
 	if statementFile == "" {
@@ -285,4 +288,22 @@ func safePackageJoin(baseDir, rel string) (string, error) {
 		return "", fmt.Errorf("path escapes package root: %s", rel)
 	}
 	return target, nil
+}
+
+func validatePackageDockerfileLayout(rootDir string) error {
+	files, err := listChallengePackageFiles(rootDir)
+	if err != nil {
+		return fmt.Errorf("list package files: %w", err)
+	}
+	for _, item := range files {
+		if filepath.Base(item.Path) != "Dockerfile" {
+			continue
+		}
+		if item.Path != "docker/Dockerfile" {
+			return errcode.ErrInvalidParams.WithCause(
+				fmt.Errorf("容器题 Dockerfile 必须位于 docker/Dockerfile，当前为 %s", item.Path),
+			)
+		}
+	}
+	return nil
 }

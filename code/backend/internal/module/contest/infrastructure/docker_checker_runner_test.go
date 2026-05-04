@@ -1,6 +1,8 @@
 package infrastructure
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -74,6 +76,12 @@ func TestDockerCheckerRunnerBuildsLockedDownContainerSpec(t *testing.T) {
 	if got := strings.Join(spec.ContainerConfig.Cmd, " "); got != "python3 /checker/docker/check/check.py {{TARGET_URL}}" {
 		t.Fatalf("command = %q, want python3 /checker/docker/check/check.py {{TARGET_URL}}", got)
 	}
+	if spec.ContainerConfig.Labels["ctf.project"] != "ctf" {
+		t.Fatalf("missing ctf project label: %+v", spec.ContainerConfig.Labels)
+	}
+	if spec.ContainerConfig.Labels["managed-by"] != "ctf-platform" {
+		t.Fatalf("missing managed-by label: %+v", spec.ContainerConfig.Labels)
+	}
 	if spec.ContainerConfig.Labels["ctf.role"] != "checker-sandbox" {
 		t.Fatalf("missing checker-sandbox label: %+v", spec.ContainerConfig.Labels)
 	}
@@ -130,10 +138,33 @@ func TestParseCheckerJSONOutput(t *testing.T) {
 	}
 }
 
+func TestMaterializeCheckerFilesUsesConfiguredHostRoot(t *testing.T) {
+	t.Parallel()
+
+	hostRoot := filepath.Join(t.TempDir(), "checker-sandboxes")
+	workDir, err := materializeCheckerFiles([]contestports.CheckerRunFile{
+		{Path: "docker/check/check.py", Content: []byte("print('ok')\n"), Mode: 0o500},
+	}, hostRoot)
+	if err != nil {
+		t.Fatalf("materializeCheckerFiles() error = %v", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(workDir)
+	}()
+
+	if !strings.HasPrefix(workDir, hostRoot+string(filepath.Separator)) {
+		t.Fatalf("workDir = %q, want under %q", workDir, hostRoot)
+	}
+	if _, err := os.Stat(filepath.Join(workDir, "docker/check/check.py")); err != nil {
+		t.Fatalf("expected checker file to be materialized: %v", err)
+	}
+}
+
 func checkerSandboxConfigForTest() config.CheckerSandboxConfig {
 	return config.CheckerSandboxConfig{
 		Image:            "python:3.12-alpine",
 		User:             "65532:65532",
+		HostWorkRoot:     "",
 		WorkDir:          "/checker",
 		Timeout:          10 * time.Second,
 		CPUQuota:         0.5,

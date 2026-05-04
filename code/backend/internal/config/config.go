@@ -261,6 +261,7 @@ type ContestAWDConfig struct {
 type CheckerSandboxConfig struct {
 	Image            string        `mapstructure:"image"`
 	User             string        `mapstructure:"user"`
+	HostWorkRoot     string        `mapstructure:"host_work_root"`
 	WorkDir          string        `mapstructure:"work_dir"`
 	Timeout          time.Duration `mapstructure:"timeout"`
 	CPUQuota         float64       `mapstructure:"cpu_quota"`
@@ -491,6 +492,11 @@ func (c *Config) Validate() error {
 	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.Image) == "" {
 		return fmt.Errorf("contest.awd.checker_sandbox.image must not be empty")
 	}
+	if root := strings.TrimSpace(c.Contest.AWD.CheckerSandbox.HostWorkRoot); root != "" {
+		if !strings.HasPrefix(root, "/") || root == "/" {
+			return fmt.Errorf("contest.awd.checker_sandbox.host_work_root must be an absolute non-root path when configured")
+		}
+	}
 	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "" {
 		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must not be empty")
 	}
@@ -697,6 +703,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.awd.checker_health_path", "/health")
 	v.SetDefault("contest.awd.checker_sandbox.image", "python:3.12-alpine")
 	v.SetDefault("contest.awd.checker_sandbox.user", "65532:65532")
+	v.SetDefault("contest.awd.checker_sandbox.host_work_root", "")
 	v.SetDefault("contest.awd.checker_sandbox.work_dir", "/checker")
 	v.SetDefault("contest.awd.checker_sandbox.timeout", 10*time.Second)
 	v.SetDefault("contest.awd.checker_sandbox.cpu_quota", 0.5)

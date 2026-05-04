@@ -220,6 +220,8 @@ contest:
     checker_sandbox:
       image: python:3.12-alpine
       user: "65532:65532"
+      # 宿主机工作目录留空时使用系统临时目录；生产或容器内开发环境建议显式指向与 Docker 守护进程共享的绝对路径。
+      host_work_root: ""
       work_dir: /checker
       timeout: 10s
       cpu_quota: 0.5
