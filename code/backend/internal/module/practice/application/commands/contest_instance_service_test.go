@@ -396,15 +396,31 @@ func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *
 	if req == nil {
 		return nil, nil
 	}
+	hostPort := req.ReservedHostPort
+	accessURL := fmt.Sprintf("http://127.0.0.1:%d", hostPort)
+	if req.DisableEntryPortPublishing {
+		for _, node := range req.Nodes {
+			if !node.IsEntryPoint || len(node.NetworkAliases) == 0 {
+				continue
+			}
+			servicePort := node.ServicePort
+			if servicePort <= 0 {
+				servicePort = 8080
+			}
+			accessURL = fmt.Sprintf("http://%s:%d", strings.TrimSpace(node.NetworkAliases[0]), servicePort)
+			break
+		}
+		hostPort = 0
+	}
 	return &practiceports.TopologyCreateResult{
 		PrimaryContainerID: fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
 		NetworkID:          fmt.Sprintf("contest-network-%d", req.ReservedHostPort),
-		AccessURL:          fmt.Sprintf("http://127.0.0.1:%d", req.ReservedHostPort),
+		AccessURL:          accessURL,
 		RuntimeDetails: model.InstanceRuntimeDetails{
 			Containers: []model.InstanceRuntimeContainer{{
 				NodeKey:      "entry",
 				ContainerID:  fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
-				HostPort:     req.ReservedHostPort,
+				HostPort:     hostPort,
 				ServicePort:  8080,
 				IsEntryPoint: true,
 			}},

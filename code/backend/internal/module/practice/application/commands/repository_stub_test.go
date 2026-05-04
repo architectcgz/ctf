@@ -29,7 +29,7 @@ type stubPracticeRepository struct {
 	countScopedRunningInstancesFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
 	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
+	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error
 	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
 	createAWDServiceOperationFn            func(ctx context.Context, operation *model.AWDServiceOperation) error
 	finishAWDServiceOperationFn            func(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
@@ -157,9 +157,9 @@ func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, inst
 	return nil
 }
 
-func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
+func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
 	if s.resetInstanceRuntimeForRestartFn != nil {
-		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status, expiresAt)
+		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status, expiresAt, preserveHostPort)
 	}
 	return nil
 }

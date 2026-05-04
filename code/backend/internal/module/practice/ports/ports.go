@@ -73,7 +73,7 @@ type PracticeInstanceExpiryRepository interface {
 }
 
 type PracticeInstanceRestartRepository interface {
-	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error
+	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error
 }
 
 type PracticeInstanceCreateRepository interface {
