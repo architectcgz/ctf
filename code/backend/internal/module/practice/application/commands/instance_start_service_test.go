@@ -202,12 +202,11 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 }
 
-func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
+func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	t.Parallel()
 
 	teamID := int64(4105)
 	var createdInstance *model.Instance
-	reservedPort := 31005
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			return &model.Contest{
@@ -234,12 +233,11 @@ func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 			}, nil
 		},
 		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
-			return reservedPort, nil
+			t.Fatal("AWD service instances must not reserve a host port")
+			return 0, nil
 		},
 		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
-			if port != reservedPort || instanceID != 9105 {
-				t.Fatalf("unexpected reserved port binding: port=%d instance_id=%d", port, instanceID)
-			}
+			t.Fatalf("AWD service instances must not bind a reserved host port: port=%d instance_id=%d", port, instanceID)
 			return nil
 		},
 		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
@@ -291,8 +289,8 @@ func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 	if createdInstance == nil {
 		t.Fatal("expected instance to be created")
 	}
-	if createdInstance.HostPort != reservedPort {
-		t.Fatalf("expected reserved host port %d, got %d", reservedPort, createdInstance.HostPort)
+	if createdInstance.HostPort != 0 {
+		t.Fatalf("expected no AWD host port reservation, got %d", createdInstance.HostPort)
 	}
 }
 
@@ -358,12 +356,15 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 			}
 			return instance, nil
 		},
-		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
 			if instanceID != instance.ID {
 				t.Fatalf("unexpected reset instance id: %d", instanceID)
 			}
 			if !expiresAt.After(now) {
 				t.Fatalf("expected refreshed restart expiry after now, got %s now=%s", expiresAt, now)
+			}
+			if preserveHostPort {
+				t.Fatal("AWD restart must clear historical host port instead of preserving it")
 			}
 			resetStatus = status
 			return nil
@@ -419,7 +420,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	if !resp.ExpiresAt.After(now) || !instance.ExpiresAt.After(now) {
 		t.Fatalf("restart should refresh expired instance ttl, resp=%s instance=%s now=%s", resp.ExpiresAt, instance.ExpiresAt, now)
 	}
-	if instance.ServiceID == nil || *instance.ServiceID != serviceID || instance.Nonce != "nonce-keep" || instance.HostPort != 32106 {
+	if instance.ServiceID == nil || *instance.ServiceID != serviceID || instance.Nonce != "nonce-keep" || instance.HostPort != 0 {
 		t.Fatalf("restart should preserve identity fields, got %+v", instance)
 	}
 	if instance.ContainerID != "" || instance.NetworkID != "" || instance.RuntimeDetails != "" || instance.AccessURL != "" {

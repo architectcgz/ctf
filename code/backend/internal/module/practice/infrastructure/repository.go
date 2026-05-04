@@ -270,7 +270,7 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 		}).Error
 }
 
-func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time) error {
+func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
 	if instanceID <= 0 {
 		return nil
 	}
@@ -287,7 +287,7 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			return err
 		}
 
-		if instance.HostPort > 0 {
+		if preserveHostPort && instance.HostPort > 0 {
 			allocation := &model.PortAllocation{
 				Port:       instance.HostPort,
 				InstanceID: &instance.ID,
@@ -310,19 +310,28 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 				}
 			}
 		}
+		if !preserveHostPort {
+			if err := tx.Where("instance_id = ?", instance.ID).Delete(&model.PortAllocation{}).Error; err != nil {
+				return err
+			}
+		}
 
+		updates := map[string]any{
+			"container_id":    "",
+			"network_id":      "",
+			"runtime_details": "",
+			"access_url":      "",
+			"status":          status,
+			"expires_at":      expiresAt,
+			"destroyed_at":    nil,
+			"updated_at":      time.Now(),
+		}
+		if !preserveHostPort {
+			updates["host_port"] = 0
+		}
 		return tx.Model(&model.Instance{}).
 			Where("id = ?", instanceID).
-			Updates(map[string]any{
-				"container_id":    "",
-				"network_id":      "",
-				"runtime_details": "",
-				"access_url":      "",
-				"status":          status,
-				"expires_at":      expiresAt,
-				"destroyed_at":    nil,
-				"updated_at":      time.Now(),
-			}).Error
+			Updates(updates).Error
 	})
 }
 

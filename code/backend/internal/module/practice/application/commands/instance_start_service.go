@@ -86,7 +86,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
-		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt); err != nil {
+		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, requiresPublishedHostPort(scope)); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		operationStatus := model.AWDServiceOperationStatusRequested
@@ -105,6 +105,9 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	instance.NetworkID = ""
 	instance.RuntimeDetails = ""
 	instance.AccessURL = ""
+	if !requiresPublishedHostPort(scope) {
+		instance.HostPort = 0
+	}
 	instance.Status = nextStatus
 	instance.ExpiresAt = nextExpiresAt
 	instance.DestroyedAt = nil
@@ -266,7 +269,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 }
 
 func requiresPublishedHostPort(scope practiceports.InstanceScope) bool {
-	return true
+	return scope.ContestMode != model.ContestModeAWD
 }
 
 func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope) *dto.InstanceResp {

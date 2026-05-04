@@ -75,7 +75,7 @@ func (ctxOnlyPracticeCommandTxRepository) RefreshInstanceExpiry(context.Context,
 	return nil
 }
 
-func (ctxOnlyPracticeCommandTxRepository) ResetInstanceRuntimeForRestart(context.Context, int64, string, time.Time) error {
+func (ctxOnlyPracticeCommandTxRepository) ResetInstanceRuntimeForRestart(context.Context, int64, string, time.Time, bool) error {
 	return nil
 }
 
