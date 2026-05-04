@@ -460,6 +460,44 @@ Expected: pass.
 - Modify: `code/frontend/src/api/contest.ts`
 - Create: `code/frontend/src/components/contests/awd/AWDDefenseFileWorkbench.vue`
 
+- [ ] **Step 0: Ship read-only Phase 2A first**
+
+Scope:
+
+- Enable only directory listing and file reading.
+- Keep file saving and command execution forbidden at the HTTP handler.
+- Gate read-only workbench with `container.defense_workbench_readonly_enabled`, default `false`.
+- Require `container.defense_workbench_root` to be an absolute non-root path when the gate is enabled.
+- Development config may enable it for local testing.
+- Frontend shows a compact read-only workbench and treats `403` as unavailable.
+
+Backend rules:
+
+- `GET defense/directories` and `GET defense/files` call the runtime service.
+- Student authorization remains owned by `FindAWDDefenseSSHScope`.
+- Browser paths stay relative in the API, but backend resolves them under `defense_workbench_root` before reading from the container.
+- Reject traversal, absolute paths, `.ssh`, env files, `/proc`, `/sys`, `/dev`, `/run`, `/var/run`.
+- Max read size remains <= 256 KiB and directory list <= 300.
+
+Frontend rules:
+
+- Workbench belongs to the selected defense service.
+- Route panel/composable owns async loading and errors.
+- Component is display-only: directory entries, selected file, refresh/open events.
+- No write editor and no command console in Phase 2A.
+
+Validation:
+
+```bash
+cd code/backend
+go test ./internal/module/runtime/api/http -run 'AWDDefenseWorkbench'
+go test ./internal/app/composition -run 'AWDDefenseWorkbench'
+go test ./internal/app -run 'Router|AWD|Runtime'
+cd ../frontend
+npm run test:run -- src/api/__tests__/contest.test.ts src/components/contests/awd src/views/contests/__tests__/contestAwdWorkspacePanelSource.test.ts
+npm run typecheck
+```
+
 - [ ] **Step 1: Keep feature flag disabled by default**
 
 Expected: browser file workbench is hidden unless backend capability says enabled.

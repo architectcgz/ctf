@@ -103,25 +103,27 @@ type runtimeContestDeps struct {
 }
 
 type runtimeModuleDeps struct {
-	repo                  *runtimeinfra.Repository
-	practiceInstanceRepo  *runtimeinfra.Repository
-	instanceCommands      runtimeHTTPCommandService
-	instanceQueries       runtimeHTTPQueryService
-	countRunningQuery     opsports.RuntimeQuery
-	proxyTicketService    runtimeHTTPProxyTicketService
-	cleanupService        *runtimecmd.RuntimeCleanupService
-	maintenanceService    *runtimecmd.RuntimeMaintenanceService
-	provisioningService   *runtimecmd.ProvisioningService
-	containerStatsService *runtimeapp.ContainerStatsService
-	imageRuntime          challengeports.ImageRuntime
-	containerFiles        contestports.AWDContainerFileWriter
-	proxyTrafficRecorder  runtimeports.ProxyTrafficEventRecorder
-	containerPublicHost   string
-	sshExecutor           runtimeContainerInteractiveExecutor
-	defenseWorkbench      runtimeDefenseWorkbenchRuntime
-	defenseSSHEnabled     bool
-	defenseSSHHost        string
-	defenseSSHPort        int
+	repo                            *runtimeinfra.Repository
+	practiceInstanceRepo            *runtimeinfra.Repository
+	instanceCommands                runtimeHTTPCommandService
+	instanceQueries                 runtimeHTTPQueryService
+	countRunningQuery               opsports.RuntimeQuery
+	proxyTicketService              runtimeHTTPProxyTicketService
+	cleanupService                  *runtimecmd.RuntimeCleanupService
+	maintenanceService              *runtimecmd.RuntimeMaintenanceService
+	provisioningService             *runtimecmd.ProvisioningService
+	containerStatsService           *runtimeapp.ContainerStatsService
+	imageRuntime                    challengeports.ImageRuntime
+	containerFiles                  contestports.AWDContainerFileWriter
+	proxyTrafficRecorder            runtimeports.ProxyTrafficEventRecorder
+	containerPublicHost             string
+	sshExecutor                     runtimeContainerInteractiveExecutor
+	defenseWorkbench                runtimeDefenseWorkbenchRuntime
+	defenseSSHEnabled               bool
+	defenseSSHHost                  string
+	defenseSSHPort                  int
+	defenseWorkbenchReadOnlyEnabled bool
+	defenseWorkbenchRoot            string
 }
 
 func BuildRuntimeModule(root *Root) *RuntimeModule {
@@ -165,25 +167,27 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 	proxyTicketService := runtimeqry.NewProxyTicketService(proxyTicketStore, repo, cfg.Container.ProxyTicketTTL)
 
 	return runtimeModuleDeps{
-		repo:                  repo,
-		practiceInstanceRepo:  repo,
-		instanceCommands:      runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
-		instanceQueries:       runtimeqry.NewInstanceService(repo),
-		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
-		proxyTicketService:    proxyTicketService,
-		cleanupService:        cleanupService,
-		maintenanceService:    maintenanceService,
-		provisioningService:   provisioningService,
-		containerStatsService: containerStatsService,
-		proxyTrafficRecorder:  runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
-		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
-		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
-		containerPublicHost:   cfg.Container.PublicHost,
-		sshExecutor:           engine,
-		defenseWorkbench:      engine,
-		defenseSSHEnabled:     cfg.Container.DefenseSSHEnabled && engine != nil,
-		defenseSSHHost:        cfg.Container.DefenseSSHHost,
-		defenseSSHPort:        cfg.Container.DefenseSSHPort,
+		repo:                            repo,
+		practiceInstanceRepo:            repo,
+		instanceCommands:                runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
+		instanceQueries:                 runtimeqry.NewInstanceService(repo),
+		countRunningQuery:               runtimeqry.NewCountRunningService(repo),
+		proxyTicketService:              proxyTicketService,
+		cleanupService:                  cleanupService,
+		maintenanceService:              maintenanceService,
+		provisioningService:             provisioningService,
+		containerStatsService:           containerStatsService,
+		proxyTrafficRecorder:            runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
+		imageRuntime:                    runtimeapp.NewImageRuntimeService(engine),
+		containerFiles:                  runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
+		containerPublicHost:             cfg.Container.PublicHost,
+		sshExecutor:                     engine,
+		defenseWorkbench:                engine,
+		defenseSSHEnabled:               cfg.Container.DefenseSSHEnabled && engine != nil,
+		defenseSSHHost:                  cfg.Container.DefenseSSHHost,
+		defenseSSHPort:                  cfg.Container.DefenseSSHPort,
+		defenseWorkbenchReadOnlyEnabled: cfg.Container.DefenseWorkbenchReadOnlyEnabled && engine != nil,
+		defenseWorkbenchRoot:            cfg.Container.DefenseWorkbenchRoot,
 	}
 }
 
@@ -227,6 +231,8 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.defenseSSHEnabled,
 			deps.defenseSSHHost,
 			deps.defenseSSHPort,
+			deps.defenseWorkbenchReadOnlyEnabled,
+			deps.defenseWorkbenchRoot,
 		),
 		proxyTrafficRecorder: deps.proxyTrafficRecorder,
 	}
@@ -377,28 +383,32 @@ type runtimeHTTPProxyTicketService interface {
 }
 
 type runtimeHTTPServiceAdapter struct {
-	commandService       runtimeHTTPCommandService
-	queryService         runtimeHTTPQueryService
-	proxyTickets         runtimeHTTPProxyTicketService
-	proxyTicketReader    runtimeports.ProxyTicketInstanceReader
-	defenseWorkbench     runtimeDefenseWorkbenchRuntime
-	proxyBodyPreviewSize int
-	defenseSSHEnabled    bool
-	defenseSSHHost       string
-	defenseSSHPort       int
+	commandService                  runtimeHTTPCommandService
+	queryService                    runtimeHTTPQueryService
+	proxyTickets                    runtimeHTTPProxyTicketService
+	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
+	defenseWorkbench                runtimeDefenseWorkbenchRuntime
+	proxyBodyPreviewSize            int
+	defenseSSHEnabled               bool
+	defenseSSHHost                  string
+	defenseSSHPort                  int
+	defenseWorkbenchReadOnlyEnabled bool
+	defenseWorkbenchRoot            string
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int, defenseWorkbenchReadOnlyEnabled bool, defenseWorkbenchRoot string) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
-		commandService:       commandService,
-		queryService:         queryService,
-		proxyTickets:         proxyTickets,
-		proxyTicketReader:    proxyTicketReader,
-		defenseWorkbench:     defenseWorkbench,
-		proxyBodyPreviewSize: proxyBodyPreviewSize,
-		defenseSSHEnabled:    defenseSSHEnabled,
-		defenseSSHHost:       defenseSSHHost,
-		defenseSSHPort:       defenseSSHPort,
+		commandService:                  commandService,
+		queryService:                    queryService,
+		proxyTickets:                    proxyTickets,
+		proxyTicketReader:               proxyTicketReader,
+		defenseWorkbench:                defenseWorkbench,
+		proxyBodyPreviewSize:            proxyBodyPreviewSize,
+		defenseSSHEnabled:               defenseSSHEnabled,
+		defenseSSHHost:                  defenseSSHHost,
+		defenseSSHPort:                  defenseSSHPort,
+		defenseWorkbenchReadOnlyEnabled: defenseWorkbenchReadOnlyEnabled,
+		defenseWorkbenchRoot:            defenseWorkbenchRoot,
 	}
 }
 
@@ -506,9 +516,19 @@ func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user
 	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
+	if !a.defenseWorkbenchReadOnlyEnabled {
+		return nil, errcode.ErrForbidden
+	}
+	rootPath, err := normalizeAWDDefenseWorkbenchRoot(a.defenseWorkbenchRoot)
+	if err != nil {
+		return nil, err
+	}
 	cleanPath, err := normalizeAWDDefensePath(filePath)
 	if err != nil {
 		return nil, err
+	}
+	if isBlockedAWDDefensePath(cleanPath) {
+		return nil, errcode.ErrForbidden
 	}
 	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
@@ -518,7 +538,8 @@ func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user
 		return nil, errcode.ErrForbidden
 	}
 
-	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxFileSize)
+	containerPath := buildAWDDefenseWorkbenchContainerPath(rootPath, cleanPath)
+	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, containerPath, awdDefenseMaxFileSize)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -533,9 +554,19 @@ func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context,
 	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
+	if !a.defenseWorkbenchReadOnlyEnabled {
+		return nil, errcode.ErrForbidden
+	}
+	rootPath, err := normalizeAWDDefenseWorkbenchRoot(a.defenseWorkbenchRoot)
+	if err != nil {
+		return nil, err
+	}
 	cleanPath, err := normalizeAWDDefenseDirectoryPath(dirPath)
 	if err != nil {
 		return nil, err
+	}
+	if cleanPath != "." && isBlockedAWDDefensePath(cleanPath) {
+		return nil, errcode.ErrForbidden
 	}
 	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
@@ -545,7 +576,8 @@ func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context,
 		return nil, errcode.ErrForbidden
 	}
 
-	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxDirectoryList)
+	containerPath := buildAWDDefenseWorkbenchContainerPath(rootPath, cleanPath)
+	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, containerPath, awdDefenseMaxDirectoryList)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -557,6 +589,9 @@ func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context,
 		entryPath := entry.Name
 		if cleanPath != "." {
 			entryPath = path.Join(cleanPath, entry.Name)
+		}
+		if isBlockedAWDDefensePath(entryPath) {
+			continue
 		}
 		resp.Entries = append(resp.Entries, dto.AWDDefenseDirectoryEntryResp{
 			Name: entry.Name,
@@ -658,6 +693,53 @@ func normalizeAWDDefensePath(input string) (string, error) {
 		return "", errcode.ErrInvalidParams
 	}
 	return cleaned, nil
+}
+
+func normalizeAWDDefenseWorkbenchRoot(input string) (string, error) {
+	trimmed := strings.TrimSpace(input)
+	if trimmed == "" {
+		return "", errcode.ErrForbidden
+	}
+	cleaned := path.Clean(trimmed)
+	if !path.IsAbs(cleaned) || cleaned == "/" || strings.Contains(cleaned, "/../") {
+		return "", errcode.ErrForbidden
+	}
+	return cleaned, nil
+}
+
+func buildAWDDefenseWorkbenchContainerPath(rootPath, cleanPath string) string {
+	if cleanPath == "." {
+		return rootPath
+	}
+	return path.Join(rootPath, cleanPath)
+}
+
+func isBlockedAWDDefensePath(cleanPath string) bool {
+	trimmed := strings.TrimSpace(cleanPath)
+	if trimmed == "" {
+		return true
+	}
+	parts := strings.Split(path.Clean(trimmed), "/")
+	for _, part := range parts {
+		name := strings.ToLower(strings.TrimSpace(part))
+		if name == "" || name == "." {
+			continue
+		}
+		if name == ".ssh" || name == ".env" || strings.HasPrefix(name, ".env.") || strings.HasSuffix(name, ".env") {
+			return true
+		}
+		if name == "proc" || name == "sys" || name == "dev" || name == "run" {
+			return true
+		}
+		if name == "var" && len(parts) > 1 {
+			for i := 0; i < len(parts)-1; i++ {
+				if strings.EqualFold(parts[i], "var") && strings.EqualFold(parts[i+1], "run") {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

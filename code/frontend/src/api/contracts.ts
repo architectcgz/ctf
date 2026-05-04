@@ -518,6 +518,24 @@ export interface AWDDefenseSSHAccessData {
   expires_at: ISODateTime
 }
 
+export interface AWDDefenseFileData {
+  path: string
+  content: string
+  size: number
+}
+
+export interface AWDDefenseDirectoryEntryData {
+  name: string
+  path: string
+  type: 'file' | 'dir'
+  size: number
+}
+
+export interface AWDDefenseDirectoryData {
+  path: string
+  entries: AWDDefenseDirectoryEntryData[]
+}
+
 export interface AWDRoundSummaryItemData {
   team_id: ID
   team_name: string

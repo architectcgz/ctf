@@ -15,8 +15,13 @@ import {
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AWDDefenseFileWorkbench from '@/components/contests/awd/AWDDefenseFileWorkbench.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
+import {
+  requestContestAWDDefenseDirectory,
+  requestContestAWDDefenseFile,
+} from '@/api/contest'
 import {
   buildOpenSSHConfig,
   getVSCodeSSHCommand,
@@ -25,6 +30,8 @@ import {
   useContestAWDWorkspace,
 } from '@/features/contest-awd-workspace'
 import type {
+  AWDDefenseDirectoryData,
+  AWDDefenseFileData,
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
@@ -44,6 +51,11 @@ const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
 const copiedSSHCommandKey = ref('')
 const copiedSSHConfigKey = ref('')
+const defenseDirectory = ref<AWDDefenseDirectoryData | null>(null)
+const defenseFile = ref<AWDDefenseFileData | null>(null)
+const defenseWorkbenchLoadingKey = ref('')
+const defenseWorkbenchError = ref('')
+let defenseWorkbenchRequestSeq = 0
 
 const {
   workspace,
@@ -114,6 +126,11 @@ const defenseServiceActionPendingById = computed(() => {
 })
 
 const { selectedServiceId, selectService } = useAwdDefenseServiceSelection(defenseServiceCards)
+const selectedDefenseServiceTitle = computed(
+  () =>
+    defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value)?.title ||
+    ''
+)
 
 const challengeByChallengeId = computed(() => {
   const map = new Map<string, ContestChallengeItem>()
@@ -224,6 +241,19 @@ watch(
     }
     if (!challengeKeys.includes(activeChallengeKey.value)) {
       activeChallengeKey.value = challengeKeys[0]
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  selectedServiceId,
+  (serviceId) => {
+    defenseFile.value = null
+    defenseDirectory.value = null
+    defenseWorkbenchError.value = ''
+    if (serviceId) {
+      void loadDefenseDirectory(serviceId, '.')
     }
   },
   { immediate: true }
@@ -346,6 +376,65 @@ async function copySSHConfig(serviceId?: string): Promise<void> {
   const copied = await copyTextToClipboard(config, 'OpenSSH 配置已复制')
   if (copied) {
     copiedSSHConfigKey.value = serviceId
+  }
+}
+
+function isDefenseWorkbenchRequestCurrent(seq: number, serviceId: string): boolean {
+  return seq === defenseWorkbenchRequestSeq && selectedServiceId.value === serviceId
+}
+
+function isDefenseWorkbenchRequestLatest(seq: number): boolean {
+  return seq === defenseWorkbenchRequestSeq
+}
+
+function formatDefenseWorkbenchError(err: unknown): string {
+  if (err instanceof Error && err.message.trim()) {
+    return err.message
+  }
+  return '文件工作台暂不可用。'
+}
+
+async function loadDefenseDirectory(serviceId = selectedServiceId.value, path = '.'): Promise<void> {
+  if (!serviceId) return
+
+  const seq = ++defenseWorkbenchRequestSeq
+  defenseWorkbenchLoadingKey.value = `${serviceId}:dir:${path}`
+  defenseWorkbenchError.value = ''
+  defenseFile.value = null
+  try {
+    const directory = await requestContestAWDDefenseDirectory(props.contest.id, serviceId, path)
+    if (!isDefenseWorkbenchRequestCurrent(seq, serviceId)) return
+    defenseDirectory.value = directory
+    defenseFile.value = null
+  } catch (err) {
+    if (!isDefenseWorkbenchRequestCurrent(seq, serviceId)) return
+    defenseWorkbenchError.value = formatDefenseWorkbenchError(err)
+  } finally {
+    if (isDefenseWorkbenchRequestLatest(seq)) {
+      defenseWorkbenchLoadingKey.value = ''
+    }
+  }
+}
+
+async function openDefenseFile(path: string): Promise<void> {
+  const serviceId = selectedServiceId.value
+  if (!serviceId) return
+
+  const seq = ++defenseWorkbenchRequestSeq
+  defenseWorkbenchLoadingKey.value = `${serviceId}:file:${path}`
+  defenseWorkbenchError.value = ''
+  defenseFile.value = null
+  try {
+    const file = await requestContestAWDDefenseFile(props.contest.id, serviceId, path)
+    if (!isDefenseWorkbenchRequestCurrent(seq, serviceId)) return
+    defenseFile.value = file
+  } catch (err) {
+    if (!isDefenseWorkbenchRequestCurrent(seq, serviceId)) return
+    defenseWorkbenchError.value = formatDefenseWorkbenchError(err)
+  } finally {
+    if (isDefenseWorkbenchRequestLatest(seq)) {
+      defenseWorkbenchLoadingKey.value = ''
+    }
   }
 }
 
@@ -476,6 +565,17 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               @restart-service="restartService"
               @copy-command="copySSHCommand"
               @copy-config="copySSHConfig"
+            />
+
+            <AWDDefenseFileWorkbench
+              :service-title="selectedDefenseServiceTitle"
+              :directory="defenseDirectory"
+              :file="defenseFile"
+              :loading="Boolean(defenseWorkbenchLoadingKey)"
+              :error="defenseWorkbenchError"
+              @refresh="loadDefenseDirectory()"
+              @open-directory="loadDefenseDirectory(selectedServiceId, $event)"
+              @open-file="openDefenseFile"
             />
 
           </div>

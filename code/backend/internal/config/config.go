@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -119,37 +120,39 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota      float64                  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
-	DefaultMemory        int64                    `mapstructure:"default_memory"`    // 内存限制（字节）
-	DefaultPidsLimit     int64                    `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs       bool                     `mapstructure:"readonly_rootfs"`
-	RunAsUser            string                   `mapstructure:"run_as_user"`
-	AllowedCapabilities  []string                 `mapstructure:"allowed_capabilities"`
-	Seccomp              string                   `mapstructure:"seccomp"`
-	PortRangeStart       int                      `mapstructure:"port_range_start"`
-	PortRangeEnd         int                      `mapstructure:"port_range_end"`
-	DefaultExposedPort   int                      `mapstructure:"default_exposed_port"`
-	MaxConcurrentPerUser int                      `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL           time.Duration            `mapstructure:"default_ttl"`
-	SolveGracePeriod     time.Duration            `mapstructure:"solve_grace_period"`
-	MaxExtends           int                      `mapstructure:"max_extends"`
-	ExtendDuration       time.Duration            `mapstructure:"extend_duration"`
-	CleanupInterval      string                   `mapstructure:"cleanup_interval"`
-	CleanupLockTTL       time.Duration            `mapstructure:"cleanup_lock_ttl"`
-	OrphanGracePeriod    time.Duration            `mapstructure:"orphan_grace_period"`
-	CreateTimeout        time.Duration            `mapstructure:"create_timeout"`
-	StartProbeTimeout    time.Duration            `mapstructure:"start_probe_timeout"`
-	StartProbeInterval   time.Duration            `mapstructure:"start_probe_interval"`
-	StartProbeAttempts   int                      `mapstructure:"start_probe_attempts"`
-	FlagGlobalSecret     string                   `mapstructure:"flag_global_secret"`
-	PublicHost           string                   `mapstructure:"public_host"`
-	ProxyTicketTTL       time.Duration            `mapstructure:"proxy_ticket_ttl"`
-	ProxyBodyPreviewSize int                      `mapstructure:"proxy_body_preview_size"`
-	DefenseSSHEnabled    bool                     `mapstructure:"defense_ssh_enabled"`
-	DefenseSSHHost       string                   `mapstructure:"defense_ssh_host"`
-	DefenseSSHPort       int                      `mapstructure:"defense_ssh_port"`
-	Registry             ContainerRegistryConfig  `mapstructure:"registry"`
-	Scheduler            ContainerSchedulerConfig `mapstructure:"scheduler"`
+	DefaultCPUQuota                 float64                  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory                   int64                    `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit                int64                    `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs                  bool                     `mapstructure:"readonly_rootfs"`
+	RunAsUser                       string                   `mapstructure:"run_as_user"`
+	AllowedCapabilities             []string                 `mapstructure:"allowed_capabilities"`
+	Seccomp                         string                   `mapstructure:"seccomp"`
+	PortRangeStart                  int                      `mapstructure:"port_range_start"`
+	PortRangeEnd                    int                      `mapstructure:"port_range_end"`
+	DefaultExposedPort              int                      `mapstructure:"default_exposed_port"`
+	MaxConcurrentPerUser            int                      `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL                      time.Duration            `mapstructure:"default_ttl"`
+	SolveGracePeriod                time.Duration            `mapstructure:"solve_grace_period"`
+	MaxExtends                      int                      `mapstructure:"max_extends"`
+	ExtendDuration                  time.Duration            `mapstructure:"extend_duration"`
+	CleanupInterval                 string                   `mapstructure:"cleanup_interval"`
+	CleanupLockTTL                  time.Duration            `mapstructure:"cleanup_lock_ttl"`
+	OrphanGracePeriod               time.Duration            `mapstructure:"orphan_grace_period"`
+	CreateTimeout                   time.Duration            `mapstructure:"create_timeout"`
+	StartProbeTimeout               time.Duration            `mapstructure:"start_probe_timeout"`
+	StartProbeInterval              time.Duration            `mapstructure:"start_probe_interval"`
+	StartProbeAttempts              int                      `mapstructure:"start_probe_attempts"`
+	FlagGlobalSecret                string                   `mapstructure:"flag_global_secret"`
+	PublicHost                      string                   `mapstructure:"public_host"`
+	ProxyTicketTTL                  time.Duration            `mapstructure:"proxy_ticket_ttl"`
+	ProxyBodyPreviewSize            int                      `mapstructure:"proxy_body_preview_size"`
+	DefenseSSHEnabled               bool                     `mapstructure:"defense_ssh_enabled"`
+	DefenseSSHHost                  string                   `mapstructure:"defense_ssh_host"`
+	DefenseSSHPort                  int                      `mapstructure:"defense_ssh_port"`
+	DefenseWorkbenchReadOnlyEnabled bool                     `mapstructure:"defense_workbench_readonly_enabled"`
+	DefenseWorkbenchRoot            string                   `mapstructure:"defense_workbench_root"`
+	Registry                        ContainerRegistryConfig  `mapstructure:"registry"`
+	Scheduler                       ContainerSchedulerConfig `mapstructure:"scheduler"`
 }
 
 type ContainerRegistryConfig struct {
@@ -365,6 +368,12 @@ func (c *Config) Validate() error {
 		}
 		if c.Container.DefenseSSHPort <= 0 || c.Container.DefenseSSHPort > 65535 {
 			return fmt.Errorf("container.defense_ssh_port must be between 1 and 65535")
+		}
+	}
+	if c.Container.DefenseWorkbenchReadOnlyEnabled {
+		root := path.Clean(strings.TrimSpace(c.Container.DefenseWorkbenchRoot))
+		if root == "" || root == "." || root == "/" || !path.IsAbs(root) {
+			return fmt.Errorf("container.defense_workbench_root must be an absolute non-root path when container.defense_workbench_readonly_enabled is true")
 		}
 	}
 	if c.Container.Registry.Enabled {
@@ -640,6 +649,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_ssh_enabled", false)
 	v.SetDefault("container.defense_ssh_host", "127.0.0.1")
 	v.SetDefault("container.defense_ssh_port", 2222)
+	v.SetDefault("container.defense_workbench_readonly_enabled", false)
+	v.SetDefault("container.defense_workbench_root", "")
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.server", "")
 	v.SetDefault("container.registry.username", "")

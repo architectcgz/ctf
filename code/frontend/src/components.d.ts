@@ -35,6 +35,7 @@ declare module 'vue' {
     AWDChallengeLibraryPage: typeof import('./components/platform/awd-service/AWDChallengeLibraryPage.vue')['default']
     AWDContestSelectorField: typeof import('./components/platform/contest/AWDContestSelectorField.vue')['default']
     AWDDefenseConnectionPanel: typeof import('./components/contests/awd/AWDDefenseConnectionPanel.vue')['default']
+    AWDDefenseFileWorkbench: typeof import('./components/contests/awd/AWDDefenseFileWorkbench.vue')['default']
     AWDDefenseServiceList: typeof import('./components/contests/awd/AWDDefenseServiceList.vue')['default']
     AWDInstanceOrchestrationPanel: typeof import('./components/platform/contest/AWDInstanceOrchestrationPanel.vue')['default']
     AWDOperationsPanel: typeof import('./components/platform/contest/AWDOperationsPanel.vue')['default']

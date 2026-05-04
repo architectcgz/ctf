@@ -30,10 +30,13 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
   })
 
-  it('不再暴露浏览器文件防守工作台入口', () => {
-    expect(awdWorkspaceSource).not.toContain("name: 'ContestAWDDefenseWorkbench'")
-    expect(awdWorkspaceSource).not.toContain('openDefenseWorkbench(challenge.awd_service_id)')
-    expect(awdWorkspaceSource).not.toContain('asset-btn--defense')
-    expect(awdWorkspaceSource).not.toContain('class="defense-workbench"')
+  it('暴露只读浏览器文件防守工作台入口', () => {
+    expect(awdWorkspaceSource).toContain('AWDDefenseFileWorkbench')
+    expect(awdWorkspaceSource).toContain('requestContestAWDDefenseDirectory')
+    expect(awdWorkspaceSource).toContain('requestContestAWDDefenseFile')
+    expect(awdWorkspaceSource).toContain('loadDefenseDirectory')
+    expect(awdWorkspaceSource).toContain('openDefenseFile')
+    expect(awdWorkspaceSource).not.toContain('requestContestAWDDefenseCommand')
+    expect(awdWorkspaceSource).not.toContain('saveContestAWDDefenseFile')
   })
 })
