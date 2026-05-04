@@ -98,7 +98,7 @@
 建议按 `challenge-pack-v1` 落在独立题目包目录，结构最小化：
 
 ```text
-challenges/Jeopardy/packs/web-source-audit-double-wrap-01/
+challenges/jeopardy/packs/web-source-audit-double-wrap-01/
   challenge.yml
   statement.md
   attachments/source.html

@@ -6,22 +6,27 @@
 
 当前仓库只认可两类正式产物：
 
-- `packs/<slug>/`：题目真源目录，所有编辑都应在这里完成
-- `dist/<slug>.zip`：对外交付的题目包 zip
+- `jeopardy/packs/<slug>/`：Jeopardy 题目真源目录，所有编辑都应在这里完成
+- `jeopardy/dist/<slug>.zip`：Jeopardy 对外交付的题目包 zip
 
 当前约定：
 
-- 只改 `challenges/packs/<slug>/`
-- 只交付 `challenges/dist/<slug>.zip`
+- Jeopardy 题目只改 `challenges/jeopardy/packs/<slug>/`
+- Jeopardy 分发包只交付 `challenges/jeopardy/dist/<slug>.zip`
+- AWD 题目只改 `challenges/awd/<contest-or-group>/<slug>/`
 - 题目目录里的 `challenge.zip`、`case-evidence.zip` 这类文件，只是题内附件，不是外层交付包
 - 平台当前没有公开的“题目包一键导入”接口，因此老师交付的是规范源包和分发 zip，不是直接在平台上点上传即可完成全部导入
 
+如果是 AWD 题目，先看这份契约再落题：
+
+- [awd/challenge-package-contract.md](/home/azhi/workspace/projects/ctf/challenges/awd/challenge-package-contract.md)
+
 如果不想从空目录开始，可以直接使用模板：
 
-- [templates/README.md](/home/azhi/workspace/projects/ctf/challenges/templates/README.md)
-- [offline-static-template](/home/azhi/workspace/projects/ctf/challenges/templates/offline-static-template)
-- [container-web-template](/home/azhi/workspace/projects/ctf/challenges/templates/container-web-template)
-- [container-pwn-template](/home/azhi/workspace/projects/ctf/challenges/templates/container-pwn-template)
+- [jeopardy/templates/README.md](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/README.md)
+- [offline-static-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/offline-static-template)
+- [container-web-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/container-web-template)
+- [container-pwn-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/container-pwn-template)
 
 ## 2. 先决定题型
 
@@ -53,6 +58,10 @@
 - `runtime.type: container`
 - 题目运行材料放在 `docker/`
 - flag 一般是 `dynamic`
+
+如果是 AWD 容器题，再额外记一条：
+
+- 平台运行归属看 label，不看老师本地进入哪个目录执行 `docker compose`
 
 选择原则很简单：
 
@@ -105,7 +114,7 @@
 一个标准题目目录最少如下：
 
 ```text
-packs/<slug>/
+jeopardy/packs/<slug>/
 ├── challenge.yml
 ├── statement.md
 ├── attachments/    # 可选
@@ -118,7 +127,7 @@ packs/<slug>/
 - `challenge.yml`：题目元数据
 - `statement.md`：题面
 - `attachments/`：学生下载的附件
-- `docker/`：容器题运行上下文
+- `docker/`：容器题运行上下文；容器入口统一为 `docker/Dockerfile`
 - `writeup/`：官方题解，可后补
 
 ## 5. slug、分类、难度约定
@@ -370,15 +379,15 @@ runtime:
 
 ### 8.1 基本流程
 
-1. 新建 `packs/<slug>/`
+1. 新建 `jeopardy/packs/<slug>/`
 2. 写 `statement.md`
 3. 准备 `attachments/`
 4. 计算附件 `sha256`
 5. 写 `challenge.yml`
-6. 生成 `dist/<slug>.zip`
+6. 生成 `jeopardy/dist/<slug>.zip`
 7. 做可做性验证
 
-如果是第一次出题，建议直接复制 `templates/offline-static-template/` 作为起点。
+如果是第一次出题，建议直接复制 `jeopardy/templates/offline-static-template/` 作为起点。
 
 ### 8.2 离线题材料要求
 
@@ -411,25 +420,27 @@ runtime:
 
 ### 9.1 基本流程
 
-1. 新建 `packs/<slug>/`
+1. 新建 `jeopardy/packs/<slug>/`
 2. 写 `statement.md`
 3. 在 `docker/` 下准备 `Dockerfile`、源码、静态资源、入口脚本
 4. 写 `challenge.yml`
 5. `docker build` 验证
 6. `docker run` 验证真实利用路径
-7. 生成 `dist/<slug>.zip`
+7. 生成 `jeopardy/dist/<slug>.zip`
 
 如果是第一次做容器题：
 
-- Web 题建议直接复制 `templates/container-web-template/`
-- Pwn 题建议直接复制 `templates/container-pwn-template/`
+- Web 题建议直接复制 `jeopardy/templates/container-web-template/`
+- Pwn 题建议直接复制 `jeopardy/templates/container-pwn-template/`
 
 ### 9.2 Docker 目录建议
+
+容器题的镜像入口固定放在 `docker/Dockerfile`。源码可以按题目复杂度放在 `docker/app/`、`docker/src/` 或其他子目录，但不要把 Dockerfile 下沉到这些子目录里。
 
 常见写法：
 
 ```text
-packs/<slug>/docker/
+jeopardy/packs/<slug>/docker/
 ├── Dockerfile
 ├── entrypoint.sh          # 可选
 ├── src/                   # 题目源码 / 页面源码
@@ -440,7 +451,7 @@ packs/<slug>/docker/
 Pwn 题常见写法：
 
 ```text
-packs/<slug>/docker/
+jeopardy/packs/<slug>/docker/
 ├── Dockerfile
 ├── entrypoint.sh
 ├── src/
@@ -506,7 +517,7 @@ puts(flag ? flag : "flag{pwn_demo_container}");
 例如：
 
 ```bash
-docker build -t test-web-sqli-union packs/web-sqli-union/docker
+docker build -t test-web-sqli-union jeopardy/packs/web-sqli-union/docker
 docker run --rm -p 18080:80 -e FLAG='flag{demo}' test-web-sqli-union
 ```
 
@@ -515,7 +526,7 @@ docker run --rm -p 18080:80 -e FLAG='flag{demo}' test-web-sqli-union
 如果是 Pwn 题，至少还应验证：
 
 ```bash
-docker build -t test-pwn-demo packs/pwn-demo/docker
+docker build -t test-pwn-demo jeopardy/packs/pwn-demo/docker
 docker run --rm -p 18080:80 -p 19999:9999 -e FLAG='flag{demo}' test-pwn-demo
 curl http://127.0.0.1:18080/
 nc 127.0.0.1 19999
@@ -563,14 +574,14 @@ nc 127.0.0.1 19999
 
 老师在本地至少应完成：
 
-- 检查 `packs/<slug>/` 结构是否完整，`challenge.yml`、`statement.md`、附件或 `docker/` 是否齐全
+- 检查 `jeopardy/packs/<slug>/` 结构是否完整，`challenge.yml`、`statement.md`、附件或 `docker/` 是否齐全
 - 确认题面、flag、提示、附件文件名和 `challenge.yml` 中的引用一致
-- 如需生成外层分发包，重新打包 `packs/<slug>/`，确保 zip 根目录名仍为 `<slug>/`
+- 如需生成外层分发包，重新打包 `jeopardy/packs/<slug>/`，确保 zip 根目录名仍为 `<slug>/`
 
 容器题还应至少执行：
 
 ```bash
-docker build -t test-<slug> packs/<slug>/docker
+docker build -t test-<slug> jeopardy/packs/<slug>/docker
 ```
 
 必要时再手工起容器验证一次核心解题链路。老师日常出题时，至少应验证自己新增或修改的那道题。
@@ -579,12 +590,12 @@ docker build -t test-<slug> packs/<slug>/docker
 
 一道题可以认为“可交付”，至少要满足：
 
-- `packs/<slug>/` 结构完整
+- `jeopardy/packs/<slug>/` 结构完整
 - `challenge.yml` 正确
 - `statement.md` 清晰
 - 附件不是空壳
 - 容器题已经 build 并实跑验证
-- `dist/<slug>.zip` 已生成
+- `jeopardy/dist/<slug>.zip` 已生成
 - 题目可以被其他老师复现
 
 ## 13. 常见错误
@@ -647,8 +658,8 @@ docker build -t test-<slug> packs/<slug>/docker
 
 老师交题时建议至少给管理员：
 
-- `packs/<slug>/`
-- `dist/<slug>.zip`
+- `jeopardy/packs/<slug>/`
+- `jeopardy/dist/<slug>.zip`
 - 一段简短说明：
   - 题目类型
   - 预期难度

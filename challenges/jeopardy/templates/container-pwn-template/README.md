@@ -15,6 +15,8 @@
 5. 确认默认 flag 只用于本地调试
 6. 执行 `docker build` 和真实利用验证
 
+镜像入口固定为 `docker/Dockerfile`，不要把 Dockerfile 移到 `docker/src/` 或其他子目录。
+
 ## 模板说明
 
 - 模板默认暴露 `80/tcp` 下载题目二进制

@@ -13,6 +13,8 @@
 4. 确认默认 flag 只用于本地调试
 5. 执行 `docker build` 和真实访问验证
 
+镜像入口固定为 `docker/Dockerfile`，不要把 Dockerfile 移到 `docker/src/` 或其他子目录。
+
 ## 最低验证命令
 
 ```bash
