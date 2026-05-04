@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 
 describe('ContestAWDWorkspacePanel source', () => {
@@ -18,8 +19,15 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('data-testid="awd-feedback-challenge-title"')
     expect(awdWorkspaceSource).toContain('ssh_profile')
     expect(awdWorkspaceSource).toContain('buildOpenSSHConfig')
+    expect(awdWorkspaceSource).toContain('getSSHCommand')
+    expect(awdWorkspaceSource).toContain('copySSHCommand')
     expect(awdWorkspaceSource).toContain('copySSHConfig')
-    expect(awdWorkspaceSource).toContain('VS Code')
+    expect(awdDefenseConnectionPanelSource).toContain('VS Code Remote-SSH')
+    expect(awdDefenseConnectionPanelSource).toContain('复制 VS Code 命令')
+    expect(awdDefenseConnectionPanelSource).toContain('OpenSSH 配置')
+    expect(awdDefenseConnectionPanelSource).toContain('票据将在')
+    expect(awdDefenseConnectionPanelSource).toContain('expires_at')
+    expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
   })
 
   it('不再暴露浏览器文件防守工作台入口', () => {

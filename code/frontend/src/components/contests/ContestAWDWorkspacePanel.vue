@@ -12,18 +12,24 @@ import {
   Terminal,
   ExternalLink,
   RefreshCw,
-  Copy,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
-import { useContestAWDWorkspace } from '@/features/contest-awd-workspace'
+import {
+  buildOpenSSHConfig,
+  getVSCodeSSHCommand,
+  toDefenseServiceCards,
+  useAwdDefenseServiceSelection,
+  useContestAWDWorkspace,
+} from '@/features/contest-awd-workspace'
 import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
-  SSHProfileData,
 } from '@/api/contracts'
+import { useToast } from '@/composables/useToast'
 import { formatTime } from '@/utils/format'
 
 const props = defineProps<{
@@ -31,10 +37,12 @@ const props = defineProps<{
   challenges: ContestChallengeItem[]
 }>()
 
+const toast = useToast()
 const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
+const copiedSSHCommandKey = ref('')
 const copiedSSHConfigKey = ref('')
 
 const {
@@ -80,6 +88,32 @@ const runtimeChallenges = computed(() =>
     Boolean(item.awd_service_id)
   )
 )
+
+const defenseServiceCards = computed(() =>
+  toDefenseServiceCards({
+    challenges: props.challenges,
+    services: workspace.value?.services || [],
+  })
+)
+
+const defenseServiceActionPendingById = computed(() => {
+  const pendingById: Record<string, boolean> = {}
+  for (const card of defenseServiceCards.value) {
+    const service = servicesByServiceId.value.get(card.serviceId)
+    pendingById[card.serviceId] = Boolean(
+      startingServiceKey.value === card.serviceId ||
+        serviceActionPendingById.value[card.serviceId] ||
+        service?.instance_status === 'pending' ||
+        service?.instance_status === 'creating' ||
+        service?.operation_status === 'requested' ||
+        service?.operation_status === 'provisioning' ||
+        service?.operation_status === 'recovering'
+    )
+  }
+  return pendingById
+})
+
+const { selectedServiceId, selectService } = useAwdDefenseServiceSelection(defenseServiceCards)
 
 const challengeByChallengeId = computed(() => {
   const map = new Map<string, ContestChallengeItem>()
@@ -195,86 +229,6 @@ watch(
   { immediate: true }
 )
 
-function getServiceStatusLabel(status?: string): string {
-  switch (status) {
-    case 'up':
-      return '正常'
-    case 'down':
-      return '离线'
-    case 'compromised':
-      return '失陷'
-    default:
-      return '待命'
-  }
-}
-
-function getServiceStatusClass(status?: string): string {
-  return `status-badge status-badge--${status || 'pending'}`
-}
-
-function getDisplayedServiceStatus(service?: ContestAWDWorkspaceServiceData): {
-  status: 'up' | 'down' | 'compromised' | 'pending'
-  label: string
-} {
-  if (service?.instance_status === 'running' && service.service_status === 'down') {
-    return {
-      status: 'pending',
-      label: '待同步',
-    }
-  }
-
-  if (service?.service_status === 'up' || service?.service_status === 'down' || service?.service_status === 'compromised') {
-    return {
-      status: service.service_status,
-      label: getServiceStatusLabel(service.service_status),
-    }
-  }
-
-  return {
-    status: 'pending',
-    label: '待命',
-  }
-}
-
-function getInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): string {
-  switch (service?.instance_status) {
-    case 'pending':
-      return '重启队列中'
-    case 'creating':
-      return '正在启动'
-    case 'running':
-      if (service.service_status === 'down') {
-        return '平台代理已就绪，等待状态同步'
-      }
-      return '平台代理已就绪'
-    case 'failed':
-      return '启动失败'
-    default:
-      return service?.instance_id ? '已通过平台代理就绪' : '等待分配实例'
-  }
-}
-
-function canOpenWorkspaceService(service?: ContestAWDWorkspaceServiceData): boolean {
-  return Boolean(service?.instance_id && (!service.instance_status || service.instance_status === 'running'))
-}
-
-function isWorkspaceServiceActionPending(challenge: ContestChallengeItem): boolean {
-  const serviceId = challenge.awd_service_id
-  if (!serviceId) {
-    return false
-  }
-  const service = getWorkspaceService(challenge)
-  return Boolean(
-    startingServiceKey.value === serviceId ||
-      serviceActionPendingById.value[serviceId] ||
-      service?.instance_status === 'pending' ||
-      service?.instance_status === 'creating' ||
-      service?.operation_status === 'requested' ||
-      service?.operation_status === 'provisioning' ||
-      service?.operation_status === 'recovering'
-  )
-}
-
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
   return direction === 'attack_out' ? '对外攻击' : '受到攻击'
 }
@@ -308,10 +262,6 @@ function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefin
 
 function getAWDChallengeId(challenge: ContestChallengeItem): string {
   return challenge.awd_challenge_id || challenge.challenge_id
-}
-
-function getServiceStartKey(challenge: ContestChallengeItem): string {
-  return challenge.awd_service_id || ''
 }
 
 function getChallengeTitleForEvent(event: { service_id?: string; awd_challenge_id: string }): string {
@@ -350,33 +300,52 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
-function buildOpenSSHConfig(profile?: SSHProfileData): string {
-  if (!profile) return ''
-  return [
-    `Host ${profile.alias}`,
-    `  HostName ${profile.host_name}`,
-    `  Port ${profile.port}`,
-    `  User ${profile.user}`,
-    '',
-  ].join('\n')
-}
-
 function getOpenSSHConfig(serviceId?: string): string {
   const access = getSSHAccess(serviceId)
   return buildOpenSSHConfig(access?.ssh_profile)
 }
 
-async function copySSHConfig(serviceId?: string): Promise<void> {
-  const config = getOpenSSHConfig(serviceId)
-  if (!serviceId || !config || typeof navigator === 'undefined' || !navigator.clipboard) {
-    return
+function getSSHCommand(serviceId?: string): string {
+  return getVSCodeSSHCommand(getSSHAccess(serviceId))
+}
+
+function openDefenseService(serviceId: string): void {
+  const instanceId = servicesByServiceId.value.get(serviceId)?.instance_id
+  if (!instanceId) return
+  void openService(instanceId)
+}
+
+async function copyTextToClipboard(text: string, successMessage: string): Promise<boolean> {
+  if (!text || typeof navigator === 'undefined' || !navigator.clipboard) {
+    toast.error('复制失败，请手动选择文本')
+    return false
   }
 
   try {
-    await navigator.clipboard.writeText(config)
-    copiedSSHConfigKey.value = serviceId
+    await navigator.clipboard.writeText(text)
+    toast.success(successMessage)
+    return true
   } catch (err) {
     console.error(err)
+    toast.error('复制失败，请手动选择文本')
+    return false
+  }
+}
+
+async function copySSHCommand(serviceId?: string): Promise<void> {
+  if (!serviceId) return
+  const copied = await copyTextToClipboard(getSSHCommand(serviceId), 'VS Code SSH 命令已复制')
+  if (copied) {
+    copiedSSHCommandKey.value = serviceId
+  }
+}
+
+async function copySSHConfig(serviceId?: string): Promise<void> {
+  const config = getOpenSSHConfig(serviceId)
+  if (!serviceId) return
+  const copied = await copyTextToClipboard(config, 'OpenSSH 配置已复制')
+  if (copied) {
+    copiedSSHConfigKey.value = serviceId
   }
 }
 
@@ -492,91 +461,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </div>
             </div>
 
-            <!-- Services -->
-            <div class="asset-list mt-4">
-              <div class="asset-header">战队服务</div>
-              <div v-if="runtimeChallenges.length === 0" class="panel-note">
-                当前竞赛暂无可部署服务。
-              </div>
-              <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
-                <div class="asset-main">
-                  <div class="flex items-center justify-between">
-                    <div class="asset-title-stack">
-                      <span class="asset-title">{{ challenge.title }}</span>
-                      <span class="asset-ref">{{
-                        formatServiceRef(challenge.awd_service_id)
-                      }}</span>
-                    </div>
-                    <span
-                      :class="getServiceStatusClass(getDisplayedServiceStatus(getWorkspaceService(challenge)).status)"
-                    >
-                      {{ getDisplayedServiceStatus(getWorkspaceService(challenge)).label }}
-                    </span>
-                  </div>
-                  <div class="asset-meta font-mono text-[10px]">
-                    {{ getInstanceStatusLabel(getWorkspaceService(challenge)) }}
-                  </div>
-                  <div v-if="getSSHAccess(challenge.awd_service_id)" class="asset-ssh">
-                    <div class="asset-ssh__label">SSH DEFENSE</div>
-                    <code class="asset-ssh__command">{{
-                      getSSHAccess(challenge.awd_service_id)?.command
-                    }}</code>
-                    <div class="asset-ssh__password font-mono">
-                      PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
-                    </div>
-                    <pre
-                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
-                      class="asset-ssh__config"
-                    >{{ getOpenSSHConfig(challenge.awd_service_id) }}</pre>
-                    <button
-                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
-                      class="asset-ssh__copy"
-                      type="button"
-                      @click="copySSHConfig(challenge.awd_service_id)"
-                    >
-                      <Copy class="h-3 w-3" />
-                      <span>{{
-                        copiedSSHConfigKey === challenge.awd_service_id ? '已复制' : '复制 VS Code'
-                      }}</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="asset-actions">
-                  <button
-                    v-if="getWorkspaceService(challenge)?.instance_id"
-                    :disabled="
-                      !canOpenWorkspaceService(getWorkspaceService(challenge)) ||
-                      openingServiceKey === getWorkspaceService(challenge)?.instance_id
-                    "
-                    class="asset-btn"
-                    @click="
-                      getWorkspaceService(challenge)?.instance_id &&
-                      openService(getWorkspaceService(challenge)?.instance_id || '')
-                    "
-                  >
-                    <ExternalLink class="h-3 w-3" />
-                  </button>
-                  <button
-                    v-if="getWorkspaceService(challenge)?.instance_id"
-                    :disabled="
-                      !canOpenWorkspaceService(getWorkspaceService(challenge)) ||
-                      openingSSHKey === getServiceStartKey(challenge)
-                    "
-                    class="asset-btn"
-                    @click="challenge.awd_service_id && openDefenseSSH(challenge.awd_service_id)"
-                  >
-                    {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
-                  </button>
-                  <button
-                    :disabled="isWorkspaceServiceActionPending(challenge)"
-                    class="asset-btn asset-btn--primary"
-                    @click="challenge.awd_service_id && restartService(challenge.awd_service_id)"
-                  >
-                    {{ isWorkspaceServiceActionPending(challenge) ? '重启中' : '重启' }}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <AWDDefenseServiceList
+              :services="defenseServiceCards"
+              :selected-service-id="selectedServiceId"
+              :opening-service-key="openingServiceKey"
+              :opening-ssh-key="openingSSHKey"
+              :service-action-pending-by-id="defenseServiceActionPendingById"
+              :access-by-service-id="sshAccessByServiceId"
+              :copied-command-key="copiedSSHCommandKey"
+              :copied-config-key="copiedSSHConfigKey"
+              @select-service="selectService"
+              @open-service="openDefenseService"
+              @request-ssh="openDefenseSSH"
+              @restart-service="restartService"
+              @copy-command="copySSHCommand"
+              @copy-config="copySSHConfig"
+            />
 
           </div>
         </section>
@@ -963,174 +863,12 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   gap: 0.5rem;
 }
 
-.asset-header {
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
-}
-
-.asset-item {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  margin-bottom: 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.asset-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.asset-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.asset-title-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.asset-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-.asset-ref,
 .target-ref,
 .feedback-ref {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
-}
-.asset-meta {
-  color: var(--color-text-muted);
-  margin-top: 0.35rem;
-}
-
-.asset-ssh {
-  margin-top: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
-  padding: var(--space-2);
-}
-
-.asset-ssh__label {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: var(--color-primary);
-}
-
-.asset-ssh__command,
-.asset-ssh__password {
-  display: block;
-  margin-top: var(--space-1);
-  color: var(--color-text-primary);
-  font-size: 11px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.asset-ssh__command {
-  font-family: var(--font-family-mono);
-}
-
-.asset-ssh__config {
-  margin-top: var(--space-2);
-  padding: var(--space-2);
-  white-space: pre-wrap;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-  color: var(--color-text-primary);
-  font-family: var(--font-family-mono);
-  font-size: 10px;
-  line-height: 1.45;
-}
-
-.asset-ssh__copy {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-  border-radius: 0.5rem;
-  background: var(--color-bg-surface);
-  color: var(--color-primary);
-  padding: var(--space-1) var(--space-2);
-  font-size: 10px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.status-badge {
-  font-size: 10px;
-  font-weight: 900;
-  padding: 0.2rem 0.6rem;
-  border-radius: 99px;
-}
-
-.status-badge--up {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-}
-.status-badge--down {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-.status-badge--compromised {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-}
-.status-badge--pending {
-  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
-  color: var(--color-text-secondary);
-}
-
-.asset-btn {
-  width: 2.25rem;
-  height: 2.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-default);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.asset-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.asset-btn--primary {
-  width: auto;
-  padding: 0 1rem;
-  font-size: 11px;
-  font-weight: 900;
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
-}
-
-.asset-btn--primary:hover {
-  background: var(--color-primary);
-  color: var(--color-bg-base);
 }
 
 /* Attack Components */
