@@ -1,9 +1,10 @@
 # AWD 重启端口隔离 Review
 
-- Review target: `/home/azhi/workspace/projects/.worktrees/ctf-awd-restart-port-fix`
-- Branch: `fix/awd-restart-port-isolation`
-- Base: `6418b705`
-- Diff source: local working tree diff
+- Review target: `/home/azhi/workspace/projects/ctf`
+- Reviewer: subagent `019df283-6d52-7d82-a400-477b92ed3151`
+- Branch: `main`
+- Base/head: `6418b705..58d02e14`, merged by `a63d18cc`
+- Diff source: committed diff after merge
 - Files reviewed:
   - `code/backend/internal/module/practice/application/commands/instance_start_service.go`
   - `code/backend/internal/module/practice/application/commands/instance_start_service_test.go`
@@ -25,7 +26,7 @@ Pass.
 
 ## Findings
 
-No material findings.
+No material findings. Subagent review found no blockers.
 
 ## Senior Implementation Assessment
 
@@ -46,9 +47,17 @@ go test ./internal/module/practice/application/commands ./internal/module/practi
 go test ./internal/module/practice/...
 ```
 
+Subagent also reported this fresh validation:
+
+```bash
+cd /home/azhi/workspace/projects/ctf/code/backend
+go test ./internal/module/practice/application/commands ./internal/module/practice/infrastructure ./internal/module/practice/ports ./internal/module/practice/... -count=1
+```
+
 Re-run `go test ./internal/module/practice/...` after any review-driven changes.
 
 ## Residual Risk
 
 - Existing running AWD instances that still have `host_port` are not proactively rewritten; they are corrected on their next restart.
 - If an external deployment later introduces a browser-facing AWD defense proxy that depends on host ports, that should be modeled as a separate stable proxy mapping, not by reusing instance `host_port`.
+- The review did not include a real Docker/runtime end-to-end restart exercise; it validated the code path and tests.
