@@ -385,8 +385,22 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
 `,
-		"awd-bank-portal-01/statement.md": "银行门户存在越权修改 flag 的逻辑。",
+		"awd-bank-portal-01/statement.md":            "银行门户存在越权修改 flag 的逻辑。",
+		"awd-bank-portal-01/docker/app.py":           "print('entry')\n",
+		"awd-bank-portal-01/docker/ctf_runtime.py":   "print('runtime')\n",
+		"awd-bank-portal-01/docker/challenge_app.py": "print('challenge')\n",
+		"awd-bank-portal-01/docker/check/check.py":   "print('check')\n",
 	}
 
 	var buffer bytes.Buffer
@@ -456,8 +470,22 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - PING 必须返回 PONG
 `,
-		"awd-tcp-length-gate/statement.md": "TCP checker service.",
+		"awd-tcp-length-gate/statement.md":            "TCP checker service.",
+		"awd-tcp-length-gate/docker/app.py":           "print('entry')\n",
+		"awd-tcp-length-gate/docker/ctf_runtime.py":   "print('runtime')\n",
+		"awd-tcp-length-gate/docker/challenge_app.py": "print('challenge')\n",
+		"awd-tcp-length-gate/docker/check/check.py":   "print('check')\n",
 	}
 
 	var buffer bytes.Buffer
@@ -529,9 +557,22 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
 `,
-		slug + "/statement.md":          "Script checker service.",
-		slug + "/docker/check/check.py": checkerContent,
+		slug + "/statement.md":            "Script checker service.",
+		slug + "/docker/check/check.py":   checkerContent,
+		slug + "/docker/app.py":           "print('entry')\n",
+		slug + "/docker/ctf_runtime.py":   "print('runtime')\n",
+		slug + "/docker/challenge_app.py": "print('challenge')\n",
 	}
 
 	var buffer bytes.Buffer
@@ -602,11 +643,24 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
 `,
 		"script-checker-files/statement.md":                "Script checker service.",
 		"script-checker-files/docker/check/check.py":       "import protocol\nprint(protocol.STATUS)\n",
 		"script-checker-files/docker/check/protocol.py":    "STATUS = '{\"status\":\"ok\"}'\n",
 		"script-checker-files/docker/check/unused_file.py": "SHOULD_NOT_IMPORT = True\n",
+		"script-checker-files/docker/app.py":               "print('entry')\n",
+		"script-checker-files/docker/ctf_runtime.py":       "print('runtime')\n",
+		"script-checker-files/docker/challenge_app.py":     "print('challenge')\n",
 	}
 
 	var buffer bytes.Buffer

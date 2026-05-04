@@ -35,7 +35,7 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 </script>
 
 <template>
-  <div class="asset-list mt-4">
+  <div class="asset-list">
     <div class="asset-header">防守服务</div>
     <div v-if="services.length === 0" class="panel-note">当前竞赛暂无可部署服务。</div>
     <div
@@ -55,7 +55,7 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
             {{ service.serviceStatusLabel }}
           </span>
         </div>
-        <div class="asset-meta font-mono text-[10px]">
+        <div class="asset-meta">
           {{ service.instanceStatusLabel }}
         </div>
         <div v-if="service.riskReasons.length > 0" class="asset-risk">
@@ -87,7 +87,7 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
           type="button"
           @click.stop="emit('requestSsh', service.serviceId)"
         >
-          {{ openingSshKey === service.serviceId ? '...' : 'SSH' }}
+          SSH
         </button>
         <button
           :disabled="!service.canRestart || isActionPending(service)"
@@ -104,28 +104,37 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 
 <style scoped>
 .asset-header {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
   color: var(--color-text-muted);
   letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
 }
 
 .asset-item {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  margin-bottom: 0.75rem;
+  background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  padding: var(--space-3);
+  border-radius: var(--ui-control-radius-sm);
+  margin-bottom: var(--space-2);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
   cursor: pointer;
+  transition:
+    border-color var(--ui-motion-fast),
+    background var(--ui-motion-fast);
 }
 
 .asset-item.is-selected {
   border-color: color-mix(in srgb, var(--color-primary) 46%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-elevated));
+}
+
+.asset-item:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .asset-main {
@@ -150,17 +159,21 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 .asset-title-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .asset-title {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 800;
   color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .asset-ref {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 800;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
@@ -168,7 +181,9 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 
 .asset-meta {
   color: var(--color-text-muted);
-  margin-top: 0.35rem;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-11);
+  margin-top: var(--space-2);
 }
 
 .asset-risk {
@@ -182,16 +197,17 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
   color: var(--color-warning);
-  padding: 0.15rem 0.45rem;
-  font-size: 10px;
+  padding: var(--space-0-5) var(--space-2);
+  font-size: var(--font-size-11);
   font-weight: 800;
 }
 
 .status-badge {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
-  padding: 0.2rem 0.6rem;
-  border-radius: 99px;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .status-badge--up {
@@ -215,12 +231,12 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 }
 
 .asset-btn {
-  width: 2.25rem;
-  height: 2.25rem;
+  min-width: var(--ui-control-height-sm);
+  height: var(--ui-control-height-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: var(--color-bg-surface);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-default);
@@ -240,8 +256,8 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 
 .asset-btn--primary {
   width: auto;
-  padding: 0 1rem;
-  font-size: 11px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-11);
   font-weight: 900;
   background: var(--color-primary-soft);
   color: var(--color-primary);
@@ -251,5 +267,17 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 .asset-btn--primary:hover {
   background: var(--color-primary);
   color: var(--color-bg-base);
+}
+
+@media (max-width: 42rem) {
+  .asset-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .asset-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 </style>

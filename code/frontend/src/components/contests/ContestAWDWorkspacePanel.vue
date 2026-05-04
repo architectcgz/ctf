@@ -99,12 +99,12 @@ const defenseServiceActionPendingById = computed(() => {
     const service = servicesByServiceId.value.get(card.serviceId)
     pendingById[card.serviceId] = Boolean(
       startingServiceKey.value === card.serviceId ||
-        serviceActionPendingById.value[card.serviceId] ||
-        service?.instance_status === 'pending' ||
-        service?.instance_status === 'creating' ||
-        service?.operation_status === 'requested' ||
-        service?.operation_status === 'provisioning' ||
-        service?.operation_status === 'recovering'
+      serviceActionPendingById.value[card.serviceId] ||
+      service?.instance_status === 'pending' ||
+      service?.instance_status === 'creating' ||
+      service?.operation_status === 'requested' ||
+      service?.operation_status === 'provisioning' ||
+      service?.operation_status === 'recovering'
     )
   }
   return pendingById
@@ -272,7 +272,10 @@ function getAWDChallengeId(challenge: ContestChallengeItem): string {
   return challenge.awd_challenge_id || challenge.challenge_id
 }
 
-function getChallengeTitleForEvent(event: { service_id?: string; awd_challenge_id: string }): string {
+function getChallengeTitleForEvent(event: {
+  service_id?: string
+  awd_challenge_id: string
+}): string {
   if (event.service_id) {
     const matchedByService = challengeByServiceId.value.get(event.service_id)
     if (matchedByService) return matchedByService.title
@@ -391,39 +394,44 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       @updated="refreshAll"
     />
 
-    <!-- HUD KPI Strip -->
     <header class="awd-hud-strip">
-      <div class="hud-item">
-        <div class="hud-label">当前回合</div>
-        <div class="hud-value font-mono">
-          {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
-        </div>
-        <div class="hud-helper">
-          {{ formatRoundStatusLabel(currentRound?.status) }}
-        </div>
+      <div class="hud-heading">
+        <div class="hud-label">AWD Workspace</div>
+        <h3>战场态势</h3>
       </div>
-      <div class="hud-item">
-        <div class="hud-label">我的战队</div>
-        <div class="hud-value">
-          {{ myTeam?.team_name || '未加入' }}
+      <div class="hud-metrics" aria-label="战场概览">
+        <div class="hud-item">
+          <div class="hud-label">当前回合</div>
+          <div class="hud-value font-mono">
+            {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
+          </div>
+          <div class="hud-helper">
+            {{ formatRoundStatusLabel(currentRound?.status) }}
+          </div>
         </div>
-        <div class="hud-helper">
-          排名 #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
+        <div class="hud-item">
+          <div class="hud-label">我的战队</div>
+          <div class="hud-value">
+            {{ myTeam?.team_name || '未加入' }}
+          </div>
+          <div class="hud-helper">
+            排名 #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
+          </div>
         </div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">战队服务</div>
-        <div class="hud-value font-mono">
-          {{ workspace?.services.length || 0 }}
+        <div class="hud-item">
+          <div class="hud-label">战队服务</div>
+          <div class="hud-value font-mono">
+            {{ workspace?.services.length || 0 }}
+          </div>
+          <div class="hud-helper">运行中服务</div>
         </div>
-        <div class="hud-helper">运行中服务</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">最高分</div>
-        <div class="hud-value hud-value--accent font-mono">
-          {{ topScore }}
+        <div class="hud-item">
+          <div class="hud-label">最高分</div>
+          <div class="hud-value hud-value--accent font-mono">
+            {{ topScore }}
+          </div>
+          <div class="hud-helper">当前榜首</div>
         </div>
-        <div class="hud-helper">当前榜首</div>
       </div>
       <div class="hud-actions">
         <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
@@ -447,7 +455,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     />
 
     <div v-else class="war-room-grid">
-      <!-- 1. Defense Monitor (Left) -->
       <aside class="war-room-col column-defense">
         <section class="ops-panel">
           <header class="ops-panel__header">
@@ -504,12 +511,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               @copy-command="copySSHCommand"
               @copy-config="copySSHConfig"
             />
-
           </div>
         </section>
       </aside>
 
-      <!-- 2. Attack Vector (Middle) -->
       <main class="war-room-col column-attack">
         <section class="ops-panel">
           <header class="ops-panel__header">
@@ -583,7 +588,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     <span>{{
                       openingTargetKey ===
                       buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                        ? '...'
+                        ? '打开中'
                         : '打开'
                     }}</span>
                   </button>
@@ -612,7 +617,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{
                       submittingKey ===
                       buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                        ? '...'
+                        ? '提交中'
                         : '提交'
                     }}
                   </button>
@@ -630,9 +635,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         </section>
       </main>
 
-      <!-- 3. Intelligence (Right) -->
       <aside class="war-room-col column-intel">
-        <section class="ops-panel h-1/2 mb-4">
+        <section class="ops-panel ops-panel--compact">
           <header class="ops-panel__header">
             <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
             <h3 class="ops-panel__title">战场情报</h3>
@@ -651,9 +655,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
           </div>
         </section>
 
-        <section class="ops-panel h-1/2">
+        <section class="ops-panel ops-panel--compact">
           <header class="ops-panel__header">
-            <History class="h-4 w-4 text-purple-500" />
+            <History class="ops-panel__icon ops-panel__icon--history h-4 w-4" />
             <h3 class="ops-panel__title">最近战报</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
@@ -663,11 +667,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               class="feedback-item"
               :class="event.direction"
             >
-              <div class="flex items-center justify-between text-[10px] font-black">
+              <div class="feedback-topline">
                 <span>{{ eventDirectionLabel(event.direction) }}</span>
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
-              <div class="mt-1 text-xs">
+              <div class="feedback-title">
                 <span>{{ event.peer_team_name }} / </span>
                 <span data-testid="awd-feedback-challenge-title">{{
                   getChallengeTitleForEvent(event)
@@ -676,7 +680,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               <div class="feedback-ref">
                 {{ formatServiceRef(event.service_id) }}
               </div>
-              <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
+              <div class="feedback-result-row">
                 <span
                   :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'"
                   >{{ eventResultLabel(event.is_success) }}</span
@@ -702,25 +706,57 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   padding-top: var(--space-4);
 }
 
-/* HUD Strip */
 .awd-hud-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
-  gap: var(--space-4);
-  background: var(--color-bg-surface);
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 2.4fr) auto;
+  align-items: stretch;
+  gap: var(--space-5);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 46%
+    ),
+    var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
+  border-radius: var(--ui-control-radius-lg);
+  padding: var(--space-5) var(--space-6);
   box-shadow: var(--color-shadow-soft);
+}
+
+.hud-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.hud-heading h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-22);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.hud-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .hud-item {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  justify-content: center;
+  border-left: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  padding-left: var(--space-4);
 }
 
 .hud-label {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
   color: var(--color-text-muted);
   letter-spacing: 0.1em;
@@ -731,7 +767,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-size: var(--font-size-24);
   font-weight: 900;
   color: var(--color-text-primary);
-  margin: 0.25rem 0;
+  margin: var(--space-1) 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hud-value--accent,
@@ -747,10 +787,18 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   color: var(--color-danger);
 }
 
+.ops-panel__icon--history {
+  color: var(--color-text-secondary);
+}
+
 .hud-helper {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 800;
-  color: var(--color-primary);
+  color: var(--color-text-secondary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hud-refresh-btn {
@@ -759,34 +807,51 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0 1.25rem;
-  border-left: 1px solid var(--color-border-subtle);
+  gap: var(--space-2);
+  min-width: 7.5rem;
+  padding: 0 var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border-radius: var(--ui-control-radius-sm);
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 800;
   cursor: pointer;
-  background: transparent;
+  background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
   transition: all 0.2s ease;
 }
 
-.hud-refresh-btn:hover {
+.hud-refresh-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 36%, transparent);
 }
 
-/* Layout Grid */
+.hud-refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .war-room-grid {
   display: grid;
-  grid-template-columns: 22rem 1fr 22rem;
-  gap: var(--space-5);
+  grid-template-columns: minmax(18rem, 0.9fr) minmax(28rem, 1.7fr) minmax(18rem, 0.9fr);
+  gap: var(--space-4);
   flex: 1;
   min-height: 0;
+}
+
+.war-room-col {
+  min-width: 0;
+}
+
+.column-intel {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
 }
 
 .ops-panel {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
+  border-radius: var(--ui-control-radius-lg);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -794,40 +859,46 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   overflow: hidden;
 }
 
+.ops-panel--compact {
+  min-height: 0;
+}
+
 .ops-panel__header {
-  padding: 1rem 1.25rem;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: var(--color-bg-elevated);
+  gap: var(--space-3);
+  background: color-mix(in srgb, var(--color-bg-elevated) 78%, var(--color-bg-surface));
 }
 
 .ops-panel__title {
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 900;
   letter-spacing: 0.15em;
   color: var(--color-text-primary);
   margin: 0;
+  text-transform: uppercase;
 }
 
 .ops-panel__toolbar {
-  padding: 1rem 1.25rem;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border-subtle);
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.8fr) minmax(14rem, 1fr);
+  gap: var(--space-4);
   background: var(--color-bg-surface);
 }
 
 .toolbar-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  flex: 1;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .toolbar-field label {
-  font-size: 9px;
+  font-size: var(--font-size-11);
   font-weight: 900;
   color: var(--color-text-muted);
   letter-spacing: 0.1em;
@@ -837,11 +908,12 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .war-room-input {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 700;
-  padding: 0.5rem 0.75rem;
+  min-height: var(--ui-control-height-sm);
+  padding: 0 var(--space-3);
   outline: none;
   transition: all 0.2s ease;
 }
@@ -853,17 +925,21 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .ops-panel__content {
   flex: 1;
   overflow-y: auto;
-  padding: 1.25rem;
+  padding: var(--space-5);
 }
 
-/* Defense Components */
+.defense-alerts {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
 .defense-alert {
   background: var(--color-warning-soft);
   border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-  border-left: 3px solid var(--color-warning);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
+  border-left: var(--space-0-5) solid var(--color-warning);
+  border-radius: var(--ui-control-radius-sm);
+  padding: var(--space-3) var(--space-4);
 }
 
 .defense-alert.danger {
@@ -873,64 +949,71 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 }
 
 .alert-title {
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 800;
   color: var(--color-text-primary);
 }
 .alert-badge {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
 }
 .alert-issues {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   color: var(--color-text-secondary);
-  margin-top: 0.35rem;
+  margin-top: var(--space-2);
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .target-ref,
 .feedback-ref {
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 800;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
 
-/* Attack Components */
 .target-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: var(--space-3);
 }
 
 .target-card {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
-  padding: 1.25rem;
-  border-radius: 0.75rem;
+  padding: var(--space-4);
+  border-radius: var(--ui-control-radius-sm);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .target-team {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   letter-spacing: 0.05em;
   color: var(--color-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .target-url {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   color: var(--color-text-muted);
 }
 .target-ref {
-  margin-top: 0.2rem;
+  margin-top: var(--space-1);
 }
 
 .target-action {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: stretch;
 }
 
 .target-open-btn {
@@ -940,10 +1023,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   gap: var(--space-1);
   min-width: 4.5rem;
   border: 1px solid var(--color-border-default);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: var(--color-bg-surface);
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 900;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -960,14 +1043,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 }
 
 .flag-input {
-  flex: 1;
+  min-width: 0;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--ui-control-radius-sm);
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   outline: none;
   transition: border-color 0.2s ease;
 }
@@ -979,10 +1062,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   background: var(--color-danger);
   color: var(--color-bg-base);
   border: none;
-  padding: 0 1.25rem;
-  border-radius: 0.5rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--ui-control-radius-sm);
   font-weight: 900;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1003,14 +1086,13 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   color: var(--color-text-muted);
 }
 
-/* Intel Components */
 .intel-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--color-border-subtle);
-  font-size: 13px;
+  font-size: var(--font-size-13);
 }
 
 .intel-row.is-me {
@@ -1019,10 +1101,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .intel-rank {
   font-weight: 900;
   color: var(--color-text-muted);
-  width: 2rem;
+  width: var(--space-8);
 }
 .intel-name {
   flex: 1;
+  min-width: 0;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -1037,10 +1120,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .feedback-item {
   background: var(--color-bg-elevated);
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border-left: 2px solid var(--color-border-default);
-  margin-bottom: 0.75rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--ui-control-radius-sm);
+  border-left: var(--space-0-5) solid var(--color-border-default);
+  margin-bottom: var(--space-3);
 }
 
 .feedback-item.attack_out {
@@ -1050,30 +1133,52 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   border-left-color: var(--color-warning);
 }
 .feedback-ref {
-  margin-top: 0.35rem;
+  margin-top: var(--space-2);
+}
+
+.feedback-topline,
+.feedback-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+}
+
+.feedback-title {
+  margin-top: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
+
+.feedback-result-row {
+  margin-top: var(--space-1);
 }
 
 .panel-note {
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 700;
   color: var(--color-text-muted);
   text-align: center;
-  padding: 3rem 0;
+  padding: var(--space-12) 0;
 }
 
 .ops-panel__footer {
-  padding: 1rem 1.25rem;
+  padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-border-subtle);
   background: var(--color-bg-surface);
 }
 
 .result-alert {
-  padding: 0.65rem 1rem;
-  border-radius: 0.5rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--ui-control-radius-sm);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 12px;
+  gap: var(--space-3);
+  font-size: var(--font-size-12);
   font-weight: 900;
 }
 
@@ -1094,11 +1199,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  font-size: 14px;
+  gap: var(--space-8);
+  font-size: var(--font-size-14);
   font-weight: 900;
   color: var(--color-primary);
-  padding: 4rem 0;
+  padding: var(--space-12) 0;
 }
 
 .radar-scan {
@@ -1125,7 +1230,19 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   }
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 72rem) {
+  .awd-hud-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hud-refresh-btn {
+    min-height: var(--ui-control-height-sm);
+  }
+
   .war-room-grid {
     grid-template-columns: 1fr;
   }
@@ -1135,11 +1252,34 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   }
 }
 
+@media (max-width: 48rem) {
+  .awd-hud-strip {
+    padding: var(--space-4);
+  }
+
+  .hud-metrics,
+  .ops-panel__toolbar,
+  .target-action {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-item {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+    padding: var(--space-3) 0 0;
+  }
+
+  .target-open-btn,
+  .submit-btn {
+    min-height: var(--ui-control-height-sm);
+  }
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-border-default);
-  border-radius: 10px;
+  border-radius: 999px;
 }
 </style>

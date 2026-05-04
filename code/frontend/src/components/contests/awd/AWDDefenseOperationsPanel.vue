@@ -1,18 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ExternalLink,
-  RefreshCw,
-  RotateCcw,
-  ShieldCheck,
-  Terminal,
-} from 'lucide-vue-next'
+import { ExternalLink, RefreshCw, RotateCcw, ShieldCheck, Terminal } from 'lucide-vue-next'
 
-import type {
-  AWDDefenseSSHAccessData,
-  ContestAWDWorkspaceServiceData,
-  ID,
-} from '@/api/contracts'
+import type { AWDDefenseSSHAccessData, ContestAWDWorkspaceServiceData, ID } from '@/api/contracts'
 import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
 import AWDDefenseConnectionPanel from './AWDDefenseConnectionPanel.vue'
 
@@ -41,19 +31,26 @@ const emit = defineEmits<{
 const serviceId = computed(() => props.serviceCard?.serviceId || '')
 const receivedAttackCount = computed(() => props.service?.attack_received ?? 0)
 const hasReceivedAttacks = computed(() => receivedAttackCount.value > 0)
+const editablePaths = computed(() => props.serviceCard?.defenseScope?.editable_paths || [])
+const protectedPaths = computed(() => props.serviceCard?.defenseScope?.protected_paths || [])
+const serviceContracts = computed(() => props.serviceCard?.defenseScope?.service_contracts || [])
+const hasDefenseScope = computed(
+  () =>
+    editablePaths.value.length > 0 ||
+    protectedPaths.value.length > 0 ||
+    serviceContracts.value.length > 0
+)
 const canOpenService = computed(() =>
   Boolean(
     props.serviceCard?.canOpenService &&
-      props.serviceCard.instanceId &&
-      props.openingServiceKey !== props.serviceCard.instanceId
+    props.serviceCard.instanceId &&
+    props.openingServiceKey !== props.serviceCard.instanceId
   )
 )
 const canRequestSSH = computed(() =>
   Boolean(props.serviceCard?.canRequestSSH && props.openingSshKey !== serviceId.value)
 )
-const canRestart = computed(() =>
-  Boolean(props.serviceCard?.canRestart && !props.actionPending)
-)
+const canRestart = computed(() => Boolean(props.serviceCard?.canRestart && !props.actionPending))
 
 function emitOpenService(): void {
   if (!serviceId.value) return
@@ -107,11 +104,7 @@ function emitRestartService(): void {
           </div>
         </div>
         <div class="defense-ops__chips">
-          <span
-            v-for="reason in serviceCard.riskReasons"
-            :key="reason"
-            class="defense-ops__chip"
-          >
+          <span v-for="reason in serviceCard.riskReasons" :key="reason" class="defense-ops__chip">
             {{ reason }}
           </span>
           <span v-if="!serviceCard.riskReasons.length" class="defense-ops__chip">暂无告警</span>
@@ -121,15 +114,35 @@ function emitRestartService(): void {
       <section class="defense-ops__block">
         <div class="defense-ops__block-title">
           <Terminal class="h-3.5 w-3.5" />
-          <span>风险片段</span>
+          <span>防守范围</span>
         </div>
-        <div class="defense-ops__fragment">
+        <div v-if="hasDefenseScope" class="defense-ops__scope">
+          <div v-if="editablePaths.length > 0" class="defense-ops__scope-group">
+            <span>可编辑</span>
+            <code v-for="path in editablePaths" :key="`${serviceId}:editable:${path}`">{{
+              path
+            }}</code>
+          </div>
+          <div v-if="protectedPaths.length > 0" class="defense-ops__scope-group">
+            <span>受保护</span>
+            <code v-for="path in protectedPaths" :key="`${serviceId}:protected:${path}`">{{
+              path
+            }}</code>
+          </div>
+          <div v-if="serviceContracts.length > 0" class="defense-ops__scope-group">
+            <span>服务契约</span>
+            <strong v-for="contract in serviceContracts" :key="`${serviceId}:contract:${contract}`">
+              {{ contract }}
+            </strong>
+          </div>
+        </div>
+        <div v-else class="defense-ops__fragment">
           <div>
             <span class="defense-ops__fragment-title">{{
-              hasReceivedAttacks ? '最近受到攻击' : '等待片段'
+              hasReceivedAttacks ? '最近受到攻击' : '等待契约'
             }}</span>
             <span class="defense-ops__fragment-meta">{{
-              hasReceivedAttacks ? `${receivedAttackCount} 次` : '当前服务暂无可展示片段'
+              hasReceivedAttacks ? `${receivedAttackCount} 次` : '当前服务暂无防守范围数据'
             }}</span>
           </div>
           <span class="defense-ops__fragment-badge">只读</span>
@@ -141,7 +154,11 @@ function emitRestartService(): void {
           <RotateCcw class="h-3.5 w-3.5" />
           <span>验证</span>
         </div>
-        <div class="defense-ops__actions" role="group" :aria-label="`${serviceCard.title} 验证操作`">
+        <div
+          class="defense-ops__actions"
+          role="group"
+          :aria-label="`${serviceCard.title} 验证操作`"
+        >
           <button
             class="defense-ops__button"
             type="button"
@@ -216,7 +233,7 @@ function emitRestartService(): void {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--ui-control-radius-sm);
   font-weight: 800;
 }
 
@@ -249,7 +266,7 @@ function emitRestartService(): void {
 .defense-ops__block {
   background: color-mix(in srgb, var(--color-bg-elevated) 76%, transparent);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--ui-control-radius-lg);
   padding: var(--space-3);
 }
 
@@ -319,6 +336,39 @@ function emitRestartService(): void {
   font-weight: 900;
 }
 
+.defense-ops__scope {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.defense-ops__scope-group {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.defense-ops__scope-group span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+}
+
+.defense-ops__scope-group code,
+.defense-ops__scope-group strong {
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.defense-ops__scope-group code {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--ui-control-radius-sm);
+  background: var(--color-bg-surface);
+  padding: var(--space-1) var(--space-2);
+}
+
 .defense-ops__actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -329,7 +379,7 @@ function emitRestartService(): void {
 .defense-ops__button {
   justify-content: center;
   gap: var(--space-1);
-  min-height: var(--control-height-sm);
+  min-height: var(--ui-control-height-sm);
   background: var(--color-bg-surface);
   color: var(--color-text-secondary);
   font-size: var(--font-size-12);

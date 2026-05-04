@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -62,7 +63,8 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	serviceIDs := make([]int64, 0, len(definitions))
 	for _, definition := range definitions {
 		serviceIDs = append(serviceIDs, definition.ServiceID)
-		ensureAWDWorkspaceService(serviceMap, definition.ServiceID, definition.AWDChallengeID)
+		item := ensureAWDWorkspaceService(serviceMap, definition.ServiceID, definition.AWDChallengeID)
+		item.DefenseScope = toAWDWorkspaceDefenseScope(definition.DefenseScope)
 	}
 	targetMap := make(map[int64]*dto.ContestAWDWorkspaceTargetTeamResp)
 	for teamID, team := range teams {
@@ -231,6 +233,17 @@ func ensureAWDWorkspaceService(items map[int64]*dto.ContestAWDWorkspaceServiceRe
 	}
 	items[serviceID] = item
 	return item
+}
+
+func toAWDWorkspaceDefenseScope(scope contestports.AWDDefenseScope) *dto.AWDDefenseScopeResp {
+	if len(scope.EditablePaths) == 0 && len(scope.ProtectedPaths) == 0 && len(scope.ServiceContracts) == 0 {
+		return nil
+	}
+	return &dto.AWDDefenseScopeResp{
+		EditablePaths:    scope.EditablePaths,
+		ProtectedPaths:   scope.ProtectedPaths,
+		ServiceContracts: scope.ServiceContracts,
+	}
 }
 
 func sortAWDWorkspaceServices(items map[int64]*dto.ContestAWDWorkspaceServiceResp) []*dto.ContestAWDWorkspaceServiceResp {

@@ -9,7 +9,7 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('我的防守')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
     expect(awdDefenseOperationsPanelSource).toContain('Web 防守')
-    expect(awdDefenseOperationsPanelSource).toContain('风险片段')
+    expect(awdDefenseOperationsPanelSource).toContain('防守范围')
     expect(awdDefenseOperationsPanelSource).toContain('打开服务')
     expect(awdWorkspaceSource).toContain('攻击向量')
     expect(awdWorkspaceSource).toContain('战场情报')

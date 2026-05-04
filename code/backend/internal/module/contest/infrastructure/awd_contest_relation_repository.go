@@ -111,6 +111,7 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 			CheckerConfig:  resolveContestAWDServiceCheckerConfig(runtimeConfig),
 			SLAScore:       resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
 			DefenseScore:   resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
+			DefenseScope:   resolveContestAWDServiceDefenseScope(runtimeConfig),
 		})
 	}
 	return definitions, nil
@@ -225,6 +226,28 @@ func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string 
 	return ""
 }
 
+func resolveContestAWDServiceDefenseScope(runtimeConfig map[string]any) contestports.AWDDefenseScope {
+	if runtimeConfig == nil {
+		return contestports.AWDDefenseScope{}
+	}
+	raw := runtimeConfig["defense_scope"]
+	if raw == nil {
+		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+			raw = challengeRuntime["defense_scope"]
+		}
+	}
+	payload, ok := raw.(map[string]any)
+	if !ok {
+		return contestports.AWDDefenseScope{}
+	}
+
+	return contestports.AWDDefenseScope{
+		EditablePaths:    normalizeContestAWDServiceStringSlice(payload["editable_paths"]),
+		ProtectedPaths:   normalizeContestAWDServiceStringSlice(payload["protected_paths"]),
+		ServiceContracts: normalizeContestAWDServiceStringSlice(payload["service_contracts"]),
+	}
+}
+
 func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
 	if scoreConfig != nil {
 		if raw, ok := scoreConfig[key]; ok {
@@ -234,6 +257,28 @@ func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
 		}
 	}
 	return 0
+}
+
+func normalizeContestAWDServiceString(value any) string {
+	raw, ok := value.(string)
+	if !ok {
+		return ""
+	}
+	return strings.TrimSpace(raw)
+}
+
+func normalizeContestAWDServiceStringSlice(value any) []string {
+	items, ok := value.([]any)
+	if !ok {
+		return nil
+	}
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		if text := normalizeContestAWDServiceString(item); text != "" {
+			result = append(result, text)
+		}
+	}
+	return result
 }
 
 func normalizeContestAWDServiceInt(value any) (int, bool) {

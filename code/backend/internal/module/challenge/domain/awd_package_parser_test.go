@@ -71,10 +71,31 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
 `
 
 	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
 		t.Fatalf("write challenge.yml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
+		t.Fatalf("create docker/check dir: %v", err)
+	}
+	for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
+		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
+			t.Fatalf("write docker/%s: %v", item, err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
+		t.Fatalf("write docker/check/check.py: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("银行门户存在越权修改 flag 的逻辑。"), 0o644); err != nil {
 		t.Fatalf("write statement.md: %v", err)
@@ -160,10 +181,31 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - PING 必须返回 PONG
 `
 
 	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
 		t.Fatalf("write challenge.yml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
+		t.Fatalf("create docker/check dir: %v", err)
+	}
+	for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
+		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
+			t.Fatalf("write docker/%s: %v", item, err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
+		t.Fatalf("write docker/check/check.py: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("TCP service."), 0o644); err != nil {
 		t.Fatalf("write statement.md: %v", err)
@@ -185,6 +227,128 @@ extensions:
 	}
 	if parsed.CheckerConfig["timeout_ms"] != float64(3000) {
 		t.Fatalf("unexpected checker_config: %+v", parsed.CheckerConfig)
+	}
+}
+
+func TestParseAWDChallengePackageDirRejectsInvalidDefenseScope(t *testing.T) {
+	cases := []struct {
+		name        string
+		defenseYAML string
+	}{
+		{
+			name: "missing",
+			defenseYAML: `      instance_sharing: per_team
+      service_port: 8080
+`,
+		},
+		{
+			name: "editable fixed app entry",
+			defenseYAML: `      instance_sharing: per_team
+      service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/app.py
+        protected_paths:
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`,
+		},
+		{
+			name: "missing editable file",
+			defenseYAML: `      instance_sharing: per_team
+      service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/missing.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`,
+		},
+		{
+			name: "overlap",
+			defenseYAML: `      instance_sharing: per_team
+      service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/challenge_app.py
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rootDir := t.TempDir()
+			if err := os.MkdirAll(filepath.Join(rootDir, "docker"), 0o755); err != nil {
+				t.Fatalf("create docker dir: %v", err)
+			}
+			for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
+				if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
+					t.Fatalf("write docker/%s: %v", item, err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
+				t.Fatalf("write statement.md: %v", err)
+			}
+
+			manifest := `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-defense-scope
+  title: AWD Defense Scope
+  category: web
+  difficulty: hard
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/awd-defense-scope:v1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: http_standard
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      service_port: 8080
+    runtime_config:
+` + tc.defenseYAML
+			if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+				t.Fatalf("write challenge.yml: %v", err)
+			}
+			if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
+				t.Fatal("expected invalid defense_scope to be rejected")
+			}
+		})
 	}
 }
 

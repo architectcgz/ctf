@@ -3,10 +3,7 @@ import { computed } from 'vue'
 import { Copy } from 'lucide-vue-next'
 
 import type { AWDDefenseSSHAccessData } from '@/api/contracts'
-import {
-  buildOpenSSHConfig,
-  getVSCodeSSHCommand,
-} from '@/features/contest-awd-workspace'
+import { buildOpenSSHConfig, getVSCodeSSHCommand } from '@/features/contest-awd-workspace'
 import { formatTime } from '@/utils/format'
 
 const props = defineProps<{
@@ -55,11 +52,7 @@ const expiresAtLabel = computed(() =>
     <details v-if="openSSHConfig" class="asset-ssh__details">
       <summary>OpenSSH 配置</summary>
       <pre class="asset-ssh__config">{{ openSSHConfig }}</pre>
-      <button
-        class="asset-ssh__copy"
-        type="button"
-        @click="emit('copyConfig', serviceId)"
-      >
+      <button class="asset-ssh__copy" type="button" @click="emit('copyConfig', serviceId)">
         <Copy class="h-3 w-3" />
         <span>{{ copiedConfig ? '已复制' : '复制配置' }}</span>
       </button>
@@ -71,9 +64,9 @@ const expiresAtLabel = computed(() =>
 .asset-ssh {
   margin-top: var(--space-3);
   border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
-  border-radius: 0.625rem;
+  border-radius: var(--ui-control-radius-md);
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
-  max-height: 24rem;
+  max-height: min(60vh, calc(var(--space-12) * 8));
   overflow: auto;
   padding: var(--space-2);
 }
@@ -86,10 +79,11 @@ const expiresAtLabel = computed(() =>
 }
 
 .asset-ssh__label {
-  font-size: 9px;
+  font-size: var(--font-size-11);
   font-weight: 900;
   letter-spacing: 0.1em;
   color: var(--color-primary);
+  text-transform: uppercase;
 }
 
 .asset-ssh__command {
@@ -97,7 +91,7 @@ const expiresAtLabel = computed(() =>
   margin-top: var(--space-1);
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   line-height: 1.45;
   max-width: 100%;
   overflow-x: auto;
@@ -111,10 +105,10 @@ const expiresAtLabel = computed(() =>
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding: var(--space-2);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: color-mix(in srgb, var(--color-bg-surface) 70%, transparent);
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 800;
 }
 
@@ -130,7 +124,7 @@ const expiresAtLabel = computed(() =>
 .asset-ssh__expires {
   margin-top: var(--space-2);
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 800;
 }
 
@@ -141,7 +135,7 @@ const expiresAtLabel = computed(() =>
 .asset-ssh__details summary {
   cursor: pointer;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
 }
 
@@ -152,11 +146,11 @@ const expiresAtLabel = computed(() =>
   padding: var(--space-2);
   white-space: pre-wrap;
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 10px;
+  font-size: var(--font-size-11);
   line-height: 1.45;
 }
 
@@ -165,11 +159,11 @@ const expiresAtLabel = computed(() =>
   align-items: center;
   gap: var(--space-1);
   border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: var(--color-bg-surface);
   color: var(--color-primary);
   padding: var(--space-1) var(--space-2);
-  font-size: 10px;
+  font-size: var(--font-size-11);
   font-weight: 900;
   cursor: pointer;
 }

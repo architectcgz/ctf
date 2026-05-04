@@ -350,6 +350,11 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	contesttestsupport.CreateAWDChallengeFixture(t, db, 8012, now)
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8011, now)
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8012, now)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND awd_challenge_id = ?", 801, 8011).
+		Update("runtime_config", `{"challenge_runtime":{"defense_scope":{"editable_paths":["docker/challenge_app.py"],"protected_paths":["docker/app.py","docker/ctf_runtime.py"],"service_contracts":["/health 必须返回 200","/api/flag 必须保留 checker token 校验"]}}}`).Error; err != nil {
+		t.Fatalf("seed awd defense scope: %v", err)
+	}
 
 	contesttestsupport.CreateAWDTeamFixture(t, db, 8101, 801, "Red", now)
 	contesttestsupport.CreateAWDTeamFixture(t, db, 8102, 801, "Blue", now)
@@ -448,6 +453,9 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if resp.Services[0].AWDChallengeID != 8011 || resp.Services[0].InstanceID != 1 || resp.Services[0].AccessURL != "" {
 		t.Fatalf("expected first own service to expose instance id without raw access url, got %+v", resp.Services[0])
 	}
+	if resp.Services[0].DefenseScope == nil || len(resp.Services[0].DefenseScope.EditablePaths) != 1 || resp.Services[0].DefenseScope.EditablePaths[0] != "docker/challenge_app.py" {
+		t.Fatalf("expected first own service to expose defense scope, got %+v", resp.Services[0].DefenseScope)
+	}
 	if len(resp.Targets) != 2 {
 		t.Fatalf("expected 2 target teams, got %+v", resp.Targets)
 	}
@@ -487,6 +495,11 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	}
 	if firstService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
 		t.Fatalf("expected own service to expose service_id, got %s", string(raw))
+	}
+	defenseScope, ok := firstService["defense_scope"].(map[string]any)
+	editablePaths, pathsOK := defenseScope["editable_paths"].([]any)
+	if !ok || !pathsOK || len(editablePaths) != 1 {
+		t.Fatalf("expected own service to expose defense_scope, got %s", string(raw))
 	}
 	targets, ok := payload["targets"].([]any)
 	if !ok || len(targets) != 2 {

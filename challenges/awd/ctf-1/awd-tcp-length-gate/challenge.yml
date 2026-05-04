@@ -86,3 +86,16 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - PING 必须返回 PONG
+          - SET_FLAG 必须写入本轮动态 Flag
+          - GET_FLAG 必须返回最近写入的动态 Flag
+          - CHECK 命令需要保持业务判断入口

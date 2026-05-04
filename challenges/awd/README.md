@@ -25,7 +25,10 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 │   ├── statement.md
 │   ├── docker/
 │   │   ├── docker-compose.yml
-│   │   ├── app/
+│   │   ├── app.py
+│   │   ├── ctf_runtime.py
+│   │   ├── challenge_app.py
+│   │   ├── requirements.txt
 │   │   └── check/
 │   └── writeup/
 │       ├── attack.md
@@ -37,6 +40,10 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 补充约定：
 
 - `docker/` 是题目本地调试入口，不是平台运行归属依据
+- Web 题固定入口为 `docker/app.py`，学生主要审计和修补的业务代码为 `docker/challenge_app.py`
+- TCP 题固定入口为 `docker/app.py`，学生主要审计和修补的业务逻辑为 `docker/challenge_app.py`
+- `ctf_runtime.py` 承载 `/health`、`/api/flag`、checker token、动态 Flag 写入读取等平台运行契约，默认放入 `protected_paths`
+- `challenge.yml` 的 `extensions.awd.runtime_config.defense_scope` 必须声明 `editable_paths`、`protected_paths`、`service_contracts`
 - 平台是否把实例识别为 `ctf` 项目下的受管容器，只看运行时 label，不看题目放在哪个目录、老师从哪个目录执行 compose
 
 ## 平台导入
@@ -49,6 +56,8 @@ POST /api/v1/authoring/awd-challenge-imports/:id/commit
 ```
 
 导入后，在 AWD 竞赛后台把 AWD 题目添加为 `contest_awd_services`，再由队伍在学生端启动队伍共享实例。
+
+上传预览阶段会校验 `defense_scope` 的结构、路径存在性、可编辑/受保护路径是否交叉，以及固定入口是否被错误放入可编辑范围；不符合约定的包不会进入待确认队列。
 
 添加到赛事时，管理端会读取题目包导入得到的 `checker_type / checker_config` 作为默认草稿。只有当前赛事需要临时调整裁判规则时，才在赛事配置里覆盖 checker；覆盖结果只写入该赛事的 `contest_awd_services.runtime_config`，不会反向修改题目包或 AWD 题库模板。
 

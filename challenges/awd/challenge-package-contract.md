@@ -20,8 +20,12 @@
 ├── docker/
 │   ├── docker-compose.yml
 │   ├── Dockerfile
-│   ├── app/
+│   ├── app.py                  # 固定入口，创建服务并注册路由
+│   ├── ctf_runtime.py          # 平台运行契约：health、flag、checker token
+│   ├── challenge_app.py        # 题目业务代码，学生主要审计和修补对象
+│   ├── requirements.txt        # 语言依赖，按题目技术栈可选
 │   └── check/
+│       └── check.py            # 出题人本地检查脚本，不作为学生可编辑代码
 └── writeup/
 ```
 
@@ -31,6 +35,9 @@
 - `runtime.type` 必须为 `container`
 - `runtime.image.ref` 必须指向平台实际会拉起的题目镜像
 - 本地调试入口固定放在 `docker/`
+- Web 类题目固定入口放在 `docker/app.py`，题目业务代码放在 `docker/challenge_app.py`
+- TCP 类题目固定入口放在 `docker/app.py`，题目业务逻辑放在 `docker/challenge_app.py`
+- 平台运行契约代码单独放在 `ctf_runtime.py`，不要和题目业务漏洞代码混写
 - 本地 `docker/docker-compose.yml` 只用于老师构建、调试、验题，不作为平台实例归属判断依据
 
 ## 2. 平台归属契约
@@ -85,8 +92,9 @@ AWD 题目在平台内启动后，容器是否归属于 `ctf` 项目，不看下
 `challenge.yml` 至少应保证：
 
 - `runtime.image.ref` 对应的镜像就是平台会用于创建实例的镜像
-- `extensions.awd.runtime_config` 只描述服务访问、实例共享、checker 所需运行参数
+- `extensions.awd.runtime_config` 只描述服务访问、实例共享、checker 所需运行参数和防守范围契约
 - 不把“平台必须在哪个宿主机目录下启动容器”写进题目包字段
+- 如需给学生页提供防守边界，只使用 `extensions.awd.runtime_config.defense_scope`
 
 这里要刻意区分两层：
 
@@ -94,6 +102,38 @@ AWD 题目在平台内启动后，容器是否归属于 `ctf` 项目，不看下
 - 平台关心“实例容器怎么命名、怎么打 label、怎么回收”
 
 这两层不要混在一个字段里。
+
+`defense_scope` 只用于描述代码边界和服务契约，不用于提示漏洞点或修复方式。推荐字段如下：
+
+```yaml
+extensions:
+  awd:
+    runtime_config:
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - docker/requirements.txt
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+          - /api/flag 必须保留 checker token 校验
+```
+
+`editable_paths` 应放漏洞业务代码或学生可审计、可修补的服务代码；`protected_paths` 应放平台运行契约、checker 示例和题目元数据。不要在 `defense_scope` 中写“漏洞位置”“风险原因”“修复步骤”“验证 payload”。
+
+管理员上传 AWD 包时，平台会在预览阶段校验 `defense_scope`：
+
+- `defense_scope` 必须存在，并且是对象
+- `editable_paths`、`protected_paths`、`service_contracts` 都必须是非空字符串数组
+- `editable_paths` 和 `protected_paths` 中的路径必须是题目包内相对文件路径，不能是目录、绝对路径或 `..` 逃逸路径
+- 同一路径不能同时出现在 `editable_paths` 和 `protected_paths`
+- Web 类题目的 `protected_paths` 必须包含 `docker/app.py`、`docker/ctf_runtime.py`、`docker/check/check.py`、`challenge.yml`
+- TCP 类题目的 `protected_paths` 必须包含 `docker/app.py`、`docker/ctf_runtime.py`、`docker/check/check.py`、`challenge.yml`
+- 固定入口文件不得放入 `editable_paths`
 
 ## 5. 本地调试与平台运行的关系
 
@@ -123,5 +163,6 @@ docker compose up --build
 - `runtime.image.ref` 与本地 build 出来的镜像一致
 - 本地 `docker compose up --build` 可以启动
 - 本地 `check/check.py` 可以跑通
+- 学生可改代码和平台契约代码已分离，`defense_scope` 没有暴露漏洞提示
 - 没有把目录名、compose project name 或容器名当成平台归属契约
 - 题目需要的平台归属语义，已经明确交给平台 label 管理

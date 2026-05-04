@@ -1,4 +1,5 @@
 import type {
+  AWDDefenseScopeData,
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ID,
@@ -15,6 +16,7 @@ export interface AWDDefenseServiceCard {
   riskReasons: string[]
   serviceStatusLabel: string
   instanceStatusLabel: string
+  defenseScope?: AWDDefenseScopeData
   canOpenService: boolean
   canRequestSSH: boolean
   canRestart: boolean
@@ -25,11 +27,7 @@ interface ToDefenseServiceCardsOptions {
   services: ContestAWDWorkspaceServiceData[]
 }
 
-const ACTIVE_OPERATION_STATUSES = new Set([
-  'requested',
-  'provisioning',
-  'recovering',
-])
+const ACTIVE_OPERATION_STATUSES = new Set(['requested', 'provisioning', 'recovering'])
 
 const ACTIVE_INSTANCE_STATUSES = new Set(['pending', 'creating'])
 
@@ -68,6 +66,7 @@ export function toDefenseServiceCards({
         riskReasons: risk.reasons,
         serviceStatusLabel: getDisplayedServiceStatus(service).label,
         instanceStatusLabel: getDefenseInstanceStatusLabel(service),
+        defenseScope: service?.defense_scope,
         canOpenService: canOpenDefenseService(service),
         canRequestSSH: canOpenDefenseService(service),
         canRestart: Boolean(service?.service_id),
@@ -79,7 +78,11 @@ export function toDefenseServiceCards({
       if (riskDelta !== 0) return riskDelta
       return left.sortIndex - right.sortIndex
     })
-    .map(({ sortIndex: _sortIndex, ...card }) => card)
+    .map((card) => {
+      const { sortIndex, ...result } = card
+      void sortIndex
+      return result
+    })
 }
 
 export function getDisplayedServiceStatus(service?: ContestAWDWorkspaceServiceData): {
@@ -143,8 +146,7 @@ export function getDefenseInstanceStatusLabel(service?: ContestAWDWorkspaceServi
 
 export function canOpenDefenseService(service?: ContestAWDWorkspaceServiceData): boolean {
   return Boolean(
-    service?.instance_id &&
-      (!service.instance_status || service.instance_status === 'running')
+    service?.instance_id && (!service.instance_status || service.instance_status === 'running')
   )
 }
 

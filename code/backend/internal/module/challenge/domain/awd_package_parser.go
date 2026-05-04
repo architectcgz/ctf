@@ -120,6 +120,9 @@ func buildParsedAWDChallengePackage(
 	flagConfig := normalizePackageConfigMap(awd.FlagPolicy.Config)
 	accessConfig := normalizePackageConfigMap(awd.AccessConfig)
 	runtimeConfig := normalizePackageConfigMap(awd.RuntimeConfig)
+	if err := validateAWDPackageDefenseScope(rootDir, runtimeConfig); err != nil {
+		return nil, err
+	}
 
 	if len(accessConfig) == 0 {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.access_config 不能为空"))
@@ -207,6 +210,117 @@ func resolveAWDPackageCheckerFiles(rootDir, checkerType string, checkerConfig ma
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
 	return entryPath, entryAbs, files, nil
+}
+
+func validateAWDPackageDefenseScope(rootDir string, runtimeConfig map[string]any) error {
+	raw, ok := runtimeConfig["defense_scope"]
+	if !ok {
+		return errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.runtime_config.defense_scope 不能为空"))
+	}
+	scope, ok := raw.(map[string]any)
+	if !ok {
+		return errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.runtime_config.defense_scope 必须是对象"))
+	}
+
+	editablePaths, err := readAWDPackageDefenseScopePathList(scope["editable_paths"], "editable_paths")
+	if err != nil {
+		return err
+	}
+	protectedPaths, err := readAWDPackageDefenseScopePathList(scope["protected_paths"], "protected_paths")
+	if err != nil {
+		return err
+	}
+	if _, err := readAWDPackageDefenseScopeStringList(scope["service_contracts"], "service_contracts"); err != nil {
+		return err
+	}
+
+	if len(editablePaths) == 0 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("defense_scope.editable_paths 不能为空"))
+	}
+	if len(protectedPaths) == 0 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("defense_scope.protected_paths 不能为空"))
+	}
+
+	editableSet := make(map[string]struct{}, len(editablePaths))
+	for _, item := range editablePaths {
+		if err := validateAWDPackageDefenseScopeFile(rootDir, item, "defense_scope.editable_paths"); err != nil {
+			return err
+		}
+		editableSet[item] = struct{}{}
+	}
+	protectedSet := make(map[string]struct{}, len(protectedPaths))
+	for _, item := range protectedPaths {
+		if err := validateAWDPackageDefenseScopeFile(rootDir, item, "defense_scope.protected_paths"); err != nil {
+			return err
+		}
+		if _, exists := editableSet[item]; exists {
+			return errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope 路径不能同时出现在 editable_paths 和 protected_paths: %s", item))
+		}
+		protectedSet[item] = struct{}{}
+	}
+
+	requiredProtected := []string{"docker/app.py", "docker/ctf_runtime.py", "docker/check/check.py", "challenge.yml"}
+	for _, required := range requiredProtected {
+		if _, exists := protectedSet[required]; !exists {
+			return errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.protected_paths 必须包含 %s", required))
+		}
+	}
+	return nil
+}
+
+func readAWDPackageDefenseScopePathList(raw any, field string) ([]string, error) {
+	items, err := readAWDPackageDefenseScopeStringList(raw, field)
+	if err != nil {
+		return nil, err
+	}
+	paths := make([]string, 0, len(items))
+	seen := map[string]struct{}{}
+	for _, item := range items {
+		clean := filepath.ToSlash(filepath.Clean(item))
+		if filepath.IsAbs(clean) || clean == "." || clean == ".." || strings.HasPrefix(clean, "../") {
+			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.%s 必须是题目包内相对文件路径", field))
+		}
+		if _, exists := seen[clean]; exists {
+			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.%s 存在重复路径: %s", field, clean))
+		}
+		seen[clean] = struct{}{}
+		paths = append(paths, clean)
+	}
+	return paths, nil
+}
+
+func readAWDPackageDefenseScopeStringList(raw any, field string) ([]string, error) {
+	rawList, ok := raw.([]any)
+	if !ok {
+		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.%s 必须是非空字符串数组", field))
+	}
+	values := make([]string, 0, len(rawList))
+	for _, item := range rawList {
+		value, ok := item.(string)
+		if !ok || strings.TrimSpace(value) == "" {
+			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.%s 必须是非空字符串数组", field))
+		}
+		values = append(values, strings.TrimSpace(value))
+	}
+	if len(values) == 0 {
+		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("defense_scope.%s 不能为空", field))
+	}
+	return values, nil
+}
+
+func validateAWDPackageDefenseScopeFile(rootDir, value, field string) error {
+	abs, err := safePackageJoin(rootDir, value)
+	if err != nil {
+		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 路径非法: %w", field, err))
+	}
+	info, err := os.Stat(abs)
+	if err != nil {
+		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 指向的文件不存在: %s", field, value))
+	}
+	if info.IsDir() {
+		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 不能指向目录: %s", field, value))
+	}
+	return nil
 }
 
 func readAWDPackageCheckerFileList(raw any) ([]string, error) {

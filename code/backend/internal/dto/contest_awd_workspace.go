@@ -36,7 +36,14 @@ type ContestAWDWorkspaceServiceResp struct {
 	SLAScore             int                  `json:"sla_score"`
 	DefenseScore         int                  `json:"defense_score"`
 	AttackScore          int                  `json:"attack_score"`
+	DefenseScope         *AWDDefenseScopeResp `json:"defense_scope,omitempty"`
 	UpdatedAt            *time.Time           `json:"updated_at,omitempty"`
+}
+
+type AWDDefenseScopeResp struct {
+	EditablePaths    []string `json:"editable_paths,omitempty"`
+	ProtectedPaths   []string `json:"protected_paths,omitempty"`
+	ServiceContracts []string `json:"service_contracts,omitempty"`
 }
 
 type ContestAWDWorkspaceTargetTeamResp struct {

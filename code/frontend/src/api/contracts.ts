@@ -449,6 +449,12 @@ export interface ContestAWDWorkspaceTeamData {
   team_name: string
 }
 
+export interface AWDDefenseScopeData {
+  editable_paths?: string[]
+  protected_paths?: string[]
+  service_contracts?: string[]
+}
+
 export interface ContestAWDWorkspaceServiceData {
   service_id?: ID
   awd_challenge_id: ID
@@ -456,7 +462,13 @@ export interface ContestAWDWorkspaceServiceData {
   instance_status?: InstanceStatus
   access_url?: string
   service_status?: AWDServiceStatus
-  operation_status?: 'requested' | 'provisioning' | 'recovering' | 'recovered' | 'succeeded' | 'failed'
+  operation_status?:
+    | 'requested'
+    | 'provisioning'
+    | 'recovering'
+    | 'recovered'
+    | 'succeeded'
+    | 'failed'
   operation_type?: 'start' | 'restart' | 'recover' | 'recreate'
   operation_reason?: string
   operation_sla_billable?: boolean
@@ -465,6 +477,7 @@ export interface ContestAWDWorkspaceServiceData {
   sla_score: number
   defense_score: number
   attack_score: number
+  defense_scope?: AWDDefenseScopeData
   updated_at?: ISODateTime
 }
 

@@ -100,3 +100,17 @@ extensions:
       instance_sharing: per_team
       service_port: 8080
       checker_token_env: CHECKER_TOKEN
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - docker/requirements.txt
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+          - /api/flag 必须保留 X-AWD-Checker-Token 校验
+          - /api/flag 必须支持 PUT 写入与 GET 读取本轮动态 Flag
+          - 工单创建、登录、通知和后台入口需要保持可用

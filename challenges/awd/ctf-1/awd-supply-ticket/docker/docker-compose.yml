@@ -15,7 +15,9 @@ services:
       ADMIN_PASSWORD: "admin123"
       CHECKER_TOKEN: "demo-checker-token"
     volumes:
-      - ./app/app.py:/app/app.py:ro
+      - ./app.py:/app/app.py:ro
+      - ./challenge_app.py:/app/challenge_app.py:ro
+      - ./ctf_runtime.py:/app/ctf_runtime.py:ro
       - ticket-data:/data
 
 volumes:

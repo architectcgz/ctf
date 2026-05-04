@@ -134,6 +134,13 @@ type AWDServiceDefinition struct {
 	CheckerConfig  string
 	SLAScore       int
 	DefenseScore   int
+	DefenseScope   AWDDefenseScope
+}
+
+type AWDDefenseScope struct {
+	EditablePaths    []string
+	ProtectedPaths   []string
+	ServiceContracts []string
 }
 
 type AWDReadinessChallengeRecord struct {
