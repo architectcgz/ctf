@@ -2645,7 +2645,7 @@ CREATE UNIQUE INDEX uk_contest_reg_user ON public.contest_registrations USING bt
 -- Name: uk_instances_active_host_port; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX uk_instances_active_host_port ON public.instances USING btree (host_port) WHERE ((host_port IS NOT NULL) AND ((status)::text = ANY (ARRAY[('creating'::character varying)::text, ('running'::character varying)::text])));
+CREATE UNIQUE INDEX uk_instances_active_host_port ON public.instances USING btree (host_port) WHERE ((host_port > 0) AND ((status)::text = ANY (ARRAY[('creating'::character varying)::text, ('running'::character varying)::text])));
 
 
 --
@@ -3204,4 +3204,3 @@ ON CONFLICT (user_id, role_id) DO NOTHING;
 --
 -- PostgreSQL database dump complete
 --
-
