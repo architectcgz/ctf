@@ -2,6 +2,10 @@
 
 这里放的是毕设演示用 AWD 题目包。每个目录都按平台 `challenge-pack-v1` 的 AWD 扩展格式组织，包含题面、元数据、Docker 启动文件、本地 Checkbot 示例和攻防说明。
 
+题目包正式契约见：
+
+- [AWD 题目包契约](./challenge-package-contract.md)
+
 AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平台正式 checker。管理员导入题目包后，赛事服务默认继承这个 checker；后台编辑只用于赛事级覆盖、试跑和保存校验结果，不作为题目包 checker 的替代来源。
 
 当前 `ctf-1/` 期次题目：
@@ -29,6 +33,11 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 └── dist/
     └── <slug>.zip
 ```
+
+补充约定：
+
+- `docker/` 是题目本地调试入口，不是平台运行归属依据
+- 平台是否把实例识别为 `ctf` 项目下的受管容器，只看运行时 label，不看题目放在哪个目录、老师从哪个目录执行 compose
 
 ## 平台导入
 

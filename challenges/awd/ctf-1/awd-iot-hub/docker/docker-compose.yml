@@ -1,7 +1,13 @@
+name: ctf
+
 services:
   iot-hub:
     image: ctf/awd-iot-hub:latest
-    build: ./app
+    build: .
+    labels:
+      ctf.project: ctf
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-iot-hub
     ports:
       - "18083:8080"
     environment:

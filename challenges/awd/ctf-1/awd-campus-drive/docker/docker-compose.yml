@@ -1,7 +1,13 @@
+name: ctf
+
 services:
   drive-app:
     image: ctf/awd-campus-drive:latest
-    build: ./app
+    build: .
+    labels:
+      ctf.project: ctf
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-campus-drive
     ports:
       - "18082:8080"
     environment:
