@@ -37,7 +37,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 	defer cancel()
 
 	if err := s.createContainer(createCtx, instance, chal, topology, flag); err != nil {
-		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
+		s.logger.Error("容器创建失败", zap.Error(err), wrappedErrorCauseField(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
 		return err
 	}

@@ -130,7 +130,7 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 	}
 
 	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
-		s.logger.Warn("实例异步启动失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+		s.logger.Warn("实例异步启动失败", zap.Int64("instance_id", instanceID), zap.Error(err), wrappedErrorCauseField(err))
 	}
 }
 
