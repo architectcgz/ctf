@@ -159,7 +159,7 @@ const defenseAlerts = computed(() => {
       issues.push('已失陷')
       statusLabel = '严重'
       tone = 'danger'
-    } else if (service.service_status === 'down') {
+    } else if (service.service_status === 'down' && service.instance_status !== 'running') {
       issues.push('已离线')
       statusLabel = '告警'
     }
@@ -212,6 +212,30 @@ function getServiceStatusClass(status?: string): string {
   return `status-badge status-badge--${status || 'pending'}`
 }
 
+function getDisplayedServiceStatus(service?: ContestAWDWorkspaceServiceData): {
+  status: 'up' | 'down' | 'compromised' | 'pending'
+  label: string
+} {
+  if (service?.instance_status === 'running' && service.service_status === 'down') {
+    return {
+      status: 'pending',
+      label: '待同步',
+    }
+  }
+
+  if (service?.service_status === 'up' || service?.service_status === 'down' || service?.service_status === 'compromised') {
+    return {
+      status: service.service_status,
+      label: getServiceStatusLabel(service.service_status),
+    }
+  }
+
+  return {
+    status: 'pending',
+    label: '待命',
+  }
+}
+
 function getInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): string {
   switch (service?.instance_status) {
     case 'pending':
@@ -219,6 +243,9 @@ function getInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): strin
     case 'creating':
       return '正在启动'
     case 'running':
+      if (service.service_status === 'down') {
+        return '平台代理已就绪，等待状态同步'
+      }
       return '平台代理已就绪'
     case 'failed':
       return '启动失败'
@@ -481,9 +508,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                       }}</span>
                     </div>
                     <span
-                      :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
+                      :class="getServiceStatusClass(getDisplayedServiceStatus(getWorkspaceService(challenge)).status)"
                     >
-                      {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
+                      {{ getDisplayedServiceStatus(getWorkspaceService(challenge)).label }}
                     </span>
                   </div>
                   <div class="asset-meta font-mono text-[10px]">
@@ -1066,6 +1093,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .status-badge--compromised {
   background: var(--color-warning-soft);
   color: var(--color-warning);
+}
+.status-badge--pending {
+  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+  color: var(--color-text-secondary);
 }
 
 .asset-btn {
