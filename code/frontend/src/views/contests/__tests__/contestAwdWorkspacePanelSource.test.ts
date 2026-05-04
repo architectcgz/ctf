@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
+import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 
 describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
-    expect(awdWorkspaceSource).toContain('防守监控')
+    expect(awdWorkspaceSource).toContain('我的防守')
+    expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
+    expect(awdDefenseOperationsPanelSource).toContain('Web 防守')
+    expect(awdDefenseOperationsPanelSource).toContain('风险片段')
+    expect(awdDefenseOperationsPanelSource).toContain('打开服务')
     expect(awdWorkspaceSource).toContain('攻击向量')
     expect(awdWorkspaceSource).toContain('战场情报')
     expect(awdWorkspaceSource).toContain('最近战报')
@@ -30,13 +35,14 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
   })
 
-  it('暴露只读浏览器文件防守工作台入口', () => {
-    expect(awdWorkspaceSource).toContain('AWDDefenseFileWorkbench')
-    expect(awdWorkspaceSource).toContain('requestContestAWDDefenseDirectory')
-    expect(awdWorkspaceSource).toContain('requestContestAWDDefenseFile')
-    expect(awdWorkspaceSource).toContain('loadDefenseDirectory')
-    expect(awdWorkspaceSource).toContain('openDefenseFile')
+  it('学生战场不暴露完整浏览器文件工作台入口', () => {
+    expect(awdWorkspaceSource).not.toContain('AWDDefenseFileWorkbench')
+    expect(awdWorkspaceSource).not.toContain('requestContestAWDDefenseDirectory')
+    expect(awdWorkspaceSource).not.toContain('requestContestAWDDefenseFile')
+    expect(awdWorkspaceSource).not.toContain('loadDefenseDirectory')
+    expect(awdWorkspaceSource).not.toContain('openDefenseFile')
     expect(awdWorkspaceSource).not.toContain('requestContestAWDDefenseCommand')
     expect(awdWorkspaceSource).not.toContain('saveContestAWDDefenseFile')
+    expect(awdWorkspaceSource).not.toContain('app.py')
   })
 })

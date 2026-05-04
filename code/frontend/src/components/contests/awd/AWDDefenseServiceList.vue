@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { ExternalLink } from 'lucide-vue-next'
+import { ExternalLink, ShieldCheck } from 'lucide-vue-next'
 
-import type { AWDDefenseSSHAccessData } from '@/api/contracts'
 import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
-import AWDDefenseConnectionPanel from './AWDDefenseConnectionPanel.vue'
 
 const props = defineProps<{
   services: AWDDefenseServiceCard[]
@@ -11,9 +9,6 @@ const props = defineProps<{
   openingServiceKey: string
   openingSshKey: string
   serviceActionPendingById: Record<string, boolean>
-  accessByServiceId: Record<string, AWDDefenseSSHAccessData>
-  copiedCommandKey: string
-  copiedConfigKey: string
 }>()
 
 const emit = defineEmits<{
@@ -21,8 +16,6 @@ const emit = defineEmits<{
   openService: [serviceId: string]
   requestSsh: [serviceId: string]
   restartService: [serviceId: string]
-  copyCommand: [serviceId: string]
-  copyConfig: [serviceId: string]
 }>()
 
 function formatServiceRef(serviceId?: string): string {
@@ -43,7 +36,7 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
 
 <template>
   <div class="asset-list mt-4">
-    <div class="asset-header">战队服务</div>
+    <div class="asset-header">防守服务</div>
     <div v-if="services.length === 0" class="panel-note">当前竞赛暂无可部署服务。</div>
     <div
       v-for="service in services"
@@ -68,16 +61,16 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
         <div v-if="service.riskReasons.length > 0" class="asset-risk">
           <span v-for="reason in service.riskReasons" :key="reason">{{ reason }}</span>
         </div>
-        <AWDDefenseConnectionPanel
-          :access="accessByServiceId[service.serviceId]"
-          :service-id="service.serviceId"
-          :copied-command="copiedCommandKey === service.serviceId"
-          :copied-config="copiedConfigKey === service.serviceId"
-          @copy-command="emit('copyCommand', $event)"
-          @copy-config="emit('copyConfig', $event)"
-        />
       </div>
       <div class="asset-actions" role="group" :aria-label="`${service.title} 防守操作`">
+        <button
+          :aria-pressed="service.serviceId === selectedServiceId"
+          class="asset-btn"
+          type="button"
+          @click.stop="emit('selectService', service.serviceId)"
+        >
+          <ShieldCheck class="h-3 w-3" />
+        </button>
         <button
           v-if="service.instanceId"
           :disabled="!service.canOpenService || openingServiceKey === service.instanceId"

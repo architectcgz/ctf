@@ -158,10 +158,10 @@ const {
               <div class="contest-section__head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
                   <div class="workspace-overline">
-                    {{ contest.mode === 'awd' ? '战场' : '题目' }}
+                    {{ contest.mode === 'awd' ? '攻防战场' : '题目' }}
                   </div>
                   <h2 class="contest-section__title workspace-tab-heading__title">
-                    {{ contest.mode === 'awd' ? '战场' : '题目' }}
+                    {{ contest.mode === 'awd' ? '攻防战场' : '题目' }}
                   </h2>
                 </div>
                 <div class="contest-section__hint">

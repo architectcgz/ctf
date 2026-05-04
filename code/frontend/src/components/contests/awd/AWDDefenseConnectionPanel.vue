@@ -73,6 +73,8 @@ const expiresAtLabel = computed(() =>
   border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
   border-radius: 0.625rem;
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+  max-height: 24rem;
+  overflow: auto;
   padding: var(--space-2);
 }
 
@@ -97,7 +99,9 @@ const expiresAtLabel = computed(() =>
   font-family: var(--font-family-mono);
   font-size: 11px;
   line-height: 1.45;
-  overflow-wrap: anywhere;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .asset-ssh__secret {
@@ -118,7 +122,9 @@ const expiresAtLabel = computed(() =>
   min-width: 0;
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .asset-ssh__expires {
@@ -141,6 +147,8 @@ const expiresAtLabel = computed(() =>
 
 .asset-ssh__config {
   margin-top: var(--space-2);
+  max-height: 12rem;
+  overflow: auto;
   padding: var(--space-2);
   white-space: pre-wrap;
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);

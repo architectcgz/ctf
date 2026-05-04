@@ -207,7 +207,7 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 }
 
-func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T) {
+func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	handler := NewHandler(
@@ -253,15 +253,15 @@ func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T)
 	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
 	readResp := httptest.NewRecorder()
 	router.ServeHTTP(readResp, readReq)
-	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), "print('vuln')") {
-		t.Fatalf("expected successful read response with file content, status=%d body=%s", readResp.Code, readResp.Body.String())
+	if readResp.Code != http.StatusForbidden || strings.Contains(readResp.Body.String(), "print('vuln')") {
+		t.Fatalf("expected forbidden read response without file content, status=%d body=%s", readResp.Code, readResp.Body.String())
 	}
 
 	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
 	listResp := httptest.NewRecorder()
 	router.ServeHTTP(listResp, listReq)
-	if listResp.Code != http.StatusOK || !strings.Contains(listResp.Body.String(), "templates") {
-		t.Fatalf("expected successful list response with directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
+	if listResp.Code != http.StatusForbidden || strings.Contains(listResp.Body.String(), "templates") {
+		t.Fatalf("expected forbidden list response without directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
 	}
 
 	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))

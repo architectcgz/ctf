@@ -375,7 +375,7 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('战场')
+    expect(wrapper.text()).toContain('攻防战场')
     expect(wrapper.text()).toContain('攻击向量')
     expect(wrapper.text()).toContain('目标题目')
     expect(wrapper.text()).toContain('BLUE')
@@ -420,7 +420,7 @@ describe('ContestDetail', () => {
 
     expect(wrapper.text()).toContain('先加入队伍')
     expect(wrapper.text()).toContain('需要先加入队伍后才能进入 AWD 战场。')
-    expect(wrapper.text()).toContain('战场')
+    expect(wrapper.text()).toContain('攻防战场')
   })
 
   it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
@@ -749,7 +749,7 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('防守监控')
+    expect(wrapper.text()).toContain('我的防守')
     expect(wrapper.text()).toContain('Service A')
     expect(wrapper.text()).toContain('BLUE')
     expect(wrapper.text()).toContain('GREEN')
@@ -1648,7 +1648,7 @@ describe('ContestDetail', () => {
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
     expect(combinedSource).toMatch(
-      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? '战场' : '题目' \}\}\s*<\/div>/
+      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? '攻防战场' : '题目' \}\}\s*<\/div>/
     )
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
     expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')

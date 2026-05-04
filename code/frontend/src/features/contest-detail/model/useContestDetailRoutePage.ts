@@ -51,7 +51,7 @@ export function useContestDetailRoutePage() {
   const workspaceTabs = computed<Array<{ id: ContestWorkspaceTab; label: string }>>(() => [
     { id: 'overview', label: '概览' },
     { id: 'announcements', label: '公告' },
-    { id: 'challenges', label: isAWDContest.value ? '战场' : '题目' },
+    { id: 'challenges', label: isAWDContest.value ? '攻防战场' : '题目' },
     { id: 'team', label: '队伍' },
   ])
   const solvedCount = computed(() => page.challenges.value.filter((item) => item.is_solved).length)

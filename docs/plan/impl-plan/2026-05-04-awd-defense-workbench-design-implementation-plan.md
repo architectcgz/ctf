@@ -1,5 +1,8 @@
 # AWD Defense Workbench Design And Implementation Plan
 
+> Status: Superseded for student default UI by `docs/architecture/features/awd-web-defense-workbench-design.md` and `docs/plan/impl-plan/2026-05-04-awd-web-defense-workbench-implementation-plan.md`.
+> The browser file workbench described here must not be mounted on the student AWD battlefield by default. Any future code-fragment or patch workflow must use service-side allowlisted fragments instead of generic directory/file browsing.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 将学生端 AWD 战场的“防守服务卡片”升级为面向真实攻防防守流程的防守工作台，让学生能快速连接服务、判断风险、定位攻击痕迹、完成修复并验证服务状态。
