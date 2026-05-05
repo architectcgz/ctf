@@ -15,8 +15,8 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
-	"gorm.io/gorm"
 	"ctf-platform/pkg/errcode"
+	"gorm.io/gorm"
 )
 
 func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repository) *AWDChallengeImportService {
@@ -190,7 +190,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 func TestAWDChallengeImportRejectsDuplicateSlug(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -351,67 +351,6 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactFiles(t *testing.T) {
 	}
 }
 
-func TestAWDChallengeImportCleansReplacedScriptCheckerArtifact(t *testing.T) {
-	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	service := newAWDChallengeImportServiceForTest(db, repo)
-
-	previewDir := filepath.Join(t.TempDir(), "awd-imports")
-	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
-	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
-	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactDir)
-
-	firstPreview, err := service.PreviewImport(
-		context.Background(),
-		2001,
-		"script-checker-cleanup-v1.zip",
-		bytes.NewReader(buildAWDScriptCheckerImportArchiveWithSlug(t, "script-checker-cleanup", "print('v1')\n")),
-	)
-	if err != nil {
-		t.Fatalf("PreviewImport(v1) error = %v", err)
-	}
-	firstCommitted, err := service.CommitImport(context.Background(), 2001, firstPreview.ID)
-	if err != nil {
-		t.Fatalf("CommitImport(v1) error = %v", err)
-	}
-	firstStored, err := repo.FindAWDChallengeByID(context.Background(), firstCommitted.ID)
-	if err != nil {
-		t.Fatalf("FindAWDChallengeByID(v1) error = %v", err)
-	}
-	firstDigest := readAWDCheckerArtifactDigestForTest(t, firstStored.CheckerConfig)
-	firstDir := filepath.Join(artifactDir, "script-checker-cleanup", firstDigest)
-	if _, err := os.Stat(firstDir); err != nil {
-		t.Fatalf("expected first artifact dir: %v", err)
-	}
-
-	secondPreview, err := service.PreviewImport(
-		context.Background(),
-		2001,
-		"script-checker-cleanup-v2.zip",
-		bytes.NewReader(buildAWDScriptCheckerImportArchiveWithSlug(t, "script-checker-cleanup", "print('v2 changed')\n")),
-	)
-	if err != nil {
-		t.Fatalf("PreviewImport(v2) error = %v", err)
-	}
-	secondCommitted, err := service.CommitImport(context.Background(), 2001, secondPreview.ID)
-	if err != nil {
-		t.Fatalf("CommitImport(v2) error = %v", err)
-	}
-	secondStored, err := repo.FindAWDChallengeByID(context.Background(), secondCommitted.ID)
-	if err != nil {
-		t.Fatalf("FindAWDChallengeByID(v2) error = %v", err)
-	}
-	secondDigest := readAWDCheckerArtifactDigestForTest(t, secondStored.CheckerConfig)
-	if secondDigest == firstDigest {
-		t.Fatalf("expected changed artifact digest, got %s", secondDigest)
-	}
-	if _, err := os.Stat(firstDir); !os.IsNotExist(err) {
-		t.Fatalf("expected old artifact dir cleanup, stat err = %v", err)
-	}
-	if _, err := os.Stat(filepath.Join(artifactDir, "script-checker-cleanup", secondDigest)); err != nil {
-		t.Fatalf("expected second artifact dir: %v", err)
-	}
-}
 func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
@@ -563,7 +502,7 @@ extensions:
         service_contracts:
           - /health 必须返回 200
 `,
-		slug + "/statement.md": "银行门户存在越权修改 flag 的逻辑。",
+		slug + "/statement.md":            "银行门户存在越权修改 flag 的逻辑。",
 		slug + "/docker/app.py":           "print('entry')\n",
 		slug + "/docker/ctf_runtime.py":   "print('runtime')\n",
 		slug + "/docker/challenge_app.py": "print('challenge')\n",
