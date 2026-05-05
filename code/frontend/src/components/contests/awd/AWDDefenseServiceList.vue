@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   selectService: [serviceId: string]
+  openDefense: [serviceId: string]
   openService: [serviceId: string]
   requestSsh: [serviceId: string]
   restartService: [serviceId: string]
@@ -64,12 +65,12 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
       </div>
       <div class="asset-actions" role="group" :aria-label="`${service.title} 防守操作`">
         <button
-          :aria-pressed="service.serviceId === selectedServiceId"
           class="asset-btn"
           type="button"
-          @click.stop="emit('selectService', service.serviceId)"
+          @click.stop="emit('openDefense', service.serviceId)"
         >
           <ShieldCheck class="h-3 w-3" />
+          <span>防守</span>
         </button>
         <button
           v-if="service.instanceId"
@@ -236,11 +237,15 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
   border-radius: var(--ui-control-radius-sm);
   background: var(--color-bg-surface);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-default);
   cursor: pointer;
+  font-size: var(--font-size-11);
+  font-weight: 800;
   transition: all 0.2s ease;
 }
 

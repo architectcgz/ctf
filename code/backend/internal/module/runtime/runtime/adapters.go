@@ -52,28 +52,32 @@ func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.C
 }
 
 type runtimeHTTPServiceAdapter struct {
-	commandService       runtimeHTTPCommandService
-	queryService         runtimeHTTPQueryService
-	proxyTickets         runtimeHTTPProxyTicketService
-	proxyTicketReader    runtimeports.ProxyTicketInstanceReader
-	defenseWorkbench     runtimeDefenseWorkbenchRuntime
-	proxyBodyPreviewSize int
-	defenseSSHEnabled    bool
-	defenseSSHHost       string
-	defenseSSHPort       int
+	commandService                  runtimeHTTPCommandService
+	queryService                    runtimeHTTPQueryService
+	proxyTickets                    runtimeHTTPProxyTicketService
+	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
+	defenseWorkbench                runtimeDefenseWorkbenchRuntime
+	proxyBodyPreviewSize            int
+	defenseWorkbenchReadOnlyEnabled bool
+	defenseWorkbenchRoot            string
+	defenseSSHEnabled               bool
+	defenseSSHHost                  string
+	defenseSSHPort                  int
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int, defenseWorkbenchReadOnlyEnabled bool, defenseWorkbenchRoot string) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
-		commandService:       commandService,
-		queryService:         queryService,
-		proxyTickets:         proxyTickets,
-		proxyTicketReader:    proxyTicketReader,
-		defenseWorkbench:     defenseWorkbench,
-		proxyBodyPreviewSize: proxyBodyPreviewSize,
-		defenseSSHEnabled:    defenseSSHEnabled,
-		defenseSSHHost:       defenseSSHHost,
-		defenseSSHPort:       defenseSSHPort,
+		commandService:                  commandService,
+		queryService:                    queryService,
+		proxyTickets:                    proxyTickets,
+		proxyTicketReader:               proxyTicketReader,
+		defenseWorkbench:                defenseWorkbench,
+		proxyBodyPreviewSize:            proxyBodyPreviewSize,
+		defenseWorkbenchReadOnlyEnabled: defenseWorkbenchReadOnlyEnabled,
+		defenseWorkbenchRoot:            strings.TrimSpace(defenseWorkbenchRoot),
+		defenseSSHEnabled:               defenseSSHEnabled,
+		defenseSSHHost:                  defenseSSHHost,
+		defenseSSHPort:                  defenseSSHPort,
 	}
 }
 
@@ -168,60 +172,41 @@ const (
 )
 
 func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
-	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
-	}
-	cleanPath, err := normalizeAWDDefensePath(filePath)
+	scope, cleanPath, err := a.resolveDefenseScope(ctx, user, contestID, serviceID, filePath, false)
 	if err != nil {
 		return nil, err
 	}
-	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if scope == nil || scope.ContainerID == "" {
-		return nil, errcode.ErrForbidden
-	}
-
 	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxFileSize)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return &dto.AWDDefenseFileResp{
-		Path:    cleanPath,
+		Path:    filePath,
 		Content: string(content),
 		Size:    len(content),
 	}, nil
 }
 
 func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
-	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
-	}
-	cleanPath, err := normalizeAWDDefenseDirectoryPath(dirPath)
+	scope, cleanPath, err := a.resolveDefenseScope(ctx, user, contestID, serviceID, dirPath, true)
 	if err != nil {
 		return nil, err
 	}
-	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if scope == nil || scope.ContainerID == "" {
-		return nil, errcode.ErrForbidden
-	}
-
 	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxDirectoryList)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	resp := &dto.AWDDefenseDirectoryResp{
-		Path:    cleanPath,
+		Path:    dirPath,
 		Entries: make([]dto.AWDDefenseDirectoryEntryResp, 0, len(entries)),
 	}
 	for _, entry := range entries {
+		if isSensitiveDefensePath(entry.Name) {
+			continue
+		}
 		entryPath := entry.Name
-		if cleanPath != "." {
-			entryPath = path.Join(cleanPath, entry.Name)
+		if dirPath != "." {
+			entryPath = path.Join(dirPath, entry.Name)
 		}
 		resp.Entries = append(resp.Entries, dto.AWDDefenseDirectoryEntryResp{
 			Name: entry.Name,
@@ -323,6 +308,73 @@ func normalizeAWDDefensePath(input string) (string, error) {
 		return "", errcode.ErrInvalidParams
 	}
 	return cleaned, nil
+}
+
+func (a *runtimeHTTPServiceAdapter) resolveDefenseScope(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, inputPath string, directory bool) (*runtimeports.AWDDefenseSSHScope, string, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	if !a.defenseWorkbenchReadOnlyEnabled {
+		return nil, "", errcode.ErrForbidden
+	}
+	root := strings.TrimSpace(a.defenseWorkbenchRoot)
+	if !strings.HasPrefix(root, "/") || root == "/" {
+		return nil, "", errcode.ErrInvalidParams
+	}
+	var cleanPath string
+	var err error
+	if directory {
+		cleanPath, err = normalizeAWDDefenseDirectoryPath(inputPath)
+	} else {
+		cleanPath, err = normalizeAWDDefensePath(inputPath)
+	}
+	if err != nil {
+		return nil, "", err
+	}
+	if isSensitiveDefensePath(cleanPath) {
+		return nil, "", errcode.ErrForbidden
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, "", errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, "", errcode.ErrForbidden
+	}
+	if cleanPath == "." {
+		return scope, root, nil
+	}
+	return scope, path.Join(root, cleanPath), nil
+}
+
+func isSensitiveDefensePath(value string) bool {
+	lower := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(value, "\\", "/")))
+	if lower == "" {
+		return false
+	}
+	segments := strings.Split(lower, "/")
+	for _, segment := range segments {
+		switch {
+		case segment == ".env",
+			strings.HasPrefix(segment, ".env."),
+			segment == ".ssh",
+			segment == "id_rsa",
+			segment == "id_ed25519",
+			segment == "authorized_keys",
+			segment == "known_hosts":
+			return true
+		}
+	}
+	switch {
+	case strings.HasPrefix(lower, "proc/"),
+		strings.HasPrefix(lower, "sys/"),
+		strings.HasPrefix(lower, "dev/"),
+		strings.HasPrefix(lower, "run/secrets"),
+		strings.HasPrefix(lower, "var/run/docker.sock"):
+		return true
+	default:
+		return false
+	}
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

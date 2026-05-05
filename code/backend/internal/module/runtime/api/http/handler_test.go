@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type stubRuntimeService struct{}
@@ -127,16 +128,24 @@ type stubAWDDefenseWorkbenchRuntimeService struct {
 	directoryResp *dto.AWDDefenseDirectoryResp
 	saveResp      *dto.AWDDefenseFileSaveResp
 	commandResp   *dto.AWDDefenseCommandResp
+	readFn        func(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error)
+	listFn        func(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error)
 }
 
-func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+	if s.readFn != nil {
+		return s.readFn(ctx, user, contestID, serviceID, filePath)
+	}
 	if contestID != 5 || serviceID != 12 || filePath != "app.py" {
 		return nil, errors.New("unexpected read args")
 	}
 	return s.fileResp, nil
 }
 
-func (s stubAWDDefenseWorkbenchRuntimeService) ListAWDDefenseDirectory(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+func (s stubAWDDefenseWorkbenchRuntimeService) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, user, contestID, serviceID, dirPath)
+	}
 	if contestID != 5 || serviceID != 12 || dirPath != "." {
 		return nil, errors.New("unexpected list args")
 	}
@@ -206,7 +215,7 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 }
 
-func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAccess(t *testing.T) {
+func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	handler := NewHandler(
@@ -232,6 +241,25 @@ func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAccess(t *testing.T) {
 				Command: "ls",
 				Output:  "app.py\nrequirements.txt\n",
 			},
+			readFn: func(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+				if contestID != 5 || serviceID != 12 {
+					return nil, errors.New("unexpected read scope")
+				}
+				switch filePath {
+				case "app.py":
+					return &dto.AWDDefenseFileResp{
+						Path:    "app.py",
+						Content: "print('vuln')",
+						Size:    13,
+					}, nil
+				case ".env", ".ssh/id_rsa":
+					return nil, errcode.ErrForbidden
+				case "../app.py":
+					return nil, errcode.ErrInvalidParams
+				default:
+					return nil, errors.New("unexpected read path")
+				}
+			},
 		},
 		nil,
 		CookieConfig{},
@@ -252,15 +280,36 @@ func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAccess(t *testing.T) {
 	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
 	readResp := httptest.NewRecorder()
 	router.ServeHTTP(readResp, readReq)
-	if readResp.Code != http.StatusForbidden || strings.Contains(readResp.Body.String(), "print('vuln')") {
-		t.Fatalf("expected forbidden read response without file content, status=%d body=%s", readResp.Code, readResp.Body.String())
+	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), "print('vuln')") {
+		t.Fatalf("expected read response with file content, status=%d body=%s", readResp.Code, readResp.Body.String())
 	}
 
 	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
 	listResp := httptest.NewRecorder()
 	router.ServeHTTP(listResp, listReq)
-	if listResp.Code != http.StatusForbidden || strings.Contains(listResp.Body.String(), "templates") {
-		t.Fatalf("expected forbidden list response without directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
+	if listResp.Code != http.StatusOK || !strings.Contains(listResp.Body.String(), "templates") {
+		t.Fatalf("expected list response with directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
+	}
+
+	forbiddenReadReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=.env", nil)
+	forbiddenReadResp := httptest.NewRecorder()
+	router.ServeHTTP(forbiddenReadResp, forbiddenReadReq)
+	if forbiddenReadResp.Code != http.StatusForbidden || strings.Contains(forbiddenReadResp.Body.String(), "DB_PASSWORD") {
+		t.Fatalf("expected forbidden sensitive read response, status=%d body=%s", forbiddenReadResp.Code, forbiddenReadResp.Body.String())
+	}
+
+	forbiddenKeyReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=.ssh/id_rsa", nil)
+	forbiddenKeyResp := httptest.NewRecorder()
+	router.ServeHTTP(forbiddenKeyResp, forbiddenKeyReq)
+	if forbiddenKeyResp.Code != http.StatusForbidden || strings.Contains(forbiddenKeyResp.Body.String(), "BEGIN OPENSSH PRIVATE KEY") {
+		t.Fatalf("expected forbidden ssh key response, status=%d body=%s", forbiddenKeyResp.Code, forbiddenKeyResp.Body.String())
+	}
+
+	invalidReadReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=../app.py", nil)
+	invalidReadResp := httptest.NewRecorder()
+	router.ServeHTTP(invalidReadResp, invalidReadReq)
+	if invalidReadResp.Code != http.StatusBadRequest {
+		t.Fatalf("expected invalid traversal path to be rejected, status=%d body=%s", invalidReadResp.Code, invalidReadResp.Body.String())
 	}
 
 	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))
