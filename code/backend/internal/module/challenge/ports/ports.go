@@ -172,6 +172,14 @@ type ImageQueryRepository interface {
 	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 }
 
+type ImageBuildJobRepository interface {
+	CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
+	FindImageBuildJobByID(ctx context.Context, id int64) (*model.ImageBuildJob, error)
+	ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*model.ImageBuildJob, error)
+	TryStartImageBuildJob(ctx context.Context, id int64, startedAt time.Time) (bool, error)
+	UpdateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
+}
+
 type EnvironmentTemplateCommandRepository interface {
 	Create(ctx context.Context, template *model.EnvironmentTemplate) error
 	Update(ctx context.Context, template *model.EnvironmentTemplate) error

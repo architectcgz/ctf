@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"time"
 
 	"ctf-platform/internal/model"
 
@@ -68,4 +69,49 @@ func (r *ImageRepository) Update(ctx context.Context, image *model.Image) error 
 
 func (r *ImageRepository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Image{}, id).Error
+}
+
+func (r *ImageRepository) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+	return r.dbWithContext(ctx).Create(job).Error
+}
+
+func (r *ImageRepository) FindImageBuildJobByID(ctx context.Context, id int64) (*model.ImageBuildJob, error) {
+	var job model.ImageBuildJob
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&job).Error
+	if err != nil {
+		return nil, err
+	}
+	return &job, nil
+}
+
+func (r *ImageRepository) ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*model.ImageBuildJob, error) {
+	if limit <= 0 {
+		limit = 1
+	}
+	var jobs []*model.ImageBuildJob
+	err := r.dbWithContext(ctx).
+		Where("status = ?", model.ImageBuildJobStatusPending).
+		Order("created_at ASC, id ASC").
+		Limit(limit).
+		Find(&jobs).Error
+	return jobs, err
+}
+
+func (r *ImageRepository) TryStartImageBuildJob(ctx context.Context, id int64, startedAt time.Time) (bool, error) {
+	result := r.dbWithContext(ctx).
+		Model(&model.ImageBuildJob{}).
+		Where("id = ? AND status = ?", id, model.ImageBuildJobStatusPending).
+		Updates(map[string]any{
+			"status":     model.ImageBuildJobStatusBuilding,
+			"started_at": startedAt,
+			"updated_at": startedAt,
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected == 1, nil
+}
+
+func (r *ImageRepository) UpdateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+	return r.dbWithContext(ctx).Save(job).Error
 }

@@ -323,7 +323,7 @@ git commit -m "feat(challenge): 归一题包镜像命名"
   - `code/backend/internal/module/challenge/infrastructure/image_repository_test.go`
   - `code/backend/internal/module/challenge/application/commands/image_build_service_test.go`
 
-- [ ] **Step 1: 写 repository 测试**
+- [x] **Step 1: 写 repository 测试**
 
 覆盖：
 
@@ -333,11 +333,11 @@ git commit -m "feat(challenge): 归一题包镜像命名"
 - try start job uses `WHERE status='pending'`
 - update job status/error/digest
 
-- [ ] **Step 2: 扩展 repository**
+- [x] **Step 2: 扩展 repository**
 
 在 `ImageRepository` 上实现 build job 方法，避免新建另一个 GORM repo 后造成 composition 分散。
 
-- [ ] **Step 3: 写 service 测试**
+- [x] **Step 3: 写 service 测试**
 
 测试 `CreatePlatformBuildJob`：
 
@@ -346,11 +346,11 @@ git commit -m "feat(challenge): 归一题包镜像命名"
 - 创建 `image_build_jobs` 行 status=`pending`。
 - 返回 image id、job id、target ref。
 
-- [ ] **Step 4: 实现 service 骨架**
+- [x] **Step 4: 实现 service 骨架**
 
 `ImageBuildService` 先只负责创建 job，不执行 Docker。
 
-- [ ] **Step 5: 跑测试**
+- [x] **Step 5: 跑测试**
 
 Run:
 
@@ -359,7 +359,7 @@ cd code/backend
 go test ./internal/module/challenge/infrastructure ./internal/module/challenge/application/commands -run 'ImageBuild|BuildJob|ImageRepository' -count=1
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/ports code/backend/internal/module/challenge/infrastructure code/backend/internal/module/challenge/application/commands
