@@ -44,9 +44,16 @@ type ChallengeService struct {
 	topologyRepo  challengeports.ChallengeTopologyReadRepository
 	packageRepo   challengeports.ChallengePackageRevisionRepository
 	runtimeProbe  challengeports.ChallengeRuntimeProbe
+	imageBuild    *ImageBuildService
 	notifications ChallengeNotificationSender
 	selfCheckCfg  SelfCheckConfig
 	logger        *zap.Logger
+}
+
+func (s *ChallengeService) SetImageBuildService(service *ImageBuildService) {
+	if s != nil {
+		s.imageBuild = service
+	}
 }
 
 func NewChallengeService(

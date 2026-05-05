@@ -509,7 +509,7 @@ git commit -m "feat(image): 启动镜像构建 worker"
   - `code/backend/internal/module/challenge/api/http/challenge_import_handler_test.go`
   - `code/backend/internal/app/challenge_import_integration_test.go`
 
-- [ ] **Step 1: 写 preview 测试**
+- [x] **Step 1: 写 preview 测试**
 
 上传不带 `runtime.image.ref`、但带 `docker/Dockerfile` 的题包，preview 应返回：
 
@@ -517,7 +517,7 @@ git commit -m "feat(image): 启动镜像构建 worker"
 - `target_image_ref=127.0.0.1:5000/jeopardy/<slug>:<tag>` 或测试注入 registry
 - 不报缺少镜像名
 
-- [ ] **Step 2: 写 commit 测试**
+- [x] **Step 2: 写 commit 测试**
 
 commit 后：
 
@@ -526,15 +526,15 @@ commit 后：
 - challenge.image_id 指向该 image
 - build job 创建成功
 
-- [ ] **Step 3: 替换 `resolveImportedImageID`**
+- [x] **Step 3: 替换 `resolveImportedImageID`**
 
 保留 `SplitImageRef` 用于 external ref，但平台构建路径调用 `ImageBuildService.CreatePlatformBuildJob`。
 
-- [ ] **Step 4: 拓扑快照使用目标 image ref**
+- [x] **Step 4: 拓扑快照使用目标 image ref**
 
 第一轮把拓扑所有节点映射到同一 image id；如果节点有独立 `image.ref`，preview 加 warning，commit 不再按节点创建外部 available image。
 
-- [ ] **Step 5: 跑测试**
+- [x] **Step 5: 跑测试**
 
 Run:
 
@@ -545,7 +545,7 @@ go test ./internal/module/challenge/api/http -run 'ChallengeImport' -count=1
 go test ./internal/app -run 'ChallengeImport' -count=1
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/application/commands code/backend/internal/dto code/backend/internal/module/challenge/api/http code/backend/internal/app

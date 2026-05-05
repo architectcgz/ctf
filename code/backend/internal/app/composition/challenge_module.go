@@ -59,7 +59,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 
 	imageCommandService, imageHandler := buildChallengeImageHandler(root, deps)
 	imageBuildService := buildChallengeImageBuildService(root, deps)
-	coreService, coreHandler := buildChallengeCoreHandler(root, deps, ops)
+	coreService, coreHandler := buildChallengeCoreHandler(root, deps, ops, imageBuildService)
 	flagHandler, flagValidator, err := buildChallengeFlagHandler(cfg, deps)
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (s *challengePublishNotificationSender) SendChallengePublishCheckResult(ctx
 	})
 }
 
-func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps, ops *OpsModule) (*challengecmd.ChallengeService, *challengehttp.Handler) {
+func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps, ops *OpsModule, imageBuildService *challengecmd.ImageBuildService) (*challengecmd.ChallengeService, *challengehttp.Handler) {
 	var notifications challengecmd.ChallengeNotificationSender = nil
 	if ops != nil {
 		notifications = &challengePublishNotificationSender{
@@ -206,6 +206,7 @@ func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps, ops *OpsMod
 		root.Logger().Named("challenge_command_service"),
 		notifications,
 	)
+	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, root.Cache(), &challengeqry.Config{
 		SolvedCountCacheTTL: root.Config().Challenge.SolvedCountCacheTTL,
 	}, root.Logger().Named("challenge_service"))

@@ -164,6 +164,86 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 	}, nil
 }
 
+func (s *ImageBuildService) CreatePlatformBuildJobInTx(
+	ctx context.Context,
+	tx *gorm.DB,
+	req CreatePlatformBuildJobRequest,
+) (*CreatePlatformBuildJobResult, error) {
+	if s == nil {
+		return nil, fmt.Errorf("image build service is not configured")
+	}
+	if tx == nil {
+		return nil, fmt.Errorf("image build transaction is not configured")
+	}
+
+	tag := strings.TrimSpace(req.SuggestedTag)
+	if tag == "" {
+		tag = "latest"
+	}
+	targetRef, err := domain.BuildPlatformImageRef(s.config.Registry, req.ChallengeMode, req.PackageSlug, tag)
+	if err != nil {
+		return nil, err
+	}
+	name, imageTag, err := domain.SplitImageRef(targetRef)
+	if err != nil {
+		return nil, err
+	}
+
+	image, err := findOrCreatePendingPlatformBuildImageTx(ctx, tx, name, imageTag, req.PackageSlug)
+	if err != nil {
+		return nil, err
+	}
+
+	createdBy := req.CreatedBy
+	job := &model.ImageBuildJob{
+		SourceType:     model.ImageSourceTypePlatformBuild,
+		ChallengeMode:  strings.TrimSpace(req.ChallengeMode),
+		PackageSlug:    strings.TrimSpace(req.PackageSlug),
+		SourceDir:      strings.TrimSpace(req.SourceDir),
+		DockerfilePath: strings.TrimSpace(req.DockerfilePath),
+		ContextPath:    strings.TrimSpace(req.ContextPath),
+		TargetRef:      targetRef,
+		Status:         model.ImageBuildJobStatusPending,
+	}
+	if createdBy > 0 {
+		job.CreatedBy = &createdBy
+	}
+	if err := tx.WithContext(ctx).Create(job).Error; err != nil {
+		return nil, err
+	}
+
+	updates := map[string]any{
+		"status":       model.ImageStatusPending,
+		"source_type":  model.ImageSourceTypePlatformBuild,
+		"build_job_id": job.ID,
+		"last_error":   "",
+		"digest":       "",
+		"verified_at":  nil,
+		"deleted_at":   nil,
+		"updated_at":   time.Now(),
+	}
+	if err := tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	return &CreatePlatformBuildJobResult{
+		ImageID:   image.ID,
+		JobID:     job.ID,
+		TargetRef: targetRef,
+	}, nil
+}
+
+func (s *ImageBuildService) BuildPlatformTargetRef(mode, slug, suggestedTag string) (string, error) {
+	if s == nil {
+		return "", fmt.Errorf("image build service is not configured")
+	}
+	tag := strings.TrimSpace(suggestedTag)
+	if tag == "" {
+		tag = "latest"
+	}
+	return domain.BuildPlatformImageRef(s.config.Registry, mode, slug, tag)
+}
+
 func (s *ImageBuildService) StartBackgroundTasks(ctx context.Context) {
 	if s == nil || ctx == nil {
 		return
@@ -401,5 +481,36 @@ func (s *ImageBuildService) findOrCreatePendingPlatformBuildImage(
 		return image, nil
 	default:
 		return nil, err
+	}
+}
+
+func findOrCreatePendingPlatformBuildImageTx(
+	ctx context.Context,
+	tx *gorm.DB,
+	name string,
+	tag string,
+	packageSlug string,
+) (*model.Image, error) {
+	var image model.Image
+	findErr := tx.WithContext(ctx).Unscoped().
+		Where("name = ? AND tag = ?", name, tag).
+		First(&image).Error
+	switch {
+	case findErr == nil:
+		return &image, nil
+	case errors.Is(findErr, gorm.ErrRecordNotFound):
+		image = model.Image{
+			Name:        name,
+			Tag:         tag,
+			Description: fmt.Sprintf("Built from challenge pack %s", packageSlug),
+			Status:      model.ImageStatusPending,
+			SourceType:  model.ImageSourceTypePlatformBuild,
+		}
+		if err := tx.WithContext(ctx).Create(&image).Error; err != nil {
+			return nil, err
+		}
+		return &image, nil
+	default:
+		return nil, findErr
 	}
 }

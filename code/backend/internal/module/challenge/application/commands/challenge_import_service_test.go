@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,6 +103,112 @@ func TestServiceListChallengeImportsReturnsEmptyWhenPreviewRootMissing(t *testin
 	}
 	if len(previews) != 0 {
 		t.Fatalf("expected no previews, got %d", len(previews))
+	}
+}
+
+func TestPreviewChallengeImportReturnsPlatformBuildImageDelivery(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
+
+	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
+	preview, err := service.PreviewChallengeImport(
+		context.Background(),
+		4,
+		"web-platform-build.zip",
+		bytes.NewReader(buildZipArchiveFromDir(t, packageDir)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewChallengeImport() error = %v", err)
+	}
+
+	if preview.Runtime.ImageRef != "" {
+		t.Fatalf("expected no author image ref, got %q", preview.Runtime.ImageRef)
+	}
+	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	}
+	if preview.ImageDelivery.TargetImageRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
+		t.Fatalf("TargetImageRef = %q", preview.ImageDelivery.TargetImageRef)
+	}
+	if preview.ImageDelivery.BuildStatus != model.ImageStatusPending {
+		t.Fatalf("BuildStatus = %q, want pending", preview.ImageDelivery.BuildStatus)
+	}
+}
+
+func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
+
+	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
+	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+		ID:        "platform-build",
+		FileName:  "platform-build.zip",
+		SourceDir: packageDir,
+		CreatedBy: 4,
+		CreatedAt: time.Now(),
+		Preview: dto.ChallengeImportPreviewResp{
+			ID:         "platform-build",
+			FileName:   "platform-build.zip",
+			Slug:       "web-platform-build",
+			Title:      "Web Platform Build",
+			Category:   "web",
+			Difficulty: "easy",
+			Points:     100,
+			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			CreatedAt:  time.Now(),
+		},
+	})
+
+	resp, err := service.CommitChallengeImport(context.Background(), 4, "platform-build")
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+	if resp.Status != model.ChallengeStatusDraft {
+		t.Fatalf("expected draft challenge, got %q", resp.Status)
+	}
+
+	var challenge model.Challenge
+	if err := db.First(&challenge, resp.ID).Error; err != nil {
+		t.Fatalf("load challenge: %v", err)
+	}
+	if challenge.ImageID <= 0 {
+		t.Fatal("expected challenge image id")
+	}
+
+	image, err := imageRepo.FindByID(context.Background(), challenge.ImageID)
+	if err != nil {
+		t.Fatalf("FindByID(image) error = %v", err)
+	}
+	if image.Name != "127.0.0.1:5000/jeopardy/web-platform-build" ||
+		image.Tag != "v1" ||
+		image.Status != model.ImageStatusPending ||
+		image.SourceType != model.ImageSourceTypePlatformBuild ||
+		image.BuildJobID == nil {
+		t.Fatalf("unexpected image: %+v", image)
+	}
+
+	job, err := imageRepo.FindImageBuildJobByID(context.Background(), *image.BuildJobID)
+	if err != nil {
+		t.Fatalf("FindImageBuildJobByID() error = %v", err)
+	}
+	if job.Status != model.ImageBuildJobStatusPending ||
+		job.TargetRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
+		t.Fatalf("unexpected build job: %+v", job)
 	}
 }
 
@@ -386,7 +495,9 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
 	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "bank-portal")
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
@@ -478,7 +589,9 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
 	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "exportable-bank")
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
@@ -593,6 +706,87 @@ func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record sto
 	if err := os.WriteFile(filepath.Join(previewDir, "preview.json"), content, 0o644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
+}
+
+func buildZipArchiveFromDir(t *testing.T, root string) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+	archive := zip.NewWriter(&buf)
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		writer, err := archive.Create(filepath.ToSlash(rel))
+		if err != nil {
+			return err
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(writer, file)
+		return err
+	})
+	if err != nil {
+		t.Fatalf("walk package dir: %v", err)
+	}
+	if err := archive.Close(); err != nil {
+		t.Fatalf("close zip archive: %v", err)
+	}
+	return buf.Bytes()
+}
+
+func writePlatformBuildChallengePackage(t *testing.T, root string, slug string) string {
+	t.Helper()
+
+	packageDir := filepath.Join(root, slug+"-package")
+	if err := os.MkdirAll(filepath.Join(packageDir, "docker"), 0o755); err != nil {
+		t.Fatalf("MkdirAll(packageDir/docker) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "statement.md"), []byte("platform build statement"), 0o644); err != nil {
+		t.Fatalf("WriteFile(statement.md) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "docker", "Dockerfile"), []byte("FROM nginx:1.27-alpine"), 0o644); err != nil {
+		t.Fatalf("WriteFile(Dockerfile) error = %v", err)
+	}
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  slug: ` + slug + `
+  title: Web Platform Build
+  category: web
+  difficulty: easy
+  points: 100
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: flag
+
+runtime:
+  type: container
+  image:
+    tag: v1
+  service:
+    protocol: http
+    port: 8080
+`
+	if err := os.WriteFile(filepath.Join(packageDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
+	}
+	return packageDir
 }
 
 func int64Pointer(value int64) *int64 {

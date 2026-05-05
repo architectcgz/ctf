@@ -17,6 +17,15 @@ type ChallengeImportRuntimeResp struct {
 	ImageRef string `json:"image_ref,omitempty"`
 }
 
+type ChallengeImportImageDeliveryResp struct {
+	SourceType     string `json:"source_type,omitempty"`
+	SuggestedTag   string `json:"suggested_tag,omitempty"`
+	TargetImageRef string `json:"target_image_ref,omitempty"`
+	BuildStatus    string `json:"build_status,omitempty"`
+	Digest         string `json:"digest,omitempty"`
+	LastError      string `json:"last_error,omitempty"`
+}
+
 type ChallengeImportTopologyExtensionResp struct {
 	Source  string `json:"source,omitempty"`
 	Enabled bool   `json:"enabled"`
@@ -52,23 +61,24 @@ type ChallengeImportExtensionsResp struct {
 }
 
 type ChallengeImportPreviewResp struct {
-	ID           string                          `json:"id"`
-	FileName     string                          `json:"file_name"`
-	Slug         string                          `json:"slug"`
-	Title        string                          `json:"title"`
-	Description  string                          `json:"description"`
-	Category     string                          `json:"category"`
-	Difficulty   string                          `json:"difficulty"`
-	Points       int                             `json:"points"`
-	Attachments  []ChallengeImportAttachmentResp `json:"attachments,omitempty"`
-	Hints        []ChallengeHintAdminResp        `json:"hints,omitempty"`
-	Flag         ChallengeImportFlagResp         `json:"flag"`
-	Runtime      ChallengeImportRuntimeResp      `json:"runtime"`
-	Extensions   ChallengeImportExtensionsResp   `json:"extensions"`
-	Topology     *ChallengeImportTopologyResp    `json:"topology,omitempty"`
-	PackageFiles []ChallengePackageFileResp      `json:"package_files,omitempty"`
-	Warnings     []string                        `json:"warnings,omitempty"`
-	CreatedAt    time.Time                       `json:"created_at"`
+	ID            string                           `json:"id"`
+	FileName      string                           `json:"file_name"`
+	Slug          string                           `json:"slug"`
+	Title         string                           `json:"title"`
+	Description   string                           `json:"description"`
+	Category      string                           `json:"category"`
+	Difficulty    string                           `json:"difficulty"`
+	Points        int                              `json:"points"`
+	Attachments   []ChallengeImportAttachmentResp  `json:"attachments,omitempty"`
+	Hints         []ChallengeHintAdminResp         `json:"hints,omitempty"`
+	Flag          ChallengeImportFlagResp          `json:"flag"`
+	Runtime       ChallengeImportRuntimeResp       `json:"runtime"`
+	ImageDelivery ChallengeImportImageDeliveryResp `json:"image_delivery"`
+	Extensions    ChallengeImportExtensionsResp    `json:"extensions"`
+	Topology      *ChallengeImportTopologyResp     `json:"topology,omitempty"`
+	PackageFiles  []ChallengePackageFileResp       `json:"package_files,omitempty"`
+	Warnings      []string                         `json:"warnings,omitempty"`
+	CreatedAt     time.Time                        `json:"created_at"`
 }
 
 type ChallengeImportCommitResp struct {

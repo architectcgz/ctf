@@ -82,7 +82,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 		return nil, err
 	}
 
-	preview := buildChallengeImportPreview(previewID, fileName, parsed, time.Now())
+	preview := s.buildChallengeImportPreview(previewID, fileName, parsed, time.Now())
 	record := storedChallengeImportPreview{
 		ID:        previewID,
 		FileName:  fileName,
@@ -156,7 +156,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	var challenge *model.Challenge
 	cleanupPaths := make([]string, 0, 2)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		resolvedImageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
+		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, tx, actorUserID, parsed)
 		if err != nil {
 			return err
 		}
@@ -233,6 +233,9 @@ func (s *ChallengeService) CommitChallengeImport(
 			topologySpec, entryNodeKey, topologyErr := domain.BuildTopologySpecFromImportedPackage(
 				parsed.Topology,
 				func(imageRef string) (int64, error) {
+					if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && resolvedImageID > 0 {
+						return resolvedImageID, nil
+					}
 					return resolveImportedImageID(tx, parsed.Slug, imageRef)
 				},
 			)
@@ -274,7 +277,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	return domain.ChallengeRespFromModel(challenge, nil), nil
 }
 
-func buildChallengeImportPreview(
+func (s *ChallengeService) buildChallengeImportPreview(
 	id string,
 	fileName string,
 	parsed *domain.ParsedChallengePackage,
@@ -297,6 +300,17 @@ func buildChallengeImportPreview(
 		})
 	}
 
+	imageDelivery := dto.ChallengeImportImageDeliveryResp{
+		SourceType:   parsed.ImageSourceType,
+		SuggestedTag: parsed.SuggestedImageTag,
+	}
+	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && s != nil && s.imageBuild != nil {
+		if targetRef, err := s.imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeJeopardy, parsed.Slug, parsed.SuggestedImageTag); err == nil {
+			imageDelivery.TargetImageRef = targetRef
+			imageDelivery.BuildStatus = model.ImageStatusPending
+		}
+	}
+
 	return &dto.ChallengeImportPreviewResp{
 		ID:          id,
 		FileName:    fileName,
@@ -316,6 +330,7 @@ func buildChallengeImportPreview(
 			Type:     parsed.Manifest.Runtime.Type,
 			ImageRef: parsed.RuntimeImageRef,
 		},
+		ImageDelivery: imageDelivery,
 		Extensions: dto.ChallengeImportExtensionsResp{
 			Topology: dto.ChallengeImportTopologyExtensionResp{
 				Source:  parsed.Manifest.Extensions.Topology.Source,
@@ -327,6 +342,33 @@ func buildChallengeImportPreview(
 		Warnings:     parsed.Warnings,
 		CreatedAt:    createdAt,
 	}
+}
+
+func (s *ChallengeService) resolveImportedImageIDForCommit(
+	ctx context.Context,
+	tx *gorm.DB,
+	actorUserID int64,
+	parsed *domain.ParsedChallengePackage,
+) (int64, error) {
+	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
+		return resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
+	}
+	if s == nil || s.imageBuild == nil {
+		return 0, fmt.Errorf("image build service is not configured")
+	}
+	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+		ChallengeMode:  domain.ChallengePackageModeJeopardy,
+		PackageSlug:    parsed.Slug,
+		SuggestedTag:   parsed.SuggestedImageTag,
+		SourceDir:      parsed.RootDir,
+		DockerfilePath: parsed.DockerfilePath,
+		ContextPath:    parsed.BuildContextPath,
+		CreatedBy:      actorUserID,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return result.ImageID, nil
 }
 
 func writeImportUploadArchive(targetPath string, reader io.Reader) error {
