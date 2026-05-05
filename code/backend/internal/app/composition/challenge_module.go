@@ -58,6 +58,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	deps := buildChallengeModuleDeps(root, runtime)
 
 	imageCommandService, imageHandler := buildChallengeImageHandler(root, deps)
+	imageBuildService := buildChallengeImageBuildService(root, deps)
 	coreService, coreHandler := buildChallengeCoreHandler(root, deps, ops)
 	flagHandler, flagValidator, err := buildChallengeFlagHandler(cfg, deps)
 	if err != nil {
@@ -68,6 +69,9 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	writeupHandler := buildChallengeWriteupHandler(deps)
 	if root.Config().Challenge.PublishCheck.Enabled {
 		root.RegisterBackgroundJob(NewLoopBackgroundJob("challenge_publish_check_worker", coreService.RunPublishCheckLoop))
+	}
+	if cfg.Container.Registry.BuildEnabled {
+		root.RegisterBackgroundJob(NewLoopBackgroundJob("image_build_worker", imageBuildService.RunBuildLoop))
 	}
 
 	return &ChallengeModule{
@@ -125,6 +129,28 @@ func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challeng
 	imageCommandService.StartBackgroundTasks(root.Context())
 	imageQueryService := challengeqry.NewImageService(deps.imageRepo, root.Config())
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
+}
+
+func buildChallengeImageBuildService(root *Root, deps challengeModuleDeps) *challengecmd.ImageBuildService {
+	registry := root.Config().Container.Registry
+	return challengecmd.NewImageBuildService(
+		deps.imageRepo,
+		challengecmd.ImageBuildConfig{
+			Registry:         registry.Server,
+			BuildTimeout:     registry.BuildTimeout,
+			BuildConcurrency: registry.BuildConcurrency,
+			BatchSize:        registry.BuildConcurrency,
+		},
+		challengecmd.WithImageBuildDockerBuilder(challengecmd.NewDockerCLIImageBuilder()),
+		challengecmd.WithImageBuildRegistryVerifier(challengecmd.NewRegistryClient(challengecmd.RegistryClientConfig{
+			Scheme:        registry.Scheme,
+			Server:        registry.Server,
+			Username:      registry.Username,
+			Password:      registry.Password,
+			IdentityToken: registry.IdentityToken,
+		}, nil)),
+		challengecmd.WithImageBuildLogger(root.Logger().Named("image_build_service")),
+	)
 }
 
 type challengePublishNotificationSender struct {

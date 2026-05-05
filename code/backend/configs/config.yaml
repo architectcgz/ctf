@@ -137,6 +137,7 @@ container:
   defense_workbench_root: ""
   registry:
     enabled: false
+    scheme: https
     server: "" # 例如 registry.example.edu 或 registry.local:5000
     username: "" # 建议通过 CTF_CONTAINER_REGISTRY_USERNAME 注入
     password: "" # 建议通过 CTF_CONTAINER_REGISTRY_PASSWORD 注入

@@ -40,6 +40,7 @@ container:
   start_probe_attempts: 5
   registry:
     enabled: false
+    scheme: https
     server: "" # 生产环境如需私有仓库，使用 CTF_CONTAINER_REGISTRY_SERVER 注入
     username: "" # 使用 CTF_CONTAINER_REGISTRY_USERNAME 注入
     password: "" # 使用 CTF_CONTAINER_REGISTRY_PASSWORD 注入

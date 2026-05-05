@@ -442,7 +442,7 @@ git commit -m "feat(image): 增加 registry 校验与 docker builder"
   - `code/backend/internal/module/challenge/application/commands/image_build_service_test.go`
   - `code/backend/internal/app/composition/challenge_module_test.go` or existing composition tests
 
-- [ ] **Step 1: 写状态流转测试**
+- [x] **Step 1: 写状态流转测试**
 
 覆盖成功路径：
 
@@ -456,7 +456,7 @@ pending -> building -> pushed -> verifying -> available
 - image status 最终 available
 - image digest/verified_at 被写入
 
-- [ ] **Step 2: 写失败路径测试**
+- [x] **Step 2: 写失败路径测试**
 
 覆盖：
 
@@ -465,7 +465,7 @@ pending -> building -> pushed -> verifying -> available
 - manifest 失败 -> failed
 - inspect 失败 -> failed
 
-- [ ] **Step 3: 实现 worker loop**
+- [x] **Step 3: 实现 worker loop**
 
 实现：
 
@@ -476,11 +476,11 @@ pending -> building -> pushed -> verifying -> available
 - max concurrency
 - graceful stop
 
-- [ ] **Step 4: 装配到 app**
+- [x] **Step 4: 装配到 app**
 
 `buildChallengeImageHandler` 或单独 builder 中创建并启动 `ImageBuildService`。不要把 build worker 挂在 HTTP handler 生命周期之外。
 
-- [ ] **Step 5: 跑测试**
+- [x] **Step 5: 跑测试**
 
 Run:
 
@@ -490,7 +490,7 @@ go test ./internal/module/challenge/application/commands -run 'ImageBuild' -coun
 go test ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouter' -count=1
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/application/commands code/backend/internal/app/composition

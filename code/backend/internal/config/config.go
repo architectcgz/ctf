@@ -157,6 +157,7 @@ type ContainerConfig struct {
 
 type ContainerRegistryConfig struct {
 	Enabled          bool          `mapstructure:"enabled"`
+	Scheme           string        `mapstructure:"scheme"`
 	Server           string        `mapstructure:"server"`
 	Username         string        `mapstructure:"username"`
 	Password         string        `mapstructure:"password"`
@@ -667,6 +668,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_workbench_readonly_enabled", false)
 	v.SetDefault("container.defense_workbench_root", "")
 	v.SetDefault("container.registry.enabled", false)
+	v.SetDefault("container.registry.scheme", "https")
 	v.SetDefault("container.registry.server", "")
 	v.SetDefault("container.registry.username", "")
 	v.SetDefault("container.registry.password", "")
