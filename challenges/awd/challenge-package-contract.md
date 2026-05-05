@@ -33,7 +33,7 @@
 
 - `challenge.yml` 必须声明 `meta.mode: awd`
 - `runtime.type` 必须为 `container`
-- `runtime.image.ref` 必须指向平台实际会拉起的题目镜像
+- 平台构建模式下可以省略 `runtime.image.ref`，平台会生成 `<registry>/awd/<slug>:<tag>`；外部镜像引用模式下才必须填写完整 `runtime.image.ref`
 - 本地调试入口固定放在 `docker/`
 - Web 类题目固定入口放在 `docker/app.py`，题目业务代码放在 `docker/challenge_app.py`
 - TCP 类题目固定入口放在 `docker/app.py`，题目业务逻辑放在 `docker/challenge_app.py`
@@ -91,7 +91,8 @@ AWD 题目在平台内启动后，容器是否归属于 `ctf` 项目，不看下
 
 `challenge.yml` 至少应保证：
 
-- `runtime.image.ref` 对应的镜像就是平台会用于创建实例的镜像
+- 平台构建模式提供 `docker/Dockerfile`，并可通过 `runtime.image.tag` 或 `runtime.image.ref` 提供 tag 建议
+- 外部镜像引用模式下，`runtime.image.ref` 对应的镜像就是平台会用于创建实例的镜像
 - `extensions.awd.runtime_config` 只描述服务访问、实例共享、checker 所需运行参数和防守范围契约
 - 不把“平台必须在哪个宿主机目录下启动容器”写进题目包字段
 - 如需给学生页提供防守边界，只使用 `extensions.awd.runtime_config.defense_scope`
@@ -160,7 +161,7 @@ docker compose up --build
 老师提交 AWD 题目之前，至少自查：
 
 - `challenge.yml` 已声明 `meta.mode: awd`
-- `runtime.image.ref` 与本地 build 出来的镜像一致
+- 平台构建模式已提供 `docker/Dockerfile`，外部镜像引用模式下 `runtime.image.ref` 与本地 build 出来的镜像一致
 - 本地 `docker compose up --build` 可以启动
 - 本地 `check/check.py` 可以跑通
 - 学生可改代码和平台契约代码已分离，`defense_scope` 没有暴露漏洞提示

@@ -8,7 +8,7 @@
 编写题包 -> 上传预览 -> 平台构建 -> 推送 registry -> 拉取/试跑校验 -> 落库 -> 发布/配赛
 ```
 
-这份文档定义目标架构。当前代码已有题包上传、解析、导入、registry 拉取认证和运行时拉起能力，但平台构建并上传镜像还没有完整任务系统；后续实现以本文为方案依据。
+这份文档定义题包 registry 交付闭环。当前实现已经具备题包上传预览、平台镜像命名、异步构建任务、Docker build/push、registry manifest 校验、pull/inspect 校验和导入落库能力；后续扩展以本文的边界继续推进。
 
 ## 设计结论
 
@@ -93,8 +93,7 @@ registry.example.edu/jeopardy/web-demo:v1
 7. 如果题包包含拓扑，使用平台生成后的 image ref 归一化入口节点和所有节点镜像引用。
 8. push 到平台 registry。
 9. 通过 registry manifest、docker pull、image inspect 做可用性校验。
-10. 启动一次预览实例或 checker preview。
-11. 全部通过后，将题目和镜像记录落库为可发布状态。
+10. 镜像变为 `available` 后，发布自检或 AWD checker preview 才允许进入后续发布/配赛。
 
 ### 2. 引用已有镜像
 
@@ -394,7 +393,7 @@ AWD 题目加入赛事前，readiness 必须检查镜像状态；镜像不可用
 
 - 教师上传 Jeopardy 题包后，平台可构建并推送到 `registry/jeopardy/<slug>:<tag>`。
 - 管理员上传 AWD 题包后，平台可构建并推送到 `registry/awd/<slug>:<tag>`。
-- registry manifest、pull、inspect 和预览试跑失败时，题目不能发布或加入 AWD 可用服务。
+- registry manifest、pull、inspect、发布自检或 checker preview 失败时，题目不能发布或加入 AWD 可用服务。
 - 数据库中的 `images.status=available` 只表示镜像已验证可运行。
 - 管理端能看到构建日志、最终 image ref、digest 和失败摘要。
 - 引用已有镜像路径仍可使用，但必须显式选择并通过拉取校验。

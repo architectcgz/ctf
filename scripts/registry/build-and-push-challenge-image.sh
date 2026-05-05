@@ -26,7 +26,7 @@ usage() {
 
 说明:
   面向题目作者/管理员的镜像交付脚本。
-  传入题目包目录后，脚本会读取 challenge.yml 的 meta.slug，
+  传入题目包目录后，脚本会读取 challenge.yml 的 meta.slug 与 meta.mode，
   使用 docker/ 目录构建镜像，打上私有 registry 标签并 push。
   题目包目录既可以传当前目录相对路径，也可以传仓库根目录相对路径。
 
@@ -39,7 +39,7 @@ usage() {
                          访问 registry API 使用的协议，默认 http
   --username USER        registry 用户名
   --password PASSWORD    registry 密码
-  --update-manifest      push 成功后把 challenge.yml 的 runtime.image.ref 更新为最终镜像地址
+  --update-manifest      push 成功后把 challenge.yml 的 runtime.image.ref 更新为最终镜像地址；平台构建导入通常不需要
   --no-login             跳过 docker login，适用于已登录或无认证 registry
   -h, --help             显示帮助
 
@@ -56,8 +56,8 @@ usage() {
   命令行参数 > 当前 shell 环境变量 > registry 环境文件 > registry 配置文件 > 默认本机演示地址
 
 输出:
-  最后一行会输出可写入 challenge.yml 的镜像引用:
-  IMAGE_REF=<registry>/<repository>:<tag>
+  最后一行会输出平台镜像引用:
+  IMAGE_REF=<registry>/<jeopardy|awd>/<slug>:<tag>
 EOF
 }
 
@@ -210,9 +210,39 @@ parse_slug() {
   ' "${manifest}"
 }
 
+parse_mode() {
+  local manifest="$1"
+  local mode
+  mode="$(parse_yaml_with_python "${manifest}" "meta.mode" 2>/dev/null || true)"
+  if [[ -n "${mode}" ]]; then
+    printf '%s\n' "${mode}"
+    return 0
+  fi
+  mode="$(awk '
+    /^meta:[[:space:]]*$/ { in_meta=1; next }
+    /^[^[:space:]][^:]*:/ { in_meta=0 }
+    in_meta && /^[[:space:]]+mode:[[:space:]]*/ {
+      sub(/^[[:space:]]+mode:[[:space:]]*/, "")
+      gsub(/^"|"$/, "")
+      print
+      exit
+    }
+  ' "${manifest}")"
+  if [[ -n "${mode}" ]]; then
+    printf '%s\n' "${mode}"
+    return 0
+  fi
+  printf 'jeopardy\n'
+}
+
 parse_runtime_image_ref() {
   local manifest="$1"
   parse_yaml_with_python "${manifest}" "runtime.image.ref" 2>/dev/null || true
+}
+
+parse_runtime_image_tag() {
+  local manifest="$1"
+  parse_yaml_with_python "${manifest}" "runtime.image.tag" 2>/dev/null || true
 }
 
 extract_tag_from_ref() {
@@ -361,22 +391,34 @@ SLUG="$(parse_slug "${MANIFEST}")"
 
 EXISTING_REF="$(parse_runtime_image_ref "${MANIFEST}")"
 if [[ -z "${TAG}" ]]; then
+  TAG="$(parse_runtime_image_tag "${MANIFEST}")"
+fi
+if [[ -z "${TAG}" ]]; then
   TAG="$(extract_tag_from_ref "${EXISTING_REF}")"
 fi
 if [[ -z "${TAG}" ]]; then
   TAG="$(date +%Y%m%d%H%M)"
 fi
 
-IMAGE_REPOSITORY="$(extract_repository_from_ref "${EXISTING_REF}")"
-if [[ -z "${IMAGE_REPOSITORY}" ]]; then
-  IMAGE_REPOSITORY="ctf/${SLUG}"
-fi
+MODE="$(parse_mode "${MANIFEST}")"
+case "${MODE}" in
+  awd)
+    IMAGE_REPOSITORY="awd/${SLUG}"
+    ;;
+  jeopardy|"")
+    IMAGE_REPOSITORY="jeopardy/${SLUG}"
+    ;;
+  *)
+    die "meta.mode 只支持 awd 或 jeopardy，当前为: ${MODE}"
+    ;;
+esac
 
 LOCAL_REF="${IMAGE_REPOSITORY}:${TAG}"
 IMAGE_REF="${REGISTRY_SERVER}/${IMAGE_REPOSITORY}:${TAG}"
 
 log_info "题目包: ${PACK_DIR}"
 log_info "slug: ${SLUG}"
+log_info "mode: ${MODE}"
 log_info "tag: ${TAG}"
 log_info "repository: ${IMAGE_REPOSITORY}"
 log_info "registry: ${REGISTRY_SERVER}"
@@ -416,7 +458,7 @@ if [[ "${UPDATE_MANIFEST}" == "true" ]]; then
   log_success "challenge.yml 已更新"
   log_info "已设置 challenge.yml: runtime.image.ref=${IMAGE_REF}"
 else
-  log_info "请确认 challenge.yml 中已设置 runtime.image.ref=${IMAGE_REF}；也可以下次加 --update-manifest 自动写入"
+  log_info "平台构建导入不要求把最终镜像写回 challenge.yml；外部镜像引用模式才需要 runtime.image.ref"
 fi
 
 printf 'IMAGE_REF=%s\n' "${IMAGE_REF}"

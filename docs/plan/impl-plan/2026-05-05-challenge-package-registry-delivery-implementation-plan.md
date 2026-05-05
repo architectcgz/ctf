@@ -725,7 +725,7 @@ git commit -m "feat(frontend): 展示题包镜像交付状态"
   - backend focused tests
   - frontend focused tests
 
-- [ ] **Step 1: 更新脚本默认 repository**
+- [x] **Step 1: 更新脚本默认 repository**
 
 脚本按 `meta.mode` 生成：
 
@@ -736,7 +736,7 @@ awd/<slug>:<tag>
 
 不再默认 `ctf/<slug>`，也不再提示必须写回 manifest 才能上传。
 
-- [ ] **Step 2: 更新契约文档**
+- [x] **Step 2: 更新契约文档**
 
 只有代码实现后才把 `challenge-pack-v1` 从“当前不支持平台构建”改成：
 
@@ -744,7 +744,7 @@ awd/<slug>:<tag>
 - 上传者只提供源码、Dockerfile、可选 tag 建议。
 - 外部镜像引用模式才要求完整 `runtime.image.ref`。
 
-- [ ] **Step 3: 本地闭环验证**
+- [x] **Step 3: 本地闭环验证**
 
 准备一个最小 Jeopardy 题包和一个最小 AWD 题包，使用本地 registry：
 
@@ -759,7 +759,7 @@ scripts/registry/deploy-private-registry.sh --port 5000 --server 127.0.0.1:5000
 - registry 中存在 `127.0.0.1:5000/awd/<slug>:<tag>`。
 - 发布自检或 AWD readiness 在镜像失败时阻断。
 
-- [ ] **Step 4: 最小全量验证**
+- [x] **Step 4: 最小全量验证**
 
 Run:
 
@@ -772,7 +772,7 @@ npm run typecheck
 npm run test:run -- src/components/platform/__tests__/ChallengePackageImportReview.test.ts src/components/platform/awd-service/__tests__/AWDChallengeLibraryPage.test.ts src/views/platform/__tests__/ImageManage.test.ts
 ```
 
-- [ ] **Step 5: Review 记录**
+- [x] **Step 5: Review 记录**
 
 本任务属于跨模块结构性改动，完成后必须做 review，记录到：
 
@@ -788,7 +788,7 @@ Review 必查：
 - registry 凭据是否没有进入题包、日志和 response。
 - worker 是否可停止，测试是否不会留下后台进程。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/registry docs/contracts challenges/awd docs/architecture/features docs/reviews
@@ -813,4 +813,4 @@ git commit -m "docs(challenge): 同步题包 registry 交付契约"
 
 ## Plan Review Note
 
-`writing-plans` skill 建议派发 plan-document-reviewer subagent。但当前会话的系统级规则只允许在用户明确要求 sub-agent/并行代理时使用 `spawn_agent`，本次用户只要求写执行方案，因此未派发 subagent。执行前仍应由实现者按本计划的 Review Gate 做独立 review。
+计划阶段未派发 plan-document-reviewer subagent；实现完成后已按工作流进行独立 review，并将 findings、修复和复测记录归档到 `docs/reviews/backend/2026-05-05-challenge-package-registry-delivery-review.md`。

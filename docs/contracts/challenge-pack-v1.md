@@ -56,7 +56,7 @@
   - 查询最近一次发布自检：`GET /api/v1/authoring/challenges/:id/publish-requests/latest`
 - Flag 已支持：`static` / `dynamic`
 - 动态 Flag 注入已支持：实例启动时通过环境变量 `FLAG` 注入容器；拓扑节点可按 `inject_flag` 控制是否注入
-- 镜像已支持：平台当前通过“已注册镜像”运行题目；运行时可按 `container.registry` 配置为匹配的私有 registry 拉取镜像，但不支持公开的在线 Dockerfile 构建导入
+- 镜像已支持：平台可通过“平台构建”路径从题包 `docker/Dockerfile` 创建异步构建任务，推送到平台 registry 并校验；也支持显式引用已有镜像并在导入时做 manifest / pull / inspect 校验
 - 拓扑已支持：挑战拓扑、环境模板、多节点网络与 ACL 已有独立 API
 - Writeup 已支持：挑战 Writeup 已有独立 API
 - 标签已支持：通过独立 Tag API 和 `challenge_tags` 关系维护，不在当前创建题目 API 内直接写入
@@ -78,7 +78,6 @@
 
 - `manual` Flag 判题模式
 - `runtime.type = none`
-- 通过题目包直接在线构建 Dockerfile
 - 通过题目包直接导入镜像 tar
 - 多附件自动映射到题目详情页
 
@@ -90,19 +89,24 @@
 
 ### 4.1 AWD 镜像交付边界
 
-AWD 题目包只声明运行镜像引用，不承担镜像构建职责。`runtime.image.ref` 必须指向平台运行节点可拉取的镜像；题目包内的 `docker/` 目录只作为源码、构建上下文和审计材料保留，当前平台导入 AWD 题目时不会自动执行 `docker build`。
+AWD 题目包默认走平台构建路径。题包提供源码、`docker/Dockerfile` 和可选 tag 建议，平台生成最终镜像名：
+
+```text
+<registry>/awd/<slug>:<tag>
+```
+
+`runtime.image.ref` 在平台构建路径下可以省略；如果填写，平台只复用其中的 tag 建议，不复用作者写入的 registry、namespace 或 repository。
+
+如果上传者选择引用已有镜像，则 `runtime.image.ref` 必须指向平台运行节点可拉取的完整镜像。平台导入时会执行 manifest / pull / inspect 校验，校验失败会阻断 commit。
 
 推荐交付链路固定为：
 
 ```text
-题目作者机器 / CI
-  -> docker build
-  -> docker scan / smoke test
-  -> docker push registry
-
 平台后台
   -> 上传 AWD 题目包
-  -> 解析 runtime.image.ref
+  -> 解析源码、Dockerfile 和 tag 建议
+  -> 创建 image_build_jobs
+  -> docker build / push / manifest / pull / inspect
   -> 创建 AWD 题目
   -> 管理员加入比赛服务
   -> 队伍启动共享实例
@@ -111,11 +115,10 @@ AWD 题目包只声明运行镜像引用，不承担镜像构建职责。`runtim
 
 这条边界的含义是：
 
-- 镜像构建失败、基础镜像不可拉取、`pip` / `apt` / `npm` / `composer` 等依赖源不可用，应在题目作者机器或 CI 阶段暴露并修复。
-- 平台导入只校验题目包结构和 AWD 运行定义，不在上传请求中执行不受控构建。
+- 镜像构建失败、基础镜像不可拉取、`pip` / `apt` / `npm` / `composer` 等依赖源不可用，应在平台构建任务中形成失败摘要；题目作者也可以在本地或 CI 先行暴露并修复。
+- 平台上传请求只做解包和预览；实际构建由异步 worker 执行。
 - 平台运行只依赖最终镜像仓库，避免比赛现场临时访问 Docker Hub、PyPI、apt 源等外部服务。
 - 管理员导入后仍应执行 checker preview；preview 通过后再将 AWD 题目加入比赛服务并开赛。
-- 如果后续要支持“上传源码后平台自动构建”，应作为独立的镜像构建任务系统设计，例如 `image_build_jobs`、隔离 builder、构建日志、超时、资源限制、registry 凭据和失败重试，而不是混入 AWD 题目导入接口。
 
 ---
 
@@ -232,7 +235,7 @@ runtime:
 - `flag.value`：静态题目必填
 - `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
 - `runtime.type`：当前首版仅支持 `container`
-- `runtime.image.ref`：容器题必填，表示最终运行镜像引用
+- `runtime.image.ref`：外部镜像引用模式必填；平台构建模式可省略，或只作为 tag 建议来源
 - `runtime.service`：可选，声明单容器题的入口服务；省略时按 HTTP 题兼容处理
   - `protocol`：入口协议，当前支持 `http` / `tcp`，默认 `http`
   - `port`：容器内入口端口；TCP 题必须填写，例如 Pwn 原生 TCP 服务监听 `8080` 时写 `8080`
@@ -524,14 +527,14 @@ extensions:
 - `extensions.awd.runtime_config`
   - 可选，对应 `runtime_config`
   - 建议写 `instance_sharing`、`service_port`、拓扑或运行时参数
-  - 平台导入时会额外把 `runtime.image.ref` 解析成 `image_ref` 与 `image_id` 并补进题目运行配置
+  - 平台导入时会把平台生成或校验通过的镜像补成 `image_ref` 与 `image_id`
 
 边界说明：
 
 - `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 题目；真正比赛分值仍在管理员配置比赛时设置
 - AWD 题目导入成功后，平台会直接生成 `published` 状态题目，便于管理员在比赛题池里立即选题
 - 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回 AWD 题目；上传后编辑只能覆盖赛事副本，不能替代题目包内的默认 checker
-- `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 题目不会自动构建 `docker/` 目录中的 Dockerfile
+- 平台构建模式下，题包可省略 `runtime.image.ref`，但必须提供 `docker/Dockerfile`；外部镜像引用模式下，`runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用
 - `docker/check/` 或类似目录中的 `check.py` 默认只作为出题人本地验证脚本和审计材料保留；只有在 `checker.type=script_checker` 且通过 `config.entry` / `config.files` 显式声明时，平台才会把这些文件作为私有 artifact 交给 sandbox runner 执行。私有 checker 文件不会作为选手附件公开，也不会挂载进目标服务容器。
 
 ### 6.1 `tcp_standard` 配置示例
