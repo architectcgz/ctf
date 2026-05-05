@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ShieldAlert,
   Sword,
@@ -37,6 +38,7 @@ const props = defineProps<{
   challenges: ContestChallengeItem[]
 }>()
 
+const router = useRouter()
 const toast = useToast()
 const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
@@ -316,6 +318,17 @@ function openDefenseService(serviceId: string): void {
   void openService(instanceId)
 }
 
+function openDefenseWorkbench(serviceId: string): void {
+  if (!serviceId || !props.contest.id) return
+  void router.push({
+    name: 'ContestAWDDefenseWorkbench',
+    params: {
+      id: props.contest.id,
+      serviceId,
+    },
+  })
+}
+
 async function copyTextToClipboard(text: string, successMessage: string): Promise<boolean> {
   if (!text || typeof navigator === 'undefined' || !navigator.clipboard) {
     toast.error('复制失败，请手动选择文本')
@@ -431,7 +444,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel">
           <header class="ops-panel__header">
             <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
-            <h3 class="ops-panel__title">防守监控</h3>
+            <h3 class="ops-panel__title">我的防守</h3>
           </header>
 
           <div class="ops-panel__content custom-scrollbar">
@@ -460,6 +473,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               :opening-ssh-key="openingSSHKey"
               :service-action-pending-by-id="defenseServiceActionPendingById"
               @select-service="selectService"
+              @open-defense="openDefenseWorkbench"
               @open-service="openDefenseService"
               @request-ssh="openDefenseSSH"
               @restart-service="restartService"

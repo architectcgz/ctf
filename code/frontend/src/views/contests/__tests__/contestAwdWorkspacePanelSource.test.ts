@@ -5,10 +5,11 @@ import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.v
 
 describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
-    expect(awdWorkspaceSource).toContain('防守监控')
+    expect(awdWorkspaceSource).toContain('我的防守')
     expect(awdWorkspaceSource).toContain('攻击向量')
     expect(awdWorkspaceSource).toContain('战场情报')
     expect(awdWorkspaceSource).toContain('最近战报')
+    expect(awdWorkspaceSource).toContain('ContestAWDDefenseWorkbench')
     expect(awdWorkspaceSource).toContain('目标题目')
     expect(awdWorkspaceSource).toContain('队伍筛选')
     expect(awdWorkspaceSource).toContain('输入获取到的 Flag...')
@@ -26,6 +27,7 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdDefenseConnectionPanelSource).toContain('票据将在')
     expect(awdDefenseConnectionPanelSource).toContain('expires_at')
     expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
+    expect(awdWorkspaceSource).toContain('openDefenseWorkbench')
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {

@@ -3,6 +3,8 @@ import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
+  AWDDefenseDirectoryData,
+  AWDDefenseFileData,
   AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
@@ -427,6 +429,30 @@ export async function requestContestAWDDefenseSSH(
   return request<AWDDefenseSSHAccessData>({
     method: 'POST',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/ssh`,
+  })
+}
+
+export async function requestContestAWDDefenseDirectory(
+  contestId: string,
+  serviceId: string,
+  path: string
+): Promise<AWDDefenseDirectoryData> {
+  return request<AWDDefenseDirectoryData>({
+    method: 'GET',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/directories`,
+    params: { path },
+  })
+}
+
+export async function requestContestAWDDefenseFile(
+  contestId: string,
+  serviceId: string,
+  path: string
+): Promise<AWDDefenseFileData> {
+  return request<AWDDefenseFileData>({
+    method: 'GET',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
+    params: { path },
   })
 }
 

@@ -114,27 +114,29 @@ type practiceInstanceRepository interface {
 }
 
 type runtimeModuleDeps struct {
-	input                 Deps
-	repo                  runtimeInstanceRepository
-	proxyTicketReader     runtimeports.ProxyTicketInstanceReader
-	practiceInstanceRepo  practiceInstanceRepository
-	instanceCommands      runtimeHTTPCommandService
-	instanceQueries       runtimeHTTPQueryService
-	countRunningQuery     opsports.RuntimeQuery
-	proxyTicketService    runtimeHTTPProxyTicketService
-	cleanupService        *runtimecmd.RuntimeCleanupService
-	maintenanceService    *runtimecmd.RuntimeMaintenanceService
-	provisioningService   *runtimecmd.ProvisioningService
-	containerStatsService *runtimeapp.ContainerStatsService
-	imageRuntime          challengeports.ImageRuntime
-	containerFiles        contestports.AWDContainerFileWriter
-	proxyTrafficRecorder  runtimeports.ProxyTrafficEventRecorder
-	containerPublicHost   string
-	sshExecutor           ContainerInteractiveExecutor
-	defenseWorkbench      runtimeDefenseWorkbenchRuntime
-	defenseSSHEnabled     bool
-	defenseSSHHost        string
-	defenseSSHPort        int
+	input                           Deps
+	repo                            runtimeInstanceRepository
+	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
+	practiceInstanceRepo            practiceInstanceRepository
+	instanceCommands                runtimeHTTPCommandService
+	instanceQueries                 runtimeHTTPQueryService
+	countRunningQuery               opsports.RuntimeQuery
+	proxyTicketService              runtimeHTTPProxyTicketService
+	cleanupService                  *runtimecmd.RuntimeCleanupService
+	maintenanceService              *runtimecmd.RuntimeMaintenanceService
+	provisioningService             *runtimecmd.ProvisioningService
+	containerStatsService           *runtimeapp.ContainerStatsService
+	imageRuntime                    challengeports.ImageRuntime
+	containerFiles                  contestports.AWDContainerFileWriter
+	proxyTrafficRecorder            runtimeports.ProxyTrafficEventRecorder
+	containerPublicHost             string
+	sshExecutor                     ContainerInteractiveExecutor
+	defenseWorkbench                runtimeDefenseWorkbenchRuntime
+	defenseWorkbenchReadOnlyEnabled bool
+	defenseWorkbenchRoot            string
+	defenseSSHEnabled               bool
+	defenseSSHHost                  string
+	defenseSSHPort                  int
 }
 
 type runtimeDefenseWorkbenchRuntime interface {
@@ -153,18 +155,18 @@ func Build(deps Deps) *Module {
 	contestDeps := buildRuntimeContestDeps(internalDeps)
 
 	return &Module{
-		BackgroundJobs:               buildBackgroundJobs(internalDeps),
-		PracticeInstanceRepository:   practiceDeps.instanceRepository,
-		PracticeRuntimeService:       practiceDeps.runtimeService,
-		ChallengeImageRuntime:        challengeDeps.imageRuntime,
-		ChallengeRuntimeProbe:        challengeDeps.runtimeProbe,
-		OpsRuntimeQuery:              opsDeps.query,
-		OpsRuntimeStatsProvider:      opsDeps.statsProvider,
-		ContestContainerFiles:        contestDeps.containerFiles,
-		ProxyTicketReader:            internalDeps.proxyTicketReader,
-		ProxyTicketService:           internalDeps.proxyTicketService,
-		SSHExecutor:                  internalDeps.sshExecutor,
-		http:                         httpDeps,
+		BackgroundJobs:             buildBackgroundJobs(internalDeps),
+		PracticeInstanceRepository: practiceDeps.instanceRepository,
+		PracticeRuntimeService:     practiceDeps.runtimeService,
+		ChallengeImageRuntime:      challengeDeps.imageRuntime,
+		ChallengeRuntimeProbe:      challengeDeps.runtimeProbe,
+		OpsRuntimeQuery:            opsDeps.query,
+		OpsRuntimeStatsProvider:    opsDeps.statsProvider,
+		ContestContainerFiles:      contestDeps.containerFiles,
+		ProxyTicketReader:          internalDeps.proxyTicketReader,
+		ProxyTicketService:         internalDeps.proxyTicketService,
+		SSHExecutor:                internalDeps.sshExecutor,
+		http:                       httpDeps,
 	}
 }
 
@@ -195,27 +197,29 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	proxyTicketService := runtimeqry.NewProxyTicketService(proxyTicketStore, repo, cfg.Container.ProxyTicketTTL)
 
 	return runtimeModuleDeps{
-		input:                 deps,
-		repo:                  repo,
-		proxyTicketReader:     repo,
-		practiceInstanceRepo:  repo,
-		instanceCommands:      runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
-		instanceQueries:       runtimeqry.NewInstanceService(repo),
-		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
-		proxyTicketService:    proxyTicketService,
-		cleanupService:        cleanupService,
-		maintenanceService:    maintenanceService,
-		provisioningService:   provisioningService,
-		containerStatsService: containerStatsService,
-		proxyTrafficRecorder:  runtimeinfra.NewProxyTrafficEventRecorder(deps.DB),
-		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.Engine),
-		containerFiles:        runtimeapp.NewContainerFileService(deps.Engine, log.Named("runtime_container_file_service")),
-		containerPublicHost:   cfg.Container.PublicHost,
-		sshExecutor:           deps.Engine,
-		defenseWorkbench:      deps.Engine,
-		defenseSSHEnabled:     cfg.Container.DefenseSSHEnabled && deps.Engine != nil,
-		defenseSSHHost:        cfg.Container.DefenseSSHHost,
-		defenseSSHPort:        cfg.Container.DefenseSSHPort,
+		input:                           deps,
+		repo:                            repo,
+		proxyTicketReader:               repo,
+		practiceInstanceRepo:            repo,
+		instanceCommands:                runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
+		instanceQueries:                 runtimeqry.NewInstanceService(repo),
+		countRunningQuery:               runtimeqry.NewCountRunningService(repo),
+		proxyTicketService:              proxyTicketService,
+		cleanupService:                  cleanupService,
+		maintenanceService:              maintenanceService,
+		provisioningService:             provisioningService,
+		containerStatsService:           containerStatsService,
+		proxyTrafficRecorder:            runtimeinfra.NewProxyTrafficEventRecorder(deps.DB),
+		imageRuntime:                    runtimeapp.NewImageRuntimeService(deps.Engine),
+		containerFiles:                  runtimeapp.NewContainerFileService(deps.Engine, log.Named("runtime_container_file_service")),
+		containerPublicHost:             cfg.Container.PublicHost,
+		sshExecutor:                     deps.Engine,
+		defenseWorkbench:                deps.Engine,
+		defenseWorkbenchReadOnlyEnabled: cfg.Container.DefenseWorkbenchReadOnlyEnabled && deps.Engine != nil,
+		defenseWorkbenchRoot:            cfg.Container.DefenseWorkbenchRoot,
+		defenseSSHEnabled:               cfg.Container.DefenseSSHEnabled && deps.Engine != nil,
+		defenseSSHHost:                  cfg.Container.DefenseSSHHost,
+		defenseSSHPort:                  cfg.Container.DefenseSSHPort,
 	}
 }
 
@@ -246,6 +250,8 @@ func buildRuntimeHTTPDeps(deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.defenseSSHEnabled,
 			deps.defenseSSHHost,
 			deps.defenseSSHPort,
+			deps.defenseWorkbenchReadOnlyEnabled,
+			deps.defenseWorkbenchRoot,
 		),
 		proxyTrafficRecorder: deps.proxyTrafficRecorder,
 	}

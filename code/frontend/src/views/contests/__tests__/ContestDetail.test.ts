@@ -174,6 +174,7 @@ describe('ContestDetail', () => {
       routes: [
         { path: '/contests', component: { template: '<div>contests</div>' } },
         { path: '/contests/:id', component: { template: '<div />' } },
+        { path: '/contests/:id/awd/defense/:serviceId', name: 'ContestAWDDefenseWorkbench', component: { template: '<div>defense</div>' } },
       ],
     })
     await router.push('/contests/1')
@@ -863,6 +864,86 @@ describe('ContestDetail', () => {
 
     expect(wrapper.text()).toContain('服务 #7009')
     expect(wrapper.text()).toContain('服务 #7010')
+  })
+
+  it('点击防守按钮后应跳转到独立防守内容页', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          instance_id: '9001',
+          access_url: 'http://red.internal',
+          instance_status: 'running',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    const defenseButton = wrapper.findAll('button').find((node) => node.text().includes('防守'))
+    expect(defenseButton).toBeTruthy()
+
+    await defenseButton!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('ContestAWDDefenseWorkbench')
+    expect(router.currentRoute.value.params).toMatchObject({
+      id: '1',
+      serviceId: '7009',
+    })
   })
 
   it('学生 AWD 工作台应优先用 awd service 标识匹配运行态服务', async () => {
