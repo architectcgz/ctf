@@ -64,7 +64,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	if err != nil {
 		return nil, err
 	}
-	awdChallengeHandler := buildChallengeAWDChallengeHandler(root.DB(), deps)
+	awdChallengeHandler := buildChallengeAWDChallengeHandler(root.DB(), deps, imageBuildService)
 	topologyHandler := buildChallengeTopologyHandler(deps)
 	writeupHandler := buildChallengeWriteupHandler(deps)
 	if root.Config().Challenge.PublishCheck.Enabled {
@@ -89,8 +89,8 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	}, nil
 }
 
-func buildChallengeAWDChallengeHandler(db *gorm.DB, deps challengeModuleDeps) *challengehttp.AWDChallengeHandler {
-	commandService := challengecmd.NewAWDChallengeCommandFacade(db, deps.awdChallengeCommandRepo)
+func buildChallengeAWDChallengeHandler(db *gorm.DB, deps challengeModuleDeps, imageBuildService *challengecmd.ImageBuildService) *challengehttp.AWDChallengeHandler {
+	commandService := challengecmd.NewAWDChallengeCommandFacade(db, deps.awdChallengeCommandRepo, imageBuildService)
 	queryService := challengeqry.NewAWDChallengeQueryService(deps.awdChallengeQueryRepo)
 	return challengehttp.NewAWDChallengeHandler(commandService, queryService)
 }

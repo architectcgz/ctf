@@ -563,11 +563,11 @@ git commit -m "feat(challenge): 导入题包创建平台构建任务"
   - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service_test.go`
   - `code/backend/internal/module/challenge/api/http/awd_challenge_handler_test.go`
 
-- [ ] **Step 1: 写 AWD 无 image ref 测试**
+- [x] **Step 1: 写 AWD 无 image ref 测试**
 
 AWD 包包含 `docker/Dockerfile`、省略 `runtime.image.ref`，preview 通过并返回平台目标 ref。
 
-- [ ] **Step 2: 写 commit 测试**
+- [x] **Step 2: 写 commit 测试**
 
 commit 后：
 
@@ -576,15 +576,15 @@ commit 后：
 - readiness 仍为 pending
 - 不把 image 标为 available
 
-- [ ] **Step 3: 实现 AWD 接入**
+- [x] **Step 3: 实现 AWD 接入**
 
 `AWDChallengeImportService` 注入或持有 image delivery service。为避免构造函数破坏面过大，可以先用可选参数扩展 `NewAWDChallengeImportService(db, repo, imageDelivery...)`。
 
-- [ ] **Step 4: readiness gate 检查**
+- [x] **Step 4: readiness gate 检查**
 
 确认 AWD 加入赛事或 readiness 校验路径读取 image status；若只看 runtime_config，需要补检查。
 
-- [ ] **Step 5: 跑测试**
+- [x] **Step 5: 跑测试**
 
 Run:
 
@@ -595,7 +595,7 @@ go test ./internal/module/challenge/api/http -run 'AWDChallenge' -count=1
 go test ./internal/module/contest/application/commands -run 'AWDService|Readiness|Image' -count=1
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/application/commands code/backend/internal/module/challenge/api/http code/backend/internal/dto code/backend/internal/module/contest

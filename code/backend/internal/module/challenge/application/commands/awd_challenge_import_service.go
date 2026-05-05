@@ -36,15 +36,21 @@ type storedAWDChallengeImportPreview struct {
 }
 
 type AWDChallengeImportService struct {
-	db   *gorm.DB
-	repo challengeports.AWDChallengeCommandRepository
+	db         *gorm.DB
+	repo       challengeports.AWDChallengeCommandRepository
+	imageBuild *ImageBuildService
 }
 
 func NewAWDChallengeImportService(
 	db *gorm.DB,
 	repo challengeports.AWDChallengeCommandRepository,
+	imageBuild ...*ImageBuildService,
 ) *AWDChallengeImportService {
-	return &AWDChallengeImportService{db: db, repo: repo}
+	service := &AWDChallengeImportService{db: db, repo: repo}
+	if len(imageBuild) > 0 {
+		service.imageBuild = imageBuild[0]
+	}
+	return service
 }
 
 func (s *AWDChallengeImportService) PreviewImport(
@@ -83,7 +89,7 @@ func (s *AWDChallengeImportService) PreviewImport(
 		return nil, err
 	}
 
-	preview := buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now())
+	preview := s.buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now())
 	record := storedAWDChallengeImportPreview{
 		ID:        previewID,
 		FileName:  fileName,
@@ -156,14 +162,14 @@ func (s *AWDChallengeImportService) CommitImport(
 	var challenge *model.AWDChallenge
 	artifactCleanupDirs := make([]string, 0, 1)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		resolvedImageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
+		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, tx, actorUserID, parsed)
 		if err != nil {
 			return err
 		}
 
 		runtimeConfig := cloneAWDChallengeConfig(parsed.RuntimeConfig)
-		if strings.TrimSpace(parsed.RuntimeImageRef) != "" {
-			runtimeConfig["image_ref"] = parsed.RuntimeImageRef
+		if strings.TrimSpace(resolvedImageRef) != "" {
+			runtimeConfig["image_ref"] = resolvedImageRef
 		}
 		if resolvedImageID > 0 {
 			runtimeConfig["image_id"] = resolvedImageID
@@ -271,7 +277,7 @@ func (s *AWDChallengeImportService) CommitImport(
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
 
-func buildAWDChallengeImportPreview(
+func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 	id string,
 	fileName string,
 	parsed *domain.ParsedAWDChallengePackage,
@@ -279,6 +285,16 @@ func buildAWDChallengeImportPreview(
 ) *dto.AWDChallengeImportPreviewResp {
 	if parsed == nil {
 		return nil
+	}
+	imageDelivery := dto.ChallengeImportImageDeliveryResp{
+		SourceType:   parsed.ImageSourceType,
+		SuggestedTag: parsed.SuggestedImageTag,
+	}
+	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && s != nil && s.imageBuild != nil {
+		if targetRef, err := s.imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeAWD, parsed.Slug, parsed.SuggestedImageTag); err == nil {
+			imageDelivery.TargetImageRef = targetRef
+			imageDelivery.BuildStatus = model.ImageStatusPending
+		}
 	}
 	return &dto.AWDChallengeImportPreviewResp{
 		ID:               id,
@@ -298,9 +314,38 @@ func buildAWDChallengeImportPreview(
 		DefenseEntryMode: parsed.DefenseEntryMode,
 		AccessConfig:     cloneAWDChallengeConfig(parsed.AccessConfig),
 		RuntimeConfig:    cloneAWDChallengeConfig(parsed.RuntimeConfig),
+		ImageDelivery:    imageDelivery,
 		Warnings:         append([]string(nil), parsed.Warnings...),
 		CreatedAt:        createdAt,
 	}
+}
+
+func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
+	ctx context.Context,
+	tx *gorm.DB,
+	actorUserID int64,
+	parsed *domain.ParsedAWDChallengePackage,
+) (int64, string, error) {
+	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
+		imageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
+		return imageID, parsed.RuntimeImageRef, err
+	}
+	if s == nil || s.imageBuild == nil {
+		return 0, "", fmt.Errorf("image build service is not configured")
+	}
+	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+		ChallengeMode:  domain.ChallengePackageModeAWD,
+		PackageSlug:    parsed.Slug,
+		SuggestedTag:   parsed.SuggestedImageTag,
+		SourceDir:      parsed.RootDir,
+		DockerfilePath: parsed.DockerfilePath,
+		ContextPath:    parsed.BuildContextPath,
+		CreatedBy:      actorUserID,
+	})
+	if err != nil {
+		return 0, "", err
+	}
+	return result.ImageID, result.TargetRef, nil
 }
 
 func findAWDChallengeForImportedPackageUpsert(

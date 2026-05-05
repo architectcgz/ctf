@@ -18,10 +18,15 @@ type AWDChallengeCommandFacade struct {
 func NewAWDChallengeCommandFacade(
 	db *gorm.DB,
 	repo challengeports.AWDChallengeCommandRepository,
+	imageBuild ...*ImageBuildService,
 ) *AWDChallengeCommandFacade {
+	var buildService *ImageBuildService
+	if len(imageBuild) > 0 {
+		buildService = imageBuild[0]
+	}
 	return &AWDChallengeCommandFacade{
 		core:    NewAWDChallengeService(repo),
-		imports: NewAWDChallengeImportService(db, repo),
+		imports: NewAWDChallengeImportService(db, repo, buildService),
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 )
@@ -80,6 +81,95 @@ func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
 	}
 	if runtimeConfig["image_ref"] != "registry.example.edu/ctf/awd-bank-portal:v1" {
 		t.Fatalf("unexpected stored runtime_config: %+v", runtimeConfig)
+	}
+}
+
+func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewAWDChallengeImportService(db, repo, imageBuildService)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-platform-build.zip",
+		bytes.NewReader(buildAWDPlatformBuildImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	}
+	if preview.ImageDelivery.TargetImageRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
+		t.Fatalf("TargetImageRef = %q", preview.ImageDelivery.TargetImageRef)
+	}
+	if preview.ImageDelivery.BuildStatus != model.ImageStatusPending {
+		t.Fatalf("BuildStatus = %q, want pending", preview.ImageDelivery.BuildStatus)
+	}
+	if imageRef, _ := preview.RuntimeConfig["image_ref"].(string); imageRef != "" {
+		t.Fatalf("expected no author image_ref in preview runtime_config, got %q", imageRef)
+	}
+}
+
+func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewAWDChallengeImportService(db, repo, imageBuildService)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-platform-build.zip",
+		bytes.NewReader(buildAWDPlatformBuildImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	committed, err := service.CommitImport(context.Background(), 2001, preview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport() error = %v", err)
+	}
+	if committed.ReadinessStatus != string(model.AWDReadinessStatusPending) {
+		t.Fatalf("ReadinessStatus = %q, want pending", committed.ReadinessStatus)
+	}
+	if committed.RuntimeConfig["image_ref"] != "127.0.0.1:5000/awd/awd-platform-build:c1" {
+		t.Fatalf("unexpected runtime_config.image_ref: %+v", committed.RuntimeConfig)
+	}
+	imageID := readInt64FromAnyForAWDImportTest(committed.RuntimeConfig["image_id"])
+	if imageID <= 0 {
+		t.Fatalf("expected runtime_config.image_id, got %+v", committed.RuntimeConfig)
+	}
+
+	image, err := imageRepo.FindByID(context.Background(), imageID)
+	if err != nil {
+		t.Fatalf("FindByID(image) error = %v", err)
+	}
+	if image.Status != model.ImageStatusPending ||
+		image.SourceType != model.ImageSourceTypePlatformBuild ||
+		image.BuildJobID == nil {
+		t.Fatalf("unexpected platform image: %+v", image)
+	}
+
+	job, err := imageRepo.FindImageBuildJobByID(context.Background(), *image.BuildJobID)
+	if err != nil {
+		t.Fatalf("FindImageBuildJobByID() error = %v", err)
+	}
+	if job.Status != model.ImageBuildJobStatusPending ||
+		job.TargetRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
+		t.Fatalf("unexpected build job: %+v", job)
 	}
 }
 
@@ -420,6 +510,101 @@ extensions:
 	return buffer.Bytes()
 }
 
+func buildAWDPlatformBuildImportArchive(t *testing.T) []byte {
+	t.Helper()
+
+	files := map[string]string{
+		"awd-platform-build/challenge.yml": `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-platform-build
+  title: AWD Platform Build
+  category: web
+  difficulty: hard
+  points: 500
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    tag: c1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: v2026.05
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /healthz
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`,
+		"awd-platform-build/statement.md":            "平台构建 AWD 服务。",
+		"awd-platform-build/docker/Dockerfile":       "FROM python:3.12-alpine\nCOPY . /app\n",
+		"awd-platform-build/docker/app.py":           "print('entry')\n",
+		"awd-platform-build/docker/ctf_runtime.py":   "print('runtime')\n",
+		"awd-platform-build/docker/challenge_app.py": "print('challenge')\n",
+		"awd-platform-build/docker/check/check.py":   "print('check')\n",
+	}
+
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for name, content := range files {
+		fileWriter, err := writer.Create(name)
+		if err != nil {
+			t.Fatalf("Create(%s) error = %v", name, err)
+		}
+		if _, err := io.WriteString(fileWriter, content); err != nil {
+			t.Fatalf("WriteString(%s) error = %v", name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	return buffer.Bytes()
+}
+
 func buildAWDTCPCheckerImportArchive(t *testing.T) []byte {
 	t.Helper()
 
@@ -503,6 +688,19 @@ extensions:
 		t.Fatalf("Close() error = %v", err)
 	}
 	return buffer.Bytes()
+}
+
+func readInt64FromAnyForAWDImportTest(value any) int64 {
+	switch typed := value.(type) {
+	case int64:
+		return typed
+	case int:
+		return int64(typed)
+	case float64:
+		return int64(typed)
+	default:
+		return 0
+	}
 }
 
 func buildAWDScriptCheckerImportArchive(t *testing.T) []byte {
