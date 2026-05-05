@@ -6,6 +6,7 @@ import { reactive } from 'vue'
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -418,6 +419,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
     )
+  })
+
+  it('学员详情面板应通过 section 组件装配复盘区，而不是直接依赖 review workspace widget', () => {
+    expect(studentInsightPanelSource).toContain('StudentInsightAttackSessionsSection')
+    expect(studentInsightPanelSource).not.toContain('TeacherStudentReviewWorkspace')
   })
 
   it('应该支持隐藏社区题解', async () => {

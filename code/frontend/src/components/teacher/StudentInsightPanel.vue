@@ -7,7 +7,6 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
-import { TeacherStudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'
 import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -23,6 +22,7 @@ import type {
 } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { toRadarScores } from '@/utils/skillProfile'
+import StudentInsightAttackSessionsSection from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue'
 import StudentInsightManualReviewSection from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue'
 import StudentInsightWriteupsSection from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue'
 import type { StudentInsightSection } from '@/components/teacher/student-insight/studentInsightShared'
@@ -213,21 +213,15 @@ function openChallenge(challengeId: string): void {
           @review-manual-review="emit('reviewManualReview', $event)"
         />
 
-        <SectionCard
+        <StudentInsightAttackSessionsSection
           v-if="isSectionVisible('evidence')"
-          class="insight-tab-section-card"
-          title="复盘工作台"
-          subtitle="按攻击会话查看访问、请求、提交和复盘输出。"
-        >
-          <TeacherStudentReviewWorkspace
-            :evidence="evidence"
-            :attack-sessions="attackSessions"
-            :challenge-options="reviewChallengeOptions"
-            :loading="reviewWorkspaceLoading"
-            :query="reviewWorkspaceQuery"
-            @update-filters="emit('updateReviewWorkspaceFilters', $event)"
-          />
-        </SectionCard>
+          :attack-sessions="attackSessions"
+          :evidence="evidence"
+          :review-challenge-options="reviewChallengeOptions"
+          :review-workspace-loading="reviewWorkspaceLoading"
+          :review-workspace-query="reviewWorkspaceQuery"
+          @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
+        />
 
         <StudentTimelinePage v-if="isSectionVisible('timeline')" :timeline="timeline" />
       </template>

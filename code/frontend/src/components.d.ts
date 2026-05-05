@@ -167,6 +167,7 @@ declare module 'vue' {
     StudentAnalysisPage: typeof import('./components/teacher/class-management/StudentAnalysisPage.vue')['default']
     StudentCategoryProgressPage: typeof import('./components/dashboard/student/StudentCategoryProgressPage.vue')['default']
     StudentDifficultyPage: typeof import('./components/dashboard/student/StudentDifficultyPage.vue')['default']
+    StudentInsightAttackSessionsSection: typeof import('./components/teacher/student-insight/StudentInsightAttackSessionsSection.vue')['default']
     StudentInsightManualReviewSection: typeof import('./components/teacher/student-insight/StudentInsightManualReviewSection.vue')['default']
     StudentInsightPanel: typeof import('./components/teacher/StudentInsightPanel.vue')['default']
     StudentInsightWriteupsSection: typeof import('./components/teacher/student-insight/StudentInsightWriteupsSection.vue')['default']
