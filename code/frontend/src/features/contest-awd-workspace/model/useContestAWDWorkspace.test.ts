@@ -88,12 +88,6 @@ describe('useContestAWDWorkspace', () => {
       username: 'student+1+7009',
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
-      ssh_profile: {
-        alias: 'ctf-awd-1-7009',
-        host_name: '127.0.0.1',
-        port: 2222,
-        user: 'student+1+7009',
-      },
       expires_at: '2026-04-12T08:15:00Z',
     })
     instanceApiMocks.requestInstanceAccess.mockResolvedValue({
@@ -516,12 +510,6 @@ describe('useContestAWDWorkspace', () => {
           username: string
           password: string
           command: string
-          ssh_profile: {
-            alias: string
-            host_name: string
-            port: number
-            user: string
-          }
           expires_at: string
         }) => void)
       | null = null
@@ -572,12 +560,6 @@ describe('useContestAWDWorkspace', () => {
       username: string
       password: string
       command: string
-      ssh_profile: {
-        alias: string
-        host_name: string
-        port: number
-        user: string
-      }
       expires_at: string
     }) => void
     finishAccess({
@@ -586,12 +568,6 @@ describe('useContestAWDWorkspace', () => {
       username: 'student+1+7009',
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
-      ssh_profile: {
-        alias: 'ctf-awd-1-7009',
-        host_name: '127.0.0.1',
-        port: 2222,
-        user: 'student+1+7009',
-      },
       expires_at: '2026-04-12T08:15:00Z',
     })
 

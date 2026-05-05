@@ -269,12 +269,6 @@ describe('contest api contract', () => {
       username: 'student+7+7009',
       password: 'ticket-secret',
       command: 'ssh student+7+7009@127.0.0.1 -p 2222',
-      ssh_profile: {
-        alias: 'ctf-awd-7-7009',
-        host_name: '127.0.0.1',
-        port: 2222,
-        user: 'student+7+7009',
-      },
       expires_at: '2026-04-12T08:15:00Z',
     })
 
@@ -285,7 +279,7 @@ describe('contest api contract', () => {
       url: '/contests/7/awd/services/7009/defense/ssh',
     })
     expect(result.command).toBe('ssh student+7+7009@127.0.0.1 -p 2222')
-    expect(result.ssh_profile?.alias).toBe('ctf-awd-7-7009')
+    expect(result.username).toBe('student+7+7009')
     expect(result.password).toBe('ticket-secret')
   })
 

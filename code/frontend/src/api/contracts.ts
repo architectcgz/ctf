@@ -514,20 +514,12 @@ export interface ContestAWDWorkspaceData {
   recent_events: ContestAWDWorkspaceRecentEventData[]
 }
 
-export interface SSHProfileData {
-  alias: string
-  host_name: string
-  port: number
-  user: string
-}
-
 export interface AWDDefenseSSHAccessData {
   host: string
   port: number
   username: string
   password: string
   command: string
-  ssh_profile?: SSHProfileData
   expires_at: ISODateTime
 }
 

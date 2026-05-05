@@ -1,5 +1,4 @@
 export {
-  buildOpenSSHConfig,
   canOpenDefenseService,
   getDefenseInstanceStatusLabel,
   getDefenseServiceStatusLabel,

@@ -15,10 +15,10 @@ import {
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import {
-  buildOpenSSHConfig,
   getVSCodeSSHCommand,
   toDefenseServiceCards,
   useAwdDefenseServiceSelection,
@@ -43,7 +43,6 @@ const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
 const copiedSSHCommandKey = ref('')
-const copiedSSHConfigKey = ref('')
 
 const {
   workspace,
@@ -135,6 +134,13 @@ const challengeByServiceId = computed(() => {
 
 const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
+const selectedDefenseServiceCard = computed(
+  () => defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value) || null
+)
+const selectedDefenseService = computed(() =>
+  selectedServiceId.value ? servicesByServiceId.value.get(selectedServiceId.value) || null : null
+)
+const selectedDefenseServiceTitle = computed(() => selectedDefenseServiceCard.value?.title || '')
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
   lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
@@ -300,11 +306,6 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
-function getOpenSSHConfig(serviceId?: string): string {
-  const access = getSSHAccess(serviceId)
-  return buildOpenSSHConfig(access?.ssh_profile)
-}
-
 function getSSHCommand(serviceId?: string): string {
   return getVSCodeSSHCommand(getSSHAccess(serviceId))
 }
@@ -334,18 +335,9 @@ async function copyTextToClipboard(text: string, successMessage: string): Promis
 
 async function copySSHCommand(serviceId?: string): Promise<void> {
   if (!serviceId) return
-  const copied = await copyTextToClipboard(getSSHCommand(serviceId), 'VS Code SSH 命令已复制')
+  const copied = await copyTextToClipboard(getSSHCommand(serviceId), 'SSH 命令已复制')
   if (copied) {
     copiedSSHCommandKey.value = serviceId
-  }
-}
-
-async function copySSHConfig(serviceId?: string): Promise<void> {
-  const config = getOpenSSHConfig(serviceId)
-  if (!serviceId) return
-  const copied = await copyTextToClipboard(config, 'OpenSSH 配置已复制')
-  if (copied) {
-    copiedSSHConfigKey.value = serviceId
   }
 }
 
@@ -467,15 +459,28 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               :opening-service-key="openingServiceKey"
               :opening-ssh-key="openingSSHKey"
               :service-action-pending-by-id="defenseServiceActionPendingById"
-              :access-by-service-id="sshAccessByServiceId"
-              :copied-command-key="copiedSSHCommandKey"
-              :copied-config-key="copiedSSHConfigKey"
               @select-service="selectService"
               @open-service="openDefenseService"
               @request-ssh="openDefenseSSH"
               @restart-service="restartService"
+            />
+            <AWDDefenseOperationsPanel
+              :service-card="selectedDefenseServiceCard"
+              :service="selectedDefenseService"
+              :service-title="selectedDefenseServiceTitle"
+              :opening-service-key="openingServiceKey"
+              :opening-ssh-key="openingSSHKey"
+              :action-pending="
+                selectedServiceId ? Boolean(defenseServiceActionPendingById[selectedServiceId]) : false
+              "
+              :loading="loading"
+              :access="getSSHAccess(selectedServiceId)"
+              :copied-command="copiedSSHCommandKey === selectedServiceId"
+              @open-service="openDefenseService"
+              @request-ssh="openDefenseSSH"
+              @restart-service="restartService"
+              @refresh="refreshAll"
               @copy-command="copySSHCommand"
-              @copy-config="copySSHConfig"
             />
 
           </div>

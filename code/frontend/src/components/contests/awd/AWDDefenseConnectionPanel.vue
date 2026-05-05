@@ -3,23 +3,19 @@ import { computed } from 'vue'
 import { Copy } from 'lucide-vue-next'
 
 import type { AWDDefenseSSHAccessData } from '@/api/contracts'
-import { buildOpenSSHConfig, getVSCodeSSHCommand } from '@/features/contest-awd-workspace'
 import { formatTime } from '@/utils/format'
 
 const props = defineProps<{
   access?: AWDDefenseSSHAccessData
   serviceId: string
   copiedCommand: boolean
-  copiedConfig: boolean
 }>()
 
 const emit = defineEmits<{
   copyCommand: [serviceId: string]
-  copyConfig: [serviceId: string]
 }>()
 
-const command = computed(() => getVSCodeSSHCommand(props.access))
-const openSSHConfig = computed(() => buildOpenSSHConfig(props.access?.ssh_profile))
+const command = computed(() => props.access?.command || '')
 const expiresAtLabel = computed(() =>
   props.access?.expires_at ? `票据将在 ${formatTime(props.access.expires_at)} 过期` : ''
 )
@@ -29,7 +25,7 @@ const expiresAtLabel = computed(() =>
   <div v-if="access" class="asset-ssh">
     <div class="asset-ssh__topline">
       <div>
-        <div class="asset-ssh__label">VS Code Remote-SSH</div>
+        <div class="asset-ssh__label">SSH 连接</div>
         <code class="asset-ssh__command">{{ command }}</code>
       </div>
       <button
@@ -39,9 +35,23 @@ const expiresAtLabel = computed(() =>
         @click="emit('copyCommand', serviceId)"
       >
         <Copy class="h-3 w-3" />
-        <span>{{ copiedCommand ? '已复制' : '复制 VS Code 命令' }}</span>
+        <span>{{ copiedCommand ? '已复制' : '复制 SSH 命令' }}</span>
       </button>
     </div>
+    <dl class="asset-ssh__meta">
+      <div>
+        <dt>主机</dt>
+        <dd><code>{{ access.host }}</code></dd>
+      </div>
+      <div>
+        <dt>端口</dt>
+        <dd><code>{{ access.port }}</code></dd>
+      </div>
+      <div>
+        <dt>用户</dt>
+        <dd><code>{{ access.username }}</code></dd>
+      </div>
+    </dl>
     <div class="asset-ssh__secret">
       <span>密码</span>
       <code>{{ access.password }}</code>
@@ -49,14 +59,6 @@ const expiresAtLabel = computed(() =>
     <div v-if="expiresAtLabel" class="asset-ssh__expires">
       {{ expiresAtLabel }}
     </div>
-    <details v-if="openSSHConfig" class="asset-ssh__details">
-      <summary>OpenSSH 配置</summary>
-      <pre class="asset-ssh__config">{{ openSSHConfig }}</pre>
-      <button class="asset-ssh__copy" type="button" @click="emit('copyConfig', serviceId)">
-        <Copy class="h-3 w-3" />
-        <span>{{ copiedConfig ? '已复制' : '复制配置' }}</span>
-      </button>
-    </details>
   </div>
 </template>
 
@@ -121,37 +123,42 @@ const expiresAtLabel = computed(() =>
   white-space: nowrap;
 }
 
+.asset-ssh__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.asset-ssh__meta div {
+  min-width: 0;
+  padding: var(--space-2);
+  border-radius: var(--ui-control-radius-sm);
+  background: color-mix(in srgb, var(--color-bg-surface) 70%, transparent);
+}
+
+.asset-ssh__meta dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+}
+
+.asset-ssh__meta dd {
+  margin: var(--space-1) 0 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-11);
+}
+
 .asset-ssh__expires {
   margin-top: var(--space-2);
   color: var(--color-text-muted);
   font-size: var(--font-size-11);
   font-weight: 800;
-}
-
-.asset-ssh__details {
-  margin-top: var(--space-2);
-}
-
-.asset-ssh__details summary {
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-11);
-  font-weight: 900;
-}
-
-.asset-ssh__config {
-  margin-top: var(--space-2);
-  max-height: 12rem;
-  overflow: auto;
-  padding: var(--space-2);
-  white-space: pre-wrap;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-radius: var(--ui-control-radius-sm);
-  background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-  color: var(--color-text-primary);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-11);
-  line-height: 1.45;
 }
 
 .asset-ssh__copy {
@@ -176,5 +183,11 @@ const expiresAtLabel = computed(() =>
   min-height: 2rem;
   white-space: nowrap;
   background: var(--color-primary-soft);
+}
+
+@media (max-width: 42rem) {
+  .asset-ssh__meta {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

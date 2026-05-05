@@ -15,4 +15,4 @@ export type {
   AWDDefenseRiskLevel,
   AWDDefenseServiceCard,
 } from './awdDefensePresentation'
-export { buildOpenSSHConfig, getVSCodeSSHCommand } from './sshAccessPresentation'
+export { getVSCodeSSHCommand } from './sshAccessPresentation'
