@@ -76,8 +76,12 @@ func buildParsedAWDChallengePackage(
 	}
 
 	runtimeImageRef := resolvePackageRuntimeImageRef(manifest.Runtime)
-	if strings.TrimSpace(manifest.Runtime.Type) != "container" || runtimeImageRef == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("AWD 题目包必须提供 runtime.type=container 和 runtime.image.ref"))
+	imageSourceType, suggestedImageTag, dockerfilePath, buildContextPath := resolvePackageImageSource(rootDir, manifest.Runtime)
+	if strings.TrimSpace(manifest.Runtime.Type) != "container" {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("AWD 题目包必须提供 runtime.type=container"))
+	}
+	if runtimeImageRef == "" && dockerfilePath == "" {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("AWD 题目包必须提供 runtime.image.ref 或 docker/Dockerfile"))
 	}
 
 	awd := manifest.Extensions.AWD
@@ -139,29 +143,33 @@ func buildParsedAWDChallengePackage(
 	}
 
 	return &ParsedAWDChallengePackage{
-		Manifest:         *manifest,
-		RootDir:          rootDir,
-		Slug:             slug,
-		Title:            title,
-		Description:      description,
-		Category:         normalizePackageCategory(manifest.Meta.Category),
-		Difficulty:       normalizePackageDifficulty(manifest.Meta.Difficulty),
-		SuggestedPoints:  manifest.Meta.Points,
-		RuntimeImageRef:  runtimeImageRef,
-		ServiceType:      serviceType,
-		DeploymentMode:   deploymentMode,
-		Version:          version,
-		CheckerType:      checkerType,
-		CheckerConfig:    checkerConfig,
-		CheckerEntryPath: checkerEntryPath,
-		CheckerEntryAbs:  checkerEntryAbs,
-		CheckerFiles:     checkerFiles,
-		FlagMode:         flagMode,
-		FlagConfig:       flagConfig,
-		DefenseEntryMode: defenseEntryMode,
-		AccessConfig:     accessConfig,
-		RuntimeConfig:    runtimeConfig,
-		Warnings:         warnings,
+		Manifest:          *manifest,
+		RootDir:           rootDir,
+		Slug:              slug,
+		Title:             title,
+		Description:       description,
+		Category:          normalizePackageCategory(manifest.Meta.Category),
+		Difficulty:        normalizePackageDifficulty(manifest.Meta.Difficulty),
+		SuggestedPoints:   manifest.Meta.Points,
+		RuntimeImageRef:   runtimeImageRef,
+		ImageSourceType:   imageSourceType,
+		SuggestedImageTag: suggestedImageTag,
+		DockerfilePath:    dockerfilePath,
+		BuildContextPath:  buildContextPath,
+		ServiceType:       serviceType,
+		DeploymentMode:    deploymentMode,
+		Version:           version,
+		CheckerType:       checkerType,
+		CheckerConfig:     checkerConfig,
+		CheckerEntryPath:  checkerEntryPath,
+		CheckerEntryAbs:   checkerEntryAbs,
+		CheckerFiles:      checkerFiles,
+		FlagMode:          flagMode,
+		FlagConfig:        flagConfig,
+		DefenseEntryMode:  defenseEntryMode,
+		AccessConfig:      accessConfig,
+		RuntimeConfig:     runtimeConfig,
+		Warnings:          warnings,
 	}, nil
 }
 

@@ -111,26 +111,32 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 		return nil, fmt.Errorf("list package files: %w", err)
 	}
 
+	imageSourceType, suggestedImageTag, dockerfilePath, buildContextPath := resolvePackageImageSource(rootDir, manifest.Runtime)
+
 	parsed := &ParsedChallengePackage{
-		Manifest:        *manifest,
-		ManifestRaw:     manifestRaw,
-		RootDir:         rootDir,
-		Slug:            slug,
-		Title:           title,
-		Description:     description,
-		Category:        normalizePackageCategory(manifest.Meta.Category),
-		Difficulty:      normalizePackageDifficulty(manifest.Meta.Difficulty),
-		Points:          points,
-		FlagType:        flagType,
-		FlagValue:       flagValue,
-		FlagPrefix:      flagPrefix,
-		RuntimeImageRef: resolvePackageRuntimeImageRef(manifest.Runtime),
-		RuntimeProtocol: normalizePackageRuntimeProtocol(manifest.Runtime.Service.Protocol),
-		RuntimePort:     normalizePackageRuntimePort(manifest.Runtime.Service.Port),
-		Attachments:     attachments,
-		Hints:           hints,
-		Topology:        topology,
-		PackageFiles:    packageFiles,
+		Manifest:          *manifest,
+		ManifestRaw:       manifestRaw,
+		RootDir:           rootDir,
+		Slug:              slug,
+		Title:             title,
+		Description:       description,
+		Category:          normalizePackageCategory(manifest.Meta.Category),
+		Difficulty:        normalizePackageDifficulty(manifest.Meta.Difficulty),
+		Points:            points,
+		FlagType:          flagType,
+		FlagValue:         flagValue,
+		FlagPrefix:        flagPrefix,
+		RuntimeImageRef:   resolvePackageRuntimeImageRef(manifest.Runtime),
+		ImageSourceType:   imageSourceType,
+		SuggestedImageTag: suggestedImageTag,
+		DockerfilePath:    dockerfilePath,
+		BuildContextPath:  buildContextPath,
+		RuntimeProtocol:   normalizePackageRuntimeProtocol(manifest.Runtime.Service.Protocol),
+		RuntimePort:       normalizePackageRuntimePort(manifest.Runtime.Service.Port),
+		Attachments:       attachments,
+		Hints:             hints,
+		Topology:          topology,
+		PackageFiles:      packageFiles,
 	}
 	return parsed, nil
 }
@@ -306,4 +312,13 @@ func validatePackageDockerfileLayout(rootDir string) error {
 		}
 	}
 	return nil
+}
+
+func packageDockerBuildPaths(rootDir string) (string, string) {
+	dockerfilePath := filepath.Join(rootDir, "docker", "Dockerfile")
+	info, err := os.Stat(dockerfilePath)
+	if err != nil || info.IsDir() {
+		return "", ""
+	}
+	return dockerfilePath, filepath.Join(rootDir, "docker")
 }

@@ -248,7 +248,7 @@ git commit -m "feat(image): 增加镜像构建任务模型"
   - `code/backend/internal/module/challenge/domain/package_parser_test.go`
   - `code/backend/internal/module/challenge/domain/awd_package_parser_test.go`
 
-- [ ] **Step 1: 写命名规则测试**
+- [x] **Step 1: 写命名规则测试**
 
 新增测试覆盖：
 
@@ -257,7 +257,7 @@ git commit -m "feat(image): 增加镜像构建任务模型"
 - 平台构建模式忽略 `registry.example.edu/team/web-demo:v1` 的 repository，只复用 `v1`
 - 空 tag 生成可预测 fallback，测试可传入固定 import id 或 clock
 
-- [ ] **Step 2: 实现纯函数**
+- [x] **Step 2: 实现纯函数**
 
 在 `image_delivery.go` 中实现：
 
@@ -274,7 +274,7 @@ func SplitImageRef(ref string) (name, tag string, err error)
 - tag 为空时由 caller 传入导入批次 tag
 - registry 为空时只返回 `<mode>/<slug>:<tag>`，便于本地测试
 
-- [ ] **Step 3: 扩展 parsed 结构**
+- [x] **Step 3: 扩展 parsed 结构**
 
 给 Jeopardy/AWD parsed 结果加入：
 
@@ -290,11 +290,11 @@ DockerfilePath string
 - 有 `docker/Dockerfile` 且未显式选择 external -> `platform_build`
 - 显式 external 模式再使用 `external_ref`
 
-- [ ] **Step 4: 调整 AWD parser**
+- [x] **Step 4: 调整 AWD parser**
 
 AWD 平台构建路径不再因为 `runtime.image.ref` 为空失败；但如果既没有 `runtime.image.ref` 又没有 `docker/Dockerfile`，仍失败。
 
-- [ ] **Step 5: 跑 domain 测试**
+- [x] **Step 5: 跑 domain 测试**
 
 Run:
 
@@ -305,7 +305,7 @@ go test ./internal/module/challenge/domain -run 'Package|ImageDelivery|AWD' -cou
 
 Expected: PASS。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/domain

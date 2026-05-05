@@ -230,6 +230,96 @@ extensions:
 	}
 }
 
+func TestParseAWDChallengePackageDirAllowsPlatformBuildWithoutRuntimeImageRef(t *testing.T) {
+	rootDir := t.TempDir()
+
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-platform-build
+  title: AWD Platform Build
+  category: web
+  difficulty: hard
+  points: 500
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    tag: c1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: http_standard
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      service_port: 8080
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      defense_scope:
+        editable_paths:
+          - docker/challenge_app.py
+        protected_paths:
+          - docker/app.py
+          - docker/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`
+
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
+		t.Fatalf("create docker/check dir: %v", err)
+	}
+	for _, item := range []string{"Dockerfile", "app.py", "ctf_runtime.py", "challenge_app.py"} {
+		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("FROM scratch\n"), 0o644); err != nil {
+			t.Fatalf("write docker/%s: %v", item, err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
+		t.Fatalf("write docker/check/check.py: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
+		t.Fatalf("write statement.md: %v", err)
+	}
+
+	parsed, err := ParseAWDChallengePackageDir(rootDir)
+	if err != nil {
+		t.Fatalf("ParseAWDChallengePackageDir() error = %v", err)
+	}
+
+	if parsed.RuntimeImageRef != "" {
+		t.Fatalf("expected no author runtime image ref, got %q", parsed.RuntimeImageRef)
+	}
+	if parsed.ImageSourceType != ImageSourceTypePlatformBuild {
+		t.Fatalf("ImageSourceType = %q, want %q", parsed.ImageSourceType, ImageSourceTypePlatformBuild)
+	}
+	if parsed.SuggestedImageTag != "c1" {
+		t.Fatalf("SuggestedImageTag = %q, want c1", parsed.SuggestedImageTag)
+	}
+	if parsed.DockerfilePath == "" || parsed.BuildContextPath == "" {
+		t.Fatalf("expected build paths, got dockerfile=%q context=%q", parsed.DockerfilePath, parsed.BuildContextPath)
+	}
+}
+
 func TestParseAWDChallengePackageDirRejectsInvalidDefenseScope(t *testing.T) {
 	cases := []struct {
 		name        string

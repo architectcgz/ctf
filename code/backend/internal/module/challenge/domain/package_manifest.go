@@ -150,26 +150,30 @@ type ChallengePackageAWDDefenseEntry struct {
 }
 
 type ParsedChallengePackage struct {
-	Manifest        ChallengePackageManifest
-	ManifestRaw     string
-	RootDir         string
-	Slug            string
-	Title           string
-	Description     string
-	Category        string
-	Difficulty      string
-	Points          int
-	FlagType        string
-	FlagValue       string
-	FlagPrefix      string
-	RuntimeImageRef string
-	RuntimeProtocol string
-	RuntimePort     int
-	Attachments     []ParsedChallengePackageAttachment
-	Hints           []ParsedChallengePackageHint
-	Topology        *ParsedChallengePackageTopology
-	PackageFiles    []ParsedChallengePackageFile
-	Warnings        []string
+	Manifest          ChallengePackageManifest
+	ManifestRaw       string
+	RootDir           string
+	Slug              string
+	Title             string
+	Description       string
+	Category          string
+	Difficulty        string
+	Points            int
+	FlagType          string
+	FlagValue         string
+	FlagPrefix        string
+	RuntimeImageRef   string
+	ImageSourceType   string
+	SuggestedImageTag string
+	DockerfilePath    string
+	BuildContextPath  string
+	RuntimeProtocol   string
+	RuntimePort       int
+	Attachments       []ParsedChallengePackageAttachment
+	Hints             []ParsedChallengePackageHint
+	Topology          *ParsedChallengePackageTopology
+	PackageFiles      []ParsedChallengePackageFile
+	Warnings          []string
 }
 
 type ParsedChallengePackageAttachment struct {
@@ -200,29 +204,33 @@ type ParsedChallengePackageFile struct {
 }
 
 type ParsedAWDChallengePackage struct {
-	Manifest         ChallengePackageManifest
-	RootDir          string
-	Slug             string
-	Title            string
-	Description      string
-	Category         string
-	Difficulty       string
-	SuggestedPoints  int
-	RuntimeImageRef  string
-	ServiceType      string
-	DeploymentMode   string
-	Version          string
-	CheckerType      string
-	CheckerConfig    map[string]any
-	CheckerEntryPath string
-	CheckerEntryAbs  string
-	CheckerFiles     []ParsedAWDCheckerFile
-	FlagMode         string
-	FlagConfig       map[string]any
-	DefenseEntryMode string
-	AccessConfig     map[string]any
-	RuntimeConfig    map[string]any
-	Warnings         []string
+	Manifest          ChallengePackageManifest
+	RootDir           string
+	Slug              string
+	Title             string
+	Description       string
+	Category          string
+	Difficulty        string
+	SuggestedPoints   int
+	RuntimeImageRef   string
+	ImageSourceType   string
+	SuggestedImageTag string
+	DockerfilePath    string
+	BuildContextPath  string
+	ServiceType       string
+	DeploymentMode    string
+	Version           string
+	CheckerType       string
+	CheckerConfig     map[string]any
+	CheckerEntryPath  string
+	CheckerEntryAbs   string
+	CheckerFiles      []ParsedAWDCheckerFile
+	FlagMode          string
+	FlagConfig        map[string]any
+	DefenseEntryMode  string
+	AccessConfig      map[string]any
+	RuntimeConfig     map[string]any
+	Warnings          []string
 }
 
 type ParsedAWDCheckerFile struct {
