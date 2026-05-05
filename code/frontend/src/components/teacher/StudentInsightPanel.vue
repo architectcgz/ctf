@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
-import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
+import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import { TeacherStudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'
 import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
@@ -24,15 +23,9 @@ import type {
 } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { toRadarScores } from '@/utils/skillProfile'
-
-type StudentInsightSection =
-  | 'all'
-  | 'overview'
-  | 'recommendations'
-  | 'writeups'
-  | 'manual-review'
-  | 'evidence'
-  | 'timeline'
+import StudentInsightManualReviewSection from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue'
+import StudentInsightWriteupsSection from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue'
+import type { StudentInsightSection } from '@/components/teacher/student-insight/studentInsightShared'
 
 const props = defineProps<{
   student: TeacherStudentItem | null
@@ -77,112 +70,23 @@ const emit = defineEmits<{
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
-const publishedWriteupSubmissions = computed(() =>
-  props.writeupSubmissions.filter(
-    (item) => item.submission_status === 'published' || item.submission_status === 'submitted'
-  )
-)
-const publishedRecommendedWriteupCount = computed(
-  () => publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
-)
 const rankedProfileDimensions = computed(() =>
   [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
 )
-const publishedChallengeCount = computed(
-  () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
+const showManualReviewSection = computed(
+  () =>
+    !props.activeSection ||
+    props.activeSection === 'all' ||
+    props.activeSection === 'manual-review' ||
+    props.activeSection === 'writeups'
 )
-const approvedManualReviewCount = computed(
-  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
-)
-const manualReviewComment = ref('')
-
-watch(
-  () => props.activeManualReview,
-  (value) => {
-    manualReviewComment.value = value?.review_comment ?? ''
-  },
-  { immediate: true }
-)
-
-function openChallenge(challengeId: string): void {
-  emit('openChallenge', challengeId)
-}
-
-function openManualReview(submissionId: string): void {
-  emit('openManualReview', submissionId)
-}
-
-function changeWriteupPage(page: number): void {
-  emit('changeWriteupPage', page)
-}
-
-function moderateWriteup(
-  submissionId: string,
-  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
-): void {
-  emit('moderateWriteup', { submissionId, action })
-}
-
-function visibilityStatusLabel(
-  status: TeacherSubmissionWriteupItemData['visibility_status']
-): string {
-  return status === 'hidden' ? '已隐藏' : '已公开'
-}
-
-function visibilityStatusClass(
-  status: TeacherSubmissionWriteupItemData['visibility_status']
-): string {
-  return status === 'hidden'
-    ? 'writeup-chip writeup-chip--warning'
-    : 'writeup-chip writeup-chip--success'
-}
-
-function manualReviewStatusLabel(
-  status: TeacherManualReviewSubmissionItemData['review_status']
-): string {
-  switch (status) {
-    case 'approved':
-      return '已通过'
-    case 'rejected':
-      return '已驳回'
-    default:
-      return '待审核'
-  }
-}
-
-function manualReviewStatusClass(
-  status: TeacherManualReviewSubmissionItemData['review_status']
-): string {
-  switch (status) {
-    case 'approved':
-      return 'writeup-chip writeup-chip--success'
-    case 'rejected':
-      return 'writeup-chip writeup-chip--warning'
-    default:
-      return 'writeup-chip writeup-chip--muted'
-  }
-}
-
-function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
-  if (!props.activeManualReview) return
-  emit('reviewManualReview', {
-    submissionId: props.activeManualReview.id,
-    reviewStatus,
-    reviewComment: manualReviewComment.value.trim() || undefined,
-  })
-}
 
 function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boolean {
   return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
 }
 
-function isManualReviewVisible(): boolean {
-  return (
-    !props.activeSection ||
-    props.activeSection === 'all' ||
-    props.activeSection === 'manual-review' ||
-    props.activeSection === 'writeups'
-  )
+function openChallenge(challengeId: string): void {
+  emit('openChallenge', challengeId)
 }
 </script>
 
@@ -196,50 +100,29 @@ function isManualReviewVisible(): boolean {
     />
 
     <template v-else>
-      <div
-        v-if="loading"
-        class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
-      >
-        <AppCard
-          variant="panel"
-          accent="neutral"
-        >
+      <div v-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <AppCard variant="panel" accent="neutral">
           <div class="insight-skeleton-line h-6 w-36 animate-pulse rounded" />
           <div class="mt-6 space-y-3">
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
           </div>
         </AppCard>
-        <AppCard
-          variant="panel"
-          accent="neutral"
-        >
+        <AppCard variant="panel" accent="neutral">
           <div class="insight-skeleton-block h-[280px] animate-pulse rounded-2xl" />
         </AppCard>
       </div>
 
       <template v-else-if="student">
-        <div
-          v-if="isSectionVisible('overview')"
-          class="insight-overview-layout"
-        >
-          <SectionCard
-            title="能力雷达"
-            subtitle="左侧雷达图展示当前能力维度分布。"
-          >
+        <div v-if="isSectionVisible('overview')" class="insight-overview-layout">
+          <SectionCard title="能力雷达" subtitle="左侧雷达图展示当前能力维度分布。">
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
             </div>
           </SectionCard>
 
-          <SectionCard
-            title="能力比例"
-            subtitle="右侧条状图展示各维度当前分值。"
-          >
-            <div
-              v-if="rankedProfileDimensions.length > 0"
-              class="insight-dimension-bars mt-4"
-            >
+          <SectionCard title="能力比例" subtitle="右侧条状图展示各维度当前分值。">
+            <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
               <article
                 v-for="item in rankedProfileDimensions"
                 :key="item.key"
@@ -250,19 +133,11 @@ function isManualReviewVisible(): boolean {
                   <span>{{ item.value }}%</span>
                 </div>
                 <div class="insight-dimension-item__track">
-                  <div
-                    class="insight-dimension-item__fill"
-                    :style="{ width: `${item.value}%` }"
-                  />
+                  <div class="insight-dimension-item__fill" :style="{ width: `${item.value}%` }" />
                 </div>
               </article>
             </div>
-            <div
-              v-else
-              class="insight-dimension-empty mt-4"
-            >
-              暂无画像维度数据
-            </div>
+            <div v-else class="insight-dimension-empty mt-4">暂无画像维度数据</div>
           </SectionCard>
         </div>
 
@@ -279,10 +154,7 @@ function isManualReviewVisible(): boolean {
             icon="BookOpen"
           />
 
-          <div
-            v-else
-            class="mt-5 grid gap-3 lg:grid-cols-2"
-          >
+          <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
             <AppCard
               v-for="item in recommendations"
               :key="item.challenge_id"
@@ -319,347 +191,27 @@ function isManualReviewVisible(): boolean {
           </div>
         </SectionCard>
 
-        <SectionCard
+        <StudentInsightWriteupsSection
           v-if="isSectionVisible('writeups')"
-          class="writeup-section-card insight-tab-section-card"
-          title="发布的题解"
-          subtitle="按发布时间查看当前学员已发布题解。"
-        >
-          <AppEmpty
-            v-if="publishedWriteupSubmissions.length === 0"
-            title="暂无已发布题解"
-            description="当前学员还没有发布到题解区的内容。"
-            icon="FileText"
-          />
+          :writeup-submissions="writeupSubmissions"
+          :writeup-page="writeupPage"
+          :writeup-total="writeupTotal"
+          :writeup-total-pages="writeupTotalPages"
+          :writeup-pagination-loading="writeupPaginationLoading"
+          @open-challenge="emit('openChallenge', $event)"
+          @moderate-writeup="emit('moderateWriteup', $event)"
+          @change-writeup-page="emit('changeWriteupPage', $event)"
+        />
 
-          <template v-else>
-            <div
-              class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"
-            >
-              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  已发布题解
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ publishedWriteupSubmissions.length }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  当前学员已发布的题解数量
-                </div>
-              </article>
-              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  对应题目
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ publishedChallengeCount }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  覆盖到的题目总数
-                </div>
-              </article>
-              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  推荐中
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ publishedRecommendedWriteupCount }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  发布题解中被标记为推荐的数量
-                </div>
-              </article>
-            </div>
-
-            <section class="writeup-directory mt-5">
-              <header class="writeup-directory-head">
-                <span>题目</span>
-                <span>题解</span>
-                <span>社区题解状态</span>
-                <span>发布时间</span>
-                <span>操作</span>
-              </header>
-
-              <article
-                v-for="item in publishedWriteupSubmissions"
-                :key="item.id"
-                class="writeup-directory-row"
-              >
-                <div class="writeup-directory-cell">
-                  <div class="writeup-directory-challenge">
-                    {{ item.challenge_title }}
-                  </div>
-                </div>
-
-                <div class="writeup-directory-cell">
-                  <div class="writeup-directory-title">
-                    {{ item.title }}
-                  </div>
-                  <div class="writeup-directory-preview">
-                    {{ item.content_preview || '暂无摘要' }}
-                  </div>
-                </div>
-
-                <div class="writeup-directory-cell">
-                  <div class="writeup-directory-status-label">
-                    社区题解状态
-                  </div>
-                  <div class="writeup-directory-status">
-                    <span class="writeup-chip writeup-chip--muted">已发布</span>
-                    <span :class="visibilityStatusClass(item.visibility_status)">
-                      {{ visibilityStatusLabel(item.visibility_status) }}
-                    </span>
-                    <span
-                      v-if="item.is_recommended"
-                      class="writeup-chip writeup-chip--primary"
-                    >
-                      推荐题解
-                    </span>
-                  </div>
-                </div>
-
-                <div class="writeup-directory-cell writeup-directory-time">
-                  {{ new Date(item.published_at || item.updated_at).toLocaleString('zh-CN') }}
-                </div>
-
-                <div class="writeup-directory-cell writeup-directory-action">
-                  <div class="writeup-action-stack">
-                    <button
-                      type="button"
-                      class="writeup-open-link inline-flex items-center gap-1 font-medium"
-                      @click="openChallenge(item.challenge_id)"
-                    >
-                      查看题目
-                      <ArrowRight class="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      class="writeup-action-button"
-                      @click="
-                        moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')
-                      "
-                    >
-                      {{ item.is_recommended ? '取消推荐' : '推荐题解' }}
-                    </button>
-                    <button
-                      type="button"
-                      class="writeup-action-button writeup-action-button--warning"
-                      @click="
-                        moderateWriteup(
-                          item.id,
-                          item.visibility_status === 'hidden' ? 'restore' : 'hide'
-                        )
-                      "
-                    >
-                      {{ item.visibility_status === 'hidden' ? '恢复公开' : '隐藏题解' }}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            </section>
-
-            <div class="writeup-pagination mt-4">
-              <PagePaginationControls
-                :page="writeupPage"
-                :total-pages="writeupTotalPages"
-                :total="writeupTotal"
-                total-label="发布题解总数"
-                :disabled="writeupPaginationLoading"
-                show-jump
-                @change-page="changeWriteupPage"
-              />
-            </div>
-          </template>
-        </SectionCard>
-
-        <SectionCard
-          v-if="isManualReviewVisible()"
-          class="insight-tab-section-card"
-          title="人工审核题"
-          subtitle="查看当前学员需要教师判定的题解内容。"
-        >
-          <AppEmpty
-            v-if="manualReviewSubmissions.length === 0"
-            title="暂无题解审核提交"
-            description="当前学员还没有需要教师处理的题解审核内容。"
-            icon="ClipboardCheck"
-          />
-
-          <template v-else>
-            <div
-              class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
-            >
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  待处理
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ manualReviewSubmissions.length }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  当前分析页展示的题解审核提交数
-                </div>
-              </article>
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  待审核
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{
-                    manualReviewSubmissions.filter((item) => item.review_status === 'pending')
-                      .length
-                  }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  尚未给出审核结果的提交
-                </div>
-              </article>
-              <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">
-                  已通过
-                </div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">
-                  {{ approvedManualReviewCount }}
-                </div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-                  已经通过审核的题解提交
-                </div>
-              </article>
-            </div>
-
-            <div class="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-              <div class="grid gap-3">
-                <AppCard
-                  v-for="item in manualReviewSubmissions"
-                  :key="item.id"
-                  variant="panel"
-                  accent="neutral"
-                >
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div class="text-sm font-semibold text-[var(--color-text-primary)]">
-                        {{ item.challenge_title }}
-                      </div>
-                      <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                        {{ item.answer_preview || '暂无答案摘要' }}
-                      </div>
-                    </div>
-                    <span :class="manualReviewStatusClass(item.review_status)">
-                      {{ manualReviewStatusLabel(item.review_status) }}
-                    </span>
-                  </div>
-
-                  <div
-                    class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]"
-                  >
-                    <span>提交于 {{ new Date(item.submitted_at).toLocaleString('zh-CN') }}</span>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
-                      @click="openManualReview(item.id)"
-                    >
-                      {{ activeManualReview?.id === item.id ? '刷新详情' : '查看审核' }}
-                      <ArrowRight class="h-4 w-4" />
-                    </button>
-                  </div>
-                </AppCard>
-              </div>
-
-              <AppCard
-                variant="panel"
-                accent="neutral"
-              >
-                <div
-                  v-if="manualReviewLoading"
-                  class="space-y-3"
-                >
-                  <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
-                  <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
-                  <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
-                </div>
-
-                <AppEmpty
-                  v-else-if="!activeManualReview"
-                  title="选择一条题解审核提交"
-                  description="点击左侧卡片查看完整内容并进行审核。"
-                  icon="ClipboardList"
-                />
-
-                <template v-else>
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div class="journal-eyebrow">
-                        Writeup Review
-                      </div>
-                      <h4 class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
-                        {{ activeManualReview.challenge_title }}
-                      </h4>
-                      <div class="mt-2 text-sm text-[var(--color-text-secondary)]">
-                        {{ activeManualReview.student_name || activeManualReview.student_username }}
-                      </div>
-                    </div>
-                    <span :class="manualReviewStatusClass(activeManualReview.review_status)">
-                      {{ manualReviewStatusLabel(activeManualReview.review_status) }}
-                    </span>
-                  </div>
-
-                  <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
-                    <div
-                      class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]"
-                    >
-                      题解内容
-                    </div>
-                    <p
-                      class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]"
-                    >
-                      {{ activeManualReview.answer }}
-                    </p>
-                  </div>
-
-                  <label class="mt-5 block">
-                    <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
-                    <textarea
-                      v-model="manualReviewComment"
-                      rows="5"
-                      class="challenge-input insight-manual-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
-                      placeholder="记录你的判定依据、补充建议或要求学员修改的点。"
-                    />
-                  </label>
-
-                  <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs text-[var(--color-text-secondary)]">
-                      最近更新：{{
-                        new Date(activeManualReview.updated_at).toLocaleString('zh-CN')
-                      }}
-                    </div>
-                    <div class="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"
-                        :disabled="
-                          manualReviewSaving || activeManualReview.review_status !== 'pending'
-                        "
-                        @click="submitManualReview('rejected')"
-                      >
-                        {{ manualReviewSaving ? '提交中...' : '驳回并说明' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
-                        :disabled="
-                          manualReviewSaving || activeManualReview.review_status !== 'pending'
-                        "
-                        @click="submitManualReview('approved')"
-                      >
-                        {{ manualReviewSaving ? '提交中...' : '审核通过' }}
-                      </button>
-                    </div>
-                  </div>
-                </template>
-              </AppCard>
-            </div>
-          </template>
-        </SectionCard>
+        <StudentInsightManualReviewSection
+          v-if="showManualReviewSection"
+          :manual-review-submissions="manualReviewSubmissions"
+          :active-manual-review="activeManualReview"
+          :manual-review-loading="manualReviewLoading"
+          :manual-review-saving="manualReviewSaving"
+          @open-manual-review="emit('openManualReview', $event)"
+          @review-manual-review="emit('reviewManualReview', $event)"
+        />
 
         <SectionCard
           v-if="isSectionVisible('evidence')"
@@ -677,10 +229,7 @@ function isManualReviewVisible(): boolean {
           />
         </SectionCard>
 
-        <StudentTimelinePage
-          v-if="isSectionVisible('timeline')"
-          :timeline="timeline"
-        />
+        <StudentTimelinePage v-if="isSectionVisible('timeline')" :timeline="timeline" />
       </template>
     </template>
   </div>
@@ -697,7 +246,6 @@ function isManualReviewVisible(): boolean {
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
 .insight-skeleton-line,
@@ -747,8 +295,8 @@ function isManualReviewVisible(): boolean {
 
 .insight-dimension-item__track {
   height: 10px;
-  border-radius: 999px;
   overflow: hidden;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--journal-border) 36%, transparent);
 }
 
@@ -768,250 +316,7 @@ function isManualReviewVisible(): boolean {
   color: var(--journal-muted);
 }
 
-.insight-progress-item {
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  border-radius: 0;
-  background: transparent;
-}
-
-.insight-progress-track {
-  background: color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.insight-preview,
-.insight-answer-panel {
-  border: 0;
-  border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  border-radius: 0;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 48%, transparent);
-}
-
-.insight-manual-input {
-  border-color: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.insight-manual-input::placeholder {
-  color: color-mix(in srgb, var(--journal-muted) 84%, transparent);
-}
-
-.insight-manual-input:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
-}
-
-.writeup-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: var(--space-1-5) var(--space-3);
-  font-size: var(--font-size-0-72);
-  font-weight: 600;
-}
-
-.writeup-chip--primary {
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.writeup-chip--success {
-  background: color-mix(in srgb, var(--color-success) 14%, transparent);
-  color: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
-}
-
-.writeup-chip--warning {
-  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 82%, var(--journal-ink));
-}
-
-.writeup-chip--muted {
-  background: color-mix(in srgb, var(--journal-border) 36%, transparent);
-  color: var(--journal-muted);
-}
-
-.writeup-directory {
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
-}
-
-.writeup-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.writeup-directory-head,
-.writeup-directory-row {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 1.2fr)
-    minmax(0, 2fr)
-    minmax(0, 1.2fr)
-    minmax(0, 1.35fr)
-    minmax(108px, 0.9fr);
-  gap: var(--space-3-5);
-  align-items: start;
-}
-
-.writeup-directory-head {
-  padding: var(--space-3) var(--space-1-5) var(--space-2-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.writeup-directory-row {
-  padding: var(--space-3-5) var(--space-1-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
-}
-
-.writeup-directory-cell {
-  min-width: 0;
-}
-
-.writeup-directory-challenge {
-  font-size: var(--font-size-0-86);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.writeup-directory-title {
-  font-size: var(--font-size-0-86);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.writeup-directory-preview {
-  margin-top: var(--space-1-5);
-  line-height: 1.6;
-  font-size: var(--font-size-0-80);
-  color: var(--journal-muted);
-}
-
-.writeup-directory-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.writeup-directory-status-label {
-  margin-bottom: var(--space-2);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.writeup-directory-time {
-  font-size: var(--font-size-0-80);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.writeup-directory-action {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.writeup-action-stack {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.writeup-pagination {
-  padding-top: var(--space-1-5);
-}
-
-.writeup-open-link {
-  min-height: 34px;
-  padding: 0 var(--space-3);
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, var(--teacher-divider));
-  color: var(--journal-accent-strong);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
-}
-
-.writeup-open-link:hover,
-.writeup-open-link:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--teacher-divider));
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-  color: var(--journal-accent);
-  outline: none;
-}
-
-.writeup-action-button {
-  min-height: 34px;
-  padding: 0 var(--space-3);
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
-  font-size: var(--font-size-0-78);
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
-}
-
-.writeup-action-button:hover,
-.writeup-action-button:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  color: var(--journal-accent-strong);
-  outline: none;
-}
-
-.writeup-action-button--warning:hover,
-.writeup-action-button--warning:focus-visible {
-  border-color: color-mix(in srgb, var(--color-warning) 36%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-warning) 86%, var(--journal-ink));
-}
-
-@media (max-width: 1023px) {
-  .writeup-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .writeup-directory-head {
-    display: none;
-  }
-
-  .writeup-directory-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
-  .writeup-directory-action {
-    justify-content: flex-start;
-  }
-
-  .writeup-action-stack {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 767px) {
-  .insight-overview-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .writeup-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
+<<<<<<< HEAD
 :deep(.section-card) {
   padding: var(--space-4) var(--space-1) var(--space-3);
   border: 0;
@@ -1023,8 +328,8 @@ function isManualReviewVisible(): boolean {
 
 :deep(.section-card__header) {
   margin-bottom: var(--space-4);
-  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   padding-bottom: var(--space-3);
+  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
 }
 
 :deep(.section-card__body) {
@@ -1039,26 +344,9 @@ function isManualReviewVisible(): boolean {
   border-top: 0;
 }
 
-.insight-kpi-grid {
-  --metric-panel-grid-gap: var(--space-3);
-  align-items: stretch;
-}
-
-.insight-kpi-label {
-  --metric-panel-label-size: var(--font-size-0-70);
-  --metric-panel-label-spacing: 0.15em;
-}
-
-.insight-kpi-value {
-  --metric-panel-value-margin-top: var(--space-2);
-  --metric-panel-value-size: var(--font-size-1-00);
-  --metric-panel-value-line-height: 1.5;
-  --metric-panel-value-spacing: 0;
-}
-
-.insight-kpi-hint {
-  --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-0-80);
-  --metric-panel-helper-line-height: 1.55;
+@media (max-width: 767px) {
+  .insight-overview-layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
