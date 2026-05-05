@@ -316,7 +316,6 @@ function openChallenge(challengeId: string): void {
   color: var(--journal-muted);
 }
 
-<<<<<<< HEAD
 :deep(.section-card) {
   padding: var(--space-4) var(--space-1) var(--space-3);
   border: 0;
