@@ -64,7 +64,7 @@ registry.example.edu/jeopardy/web-demo:v1
 - 如果没有 tag，平台生成 `latest`、导入批次号或管理员指定 tag。
 - repository/project 由平台统一生成，不读取作者本地 project。
 
-平台构建路径下，题包可以省略 `runtime.image.ref`，也可以写本地调试用 ref。最终入库和运行使用平台生成后的 `image_ref`。
+平台构建路径下，上传者不需要填写 `team/web-demo:v1`、`registry.example.edu/team/web-demo:v1` 这类最终镜像名称。题包可以省略 `runtime.image.ref`，也可以写本地调试用 ref，但平台只读取其中的 tag 建议；repository、namespace、registry 都由平台生成。最终入库和运行使用平台生成后的 `image_ref`。
 
 引用已有镜像路径下，题包必须显式声明完整 `runtime.image.ref`，平台不静默改写，只做拉取、inspect 和试跑校验。
 
@@ -75,6 +75,8 @@ registry.example.edu/jeopardy/web-demo:v1
 ### 1. 平台构建 Dockerfile
 
 默认路径。
+
+上传者提交的是源码题包和 Dockerfile，不提交最终镜像名。平台在构建任务中生成最终 image ref，并把该 ref 作为后续 push、校验、落库和运行的唯一事实。
 
 流程：
 
@@ -141,7 +143,7 @@ registry.example.edu/team/web-demo:v1
 <registry>/jeopardy/web-demo:v1
 ```
 
-引用已有镜像路径才保留作者显式地址。
+因此，平台构建模式的上传表单不应要求上传者填写完整镜像名称；最多提供 tag 输入框。引用已有镜像路径才保留作者显式地址。
 
 多镜像题目需要在同一命名空间下派生节点名：
 
