@@ -40,6 +40,13 @@ type CreatePlatformBuildJobResult struct {
 	TargetRef string
 }
 
+type VerifyExternalImageRefResult struct {
+	ImageID  int64
+	ImageRef string
+	Digest   string
+	Size     int64
+}
+
 type imageBuildRepository interface {
 	challengeports.ImageCommandRepository
 	challengeports.ImageBuildJobRepository
@@ -242,6 +249,65 @@ func (s *ImageBuildService) BuildPlatformTargetRef(mode, slug, suggestedTag stri
 		tag = "latest"
 	}
 	return domain.BuildPlatformImageRef(s.config.Registry, mode, slug, tag)
+}
+
+func (s *ImageBuildService) VerifyExternalImageRefInTx(
+	ctx context.Context,
+	tx *gorm.DB,
+	packageSlug string,
+	imageRef string,
+) (*VerifyExternalImageRefResult, error) {
+	if s == nil {
+		return nil, fmt.Errorf("image build service is not configured")
+	}
+	if s.builder == nil {
+		return nil, fmt.Errorf("docker image builder is not configured")
+	}
+	if s.verifier == nil {
+		return nil, fmt.Errorf("registry verifier is not configured")
+	}
+	if tx == nil {
+		return nil, fmt.Errorf("image verify transaction is not configured")
+	}
+
+	name, tag, err := domain.SplitImageRef(imageRef)
+	if err != nil {
+		return nil, fmt.Errorf("invalid image ref for %s: %w", packageSlug, err)
+	}
+	image, err := findOrCreateExternalImageTx(ctx, tx, name, tag, packageSlug)
+	if err != nil {
+		return nil, err
+	}
+	if err := updateExternalImageTx(ctx, tx, image, model.ImageStatusVerifying, "", 0, ""); err != nil {
+		return nil, err
+	}
+
+	verifyCtx, cancel := context.WithTimeout(ctx, s.config.BuildTimeout)
+	defer cancel()
+
+	digest, err := s.verifier.CheckManifest(verifyCtx, imageRef)
+	if err != nil {
+		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		return nil, err
+	}
+	if err := s.builder.Pull(verifyCtx, imageRef); err != nil {
+		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		return nil, err
+	}
+	inspect, err := s.builder.Inspect(verifyCtx, imageRef)
+	if err != nil {
+		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		return nil, err
+	}
+	if err := updateExternalImageTx(ctx, tx, image, model.ImageStatusAvailable, digest, inspect.Size, ""); err != nil {
+		return nil, err
+	}
+	return &VerifyExternalImageRefResult{
+		ImageID:  image.ID,
+		ImageRef: imageRef,
+		Digest:   digest,
+		Size:     inspect.Size,
+	}, nil
 }
 
 func (s *ImageBuildService) StartBackgroundTasks(ctx context.Context) {
@@ -513,4 +579,72 @@ func findOrCreatePendingPlatformBuildImageTx(
 	default:
 		return nil, findErr
 	}
+}
+
+func findOrCreateExternalImageTx(
+	ctx context.Context,
+	tx *gorm.DB,
+	name string,
+	tag string,
+	packageSlug string,
+) (*model.Image, error) {
+	var image model.Image
+	findErr := tx.WithContext(ctx).Unscoped().
+		Where("name = ? AND tag = ?", name, tag).
+		First(&image).Error
+	switch {
+	case findErr == nil:
+		return &image, nil
+	case errors.Is(findErr, gorm.ErrRecordNotFound):
+		image = model.Image{
+			Name:        name,
+			Tag:         tag,
+			Description: fmt.Sprintf("Verified external image from challenge pack %s", packageSlug),
+			Status:      model.ImageStatusVerifying,
+			SourceType:  model.ImageSourceTypeExternalRef,
+		}
+		if err := tx.WithContext(ctx).Create(&image).Error; err != nil {
+			return nil, err
+		}
+		return &image, nil
+	default:
+		return nil, findErr
+	}
+}
+
+func updateExternalImageTx(
+	ctx context.Context,
+	tx *gorm.DB,
+	image *model.Image,
+	status string,
+	digest string,
+	size int64,
+	lastError string,
+) error {
+	updates := map[string]any{
+		"status":       status,
+		"source_type":  model.ImageSourceTypeExternalRef,
+		"build_job_id": nil,
+		"digest":       digest,
+		"size":         size,
+		"last_error":   lastError,
+		"deleted_at":   nil,
+		"updated_at":   time.Now(),
+	}
+	if status == model.ImageStatusAvailable {
+		now := time.Now()
+		updates["verified_at"] = &now
+	} else {
+		updates["verified_at"] = nil
+	}
+	if err := tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error; err != nil {
+		return err
+	}
+	image.Status = status
+	image.SourceType = model.ImageSourceTypeExternalRef
+	image.BuildJobID = nil
+	image.Digest = digest
+	image.Size = size
+	image.LastError = lastError
+	return nil
 }

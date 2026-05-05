@@ -236,7 +236,7 @@ func (s *ChallengeService) CommitChallengeImport(
 					if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && resolvedImageID > 0 {
 						return resolvedImageID, nil
 					}
-					return resolveImportedImageID(tx, parsed.Slug, imageRef)
+					return s.resolveExternalImageRefForCommit(ctx, tx, parsed.Slug, imageRef)
 				},
 			)
 			if topologyErr != nil {
@@ -350,6 +350,9 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 	actorUserID int64,
 	parsed *domain.ParsedChallengePackage,
 ) (int64, error) {
+	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
+		return s.resolveExternalImageRefForCommit(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
+	}
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
 		return resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 	}
@@ -365,6 +368,25 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 		ContextPath:    parsed.BuildContextPath,
 		CreatedBy:      actorUserID,
 	})
+	if err != nil {
+		return 0, err
+	}
+	return result.ImageID, nil
+}
+
+func (s *ChallengeService) resolveExternalImageRefForCommit(
+	ctx context.Context,
+	tx *gorm.DB,
+	packageSlug string,
+	imageRef string,
+) (int64, error) {
+	if strings.TrimSpace(imageRef) == "" {
+		return 0, nil
+	}
+	if s == nil || s.imageBuild == nil {
+		return 0, fmt.Errorf("image build service is not configured")
+	}
+	result, err := s.imageBuild.VerifyExternalImageRefInTx(ctx, tx, packageSlug, imageRef)
 	if err != nil {
 		return 0, err
 	}

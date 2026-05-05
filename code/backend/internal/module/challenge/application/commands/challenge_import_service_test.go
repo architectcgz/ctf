@@ -313,7 +313,14 @@ func TestCommitChallengeImportPersistsRuntimeServiceTarget(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(
+		imageRepo,
+		ImageBuildConfig{Registry: "127.0.0.1:5000"},
+		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
+		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
+	)
 	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {

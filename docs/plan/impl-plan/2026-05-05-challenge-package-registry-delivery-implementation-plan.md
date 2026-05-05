@@ -614,11 +614,11 @@ git commit -m "feat(awd): 导入题包创建平台构建任务"
   - challenge import tests
   - awd import tests
 
-- [ ] **Step 1: 明确 external source 输入**
+- [x] **Step 1: 明确 external source 输入**
 
 第一轮后端可以通过 manifest 标记或 commit request 字段选择 external；如果前端还没提供，先保留 manifest compatible path。
 
-- [ ] **Step 2: 写 external verify 测试**
+- [x] **Step 2: 写 external verify 测试**
 
 外部 ref 成功：
 
@@ -630,11 +630,11 @@ git commit -m "feat(awd): 导入题包创建平台构建任务"
 
 - import commit 返回错误，或 image failed 且题目不可发布。推荐第一轮 commit 返回错误，避免创建不可运行题目。
 
-- [ ] **Step 3: 实现 external verify**
+- [x] **Step 3: 实现 external verify**
 
 调用 manifest check + pull + inspect，不执行 build/push。
 
-- [ ] **Step 4: 跑测试**
+- [x] **Step 4: 跑测试**
 
 Run:
 
@@ -643,7 +643,7 @@ cd code/backend
 go test ./internal/module/challenge/application/commands -run 'External|ChallengeImport|AWDChallengeImport|ImageBuild' -count=1
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/application/commands

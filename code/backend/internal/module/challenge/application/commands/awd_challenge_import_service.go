@@ -326,6 +326,16 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	actorUserID int64,
 	parsed *domain.ParsedAWDChallengePackage,
 ) (int64, string, error) {
+	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
+		if s == nil || s.imageBuild == nil {
+			return 0, "", fmt.Errorf("image build service is not configured")
+		}
+		result, err := s.imageBuild.VerifyExternalImageRefInTx(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
+		if err != nil {
+			return 0, "", err
+		}
+		return result.ImageID, parsed.RuntimeImageRef, nil
+	}
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
 		imageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 		return imageID, parsed.RuntimeImageRef, err

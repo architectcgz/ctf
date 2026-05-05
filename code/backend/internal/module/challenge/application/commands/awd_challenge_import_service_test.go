@@ -14,12 +14,24 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"gorm.io/gorm"
 )
+
+func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repository) *AWDChallengeImportService {
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(
+		imageRepo,
+		ImageBuildConfig{Registry: "127.0.0.1:5000"},
+		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
+		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
+	)
+	return NewAWDChallengeImportService(db, repo, imageBuildService)
+}
 
 func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -176,7 +188,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 func TestAWDChallengeImportStoresScriptCheckerArtifactPrivately(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
@@ -231,7 +243,7 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactPrivately(t *testing.T) {
 func TestAWDChallengeImportStoresScriptCheckerArtifactFiles(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
@@ -287,7 +299,7 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactFiles(t *testing.T) {
 func TestAWDChallengeImportCleansReplacedScriptCheckerArtifact(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
@@ -349,7 +361,7 @@ func TestAWDChallengeImportCleansReplacedScriptCheckerArtifact(t *testing.T) {
 func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := newAWDChallengeImportServiceForTest(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)

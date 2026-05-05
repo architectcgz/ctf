@@ -9,6 +9,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"gorm.io/gorm"
 )
 
 type fakeDockerImageBuilder struct {
@@ -280,5 +281,90 @@ func TestImageBuildServiceProcessImageBuildJobMarksFailures(t *testing.T) {
 				t.Fatalf("unexpected failed image: %+v", image)
 			}
 		})
+	}
+}
+
+func TestImageBuildServiceVerifyExternalImageRefInTxMarksImageAvailable(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewImageRepository(db)
+	builder := &fakeDockerImageBuilder{}
+	service := NewImageBuildService(
+		repo,
+		ImageBuildConfig{Registry: "127.0.0.1:5000"},
+		WithImageBuildDockerBuilder(builder),
+		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:external"}),
+	)
+
+	var result *VerifyExternalImageRefResult
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		var err error
+		result, err = service.VerifyExternalImageRefInTx(
+			context.Background(),
+			tx,
+			"web-external",
+			"registry.example.edu/team/web-demo:v1",
+		)
+		return err
+	}); err != nil {
+		t.Fatalf("VerifyExternalImageRefInTx() error = %v", err)
+	}
+	if result.ImageID == 0 || result.Digest != "sha256:external" || result.Size != 12345 {
+		t.Fatalf("unexpected verify result: %+v", result)
+	}
+
+	image, err := repo.FindByID(context.Background(), result.ImageID)
+	if err != nil {
+		t.Fatalf("FindByID(image) error = %v", err)
+	}
+	if image.Name != "registry.example.edu/team/web-demo" ||
+		image.Tag != "v1" ||
+		image.Status != model.ImageStatusAvailable ||
+		image.SourceType != model.ImageSourceTypeExternalRef ||
+		image.Digest != "sha256:external" ||
+		image.VerifiedAt == nil ||
+		image.BuildJobID != nil {
+		t.Fatalf("unexpected external image: %+v", image)
+	}
+
+	wantCalls := []string{"pull", "inspect"}
+	if len(builder.calls) != len(wantCalls) {
+		t.Fatalf("builder calls = %+v, want %+v", builder.calls, wantCalls)
+	}
+	for i := range wantCalls {
+		if builder.calls[i] != wantCalls[i] {
+			t.Fatalf("builder calls = %+v, want %+v", builder.calls, wantCalls)
+		}
+	}
+}
+
+func TestImageBuildServiceVerifyExternalImageRefInTxReturnsErrorOnManifestFailure(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewImageRepository(db)
+	service := NewImageBuildService(
+		repo,
+		ImageBuildConfig{Registry: "127.0.0.1:5000"},
+		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
+		WithImageBuildRegistryVerifier(fakeRegistryVerifier{err: errors.New("manifest failed")}),
+	)
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		_, err := service.VerifyExternalImageRefInTx(
+			context.Background(),
+			tx,
+			"web-external",
+			"registry.example.edu/team/web-demo:v1",
+		)
+		return err
+	})
+	if err == nil || err.Error() != "manifest failed" {
+		t.Fatalf("VerifyExternalImageRefInTx() error = %v, want manifest failed", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Image{}).Where("name = ?", "registry.example.edu/team/web-demo").Count(&count).Error; err != nil {
+		t.Fatalf("count images: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected failed external verify transaction to roll back image, got %d", count)
 	}
 }

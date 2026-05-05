@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
@@ -22,6 +23,7 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 )
 
@@ -48,14 +50,54 @@ type envelope[T any] struct {
 	Data T   `json:"data"`
 }
 
+type appChallengeImportDockerBuilder struct{}
+
+func (appChallengeImportDockerBuilder) Build(ctx context.Context, contextPath, dockerfilePath, localRef string) error {
+	return nil
+}
+
+func (appChallengeImportDockerBuilder) Tag(ctx context.Context, sourceRef, targetRef string) error {
+	return nil
+}
+
+func (appChallengeImportDockerBuilder) Push(ctx context.Context, targetRef string) error {
+	return nil
+}
+
+func (appChallengeImportDockerBuilder) Pull(ctx context.Context, targetRef string) error {
+	return nil
+}
+
+func (appChallengeImportDockerBuilder) Inspect(ctx context.Context, targetRef string) (challengeports.ImageInspectResult, error) {
+	return challengeports.ImageInspectResult{Size: 1024}, nil
+}
+
+type appChallengeImportRegistryVerifier struct{}
+
+func (appChallengeImportRegistryVerifier) CheckManifest(ctx context.Context, imageRef string) (string, error) {
+	return "sha256:app-import", nil
+}
+
+func newChallengeImportServiceForAppTest(db *gorm.DB) *challengecmd.ChallengeService {
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := challengecmd.NewImageBuildService(
+		imageRepo,
+		challengecmd.ImageBuildConfig{Registry: "127.0.0.1:5000"},
+		challengecmd.WithImageBuildDockerBuilder(appChallengeImportDockerBuilder{}),
+		challengecmd.WithImageBuildRegistryVerifier(appChallengeImportRegistryVerifier{}),
+	)
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
+	return service
+}
+
 func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -131,9 +173,7 @@ func TestChallengeImportCommitUpsertsByPackageSlug(t *testing.T) {
 		t.Fatalf("seed legacy challenge: %v", err)
 	}
 
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	firstCommit := previewAndCommitChallengeImport(
@@ -188,9 +228,7 @@ func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -222,9 +260,7 @@ func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -250,9 +286,7 @@ func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -278,9 +312,7 @@ func TestChallengeImportPreviewRejectsArchiveWithTooManyFiles(t *testing.T) {
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := newChallengeImportServiceForAppTest(db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipartFromArchive(t, buildChallengeImportArchiveWithTooManyFiles(t))
