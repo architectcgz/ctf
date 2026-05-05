@@ -14,7 +14,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
+func (s *ContestService) UpdateContest(ctx context.Context, id int64, req UpdateContestInput) (*dto.ContestResp, error) {
 	contest, err := s.loadContestForUpdate(ctx, id)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req *dto.U
 	}
 
 	s.log.Info("contest_updated", zap.Int64("contest_id", id))
-	return contestdomain.ContestRespFromModel(contest), nil
+	return contestRespFromModel(contest), nil
 }
 
 func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Context, contest *model.Contest, fromStatus string, fromVersion int64) error {

@@ -26,3 +26,11 @@ type TeamMemberResp struct {
 	Username string    `json:"username"`
 	JoinedAt time.Time `json:"joined_at"`
 }
+
+type MyTeamResp struct {
+	ID         int64             `json:"id"`
+	Name       string            `json:"name"`
+	InviteCode string            `json:"invite_code"`
+	CaptainID  int64             `json:"captain_user_id"`
+	Members    []*TeamMemberResp `json:"members"`
+}

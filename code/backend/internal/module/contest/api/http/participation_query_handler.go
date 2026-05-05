@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -21,12 +22,16 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	items, err := h.queries.ListRegistrations(c.Request.Context(), contestID, &query)
+	items, err := h.queries.ListRegistrations(c.Request.Context(), contestID, contestqry.ContestRegistrationQueryInput{
+		Status: query.Status,
+		Page:   query.Page,
+		Size:   query.Size,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, items)
+	response.Success(c, contestRequestMapper.ToRegistrationPageRespPtr(items))
 }
 
 func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
@@ -40,7 +45,7 @@ func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, items)
+	response.Success(c, contestRequestMapper.ToContestAnnouncementResps(items))
 }
 
 func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
@@ -54,5 +59,5 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, item)
+	response.Success(c, contestRequestMapper.ToContestMyProgressRespPtr(item))
 }

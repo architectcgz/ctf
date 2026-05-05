@@ -11,7 +11,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error) {
+func (s *ContestService) CreateContest(ctx context.Context, req CreateContestInput) (*dto.ContestResp, error) {
 	startTime := domain.NormalizeContestTime(req.StartTime)
 	endTime := domain.NormalizeContestTime(req.EndTime)
 	if !endTime.After(startTime) {
@@ -33,5 +33,5 @@ func (s *ContestService) CreateContest(ctx context.Context, req *dto.CreateConte
 	}
 
 	s.log.Info("contest_created", zap.Int64("contest_id", contest.ID))
-	return domain.ContestRespFromModel(contest), nil
+	return contestRespFromModel(contest), nil
 }

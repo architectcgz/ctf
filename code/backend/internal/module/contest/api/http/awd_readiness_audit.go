@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -37,11 +36,11 @@ func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideRe
 	if c == nil || snapshot == nil || trace == nil || !trace.Allowed() || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
 		return
 	}
-	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, awdReadinessResultToDTO(snapshot), err))
+	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, contestRequestMapper.ToAWDReadinessRespPtr(snapshot), err))
 }
 
-func shouldPrepareUpdateContestReadinessAudit(contest *dto.ContestResp, req *dto.UpdateContestReq) bool {
-	if contest == nil || req == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
+func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req contestcmd.UpdateContestInput) bool {
+	if contest == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
 		return false
 	}
 	return contestdomain.ShouldGateAWDContestStart(contest.Mode, contest.Status, req.Status)

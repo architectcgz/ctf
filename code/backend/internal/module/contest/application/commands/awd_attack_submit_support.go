@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -20,7 +19,7 @@ type submitAttackContext struct {
 	acceptedFlags  []string
 }
 
-func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*submitAttackContext, error) {
+func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*submitAttackContext, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err

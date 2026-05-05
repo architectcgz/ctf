@@ -8,11 +8,10 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req *dto.AddContestChallengeReq) (*dto.ContestChallengeResp, error) {
+func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req AddContestChallengeInput) (*dto.ContestChallengeResp, error) {
 	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -55,5 +54,5 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return contestdomain.ContestChallengeRespFromModel(cc, challenge), nil
+	return contestChallengeRespFromModel(cc, challenge), nil
 }

@@ -16,7 +16,7 @@ import (
 
 const awdCheckerPreviewAttemptCount = 3
 
-func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -27,9 +27,6 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	}
 	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
 		return nil, errcode.ErrContestNotRunning
-	}
-	if req == nil {
-		req = &dto.RunCurrentAWDCheckerReq{}
 	}
 	if err := ensureAWDReadinessGate(ctx, s.repo, contestID, req.ForceOverride, req.OverrideReason); err != nil {
 		return nil, err
@@ -67,11 +64,7 @@ func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
 
-func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error) {
-	if req == nil {
-		return nil, errcode.ErrInvalidParams
-	}
-
+func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
 	s.reportAWDPreviewProgress(ctx, contestID, req.PreviewRequestID, "prepare", "准备预览环境", "正在校验当前 Checker 草稿，并准备目标访问上下文。", 0, awdCheckerPreviewAttemptCount, "running", nil)
 
 	contest, err := s.ensureAWDContest(ctx, contestID)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
@@ -21,7 +20,7 @@ func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*m
 	return contest, nil
 }
 
-func validateContestUpdateRequest(contest *model.Contest, req *dto.UpdateContestReq) error {
+func validateContestUpdateRequest(contest *model.Contest, req UpdateContestInput) error {
 	if req.Status != nil && *req.Status != contest.Status {
 		if err := domain.ValidateStatusTransition(contest.Status, *req.Status); err != nil {
 			return errcode.ErrInvalidStatusTransition
@@ -47,7 +46,7 @@ func validateContestUpdateRequest(contest *model.Contest, req *dto.UpdateContest
 	return nil
 }
 
-func applyContestUpdateFields(contest *model.Contest, req *dto.UpdateContestReq) error {
+func applyContestUpdateFields(contest *model.Contest, req UpdateContestInput) error {
 	if req.Mode != nil && *req.Mode != contest.Mode {
 		contest.Mode = *req.Mode
 	}

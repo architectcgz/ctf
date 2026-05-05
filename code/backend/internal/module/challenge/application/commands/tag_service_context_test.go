@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -88,7 +87,7 @@ func TestTagServiceCreateTagPropagatesContextToRepository(t *testing.T) {
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTag(ctx, &dto.CreateTagReq{Name: "SQL注入", Type: model.TagTypeVulnerability, Description: "desc"})
+	resp, err := service.CreateTag(ctx, CreateTagInput{Name: "SQL注入", Type: model.TagTypeVulnerability, Description: "desc"})
 	if err != nil {
 		t.Fatalf("CreateTag() error = %v", err)
 	}

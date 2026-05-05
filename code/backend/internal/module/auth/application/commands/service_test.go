@@ -8,7 +8,6 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -149,7 +148,7 @@ func TestServiceRegisterSuccess(t *testing.T) {
 	}
 
 	service := NewService(repo, tokenService, config.RateLimitPolicyConfig{}, zap.NewNop())
-	resp, tokens, err := service.Register(context.Background(), &dto.RegisterReq{
+	resp, tokens, err := service.Register(context.Background(), RegisterInput{
 		Username:  "alice_1",
 		Password:  "Password123",
 		Email:     "alice@example.com",
@@ -191,7 +190,7 @@ func TestServiceRegisterTrimsEmail(t *testing.T) {
 	}
 
 	service := NewService(repo, tokenService, config.RateLimitPolicyConfig{}, zap.NewNop())
-	_, _, err := service.Register(context.Background(), &dto.RegisterReq{
+	_, _, err := service.Register(context.Background(), RegisterInput{
 		Username:  "alice_trim",
 		Password:  "Password123",
 		Email:     "  alice@example.com  ",
@@ -215,7 +214,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 		},
 	}, config.RateLimitPolicyConfig{}, zap.NewNop())
 
-	_, _, err := service.Register(context.Background(), &dto.RegisterReq{
+	_, _, err := service.Register(context.Background(), RegisterInput{
 		Username: "alice_1",
 		Password: "Password123",
 	})
@@ -251,7 +250,7 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
 
-	_, _, err := service.Login(context.Background(), &dto.LoginReq{
+	_, _, err := service.Login(context.Background(), LoginInput{
 		Username: "alice_1",
 		Password: "wrong-password",
 	})
@@ -294,7 +293,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
 
-	_, _, err := service.Login(context.Background(), &dto.LoginReq{
+	_, _, err := service.Login(context.Background(), LoginInput{
 		Username: "alice_2",
 		Password: "wrong-password",
 	})
@@ -345,7 +344,7 @@ func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
 
-	_, _, err := service.Login(context.Background(), &dto.LoginReq{
+	_, _, err := service.Login(context.Background(), LoginInput{
 		Username: "alice_3",
 		Password: "Password123",
 	})

@@ -125,17 +125,11 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 
 	list := make([]*dto.ChallengeListItem, 0, len(challenges))
 	for _, challenge := range challenges {
-		list = append(list, &dto.ChallengeListItem{
-			ID:            challenge.ID,
-			Title:         challenge.Title,
-			Category:      challenge.Category,
-			Difficulty:    challenge.Difficulty,
-			Points:        challenge.Points,
-			IsSolved:      solvedMap[challenge.ID],
-			SolvedCount:   solvedCountMap[challenge.ID],
-			TotalAttempts: attemptsMap[challenge.ID],
-			CreatedAt:     challenge.CreatedAt,
-		})
+		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(challenge)
+		item.IsSolved = solvedMap[challenge.ID]
+		item.SolvedCount = solvedCountMap[challenge.ID]
+		item.TotalAttempts = attemptsMap[challenge.ID]
+		list = append(list, item)
 	}
 
 	return &dto.PageResult[*dto.ChallengeListItem]{
@@ -183,34 +177,13 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		return nil, err
 	}
 
-	hintList := make([]*dto.ChallengeHintResp, 0, len(hints))
-	for _, hint := range hints {
-		hintResp := &dto.ChallengeHintResp{
-			ID:      hint.ID,
-			Level:   hint.Level,
-			Title:   hint.Title,
-			Content: hint.Content,
-		}
-		hintList = append(hintList, hintResp)
-	}
-
-	return &dto.ChallengeDetailResp{
-		ID:              challenge.ID,
-		Title:           challenge.Title,
-		Description:     challenge.Description,
-		Category:        challenge.Category,
-		Difficulty:      challenge.Difficulty,
-		Points:          challenge.Points,
-		NeedTarget:      challenge.ImageID > 0,
-		FlagType:        challenge.FlagType,
-		InstanceSharing: challenge.InstanceSharing,
-		AttachmentURL:   challenge.AttachmentURL,
-		Hints:           hintList,
-		SolvedCount:     solvedCount,
-		TotalAttempts:   attempts,
-		IsSolved:        isSolved,
-		CreatedAt:       challenge.CreatedAt,
-	}, nil
+	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challenge)
+	resp.NeedTarget = challenge.ImageID > 0
+	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintRespsPtr(hints)
+	resp.SolvedCount = solvedCount
+	resp.TotalAttempts = attempts
+	resp.IsSolved = isSolved
+	return resp, nil
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {

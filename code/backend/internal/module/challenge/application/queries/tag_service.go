@@ -25,7 +25,7 @@ func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*dto.TagRe
 
 	result := make([]*dto.TagResp, len(tags))
 	for index, tag := range tags {
-		result[index] = domain.TagRespFromModel(tag)
+		result[index] = domain.ResponseMapper().ToTagRespPtr(tag)
 	}
 	return result, nil
 }

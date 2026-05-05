@@ -22,7 +22,7 @@ func NewAWDChallengeService(repo challengeports.AWDChallengeCommandRepository) *
 	return &AWDChallengeService{repo: repo}
 }
 
-func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	challenge := &model.AWDChallenge{
 		Name:            strings.TrimSpace(req.Name),
 		Slug:            strings.TrimSpace(req.Slug),
@@ -42,7 +42,7 @@ func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID i
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
 
-func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	challenge, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

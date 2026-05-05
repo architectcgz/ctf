@@ -35,7 +35,7 @@ func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, 
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error) {
+func (s *ImageService) ListImages(ctx context.Context, query ListImagesInput) (*dto.PageResult[*dto.ImageResp], error) {
 	page := query.Page
 	if page < 1 {
 		page = 1

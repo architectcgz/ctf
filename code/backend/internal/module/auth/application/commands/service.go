@@ -17,8 +17,8 @@ import (
 )
 
 type Service interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error)
+	Register(ctx context.Context, req RegisterInput) (*dto.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req LoginInput) (*dto.LoginResp, *authcontracts.Session, error)
 	ValidatePassword(user *model.User, password string) bool
 }
 
@@ -48,7 +48,7 @@ func NewService(users authUserRepository, tokenService authcontracts.TokenServic
 	}
 }
 
-func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *service) Register(ctx context.Context, req RegisterInput) (*dto.LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_register_attempt", zap.String("username", req.Username))
 
 	user := &model.User{
@@ -84,7 +84,7 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *service) Login(ctx context.Context, req LoginInput) (*dto.LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_login_attempt", zap.String("username", req.Username))
 
 	user, err := s.users.FindByUsername(ctx, req.Username)
@@ -151,9 +151,7 @@ func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.Lo
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.LoginResp{
-		User: buildAuthUser(user),
-	}, session, nil
+	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil
 }
 
 func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now time.Time) (bool, error) {

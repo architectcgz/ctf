@@ -13,7 +13,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req *dto.ReviewContestRegistrationReq) (*dto.ContestRegistrationResp, error) {
+func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req ReviewRegistrationInput) (*dto.ContestRegistrationResp, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -49,16 +49,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.ContestRegistrationResp{
-		ID:         registration.ID,
-		ContestID:  registration.ContestID,
-		UserID:     registration.UserID,
-		Username:   user.Username,
-		TeamID:     registration.TeamID,
-		Status:     registration.Status,
-		ReviewedBy: registration.ReviewedBy,
-		ReviewedAt: registration.ReviewedAt,
-		CreatedAt:  registration.CreatedAt,
-		UpdatedAt:  registration.UpdatedAt,
-	}, nil
+	resp := contestResponseMapperInst.ToContestRegistrationRespBasePtr(registration)
+	resp.Username = user.Username
+	return resp, nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -15,7 +14,7 @@ func TestAWDChallengeServiceCreateChallenge(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDChallengeService(repo)
 
-	resp, err := service.CreateChallenge(context.Background(), 2001, &dto.CreateAWDChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 2001, CreateAWDChallengeInput{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -56,7 +55,7 @@ func TestAWDChallengeServiceUpdateChallenge(t *testing.T) {
 		t.Fatalf("Create() error = %v", err)
 	}
 
-	resp, err := service.UpdateChallenge(context.Background(), template.ID, &dto.UpdateAWDChallengeReq{
+	resp, err := service.UpdateChallenge(context.Background(), template.ID, UpdateAWDChallengeInput{
 		Name:   "Bank Portal AWD",
 		Status: string(model.AWDChallengeStatusPublished),
 	})

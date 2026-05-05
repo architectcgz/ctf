@@ -6,7 +6,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -104,7 +103,7 @@ func TestImageServiceUpdateImagePropagatesContextToRepository(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	newDescription := "new"
-	if err := service.UpdateImage(ctx, 9, &dto.UpdateImageReq{Description: &newDescription}); err != nil {
+	if err := service.UpdateImage(ctx, 9, UpdateImageInput{Description: &newDescription}); err != nil {
 		t.Fatalf("UpdateImage() error = %v", err)
 	}
 	if !findCalled || !updateCalled {

@@ -15,8 +15,8 @@ func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submi
 	if err := s.repo.CreateSubmission(ctx, submission); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.SubmissionResp{
+	return contestResponseMapperInst.ToSubmissionRespPtr(submissionRespSource{
 		IsCorrect:   false,
 		SubmittedAt: submission.SubmittedAt,
-	}, nil
+	}), nil
 }

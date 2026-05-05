@@ -47,7 +47,7 @@ func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.
 		}
 		return nil, err
 	}
-	return domain.AdminWriteupRespFromModel(item), nil
+	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(item), nil
 }
 
 func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
@@ -75,19 +75,9 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 		isSolved = false
 	}
 
-	return &dto.ChallengeWriteupResp{
-		ID:                     item.ID,
-		ChallengeID:            item.ChallengeID,
-		Title:                  item.Title,
-		Content:                item.Content,
-		Visibility:             item.Visibility,
-		RequiresSpoilerWarning: !isSolved,
-		IsRecommended:          item.IsRecommended,
-		RecommendedAt:          item.RecommendedAt,
-		RecommendedBy:          item.RecommendedBy,
-		CreatedAt:              item.CreatedAt,
-		UpdatedAt:              item.UpdatedAt,
-	}, nil
+	resp := challengeQueryResponseMapperInst.ToChallengeWriteupRespBasePtr(item)
+	resp.RequiresSpoilerWarning = !isSolved
+	return resp, nil
 }
 
 func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
@@ -108,7 +98,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 		}
 		return nil, err
 	}
-	return domain.SubmissionWriteupRespFromModel(item), nil
+	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(item), nil
 }
 
 func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*dto.RecommendedChallengeSolutionResp], error) {

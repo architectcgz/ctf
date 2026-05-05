@@ -253,7 +253,7 @@ func TestTeacherAWDReviewServiceInvalidRoundUsesRoundMessage(t *testing.T) {
 	contesttestsupport.CreateAWDContestFixture(t, db, 901, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 90101, 901, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
 
-	_, err := service.GetContestArchive(context.Background(), 1, 901, &dto.GetTeacherAWDReviewArchiveReq{
+	_, err := service.GetContestArchive(context.Background(), 1, 901, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: func(v int) *int { return &v }(2),
 	})
 	if err == nil {

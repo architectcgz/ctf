@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -18,14 +20,14 @@ type ImageHandler struct {
 }
 
 type imageCommandService interface {
-	CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
-	UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error
+	CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*dto.ImageResp, error)
+	UpdateImage(ctx context.Context, id int64, req challengecmd.UpdateImageInput) error
 	DeleteImage(ctx context.Context, id int64) error
 }
 
 type imageQueryService interface {
 	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error)
+	ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*dto.PageResult[*dto.ImageResp], error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {
@@ -39,7 +41,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateImage(c.Request.Context(), &req)
+	resp, err := h.commands.CreateImage(c.Request.Context(), challengeRequestMapper.ToCreateImageInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -71,7 +73,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListImages(c.Request.Context(), &query)
+	result, err := h.queries.ListImages(c.Request.Context(), challengeRequestMapper.ToListImagesInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -93,7 +95,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateImage(c.Request.Context(), id, &req); err != nil {
+	if err := h.commands.UpdateImage(c.Request.Context(), id, challengeRequestMapper.ToUpdateImageInput(req)); err != nil {
 		response.FromError(c, err)
 		return
 	}

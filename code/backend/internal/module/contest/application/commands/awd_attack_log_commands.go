@@ -13,14 +13,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
+func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
 	return s.createAttackLog(ctx, contestID, roundID, req, model.AWDAttackSourceManual, nil)
 }
 
 func (s *AWDService) createAttackLog(
 	ctx context.Context,
 	contestID, roundID int64,
-	req *dto.CreateAWDAttackLogReq,
+	req CreateAttackLogInput,
 	source string,
 	submittedByUserID *int64,
 ) (*dto.AWDAttackLogResp, error) {

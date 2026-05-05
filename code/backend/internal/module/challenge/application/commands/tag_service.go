@@ -22,7 +22,7 @@ func NewTagService(repo tagCommandRepository) *TagService {
 	return &TagService{repo: repo}
 }
 
-func (s *TagService) CreateTag(ctx context.Context, req *dto.CreateTagReq) (*dto.TagResp, error) {
+func (s *TagService) CreateTag(ctx context.Context, req CreateTagInput) (*dto.TagResp, error) {
 	tag := &model.Tag{
 		Name:        req.Name,
 		Type:        req.Type,
@@ -31,7 +31,7 @@ func (s *TagService) CreateTag(ctx context.Context, req *dto.CreateTagReq) (*dto
 	if err := s.repo.Create(ctx, tag); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return domain.TagRespFromModel(tag), nil
+	return domain.ResponseMapper().ToTagRespPtr(tag), nil
 }
 
 func (s *TagService) DeleteTag(ctx context.Context, id int64) error {

@@ -9,7 +9,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *ListAWDTrafficEventsInput) (*AWDTrafficEventPageResult, error) {
+func (s *AWDService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req ListAWDTrafficEventsInput) (*AWDTrafficEventPageResult, error) {
 	if _, err := s.ensureAWDRound(ctx, contestID, roundID); err != nil {
 		return nil, err
 	}
@@ -17,12 +17,8 @@ func (s *AWDService) ListTrafficEvents(ctx context.Context, contestID, roundID i
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	input := ListAWDTrafficEventsInput{}
-	if req != nil {
-		input = *req
-	}
-	filtered := filterAWDTrafficEventResults(buildAWDTrafficEventResults(records), input)
-	pageItems, total, page, size := paginateAWDTrafficEventResults(filtered, input.Page, input.Size)
+	filtered := filterAWDTrafficEventResults(buildAWDTrafficEventResults(records), req)
+	pageItems, total, page, size := paginateAWDTrafficEventResults(filtered, req.Page, req.Size)
 	return &AWDTrafficEventPageResult{
 		List:     pageItems,
 		Total:    total,

@@ -100,40 +100,96 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 	}
 }
 
-func TestPortsDoNotDeclareWideNotificationRepository(t *testing.T) {
+func TestRuntimeOwnsOpsWiring(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "notification.go"))
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/ops/api/http")
+}
+
+func TestRuntimeUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read ops notification ports file: %v", err)
+		t.Fatalf("read ops runtime module: %v", err)
 	}
-	if strings.Contains(string(content), "type NotificationRepository interface") {
-		t.Fatalf("ops notification ports must not declare the legacy wide NotificationRepository interface")
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"auditRepo        opsports.AuditRepository",
+		"riskRepo         opsports.RiskRepository",
+		"notificationRepo opsports.NotificationRepository",
+		"runtimeQuery     opsports.RuntimeQuery",
+		"runtimeStats     opsports.RuntimeStatsProvider",
+		"webSocketManager *websocketpkg.Manager",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"type opsModuleDeps struct",
+		"type opsNotificationDeps struct",
+		"buildOpsModuleDeps(",
+		"buildOpsNotificationDeps(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should not keep composition glue marker %s", marker)
+		}
 	}
 }
 
-func TestPortsDoNotDeclareWideAuditRepository(t *testing.T) {
+func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "audit.go"))
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read ops audit ports file: %v", err)
+		t.Fatalf("read ops runtime module: %v", err)
 	}
-	if strings.Contains(string(content), "type AuditRepository interface") {
-		t.Fatalf("ops audit ports must not declare the legacy wide AuditRepository interface")
+
+	source := string(content)
+	expected := []string{
+		"newModuleDeps(",
+		"buildAuditHandler(",
+		"buildDashboardHandler(",
+		"buildRiskHandler(",
+		"buildNotificationHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops runtime should delegate through %s", marker)
+		}
 	}
 }
 
-func TestPortsDoNotDeclareWideRiskRepository(t *testing.T) {
-	t.Parallel()
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
 
-	content, err := os.ReadFile(filepath.Join("ports", "risk.go"))
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
 	if err != nil {
-		t.Fatalf("read ops risk ports file: %v", err)
+		t.Fatalf("parse file %s: %v", filePath, err)
 	}
-	if strings.Contains(string(content), "type RiskRepository interface") {
-		t.Fatalf("ops risk ports must not declare the wide RiskRepository interface")
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
 	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {

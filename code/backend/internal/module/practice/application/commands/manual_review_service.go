@@ -298,7 +298,7 @@ func manualReviewDetailRespFromRecord(
 	record practiceports.TeacherManualReviewSubmissionRecord,
 	submission model.Submission,
 ) *dto.TeacherManualReviewSubmissionDetailResp {
-	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionDetailRespBase(submission)
+	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionDetailRespBasePtr(&submission)
 	resp.StudentUsername = record.StudentUsername
 	resp.StudentName = record.StudentName
 	resp.ClassName = record.ClassName
@@ -313,7 +313,7 @@ func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReview
 	if len([]rune(answerPreview)) > 80 {
 		answerPreview = string([]rune(answerPreview)[:80]) + "..."
 	}
-	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionItemRespBase(record.Submission)
+	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionItemRespBasePtr(&record.Submission)
 	resp.StudentUsername = record.StudentUsername
 	resp.StudentName = record.StudentName
 	resp.ClassName = record.ClassName
@@ -333,7 +333,7 @@ func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.Challeng
 		status = dto.SubmissionStatusCorrect
 	}
 
-	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBase(item)
+	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBasePtr(&item)
 	resp.Status = status
 	resp.Answer = answer
 	return resp

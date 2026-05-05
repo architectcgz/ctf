@@ -6,13 +6,12 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*dto.ContestChallengeInfo, error) {
+func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*ContestChallengeInfoResult, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
@@ -32,7 +31,7 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if len(challenges) == 0 {
-		return []*dto.ContestChallengeInfo{}, nil
+		return []*ContestChallengeInfoResult{}, nil
 	}
 	challengeIDs := make([]int64, 0, len(challenges))
 	for _, item := range challenges {
@@ -48,13 +47,13 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]*dto.ContestChallengeInfo, 0, len(challenges))
+	result := make([]*ContestChallengeInfoResult, 0, len(challenges))
 	for _, item := range challenges {
 		challenge, findErr := s.challengeRepo.FindByID(ctx, item.ChallengeID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}
-		resp := &dto.ContestChallengeInfo{
+		resp := &ContestChallengeInfoResult{
 			ID:          item.ID,
 			ChallengeID: item.ChallengeID,
 			Title:       challenge.Title,
@@ -70,9 +69,9 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 	return result, nil
 }
 
-func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, contestID int64) ([]*dto.ContestChallengeInfo, error) {
+func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, contestID int64) ([]*ContestChallengeInfoResult, error) {
 	if s.awdRepo == nil {
-		return []*dto.ContestChallengeInfo{}, nil
+		return []*ContestChallengeInfoResult{}, nil
 	}
 
 	services, err := s.awdRepo.ListContestAWDServicesByContest(ctx, contestID)
@@ -87,17 +86,17 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 		visibleServices = append(visibleServices, service)
 	}
 	if len(visibleServices) == 0 {
-		return []*dto.ContestChallengeInfo{}, nil
+		return []*ContestChallengeInfoResult{}, nil
 	}
 
-	result := make([]*dto.ContestChallengeInfo, 0, len(visibleServices))
+	result := make([]*ContestChallengeInfoResult, 0, len(visibleServices))
 	for _, service := range visibleServices {
 		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, errcode.ErrInternal.WithCause(decodeErr)
 		}
 		awdChallengeID := service.AWDChallengeID
-		result = append(result, &dto.ContestChallengeInfo{
+		result = append(result, &ContestChallengeInfoResult{
 			ID:             service.ID,
 			AWDChallengeID: &awdChallengeID,
 			AWDServiceID:   &service.ID,

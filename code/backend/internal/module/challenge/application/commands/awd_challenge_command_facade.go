@@ -33,7 +33,7 @@ func NewAWDChallengeCommandFacade(
 func (s *AWDChallengeCommandFacade) CreateChallenge(
 	ctx context.Context,
 	actorUserID int64,
-	req *dto.CreateAWDChallengeReq,
+	req CreateAWDChallengeInput,
 ) (*dto.AWDChallengeResp, error) {
 	return s.core.CreateChallenge(ctx, actorUserID, req)
 }
@@ -41,7 +41,7 @@ func (s *AWDChallengeCommandFacade) CreateChallenge(
 func (s *AWDChallengeCommandFacade) UpdateChallenge(
 	ctx context.Context,
 	id int64,
-	req *dto.UpdateAWDChallengeReq,
+	req UpdateAWDChallengeInput,
 ) (*dto.AWDChallengeResp, error) {
 	return s.core.UpdateChallenge(ctx, id, req)
 }

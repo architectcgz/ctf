@@ -148,6 +148,46 @@ func TestTrafficEventQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	}
 }
 
+func TestWorkspaceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_workspace_query.go"),
+		filepath.Join("application", "queries", "awd_workspace_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestRoundSummaryQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_summary_query.go"),
+		filepath.Join("application", "queries", "awd_summary_support.go"),
+		filepath.Join("application", "queries", "awd_summary_attack_support.go"),
+		filepath.Join("application", "queries", "awd_summary_service_support.go"),
+		filepath.Join("application", "queries", "awd_summary_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestTrafficSummaryQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "awd_traffic_summary_query.go"),
+		filepath.Join("application", "queries", "awd_traffic_support.go"),
+		filepath.Join("application", "queries", "awd_traffic_summary_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestContestAWDServiceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
 	t.Parallel()
 
@@ -158,6 +198,117 @@ func TestContestAWDServiceQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/model")
+	}
+}
+
+func TestContestQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "contest_get_query.go"),
+		filepath.Join("application", "queries", "contest_list_query.go"),
+		filepath.Join("application", "queries", "contest_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestScoreboardRankQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "scoreboard_rank_query.go"),
+		filepath.Join("application", "queries", "scoreboard_rank_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestScoreboardListQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "scoreboard_list_query.go"),
+		filepath.Join("application", "queries", "scoreboard_list_support.go"),
+		filepath.Join("application", "queries", "scoreboard_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestParticipationAnnouncementQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "participation_announcement_query.go"),
+		filepath.Join("application", "queries", "participation_announcement_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestParticipationProgressQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "participation_progress_query.go"),
+		filepath.Join("application", "queries", "participation_progress_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestParticipationRegistrationQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "participation_registration_admin_query.go"),
+		filepath.Join("application", "queries", "participation_registration_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestAdminChallengeQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "challenge_admin_query.go"),
+		filepath.Join("application", "queries", "challenge_admin_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestVisibleChallengeQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "challenge_visible_query.go"),
+		filepath.Join("application", "queries", "challenge_visible_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestTeamListQueryUsesApplicationResultInsteadOfHTTPDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "queries", "team_list_query.go"),
+		filepath.Join("application", "queries", "team_info_query.go"),
+		filepath.Join("application", "queries", "team_result.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 	}
 }
 
@@ -306,11 +457,32 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/infrastructure")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/queries")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/jobs")
+	}
+}
+
+func TestDomainDoesNotOwnContestHTTPResponseMappers(t *testing.T) {
+	t.Parallel()
+
+	if _, err := os.Stat(filepath.Join("domain", "mappers.go")); err == nil {
+		t.Fatalf("domain/mappers.go should not exist; DTO response mappers belong outside domain")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat domain/mappers.go: %v", err)
+	}
+}
+
+func TestDomainDoesNotOwnAWDHTTPResponseMappers(t *testing.T) {
+	t.Parallel()
+
+	if _, err := os.Stat(filepath.Join("domain", "awd_response.go")); err == nil {
+		t.Fatalf("domain/awd_response.go should not exist; DTO response mappers belong outside domain")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat domain/awd_response.go: %v", err)
 	}
 }
 

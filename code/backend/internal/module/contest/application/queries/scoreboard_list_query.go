@@ -4,20 +4,19 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error) {
+func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*ScoreboardResult, error) {
 	return s.getScoreboard(ctx, contestID, page, pageSize, false)
 }
 
-func (s *ScoreboardService) GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error) {
+func (s *ScoreboardService) GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*ScoreboardResult, error) {
 	return s.getScoreboard(ctx, contestID, page, pageSize, true)
 }
 
-func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, page, pageSize int, live bool) (*dto.ScoreboardResp, error) {
+func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, page, pageSize int, live bool) (*ScoreboardResult, error) {
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
@@ -60,16 +59,16 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 
 	start, stop := scoreboardPageBounds(page, pageSize)
 	if start >= total {
-		return &dto.ScoreboardResp{
-			Contest: &dto.ScoreboardContestInfo{
+		return &ScoreboardResult{
+			Contest: &ScoreboardContestResult{
 				ID:        contest.ID,
 				Title:     contest.Title,
 				Status:    contest.Status,
 				StartedAt: contest.StartTime,
 				EndsAt:    contest.EndTime,
 			},
-			Scoreboard: &dto.ScoreboardPage{
-				List:     []*dto.ScoreboardItem{},
+			Scoreboard: &ScoreboardPageResult{
+				List:     []*ScoreboardItemResult{},
 				Total:    total,
 				Page:     page,
 				PageSize: pageSize,
@@ -82,15 +81,15 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	}
 	items := allItems[start : stop+1]
 
-	return &dto.ScoreboardResp{
-		Contest: &dto.ScoreboardContestInfo{
+	return &ScoreboardResult{
+		Contest: &ScoreboardContestResult{
 			ID:        contest.ID,
 			Title:     contest.Title,
 			Status:    contest.Status,
 			StartedAt: contest.StartTime,
 			EndsAt:    contest.EndTime,
 		},
-		Scoreboard: &dto.ScoreboardPage{
+		Scoreboard: &ScoreboardPageResult{
 			List:     items,
 			Total:    total,
 			Page:     page,

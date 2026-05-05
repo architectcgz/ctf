@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
@@ -196,7 +195,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 	service := NewChallengeService(nil, repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateChallenge(ctx, 1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(ctx, 1001, CreateChallengeInput{
 		Title:       "Test Challenge",
 		Description: "desc",
 		Category:    "web",
@@ -270,7 +269,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateChallenge(ctx, 9, &dto.UpdateChallengeReq{ImageID: &imageID, InstanceSharing: model.InstanceSharingShared}); err != nil {
+	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: model.InstanceSharingShared}); err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !updateCalled {

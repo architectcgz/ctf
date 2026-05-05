@@ -8,13 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type adminCommandService interface {
-	CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error)
-	UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error)
+	CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*dto.AdminUserResp, error)
+	UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*dto.AdminUserResp, error)
 	DeleteUser(ctx context.Context, userID int64) error
 	ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error)
 }
@@ -57,7 +58,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.CreateUser(c.Request.Context(), &req)
+	user, err := h.commands.CreateUser(c.Request.Context(), identityRequestMapper.ToCreateUserInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -73,7 +74,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.commands.UpdateUser(c.Request.Context(), userID, &req)
+	user, err := h.commands.UpdateUser(c.Request.Context(), userID, identityRequestMapper.ToUpdateUserInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

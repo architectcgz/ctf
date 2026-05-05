@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -18,36 +17,12 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, &req)
+	resp, err := h.commands.CreateAttackLog(c.Request.Context(), contestID, roundID, contestRequestMapper.ToCreateAttackLogInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 	response.Success(c, resp)
-}
-
-func awdAttackLogResultsToDTO(results []contestqry.AWDAttackLogResult) []*dto.AWDAttackLogResp {
-	resp := make([]*dto.AWDAttackLogResp, 0, len(results))
-	for i := range results {
-		item := results[i]
-		resp = append(resp, &dto.AWDAttackLogResp{
-			ID:             item.ID,
-			RoundID:        item.RoundID,
-			AttackerTeamID: item.AttackerTeamID,
-			AttackerTeam:   item.AttackerTeam,
-			VictimTeamID:   item.VictimTeamID,
-			VictimTeam:     item.VictimTeam,
-			ServiceID:      item.ServiceID,
-			AWDChallengeID: item.AWDChallengeID,
-			AttackType:     item.AttackType,
-			Source:         item.Source,
-			SubmittedFlag:  item.SubmittedFlag,
-			IsSuccess:      item.IsSuccess,
-			ScoreGained:    item.ScoreGained,
-			CreatedAt:      item.CreatedAt,
-		})
-	}
-	return resp
 }
 
 func (h *AWDHandler) SubmitAttack(c *gin.Context) {
@@ -61,7 +36,7 @@ func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, &req)
+	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, contestRequestMapper.ToSubmitAttackInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -77,5 +52,5 @@ func (h *AWDHandler) ListAttackLogs(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, awdAttackLogResultsToDTO(resp))
+	response.Success(c, contestRequestMapper.ToAWDAttackLogResps(resp))
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -113,7 +112,7 @@ func TestImageServiceListImagesPropagatesContextToRepository(t *testing.T) {
 	service := NewImageService(repo, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListImages(ctx, &dto.ImageQuery{Name: "web", Status: model.ImageStatusAvailable})
+	resp, err := service.ListImages(ctx, ListImagesInput{Name: "web", Status: model.ImageStatusAvailable})
 	if err != nil {
 		t.Fatalf("ListImages() error = %v", err)
 	}

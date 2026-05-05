@@ -44,6 +44,23 @@ type RecommendationChallengeRepository interface {
 	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }
 
+type ProfileRepository interface {
+	AssessmentProfileLookupRepository
+	AssessmentProfileReadRepository
+	AssessmentProfileWriteRepository
+	AssessmentProfileRebuildRepository
+	AssessmentDimensionScoreRepository
+}
+
+type RecommendationRepository interface {
+	RecommendationProfileRepository
+	RecommendationSolvedChallengeRepository
+}
+
+type ChallengeRepository interface {
+	RecommendationChallengeRepository
+}
+
 type AssessmentReportLifecycleRepository interface {
 	Create(ctx context.Context, report *model.Report) error
 	FindByID(ctx context.Context, reportID int64) (*model.Report, error)
@@ -87,4 +104,14 @@ type AssessmentReviewArchiveRepository interface {
 
 type AssessmentProfileReader interface {
 	GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+}
+
+type ReportRepository interface {
+	AssessmentReportLifecycleRepository
+	AssessmentReportUserLookupRepository
+	AssessmentReportContestLookupRepository
+	AssessmentPersonalReportRepository
+	AssessmentClassReportRepository
+	AssessmentContestExportRepository
+	AssessmentReviewArchiveRepository
 }

@@ -230,7 +230,7 @@ func TestNotificationServiceSendNotificationPublishesWebsocketEvent(t *testing.T
 		MaxPageSize:     100,
 	}, broadcaster, zap.NewNop())
 
-	if err := service.SendNotification(context.Background(), 7, &dto.NotificationReq{
+	if err := service.SendNotification(context.Background(), 7, SendNotificationInput{
 		Type:    model.NotificationTypeSystem,
 		Title:   "title",
 		Content: "content",
@@ -276,14 +276,14 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 	}, broadcaster, zap.NewNop())
 	link := "/notifications/admin"
 
-	result, err := service.PublishAdminNotification(context.Background(), 99, &dto.AdminNotificationPublishReq{
+	result, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
 		Type:    model.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "统一发布测试",
 		Link:    &link,
-		AudienceRules: dto.NotificationAudienceRulesReq{
+		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
-			Rules: []dto.NotificationAudienceRuleReq{
+			Rules: []NotificationAudienceRuleInput{
 				{Type: dto.NotificationAudienceTypeAll},
 				{Type: dto.NotificationAudienceTypeRole, Values: []string{model.RoleTeacher}},
 				{Type: dto.NotificationAudienceTypeClass, Values: []string{"ClassA"}},
@@ -345,13 +345,13 @@ func TestNotificationServicePublishAdminNotificationRejectsInvalidAudienceRule(t
 		MaxPageSize:     100,
 	}, nil, zap.NewNop())
 
-	_, err := service.PublishAdminNotification(context.Background(), 99, &dto.AdminNotificationPublishReq{
+	_, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
 		Type:    model.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "invalid payload",
-		AudienceRules: dto.NotificationAudienceRulesReq{
+		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
-			Rules: []dto.NotificationAudienceRuleReq{
+			Rules: []NotificationAudienceRuleInput{
 				{Type: dto.NotificationAudienceTypeRole},
 			},
 		},
@@ -367,13 +367,13 @@ func TestNotificationServicePublishAdminNotificationRejectsUnknownRoleValue(t *t
 		MaxPageSize:     100,
 	}, nil, zap.NewNop())
 
-	_, err := service.PublishAdminNotification(context.Background(), 99, &dto.AdminNotificationPublishReq{
+	_, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
 		Type:    model.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "invalid role",
-		AudienceRules: dto.NotificationAudienceRulesReq{
+		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
-			Rules: []dto.NotificationAudienceRuleReq{
+			Rules: []NotificationAudienceRuleInput{
 				{Type: dto.NotificationAudienceTypeRole, Values: []string{"superadmin"}},
 			},
 		},

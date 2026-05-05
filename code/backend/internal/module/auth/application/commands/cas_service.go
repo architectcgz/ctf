@@ -268,9 +268,7 @@ func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*dto
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.LoginResp{
-		User: buildAuthUser(user),
-	}, session, nil
+	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil
 }
 
 func (s *casService) mapUserSyncError(err error) error {

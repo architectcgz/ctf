@@ -4,22 +4,23 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type awdCommandService interface {
-	CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error)
-	RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error)
+	CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
+	RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
 	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
-	PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
-	UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error)
-	CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error)
-	SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error)
+	PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)
+	UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error)
+	CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*dto.AWDAttackLogResp, error)
+	SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error)
 }
 
 type awdServiceCommandService interface {
-	CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error)
-	UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error
+	CreateContestAWDService(ctx context.Context, contestID int64, req contestcmd.CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error)
+	UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req contestcmd.UpdateContestAWDServiceInput) error
 	DeleteContestAWDService(ctx context.Context, contestID, serviceID int64) error
 }
 
@@ -27,11 +28,11 @@ type awdQueryService interface {
 	ListRounds(ctx context.Context, contestID int64) ([]contestqry.AWDRoundResult, error)
 	ListServices(ctx context.Context, contestID, roundID int64) ([]contestqry.AWDTeamServiceResult, error)
 	ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]contestqry.AWDAttackLogResult, error)
-	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error)
-	GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error)
-	ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error)
+	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDRoundSummaryResult, error)
+	GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDTrafficSummaryResult, error)
+	ListTrafficEvents(ctx context.Context, contestID, roundID int64, req contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error)
 	GetReadiness(ctx context.Context, contestID int64) (*contestqry.AWDReadinessResult, error)
-	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error)
+	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*contestqry.AWDWorkspaceResult, error)
 }
 
 type awdServiceQueryService interface {

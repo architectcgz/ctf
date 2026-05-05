@@ -4,21 +4,23 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type contestService interface {
-	CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
-	UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error)
+	CreateContest(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error)
+	UpdateContest(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error)
 }
 
 type contestQueryService interface {
-	GetContest(ctx context.Context, id int64) (*dto.ContestResp, error)
-	ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
+	GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error)
+	ListContests(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
 }
 
 type scoreboardQueryService interface {
-	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
-	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
+	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*contestqry.ScoreboardResult, error)
+	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*contestqry.ScoreboardResult, error)
 }
 
 type scoreboardCommandService interface {

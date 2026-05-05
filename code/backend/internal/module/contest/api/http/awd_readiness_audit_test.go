@@ -25,13 +25,13 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 	var readinessCalls int
 	handler := NewHandler(
 		stubContestService{
-			updateContestFunc: func(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
+			updateContestFunc: func(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error) {
 				return nil, errcode.ErrInvalidStatusTransition
 			},
 		},
 		stubContestQueryService{
-			getContestFunc: func(ctx context.Context, id int64) (*dto.ContestResp, error) {
-				return &dto.ContestResp{
+			getContestFunc: func(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
+				return &contestqry.ContestResult{
 					ID:     id,
 					Mode:   model.ContestModeAWD,
 					Status: model.ContestStatusRegistration,
@@ -69,7 +69,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 
 	handler := NewAWDHandler(
 		stubAWDCommandService{
-			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 				trace := contestcmd.AWDReadinessGateTraceFromContext(ctx)
 				if trace == nil {
 					t.Fatal("expected readiness gate trace in command context")
@@ -111,18 +111,18 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 }
 
 type stubContestService struct {
-	createContestFunc func(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
-	updateContestFunc func(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error)
+	createContestFunc func(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error)
+	updateContestFunc func(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error)
 }
 
-func (s stubContestService) CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error) {
+func (s stubContestService) CreateContest(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error) {
 	if s.createContestFunc != nil {
 		return s.createContestFunc(ctx, req)
 	}
 	return nil, nil
 }
 
-func (s stubContestService) UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
+func (s stubContestService) UpdateContest(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error) {
 	if s.updateContestFunc != nil {
 		return s.updateContestFunc(ctx, id, req)
 	}
@@ -130,18 +130,18 @@ func (s stubContestService) UpdateContest(ctx context.Context, id int64, req *dt
 }
 
 type stubContestQueryService struct {
-	getContestFunc   func(ctx context.Context, id int64) (*dto.ContestResp, error)
-	listContestsFunc func(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
+	getContestFunc   func(ctx context.Context, id int64) (*contestqry.ContestResult, error)
+	listContestsFunc func(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
 }
 
-func (s stubContestQueryService) GetContest(ctx context.Context, id int64) (*dto.ContestResp, error) {
+func (s stubContestQueryService) GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
 	if s.getContestFunc != nil {
 		return s.getContestFunc(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s stubContestQueryService) ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error) {
+func (s stubContestQueryService) ListContests(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error) {
 	if s.listContestsFunc != nil {
 		return s.listContestsFunc(ctx, req)
 	}
@@ -160,20 +160,20 @@ func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestI
 }
 
 type stubAWDCommandService struct {
-	createRoundFunc           func(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error)
-	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error)
+	createRoundFunc           func(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
+	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
 	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
-	previewCheckerFunc        func(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
+	previewCheckerFunc        func(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)
 }
 
-func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
+func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
 	if s.createRoundFunc != nil {
 		return s.createRoundFunc(ctx, contestID, req)
 	}
 	return nil, nil
 }
 
-func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
 	if s.runCurrentRoundChecksFunc != nil {
 		return s.runCurrentRoundChecksFunc(ctx, contestID, req)
 	}
@@ -187,22 +187,22 @@ func (s stubAWDCommandService) RunRoundChecks(ctx context.Context, contestID, ro
 	return nil, nil
 }
 
-func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error) {
+func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
 	if s.previewCheckerFunc != nil {
 		return s.previewCheckerFunc(ctx, contestID, req)
 	}
 	return nil, nil
 }
 
-func (stubAWDCommandService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error) {
+func (stubAWDCommandService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
 	return nil, nil
 }
 
-func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
-func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
@@ -212,11 +212,11 @@ type stubAWDQueryService struct {
 
 type stubAWDServiceCommandService struct{}
 
-func (stubAWDServiceCommandService) CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error) {
+func (stubAWDServiceCommandService) CreateContestAWDService(ctx context.Context, contestID int64, req contestcmd.CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceCommandService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error {
+func (stubAWDServiceCommandService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req contestcmd.UpdateContestAWDServiceInput) error {
 	return nil
 }
 
@@ -242,19 +242,19 @@ func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundI
 	return nil, nil
 }
 
-func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error) {
+func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contestID int64) (*contestqry.AWDWorkspaceResult, error) {
 	return nil, nil
 }
 
-func (stubAWDQueryService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
+func (stubAWDQueryService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDRoundSummaryResult, error) {
 	return nil, nil
 }
 
-func (stubAWDQueryService) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error) {
+func (stubAWDQueryService) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*contestqry.AWDTrafficSummaryResult, error) {
 	return nil, nil
 }
 
-func (stubAWDQueryService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error) {
+func (stubAWDQueryService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req contestqry.ListAWDTrafficEventsInput) (*contestqry.AWDTrafficEventPageResult, error) {
 	return nil, nil
 }
 

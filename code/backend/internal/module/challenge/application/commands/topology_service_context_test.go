@@ -213,7 +213,7 @@ func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *
 	service := NewTopologyService(repo, templateRepo, &topologyImageRepoStub{})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.SaveChallengeTopology(ctx, 9, &dto.SaveChallengeTopologyReq{TemplateID: &templateID})
+	resp, err := service.SaveChallengeTopology(ctx, 9, SaveChallengeTopologyInput{TemplateID: &templateID})
 	if err != nil {
 		t.Fatalf("SaveChallengeTopology() error = %v", err)
 	}
@@ -290,7 +290,7 @@ func TestTopologyServiceCreateTemplatePropagatesContextToRepositories(t *testing
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, imageRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTemplate(ctx, &dto.UpsertEnvironmentTemplateReq{
+	resp, err := service.CreateTemplate(ctx, UpsertEnvironmentTemplateInput{
 		Name:         "Base Web",
 		EntryNodeKey: "web",
 		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
@@ -345,7 +345,7 @@ func TestTopologyServiceUpdateTemplatePropagatesContextToRepositories(t *testing
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, imageRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpdateTemplate(ctx, 8, &dto.UpsertEnvironmentTemplateReq{
+	resp, err := service.UpdateTemplate(ctx, 8, UpsertEnvironmentTemplateInput{
 		Name:         "New Web",
 		EntryNodeKey: "web",
 		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},

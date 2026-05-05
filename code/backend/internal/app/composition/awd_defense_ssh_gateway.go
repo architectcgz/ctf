@@ -11,10 +11,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 
+	"ctf-platform/internal/authctx"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -29,6 +31,15 @@ type AWDDefenseSSHGateway struct {
 	mu       sync.Mutex
 	listener net.Listener
 	done     chan struct{}
+}
+
+type runtimeHTTPProxyTicketService interface {
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
+	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+}
+
+type runtimeContainerInteractiveExecutor interface {
+	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 }
 
 func NewAWDDefenseSSHGateway(

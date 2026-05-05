@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -27,7 +26,7 @@ func TestAWDChallengeQueryServiceListChallenges(t *testing.T) {
 		t.Fatalf("Create() error = %v", err)
 	}
 
-	page, err := service.ListChallenges(context.Background(), &dto.AWDChallengeQuery{Page: 1, Size: 10})
+	page, err := service.ListChallenges(context.Background(), ListAWDChallengesInput{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("ListChallenges() error = %v", err)
 	}

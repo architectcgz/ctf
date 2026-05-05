@@ -10,7 +10,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error) {
+func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
 		return nil, err

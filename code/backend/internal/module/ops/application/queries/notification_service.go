@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsports "ctf-platform/internal/module/ops/ports"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -61,19 +62,8 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 }
 
 func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
-	var content *string
-	if notification.Content != "" {
-		content = &notification.Content
-	}
-
-	return dto.NotificationInfo{
-		ID:        notification.ID,
-		Type:      notification.Type,
-		Title:     notification.Title,
-		Content:   content,
-		Unread:    !notification.IsRead,
-		Link:      notification.Link,
-		CreatedAt: notification.CreatedAt,
-		ReadAt:    notification.ReadAt,
-	}
+	resp := notificationMapper.ToNotificationInfoPtr(notification)
+	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Unread = !notification.IsRead
+	return *resp
 }

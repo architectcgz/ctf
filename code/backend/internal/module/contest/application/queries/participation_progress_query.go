@@ -6,12 +6,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, userID int64) (*dto.ContestMyProgressResp, error) {
+func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, userID int64) (*ParticipationProgressResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -29,13 +28,13 @@ func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, use
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := &dto.ContestMyProgressResp{
+	result := &ParticipationProgressResult{
 		ContestID: contestID,
 		TeamID:    teamID,
-		Solved:    make([]*dto.ContestSolvedProgressItem, 0, len(rows)),
+		Solved:    make([]*ContestSolvedProgressResult, 0, len(rows)),
 	}
 	for _, row := range rows {
-		result.Solved = append(result.Solved, &dto.ContestSolvedProgressItem{
+		result.Solved = append(result.Solved, &ContestSolvedProgressResult{
 			ContestChallengeID: row.ContestChallengeID,
 			SolvedAt:           row.SolvedAt,
 			PointsEarned:       row.PointsEarned,

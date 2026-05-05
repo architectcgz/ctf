@@ -9,8 +9,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -48,7 +48,7 @@ func TestAdminServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 	db := setupIdentityTestDB(t)
 	service := newAdminServiceForTest(db)
 
-	resp, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
+	resp, err := service.CreateUser(context.Background(), identitycontracts.CreateUserInput{
 		Username:  "student-1",
 		Name:      "Alice",
 		Password:  "Password123",
@@ -83,7 +83,7 @@ func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 	db := setupIdentityTestDB(t)
 	service := newAdminServiceForTest(db)
 
-	if _, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
+	if _, err := service.CreateUser(context.Background(), identitycontracts.CreateUserInput{
 		Username: "duplicate-user",
 		Password: "Password123",
 		Role:     model.RoleStudent,
@@ -92,7 +92,7 @@ func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 		t.Fatalf("seed CreateUser() error = %v", err)
 	}
 
-	_, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
+	_, err := service.CreateUser(context.Background(), identitycontracts.CreateUserInput{
 		Username: "duplicate-user",
 		Password: "Password123",
 		Role:     model.RoleStudent,

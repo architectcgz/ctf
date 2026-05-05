@@ -24,7 +24,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	teamResp, err := h.commands.CreateTeam(c.Request.Context(), contestID, userID, &req)
+	teamResp, err := h.commands.CreateTeam(c.Request.Context(), contestID, userID, contestRequestMapper.ToCreateTeamInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

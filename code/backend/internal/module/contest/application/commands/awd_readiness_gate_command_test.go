@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 )
@@ -59,7 +59,7 @@ func TestAWDServiceCreateRoundBlocksItemLevelReadinessReasons(t *testing.T) {
 			})
 			assertCommandReadinessBlockingReason(t, db, tc.contestID, tc.challengeID, tc.blockingReason)
 
-			_, err := service.CreateRound(context.Background(), tc.contestID, &dto.CreateAWDRoundReq{
+			_, err := service.CreateRound(context.Background(), tc.contestID, contestcmd.CreateAWDRoundInput{
 				RoundNumber: 1,
 			})
 			assertAWDReadinessBlocked(t, err)
@@ -118,7 +118,7 @@ func TestAWDServiceRunCurrentRoundChecksBlocksItemLevelReadinessReasons(t *testi
 			assertCommandReadinessBlockingReason(t, db, tc.contestID, tc.challengeID, tc.blockingReason)
 
 			service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
-			_, err := service.RunCurrentRoundChecks(context.Background(), tc.contestID, nil)
+			_, err := service.RunCurrentRoundChecks(context.Background(), tc.contestID, contestcmd.RunCurrentRoundChecksInput{})
 			assertAWDReadinessBlocked(t, err)
 		})
 	}
@@ -177,7 +177,7 @@ func TestContestServiceUpdateContestBlocksAWDStartForItemLevelReadinessReasons(t
 			})
 			assertCommandReadinessBlockingReason(t, db, tc.contestID, tc.challengeID, tc.blockingReason)
 
-			_, err := service.UpdateContest(context.Background(), tc.contestID, &dto.UpdateContestReq{
+			_, err := service.UpdateContest(context.Background(), tc.contestID, contestcmd.UpdateContestInput{
 				Status: strPtr(model.ContestStatusRunning),
 			})
 			assertContestReadinessBlocked(t, err)

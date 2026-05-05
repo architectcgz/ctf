@@ -8,7 +8,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -1046,7 +1045,7 @@ func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *model.AWDAttac
 	}
 }
 
-func findAWDWorkspaceEventByDirection(items []*dto.ContestAWDWorkspaceRecentEventResp, direction string) *dto.ContestAWDWorkspaceRecentEventResp {
+func findAWDWorkspaceEventByDirection(items []*AWDWorkspaceRecentEventResult, direction string) *AWDWorkspaceRecentEventResult {
 	for _, item := range items {
 		if item.Direction == direction {
 			return item
@@ -1055,7 +1054,7 @@ func findAWDWorkspaceEventByDirection(items []*dto.ContestAWDWorkspaceRecentEven
 	return nil
 }
 
-func findAWDWorkspaceServiceByID(items []*dto.ContestAWDWorkspaceServiceResp, serviceID int64) *dto.ContestAWDWorkspaceServiceResp {
+func findAWDWorkspaceServiceByID(items []*AWDWorkspaceServiceResult, serviceID int64) *AWDWorkspaceServiceResult {
 	for _, item := range items {
 		if item.ServiceID == serviceID {
 			return item
@@ -1064,7 +1063,7 @@ func findAWDWorkspaceServiceByID(items []*dto.ContestAWDWorkspaceServiceResp, se
 	return nil
 }
 
-func findAWDWorkspaceServiceByChallenge(items []*dto.ContestAWDWorkspaceServiceResp, challengeID int64) *dto.ContestAWDWorkspaceServiceResp {
+func findAWDWorkspaceServiceByChallenge(items []*AWDWorkspaceServiceResult, challengeID int64) *AWDWorkspaceServiceResult {
 	for _, item := range items {
 		if item.AWDChallengeID == challengeID {
 			return item

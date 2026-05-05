@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) GetContest(ctx context.Context, id int64) (*dto.ContestResp, error) {
+func (s *ContestService) GetContest(ctx context.Context, id int64) (*ContestResult, error) {
 	contest, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrContestNotFound) {
@@ -17,5 +16,5 @@ func (s *ContestService) GetContest(ctx context.Context, id int64) (*dto.Contest
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return domain.ContestRespFromModel(contest), nil
+	return contestResultFromModel(contest), nil
 }

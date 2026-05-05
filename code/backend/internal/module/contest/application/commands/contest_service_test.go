@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -32,7 +31,7 @@ func (s *stubContestRepository) Update(context.Context, *model.Contest) error { 
 func TestContestServiceCreateContestRejectsInvalidTimeRange(t *testing.T) {
 	service := contestcmd.NewContestService(&stubContestRepository{}, nil, nil, zap.NewNop())
 
-	_, err := service.CreateContest(context.Background(), &dto.CreateContestReq{
+	_, err := service.CreateContest(context.Background(), contestcmd.CreateContestInput{
 		Title:     "contest",
 		StartTime: time.Now().Add(time.Hour),
 		EndTime:   time.Now(),
@@ -48,7 +47,7 @@ func TestContestServiceCreateContestNormalizesTimeFieldsToUTC(t *testing.T) {
 	start := time.Date(2026, 4, 28, 12, 36, 54, 0, shanghai)
 	end := start.Add(2 * time.Hour)
 
-	resp, err := service.CreateContest(context.Background(), &dto.CreateContestReq{
+	resp, err := service.CreateContest(context.Background(), contestcmd.CreateContestInput{
 		Title:       "utc contest",
 		Description: "time contract",
 		Mode:        model.ContestModeAWD,
@@ -92,7 +91,7 @@ func TestContestServiceUpdateContestBlocksAWDStartWhenReadinessNotReady(t *testi
 		UpdatedAt: now,
 	})
 
-	_, err := service.UpdateContest(context.Background(), 801, &dto.UpdateContestReq{
+	_, err := service.UpdateContest(context.Background(), 801, contestcmd.UpdateContestInput{
 		Status: strPtr(model.ContestStatusRunning),
 	})
 	assertContestReadinessBlocked(t, err)
@@ -113,7 +112,7 @@ func TestContestServiceUpdateContestAllowsAWDStartOverride(t *testing.T) {
 		UpdatedAt: now,
 	})
 
-	resp, err := service.UpdateContest(context.Background(), 802, &dto.UpdateContestReq{
+	resp, err := service.UpdateContest(context.Background(), 802, contestcmd.UpdateContestInput{
 		Status:         strPtr(model.ContestStatusRunning),
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("teacher drill"),
@@ -144,7 +143,7 @@ func TestContestServiceUpdateContestNormalizesTimeFieldsToUTC(t *testing.T) {
 		UpdatedAt: now,
 	})
 
-	resp, err := service.UpdateContest(context.Background(), 805, &dto.UpdateContestReq{
+	resp, err := service.UpdateContest(context.Background(), 805, contestcmd.UpdateContestInput{
 		StartTime: &start,
 		EndTime:   &end,
 	})
@@ -185,7 +184,7 @@ func TestContestServiceUpdateContestRejectsBlankOverrideReason(t *testing.T) {
 		UpdatedAt: now,
 	})
 
-	_, err := service.UpdateContest(context.Background(), 803, &dto.UpdateContestReq{
+	_, err := service.UpdateContest(context.Background(), 803, contestcmd.UpdateContestInput{
 		Status:         strPtr(model.ContestStatusRunning),
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("  "),
@@ -210,7 +209,7 @@ func TestContestServiceUpdateContestDoesNotGateNonAWDStatusUpdate(t *testing.T) 
 		UpdatedAt: now,
 	})
 
-	resp, err := service.UpdateContest(context.Background(), 804, &dto.UpdateContestReq{
+	resp, err := service.UpdateContest(context.Background(), 804, contestcmd.UpdateContestInput{
 		Status: strPtr(model.ContestStatusRunning),
 	})
 	if err != nil {
@@ -237,7 +236,7 @@ func TestContestServiceUpdateContestRecordsManualStatusTransition(t *testing.T) 
 		UpdatedAt:     now,
 	})
 
-	resp, err := service.UpdateContest(context.Background(), 806, &dto.UpdateContestReq{
+	resp, err := service.UpdateContest(context.Background(), 806, contestcmd.UpdateContestInput{
 		Status: strPtr(model.ContestStatusRunning),
 	})
 	if err != nil {
@@ -287,7 +286,7 @@ func TestContestServiceUpdateContestManualFreezeCreatesFrozenSnapshot(t *testing
 		t.Fatalf("seed live scoreboard: %v", err)
 	}
 
-	resp, err := service.UpdateContest(context.Background(), 807, &dto.UpdateContestReq{
+	resp, err := service.UpdateContest(context.Background(), 807, contestcmd.UpdateContestInput{
 		Status: strPtr(model.ContestStatusFrozen),
 	})
 	if err != nil {

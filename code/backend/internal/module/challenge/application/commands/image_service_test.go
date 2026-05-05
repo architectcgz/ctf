@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -90,7 +89,7 @@ func TestImageServiceUpdateImageAllowsClearingDescription(t *testing.T) {
 	)
 
 	emptyDescription := ""
-	if err := service.UpdateImage(context.Background(), image.ID, &dto.UpdateImageReq{Description: &emptyDescription}); err != nil {
+	if err := service.UpdateImage(context.Background(), image.ID, UpdateImageInput{Description: &emptyDescription}); err != nil {
 		t.Fatalf("UpdateImage() error = %v", err)
 	}
 
@@ -123,7 +122,7 @@ func TestImageServiceCreateImageHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.CreateImage(ctx, &dto.CreateImageReq{
+	_, err := service.CreateImage(ctx, CreateImageInput{
 		Name: "web",
 		Tag:  "latest",
 	})

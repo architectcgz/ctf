@@ -7,7 +7,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -69,7 +68,7 @@ func TestChallengeServiceAddChallengeToAWDContestDoesNotCreateAWDService(t *test
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	resp, err := service.AddChallengeToContest(context.Background(), contest.ID, &dto.AddContestChallengeReq{
+	resp, err := service.AddChallengeToContest(context.Background(), contest.ID, AddContestChallengeInput{
 		ChallengeID: 9001,
 		Points:      120,
 		Order:       2,
@@ -143,7 +142,7 @@ func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
 		t.Fatalf("add challenge: %v", err)
 	}
 
-	err := service.UpdateChallenge(context.Background(), contest.ID, 9003, &dto.UpdateContestChallengeReq{
+	err := service.UpdateChallenge(context.Background(), contest.ID, 9003, UpdateContestChallengeInput{
 		Points:    intPtr(140),
 		Order:     intPtr(3),
 		IsVisible: boolPtr(false),

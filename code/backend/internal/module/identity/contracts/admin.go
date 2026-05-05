@@ -7,9 +7,32 @@ import (
 	"ctf-platform/internal/dto"
 )
 
+type CreateUserInput struct {
+	Username  string
+	Password  string
+	Name      string
+	Email     string
+	StudentNo string
+	TeacherNo string
+	ClassName string
+	Role      string
+	Status    string
+}
+
+type UpdateUserInput struct {
+	Password  *string
+	Name      *string
+	Email     *string
+	StudentNo *string
+	TeacherNo *string
+	ClassName *string
+	Role      *string
+	Status    *string
+}
+
 type AdminCommandService interface {
-	CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error)
-	UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error)
+	CreateUser(ctx context.Context, req CreateUserInput) (*dto.AdminUserResp, error)
+	UpdateUser(ctx context.Context, userID int64, req UpdateUserInput) (*dto.AdminUserResp, error)
 	DeleteUser(ctx context.Context, userID int64) error
 	ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error)
 }

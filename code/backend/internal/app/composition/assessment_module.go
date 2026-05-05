@@ -1,154 +1,23 @@
 package composition
 
 import (
-	"context"
-
-	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
-	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
-	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
-	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
-	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
-	assessmentports "ctf-platform/internal/module/assessment/ports"
+	assessmentruntime "ctf-platform/internal/module/assessment/runtime"
 )
 
-type AssessmentModule struct {
-	BackgroundTasks         BackgroundTaskCloser
-	Handler                 *assessmenthttp.Handler
-	ProfileService          assessmentcontracts.ProfileService
-	Recommendations         assessmentcontracts.RecommendationProvider
-	ReportHandler           *assessmenthttp.ReportHandler
-	TeacherAWDReviewHandler *assessmenthttp.TeacherAWDReviewHandler
-}
-
-type assessmentModuleDeps struct {
-	profileRepo        *assessmentinfra.Repository
-	recommendationRepo *assessmentinfra.Repository
-	reportRepo         *assessmentinfra.ReportRepository
-	awdReviewRepo      *assessmentinfra.TeacherAWDReviewRepository
-}
-
-type assessmentModuleExternalDeps struct {
-	challengeRepo assessmentports.RecommendationChallengeRepository
-}
+type AssessmentModule = assessmentruntime.Module
 
 func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentModule {
-	cfg := root.Config()
-	deps := buildAssessmentModuleDeps(root)
-	externalDeps := buildAssessmentModuleExternalDeps(challenge)
-
-	profileCommandService, profileQueryService := buildAssessmentProfileHandler(root, deps)
-	profileCommandService.RegisterPracticeEventConsumers(root.Events)
-	profileCommandService.RegisterContestEventConsumers(root.Events)
-	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps, externalDeps)
-	recommendationService.RegisterPracticeEventConsumers(root.Events)
-	recommendationService.RegisterContestEventConsumers(root.Events)
-	reportService, reportHandler := buildAssessmentReportHandler(root, cfg, deps, profileQueryService)
-	teacherAWDReviewHandler := buildAssessmentTeacherAWDReviewHandler(deps, reportService)
-	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))
-	root.RegisterBackgroundJob(NewBackgroundJob(
-		"assessment_cleaner",
-		func(ctx context.Context) error {
-			return cleaner.Start(ctx, cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout)
-		},
-		cleaner.Stop,
-	))
-
-	return &AssessmentModule{
-		BackgroundTasks:         reportService,
-		Handler:                 assessmenthttp.NewHandler(profileQueryService, recommendationService),
-		ProfileService:          profileCommandService,
-		Recommendations:         recommendationService,
-		ReportHandler:           reportHandler,
-		TeacherAWDReviewHandler: teacherAWDReviewHandler,
-	}
-}
-
-func buildAssessmentModuleDeps(root *Root) assessmentModuleDeps {
-	repo := assessmentinfra.NewRepository(root.DB())
-	return assessmentModuleDeps{
-		profileRepo:        repo,
-		recommendationRepo: repo,
-		reportRepo:         assessmentinfra.NewReportRepository(root.DB()),
-		awdReviewRepo:      assessmentinfra.NewTeacherAWDReviewRepository(root.DB()),
-	}
-}
-
-func buildAssessmentModuleExternalDeps(challenge *ChallengeModule) assessmentModuleExternalDeps {
-	return assessmentModuleExternalDeps{
-		challengeRepo: challenge.Catalog,
-	}
-}
-
-func buildAssessmentProfileHandler(root *Root, deps assessmentModuleDeps) (*assessmentcmd.Service, *assessmentqry.ProfileService) {
-	profileCommandService := assessmentcmd.NewProfileService(
-		deps.profileRepo,
-		root.Cache(),
-		root.Config().Assessment,
-		root.Logger().Named("assessment_service"),
-	)
-	profileQueryService := assessmentqry.NewProfileService(deps.profileRepo)
-	return profileCommandService, profileQueryService
-}
-
-func buildAssessmentRecommendationHandler(root *Root, cfg *config.Config, deps assessmentModuleDeps, externalDeps assessmentModuleExternalDeps) *assessmentqry.RecommendationService {
-	return assessmentqry.NewRecommendationService(
-		deps.recommendationRepo,
-		externalDeps.challengeRepo,
-		root.Cache(),
-		cfg.Recommendation,
-		root.Logger().Named("recommendation_service"),
-	)
-}
-
-func buildAssessmentReportHandler(root *Root, cfg *config.Config, deps assessmentModuleDeps, profileQueryService assessmentports.AssessmentProfileReader) (*assessmentcmd.ReportService, *assessmenthttp.ReportHandler) {
-	reportService := assessmentcmd.NewReportService(
-		deps.reportRepo,
-		deps.reportRepo,
-		deps.reportRepo,
-		deps.reportRepo,
-		deps.reportRepo,
-		deps.reportRepo,
-		deps.reportRepo,
-		profileQueryService,
-		cfg.Report,
-		root.Logger().Named("report_service"),
-	)
-	reportService.StartBackgroundTasks(root.Context())
-	reportService.SetAWDReviewExportBuilder(
-		assessmentcmd.NewAWDReviewExportBuilder(
-			assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo),
-		),
-	)
-	return reportService, assessmenthttp.NewReportHandler(reportService)
-}
-
-func buildAssessmentTeacherAWDReviewHandler(deps assessmentModuleDeps, reportService *assessmentcmd.ReportService) *assessmenthttp.TeacherAWDReviewHandler {
-	service := assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo)
-	return assessmenthttp.NewTeacherAWDReviewHandler(&teacherAWDReviewHandlerService{
-		queryService:  service,
-		reportService: reportService,
+	module := assessmentruntime.Build(assessmentruntime.Deps{
+		AppContext:    root.Context(),
+		Config:        root.Config(),
+		Logger:        root.Logger(),
+		DB:            root.DB(),
+		Cache:         root.Cache(),
+		Events:        root.Events,
+		ChallengeRepo: challenge.Catalog,
 	})
-}
-
-type teacherAWDReviewHandlerService struct {
-	queryService  *assessmentqry.TeacherAWDReviewService
-	reportService *assessmentcmd.ReportService
-}
-
-func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error) {
-	return s.queryService.ListContests(ctx, requesterID)
-}
-
-func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error) {
-	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
-}
-
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
-	return s.reportService.CreateTeacherAWDReviewArchive(ctx, requesterID, contestID, req)
-}
-
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
-	return s.reportService.CreateTeacherAWDReviewReport(ctx, requesterID, contestID, req)
+	for _, job := range module.BackgroundJobs {
+		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))
+	}
+	return module
 }

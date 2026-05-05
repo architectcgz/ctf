@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/response"
 )
 
@@ -16,10 +17,10 @@ type TopologyHandler struct {
 }
 
 type topologyCommandService interface {
-	SaveChallengeTopology(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
+	SaveChallengeTopology(ctx context.Context, challengeID int64, req challengecmd.SaveChallengeTopologyInput) (*dto.ChallengeTopologyResp, error)
 	DeleteChallengeTopology(ctx context.Context, challengeID int64) error
-	CreateTemplate(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	UpdateTemplate(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
+	CreateTemplate(ctx context.Context, req challengecmd.UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error)
+	UpdateTemplate(ctx context.Context, id int64, req challengecmd.UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error)
 	DeleteTemplate(ctx context.Context, id int64) error
 }
 
@@ -44,7 +45,7 @@ func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.SaveChallengeTopology(c.Request.Context(), challengeID, &req)
+	resp, err := h.commands.SaveChallengeTopology(c.Request.Context(), challengeID, challengeRequestMapper.ToSaveChallengeTopologyInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -85,7 +86,7 @@ func (h *TopologyHandler) CreateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.CreateTemplate(c.Request.Context(), &req)
+	resp, err := h.commands.CreateTemplate(c.Request.Context(), challengeRequestMapper.ToUpsertEnvironmentTemplateInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -104,7 +105,7 @@ func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpdateTemplate(c.Request.Context(), id, &req)
+	resp, err := h.commands.UpdateTemplate(c.Request.Context(), id, challengeRequestMapper.ToUpsertEnvironmentTemplateInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

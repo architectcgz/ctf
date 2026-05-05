@@ -22,7 +22,7 @@ func (h *ChallengeHandler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, payload)
+	response.Success(c, contestRequestMapper.ToContestChallengeInfos(payload))
 }
 
 func (h *ChallengeHandler) ListAdminChallenges(c *gin.Context) {
@@ -38,5 +38,5 @@ func (h *ChallengeHandler) ListAdminChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, payload)
+	response.Success(c, contestRequestMapper.ToContestChallengeResps(payload))
 }

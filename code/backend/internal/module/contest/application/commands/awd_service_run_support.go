@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -15,7 +14,7 @@ func (s *AWDService) buildCheckerRunResp(ctx context.Context, contestID int64, r
 		return nil, err
 	}
 	return &dto.AWDCheckerRunResp{
-		Round:    contestdomain.AWDRoundRespFromModel(round),
+		Round:    contestResponseMapperInst.ToAWDRoundRespBasePtr(round),
 		Services: services,
 	}, nil
 }
@@ -42,7 +41,7 @@ func (s *AWDService) listRoundServices(ctx context.Context, contestID, roundID i
 		if team := teams[record.TeamID]; team != nil {
 			teamName = team.Name
 		}
-		resp = append(resp, contestdomain.AWDTeamServiceRespFromModel(&recordCopy, teamName))
+		resp = append(resp, awdTeamServiceRespFromModel(&recordCopy, teamName))
 	}
 	return resp, nil
 }

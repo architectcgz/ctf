@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -13,7 +12,7 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 	ctx context.Context,
 	contestID, roundID int64,
 	runtimeService *model.ContestAWDService,
-	req *dto.UpsertAWDServiceCheckReq,
+	req UpsertServiceCheckInput,
 	team *model.Team,
 	record *model.AWDTeamService,
 ) (*dto.AWDTeamServiceResp, error) {
@@ -39,5 +38,5 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return contestdomain.AWDTeamServiceRespFromModel(record, team.Name), nil
+	return awdTeamServiceRespFromModel(record, team.Name), nil
 }

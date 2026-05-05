@@ -15,6 +15,7 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 	teachingevidence "ctf-platform/internal/teaching/evidence"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -82,7 +83,7 @@ func (s *QueryService) ListClasses(
 		if err != nil {
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
-		return toClassItems(items), total, page, size, nil
+		return commonmapper.NonNilSlice(teachingReadmodelMapper.ToClassItems(items)), total, page, size, nil
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
@@ -183,7 +184,7 @@ func (s *QueryService) ListStudents(
 	if err != nil {
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
-	return toStudentItems(items), total, page, size, nil
+	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), total, page, size, nil
 }
 
 func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirectoryQuery) (int, int) {
@@ -232,7 +233,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toStudentItems(items), nil
+	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), nil
 }
 
 func (s *QueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error) {
@@ -248,7 +249,7 @@ func (s *QueryService) GetClassSummary(ctx context.Context, requesterID int64, r
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toClassSummary(summary), nil
+	return teachingReadmodelMapper.ToClassSummaryPtr(summary), nil
 }
 
 func (s *QueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error) {
@@ -266,7 +267,7 @@ func (s *QueryService) GetClassTrend(ctx context.Context, requesterID int64, req
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return toClassTrend(trend), nil
+	return teachingReadmodelMapper.ToClassTrendRespPtr(trend), nil
 }
 
 func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error) {
@@ -294,9 +295,9 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	studentItems := toStudentItems(students)
-	summaryDTO := toClassSummary(summary)
-	trendDTO := toClassTrend(trend)
+	studentItems := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(students))
+	summaryDTO := teachingReadmodelMapper.ToClassSummaryPtr(summary)
+	trendDTO := teachingReadmodelMapper.ToClassTrendRespPtr(trend)
 
 	items := make([]dto.TeacherClassReviewItem, 0, 4)
 	riskStudents := selectRiskStudents(studentItems, 3)
@@ -332,7 +333,7 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 			Title:    "优先补薄弱维度",
 			Detail:   fmt.Sprintf("%s 是当前最集中的薄弱项，涉及 %d 名学生，建议本周统一布置该维度基础题。", weakDimension, len(weakStudents)),
 			Accent:   "primary",
-			Students: toReviewStudentRefs(limitStudents(weakStudents, 3)),
+			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(limitStudents(weakStudents, 3))),
 		}
 		if len(weakStudents) >= 3 {
 			item.Accent = "warning"
@@ -349,7 +350,7 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 			Title:    "先跟进重点学生",
 			Detail:   fmt.Sprintf("建议教师先跟进 %s，并优先布置推荐题做补强训练。", joinStudentNames(riskStudents)),
 			Accent:   "primary",
-			Students: toReviewStudentRefs(riskStudents),
+			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(riskStudents)),
 		}
 		if recommendation := s.firstStudentRecommendation(ctx, riskStudents, 1); recommendation != nil {
 			item.Recommendation = recommendation
@@ -411,19 +412,14 @@ func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterI
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-
 	items := make([]dto.TeacherRecommendationItem, 0, len(result.Challenges))
 	for _, challenge := range result.Challenges {
-		items = append(items, dto.TeacherRecommendationItem{
-			ChallengeID: challenge.ID,
-			Title:       challenge.Title,
-			Category:    challenge.Category,
-			Difficulty:  challenge.Difficulty,
-			Reason:      challenge.Reason,
-		})
+		if challenge == nil {
+			continue
+		}
+		items = append(items, *teachingReadmodelMapper.ToTeacherRecommendationItemPtr(challenge))
 	}
-
-	return items, nil
+	return commonmapper.NonNilSlice(items), nil
 }
 
 func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error) {
@@ -437,7 +433,7 @@ func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TimelineResp{Events: toTimelineEvents(events)}, nil
+	return &dto.TimelineResp{Events: commonmapper.NonNilSlice(teachingReadmodelMapper.ToTimelineEvents(events))}, nil
 }
 
 func (s *QueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
@@ -896,99 +892,6 @@ func (s *QueryService) ensureClassAccess(ctx context.Context, requesterID int64,
 	return nil
 }
 
-func toClassItems(items []readmodelports.ClassItem) []dto.TeacherClassItem {
-	if len(items) == 0 {
-		return []dto.TeacherClassItem{}
-	}
-
-	result := make([]dto.TeacherClassItem, 0, len(items))
-	for _, item := range items {
-		result = append(result, dto.TeacherClassItem{
-			Name:         item.Name,
-			StudentCount: item.StudentCount,
-		})
-	}
-	return result
-}
-
-func toStudentItems(items []readmodelports.StudentItem) []dto.TeacherStudentItem {
-	if len(items) == 0 {
-		return []dto.TeacherStudentItem{}
-	}
-
-	result := make([]dto.TeacherStudentItem, 0, len(items))
-	for _, item := range items {
-		result = append(result, dto.TeacherStudentItem{
-			ID:               item.ID,
-			Username:         item.Username,
-			StudentNo:        item.StudentNo,
-			Name:             item.Name,
-			ClassName:        item.ClassName,
-			SolvedCount:      item.SolvedCount,
-			TotalScore:       item.TotalScore,
-			RecentEventCount: item.RecentEventCount,
-			WeakDimension:    item.WeakDimension,
-		})
-	}
-	return result
-}
-
-func toClassSummary(summary *readmodelports.ClassSummary) *dto.TeacherClassSummaryResp {
-	if summary == nil {
-		return nil
-	}
-
-	return &dto.TeacherClassSummaryResp{
-		ClassName:          summary.ClassName,
-		StudentCount:       summary.StudentCount,
-		AverageSolved:      summary.AverageSolved,
-		ActiveStudentCount: summary.ActiveStudentCount,
-		ActiveRate:         summary.ActiveRate,
-		RecentEventCount:   summary.RecentEventCount,
-	}
-}
-
-func toClassTrend(trend *readmodelports.ClassTrend) *dto.TeacherClassTrendResp {
-	if trend == nil {
-		return nil
-	}
-
-	points := make([]dto.TeacherClassTrendPoint, 0, len(trend.Points))
-	for _, point := range trend.Points {
-		points = append(points, dto.TeacherClassTrendPoint{
-			Date:               point.Date,
-			ActiveStudentCount: point.ActiveStudentCount,
-			EventCount:         point.EventCount,
-			SolveCount:         point.SolveCount,
-		})
-	}
-
-	return &dto.TeacherClassTrendResp{
-		ClassName: trend.ClassName,
-		Points:    points,
-	}
-}
-
-func toTimelineEvents(events []readmodelports.TimelineEventRecord) []dto.TimelineEvent {
-	if len(events) == 0 {
-		return []dto.TimelineEvent{}
-	}
-
-	result := make([]dto.TimelineEvent, 0, len(events))
-	for _, event := range events {
-		result = append(result, dto.TimelineEvent{
-			Type:        event.Type,
-			ChallengeID: event.ChallengeID,
-			Title:       event.Title,
-			Timestamp:   event.Timestamp,
-			IsCorrect:   event.IsCorrect,
-			Points:      event.Points,
-			Detail:      event.Detail,
-		})
-	}
-	return result
-}
-
 func toProgressBreakdownMap(rows []readmodelports.ProgressRow) map[string]dto.ProgressBreakdown {
 	if len(rows) == 0 {
 		return map[string]dto.ProgressBreakdown{}
@@ -1072,18 +975,6 @@ func limitStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherSt
 	return students[:limit]
 }
 
-func toReviewStudentRefs(students []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
-	items := make([]dto.TeacherReviewStudentRef, 0, len(students))
-	for _, student := range students {
-		items = append(items, dto.TeacherReviewStudentRef{
-			ID:       student.ID,
-			Username: student.Username,
-			Name:     student.Name,
-		})
-	}
-	return items
-}
-
 func joinStudentNames(students []dto.TeacherStudentItem) string {
 	names := make([]string, 0, len(students))
 	for _, student := range students {
@@ -1131,14 +1022,7 @@ func (s *QueryService) firstStudentRecommendation(ctx context.Context, students 
 		if result == nil || len(result.Challenges) == 0 || result.Challenges[0] == nil {
 			continue
 		}
-		recommendation := result.Challenges[0]
-		return &dto.TeacherRecommendationItem{
-			ChallengeID: recommendation.ID,
-			Title:       recommendation.Title,
-			Category:    recommendation.Category,
-			Difficulty:  recommendation.Difficulty,
-			Reason:      recommendation.Reason,
-		}
+		return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(result.Challenges[0])
 	}
 	return nil
 }

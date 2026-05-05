@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -73,7 +72,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("expected nil submission before upsert, got %+v", emptyMine)
 	}
 
-	draft, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	draft, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "草稿版解题记录",
 		Content:          "先枚举路由，再找注入点",
 		SubmissionStatus: model.SubmissionWriteupStatusDraft,
@@ -88,7 +87,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected draft visibility status: %+v", draft)
 	}
 
-	if _, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	if _, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "未解题直接发布",
 		Content:          "这一步应该被拦住",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,
@@ -109,7 +108,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("create solved submission: %v", err)
 	}
 
-	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "正式版解题记录",
 		Content:          "1. 枚举接口\n2. 找到注入点\n3. 读取 flag",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,
@@ -201,7 +200,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	repo := challengeinfra.NewRepository(db)
 	service := NewWriteupService(repo)
 
-	if _, err := service.Upsert(context.Background(), challengeItem.ID, admin.ID, &dto.UpsertChallengeWriteupReq{
+	if _, err := service.Upsert(context.Background(), challengeItem.ID, admin.ID, UpsertOfficialWriteupInput{
 		Title:      "Official",
 		Content:    "official content",
 		Visibility: model.WriteupVisibilityPublic,
@@ -221,7 +220,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create solved submission: %v", err)
 	}
 
-	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "社区题解",
 		Content:          "community content",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,

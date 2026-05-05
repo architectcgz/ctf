@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -139,7 +138,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 		t.Fatalf("create pending registration: %v", err)
 	}
 
-	_, err := service.CreateTeam(context.Background(), 20, 2002, &dto.CreateTeamReq{Name: "Pending Team"})
+	_, err := service.CreateTeam(context.Background(), 20, 2002, contestcmd.CreateTeamInput{Name: "Pending Team"})
 	if err != errcode.ErrContestRegistrationPending {
 		t.Fatalf("expected ErrContestRegistrationPending, got %v", err)
 	}
@@ -211,7 +210,7 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 		t.Fatalf("create submission: %v", err)
 	}
 
-	created, err := commandService.CreateAnnouncement(context.Background(), contest.ID, 9001, &dto.CreateContestAnnouncementReq{
+	created, err := commandService.CreateAnnouncement(context.Background(), contest.ID, 9001, contestcmd.CreateAnnouncementInput{
 		Title:   "比赛开始",
 		Content: "欢迎来到比赛。",
 	})
@@ -282,7 +281,7 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	}
 
 	status := model.ContestRegistrationStatusPending
-	page, err := queryService.ListRegistrations(context.Background(), 30, &dto.ContestRegistrationQuery{
+	page, err := queryService.ListRegistrations(context.Background(), 30, contestqry.ContestRegistrationQueryInput{
 		Status: &status,
 		Page:   1,
 		Size:   10,
@@ -295,7 +294,7 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 		t.Fatalf("unexpected registrations: %+v", items)
 	}
 
-	reviewed, err := commandService.ReviewRegistration(context.Background(), 30, items[0].ID, 9001, &dto.ReviewContestRegistrationReq{
+	reviewed, err := commandService.ReviewRegistration(context.Background(), 30, items[0].ID, 9001, contestcmd.ReviewRegistrationInput{
 		Status: model.ContestRegistrationStatusApproved,
 	})
 	if err != nil {

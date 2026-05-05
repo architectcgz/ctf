@@ -6,7 +6,10 @@ import (
 )
 
 func InstanceRespFromModel(inst *model.Instance) *dto.InstanceResp {
-	resp := practiceResponseMapperInst.ToInstanceResp(inst)
+	resp := practiceResponseMapperInst.ToInstanceRespBasePtr(inst)
+	if resp == nil {
+		return nil
+	}
 	resp.Access = dto.BuildInstanceAccessInfo(inst.AccessURL)
 	resp.RemainingExtends = RemainingExtends(inst)
 	return resp

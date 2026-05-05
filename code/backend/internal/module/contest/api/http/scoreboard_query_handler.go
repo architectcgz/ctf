@@ -3,7 +3,7 @@ package http
 import (
 	"strconv"
 
-	"ctf-platform/internal/dto"
+	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +37,7 @@ func (h *Handler) getScoreboard(c *gin.Context, live bool) {
 		}
 	}
 
-	var scoreboard *dto.ScoreboardResp
+	var scoreboard *contestqry.ScoreboardResult
 	if live {
 		scoreboard, err = h.scoreboardQueries.GetLiveScoreboard(c.Request.Context(), contestID, page, pageSize)
 	} else {
@@ -48,5 +48,5 @@ func (h *Handler) getScoreboard(c *gin.Context, live bool) {
 		return
 	}
 
-	response.Success(c, scoreboard)
+	response.Success(c, contestRequestMapper.ToScoreboardRespPtr(scoreboard))
 }

@@ -49,3 +49,12 @@ type UserLoginStateRepository interface {
 type UserProfileRepository interface {
 	UpdateProfile(ctx context.Context, user *model.User) error
 }
+
+type UserRepository interface {
+	UserListRepository
+	UserLookupRepository
+	UserWriteRepository
+	UserPasswordRepository
+	UserLoginStateRepository
+	UserProfileRepository
+}

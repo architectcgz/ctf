@@ -7,7 +7,6 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -68,13 +67,13 @@ func buildScoreboardItems(
 	teamIDs []int64,
 	teams []*model.Team,
 	statsMap map[int64]contestports.ScoreboardTeamStats,
-) []*dto.ScoreboardItem {
+) []*ScoreboardItemResult {
 	teamMap := make(map[int64]*model.Team, len(teams))
 	for _, team := range teams {
 		teamMap[team.ID] = team
 	}
 
-	items := make([]*dto.ScoreboardItem, 0, len(results))
+	items := make([]*ScoreboardItemResult, 0, len(results))
 	for idx, item := range results {
 		teamID := teamIDs[idx]
 		team := teamMap[teamID]
@@ -87,7 +86,7 @@ func buildScoreboardItems(
 			continue
 		}
 		stats := statsMap[teamID]
-		items = append(items, &dto.ScoreboardItem{
+		items = append(items, &ScoreboardItemResult{
 			Rank:             int(start) + len(items) + 1,
 			TeamID:           teamID,
 			Score:            item.Score,

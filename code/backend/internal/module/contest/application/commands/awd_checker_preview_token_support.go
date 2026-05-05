@@ -19,13 +19,13 @@ import (
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
 
 type storedAWDCheckerPreviewToken struct {
-	ContestID      int64                     `json:"contest_id"`
-	ServiceID      int64                     `json:"service_id"`
-	AWDChallengeID int64                     `json:"awd_challenge_id"`
-	CheckerType    model.AWDCheckerType      `json:"checker_type"`
-	CheckerConfig  string                    `json:"checker_config"`
-	Result         dto.AWDCheckerPreviewResp `json:"result"`
-	CreatedAt      time.Time                 `json:"created_at"`
+	ContestID      int64                                 `json:"contest_id"`
+	ServiceID      int64                                 `json:"service_id"`
+	AWDChallengeID int64                                 `json:"awd_challenge_id"`
+	CheckerType    model.AWDCheckerType                  `json:"checker_type"`
+	CheckerConfig  string                                `json:"checker_config"`
+	Result         contestdomain.AWDCheckerPreviewResult `json:"result"`
+	CreatedAt      time.Time                             `json:"created_at"`
 }
 
 func storeAWDCheckerPreviewToken(
@@ -47,7 +47,7 @@ func storeAWDCheckerPreviewToken(
 		AWDChallengeID: awdChallengeID,
 		CheckerType:    checkerType,
 		CheckerConfig:  checkerConfig,
-		Result:         *result,
+		Result:         *awdPreviewResultMapper.ToDomainPtr(result),
 		CreatedAt:      time.Now().UTC(),
 	}
 	raw, err := json.Marshal(record)

@@ -19,6 +19,7 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 	ctfws "ctf-platform/pkg/websocket"
 )
@@ -56,7 +57,7 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
 	}
 	link := fmt.Sprintf("/challenges/%d", payload.ChallengeID)
-	return s.SendNotification(ctx, payload.UserID, &dto.NotificationReq{
+	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
 		Type:    "challenge",
 		Title:   "题目解出",
 		Content: fmt.Sprintf("你已成功提交题目 #%d 的 Flag，获得 %d 分。", payload.ChallengeID, payload.Points),
@@ -64,7 +65,7 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 	})
 }
 
-func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req *dto.NotificationReq) error {
+func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req SendNotificationInput) error {
 	notification := &model.Notification{
 		UserID:  userID,
 		Type:    req.Type,
@@ -86,8 +87,8 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 	return nil
 }
 
-func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req *dto.AdminNotificationPublishReq) (*dto.AdminNotificationPublishResp, error) {
-	if req == nil || req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
+func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req PublishAdminNotificationInput) (*dto.AdminNotificationPublishResp, error) {
+	if req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
 		return nil, errcode.ErrInvalidParams
 	}
 
@@ -147,10 +148,10 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 		}
 	}
 
-	return &dto.AdminNotificationPublishResp{
+	return notificationMapper.ToAdminNotificationPublishRespPtr(adminNotificationPublishRespSource{
 		BatchID:        batch.ID,
 		RecipientCount: len(notifications),
-	}, nil
+	}), nil
 }
 
 func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificationID int64) error {
@@ -183,24 +184,13 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 }
 
 func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
-	var content *string
-	if notification.Content != "" {
-		content = &notification.Content
-	}
-
-	return dto.NotificationInfo{
-		ID:        notification.ID,
-		Type:      notification.Type,
-		Title:     notification.Title,
-		Content:   content,
-		Unread:    !notification.IsRead,
-		Link:      notification.Link,
-		CreatedAt: notification.CreatedAt,
-		ReadAt:    notification.ReadAt,
-	}
+	resp := notificationMapper.ToNotificationInfoPtr(notification)
+	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Unread = !notification.IsRead
+	return *resp
 }
 
-func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule dto.NotificationAudienceRuleReq) ([]int64, error) {
+func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule NotificationAudienceRuleInput) ([]int64, error) {
 	switch rule.Type {
 	case dto.NotificationAudienceTypeAll:
 		userIDs, err := s.repo.ListAllUserIDs(ctx)

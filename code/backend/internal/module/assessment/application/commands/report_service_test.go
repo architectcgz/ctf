@@ -814,7 +814,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		_ = service.Close(closeCtx)
 	})
 
-	resp, err := service.CreateTeacherAWDReviewArchive(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{
+	resp, err := service.CreateTeacherAWDReviewArchive(context.Background(), teacher.ID, contest.ID, CreateTeacherAWDReviewExportInput{
 		RoundNumber: intPtr(2),
 	})
 	if err != nil {
@@ -889,7 +889,7 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 		nil,
 	)
 
-	_, err := service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{})
+	_, err := service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, CreateTeacherAWDReviewExportInput{})
 	appErr, ok := err.(*errcode.AppError)
 	if !ok || appErr.Code != errcode.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %#v", err)
@@ -988,7 +988,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
+	_, err := service.CreateClassReport(context.Background(), teacher.ID, CreateClassReportInput{
 		ClassName: "class-b",
 		Format:    model.ReportFormatPDF,
 	})
@@ -1098,7 +1098,7 @@ func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.CreatePersonalReport(nil, 1, &dto.CreatePersonalReportReq{Format: model.ReportFormatPDF})
+	_, err := service.CreatePersonalReport(nil, 1, CreatePersonalReportInput{Format: model.ReportFormatPDF})
 	if err == nil {
 		t.Fatal("expected CreatePersonalReport(nil) to reject missing context")
 	}

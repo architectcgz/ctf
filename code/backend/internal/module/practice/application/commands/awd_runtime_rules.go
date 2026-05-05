@@ -9,6 +9,8 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
+const runtimeContainerNamePrefix = "ctf-instance-"
+
 func isAWDInstance(instance *model.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.ServiceID != nil
 }

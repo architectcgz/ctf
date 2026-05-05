@@ -14,10 +14,7 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 )
 
-const (
-	errMsgChallengeNoTarget    = "该题目不需要靶机实例"
-	runtimeContainerNamePrefix = "ctf-instance-"
-)
+const errMsgChallengeNoTarget = "该题目不需要靶机实例"
 
 type AssessmentService interface {
 	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
@@ -32,6 +29,9 @@ type practiceCommandRepository interface {
 	practiceports.PracticeInstanceStartTxManager
 	practiceports.PracticeInstanceRestartTxManager
 	practiceports.PracticeAWDServiceOperationTxManager
+	practiceports.PracticeInstanceStartTxRepository
+	practiceports.PracticeInstanceRestartTxRepository
+	practiceports.PracticeAWDServiceOperationTxRepository
 	practiceports.PracticeContestLookupRepository
 	practiceports.PracticeContestChallengeLookupRepository
 	practiceports.PracticeContestAWDServiceRepository
@@ -47,7 +47,7 @@ type practiceCommandRepository interface {
 	practiceports.PracticeManualReviewLookupRepository
 }
 
-type practiceInstanceCommandRepository interface {
+type instanceRepository interface {
 	practiceports.PracticeInstanceLookupRepository
 	practiceports.PracticeInstanceRuntimeWriteRepository
 	practiceports.PracticeInstanceAWDOperationRepository
@@ -60,7 +60,7 @@ type Service struct {
 	repo              practiceCommandRepository
 	challengeRepo     challengecontracts.PracticeChallengeContract
 	imageRepo         challengecontracts.ImageStore
-	instanceRepo      practiceInstanceCommandRepository
+	instanceRepo      instanceRepository
 	runtimeService    practiceports.RuntimeInstanceService
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
@@ -85,7 +85,7 @@ func NewService(
 	repo practiceCommandRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo challengecontracts.ImageStore,
-	instanceRepo practiceInstanceCommandRepository,
+	instanceRepo instanceRepository,
 	runtimeService practiceports.RuntimeInstanceService,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,

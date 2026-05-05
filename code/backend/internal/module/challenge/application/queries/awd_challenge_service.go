@@ -31,20 +31,26 @@ func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (
 	return domain.AWDChallengeRespFromModel(item), nil
 }
 
-func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req *dto.AWDChallengeQuery) (*dto.AWDChallengePageResp, error) {
-	items, total, err := s.repo.ListAWDChallenges(ctx, req)
+func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
+	query := &dto.AWDChallengeQuery{
+		Keyword:     req.Keyword,
+		ServiceType: req.ServiceType,
+		Status:      req.Status,
+		Page:        req.Page,
+		Size:        req.Size,
+	}
+
+	items, total, err := s.repo.ListAWDChallenges(ctx, query)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	page := 1
 	size := 20
-	if req != nil {
-		if req.Page > 0 {
-			page = req.Page
-		}
-		if req.Size > 0 {
-			size = req.Size
-		}
+	if req.Page > 0 {
+		page = req.Page
+	}
+	if req.Size > 0 {
+		size = req.Size
 	}
 	resp := &dto.AWDChallengePageResp{
 		Items: make([]*dto.AWDChallengeResp, 0, len(items)),

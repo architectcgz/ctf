@@ -8,7 +8,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
@@ -87,7 +86,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveBuildsOverviewAndRounds(t *test
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 20101, 201, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 20102, 201, 2, 70, 30, now.Add(-10*time.Minute), time.Time{})
 
-	resp, err := service.GetContestArchive(context.Background(), 1, 201, &dto.GetTeacherAWDReviewArchiveReq{})
+	resp, err := service.GetContestArchive(context.Background(), 1, 201, assessmentqry.GetTeacherAWDReviewArchiveInput{})
 	if err != nil {
 		t.Fatalf("GetContestArchive() error = %v", err)
 	}
@@ -113,7 +112,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveSupportsSelectedRound(t *testin
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 30101, 301, 1, 50, 50, now.Add(-50*time.Minute), now.Add(-30*time.Minute))
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 30102, 301, 2, 55, 45, now.Add(-20*time.Minute), now.Add(-5*time.Minute))
 
-	resp, err := service.GetContestArchive(context.Background(), 1, 301, &dto.GetTeacherAWDReviewArchiveReq{
+	resp, err := service.GetContestArchive(context.Background(), 1, 301, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: intPtr(2),
 	})
 	if err != nil {
@@ -139,7 +138,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveBuildsLatestEvidenceAtFromSigna
 	trafficAt := now.Add(-5 * time.Minute)
 	seedTeacherAWDReviewSignals(t, db, 211, 21101, attackAt, trafficAt)
 
-	resp, err := service.GetContestArchive(context.Background(), 1, 211, &dto.GetTeacherAWDReviewArchiveReq{})
+	resp, err := service.GetContestArchive(context.Background(), 1, 211, assessmentqry.GetTeacherAWDReviewArchiveInput{})
 	if err != nil {
 		t.Fatalf("GetContestArchive() error = %v", err)
 	}
@@ -162,7 +161,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveRejectsTeamIDWithoutRound(t *te
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 32001, 320, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
 	seedTeacherAWDReviewTeamsAndChallenge(t, db, 320, now)
 
-	_, err := service.GetContestArchive(context.Background(), 1, 320, &dto.GetTeacherAWDReviewArchiveReq{
+	_, err := service.GetContestArchive(context.Background(), 1, 320, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		TeamID: int64Ptr(3201),
 	})
 	assertInvalidParamsError(t, err)
@@ -179,7 +178,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveRejectsUnknownTeamID(t *testing
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 33001, 330, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
 	seedTeacherAWDReviewTeamsAndChallenge(t, db, 330, now)
 
-	_, err := service.GetContestArchive(context.Background(), 1, 330, &dto.GetTeacherAWDReviewArchiveReq{
+	_, err := service.GetContestArchive(context.Background(), 1, 330, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: intPtr(1),
 		TeamID:      int64Ptr(999999),
 	})
@@ -198,7 +197,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveFiltersSelectedRoundByTeam(t *t
 	seedTeacherAWDReviewTeamsAndChallenge(t, db, 340, now)
 	seedTeacherAWDReviewFilterData(t, db, 340, 34001, now)
 
-	resp, err := service.GetContestArchive(context.Background(), 1, 340, &dto.GetTeacherAWDReviewArchiveReq{
+	resp, err := service.GetContestArchive(context.Background(), 1, 340, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: intPtr(1),
 		TeamID:      int64Ptr(3401),
 	})
@@ -269,7 +268,7 @@ func TestTeacherAWDReviewServiceMarksEndedContestAsFinalSnapshot(t *testing.T) {
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 40101, 401, 1, 60, 40, now.Add(-110*time.Minute), now.Add(-80*time.Minute))
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 40102, 401, 2, 70, 30, now.Add(-70*time.Minute), now.Add(-40*time.Minute))
 
-	resp, err := service.GetContestArchive(context.Background(), 1, 401, &dto.GetTeacherAWDReviewArchiveReq{})
+	resp, err := service.GetContestArchive(context.Background(), 1, 401, assessmentqry.GetTeacherAWDReviewArchiveInput{})
 	if err != nil {
 		t.Fatalf("GetContestArchive() error = %v", err)
 	}

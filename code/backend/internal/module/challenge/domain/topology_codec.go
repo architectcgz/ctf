@@ -154,6 +154,8 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*dto.ChallengeTopolog
 	if err != nil {
 		return nil, err
 	}
+
+	resp := challengeResponseMapperInst.ToChallengeTopologyRespBasePtr(item)
 	var baseline *dto.TopologySpecResp
 	if strings.TrimSpace(item.PackageBaselineSpec) != "" {
 		baselineSpec, decodeErr := model.DecodeTopologySpec(item.PackageBaselineSpec)
@@ -162,7 +164,6 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*dto.ChallengeTopolog
 		}
 		baseline = topologySpecRespFromSpec(item.EntryNodeKey, baselineSpec)
 	}
-	resp := challengeResponseMapperInst.ToChallengeTopologyRespBase(item)
 	resp.Networks = topologyNetworkRespList(spec.Networks)
 	resp.Nodes = topologyNodeRespList(spec.Nodes)
 	resp.Links = topologyLinkRespList(spec.Links)
@@ -188,7 +189,7 @@ func TemplateRespFromModel(item *model.EnvironmentTemplate) (*dto.EnvironmentTem
 	if err != nil {
 		return nil, err
 	}
-	resp := challengeResponseMapperInst.ToEnvironmentTemplateRespBase(item)
+	resp := challengeResponseMapperInst.ToEnvironmentTemplateRespBasePtr(item)
 	resp.Networks = topologyNetworkRespList(spec.Networks)
 	resp.Nodes = topologyNodeRespList(spec.Nodes)
 	resp.Links = topologyLinkRespList(spec.Links)
@@ -197,52 +198,41 @@ func TemplateRespFromModel(item *model.EnvironmentTemplate) (*dto.EnvironmentTem
 }
 
 func topologyNodeRespList(nodes []model.TopologyNode) []dto.TopologyNodeResp {
-	return challengeResponseMapperInst.ToTopologyNodeRespList(nodes)
+	return challengeResponseMapperInst.ToTopologyNodeResps(nodes)
 }
 
 func topologyNetworkRespList(networks []model.TopologyNetwork) []dto.TopologyNetworkResp {
-	return challengeResponseMapperInst.ToTopologyNetworkRespList(networks)
+	return challengeResponseMapperInst.ToTopologyNetworkResps(networks)
 }
 
 func topologyLinkRespList(links []model.TopologyLink) []dto.TopologyLinkResp {
-	return challengeResponseMapperInst.ToTopologyLinkRespList(links)
+	return challengeResponseMapperInst.ToTopologyLinkResps(links)
 }
 
 func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp {
-	return challengeResponseMapperInst.ToTopologyTrafficPolicyRespList(policies)
-}
-
-func ChallengePackageRevisionRespFromModel(item *model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
-	if item == nil {
-		return dto.ChallengePackageRevisionResp{}
-	}
-	return challengeResponseMapperInst.ToChallengePackageRevisionResp(*item)
+	return challengeResponseMapperInst.ToTopologyTrafficPolicyResps(policies)
 }
 
 func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology) *dto.ChallengeImportTopologyResp {
 	if item == nil {
 		return nil
 	}
-	nodes := make([]dto.ChallengeImportTopologyNodeResp, 0, len(item.Nodes))
-	for _, node := range item.Nodes {
-		mapped := challengeResponseMapperInst.ToChallengeImportTopologyNodeRespBase(node)
-		mapped.ImageRef = strings.TrimSpace(node.Image.Ref)
-		nodes = append(nodes, mapped)
+	nodes := challengeResponseMapperInst.ToChallengeImportTopologyNodeRespBases(item.Nodes)
+	for idx := range nodes {
+		nodes[idx].ImageRef = strings.TrimSpace(nodes[idx].ImageRef)
 	}
-	resp := challengeResponseMapperInst.ToChallengeImportTopologyRespBase(*item)
-	resp.Networks = topologyNetworkRespList(importedTopologyNetworkList(item.Networks))
-	resp.Nodes = nodes
-	resp.Links = topologyLinkRespList(importedTopologyLinkList(item.Links))
-	resp.Policies = topologyTrafficPolicyRespList(importedTopologyPolicyList(item.Policies))
-	return resp
+	return &dto.ChallengeImportTopologyResp{
+		Source:       item.Source,
+		EntryNodeKey: item.EntryNodeKey,
+		Networks:     topologyNetworkRespList(importedTopologyNetworkList(item.Networks)),
+		Nodes:        nodes,
+		Links:        topologyLinkRespList(importedTopologyLinkList(item.Links)),
+		Policies:     topologyTrafficPolicyRespList(importedTopologyPolicyList(item.Policies)),
+	}
 }
 
 func ChallengePackageFileRespList(items []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
-	resp := make([]dto.ChallengePackageFileResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, challengeResponseMapperInst.ToChallengePackageFileResp(item))
-	}
-	return resp
+	return challengeResponseMapperInst.ToChallengePackageFileResps(items)
 }
 
 func ChallengePackageFileRespListFromRevisionFiles(items []dto.ChallengePackageFileResp) []dto.ChallengePackageFileResp {
@@ -250,25 +240,25 @@ func ChallengePackageFileRespListFromRevisionFiles(items []dto.ChallengePackageF
 }
 
 func topologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *dto.TopologySpecResp {
-	resp := challengeResponseMapperInst.ToTopologySpecRespBase(spec)
-	resp.EntryNodeKey = entryNodeKey
-	resp.Networks = topologyNetworkRespList(spec.Networks)
-	resp.Nodes = topologyNodeRespList(spec.Nodes)
-	resp.Links = topologyLinkRespList(spec.Links)
-	resp.Policies = topologyTrafficPolicyRespList(spec.Policies)
-	return resp
+	return &dto.TopologySpecResp{
+		EntryNodeKey: entryNodeKey,
+		Networks:     topologyNetworkRespList(spec.Networks),
+		Nodes:        topologyNodeRespList(spec.Nodes),
+		Links:        topologyLinkRespList(spec.Links),
+		Policies:     topologyTrafficPolicyRespList(spec.Policies),
+	}
 }
 
 func importedTopologyNetworkList(items []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
-	return challengeResponseMapperInst.ToImportedTopologyNetworkList(items)
+	return challengeResponseMapperInst.ToImportedTopologyNetworks(items)
 }
 
 func importedTopologyLinkList(items []ChallengePackageTopologyLink) []model.TopologyLink {
-	return challengeResponseMapperInst.ToImportedTopologyLinkList(items)
+	return challengeResponseMapperInst.ToImportedTopologyLinks(items)
 }
 
 func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
-	return challengeResponseMapperInst.ToImportedTopologyPolicyList(items)
+	return challengeResponseMapperInst.ToImportedTopologyPolicies(items)
 }
 
 func normalizeTopologyNetworks(networks []dto.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {

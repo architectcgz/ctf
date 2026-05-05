@@ -3,11 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error) {
+func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID int64) ([]*ContestAnnouncementResult, error) {
 	if err := s.ensureContestExists(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -17,9 +16,9 @@ func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]*dto.ContestAnnouncementResp, 0, len(announcements))
+	result := make([]*ContestAnnouncementResult, 0, len(announcements))
 	for _, item := range announcements {
-		result = append(result, &dto.ContestAnnouncementResp{
+		result = append(result, &ContestAnnouncementResult{
 			ID:        item.ID,
 			Title:     item.Title,
 			Content:   item.Content,

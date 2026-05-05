@@ -12,6 +12,8 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 )
 
 func TestAWDChallengeHandlerListChallenges(t *testing.T) {
@@ -20,7 +22,7 @@ func TestAWDChallengeHandlerListChallenges(t *testing.T) {
 	handler := NewAWDChallengeHandler(
 		stubAWDChallengeCommandService{},
 		stubAWDChallengeQueryService{
-			listWithContextFunc: func(ctx context.Context, req *dto.AWDChallengeQuery) (*dto.AWDChallengePageResp, error) {
+			listWithContextFunc: func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
 				return &dto.AWDChallengePageResp{
 					Items: []*dto.AWDChallengeResp{
 						{ID: 1, Name: "Bank Portal AWD", Slug: "bank-portal-awd"},
@@ -55,11 +57,11 @@ type stubAWDChallengeCommandService struct {
 	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error)
 }
 
-func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	return nil, nil
 }
 
-func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateAWDChallengeReq) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	return nil, nil
 }
 
@@ -90,14 +92,14 @@ func (stubAWDChallengeCommandService) CommitImport(ctx context.Context, actorUse
 }
 
 type stubAWDChallengeQueryService struct {
-	listWithContextFunc func(ctx context.Context, req *dto.AWDChallengeQuery) (*dto.AWDChallengePageResp, error)
+	listWithContextFunc func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error)
 }
 
 func (s stubAWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDChallengeQueryService) ListChallenges(ctx context.Context, req *dto.AWDChallengeQuery) (*dto.AWDChallengePageResp, error) {
+func (s stubAWDChallengeQueryService) ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
 	if s.listWithContextFunc != nil {
 		return s.listWithContextFunc(ctx, req)
 	}

@@ -5,18 +5,17 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*dto.AWDTrafficEventResp {
-	items := make([]*dto.AWDTrafficEventResp, 0, len(records))
+func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*AWDTrafficEventResult {
+	items := make([]*AWDTrafficEventResult, 0, len(records))
 	for _, record := range records {
 		source := strings.TrimSpace(record.Source)
 		if source == "" {
 			source = "runtime_proxy"
 		}
-		items = append(items, &dto.AWDTrafficEventResp{
+		items = append(items, &AWDTrafficEventResult{
 			ID:                record.ID,
 			ContestID:         record.ContestID,
 			RoundID:           record.RoundID,
@@ -50,12 +49,9 @@ func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*dto.
 	return items
 }
 
-func filterAWDTrafficEvents(items []*dto.AWDTrafficEventResp, req *dto.ListAWDTrafficEventsReq) []*dto.AWDTrafficEventResp {
-	if req == nil {
-		return items
-	}
+func filterAWDTrafficEvents(items []*AWDTrafficEventResult, req ListAWDTrafficEventsInput) []*AWDTrafficEventResult {
 	pathKeyword := strings.ToLower(strings.TrimSpace(req.PathKeyword))
-	filtered := make([]*dto.AWDTrafficEventResp, 0, len(items))
+	filtered := make([]*AWDTrafficEventResult, 0, len(items))
 	for _, item := range items {
 		if req.AttackerTeamID > 0 && item.AttackerTeamID != req.AttackerTeamID {
 			continue
@@ -84,7 +80,7 @@ func matchAWDTrafficStatusGroup(statusCode int, group string) bool {
 	return awdTrafficStatusGroup(statusCode) == group
 }
 
-func paginateAWDTrafficEvents(items []*dto.AWDTrafficEventResp, page, size int) ([]*dto.AWDTrafficEventResp, int64, int, int) {
+func paginateAWDTrafficEvents(items []*AWDTrafficEventResult, page, size int) ([]*AWDTrafficEventResult, int64, int, int) {
 	if page <= 0 {
 		page = 1
 	}
@@ -94,7 +90,7 @@ func paginateAWDTrafficEvents(items []*dto.AWDTrafficEventResp, page, size int) 
 	total := int64(len(items))
 	start := (page - 1) * size
 	if start >= len(items) {
-		return []*dto.AWDTrafficEventResp{}, total, page, size
+		return []*AWDTrafficEventResult{}, total, page, size
 	}
 	end := start + size
 	if end > len(items) {
@@ -103,15 +99,15 @@ func paginateAWDTrafficEvents(items []*dto.AWDTrafficEventResp, page, size int) 
 	return items[start:end], total, page, size
 }
 
-func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEventResp) *dto.AWDTrafficSummaryResp {
-	summary := &dto.AWDTrafficSummaryResp{
+func buildAWDTrafficSummary(round *AWDRoundResult, items []*AWDTrafficEventResult) *AWDTrafficSummaryResult {
+	summary := &AWDTrafficSummaryResult{
 		Round:         round,
-		Trend:         []*dto.AWDTrafficTrendBucketResp{},
-		TopAttackers:  []*dto.AWDTrafficTopTeamResp{},
-		TopVictims:    []*dto.AWDTrafficTopTeamResp{},
-		TopChallenges: []*dto.AWDTrafficTopChallengeResp{},
-		TopPaths:      []*dto.AWDTrafficTopPathResp{},
-		TopErrorPaths: []*dto.AWDTrafficTopPathResp{},
+		Trend:         []*AWDTrafficTrendBucketResult{},
+		TopAttackers:  []*AWDTrafficTopTeamResult{},
+		TopVictims:    []*AWDTrafficTopTeamResult{},
+		TopChallenges: []*AWDTrafficTopChallengeResult{},
+		TopPaths:      []*AWDTrafficTopPathResult{},
+		TopErrorPaths: []*AWDTrafficTopPathResult{},
 	}
 	if round != nil {
 		summary.ContestID = round.ContestID
@@ -126,11 +122,11 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 	attackerSeen := make(map[int64]struct{})
 	victimSeen := make(map[int64]struct{})
 	paths := make(map[string]struct{})
-	attackerAgg := make(map[int64]*dto.AWDTrafficTopTeamResp)
-	victimAgg := make(map[int64]*dto.AWDTrafficTopTeamResp)
-	challengeAgg := make(map[int64]*dto.AWDTrafficTopChallengeResp)
-	pathAgg := make(map[string]*dto.AWDTrafficTopPathResp)
-	trendAgg := make(map[time.Time]*dto.AWDTrafficTrendBucketResp)
+	attackerAgg := make(map[int64]*AWDTrafficTopTeamResult)
+	victimAgg := make(map[int64]*AWDTrafficTopTeamResult)
+	challengeAgg := make(map[int64]*AWDTrafficTopChallengeResult)
+	pathAgg := make(map[string]*AWDTrafficTopPathResult)
+	trendAgg := make(map[time.Time]*AWDTrafficTrendBucketResult)
 
 	for _, item := range items {
 		summary.TotalRequests++
@@ -141,7 +137,7 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 			attackerSeen[item.AttackerTeamID] = struct{}{}
 			entry := attackerAgg[item.AttackerTeamID]
 			if entry == nil {
-				entry = &dto.AWDTrafficTopTeamResp{TeamID: item.AttackerTeamID, TeamName: item.AttackerTeam}
+				entry = &AWDTrafficTopTeamResult{TeamID: item.AttackerTeamID, TeamName: item.AttackerTeam}
 				attackerAgg[item.AttackerTeamID] = entry
 			}
 			entry.RequestCount++
@@ -153,7 +149,7 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 			victimSeen[item.VictimTeamID] = struct{}{}
 			entry := victimAgg[item.VictimTeamID]
 			if entry == nil {
-				entry = &dto.AWDTrafficTopTeamResp{TeamID: item.VictimTeamID, TeamName: item.VictimTeam}
+				entry = &AWDTrafficTopTeamResult{TeamID: item.VictimTeamID, TeamName: item.VictimTeam}
 				victimAgg[item.VictimTeamID] = entry
 			}
 			entry.RequestCount++
@@ -165,7 +161,7 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 			paths[item.Path] = struct{}{}
 			entry := pathAgg[item.Path]
 			if entry == nil {
-				entry = &dto.AWDTrafficTopPathResp{Path: item.Path}
+				entry = &AWDTrafficTopPathResult{Path: item.Path}
 				pathAgg[item.Path] = entry
 			}
 			entry.RequestCount++
@@ -176,7 +172,7 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 		}
 		entry := challengeAgg[item.AWDChallengeID]
 		if entry == nil {
-			entry = &dto.AWDTrafficTopChallengeResp{AWDChallengeID: item.AWDChallengeID, AWDChallengeTitle: item.AWDChallengeTitle}
+			entry = &AWDTrafficTopChallengeResult{AWDChallengeID: item.AWDChallengeID, AWDChallengeTitle: item.AWDChallengeTitle}
 			challengeAgg[item.AWDChallengeID] = entry
 		}
 		entry.RequestCount++
@@ -187,7 +183,7 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 		bucket := item.OccurredAt.Truncate(time.Minute)
 		trendEntry := trendAgg[bucket]
 		if trendEntry == nil {
-			trendEntry = &dto.AWDTrafficTrendBucketResp{BucketStart: bucket}
+			trendEntry = &AWDTrafficTrendBucketResult{BucketStart: bucket}
 			trendAgg[bucket] = trendEntry
 		}
 		trendEntry.RequestCount++
@@ -223,8 +219,8 @@ func awdTrafficStatusGroup(statusCode int) string {
 	}
 }
 
-func sortAWDTrafficTeams(items map[int64]*dto.AWDTrafficTopTeamResp) []*dto.AWDTrafficTopTeamResp {
-	list := make([]*dto.AWDTrafficTopTeamResp, 0, len(items))
+func sortAWDTrafficTeams(items map[int64]*AWDTrafficTopTeamResult) []*AWDTrafficTopTeamResult {
+	list := make([]*AWDTrafficTopTeamResult, 0, len(items))
 	for _, item := range items {
 		list = append(list, item)
 	}
@@ -237,15 +233,15 @@ func sortAWDTrafficTeams(items map[int64]*dto.AWDTrafficTopTeamResp) []*dto.AWDT
 	return limitAWDTrafficTeams(list, 5)
 }
 
-func limitAWDTrafficTeams(items []*dto.AWDTrafficTopTeamResp, limit int) []*dto.AWDTrafficTopTeamResp {
+func limitAWDTrafficTeams(items []*AWDTrafficTopTeamResult, limit int) []*AWDTrafficTopTeamResult {
 	if len(items) <= limit {
 		return items
 	}
 	return items[:limit]
 }
 
-func sortAWDTrafficChallenges(items map[int64]*dto.AWDTrafficTopChallengeResp) []*dto.AWDTrafficTopChallengeResp {
-	list := make([]*dto.AWDTrafficTopChallengeResp, 0, len(items))
+func sortAWDTrafficChallenges(items map[int64]*AWDTrafficTopChallengeResult) []*AWDTrafficTopChallengeResult {
+	list := make([]*AWDTrafficTopChallengeResult, 0, len(items))
 	for _, item := range items {
 		list = append(list, item)
 	}
@@ -261,8 +257,8 @@ func sortAWDTrafficChallenges(items map[int64]*dto.AWDTrafficTopChallengeResp) [
 	return list
 }
 
-func sortAWDTrafficPaths(items map[string]*dto.AWDTrafficTopPathResp) []*dto.AWDTrafficTopPathResp {
-	list := make([]*dto.AWDTrafficTopPathResp, 0, len(items))
+func sortAWDTrafficPaths(items map[string]*AWDTrafficTopPathResult) []*AWDTrafficTopPathResult {
+	list := make([]*AWDTrafficTopPathResult, 0, len(items))
 	for _, item := range items {
 		list = append(list, item)
 	}
@@ -281,8 +277,8 @@ func sortAWDTrafficPaths(items map[string]*dto.AWDTrafficTopPathResp) []*dto.AWD
 	return list
 }
 
-func sortAWDTrafficTrend(items map[time.Time]*dto.AWDTrafficTrendBucketResp) []*dto.AWDTrafficTrendBucketResp {
-	list := make([]*dto.AWDTrafficTrendBucketResp, 0, len(items))
+func sortAWDTrafficTrend(items map[time.Time]*AWDTrafficTrendBucketResult) []*AWDTrafficTrendBucketResult {
+	list := make([]*AWDTrafficTrendBucketResult, 0, len(items))
 	for _, item := range items {
 		list = append(list, item)
 	}

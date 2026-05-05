@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/response"
 )
 
@@ -17,8 +18,8 @@ type WriteupHandler struct {
 }
 
 type writeupCommandService interface {
-	Upsert(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
-	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
+	Upsert(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertOfficialWriteupInput) (*dto.AdminChallengeWriteupResp, error)
+	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertSubmissionWriteupInput) (*dto.SubmissionWriteupResp, error)
 	RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	UnrecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
@@ -53,7 +54,7 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.Upsert(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.Upsert(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, challengeRequestMapper.ToUpsertOfficialWriteupInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -141,7 +142,7 @@ func (h *WriteupHandler) UpsertSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpsertSubmission(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.UpsertSubmission(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, challengeRequestMapper.ToUpsertSubmissionWriteupInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

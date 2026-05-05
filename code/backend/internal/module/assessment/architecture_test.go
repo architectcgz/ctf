@@ -90,42 +90,71 @@ func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 	}
 }
 
-func TestPortsDoNotDeclareWideProfileRepository(t *testing.T) {
+func TestRuntimeOwnsAssessmentWiring(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "ports.go"))
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/api/http")
+}
+
+func TestRuntimeUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read assessment ports file: %v", err)
+		t.Fatalf("read assessment runtime module: %v", err)
 	}
-	if strings.Contains(string(content), "type ProfileRepository interface") {
-		t.Fatalf("assessment ports must not declare the legacy wide ProfileRepository interface")
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"profileRepo        assessmentports.ProfileRepository",
+		"recommendationRepo assessmentports.RecommendationRepository",
+		"reportRepo         assessmentports.ReportRepository",
+		"awdReviewRepo      assessmentports.TeacherAWDReviewRepository",
+		"challengeRepo      assessmentports.ChallengeRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("assessment runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"type assessmentModuleDeps struct",
+		"type assessmentModuleExternalDeps struct",
+		"repo := assessmentinfra.NewRepository(root.DB())",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("assessment runtime should not keep composition glue marker %s", marker)
+		}
 	}
 }
 
-func TestPortsDoNotDeclareWideReportRepository(t *testing.T) {
+func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "ports.go"))
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read assessment ports file: %v", err)
+		t.Fatalf("read assessment runtime module: %v", err)
 	}
-	if strings.Contains(string(content), "type ReportRepository interface") {
-		t.Fatalf("assessment ports must not declare the legacy wide ReportRepository interface")
-	}
-}
 
-func TestPortsDoNotDeclareWideRecommendationRepository(t *testing.T) {
-	t.Parallel()
-
-	content, err := os.ReadFile(filepath.Join("ports", "ports.go"))
-	if err != nil {
-		t.Fatalf("read assessment ports file: %v", err)
+	source := string(content)
+	expected := []string{
+		"newModuleDeps(",
+		"buildProfileHandler(",
+		"buildRecommendationHandler(",
+		"buildReportHandler(",
+		"buildTeacherAWDReviewHandler(",
 	}
-	if strings.Contains(string(content), "type RecommendationRepository interface") {
-		t.Fatalf("assessment ports must not declare the wide RecommendationRepository interface")
-	}
-	if strings.Contains(string(content), "type ChallengeRepository interface") {
-		t.Fatalf("assessment ports must not declare the generic ChallengeRepository interface for recommendation queries")
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("assessment runtime should delegate through %s", marker)
+		}
 	}
 }
 
@@ -144,6 +173,28 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {

@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 	"fmt"
@@ -24,8 +25,8 @@ type Handler struct {
 }
 
 type challengeCommandService interface {
-	CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
-	UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
+	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*dto.ChallengeResp, error)
+	UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateChallengeInput) error
 	DeleteChallenge(ctx context.Context, id int64) error
 	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
@@ -56,7 +57,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeRequestMapper.ToCreateChallengeInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -78,7 +79,7 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateChallenge(c.Request.Context(), id, &req); err != nil {
+	if err := h.commands.UpdateChallenge(c.Request.Context(), id, challengeRequestMapper.ToUpdateChallengeInput(req)); err != nil {
 		response.FromError(c, err)
 		return
 	}

@@ -3,12 +3,10 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error) {
+func (s *AWDService) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*AWDTrafficSummaryResult, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
 		return nil, err
@@ -17,5 +15,16 @@ func (s *AWDService) GetTrafficSummary(ctx context.Context, contestID, roundID i
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return buildAWDTrafficSummary(contestdomain.AWDRoundRespFromModel(round), buildAWDTrafficEvents(records)), nil
+	return buildAWDTrafficSummary(&AWDRoundResult{
+		ID:           round.ID,
+		ContestID:    round.ContestID,
+		RoundNumber:  round.RoundNumber,
+		Status:       round.Status,
+		StartedAt:    round.StartedAt,
+		EndedAt:      round.EndedAt,
+		AttackScore:  round.AttackScore,
+		DefenseScore: round.DefenseScore,
+		CreatedAt:    round.CreatedAt,
+		UpdatedAt:    round.UpdatedAt,
+	}, buildAWDTrafficEvents(records)), nil
 }

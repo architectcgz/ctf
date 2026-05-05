@@ -158,7 +158,10 @@ func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
-	resp := runtimeCommandResponseMapperInst.ToInstanceResp(inst)
+	resp := runtimeResponseMapper.ToInstanceRespPtr(inst)
+	if resp == nil {
+		return nil
+	}
 	resp.RemainingExtends = runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount)
 	return resp
 }

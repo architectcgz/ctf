@@ -147,7 +147,7 @@ func (s *ReportService) SetAWDReviewExportBuilder(builder AWDReviewExportBuilder
 	s.awdReviewBuilder = builder
 }
 
-func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error) {
+func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req CreatePersonalReportInput) (*dto.ReportExportData, error) {
 	if ctx == nil {
 		return nil, errors.New("create personal report requires context")
 	}
@@ -185,7 +185,7 @@ func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Contex
 	return context.WithTimeout(ctx, s.config.PersonalTimeout)
 }
 
-func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req CreateClassReportInput) (*dto.ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
@@ -225,7 +225,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req *dto.CreateContestExportReq) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*dto.ReportExportData, error) {
 	if _, err := s.contestRepo.FindContestByID(ctx, contestID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -255,7 +255,7 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req *dto.CreateStudentReviewArchiveReq) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req CreateStudentReviewArchiveInput) (*dto.ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
@@ -291,11 +291,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
-	if req == nil {
-		req = &dto.CreateTeacherAWDReviewExportReq{}
-	}
-
+func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
 	if _, err := s.findAWDContestForExport(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -329,11 +325,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
-	if req == nil {
-		req = &dto.CreateTeacherAWDReviewExportReq{}
-	}
-
+func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
 	contest, err := s.findAWDContestForExport(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -1155,7 +1147,7 @@ func buildReportExportData(reportID int64, status string, expiresAt time.Time) *
 }
 
 func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData {
-	resp := assessmentCommandResponseMapperInst.ToReportExportDataBase(report)
+	resp := assessmentCommandResponseMapperInst.ToReportExportDataBasePtr(report)
 	if report.Status == model.ReportStatusReady {
 		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)
 		resp.DownloadURL = &downloadURL

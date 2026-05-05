@@ -9,10 +9,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
-	if req == nil {
-		return nil, errcode.ErrInvalidParams
-	}
+func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -48,5 +45,5 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return contestdomain.AWDRoundRespFromModel(round), nil
+	return contestResponseMapperInst.ToAWDRoundRespBasePtr(round), nil
 }

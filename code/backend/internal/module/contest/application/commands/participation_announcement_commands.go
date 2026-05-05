@@ -13,7 +13,7 @@ import (
 	ctfws "ctf-platform/pkg/websocket"
 )
 
-func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req *dto.CreateContestAnnouncementReq) (*dto.ContestAnnouncementResp, error) {
+func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req CreateAnnouncementInput) (*dto.ContestAnnouncementResp, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -33,12 +33,7 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 	if err := s.repo.CreateAnnouncement(ctx, item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	result := &dto.ContestAnnouncementResp{
-		ID:        item.ID,
-		Title:     item.Title,
-		Content:   item.Content,
-		CreatedAt: item.CreatedAt,
-	}
+	result := contestResponseMapperInst.ToContestAnnouncementRespBasePtr(item)
 	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
 		Type: "contest.announcement.created",
 		Payload: map[string]any{

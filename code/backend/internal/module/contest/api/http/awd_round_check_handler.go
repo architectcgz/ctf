@@ -12,23 +12,24 @@ import (
 
 func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	req := &dto.RunCurrentAWDCheckerReq{}
+	req := dto.RunCurrentAWDCheckerReq{}
 	if c.Request.ContentLength > 0 {
-		if err := c.ShouldBindJSON(req); err != nil {
+		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
 			return
 		}
 	}
+	input := contestRequestMapper.ToRunCurrentRoundChecksInput(req)
 
-	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, req.ForceOverride)
+	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, input.ForceOverride)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
 	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
-	resp, err := h.commands.RunCurrentRoundChecks(requestCtx, contestID, req)
-	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionRunCurrentRoundCheck, req.OverrideReason, readinessSnapshot, gateTrace, err)
+	resp, err := h.commands.RunCurrentRoundChecks(requestCtx, contestID, input)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionRunCurrentRoundCheck, input.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -54,9 +55,10 @@ func (h *AWDHandler) PreviewChecker(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
+	input := contestRequestMapper.ToPreviewCheckerInput(req)
 
 	requestCtx := contestcmd.WithAWDPreviewRequester(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
-	resp, err := h.commands.PreviewChecker(requestCtx, contestID, &req)
+	resp, err := h.commands.PreviewChecker(requestCtx, contestID, input)
 	if err != nil {
 		response.FromError(c, err)
 		return

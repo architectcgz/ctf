@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/response"
 )
 
@@ -16,7 +17,7 @@ type TagHandler struct {
 }
 
 type tagCommandService interface {
-	CreateTag(ctx context.Context, req *dto.CreateTagReq) (*dto.TagResp, error)
+	CreateTag(ctx context.Context, req challengecmd.CreateTagInput) (*dto.TagResp, error)
 	AttachTags(ctx context.Context, challengeID int64, tagIDs []int64) error
 	DetachTags(ctx context.Context, challengeID int64, tagIDs []int64) error
 }
@@ -36,7 +37,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateTag(c.Request.Context(), &req)
+	resp, err := h.commands.CreateTag(c.Request.Context(), challengeRequestMapper.ToCreateTagInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

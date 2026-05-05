@@ -38,7 +38,7 @@ func NewAdminService(repo adminCommandRepository, log *zap.Logger) *AdminService
 	}
 }
 
-func (s *AdminService) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error) {
+func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*dto.AdminUserResp, error) {
 	username := strings.TrimSpace(req.Username)
 	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
 		return nil, errcode.ErrUsernameExists
@@ -68,7 +68,7 @@ func (s *AdminService) CreateUser(ctx context.Context, req *dto.CreateAdminUserR
 	return &resp, nil
 }
 
-func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error) {
+func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*dto.AdminUserResp, error) {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, mapServiceError(err)
@@ -196,7 +196,7 @@ func (s *AdminService) importRow(ctx context.Context, record []string) (bool, er
 		if password == "" {
 			return false, fmt.Errorf("新用户必须提供 password")
 		}
-		_, createErr := s.CreateUser(ctx, &dto.CreateAdminUserReq{
+		_, createErr := s.CreateUser(ctx, identitycontracts.CreateUserInput{
 			Username:  username,
 			Name:      name,
 			Password:  password,
@@ -213,7 +213,7 @@ func (s *AdminService) importRow(ctx context.Context, record []string) (bool, er
 		return true, nil
 	}
 
-	req := &dto.UpdateAdminUserReq{
+	req := identitycontracts.UpdateUserInput{
 		Name:      &name,
 		Email:     &email,
 		StudentNo: &studentNo,

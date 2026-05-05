@@ -3,10 +3,9 @@ package composition
 import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
-	identitycmd "ctf-platform/internal/module/identity/application/commands"
-	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	identityruntime "ctf-platform/internal/module/identity/runtime"
 )
 
 type IdentityModule struct {
@@ -15,7 +14,8 @@ type IdentityModule struct {
 	ProfileQueries  identitycontracts.ProfileQueryService
 	TokenService    identitycontracts.Authenticator
 	Users           identitycontracts.UserLookupRepository
-	userRepo        *identityinfra.Repository
+
+	userRepo *identityinfra.Repository
 }
 
 type identityModuleDeps struct {
@@ -24,18 +24,18 @@ type identityModuleDeps struct {
 }
 
 func BuildIdentityModule(root *Root) (*IdentityModule, error) {
-	cfg := root.Config()
-	log := root.Logger()
 	deps := buildIdentityModuleDeps(root)
-	adminCommandService := identitycmd.NewAdminService(deps.users, log.Named("identity_admin_command_service"))
-	adminQueryService := identityqry.NewAdminService(deps.users, cfg.Pagination, log.Named("identity_admin_query_service"))
-	profileCommandService := identitycmd.NewProfileService(deps.users, log.Named("identity_profile_command_service"))
-	profileQueryService := identityqry.NewProfileService(deps.users)
-
+	module := identityruntime.Build(identityruntime.Deps{
+		Config:       root.Config(),
+		Logger:       root.Logger(),
+		DB:           root.DB(),
+		Cache:        root.Cache(),
+		TokenService: authinfra.NewTokenService(root.Config().Auth, root.Config().WebSocket, root.Cache()),
+	})
 	return &IdentityModule{
-		AdminHandler:    identityhttp.NewHandler(adminCommandService, adminQueryService),
-		ProfileCommands: profileCommandService,
-		ProfileQueries:  profileQueryService,
+		AdminHandler:    module.AdminHandler,
+		ProfileCommands: module.ProfileCommands,
+		ProfileQueries:  module.ProfileQueries,
 		TokenService:    deps.tokenService,
 		Users:           deps.users,
 		userRepo:        deps.users,
@@ -43,9 +43,8 @@ func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 }
 
 func buildIdentityModuleDeps(root *Root) identityModuleDeps {
-	cfg := root.Config()
 	return identityModuleDeps{
 		users:        identityinfra.NewRepository(root.DB()),
-		tokenService: identitycmd.NewAuthenticatorService(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, root.Cache())),
+		tokenService: authinfra.NewTokenService(root.Config().Auth, root.Config().WebSocket, root.Cache()),
 	}
 }

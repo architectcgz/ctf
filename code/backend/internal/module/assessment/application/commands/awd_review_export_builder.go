@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/dto"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -12,7 +13,7 @@ type AWDReviewExportBuilder interface {
 }
 
 type awdReviewArchiveReader interface {
-	GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error)
+	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error)
 }
 
 type teacherAWDReviewExportBuilder struct {
@@ -28,7 +29,7 @@ func (b *teacherAWDReviewExportBuilder) BuildArchive(ctx context.Context, reques
 		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
 	}
 
-	return b.reader.GetContestArchive(ctx, requesterID, contestID, &dto.GetTeacherAWDReviewArchiveReq{
+	return b.reader.GetContestArchive(ctx, requesterID, contestID, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: roundNumber,
 	})
 }

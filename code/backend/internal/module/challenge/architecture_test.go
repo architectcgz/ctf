@@ -116,6 +116,77 @@ func TestPortsDoNotDeclareWideChallengeRepository(t *testing.T) {
 	}
 }
 
+func TestRuntimeOwnsChallengeWiring(t *testing.T) {
+	t.Parallel()
+
+	runtimeFile := filepath.Join("runtime", "module.go")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/application/commands")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/api/http")
+}
+
+func TestRuntimeUsesTypedPortsDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read challenge runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type moduleDeps struct",
+		"challengeCommandRepo    challengeports.ChallengeCommandRepository",
+		"challengeQueryRepo      challengeports.ChallengeQueryRepository",
+		"flagRepo                challengeports.ChallengeFlagRepository",
+		"imageUsageRepo          challengeports.ChallengeImageUsageRepository",
+		"topologyRepo            challengeports.ChallengeTopologyRepository",
+		"writeupRepo             challengeports.ChallengeWriteupRepository",
+		"templateRepo            challengeports.EnvironmentTemplateRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("challenge runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"challengeRepo *challengeinfra.Repository",
+		"imageRepo *challengeinfra.ImageRepository",
+		"templateRepo *challengeinfra.TemplateRepository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("challenge runtime should not keep concrete repository field %s", marker)
+		}
+	}
+}
+
+func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read challenge runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildImageHandler(",
+		"buildCoreHandler(",
+		"buildFlagHandler(",
+		"buildTopologyHandler(",
+		"buildWriteupHandler(",
+		"buildAWDChallengeHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("challenge runtime should delegate through %s", marker)
+		}
+	}
+}
+
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 	t.Parallel()
 
@@ -128,6 +199,28 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
+}
+
+func assertFileImports(t *testing.T, filePath string, expectedImport string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == expectedImport {
+			return
+		}
+	}
+
+	t.Fatalf("%s must import %s", filePath, expectedImport)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {

@@ -256,14 +256,10 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		return nil, err
 	}
 
-	return &dto.ChallengePackageExportResp{
-		ChallengeID: challengeID,
-		RevisionID:  revision.ID,
-		ArchivePath: revision.ArchivePath,
-		SourceDir:   revision.SourceDir,
-		FileName:    filepath.Base(revision.ArchivePath),
-		CreatedAt:   revision.CreatedAt,
-	}, nil
+	resp := challengeCommandResponseMapperInst.ToChallengePackageExportRespBasePtr(revision)
+	resp.ChallengeID = challengeID
+	resp.FileName = filepath.Base(revision.ArchivePath)
+	return resp, nil
 }
 
 func nextChallengePackageRevisionNo(tx *gorm.DB, challengeID int64) (int, error) {

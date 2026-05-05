@@ -16,17 +16,19 @@ import (
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type authCommandService interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error)
+	Register(ctx context.Context, req authcmd.RegisterInput) (*dto.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req authcmd.LoginInput) (*dto.LoginResp, *authcontracts.Session, error)
 }
 
 type profileCommandService interface {
-	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
+	ChangePassword(ctx context.Context, userID int64, req identitycontracts.ChangePasswordInput) error
 }
 
 type profileQueryService interface {
@@ -96,7 +98,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Register(c.Request.Context(), req)
+	resp, session, err := h.commands.Register(c.Request.Context(), authRequestMapper.ToRegisterInput(*req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -113,7 +115,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	resp, session, err := h.commands.Login(c.Request.Context(), req)
+	resp, session, err := h.commands.Login(c.Request.Context(), authRequestMapper.ToLoginInput(*req))
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -125,7 +127,7 @@ func (h *Handler) Login(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -143,7 +145,7 @@ func (h *Handler) Login(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
 }
@@ -168,7 +170,7 @@ func (h *Handler) Logout(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -201,7 +203,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
+	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, authRequestMapper.ToChangePasswordInput(*req)); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
 			Action:       model.AuditActionUpdate,
@@ -213,7 +215,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -229,7 +231,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -280,7 +282,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: userAgentPtr(c.Request.UserAgent()),
+			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -299,7 +301,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: userAgentPtr(c.Request.UserAgent()),
+		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, resp)
 }
@@ -329,11 +331,4 @@ func (h *Handler) recordAudit(c *gin.Context, entry auditlog.Entry) {
 	if err := h.auditRecorder.Record(c.Request.Context(), entry); err != nil {
 		h.log.Warn("auth_audit_record_failed", zap.String("action", entry.Action), zap.Error(err))
 	}
-}
-
-func userAgentPtr(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
 }
