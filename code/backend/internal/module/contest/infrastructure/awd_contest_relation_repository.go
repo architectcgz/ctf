@@ -123,25 +123,76 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 		return nil, err
 	}
 
-	records := make([]contestports.AWDReadinessChallengeRecord, 0, len(rows))
-	for _, row := range rows {
+	runtimeConfigs := make([]map[string]any, len(rows))
+	snapshots := make([]model.ContestAWDServiceSnapshot, len(rows))
+	imageIDs := make([]int64, 0, len(rows))
+	seenImageIDs := make(map[int64]struct{}, len(rows))
+	for index, row := range rows {
 		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
+		snapshots[index] = snapshot
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
+		runtimeConfigs[index] = runtimeConfig
+		if imageID := resolveContestAWDServiceRuntimeImageID(runtimeConfig); imageID > 0 {
+			if _, ok := seenImageIDs[imageID]; !ok {
+				seenImageIDs[imageID] = struct{}{}
+				imageIDs = append(imageIDs, imageID)
+			}
+		} else if imageID := resolveContestAWDServiceRuntimeImageID(snapshot.RuntimeConfig); imageID > 0 {
+			if _, ok := seenImageIDs[imageID]; !ok {
+				seenImageIDs[imageID] = struct{}{}
+				imageIDs = append(imageIDs, imageID)
+			}
+		}
+	}
+	imageStatuses, err := r.listAWDReadinessImageStatuses(ctx, imageIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	records := make([]contestports.AWDReadinessChallengeRecord, 0, len(rows))
+	for index, row := range rows {
+		snapshot := snapshots[index]
+		runtimeConfig := runtimeConfigs[index]
+		imageID := resolveContestAWDServiceRuntimeImageID(runtimeConfig)
+		if imageID <= 0 {
+			imageID = resolveContestAWDServiceRuntimeImageID(snapshot.RuntimeConfig)
+		}
 		records = append(records, contestports.AWDReadinessChallengeRecord{
-			ServiceID:         row.ServiceID,
-			AWDChallengeID:    row.AWDChallengeID,
-			Title:             resolveContestAWDServiceTitle(snapshot, row.DisplayName),
-			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
-			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig),
-			ValidationState:   row.ValidationState,
-			LastPreviewAt:     row.LastPreviewAt,
-			LastPreviewResult: row.LastPreviewResult,
+			ServiceID:          row.ServiceID,
+			AWDChallengeID:     row.AWDChallengeID,
+			Title:              resolveContestAWDServiceTitle(snapshot, row.DisplayName),
+			CheckerType:        resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig:      resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			RuntimeImageID:     imageID,
+			RuntimeImageStatus: imageStatuses[imageID],
+			ValidationState:    row.ValidationState,
+			LastPreviewAt:      row.LastPreviewAt,
+			LastPreviewResult:  row.LastPreviewResult,
 		})
 	}
 	return records, nil
+}
+
+func (r *AWDRepository) listAWDReadinessImageStatuses(ctx context.Context, imageIDs []int64) (map[int64]string, error) {
+	statuses := make(map[int64]string, len(imageIDs))
+	if len(imageIDs) == 0 {
+		return statuses, nil
+	}
+	var images []model.Image
+	if err := r.dbWithContext(ctx).
+		Select("id", "status").
+		Where("id IN ?", imageIDs).
+		Where("deleted_at IS NULL").
+		Find(&images).Error; err != nil {
+		return nil, err
+	}
+	for _, image := range images {
+		statuses[image.ID] = image.Status
+	}
+	return statuses, nil
 }
 
 func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, contestID int64) ([]awdContestServiceRuntimeRow, error) {
@@ -248,6 +299,21 @@ func resolveContestAWDServiceDefenseScope(runtimeConfig map[string]any) contestp
 	}
 }
 
+func resolveContestAWDServiceRuntimeImageID(runtimeConfig map[string]any) int64 {
+	if runtimeConfig == nil {
+		return 0
+	}
+	if imageID, ok := normalizeContestAWDServiceInt64(runtimeConfig["image_id"]); ok {
+		return imageID
+	}
+	if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+		if imageID, ok := normalizeContestAWDServiceInt64(challengeRuntime["image_id"]); ok {
+			return imageID
+		}
+	}
+	return 0
+}
+
 func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
 	if scoreConfig != nil {
 		if raw, ok := scoreConfig[key]; ok {
@@ -257,6 +323,21 @@ func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
 		}
 	}
 	return 0
+}
+
+func normalizeContestAWDServiceInt64(value any) (int64, bool) {
+	switch typed := value.(type) {
+	case int:
+		return int64(typed), true
+	case int32:
+		return int64(typed), true
+	case int64:
+		return typed, true
+	case float64:
+		return int64(typed), true
+	default:
+		return 0, false
+	}
 }
 
 func normalizeContestAWDServiceString(value any) string {

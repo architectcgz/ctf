@@ -1585,6 +1585,79 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	}
 }
 
+func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavailable(t *testing.T) {
+	db := newAWDTestDB(t)
+	if err := db.AutoMigrate(&model.AWDChallenge{}); err != nil {
+		t.Fatalf("auto migrate awd challenge: %v", err)
+	}
+	now := time.Now()
+	createAWDContestFixture(t, db, 260, now)
+	if err := db.Create(&model.Image{
+		ID:        26002,
+		Name:      "registry.example.edu/ctf/awd-preview",
+		Tag:       "pending",
+		Status:    model.ImageStatusPending,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.AWDChallenge{
+		ID:             2602,
+		Name:           "Preview Pending Image",
+		Slug:           "preview-pending-image",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyEasy,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
+		RuntimeConfig:  `{"image_id":26002,"image_ref":"registry.example.edu/ctf/awd-preview:pending"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}).Error; err != nil {
+		t.Fatalf("create awd challenge: %v", err)
+	}
+
+	roundManager := &fakeAWDPreviewRoundManager{}
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	service := contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		nil,
+		"",
+		config.ContestAWDConfig{CheckerTimeout: time.Second},
+		zap.NewNop(),
+		roundManager,
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
+		nil,
+	)
+
+	_, err := service.PreviewChecker(context.Background(), 260, &dto.PreviewAWDCheckerReq{
+		AWDChallengeID: 2602,
+		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+		AccessURL:   "http://preview.internal",
+		PreviewFlag: "flag{preview}",
+	})
+	if err == nil {
+		t.Fatal("expected PreviewChecker() to reject unavailable runtime image")
+	}
+	if len(roundManager.previewRequests) != 0 {
+		t.Fatalf("preview should be blocked before checker execution, got %+v", roundManager.previewRequests)
+	}
+}
+
 func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing.T) {
 	db := newAWDTestDB(t)
 	mini, err := miniredis.Run()

@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	AWDReadinessBlockingReasonImageNotAvailable    = "image_not_available"
 	AWDReadinessBlockingReasonMissingChecker       = "missing_checker"
 	AWDReadinessBlockingReasonInvalidCheckerConfig = "invalid_checker_config"
 	AWDReadinessBlockingReasonPendingValidation    = "pending_validation"
@@ -27,14 +28,16 @@ var awdReadinessBlockingActions = []string{
 }
 
 type AWDReadinessChallenge struct {
-	ServiceID         int64
-	AWDChallengeID    int64
-	Title             string
-	CheckerType       string
-	CheckerConfig     string
-	ValidationState   string
-	LastPreviewAt     *time.Time
-	LastPreviewResult string
+	ServiceID          int64
+	AWDChallengeID     int64
+	Title              string
+	CheckerType        string
+	CheckerConfig      string
+	RuntimeImageID     int64
+	RuntimeImageStatus string
+	ValidationState    string
+	LastPreviewAt      *time.Time
+	LastPreviewResult  string
 }
 
 type AWDReadinessItem struct {
@@ -88,6 +91,10 @@ func BuildAWDReadiness(contestID int64, challenges []AWDReadinessChallenge) *AWD
 		}
 
 		switch resolveAWDReadinessBlockingReason(challenge) {
+		case AWDReadinessBlockingReasonImageNotAvailable:
+			item.BlockingReason = AWDReadinessBlockingReasonImageNotAvailable
+			summary.PendingChallenges++
+			summary.BlockingCount++
 		case AWDReadinessBlockingReasonMissingChecker:
 			item.BlockingReason = AWDReadinessBlockingReasonMissingChecker
 			summary.MissingCheckerChallenges++
@@ -123,6 +130,9 @@ func BuildAWDReadiness(contestID int64, challenges []AWDReadinessChallenge) *AWD
 }
 
 func resolveAWDReadinessBlockingReason(challenge AWDReadinessChallenge) string {
+	if challenge.RuntimeImageID > 0 && strings.TrimSpace(challenge.RuntimeImageStatus) != "available" {
+		return AWDReadinessBlockingReasonImageNotAvailable
+	}
 	if awdReadinessCheckerMissing(challenge.CheckerType, challenge.CheckerConfig) {
 		return AWDReadinessBlockingReasonMissingChecker
 	}

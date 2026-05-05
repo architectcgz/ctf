@@ -23,6 +23,7 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 		&model.Contest{},
 		&model.ContestStatusTransition{},
 		&model.Challenge{},
+		&model.Image{},
 		&model.AWDChallenge{},
 		&model.ContestAWDService{},
 		&model.User{},

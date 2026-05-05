@@ -144,14 +144,16 @@ type AWDDefenseScope struct {
 }
 
 type AWDReadinessChallengeRecord struct {
-	ServiceID         int64
-	AWDChallengeID    int64
-	Title             string
-	CheckerType       model.AWDCheckerType
-	CheckerConfig     string
-	ValidationState   model.AWDCheckerValidationState
-	LastPreviewAt     *time.Time
-	LastPreviewResult string
+	ServiceID          int64
+	AWDChallengeID     int64
+	Title              string
+	CheckerType        model.AWDCheckerType
+	CheckerConfig      string
+	RuntimeImageID     int64
+	RuntimeImageStatus string
+	ValidationState    model.AWDCheckerValidationState
+	LastPreviewAt      *time.Time
+	LastPreviewResult  string
 }
 
 type AWDContainerFileWriter interface {

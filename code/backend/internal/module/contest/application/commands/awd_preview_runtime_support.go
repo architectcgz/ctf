@@ -30,6 +30,9 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 	previewFlag string,
 ) (string, func(context.Context) error, error) {
 	if strings.TrimSpace(explicitAccessURL) != "" {
+		if err := s.ensureExplicitPreviewRuntimeImageAvailable(ctx, previewService, previewChallengeID); err != nil {
+			return "", nil, err
+		}
 		return strings.TrimSpace(explicitAccessURL), nil, nil
 	}
 	if s.runtimeProbe == nil {
@@ -87,6 +90,38 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 		return "", nil, errcode.ErrInternal.WithCause(err)
 	}
 	return challenge.DeploymentMode, parseContestAWDServiceJSONMap(challenge.RuntimeConfig), nil
+}
+
+func (s *AWDService) ensureExplicitPreviewRuntimeImageAvailable(
+	ctx context.Context,
+	previewService *model.ContestAWDService,
+	previewChallengeID int64,
+) error {
+	if previewService == nil && (previewChallengeID <= 0 || s.awdChallengeRepo == nil) {
+		return nil
+	}
+	_, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
+	if err != nil {
+		if appErr, ok := err.(*errcode.AppError); ok &&
+			(appErr.Code == errcode.ErrNotFound.Code || appErr.Code == errcode.ErrInvalidParams.Code) {
+			return nil
+		}
+		return err
+	}
+	imageID := readInt64FromAny(runtimeConfig["image_id"])
+	if imageID <= 0 {
+		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+			imageID = readInt64FromAny(challengeRuntime["image_id"])
+		}
+	}
+	if imageID <= 0 {
+		return nil
+	}
+	if s.imageRepo == nil {
+		return errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置"))
+	}
+	_, err = s.resolvePreviewImageRefByID(ctx, imageID)
+	return err
 }
 
 func (s *AWDService) resolvePreviewImageRef(ctx context.Context, runtimeConfig map[string]any) (string, error) {

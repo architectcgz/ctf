@@ -214,6 +214,52 @@ func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t 
 	}
 }
 
+func TestAWDQueryServiceGetReadinessBlocksUnavailableRuntimeImage(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Now()
+
+	createAWDReadinessContestFixture(t, db, 708, now)
+	if err := db.Create(&model.Image{
+		ID:        70801,
+		Name:      "registry.example.edu/awd/pending-service",
+		Tag:       "c1",
+		Status:    model.ImageStatusPending,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	createAWDReadinessChallengeFixture(t, db, 7081, "pending-image-service", now)
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 7081).Update("image_id", 70801).Error; err != nil {
+		t.Fatalf("attach image: %v", err)
+	}
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   708,
+			ChallengeID: 7081,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerConfig:   `{"get_flag":{"path":"/health"}}`,
+		validationState: model.AWDCheckerValidationStatePassed,
+		lastPreviewAt:   &now,
+	})
+
+	resp, err := service.GetReadiness(context.Background(), 708)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if resp.Ready || resp.BlockingCount != 1 || resp.PendingChallenges != 1 {
+		t.Fatalf("unexpected readiness counts: %+v", resp)
+	}
+	if got := readinessBlockingReasonByChallenge(resp.Items, 7081); got != "image_not_available" {
+		t.Fatalf("blocking reason = %q, want image_not_available", got)
+	}
+}
+
 func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Now()
