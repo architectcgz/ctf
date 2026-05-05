@@ -36,7 +36,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/awd-supply-ticket:latest
+    ref: registry.example.edu/ctf/awd/awd-supply-ticket:latest
 ```
 
 ## statement.md 草案

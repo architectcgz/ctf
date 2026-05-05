@@ -57,7 +57,7 @@ usage() {
 
 输出:
   最后一行会输出可写入 challenge.yml 的镜像引用:
-  IMAGE_REF=<registry>/ctf/<slug>:<tag>
+  IMAGE_REF=<registry>/<repository>:<tag>
 EOF
 }
 
@@ -226,6 +226,28 @@ extract_tag_from_ref() {
   printf '%s\n' "${last_colon}"
 }
 
+extract_repository_from_ref() {
+  local ref="$1"
+  local without_tag first rest
+  ref="${ref#http://}"
+  ref="${ref#https://}"
+  without_tag="${ref}"
+  if [[ "${without_tag##*/}" == *:* ]]; then
+    without_tag="${without_tag%:*}"
+  fi
+
+  first="${without_tag%%/*}"
+  rest="${without_tag#*/}"
+  if [[ "${first}" == "${without_tag}" ]]; then
+    return 0
+  fi
+  if [[ "${first}" == *.* || "${first}" == *:* || "${first}" == "localhost" ]]; then
+    printf '%s\n' "${rest}"
+    return 0
+  fi
+  printf '%s\n' "${without_tag}"
+}
+
 update_manifest_image_ref() {
   local manifest="$1"
   local image_ref="$2"
@@ -337,20 +359,26 @@ fi
 SLUG="$(parse_slug "${MANIFEST}")"
 [[ -n "${SLUG}" ]] || die "challenge.yml meta.slug 不能为空"
 
+EXISTING_REF="$(parse_runtime_image_ref "${MANIFEST}")"
 if [[ -z "${TAG}" ]]; then
-  EXISTING_REF="$(parse_runtime_image_ref "${MANIFEST}")"
   TAG="$(extract_tag_from_ref "${EXISTING_REF}")"
 fi
 if [[ -z "${TAG}" ]]; then
   TAG="$(date +%Y%m%d%H%M)"
 fi
 
-LOCAL_REF="ctf/${SLUG}:${TAG}"
-IMAGE_REF="${REGISTRY_SERVER}/ctf/${SLUG}:${TAG}"
+IMAGE_REPOSITORY="$(extract_repository_from_ref "${EXISTING_REF}")"
+if [[ -z "${IMAGE_REPOSITORY}" ]]; then
+  IMAGE_REPOSITORY="ctf/${SLUG}"
+fi
+
+LOCAL_REF="${IMAGE_REPOSITORY}:${TAG}"
+IMAGE_REF="${REGISTRY_SERVER}/${IMAGE_REPOSITORY}:${TAG}"
 
 log_info "题目包: ${PACK_DIR}"
 log_info "slug: ${SLUG}"
 log_info "tag: ${TAG}"
+log_info "repository: ${IMAGE_REPOSITORY}"
 log_info "registry: ${REGISTRY_SERVER}"
 log_info "registry scheme: ${REGISTRY_SCHEME}"
 log_info "local image: ${LOCAL_REF}"

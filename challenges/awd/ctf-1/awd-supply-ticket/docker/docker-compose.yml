@@ -2,7 +2,7 @@ name: ctf
 
 services:
   ticket-app:
-    image: ctf/awd-supply-ticket:latest
+    image: ctf/awd/awd-supply-ticket:latest
     build: .
     labels:
       ctf.project: ctf

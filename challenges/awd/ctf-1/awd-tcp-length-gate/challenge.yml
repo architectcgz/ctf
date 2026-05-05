@@ -31,7 +31,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/awd-tcp-length-gate:latest
+    ref: 127.0.0.1:5000/ctf/awd/awd-tcp-length-gate:latest
 
 topology:
   entry_node_key: tcp

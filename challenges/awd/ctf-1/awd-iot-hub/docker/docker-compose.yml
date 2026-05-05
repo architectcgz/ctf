@@ -2,7 +2,7 @@ name: ctf
 
 services:
   iot-hub:
-    image: ctf/awd-iot-hub:latest
+    image: ctf/awd/awd-iot-hub:latest
     build: .
     labels:
       ctf.project: ctf

@@ -63,7 +63,7 @@ POST /api/v1/authoring/awd-challenge-imports/:id/commit
 
 ## 镜像准备
 
-`challenge.yml` 中的 `runtime.image.ref` 使用本地演示镜像名，例如 `ctf/awd-supply-ticket:latest`。本地可先构建：
+`challenge.yml` 中的 `runtime.image.ref` 使用本地演示镜像名，例如 `ctf/awd/awd-supply-ticket:latest`。本地可先构建：
 
 ```bash
 cd challenges/awd/ctf-1/awd-supply-ticket/docker

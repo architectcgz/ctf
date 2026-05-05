@@ -2,7 +2,7 @@ name: ctf
 
 services:
   drive-app:
-    image: ctf/awd-campus-drive:latest
+    image: ctf/awd/awd-campus-drive:latest
     build: .
     labels:
       ctf.project: ctf

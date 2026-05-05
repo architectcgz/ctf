@@ -36,7 +36,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/awd-iot-hub:latest
+    ref: registry.example.edu/ctf/awd/awd-iot-hub:latest
 ```
 
 ## statement.md 草案

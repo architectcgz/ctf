@@ -36,7 +36,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/awd-campus-drive:latest
+    ref: registry.example.edu/ctf/awd/awd-campus-drive:latest
 ```
 
 ## statement.md 草案

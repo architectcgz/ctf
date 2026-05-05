@@ -31,7 +31,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/awd-iot-hub:latest
+    ref: 127.0.0.1:5000/ctf/awd/awd-iot-hub:latest
 
 topology:
   entry_node_key: api
