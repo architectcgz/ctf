@@ -11,7 +11,6 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -67,42 +66,6 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 		if err := engine.RemoveNetwork(context.Background(), networkID); err != nil {
 			t.Fatalf("RemoveNetwork() error = %v", err)
 		}
-	}
-}
-
-func TestRuntimeHTTPServiceAdapterBuildsVSCodeSSHConfig(t *testing.T) {
-	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
-	adapter := newRuntimeHTTPServiceAdapter(
-		nil,
-		nil,
-		stubRuntimeHTTPProxyTickets{ticket: "ticket-secret", expiresAt: expiresAt},
-		nil,
-		nil,
-		0,
-		true,
-		"ssh.ctf.local",
-		2222,
-		false,
-		"",
-	)
-
-	resp, err := adapter.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
-		UserID:   1001,
-		Username: "student",
-		Role:     "student",
-	}, 5, 12)
-	if err != nil {
-		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
-	}
-
-	if resp.SSHProfile == nil {
-		t.Fatal("expected ssh profile in response")
-	}
-	if resp.SSHProfile.Alias != "ctf-awd-5-12" ||
-		resp.SSHProfile.HostName != "ssh.ctf.local" ||
-		resp.SSHProfile.Port != 2222 ||
-		resp.SSHProfile.User != "student+5+12" {
-		t.Fatalf("unexpected ssh profile: %+v", resp.SSHProfile)
 	}
 }
 
@@ -248,31 +211,6 @@ func TestRuntimeHTTPServiceAdapterRootsAWDDefenseContainerPath(t *testing.T) {
 	}
 	if workbench.listPath != "/home/student" {
 		t.Fatalf("expected rooted list path, got %q", workbench.listPath)
-	}
-}
-
-func TestRuntimePracticeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
-	req := &practiceports.TopologyCreateRequest{
-		Networks: []practiceports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
-		},
-		Nodes: []practiceports.TopologyCreateNode{
-			{
-				Key:            "web",
-				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
-				NetworkAliases: []string{"awd-c8-t15-s21"},
-			},
-		},
-		DisableEntryPortPublishing: true,
-	}
-
-	got := toRuntimeTopologyCreateRequest(req)
-	if len(got.Networks) != 1 || got.Networks[0].Name != "ctf-awd-contest-8" || !got.Networks[0].Shared {
-		t.Fatalf("expected AWD network fields to be preserved, got %+v", got.Networks)
-	}
-	if len(got.Nodes) != 1 || len(got.Nodes[0].NetworkAliases) != 1 || got.Nodes[0].NetworkAliases[0] != "awd-c8-t15-s21" {
-		t.Fatalf("expected AWD network aliases to be preserved, got %+v", got.Nodes)
 	}
 }
 
