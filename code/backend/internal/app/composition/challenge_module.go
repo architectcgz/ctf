@@ -141,7 +141,12 @@ func buildChallengeImageBuildService(root *Root, deps challengeModuleDeps) *chal
 			BuildConcurrency: registry.BuildConcurrency,
 			BatchSize:        registry.BuildConcurrency,
 		},
-		challengecmd.WithImageBuildDockerBuilder(challengecmd.NewDockerCLIImageBuilder()),
+		challengecmd.WithImageBuildDockerBuilder(challengecmd.NewDockerCLIImageBuilderWithConfig(challengecmd.DockerCLIImageBuilderConfig{
+			RegistryServer: registry.Server,
+			Username:       registry.Username,
+			Password:       registry.Password,
+			IdentityToken:  registry.IdentityToken,
+		})),
 		challengecmd.WithImageBuildRegistryVerifier(challengecmd.NewRegistryClient(challengecmd.RegistryClientConfig{
 			Scheme:        registry.Scheme,
 			Server:        registry.Server,
