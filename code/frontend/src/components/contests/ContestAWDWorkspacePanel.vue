@@ -139,9 +139,6 @@ const myTeam = computed(() => workspace.value?.my_team ?? null)
 const selectedDefenseServiceCard = computed(
   () => defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value) || null
 )
-const selectedDefenseService = computed(() =>
-  selectedServiceId.value ? servicesByServiceId.value.get(selectedServiceId.value) || null : null
-)
 const selectedDefenseServiceTitle = computed(() => selectedDefenseServiceCard.value?.title || '')
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
@@ -480,7 +477,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             />
             <AWDDefenseOperationsPanel
               :service-card="selectedDefenseServiceCard"
-              :service="selectedDefenseService"
               :service-title="selectedDefenseServiceTitle"
               :opening-service-key="openingServiceKey"
               :opening-ssh-key="openingSSHKey"

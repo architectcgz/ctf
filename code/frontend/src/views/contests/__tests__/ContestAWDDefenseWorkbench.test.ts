@@ -11,6 +11,10 @@ describe('ContestAWDDefenseWorkbench', () => {
     expect(contestAwdDefenseWorkbenchSource).not.toContain('防守入口已迁移')
   })
 
+  it('独立防守页应承载防守范围摘要，而不是把范围留在战场侧栏', () => {
+    expect(contestAwdDefenseWorkbenchSource).toContain('防守范围')
+  })
+
   it('学生路由应暴露独立防守内容页入口', () => {
     expect(studentRoutesSource).toContain("name: 'ContestAWDDefenseWorkbench'")
     expect(studentRoutesSource).toContain("path: 'contests/:id/awd/defense/:serviceId'")

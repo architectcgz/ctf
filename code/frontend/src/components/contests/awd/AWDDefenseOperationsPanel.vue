@@ -2,13 +2,12 @@
 import { computed } from 'vue'
 import { ExternalLink, RefreshCw, RotateCcw, ShieldCheck, Terminal } from 'lucide-vue-next'
 
-import type { AWDDefenseSSHAccessData, ContestAWDWorkspaceServiceData, ID } from '@/api/contracts'
+import type { AWDDefenseSSHAccessData, ID } from '@/api/contracts'
 import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
 import AWDDefenseConnectionPanel from './AWDDefenseConnectionPanel.vue'
 
 const props = defineProps<{
   serviceCard: AWDDefenseServiceCard | null
-  service: ContestAWDWorkspaceServiceData | null
   serviceTitle: string
   openingServiceKey: string
   openingSshKey: string
@@ -27,17 +26,6 @@ const emit = defineEmits<{
 }>()
 
 const serviceId = computed(() => props.serviceCard?.serviceId || '')
-const receivedAttackCount = computed(() => props.service?.attack_received ?? 0)
-const hasReceivedAttacks = computed(() => receivedAttackCount.value > 0)
-const editablePaths = computed(() => props.serviceCard?.defenseScope?.editable_paths || [])
-const protectedPaths = computed(() => props.serviceCard?.defenseScope?.protected_paths || [])
-const serviceContracts = computed(() => props.serviceCard?.defenseScope?.service_contracts || [])
-const hasDefenseScope = computed(
-  () =>
-    editablePaths.value.length > 0 ||
-    protectedPaths.value.length > 0 ||
-    serviceContracts.value.length > 0
-)
 const canOpenService = computed(() =>
   Boolean(
     props.serviceCard?.canOpenService &&
@@ -106,44 +94,6 @@ function emitRestartService(): void {
             {{ reason }}
           </span>
           <span v-if="!serviceCard.riskReasons.length" class="defense-ops__chip">暂无告警</span>
-        </div>
-      </section>
-
-      <section class="defense-ops__block">
-        <div class="defense-ops__block-title">
-          <Terminal class="h-3.5 w-3.5" />
-          <span>防守范围</span>
-        </div>
-        <div v-if="hasDefenseScope" class="defense-ops__scope">
-          <div v-if="editablePaths.length > 0" class="defense-ops__scope-group">
-            <span>可编辑</span>
-            <code v-for="path in editablePaths" :key="`${serviceId}:editable:${path}`">{{
-              path
-            }}</code>
-          </div>
-          <div v-if="protectedPaths.length > 0" class="defense-ops__scope-group">
-            <span>受保护</span>
-            <code v-for="path in protectedPaths" :key="`${serviceId}:protected:${path}`">{{
-              path
-            }}</code>
-          </div>
-          <div v-if="serviceContracts.length > 0" class="defense-ops__scope-group">
-            <span>服务契约</span>
-            <strong v-for="contract in serviceContracts" :key="`${serviceId}:contract:${contract}`">
-              {{ contract }}
-            </strong>
-          </div>
-        </div>
-        <div v-else class="defense-ops__fragment">
-          <div>
-            <span class="defense-ops__fragment-title">{{
-              hasReceivedAttacks ? '最近受到攻击' : '等待契约'
-            }}</span>
-            <span class="defense-ops__fragment-meta">{{
-              hasReceivedAttacks ? `${receivedAttackCount} 次` : '当前服务暂无防守范围数据'
-            }}</span>
-          </div>
-          <span class="defense-ops__fragment-badge">只读</span>
         </div>
       </section>
 
@@ -288,8 +238,7 @@ function emitRestartService(): void {
   min-width: 0;
 }
 
-.defense-ops__status-grid span,
-.defense-ops__fragment-meta {
+.defense-ops__status-grid span {
   color: var(--color-text-muted);
   font-size: var(--font-size-11);
   font-weight: 800;
@@ -307,61 +256,12 @@ function emitRestartService(): void {
   margin-top: var(--space-3);
 }
 
-.defense-ops__chip,
-.defense-ops__fragment-badge {
+.defense-ops__chip {
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
   color: var(--color-warning);
   font-size: var(--font-size-11);
   font-weight: 900;
-  padding: var(--space-1) var(--space-2);
-}
-
-.defense-ops__fragment {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
-.defense-ops__fragment-title {
-  display: block;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-12);
-  font-weight: 900;
-}
-
-.defense-ops__scope {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
-.defense-ops__scope-group {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.defense-ops__scope-group span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 900;
-}
-
-.defense-ops__scope-group code,
-.defense-ops__scope-group strong {
-  overflow-wrap: anywhere;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-12);
-  font-weight: 800;
-}
-
-.defense-ops__scope-group code {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--ui-control-radius-sm);
-  background: var(--color-bg-surface);
   padding: var(--space-1) var(--space-2);
 }
 

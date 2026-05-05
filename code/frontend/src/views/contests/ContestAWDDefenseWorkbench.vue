@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowLeft, FolderTree, RefreshCw, ShieldCheck } from 'lucide-vue-next'
 
@@ -20,6 +21,16 @@ const {
   serviceCard,
   serviceTitle,
 } = useContestAwdDefenseWorkbenchPage()
+
+const editablePaths = computed(() => serviceCard.value?.defenseScope?.editable_paths || [])
+const protectedPaths = computed(() => serviceCard.value?.defenseScope?.protected_paths || [])
+const serviceContracts = computed(() => serviceCard.value?.defenseScope?.service_contracts || [])
+const hasDefenseScope = computed(
+  () =>
+    editablePaths.value.length > 0 ||
+    protectedPaths.value.length > 0 ||
+    serviceContracts.value.length > 0
+)
 </script>
 
 <template>
@@ -49,6 +60,32 @@ const {
         <span>刷新当前目录</span>
       </button>
     </header>
+
+    <section class="defense-scope" aria-label="防守范围">
+      <div class="defense-scope__header">
+        <div>
+          <div class="defense-scope__eyebrow">防守范围</div>
+          <h2 class="defense-scope__title">只读摘要</h2>
+        </div>
+      </div>
+      <div v-if="hasDefenseScope" class="defense-scope__body">
+        <div v-if="editablePaths.length > 0" class="defense-scope__group">
+          <span>可编辑</span>
+          <code v-for="path in editablePaths" :key="`editable:${path}`">{{ path }}</code>
+        </div>
+        <div v-if="protectedPaths.length > 0" class="defense-scope__group">
+          <span>受保护</span>
+          <code v-for="path in protectedPaths" :key="`protected:${path}`">{{ path }}</code>
+        </div>
+        <div v-if="serviceContracts.length > 0" class="defense-scope__group">
+          <span>服务契约</span>
+          <strong v-for="contract in serviceContracts" :key="`contract:${contract}`">
+            {{ contract }}
+          </strong>
+        </div>
+      </div>
+      <div v-else class="defense-scope__empty">当前服务暂无防守范围数据。</div>
+    </section>
 
     <AWDDefenseFileWorkbench
       :service-title="serviceTitle"
@@ -166,6 +203,75 @@ const {
 .defense-refresh:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.defense-scope {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-bg-elevated) 82%, transparent);
+}
+
+.defense-scope__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.defense-scope__eyebrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.defense-scope__title {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-16);
+  font-weight: 800;
+}
+
+.defense-scope__body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.defense-scope__group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.defense-scope__group span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+}
+
+.defense-scope__group code,
+.defense-scope__group strong {
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.defense-scope__group code {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--ui-control-radius-sm);
+  background: color-mix(in srgb, var(--color-bg-page) 72%, transparent);
+  padding: var(--space-1) var(--space-2);
+}
+
+.defense-scope__empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
 }
 
 @media (max-width: 899px) {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 
@@ -38,5 +39,10 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).not.toContain('openDefenseFile')
     expect(awdWorkspaceSource).not.toContain('requestContestAWDDefenseCommand')
     expect(awdWorkspaceSource).not.toContain('saveContestAWDDefenseFile')
+  })
+
+  it('战场侧栏不再展示防守范围面板', () => {
+    expect(awdDefenseOperationsPanelSource).not.toContain('防守范围')
+    expect(awdDefenseOperationsPanelSource).not.toContain('当前服务暂无防守范围数据')
   })
 })
