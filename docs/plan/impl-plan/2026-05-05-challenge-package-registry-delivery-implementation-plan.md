@@ -151,7 +151,7 @@
   - `code/backend/internal/module/challenge/testsupport/test_helper.go`
   - selected import tests that create image/build job records
 
-- [ ] **Step 1: 写迁移文件**
+- [x] **Step 1: 写迁移文件**
 
 `000005_create_image_build_jobs.up.sql` 应完成：
 
@@ -189,11 +189,11 @@ CREATE INDEX IF NOT EXISTS idx_images_source_type ON public.images(source_type);
 CREATE INDEX IF NOT EXISTS idx_images_build_job_id ON public.images(build_job_id);
 ```
 
-- [ ] **Step 2: 写 down migration**
+- [x] **Step 2: 写 down migration**
 
 Down migration 删除新增 index、`image_build_jobs` 表和 `images` 新增列。
 
-- [ ] **Step 3: 更新 Go model**
+- [x] **Step 3: 更新 Go model**
 
 `Image` 增加：
 
@@ -218,7 +218,7 @@ const (
 )
 ```
 
-- [ ] **Step 4: 跑模型相关测试**
+- [x] **Step 4: 跑模型相关测试**
 
 Run:
 
@@ -229,7 +229,7 @@ go test ./internal/model ./internal/app -run 'Migration|AutoMigrate|FullRouter' 
 
 Expected: PASS，或没有测试文件；如 FullRouter 太重，至少跑 `./internal/app -run TestMigrationFiles`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add code/backend/internal/model code/backend/migrations code/backend/internal/module/challenge/testsupport
