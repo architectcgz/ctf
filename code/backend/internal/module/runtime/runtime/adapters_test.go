@@ -11,7 +11,7 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-func TestRuntimeHTTPServiceAdapterBuildsVSCodeSSHConfig(t *testing.T) {
+func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
 	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
 	adapter := newRuntimeHTTPServiceAdapter(
 		nil,
@@ -34,14 +34,16 @@ func TestRuntimeHTTPServiceAdapterBuildsVSCodeSSHConfig(t *testing.T) {
 		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
 	}
 
-	if resp.SSHProfile == nil {
-		t.Fatal("expected ssh profile in response")
+	if resp.Host != "ssh.ctf.local" ||
+		resp.Port != 2222 ||
+		resp.Username != "student+5+12" ||
+		resp.Password != "ticket-secret" ||
+		resp.Command != "ssh student+5+12@ssh.ctf.local -p 2222" ||
+		resp.ExpiresAt != expiresAt.Format(time.RFC3339) {
+		t.Fatalf("unexpected ssh access response: %+v", resp)
 	}
-	if resp.SSHProfile.Alias != "ctf-awd-5-12" ||
-		resp.SSHProfile.HostName != "ssh.ctf.local" ||
-		resp.SSHProfile.Port != 2222 ||
-		resp.SSHProfile.User != "student+5+12" {
-		t.Fatalf("unexpected ssh profile: %+v", resp.SSHProfile)
+	if resp == nil {
+		t.Fatal("expected ssh access response")
 	}
 }
 

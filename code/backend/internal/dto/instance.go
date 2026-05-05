@@ -93,21 +93,13 @@ func formatCommandHost(host string) string {
 	return host
 }
 
-type SSHProfileResp struct {
-	Alias    string `json:"alias"`
-	HostName string `json:"host_name"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-}
-
 type AWDDefenseSSHAccessResp struct {
-	Host       string          `json:"host"`
-	Port       int             `json:"port"`
-	Username   string          `json:"username"`
-	Password   string          `json:"password"`
-	Command    string          `json:"command"`
-	SSHProfile *SSHProfileResp `json:"ssh_profile,omitempty"`
-	ExpiresAt  string          `json:"expires_at"`
+	Host      string `json:"host"`
+	Port      int    `json:"port"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Command   string `json:"command"`
+	ExpiresAt string `json:"expires_at"`
 }
 
 type AWDDefenseFileResp struct {

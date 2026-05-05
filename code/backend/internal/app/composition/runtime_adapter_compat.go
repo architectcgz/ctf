@@ -79,17 +79,11 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
 	return &dto.AWDDefenseSSHAccessResp{
-		Host:     a.defenseSSHHost,
-		Port:     a.defenseSSHPort,
-		Username: username,
-		Password: ticket,
-		Command:  fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
-		SSHProfile: &dto.SSHProfileResp{
-			Alias:    fmt.Sprintf("ctf-awd-%d-%d", contestID, serviceID),
-			HostName: a.defenseSSHHost,
-			Port:     a.defenseSSHPort,
-			User:     username,
-		},
+		Host:      a.defenseSSHHost,
+		Port:      a.defenseSSHPort,
+		Username:  username,
+		Password:  ticket,
+		Command:   fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
 		ExpiresAt: expiresAt.Format(time.RFC3339),
 	}, nil
 }

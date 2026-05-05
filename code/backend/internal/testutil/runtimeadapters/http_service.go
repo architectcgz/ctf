@@ -90,17 +90,11 @@ func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
 	return &dto.AWDDefenseSSHAccessResp{
-		Host:     "127.0.0.1",
-		Port:     2222,
-		Username: username,
-		Password: ticket,
-		Command:  fmt.Sprintf("ssh %s@127.0.0.1 -p 2222", username),
-		SSHProfile: &dto.SSHProfileResp{
-			Alias:    fmt.Sprintf("ctf-awd-%d-%d", contestID, serviceID),
-			HostName: "127.0.0.1",
-			Port:     2222,
-			User:     username,
-		},
+		Host:      "127.0.0.1",
+		Port:      2222,
+		Username:  username,
+		Password:  ticket,
+		Command:   fmt.Sprintf("ssh %s@127.0.0.1 -p 2222", username),
 		ExpiresAt: expiresAt.Format(time.RFC3339),
 	}, nil
 }
