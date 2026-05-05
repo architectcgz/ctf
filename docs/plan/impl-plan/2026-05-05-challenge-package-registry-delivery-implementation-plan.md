@@ -380,7 +380,7 @@ git commit -m "feat(image): 增加构建任务服务"
   - `code/backend/internal/module/challenge/application/commands/registry_client_test.go`
   - `code/backend/internal/config/config_test.go` if config tests exist
 
-- [ ] **Step 1: 定义端口接口**
+- [x] **Step 1: 定义端口接口**
 
 接口应表达最小能力：
 
@@ -398,15 +398,15 @@ type RegistryVerifier interface {
 }
 ```
 
-- [ ] **Step 2: 写 fake 测试**
+- [x] **Step 2: 写 fake 测试**
 
 先用 fake builder/verifier 测 service 状态流转，不在单元测试里真实跑 Docker。
 
-- [ ] **Step 3: 实现 Docker CLI adapter**
+- [x] **Step 3: 实现 Docker CLI adapter**
 
 使用 `exec.CommandContext`，命令超时由 caller context 控制。日志输出写入 job log file，不进入 HTTP response。
 
-- [ ] **Step 4: 实现 Registry v2 manifest check**
+- [x] **Step 4: 实现 Registry v2 manifest check**
 
 支持：
 
@@ -415,7 +415,7 @@ type RegistryVerifier interface {
 - Docker content digest 读取
 - 401/404/5xx 错误摘要归一化
 
-- [ ] **Step 5: 跑测试**
+- [x] **Step 5: 跑测试**
 
 Run:
 
@@ -425,7 +425,7 @@ go test ./internal/module/challenge/application/commands -run 'DockerImageBuilde
 go test ./internal/config -count=1
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge/application/commands code/backend/internal/config code/backend/configs

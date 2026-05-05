@@ -156,11 +156,15 @@ type ContainerConfig struct {
 }
 
 type ContainerRegistryConfig struct {
-	Enabled       bool   `mapstructure:"enabled"`
-	Server        string `mapstructure:"server"`
-	Username      string `mapstructure:"username"`
-	Password      string `mapstructure:"password"`
-	IdentityToken string `mapstructure:"identity_token"`
+	Enabled          bool          `mapstructure:"enabled"`
+	Server           string        `mapstructure:"server"`
+	Username         string        `mapstructure:"username"`
+	Password         string        `mapstructure:"password"`
+	IdentityToken    string        `mapstructure:"identity_token"`
+	BuildEnabled     bool          `mapstructure:"build_enabled"`
+	BuildTimeout     time.Duration `mapstructure:"build_timeout"`
+	BuildConcurrency int           `mapstructure:"build_concurrency"`
+	DefaultTagPolicy string        `mapstructure:"default_tag_policy"`
 }
 
 type ContainerSchedulerConfig struct {
@@ -384,6 +388,17 @@ func (c *Config) Validate() error {
 		hasBasicAuth := strings.TrimSpace(c.Container.Registry.Username) != "" && strings.TrimSpace(c.Container.Registry.Password) != ""
 		if !hasIdentityToken && !hasBasicAuth {
 			return fmt.Errorf("container.registry requires username/password or identity_token when enabled")
+		}
+	}
+	if c.Container.Registry.BuildEnabled {
+		if strings.TrimSpace(c.Container.Registry.Server) == "" {
+			return fmt.Errorf("container.registry.server must not be empty when container.registry.build_enabled is true")
+		}
+		if c.Container.Registry.BuildTimeout <= 0 {
+			return fmt.Errorf("container.registry.build_timeout must be greater than 0")
+		}
+		if c.Container.Registry.BuildConcurrency <= 0 {
+			return fmt.Errorf("container.registry.build_concurrency must be greater than 0")
 		}
 	}
 	if c.Container.Scheduler.Enabled {
@@ -656,6 +671,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.registry.username", "")
 	v.SetDefault("container.registry.password", "")
 	v.SetDefault("container.registry.identity_token", "")
+	v.SetDefault("container.registry.build_enabled", false)
+	v.SetDefault("container.registry.build_timeout", 10*time.Minute)
+	v.SetDefault("container.registry.build_concurrency", 1)
+	v.SetDefault("container.registry.default_tag_policy", "latest")
 	v.SetDefault("container.scheduler.enabled", true)
 	v.SetDefault("container.scheduler.poll_interval", time.Second)
 	v.SetDefault("container.scheduler.batch_size", 4)

@@ -180,6 +180,22 @@ type ImageBuildJobRepository interface {
 	UpdateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
 }
 
+type ImageInspectResult struct {
+	Size int64
+}
+
+type DockerImageBuilder interface {
+	Build(ctx context.Context, contextPath, dockerfilePath, localRef string) error
+	Tag(ctx context.Context, sourceRef, targetRef string) error
+	Push(ctx context.Context, targetRef string) error
+	Pull(ctx context.Context, targetRef string) error
+	Inspect(ctx context.Context, targetRef string) (ImageInspectResult, error)
+}
+
+type RegistryVerifier interface {
+	CheckManifest(ctx context.Context, imageRef string) (string, error)
+}
+
 type EnvironmentTemplateCommandRepository interface {
 	Create(ctx context.Context, template *model.EnvironmentTemplate) error
 	Update(ctx context.Context, template *model.EnvironmentTemplate) error
