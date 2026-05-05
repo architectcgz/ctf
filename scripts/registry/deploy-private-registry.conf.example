@@ -22,6 +22,10 @@ REGISTRY_PASSWORD="change-this-password"
 REGISTRY_DATA_DIR="$HOME/ctf-registry/data"
 REGISTRY_AUTH_DIR="$HOME/ctf-registry/auth"
 
+# 同步写入 ctf compose 会加载的 registry 环境变量文件。
+# 留空表示只写 REGISTRY_AUTH_DIR/ctf-platform-registry.env，不写 docker/ctf/.env.registry。
+CTF_COMPOSE_REGISTRY_ENV_FILE="docker/ctf/.env.registry"
+
 # 使用的镜像。
 REGISTRY_IMAGE="registry:2"
 HTPASSWD_IMAGE="httpd:2.4-alpine"

@@ -74,7 +74,7 @@ start_infra() {
     exit 1
   fi
 
-  docker compose -f "${compose_file}" up -d ctf-postgres ctf-redis
+  CTF_HOST_ROOT="${REPO_ROOT}" docker compose -f "${compose_file}" up -d ctf-postgres ctf-redis
 }
 
 apply_runtime_defaults() {

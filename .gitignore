@@ -50,6 +50,11 @@ code/frontend/docs/
 /backups/
 /TODO/
 /code/backend/data/challenge-import-previews/
-/docker/
+/docker/*
+!/docker/ctf/
+!/docker/ctf/docker-compose.dev.yml
+!/docker/ctf/.env.registry.example
+/docker/ctf/.env.registry
+/docker/ctf/runtime/
 /output/
 /code/backend/Makefile

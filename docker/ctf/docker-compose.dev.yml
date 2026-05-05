@@ -1,0 +1,111 @@
+name: ctf
+
+services:
+  ctf-api:
+    container_name: ctf-api
+    image: ctf-backend:local
+    build:
+      context: ../../code/backend
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env.registry
+        required: false
+    environment:
+      APP_ENV: dev
+      DOCKER_HOST: unix:///var/run/docker.sock
+      AWD_CHECKER_ARTIFACT_DIR: ${CTF_HOST_ROOT:-${PWD}}/docker/ctf/runtime/awd-checker-artifacts
+      CTF_HTTP_HOST: 0.0.0.0
+      CTF_HTTP_PORT: 8080
+      CTF_CONTEST_AWD_CHECKER_SANDBOX_HOST_WORK_ROOT: ${CTF_HOST_ROOT:-${PWD}}/docker/ctf/runtime/checker-sandboxes
+      CTF_POSTGRES_HOST: ctf-postgres
+      CTF_POSTGRES_PORT: 5432
+      CTF_POSTGRES_DATABASE: ctf
+      CTF_POSTGRES_USERNAME: postgres
+      CTF_POSTGRES_PASSWORD: postgres123456
+      CTF_REDIS_ADDR: ctf-redis:6379
+      CTF_REDIS_PASSWORD: redis123456
+      CTF_REDIS_DB: 2
+      CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      ctf-postgres:
+        condition: service_healthy
+      ctf-redis:
+        condition: service_healthy
+    volumes:
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/ctf:${CTF_HOST_ROOT:-${PWD}}/docker/ctf
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://localhost:8080/health | grep -q '"status":"ok"' || exit 1
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - ctf-network
+
+  ctf-postgres:
+    container_name: ctf-postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ctf
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123456
+    ports:
+      - "127.0.0.1:15432:5432"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d ctf
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - ctf-postgres-data:/var/lib/postgresql/data
+    networks:
+      - ctf-network
+
+  ctf-redis:
+    container_name: ctf-redis
+    image: redis:7.4-alpine
+    command:
+      - redis-server
+      - --requirepass
+      - redis123456
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "127.0.0.1:16379:6379"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - -a
+        - redis123456
+        - ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - ctf-redis-data:/data
+    networks:
+      - ctf-network
+
+volumes:
+  ctf-postgres-data:
+  ctf-redis-data:
+
+networks:
+  ctf-network:
+    name: ctf-network
+    driver: bridge

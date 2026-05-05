@@ -37,6 +37,8 @@ registry.example.edu/jeopardy/web-demo:v1
 
 容器运行归属仍然使用平台运行时 label，例如 `ctf.project=ctf`、`managed-by=ctf-platform`、`ctf-component=challenge-instance`。镜像 repository 只表达题型目录和题目名，不承担运行实例归属判断。
 
+registry 连接、认证和构建开关属于 `ctf` 平台部署配置，不属于题包配置。平台内部导入题包时直接创建 `images` / `image_build_jobs`，不通过 HTTP API 自调用注册镜像。
+
 ## 非目标
 
 - 不依赖 Docker Compose project 作为平台实例归属依据。
@@ -143,6 +145,28 @@ registry.example.edu/team/web-demo:v1
 ```
 
 因此，平台构建模式的上传表单不应要求上传者填写完整镜像名称；最多提供 tag 输入框。引用已有镜像路径才保留作者显式地址。
+
+## 平台部署配置
+
+registry 配置由 `ctf` 平台后端读取，开发部署入口固定放在 `docker/ctf/`：
+
+```text
+docker/ctf/docker-compose.dev.yml
+docker/ctf/.env.registry
+```
+
+`docker/ctf/.env.registry` 只加载到 `ctf-api`，用于以下平台内部能力：
+
+- 生成 `<registry>/<mode>/<slug>:<tag>`。
+- 创建 `images` 和 `image_build_jobs`。
+- 执行 Docker build / push。
+- 调用 registry manifest API。
+- 执行 pull / inspect 校验。
+- 将校验通过的镜像状态更新为 `available`。
+
+这些配置不得进入题包、题目容器、学生防守容器或 checker 公共参数。题包最多提供源码、Dockerfile 和 tag 建议。
+
+内部导入流程不通过 HTTP API 调用 `/authoring/images` 注册镜像。原因是题目导入、镜像记录和构建任务需要在同一 application service / transaction 边界内保持一致；HTTP API 只用于管理员显式登记外部镜像。
 
 多镜像题目需要在同一命名空间下派生节点名：
 

@@ -1408,18 +1408,30 @@ docker tag challenge-web:v1 registry.ctf.local:5000/challenge-web:v1
 docker push registry.ctf.local:5000/challenge-web:v1
 ```
 
-平台运行节点拉取私有镜像时，可以在后端配置中启用 `container.registry`。该配置只负责运行时 `docker pull` 的认证，不负责构建镜像或管理 registry 生命周期。
+平台运行节点拉取私有镜像、平台构建题包镜像并推送到私有 registry 时，都通过后端 `container.registry` 配置读取 registry 地址和凭据。该配置属于 `ctf` 平台部署配置，只加载到 `ctf-api`；不要写进题包、题目容器或学生防守容器。
 
 ```yaml
 container:
   registry:
     enabled: true
+    build_enabled: true
     server: registry.ctf.local:5000
     username: ctf
     password: ${CTF_CONTAINER_REGISTRY_PASSWORD}
 ```
 
-当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 传递认证信息。例如 `registry.ctf.local:5000/challenge-web:v1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
+当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 或 registry manifest client 传递认证信息。例如 `registry.ctf.local:5000/awd/awd-demo:c1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
+
+开发 compose project 的推荐落点是：
+
+```text
+docker/ctf/docker-compose.dev.yml
+docker/ctf/.env.registry
+```
+
+`scripts/registry/deploy-private-registry.sh` 会同时写入 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 和 `docker/ctf/.env.registry`。前者适合本地 shell `source` 后启动后端，后者由 `ctf-api` compose service 通过 `env_file` 加载。两者都只服务平台后端。
+
+平台内部题包导入不应通过 HTTP API 自调用 `/authoring/images` 注册镜像，而应在导入 application service 内创建 `images` 和 `image_build_jobs`。这样题目记录、镜像记录和构建任务可以保持同一事务边界；HTTP API 只保留给管理员手动登记外部镜像。
 
 **私有 Registry 拉取烟测：**
 

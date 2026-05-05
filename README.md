@@ -71,13 +71,13 @@ cd code/frontend && npm run dev
 开发容器栈（仅在需要整套容器联调时使用）：
 
 ```bash
-docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
 
 复用共享基础设施（推荐，避免重复占用资源）：
 
 ```bash
-docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
 ```
 
 建议日常 Go 开发使用“依赖容器 + 本地热重载”：
@@ -91,6 +91,15 @@ docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
 - `ctf-api`: `8080`
 - `ctf-postgres`: `15432`
 - `ctf-redis`: `16379`
+
+题包镜像构建需要先配置私有 registry。推荐通过脚本部署 registry 并生成 `docker/ctf/.env.registry`：
+
+```bash
+scripts/registry/deploy-private-registry.sh --force-recreate
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api
+```
+
+`docker/ctf/.env.registry` 只会被 `ctf-api` 加载，用于平台构建、推送、manifest 校验、pull/inspect 和镜像注册；不要把这些凭据写进题包或题目容器。
 
 Docker 编排规范见：`docs/docker-compose-rules.md`。
 

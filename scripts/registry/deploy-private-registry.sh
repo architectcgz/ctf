@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/deploy-private-registry.conf}"
 CONFIG_FILE_EXPLICIT=false
 REGISTRY_NAME="${REGISTRY_NAME:-ctf-registry}"
@@ -12,6 +13,7 @@ REGISTRY_USERNAME="${REGISTRY_USERNAME:-ctf}"
 REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-}"
 REGISTRY_DATA_DIR="${REGISTRY_DATA_DIR:-${HOME}/ctf-registry/data}"
 REGISTRY_AUTH_DIR="${REGISTRY_AUTH_DIR:-${HOME}/ctf-registry/auth}"
+CTF_COMPOSE_REGISTRY_ENV_FILE="${CTF_COMPOSE_REGISTRY_ENV_FILE:-${REPO_ROOT}/docker/ctf/.env.registry}"
 REGISTRY_IMAGE="${REGISTRY_IMAGE:-registry:2}"
 HTPASSWD_IMAGE="${HTPASSWD_IMAGE:-httpd:2.4-alpine}"
 REGISTRY_RESTART_POLICY="${REGISTRY_RESTART_POLICY:-always}"
@@ -36,6 +38,8 @@ usage() {
   --password PASSWORD     Registry 密码；未提供时自动生成
   --data-dir DIR          镜像数据目录，默认 $HOME/ctf-registry/data
   --auth-dir DIR          认证文件目录，默认 $HOME/ctf-registry/auth
+  --ctf-env-file FILE     同步写入 ctf compose 可加载的 registry env，默认 docker/ctf/.env.registry
+  --no-ctf-env-file       不写入 ctf compose registry env
   --image IMAGE           Registry 镜像，默认 registry:2
   --htpasswd-image IMAGE  用于生成 htpasswd 的镜像，默认 httpd:2.4-alpine
   --force-recreate        若同名容器已存在，先删除后重建
@@ -54,6 +58,7 @@ usage() {
 
 该文件可供后端部署环境加载，内容形如:
   CTF_CONTAINER_REGISTRY_ENABLED=true
+  CTF_CONTAINER_REGISTRY_BUILD_ENABLED=true
   CTF_CONTAINER_REGISTRY_SERVER=127.0.0.1:5000
   CTF_CONTAINER_REGISTRY_SCHEME=http
   CTF_CONTAINER_REGISTRY_USERNAME=ctf
@@ -132,6 +137,7 @@ write_platform_env() {
   umask 077
   cat >"${path}" <<EOF
 CTF_CONTAINER_REGISTRY_ENABLED=true
+CTF_CONTAINER_REGISTRY_BUILD_ENABLED=true
 CTF_CONTAINER_REGISTRY_SERVER=${REGISTRY_SERVER}
 CTF_CONTAINER_REGISTRY_SCHEME=${REGISTRY_SCHEME}
 CTF_CONTAINER_REGISTRY_USERNAME=${REGISTRY_USERNAME}
@@ -207,6 +213,14 @@ while [[ $# -gt 0 ]]; do
     --auth-dir)
       REGISTRY_AUTH_DIR="${2:-}"
       shift 2
+      ;;
+    --ctf-env-file)
+      CTF_COMPOSE_REGISTRY_ENV_FILE="${2:-}"
+      shift 2
+      ;;
+    --no-ctf-env-file)
+      CTF_COMPOSE_REGISTRY_ENV_FILE=""
+      shift
       ;;
     --image)
       REGISTRY_IMAGE="${2:-}"
@@ -303,6 +317,13 @@ log_info "写入平台后端环境变量文件"
 write_platform_env "${PLATFORM_ENV_FILE}"
 log_success "平台后端环境变量文件已写入 ${PLATFORM_ENV_FILE}"
 
+if [[ -n "${CTF_COMPOSE_REGISTRY_ENV_FILE}" ]]; then
+  log_info "写入 ctf compose registry 环境变量文件"
+  mkdir -p "$(dirname "${CTF_COMPOSE_REGISTRY_ENV_FILE}")"
+  write_platform_env "${CTF_COMPOSE_REGISTRY_ENV_FILE}"
+  log_success "ctf compose registry 环境变量文件已写入 ${CTF_COMPOSE_REGISTRY_ENV_FILE}"
+fi
+
 cat <<EOF
 Registry 已部署:
   container: ${REGISTRY_NAME}
@@ -314,15 +335,17 @@ Registry 已部署:
 
 平台后端环境变量已写入:
   ${PLATFORM_ENV_FILE}
+$(if [[ -n "${CTF_COMPOSE_REGISTRY_ENV_FILE}" ]]; then printf '\nctf compose registry 环境变量已写入:\n  %s\n' "${CTF_COMPOSE_REGISTRY_ENV_FILE}"; fi)
 
 后端配置等价于:
   container.registry.enabled=true
+  container.registry.build_enabled=true
   container.registry.server=${REGISTRY_SERVER}
   container.registry.username=${REGISTRY_USERNAME}
   container.registry.password=<见 ${PLATFORM_ENV_FILE}>
 
 镜像引用示例:
-  ${REGISTRY_SERVER}/ctf/awd-supply-ticket:v1
+  ${REGISTRY_SERVER}/awd/awd-supply-ticket:v1
 
 注意:
   当前脚本部署的是 HTTP registry。若平台和 registry 不在同一台机器，
