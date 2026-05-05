@@ -28,6 +28,16 @@ const imageStatusMeta: Record<
     color: 'var(--color-warning)',
     backgroundColor: 'color-mix(in srgb, var(--color-warning) 14%, transparent)',
   },
+  pushed: {
+    label: '已推送',
+    color: 'var(--color-primary)',
+    backgroundColor: 'color-mix(in srgb, var(--color-primary) 14%, transparent)',
+  },
+  verifying: {
+    label: '校验中',
+    color: 'var(--color-warning)',
+    backgroundColor: 'color-mix(in srgb, var(--color-warning) 14%, transparent)',
+  },
   available: {
     label: '可用',
     color: 'var(--color-success)',
@@ -85,6 +95,8 @@ export function buildImageStatusSummary(rows: AdminImageListItem[]): ImageStatus
     available: 0,
     pending: 0,
     building: 0,
+    pushed: 0,
+    verifying: 0,
     failed: 0,
   }
 
@@ -96,6 +108,9 @@ export function buildImageStatusSummary(rows: AdminImageListItem[]): ImageStatus
 
   if (counts.building > 0) {
     summary.push({ key: 'building', label: '构建中', value: counts.building, tone: 'warning' })
+  }
+  if (counts.verifying > 0) {
+    summary.push({ key: 'verifying', label: '校验中', value: counts.verifying, tone: 'warning' })
   }
   if (counts.pending > 0) {
     summary.push({ key: 'pending', label: '等待中', value: counts.pending, tone: 'muted' })

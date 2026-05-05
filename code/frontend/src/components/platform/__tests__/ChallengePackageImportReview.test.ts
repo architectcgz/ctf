@@ -47,7 +47,9 @@ describe('ChallengePackageImportReview', () => {
     expect(wrapper.text()).not.toContain('# 一级标题')
 
     const sections = wrapper.findAll('article.import-review__section')
-    expect(sections[0]?.text()).toContain('Runtime')
+    expect(sections[0]?.text()).toContain('镜像来源')
+    expect(sections[0]?.text()).toContain('目标镜像')
+    expect(sections[0]?.text()).toContain('镜像状态')
     expect(sections[0]?.text()).toContain('Topology')
     expect(
       sections[0]?.find('.import-review__overview > .import-review__runtime > dl').exists()

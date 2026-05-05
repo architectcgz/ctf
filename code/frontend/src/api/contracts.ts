@@ -1322,6 +1322,17 @@ export interface AdminChallengeImportRuntime {
   image_ref?: string
 }
 
+export type ImageDeliverySourceType = 'platform_build' | 'external_ref' | 'manual'
+
+export interface AdminChallengeImportImageDelivery {
+  source_type?: ImageDeliverySourceType
+  suggested_tag?: string
+  target_image_ref?: string
+  build_status?: ImageStatus
+  digest?: string
+  last_error?: string
+}
+
 export interface AdminChallengeImportExtensions {
   topology: {
     source?: string
@@ -1367,6 +1378,7 @@ export interface AdminChallengeImportPreview {
   hints?: AdminChallengeHint[]
   flag: AdminChallengeImportFlag
   runtime: AdminChallengeImportRuntime
+  image_delivery?: AdminChallengeImportImageDelivery
   extensions: AdminChallengeImportExtensions
   topology?: AdminChallengeImportTopologyData
   package_files?: ChallengePackageFileData[]
@@ -1545,6 +1557,7 @@ export interface AdminAwdChallengeImportPreview {
   defense_entry_mode?: string
   access_config?: Record<string, unknown>
   runtime_config?: Record<string, unknown>
+  image_delivery?: AdminChallengeImportImageDelivery
   warnings?: string[]
   created_at: ISODateTime
 }
@@ -1627,14 +1640,19 @@ export interface AdminChallengeImportCommitData {
   challenge: AdminChallengeListItem
 }
 
-export type ImageSourceType = 'registry' | 'dockerfile' | 'upload'
-export type ImageStatus = 'pending' | 'building' | 'available' | 'failed'
+export type ImageSourceType = 'manual' | 'platform_build' | 'external_ref'
+export type ImageStatus = 'pending' | 'building' | 'pushed' | 'verifying' | 'available' | 'failed'
 
 export interface AdminImageListItem {
   id: ID
   name: string
   tag: string
   status: ImageStatus
+  source_type?: ImageSourceType
+  digest?: string
+  build_job_id?: ID
+  last_error?: string
+  verified_at?: ISODateTime
   description?: string
   size_bytes?: number
   created_at: ISODateTime

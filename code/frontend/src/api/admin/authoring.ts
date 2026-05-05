@@ -2,6 +2,7 @@ import { ApiError, request } from '../request'
 
 import type {
   AdminChallengeHint,
+  AdminChallengeImportImageDelivery,
   AdminChallengeImportCommitData,
   AdminChallengeImportPreview,
   AdminChallengeImportTopologyData,
@@ -113,6 +114,7 @@ interface RawChallengeImportPreview {
     type?: string
     image_ref?: string
   }
+  image_delivery?: AdminChallengeImportImageDelivery | null
   extensions: {
     topology: {
       source?: string
@@ -281,6 +283,11 @@ interface RawImageItem {
   description?: string
   size?: number
   status: AdminImageListItem['status']
+  source_type?: AdminImageListItem['source_type']
+  digest?: string
+  build_job_id?: string | number | null
+  last_error?: string
+  verified_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -510,6 +517,7 @@ function normalizeChallengeImportPreview(
     })),
     flag: item.flag,
     runtime: item.runtime,
+    image_delivery: item.image_delivery ?? undefined,
     extensions: item.extensions,
     topology: item.topology ? normalizeChallengeImportTopology(item.topology) : undefined,
     package_files: item.package_files?.map(normalizeChallengePackageFile),
@@ -684,6 +692,11 @@ function normalizeImage(item: RawImageItem): AdminImageListItem {
     tag: item.tag,
     description: item.description,
     status: item.status,
+    source_type: item.source_type,
+    digest: item.digest,
+    build_job_id: item.build_job_id == null ? undefined : String(item.build_job_id),
+    last_error: item.last_error,
+    verified_at: item.verified_at ?? undefined,
     size_bytes: item.size,
     created_at: item.created_at,
     updated_at: item.updated_at,

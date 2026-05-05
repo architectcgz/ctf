@@ -192,14 +192,14 @@ describe('ImageManage', () => {
     expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
   })
 
-  it('应该把镜像名称、标签和描述拆成独立列', async () => {
+  it('应该把镜像名称、标签、来源和摘要拆成独立列', async () => {
     const wrapper = mountPage()
 
     await flushPromises()
 
     const headers = wrapper.findAll('.workspace-data-table__head-cell').map((item) => item.text())
 
-    expect(headers).toEqual(['镜像名称', '标签', '描述', '状态', '创建时间', '操作'])
+    expect(headers).toEqual(['镜像名称', '标签', '来源', '摘要', '状态', '验证时间', '操作'])
 
     const row = wrapper.find('.image-row')
     expect(row.find('.image-row__name').attributes('title')).toBe('ubuntu')
@@ -287,7 +287,7 @@ describe('ImageManage', () => {
       /class="image-row__tag"[\s\S]*:title="\(row as AdminImageListItem\)\.tag"/s
     )
     expect(combinedSource).toMatch(
-      /class="image-row__description"[\s\S]*:title="\(row as AdminImageListItem\)\.description \|\| '未填写镜像说明'"/s
+      /class="image-row__description"[\s\S]*:title="\(row as AdminImageListItem\)\.last_error \|\| \(row as AdminImageListItem\)\.digest \|\| \(row as AdminImageListItem\)\.description \|\| '未生成摘要'"/s
     )
     expect(combinedSource).toMatch(
       /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s

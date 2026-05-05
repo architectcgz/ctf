@@ -172,6 +172,36 @@ function getReadinessClass(readiness: AdminAwdChallengeData['readiness_status'])
   return 'awd-status-pill--warning'
 }
 
+function getImageSourceLabel(value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['source_type']): string {
+  switch (value) {
+    case 'platform_build':
+      return '平台构建'
+    case 'external_ref':
+      return '外部镜像'
+    case 'manual':
+      return '手工登记'
+    default:
+      return '未声明'
+  }
+}
+
+function getImageStatusLabel(value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['build_status']): string {
+  switch (value) {
+    case 'available': return '可用'
+    case 'building': return '构建中'
+    case 'pushed': return '已推送'
+    case 'verifying': return '校验中'
+    case 'failed': return '失败'
+    case 'pending': return '等待中'
+    default: return '待处理'
+  }
+}
+
+function getImportTargetImageRef(item: AdminAwdChallengeImportPreview): string {
+  const runtimeImageRef = item.runtime_config?.image_ref
+  return item.image_delivery?.target_image_ref || (typeof runtimeImageRef === 'string' ? runtimeImageRef : '未生成')
+}
+
 function resetFilters(): void {
   emit('updateKeyword', '')
   emit('updateServiceTypeFilter', '')
@@ -589,6 +619,18 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                     <span class="awd-status-pill awd-status-pill--success">{{ item.defense_entry_mode || '未定义入口' }}</span>
                   </div>
 
+                  <div class="awd-challenge-import__image">
+                    <span>{{ getImageSourceLabel(item.image_delivery?.source_type) }}</span>
+                    <strong :title="getImportTargetImageRef(item)">{{ getImportTargetImageRef(item) }}</strong>
+                    <span>{{ getImageStatusLabel(item.image_delivery?.build_status) }}</span>
+                  </div>
+                  <p
+                    v-if="item.image_delivery?.last_error"
+                    class="awd-challenge-import__image-error"
+                  >
+                    {{ item.image_delivery.last_error }}
+                  </p>
+
                   <div class="awd-challenge-import__grid">
                     <pre class="awd-challenge-import__json">{{ formatStructuredJSON(item.access_config) }}</pre>
                     <pre class="awd-challenge-import__json">{{ formatStructuredJSON(item.runtime_config) }}</pre>
@@ -673,6 +715,9 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
 .awd-challenge-import__card-title { margin: 0; font-size: var(--font-size-17); font-weight: 800; color: var(--color-text-primary); }
 .awd-challenge-import__card-file { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-family: var(--font-family-mono); font-size: var(--font-size-12); }
 .awd-challenge-import__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.awd-challenge-import__image { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border-subtle); border-radius: 0.75rem; background: color-mix(in srgb, var(--color-bg-elevated) 84%, transparent); font-size: var(--font-size-13); color: var(--color-text-muted); }
+.awd-challenge-import__image strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-family-mono); color: var(--color-text-primary); }
+.awd-challenge-import__image-error { margin: calc(var(--space-2) * -1) 0 0; color: var(--color-danger); font-size: var(--font-size-12); }
 .awd-challenge-import__grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .awd-challenge-import__json { margin: 0; min-height: 10rem; padding: var(--space-4); border-radius: 1rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); color: var(--color-text-secondary); font-family: var(--font-family-mono); font-size: var(--font-size-12); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 

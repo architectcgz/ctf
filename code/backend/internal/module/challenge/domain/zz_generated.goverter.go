@@ -187,6 +187,11 @@ func (c *ChallengeResponseMapperImpl) ToImageResp(source *model.Image) *dto.Imag
 		dtoImageResp.Description = (*source).Description
 		dtoImageResp.Size = (*source).Size
 		dtoImageResp.Status = (*source).Status
+		dtoImageResp.Digest = (*source).Digest
+		dtoImageResp.SourceType = (*source).SourceType
+		dtoImageResp.BuildJobID = (*source).BuildJobID
+		dtoImageResp.LastError = (*source).LastError
+		dtoImageResp.VerifiedAt = (*source).VerifiedAt
 		dtoImageResp.CreatedAt = c.timeTimeToTimeTime((*source).CreatedAt)
 		dtoImageResp.UpdatedAt = c.timeTimeToTimeTime((*source).UpdatedAt)
 		pDtoImageResp = &dtoImageResp

@@ -9,6 +9,7 @@ import type {
   AdminAwdChallengeData,
   AdminAwdChallengeImportCommitData,
   AdminAwdChallengeImportPreview,
+  AdminChallengeImportImageDelivery,
   ChallengeCategory,
   PageResult,
 } from '../contracts'
@@ -94,6 +95,7 @@ interface RawAdminAwdChallengeImportPreview {
   defense_entry_mode?: string | null
   access_config?: Record<string, unknown> | null
   runtime_config?: Record<string, unknown> | null
+  image_delivery?: AdminChallengeImportImageDelivery | null
   warnings?: string[] | null
   created_at: string
 }
@@ -181,6 +183,9 @@ function normalizeAdminAwdChallengeImportPreview(
   }
   if (item.runtime_config && Object.keys(item.runtime_config).length > 0) {
     normalized.runtime_config = item.runtime_config
+  }
+  if (item.image_delivery) {
+    normalized.image_delivery = item.image_delivery
   }
   if (item.warnings && item.warnings.length > 0) {
     normalized.warnings = item.warnings

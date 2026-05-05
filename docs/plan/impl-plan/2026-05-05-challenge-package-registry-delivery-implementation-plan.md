@@ -668,7 +668,7 @@ git commit -m "feat(image): 支持外部镜像校验路径"
   - `code/frontend/src/components/platform/awd-service/__tests__/AWDChallengeLibraryPage.test.ts`
   - `code/frontend/src/views/platform/__tests__/ImageManage.test.ts`
 
-- [ ] **Step 1: 更新 API 类型测试**
+- [x] **Step 1: 更新 API 类型测试**
 
 确保 import preview 包含：
 
@@ -683,19 +683,19 @@ image_delivery?: {
 }
 ```
 
-- [ ] **Step 2: Jeopardy 上传 UI**
+- [x] **Step 2: Jeopardy 上传 UI**
 
 预览页显示平台生成 image ref 和构建状态；不要再把 `runtime.image_ref` 文案写成上传者必须提供。
 
-- [ ] **Step 3: AWD 上传 UI**
+- [x] **Step 3: AWD 上传 UI**
 
 AWD import queue 卡片显示 source、target ref、status、error。`runtime_config` JSON 保留给高级信息，但不作为主要镜像入口。
 
-- [ ] **Step 4: 镜像管理 UI**
+- [x] **Step 4: 镜像管理 UI**
 
 镜像列表显示 source/status/digest/verified_at/last_error，失败状态要能被管理员快速看到。
 
-- [ ] **Step 5: 跑前端测试**
+- [x] **Step 5: 跑前端测试**
 
 Run:
 
@@ -705,7 +705,7 @@ npm run test:run -- src/components/platform/__tests__/ChallengePackageImportRevi
 npm run typecheck
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/frontend/src

@@ -43,7 +43,7 @@ export function useImageManagePage() {
   const sortConfig = ref<ImageSortOption>(sortOptions[0]!)
 
   const hasActiveImages = computed(() =>
-    list.value.some((row) => row.status === 'pending' || row.status === 'building')
+    list.value.some((row) => ['pending', 'building', 'pushed', 'verifying'].includes(row.status))
   )
   const hasActiveFilters = computed(() => Boolean(keyword.value.trim() || statusFilter.value))
   const filteredRows = computed<AdminImageListItem[]>(() =>

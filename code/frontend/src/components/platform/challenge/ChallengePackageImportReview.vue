@@ -20,6 +20,42 @@ const metadata = computed(() => [
   { label: '难度', value: props.preview.difficulty },
   { label: '分值', value: `${props.preview.points} pts` },
 ])
+
+const imageDeliverySourceLabel = computed(() => {
+  switch (props.preview.image_delivery?.source_type) {
+    case 'platform_build':
+      return '平台构建'
+    case 'external_ref':
+      return '外部镜像'
+    case 'manual':
+      return '手工登记'
+    default:
+      return '未声明'
+  }
+})
+
+const imageDeliveryStatusLabel = computed(() => {
+  switch (props.preview.image_delivery?.build_status) {
+    case 'available':
+      return '可用'
+    case 'building':
+      return '构建中'
+    case 'pushed':
+      return '已推送'
+    case 'verifying':
+      return '校验中'
+    case 'failed':
+      return '失败'
+    case 'pending':
+      return '等待中'
+    default:
+      return '待处理'
+  }
+})
+
+const imageDeliveryRef = computed(() =>
+  props.preview.image_delivery?.target_image_ref || props.preview.runtime.image_ref || '未生成'
+)
 </script>
 
 <template>
@@ -61,8 +97,16 @@ const metadata = computed(() => [
                 <dd>{{ preview.flag.type }} / {{ preview.flag.prefix || 'flag' }}</dd>
               </div>
               <div>
-                <dt>Runtime</dt>
-                <dd>{{ preview.runtime.image_ref || '无镜像引用' }}</dd>
+                <dt>镜像来源</dt>
+                <dd>{{ imageDeliverySourceLabel }}</dd>
+              </div>
+              <div>
+                <dt>目标镜像</dt>
+                <dd>{{ imageDeliveryRef }}</dd>
+              </div>
+              <div>
+                <dt>镜像状态</dt>
+                <dd>{{ imageDeliveryStatusLabel }}</dd>
               </div>
               <div>
                 <dt>Topology</dt>

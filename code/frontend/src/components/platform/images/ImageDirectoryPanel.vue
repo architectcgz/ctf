@@ -49,9 +49,16 @@ const imageTableColumns = [
     cellClass: 'image-table__tag-cell',
   },
   {
-    key: 'description',
-    label: '描述',
-    widthClass: 'w-[28%] min-w-[14rem]',
+    key: 'source_type',
+    label: '来源',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[7rem]',
+    cellClass: 'image-table__source-cell',
+  },
+  {
+    key: 'digest',
+    label: '摘要',
+    widthClass: 'w-[22%] min-w-[12rem]',
     cellClass: 'image-table__description-cell',
   },
   {
@@ -62,9 +69,9 @@ const imageTableColumns = [
     cellClass: 'image-table__status-cell',
   },
   {
-    key: 'created_at',
-    label: '创建时间',
-    widthClass: 'w-[18%] min-w-[10rem]',
+    key: 'verified_at',
+    label: '验证时间',
+    widthClass: 'w-[14%] min-w-[9rem]',
     cellClass: 'image-table__time-cell',
   },
   {
@@ -78,6 +85,19 @@ const imageTableColumns = [
 
 function updateStatusFilter(event: Event): void {
   emit('update:statusFilter', (event.target as HTMLSelectElement).value as ImageStatus | '')
+}
+
+function getImageSourceLabel(value?: AdminImageListItem['source_type']): string {
+  switch (value) {
+    case 'platform_build':
+      return '平台构建'
+    case 'external_ref':
+      return '外部镜像'
+    case 'manual':
+      return '手工登记'
+    default:
+      return '未标记'
+  }
 }
 </script>
 
@@ -118,6 +138,8 @@ function updateStatusFilter(event: Event): void {
               <option value="">全部状态</option>
               <option value="available">可用</option>
               <option value="building">构建中</option>
+              <option value="pushed">已推送</option>
+              <option value="verifying">校验中</option>
               <option value="pending">等待中</option>
               <option value="failed">失败</option>
             </select>
@@ -176,12 +198,18 @@ function updateStatusFilter(event: Event): void {
           </span>
         </template>
 
-        <template #cell-description="{ row }">
+        <template #cell-source_type="{ row }">
+          <span class="image-row__source">
+            {{ getImageSourceLabel((row as AdminImageListItem).source_type) }}
+          </span>
+        </template>
+
+        <template #cell-digest="{ row }">
           <p
             class="image-row__description"
-            :title="(row as AdminImageListItem).description || '未填写镜像说明'"
+            :title="(row as AdminImageListItem).last_error || (row as AdminImageListItem).digest || (row as AdminImageListItem).description || '未生成摘要'"
           >
-            {{ (row as AdminImageListItem).description || '未填写镜像说明' }}
+            {{ (row as AdminImageListItem).last_error || (row as AdminImageListItem).digest || (row as AdminImageListItem).description || '未生成摘要' }}
           </p>
         </template>
 
@@ -196,9 +224,9 @@ function updateStatusFilter(event: Event): void {
           </div>
         </template>
 
-        <template #cell-created_at="{ row }">
+        <template #cell-verified_at="{ row }">
           <span class="image-row__time">
-            {{ formatDateTime((row as AdminImageListItem).created_at) }}
+            {{ (row as AdminImageListItem).verified_at ? formatDateTime((row as AdminImageListItem).verified_at as string) : '未验证' }}
           </span>
         </template>
 
@@ -371,6 +399,11 @@ function updateStatusFilter(event: Event): void {
 .image-row__status {
   display: flex;
   justify-content: center;
+}
+
+.image-row__source {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
 }
 
 .image-row__time {
