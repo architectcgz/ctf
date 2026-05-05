@@ -33,6 +33,7 @@
 - `awd-runtime-service-read-path-design.md`：AWD 运行态服务读路径切换。
 - `awd-runtime-service-identity-design.md`：AWD 运行态 `service_id` 主身份。
 - `package-topology-sync-design.md`：题包拓扑同步与导出。
+- `challenge-package-registry-delivery-design.md`：题包上传、平台构建与 registry 交付闭环。
 - `admin-contest-announcement-ops-design.md`：管理员赛事公告运维。
 - `probe-easter-eggs-design.md`：探针彩蛋。
 
