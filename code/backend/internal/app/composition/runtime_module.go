@@ -29,11 +29,7 @@ type RuntimeModule struct {
 		TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
 		CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 	}
-	PracticeRuntimeService interface {
-		CleanupRuntime(ctx context.Context, instance *model.Instance) error
-		CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
-		CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
-	}
+	PracticeRuntimeService  practiceports.RuntimeInstanceService
 	ChallengeImageRuntime   challengeports.ImageRuntime
 	ChallengeRuntimeProbe   challengeports.ChallengeRuntimeProbe
 	OpsRuntimeQuery         opsports.RuntimeQuery

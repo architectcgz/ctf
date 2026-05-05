@@ -45,7 +45,6 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	"ctf-platform/pkg/errcode"
 )
@@ -312,7 +311,6 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeInstanceRepository", reflect.TypeOf(&runtimeinfra.Repository{}))
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeRuntimeProbe", reflect.TypeOf((*challengeports.ChallengeRuntimeProbe)(nil)).Elem())
@@ -381,12 +379,11 @@ func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildOpsModuleDeps(",
-		"buildOpsAuditHandler(",
-		"buildOpsDashboardHandler(",
-		"buildOpsRiskHandler(",
-		"buildOpsNotificationDeps(",
-		"buildOpsNotificationHandler(",
+		"module := opsruntime.Build(",
+		"opsruntime.Deps{",
+		"return &OpsModule{",
+		"m.runtime.BindNotificationHandler(tokenService)",
+		"m.NotificationHandler = m.runtime.NotificationHandler",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -405,13 +402,11 @@ func TestBuildRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildRuntimeModuleDeps(",
-		"registerRuntimeBackgroundJobs(",
-		"buildRuntimeHTTPDeps(",
-		"buildRuntimePracticeDeps(",
-		"buildRuntimeChallengeDeps(",
-		"buildRuntimeOpsDeps(",
-		"buildRuntimeContestDeps(",
+		"module := runtimemodule.Build(",
+		"runtimemodule.Deps{",
+		"module.BackgroundJobs",
+		"module.ProxyTicketService",
+		"module.SSHExecutor",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -452,18 +447,18 @@ func TestRouterRateLimitStrategyUsesUserAndLoginPrincipalKeys(t *testing.T) {
 func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read runtime_module.go: %v", err)
+		t.Fatalf("read runtime runtime module: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
 		"type runtimeModuleDeps struct",
 		"repo",
-		"*runtimeinfra.Repository",
+		"runtimeInstanceRepository",
 		"practiceInstanceRepo",
-		"*runtimeinfra.Repository",
+		"practiceInstanceRepository",
 		"instanceCommands",
 		"runtimeHTTPCommandService",
 		"instanceQueries",
@@ -485,7 +480,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("runtime composition should declare typed deps marker %s", marker)
+			t.Fatalf("runtime runtime module should declare typed deps marker %s", marker)
 		}
 	}
 }
@@ -493,9 +488,9 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read runtime_module.go: %v", err)
+		t.Fatalf("read runtime runtime module: %v", err)
 	}
 
 	source := string(content)
@@ -510,7 +505,7 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("runtime composition should use layered runtime service marker %s", marker)
+			t.Fatalf("runtime runtime module should use layered runtime service marker %s", marker)
 		}
 	}
 
@@ -524,7 +519,7 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("runtime composition should not keep legacy root service marker %s", marker)
+			t.Fatalf("runtime runtime module should not keep legacy root service marker %s", marker)
 		}
 	}
 }
@@ -580,20 +575,11 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type opsModuleDeps struct",
-		"auditRepo",
-		"*opsinfra.AuditRepository",
-		"riskRepo",
-		"*opsinfra.RiskRepository",
-		"runtimeQuery",
-		"opsports.RuntimeQuery",
-		"runtimeStats",
-		"opsports.RuntimeStatsProvider",
-		"type opsNotificationDeps struct",
-		"notificationRepo",
-		"*opsinfra.NotificationRepository",
-		"broadcaster",
-		"opsports.NotificationBroadcaster",
+		"runtime *opsruntime.Module",
+		"opsruntime.Build(",
+		"opsruntime.Deps{",
+		"RuntimeQuery: runtime.OpsRuntimeQuery",
+		"RuntimeStats: runtime.OpsRuntimeStatsProvider",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -602,9 +588,11 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 	}
 
 	blocked := []string{
-		"runtimeapp \"ctf-platform/internal/module/runtime/application\"",
-		"runtime.ops.query",
-		"runtime.ops.statsProvider",
+		"type opsModuleDeps struct",
+		"type opsNotificationDeps struct",
+		"opsinfra.NewAuditRepository(",
+		"opsinfra.NewRiskRepository(",
+		"opsinfra.NewNotificationRepository(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -702,21 +690,10 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type challengeModuleDeps struct",
-		"imageRepo",
-		"*challengeinfra.ImageRepository",
-		"challengeCommandRepo",
-		"*challengeinfra.Repository",
-		"challengeQueryRepo",
-		"*challengeinfra.Repository",
-		"flagRepo",
-		"challengeports.ChallengeFlagRepository",
-		"imageUsageRepo",
-		"challengeports.ChallengeImageUsageRepository",
-		"topologyRepo",
-		"*challengeinfra.Repository",
-		"writeupRepo",
-		"*challengeinfra.Repository",
+		"type ChallengeModule = challengeruntime.Module",
+		"challengeruntime.Build(",
+		"challengeruntime.Deps{",
+		"buildChallengeNotificationSender(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -724,7 +701,12 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	blocked := []string{"runtime.challenge.imageRuntime"}
+	blocked := []string{
+		"type challengeModuleDeps struct",
+		"challengeinfra.NewRepository(",
+		"challengeinfra.NewImageRepository(",
+		"challengeinfra.NewTemplateRepository(",
+	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
 			t.Fatalf("challenge composition deps should not keep concrete repository field %s", marker)
@@ -742,11 +724,9 @@ func TestBuildChallengeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildChallengeImageHandler(",
-		"buildChallengeCoreHandler(",
-		"buildChallengeFlagHandler(",
-		"buildChallengeTopologyHandler(",
-		"buildChallengeWriteupHandler(",
+		"challengeruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -765,13 +745,10 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceModuleDeps struct",
-		"commandRepo",
-		"*practiceinfra.Repository",
-		"scoreRepo",
-		"*practiceinfra.Repository",
-		"rankingRepo",
-		"*practiceinfra.Repository",
+		"type PracticeModule = practiceruntime.Module",
+		"practiceruntime.Build(",
+		"practiceruntime.Deps{",
+		"runtime.PracticeInstanceRepository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -779,8 +756,15 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(source, "repo := practiceinfra.NewRepository(root.DB())") {
-		t.Fatalf("practice composition should build shared repository once in buildPracticeModuleDeps")
+	blocked := []string{
+		"type practiceModuleDeps struct",
+		"practiceinfra.NewRepository(",
+		"buildPracticeHandler(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 
@@ -794,19 +778,12 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceModuleExternalDeps struct",
-		"instanceRepo",
-		"*runtimeinfra.Repository",
-		"runtimeService",
-		"practiceports.RuntimeInstanceService",
+		"practiceruntime.Deps{",
 		"runtime.PracticeInstanceRepository",
 		"runtime.PracticeRuntimeService",
-		"challengeRepo",
-		"practiceRuntimeChallengeContract",
-		"imageStore",
-		"practiceRuntimeImageStore",
-		"assessment",
-		"practiceRuntimeAssessmentService",
+		"challenge.Catalog",
+		"challenge.ImageStore",
+		"assessment.ProfileService",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -815,8 +792,8 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	}
 
 	blocked := []string{
-		"runtime.practice.instanceRepository",
-		"runtime.practice.runtimeService",
+		"type practiceModuleExternalDeps struct",
+		"buildPracticeModuleExternalDeps(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -835,9 +812,9 @@ func TestBuildPracticeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildPracticeModuleDeps(",
-		"buildPracticeModuleExternalDeps(",
-		"buildPracticeHandler(",
+		"practiceruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -856,15 +833,10 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type assessmentModuleDeps struct",
-		"profileRepo",
-		"*assessmentinfra.Repository",
-		"recommendationRepo",
-		"*assessmentinfra.Repository",
-		"challengeRepo",
-		"assessmentports.RecommendationChallengeRepository",
-		"reportRepo",
-		"*assessmentinfra.ReportRepository",
+		"type AssessmentModule = assessmentruntime.Module",
+		"assessmentruntime.Build(",
+		"assessmentruntime.Deps{",
+		"ChallengeRepo: challenge.Catalog",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -872,8 +844,16 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(source, "repo := assessmentinfra.NewRepository(root.DB())") {
-		t.Fatalf("assessment composition should build shared repository once in buildAssessmentModuleDeps")
+	blocked := []string{
+		"type assessmentModuleDeps struct",
+		"assessmentinfra.NewRepository(",
+		"assessmentinfra.NewReportRepository(",
+		"assessmentinfra.NewTeacherAWDReviewRepository(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("assessment composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 
@@ -887,10 +867,8 @@ func TestAssessmentModuleUsesTypedCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type assessmentModuleExternalDeps struct",
-		"challengeRepo",
-		"assessmentports.RecommendationChallengeRepository",
-		"buildAssessmentModuleExternalDeps(",
+		"assessmentruntime.Deps{",
+		"ChallengeRepo: challenge.Catalog",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -909,12 +887,9 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"buildAssessmentModuleDeps(",
-		"buildAssessmentModuleExternalDeps(",
-		"buildAssessmentProfileHandler(",
-		"buildAssessmentRecommendationHandler(",
-		"buildAssessmentReportHandler(",
-		"buildAssessmentTeacherAWDReviewHandler(",
+		"assessmentruntime.Build(",
+		"root.RegisterBackgroundJob(",
+		"NewBackgroundJob(job.Name, job.Start, job.Stop)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -952,20 +927,20 @@ func TestPracticeModuleAvoidsRuntimeBridgeGlue(t *testing.T) {
 func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read runtime_module.go: %v", err)
+		t.Fatalf("read runtime runtime module: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
-		"*runtimeinfra.Repository",
+		"practiceports.PracticeInstanceLookupRepository",
 		"practiceports.RuntimeInstanceService",
 		"contestports.AWDContainerFileWriter",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("runtime composition should use external ports marker %s", marker)
+			t.Fatalf("runtime runtime module should use external ports marker %s", marker)
 		}
 	}
 
@@ -976,7 +951,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("runtime composition should not keep bridge marker %s", marker)
+			t.Fatalf("runtime runtime module should not keep bridge marker %s", marker)
 		}
 	}
 }
@@ -1049,9 +1024,9 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type practiceReadmodelModuleDeps struct",
-		"repo",
-		"*practicereadmodelinfra.Repository",
+		"type PracticeReadmodelModule = practicereadmodelruntime.Module",
+		"practicereadmodelruntime.Build(",
+		"practicereadmodelruntime.Deps{",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1059,8 +1034,14 @@ func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(source, "practicereadmodelinfra.NewRepository(root.DB())") {
-		t.Fatalf("practice readmodel composition should build repository in buildPracticeReadmodelModuleDeps")
+	blocked := []string{
+		"type practiceReadmodelModuleDeps struct",
+		"practicereadmodelinfra.NewRepository(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice readmodel composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 
@@ -1074,9 +1055,9 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"type teachingReadmodelModuleDeps struct",
-		"repo",
-		"*readmodelinfra.Repository",
+		"type TeachingReadmodelModule = readmodelruntime.Module",
+		"readmodelruntime.Build(",
+		"readmodelruntime.Deps{",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1084,8 +1065,14 @@ func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(source, "readmodelinfra.NewRepository(root.DB())") {
-		t.Fatalf("teaching readmodel composition should build repository in buildTeachingReadmodelModuleDeps")
+	blocked := []string{
+		"type teachingReadmodelModuleDeps struct",
+		"readmodelinfra.NewRepository(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("teaching readmodel composition should not keep wiring marker %s", marker)
+		}
 	}
 }
 

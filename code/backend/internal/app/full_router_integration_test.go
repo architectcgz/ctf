@@ -27,6 +27,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authruntime "ctf-platform/internal/module/auth/runtime"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -482,7 +483,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "identity")
 		return originalBuildIdentityModule(root)
 	}
-	buildAuthModule = func(root *composition.Root, ops *composition.OpsModule, identity *composition.IdentityModule) (*composition.AuthModule, error) {
+	buildAuthModule = func(root *composition.Root, ops *composition.OpsModule, identity *composition.IdentityModule) (*authruntime.Module, error) {
 		if root == nil || ops == nil || identity == nil {
 			t.Fatal("expected root, ops and identity for auth module builder")
 		}
