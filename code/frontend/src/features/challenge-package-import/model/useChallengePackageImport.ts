@@ -17,6 +17,13 @@ interface UseChallengePackageImportOptions {
 
 export type { ChallengePackageUploadResult }
 
+function humanizeCommitError(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+  return fallback
+}
+
 export function useChallengePackageImport(options: UseChallengePackageImportOptions = {}) {
   const toast = useToast()
   const preview = shallowRef<AdminChallengeImportPreview | null>(null)
@@ -70,8 +77,8 @@ export function useChallengePackageImport(options: UseChallengePackageImportOpti
       await refreshQueue()
       await options.onCommitted?.(result)
       return result
-    } catch {
-      toast.error('题目导入失败')
+    } catch (error) {
+      toast.error(humanizeCommitError(error, '题目导入失败'))
       return null
     } finally {
       committing.value = false

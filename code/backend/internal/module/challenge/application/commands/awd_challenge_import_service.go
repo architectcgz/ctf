@@ -160,8 +160,11 @@ func (s *AWDChallengeImportService) CommitImport(
 	}
 
 	var challenge *model.AWDChallenge
-	artifactCleanupDirs := make([]string, 0, 1)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := rejectImportedAWDChallengeSlugConflict(tx, parsed.Slug); err != nil {
+			return err
+		}
+
 		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, tx, actorUserID, parsed)
 		if err != nil {
 			return err
@@ -177,12 +180,10 @@ func (s *AWDChallengeImportService) CommitImport(
 
 		now := time.Now()
 		var current model.AWDChallenge
-		findErr := findAWDChallengeForImportedPackageUpsert(tx, parsed.Slug, &current)
 		checkerConfigWithArtifact, err := persistAWDCheckerArtifact(parsed)
 		if err != nil {
 			return err
 		}
-		nextArtifactDir := awdCheckerArtifactDirFromConfig(checkerConfigWithArtifact)
 		flagConfigRaw, err := marshalAWDChallengeConfig(parsed.FlagConfig)
 		if err != nil {
 			return err
@@ -196,81 +197,39 @@ func (s *AWDChallengeImportService) CommitImport(
 			return err
 		}
 
-		switch {
-		case errors.Is(findErr, gorm.ErrRecordNotFound):
-			current = model.AWDChallenge{
-				Name:             parsed.Title,
-				Slug:             parsed.Slug,
-				Category:         parsed.Category,
-				Difficulty:       parsed.Difficulty,
-				Description:      parsed.Description,
-				ServiceType:      model.AWDServiceType(parsed.ServiceType),
-				DeploymentMode:   model.AWDDeploymentMode(parsed.DeploymentMode),
-				Version:          parsed.Version,
-				Status:           model.AWDChallengeStatusPublished,
-				CheckerType:      model.AWDCheckerType(parsed.CheckerType),
-				CheckerConfig:    checkerConfigWithArtifact,
-				FlagMode:         parsed.FlagMode,
-				FlagConfig:       flagConfigRaw,
-				DefenseEntryMode: parsed.DefenseEntryMode,
-				AccessConfig:     accessConfigRaw,
-				RuntimeConfig:    runtimeConfigRaw,
-				ReadinessStatus:  model.AWDReadinessStatusPending,
-				ReadinessReport:  "",
-				LastVerifiedAt:   nil,
-				LastVerifiedBy:   nil,
-				CreatedBy:        &actorUserID,
-				CreatedAt:        now,
-				UpdatedAt:        now,
-			}
-			if err := tx.Create(&current).Error; err != nil {
-				return fmt.Errorf("create imported awd challenge %s: %w", parsed.Slug, err)
-			}
-		case findErr != nil:
-			return fmt.Errorf("find imported awd challenge %s: %w", parsed.Slug, findErr)
-		default:
-			if oldArtifactDir := awdCheckerArtifactDirFromConfig(current.CheckerConfig); oldArtifactDir != "" && oldArtifactDir != nextArtifactDir {
-				artifactCleanupDirs = append(artifactCleanupDirs, oldArtifactDir)
-			}
-			updates := map[string]any{
-				"name":               parsed.Title,
-				"slug":               parsed.Slug,
-				"category":           parsed.Category,
-				"difficulty":         parsed.Difficulty,
-				"description":        parsed.Description,
-				"service_type":       model.AWDServiceType(parsed.ServiceType),
-				"deployment_mode":    model.AWDDeploymentMode(parsed.DeploymentMode),
-				"version":            parsed.Version,
-				"status":             model.AWDChallengeStatusPublished,
-				"checker_type":       model.AWDCheckerType(parsed.CheckerType),
-				"checker_config":     checkerConfigWithArtifact,
-				"flag_mode":          parsed.FlagMode,
-				"flag_config":        flagConfigRaw,
-				"defense_entry_mode": parsed.DefenseEntryMode,
-				"access_config":      accessConfigRaw,
-				"runtime_config":     runtimeConfigRaw,
-				"readiness_status":   model.AWDReadinessStatusPending,
-				"readiness_report":   "",
-				"last_verified_at":   nil,
-				"last_verified_by":   nil,
-				"deleted_at":         nil,
-				"updated_at":         now,
-			}
-			if err := tx.Unscoped().Model(&current).Updates(updates).Error; err != nil {
-				return fmt.Errorf("update imported awd challenge %s: %w", parsed.Slug, err)
-			}
-			if err := tx.Where("id = ?", current.ID).First(&current).Error; err != nil {
-				return fmt.Errorf("reload imported awd challenge %s: %w", parsed.Slug, err)
-			}
+		current = model.AWDChallenge{
+			Name:             parsed.Title,
+			Slug:             parsed.Slug,
+			Category:         parsed.Category,
+			Difficulty:       parsed.Difficulty,
+			Description:      parsed.Description,
+			ServiceType:      model.AWDServiceType(parsed.ServiceType),
+			DeploymentMode:   model.AWDDeploymentMode(parsed.DeploymentMode),
+			Version:          parsed.Version,
+			Status:           model.AWDChallengeStatusPublished,
+			CheckerType:      model.AWDCheckerType(parsed.CheckerType),
+			CheckerConfig:    checkerConfigWithArtifact,
+			FlagMode:         parsed.FlagMode,
+			FlagConfig:       flagConfigRaw,
+			DefenseEntryMode: parsed.DefenseEntryMode,
+			AccessConfig:     accessConfigRaw,
+			RuntimeConfig:    runtimeConfigRaw,
+			ReadinessStatus:  model.AWDReadinessStatusPending,
+			ReadinessReport:  "",
+			LastVerifiedAt:   nil,
+			LastVerifiedBy:   nil,
+			CreatedBy:        &actorUserID,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		}
+		if err := tx.Create(&current).Error; err != nil {
+			return fmt.Errorf("create imported awd challenge %s: %w", parsed.Slug, err)
 		}
 
 		challenge = &current
 		return nil
 	}); err != nil {
 		return nil, err
-	}
-	for _, cleanupDir := range artifactCleanupDirs {
-		_ = removeAWDCheckerArtifactDir(cleanupDir)
 	}
 
 	_ = os.RemoveAll(filepath.Join(awdChallengeImportPreviewRoot(), id))
@@ -358,15 +317,26 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	return result.ImageID, result.TargetRef, nil
 }
 
-func findAWDChallengeForImportedPackageUpsert(
-	tx *gorm.DB,
-	slug string,
-	challenge *model.AWDChallenge,
-) error {
-	if challenge == nil {
-		return fmt.Errorf("awd challenge target is nil")
+func rejectImportedAWDChallengeSlugConflict(tx *gorm.DB, slug string) error {
+	normalizedSlug := strings.TrimSpace(slug)
+	if normalizedSlug == "" {
+		return nil
 	}
-	return tx.Unscoped().Where("slug = ?", strings.TrimSpace(slug)).First(challenge).Error
+
+	var existing model.AWDChallenge
+	err := tx.Unscoped().
+		Select("id", "slug", "name").
+		Where("slug = ?", normalizedSlug).
+		First(&existing).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return nil
+	case err != nil:
+		return fmt.Errorf("check imported awd challenge slug %s: %w", normalizedSlug, err)
+	default:
+		message := fmt.Sprintf("AWD 题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", normalizedSlug)
+		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+	}
 }
 
 func marshalAWDChallengeConfig(value map[string]any) (string, error) {

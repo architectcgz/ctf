@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"gorm.io/gorm"
+	"ctf-platform/pkg/errcode"
 )
 
 func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repository) *AWDChallengeImportService {
@@ -182,6 +184,59 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if job.Status != model.ImageBuildJobStatusPending ||
 		job.TargetRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
 		t.Fatalf("unexpected build job: %+v", job)
+	}
+}
+
+func TestAWDChallengeImportRejectsDuplicateSlug(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	firstPreview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-bank-portal-01.zip",
+		bytes.NewReader(buildAWDChallengeImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport(first) error = %v", err)
+	}
+	firstCommitted, err := service.CommitImport(context.Background(), 2001, firstPreview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport(first) error = %v", err)
+	}
+
+	secondPreview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-bank-portal-01-v2.zip",
+		bytes.NewReader(buildAWDChallengeImportArchiveWithMeta(t, "awd-bank-portal-01", "Bank Portal AWD v2", "registry.example.edu/ctf/awd-bank-portal:v2")),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport(second) error = %v", err)
+	}
+	_, err = service.CommitImport(context.Background(), 2001, secondPreview.ID)
+	if err == nil {
+		t.Fatal("expected duplicate awd slug commit to fail")
+	}
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+		t.Fatalf("expected conflict app error, got %v", err)
+	}
+	if !strings.Contains(appErr.Message, "AWD 题目 slug awd-bank-portal-01 已被已有题目占用") {
+		t.Fatalf("unexpected conflict message: %q", appErr.Message)
+	}
+
+	stored, err := repo.FindAWDChallengeByID(context.Background(), firstCommitted.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if stored.Name != "Bank Portal AWD" {
+		t.Fatalf("expected original awd challenge name to stay unchanged, got %q", stored.Name)
 	}
 }
 
@@ -357,7 +412,6 @@ func TestAWDChallengeImportCleansReplacedScriptCheckerArtifact(t *testing.T) {
 		t.Fatalf("expected second artifact dir: %v", err)
 	}
 }
-
 func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
@@ -424,14 +478,25 @@ func readAWDCheckerArtifactDigestForTest(t *testing.T, checkerConfigRaw string) 
 func buildAWDChallengeImportArchive(t *testing.T) []byte {
 	t.Helper()
 
+	return buildAWDChallengeImportArchiveWithMeta(
+		t,
+		"awd-bank-portal-01",
+		"Bank Portal AWD",
+		"registry.example.edu/ctf/awd-bank-portal:v1",
+	)
+}
+
+func buildAWDChallengeImportArchiveWithMeta(t *testing.T, slug, title, imageRef string) []byte {
+	t.Helper()
+
 	files := map[string]string{
-		"awd-bank-portal-01/challenge.yml": `api_version: v1
+		slug + "/challenge.yml": `api_version: v1
 kind: challenge
 
 meta:
   mode: awd
-  slug: awd-bank-portal-01
-  title: Bank Portal AWD
+  slug: ` + slug + `
+  title: ` + title + `
   category: web
   difficulty: hard
   points: 500
@@ -446,7 +511,7 @@ flag:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/awd-bank-portal:v1
+    ref: ` + imageRef + `
 
 extensions:
   awd:
@@ -498,11 +563,11 @@ extensions:
         service_contracts:
           - /health 必须返回 200
 `,
-		"awd-bank-portal-01/statement.md":            "银行门户存在越权修改 flag 的逻辑。",
-		"awd-bank-portal-01/docker/app.py":           "print('entry')\n",
-		"awd-bank-portal-01/docker/ctf_runtime.py":   "print('runtime')\n",
-		"awd-bank-portal-01/docker/challenge_app.py": "print('challenge')\n",
-		"awd-bank-portal-01/docker/check/check.py":   "print('check')\n",
+		slug + "/statement.md": "银行门户存在越权修改 flag 的逻辑。",
+		slug + "/docker/app.py":           "print('entry')\n",
+		slug + "/docker/ctf_runtime.py":   "print('runtime')\n",
+		slug + "/docker/challenge_app.py": "print('challenge')\n",
+		slug + "/docker/check/check.py":   "print('check')\n",
 	}
 
 	var buffer bytes.Buffer

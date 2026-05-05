@@ -163,13 +163,17 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 	created := false
 	publishedNow := false
 	if err := db.Transaction(func(tx *gorm.DB) error {
+		if err := rejectImportChallengeSlugConflict(tx, spec.Slug); err != nil {
+			return err
+		}
+
 		resolvedImageID, err := resolveImportedImageID(tx, spec.Slug, spec.ImageRef)
 		if err != nil {
 			return err
 		}
 
 		var challenge model.Challenge
-		err = findChallengeForPackageUpsert(tx, spec.Slug, spec.Title, spec.Category, &challenge)
+		err = findLegacyChallengeForPackageCreate(tx, spec.Title, spec.Category, &challenge)
 
 		now := time.Now()
 		switch {
@@ -261,9 +265,8 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 	return created, publishedNow, nil
 }
 
-func findChallengeForPackageUpsert(
+func findLegacyChallengeForPackageCreate(
 	tx *gorm.DB,
-	packageSlug string,
 	title string,
 	category string,
 	challenge *model.Challenge,
@@ -272,22 +275,30 @@ func findChallengeForPackageUpsert(
 		return fmt.Errorf("challenge target is nil")
 	}
 
-	slug := strings.TrimSpace(packageSlug)
-	if slug != "" {
-		err := tx.Unscoped().
-			Where("package_slug = ?", slug).
-			First(challenge).Error
-		switch {
-		case err == nil:
-			return nil
-		case !errors.Is(err, gorm.ErrRecordNotFound):
-			return err
-		}
-	}
-
 	return tx.Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(challenge).Error
+}
+
+func rejectImportChallengeSlugConflict(tx *gorm.DB, slug string) error {
+	normalizedSlug := strings.TrimSpace(slug)
+	if normalizedSlug == "" {
+		return nil
+	}
+
+	var existing model.Challenge
+	err := tx.Unscoped().
+		Select("id", "title", "package_slug").
+		Where("package_slug = ?", normalizedSlug).
+		First(&existing).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return nil
+	case err != nil:
+		return fmt.Errorf("check challenge slug %s: %w", normalizedSlug, err)
+	default:
+		return fmt.Errorf("challenge slug %s already exists; use challenge edit flow instead of import", normalizedSlug)
+	}
 }
 
 func buildChallengeSpec(parsed *challengedomain.ParsedChallengePackage) (*challengeSpec, error) {

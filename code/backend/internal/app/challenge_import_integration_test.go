@@ -50,6 +50,11 @@ type envelope[T any] struct {
 	Data T   `json:"data"`
 }
 
+type errorEnvelope struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type appChallengeImportDockerBuilder struct{}
 
 func (appChallengeImportDockerBuilder) Build(ctx context.Context, contextPath, dockerfilePath, localRef string) error {
@@ -156,7 +161,7 @@ func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 	}
 }
 
-func TestChallengeImportCommitUpsertsByPackageSlug(t *testing.T) {
+func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
@@ -196,22 +201,38 @@ func TestChallengeImportCommitUpsertsByPackageSlug(t *testing.T) {
 		t.Fatalf("expected package_slug to be persisted, got %q", packageSlug)
 	}
 
-	secondCommit := previewAndCommitChallengeImport(
+	body, contentType := buildChallengeImportMultipartFromArchive(
 		t,
-		router,
 		buildChallengeImportArchiveForSlug(t, "web-sqli-101", "SQL Injection 102", 200),
 	)
-	if secondCommit.Challenge == nil {
-		t.Fatal("expected second imported challenge response")
+	previewRequest := httptest.NewRequest(nethttp.MethodPost, "/imports", body)
+	previewRequest.Header.Set("Content-Type", contentType)
+	previewRequest.Header.Set("X-Test-User-ID", "1001")
+	previewRecorder := httptest.NewRecorder()
+	router.ServeHTTP(previewRecorder, previewRequest)
+	if previewRecorder.Code != nethttp.StatusCreated {
+		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
-	if secondCommit.Challenge.ID != legacyChallenge.ID {
-		t.Fatalf("expected slug upsert to update same challenge, got id=%d", secondCommit.Challenge.ID)
+
+	var previewEnvelope envelope[dto.ChallengeImportPreviewResp]
+	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &previewEnvelope); err != nil {
+		t.Fatalf("decode preview response: %v", err)
 	}
-	if secondCommit.Challenge.Title != "SQL Injection 102" {
-		t.Fatalf("expected updated title, got %q", secondCommit.Challenge.Title)
+
+	commitRecorder := httptest.NewRecorder()
+	commitRequest := httptest.NewRequest(nethttp.MethodPost, "/imports/"+previewEnvelope.Data.ID+"/commit", nil)
+	commitRequest.Header.Set("X-Test-User-ID", "1001")
+	router.ServeHTTP(commitRecorder, commitRequest)
+	if commitRecorder.Code != nethttp.StatusConflict {
+		t.Fatalf("expected conflict commit status, got %d body=%s", commitRecorder.Code, commitRecorder.Body.String())
 	}
-	if secondCommit.Challenge.Points != 200 {
-		t.Fatalf("expected updated points, got %d", secondCommit.Challenge.Points)
+
+	var conflict errorEnvelope
+	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &conflict); err != nil {
+		t.Fatalf("decode conflict response: %v", err)
+	}
+	if !strings.Contains(conflict.Message, "slug web-sqli-101 已被已有题目占用") {
+		t.Fatalf("unexpected conflict message: %q", conflict.Message)
 	}
 
 	var count int64
@@ -219,7 +240,15 @@ func TestChallengeImportCommitUpsertsByPackageSlug(t *testing.T) {
 		t.Fatalf("count challenges: %v", err)
 	}
 	if count != 1 {
-		t.Fatalf("expected 1 challenge after slug upsert, got %d", count)
+		t.Fatalf("expected 1 challenge after slug conflict, got %d", count)
+	}
+
+	var unchanged model.Challenge
+	if err := db.First(&unchanged, legacyChallenge.ID).Error; err != nil {
+		t.Fatalf("reload legacy challenge: %v", err)
+	}
+	if unchanged.Title != "SQL Injection 101" || unchanged.Points != 100 {
+		t.Fatalf("expected legacy challenge to stay unchanged, got %+v", unchanged)
 	}
 }
 

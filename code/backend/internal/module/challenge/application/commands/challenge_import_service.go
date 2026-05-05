@@ -156,6 +156,10 @@ func (s *ChallengeService) CommitChallengeImport(
 	var challenge *model.Challenge
 	cleanupPaths := make([]string, 0, 2)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := rejectImportedChallengeSlugConflict(tx, parsed.Slug); err != nil {
+			return err
+		}
+
 		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, tx, actorUserID, parsed)
 		if err != nil {
 			return err
@@ -163,7 +167,7 @@ func (s *ChallengeService) CommitChallengeImport(
 
 		now := time.Now()
 		var current model.Challenge
-		findErr := findChallengeForImportedPackageUpsert(tx, parsed.Slug, parsed.Title, parsed.Category, &current)
+		findErr := findLegacyChallengeForImportedPackageCreate(tx, parsed.Title, parsed.Category, &current)
 
 		switch {
 		case errors.Is(findErr, gorm.ErrRecordNotFound):
@@ -537,9 +541,8 @@ func resolveExtractedChallengeImportRoot(extractDir string) (string, error) {
 	return rootDir, nil
 }
 
-func findChallengeForImportedPackageUpsert(
+func findLegacyChallengeForImportedPackageCreate(
 	tx *gorm.DB,
-	packageSlug string,
 	title string,
 	category string,
 	challenge *model.Challenge,
@@ -548,22 +551,31 @@ func findChallengeForImportedPackageUpsert(
 		return fmt.Errorf("challenge target is nil")
 	}
 
-	slug := strings.TrimSpace(packageSlug)
-	if slug != "" {
-		err := tx.Unscoped().
-			Where("package_slug = ?", slug).
-			First(challenge).Error
-		switch {
-		case err == nil:
-			return nil
-		case !errors.Is(err, gorm.ErrRecordNotFound):
-			return err
-		}
-	}
-
 	return tx.Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(challenge).Error
+}
+
+func rejectImportedChallengeSlugConflict(tx *gorm.DB, packageSlug string) error {
+	slug := strings.TrimSpace(packageSlug)
+	if slug == "" {
+		return nil
+	}
+
+	var existing model.Challenge
+	err := tx.Unscoped().
+		Select("id", "title", "package_slug").
+		Where("package_slug = ?", slug).
+		First(&existing).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return nil
+	case err != nil:
+		return fmt.Errorf("check imported challenge slug %s: %w", slug, err)
+	default:
+		message := fmt.Sprintf("题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", slug)
+		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+	}
 }
 
 func saveChallengeImportPreviewRecord(previewDir string, record *storedChallengeImportPreview) error {

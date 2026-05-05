@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -145,13 +146,23 @@ runtime:
 	}
 }
 
-func TestImportOnePackUpdatesChangedFlagType(t *testing.T) {
+func TestImportOnePackAdoptsLegacyChallengeAndUpdatesFlagType(t *testing.T) {
 	db := setupImportTestDB(t)
 
 	packDir := t.TempDir()
-	writeChallengePackFixture(t, packDir, "mode-switch", "Mode Switch", 100)
-	if _, _, err := importOnePack(db, packDir, false, false); err != nil {
-		t.Fatalf("first importOnePack() error = %v", err)
+	legacyChallenge := model.Challenge{
+		Title:       "Mode Switch",
+		Description: "legacy",
+		Category:    "web",
+		Difficulty:  "easy",
+		Points:      100,
+		Status:      model.ChallengeStatusDraft,
+		FlagType:    model.FlagTypeStatic,
+		FlagHash:    "legacy-hash",
+		FlagSalt:    "legacy-salt",
+	}
+	if err := db.Create(&legacyChallenge).Error; err != nil {
+		t.Fatalf("seed legacy challenge: %v", err)
 	}
 
 	mustWriteFile(t, filepath.Join(packDir, "challenge.yml"), []byte(`
@@ -174,17 +185,18 @@ runtime:
   image:
     ref: ctf/web-sqli-101:latest
 `))
+	mustWriteFile(t, filepath.Join(packDir, "statement.md"), []byte("# Mode Switch\n\nLegacy challenge should be adopted."))
 
 	created, _, err := importOnePack(db, packDir, false, false)
 	if err != nil {
-		t.Fatalf("second importOnePack() error = %v", err)
+		t.Fatalf("importOnePack() error = %v", err)
 	}
 	if created {
-		t.Fatalf("expected second import to update existing challenge")
+		t.Fatalf("expected import to adopt legacy challenge instead of creating new one")
 	}
 
 	var challenge model.Challenge
-	if err := db.Where("package_slug = ?", "mode-switch").First(&challenge).Error; err != nil {
+	if err := db.First(&challenge, legacyChallenge.ID).Error; err != nil {
 		t.Fatalf("find imported challenge: %v", err)
 	}
 	if challenge.FlagType != model.FlagTypeDynamic {
@@ -193,9 +205,12 @@ runtime:
 	if challenge.FlagHash != "" || challenge.FlagSalt != "" {
 		t.Fatalf("expected changed dynamic flag to clear static fields, got hash=%q salt=%q", challenge.FlagHash, challenge.FlagSalt)
 	}
+	if challenge.PackageSlug == nil || *challenge.PackageSlug != "mode-switch" {
+		t.Fatalf("expected adopted challenge package_slug to be mode-switch, got %+v", challenge.PackageSlug)
+	}
 }
 
-func TestImportOnePackUpsertsByPackageSlug(t *testing.T) {
+func TestImportOnePackRejectsDuplicatePackageSlug(t *testing.T) {
 	db := setupImportTestDB(t)
 
 	packDir := t.TempDir()
@@ -214,14 +229,14 @@ func TestImportOnePackUpsertsByPackageSlug(t *testing.T) {
 
 	writeChallengePackFixture(t, packDir, "web-sqli-101", "SQL Injection 102", 200)
 	created, published, err = importOnePack(db, packDir, false, false)
-	if err != nil {
-		t.Fatalf("second importOnePack() error = %v", err)
+	if err == nil {
+		t.Fatal("expected duplicate slug import to fail")
 	}
-	if created {
-		t.Fatalf("expected second import to update existing challenge")
+	if created || published {
+		t.Fatalf("expected duplicate slug import to stop before create/publish, got created=%v published=%v", created, published)
 	}
-	if published {
-		t.Fatalf("expected draft challenge on second import")
+	if !strings.Contains(err.Error(), "challenge slug web-sqli-101 already exists") {
+		t.Fatalf("unexpected duplicate slug error: %v", err)
 	}
 
 	var count int64
@@ -229,18 +244,18 @@ func TestImportOnePackUpsertsByPackageSlug(t *testing.T) {
 		t.Fatalf("count challenges: %v", err)
 	}
 	if count != 1 {
-		t.Fatalf("expected 1 challenge after slug upsert, got %d", count)
+		t.Fatalf("expected 1 challenge after slug conflict, got %d", count)
 	}
 
 	var challenge model.Challenge
 	if err := db.First(&challenge).Error; err != nil {
 		t.Fatalf("find challenge: %v", err)
 	}
-	if challenge.Title != "SQL Injection 102" {
-		t.Fatalf("expected updated title, got %q", challenge.Title)
+	if challenge.Title != "SQL Injection 101" {
+		t.Fatalf("expected original title after conflict, got %q", challenge.Title)
 	}
-	if challenge.Points != 200 {
-		t.Fatalf("expected updated points, got %d", challenge.Points)
+	if challenge.Points != 100 {
+		t.Fatalf("expected original points after conflict, got %d", challenge.Points)
 	}
 
 	var packageSlug string

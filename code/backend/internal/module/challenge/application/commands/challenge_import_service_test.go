@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/pkg/errcode"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -212,7 +214,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	}
 }
 
-func TestCommitChallengeImportRestoresSoftDeletedChallenge(t *testing.T) {
+func TestCommitChallengeImportRejectsSoftDeletedDuplicateSlug(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
@@ -286,22 +288,25 @@ flag:
 		},
 	})
 
-	if _, err := service.CommitChallengeImport(context.Background(), 4, "restore-soft-deleted"); err != nil {
-		t.Fatalf("CommitChallengeImport() error = %v", err)
+	_, err := service.CommitChallengeImport(context.Background(), 4, "restore-soft-deleted")
+	if err == nil {
+		t.Fatal("expected soft-deleted duplicate slug import to fail")
 	}
 
-	var restored model.Challenge
-	if err := db.Unscoped().First(&restored, legacyChallenge.ID).Error; err != nil {
-		t.Fatalf("load restored challenge: %v", err)
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+		t.Fatalf("expected conflict app error, got %v", err)
 	}
-	if restored.DeletedAt.Valid {
-		t.Fatalf("expected soft-deleted challenge to be restored, got deleted_at=%v", restored.DeletedAt.Time)
+	if !strings.Contains(appErr.Message, "题目 slug web-source-audit-double-wrap-01 已被已有题目占用") {
+		t.Fatalf("unexpected conflict message: %q", appErr.Message)
 	}
-	if restored.Status != model.ChallengeStatusDraft {
-		t.Fatalf("expected restored challenge status to become draft, got %s", restored.Status)
+
+	var unchanged model.Challenge
+	if err := db.Unscoped().First(&unchanged, legacyChallenge.ID).Error; err != nil {
+		t.Fatalf("load unchanged challenge: %v", err)
 	}
-	if restored.Title != "Web-01 源码审计：双层伪装" {
-		t.Fatalf("expected restored challenge title to update, got %q", restored.Title)
+	if !unchanged.DeletedAt.Valid {
+		t.Fatalf("expected soft-deleted challenge to stay deleted, got deleted_at=%v", unchanged.DeletedAt.Time)
 	}
 }
 
@@ -395,7 +400,7 @@ runtime:
 	}
 }
 
-func TestCommitChallengeImportClearsLegacyPublishCheckJobs(t *testing.T) {
+func TestCommitChallengeImportRejectsDuplicateSlugWithoutClearingPublishCheckJobs(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
@@ -480,16 +485,22 @@ flag:
 		},
 	})
 
-	if _, err := service.CommitChallengeImport(context.Background(), 4, "clear-legacy-publish-check-jobs"); err != nil {
-		t.Fatalf("CommitChallengeImport() error = %v", err)
+	_, err := service.CommitChallengeImport(context.Background(), 4, "clear-legacy-publish-check-jobs")
+	if err == nil {
+		t.Fatal("expected duplicate slug import to fail")
+	}
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+		t.Fatalf("expected conflict app error, got %v", err)
 	}
 
 	var count int64
 	if err := db.Model(&model.ChallengePublishCheckJob{}).Where("challenge_id = ?", challenge.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count publish check jobs: %v", err)
 	}
-	if count != 0 {
-		t.Fatalf("expected legacy publish check jobs to be cleared, got %d", count)
+	if count != 1 {
+		t.Fatalf("expected legacy publish check jobs to stay untouched after conflict, got %d", count)
 	}
 }
 
