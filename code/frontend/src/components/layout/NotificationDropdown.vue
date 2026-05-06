@@ -199,7 +199,7 @@ const {
 }
 
 :deep(.notification-shell .modal-template-drawer__header) {
-  padding: var(--space-5) var(--space-7) var(--space-3);
+  padding: var(--space-5) var(--space-7) var(--space-0);
   border-bottom: 1px solid var(--notification-line);
   background: var(--notification-surface);
 }
@@ -222,7 +222,7 @@ const {
   margin-top: var(--space-3);
 }
 
-:deep(.notification-shell .modal-template-drawer__body) {
+:global(.notification-shell .modal-template-panel--drawer .modal-template-drawer__body) {
   padding: 0;
   background: var(--notification-surface);
 }
@@ -390,6 +390,10 @@ const {
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease;
+}
+
+.notification-item:first-child {
+  padding-top: var(--space-1);
 }
 
 .notification-item:hover,
