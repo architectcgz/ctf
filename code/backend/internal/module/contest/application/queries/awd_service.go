@@ -8,6 +8,7 @@ type awdQueryRepository interface {
 	contestports.AWDServiceDefinitionQuery
 	contestports.AWDReadinessQuery
 	contestports.AWDServiceInstanceQuery
+	contestports.AWDDefenseWorkspaceSummaryQuery
 	contestports.AWDServiceOperationQuery
 	contestports.AWDTeamServiceStore
 	contestports.AWDAttackLogStore

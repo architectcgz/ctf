@@ -3,6 +3,7 @@ package queries
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -397,8 +398,8 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8012, now)
 	if err := db.Model(&model.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", 801, 8011).
-		Update("runtime_config", `{"challenge_runtime":{"defense_scope":{"editable_paths":["docker/challenge_app.py"],"protected_paths":["docker/app.py","docker/ctf_runtime.py"],"service_contracts":["/health 必须返回 200","/api/flag 必须保留 checker token 校验"]}}}`).Error; err != nil {
-		t.Fatalf("seed awd defense scope: %v", err)
+		Update("runtime_config", `{"challenge_runtime":{"defense_workspace":{"entry_mode":"ssh"}}}`).Error; err != nil {
+		t.Fatalf("seed awd defense workspace config: %v", err)
 	}
 
 	contesttestsupport.CreateAWDTeamFixture(t, db, 8101, 801, "Red", now)
@@ -411,6 +412,18 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	seedAWDWorkspaceInstance(t, db, 1, 9001, 801, 8101, 8011, "http://red-1.internal", now)
 	seedAWDWorkspaceInstance(t, db, 2, 9002, 801, 8102, 8011, "http://blue-1.internal", now)
 	seedAWDWorkspaceInstance(t, db, 3, 9003, 801, 8103, 8012, "http://green-2.internal", now)
+	seedAWDDefenseWorkspace(t, db, &model.AWDDefenseWorkspace{
+		ContestID:         801,
+		TeamID:            8101,
+		ServiceID:         contesttestsupport.DefaultAWDContestServiceID(801, 8011),
+		InstanceID:        1,
+		WorkspaceRevision: 7,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-red-bank",
+		SeedSignature:     "seed:bank:v1",
+		CreatedAt:         now,
+		UpdatedAt:         now.Add(time.Minute),
+	})
 
 	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
 		RoundID:        80101,
@@ -498,8 +511,13 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if resp.Services[0].AWDChallengeID != 8011 || resp.Services[0].InstanceID != 1 || resp.Services[0].AccessURL != "" {
 		t.Fatalf("expected first own service to expose instance id without raw access url, got %+v", resp.Services[0])
 	}
-	if resp.Services[0].DefenseScope == nil || len(resp.Services[0].DefenseScope.EditablePaths) != 1 || resp.Services[0].DefenseScope.EditablePaths[0] != "docker/challenge_app.py" {
-		t.Fatalf("expected first own service to expose defense scope, got %+v", resp.Services[0].DefenseScope)
+	if resp.Services[0].DefenseConnection == nil {
+		t.Fatalf("expected first own service to expose defense connection, got %+v", resp.Services[0])
+	}
+	if resp.Services[0].DefenseConnection.EntryMode != "ssh" ||
+		resp.Services[0].DefenseConnection.WorkspaceStatus != model.AWDDefenseWorkspaceStatusRunning ||
+		resp.Services[0].DefenseConnection.WorkspaceRevision != 7 {
+		t.Fatalf("unexpected defense connection summary: %+v", resp.Services[0].DefenseConnection)
 	}
 	if len(resp.Targets) != 2 {
 		t.Fatalf("expected 2 target teams, got %+v", resp.Targets)
@@ -541,10 +559,20 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if firstService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
 		t.Fatalf("expected own service to expose service_id, got %s", string(raw))
 	}
-	defenseScope, ok := firstService["defense_scope"].(map[string]any)
-	editablePaths, pathsOK := defenseScope["editable_paths"].([]any)
-	if !ok || !pathsOK || len(editablePaths) != 1 {
-		t.Fatalf("expected own service to expose defense_scope, got %s", string(raw))
+	if strings.Contains(string(raw), "defense_scope") {
+		t.Fatalf("expected defense_scope removed from workspace payload, got %s", string(raw))
+	}
+	if _, ok := firstService["defense_scope"]; ok {
+		t.Fatalf("expected own service payload to drop defense_scope, got %s", string(raw))
+	}
+	defenseConnection, ok := firstService["defense_connection"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected own service to expose defense_connection, got %s", string(raw))
+	}
+	if defenseConnection["entry_mode"] != "ssh" ||
+		defenseConnection["workspace_status"] != model.AWDDefenseWorkspaceStatusRunning ||
+		defenseConnection["workspace_revision"] != float64(7) {
+		t.Fatalf("unexpected defense_connection payload: %s", string(raw))
 	}
 	targets, ok := payload["targets"].([]any)
 	if !ok || len(targets) != 2 {
@@ -1042,6 +1070,14 @@ func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *model.AWDAttac
 
 	if err := db.Create(record).Error; err != nil {
 		t.Fatalf("create awd workspace attack log: %v", err)
+	}
+}
+
+func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *model.AWDDefenseWorkspace) {
+	t.Helper()
+
+	if err := db.Create(workspace).Error; err != nil {
+		t.Fatalf("create awd defense workspace: %v", err)
 	}
 }
 

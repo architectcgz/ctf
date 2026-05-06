@@ -384,7 +384,7 @@ func (c *ContestRequestMapperImpl) ToAWDWorkspaceServiceResp(source queries.AWDW
 	dtoContestAWDWorkspaceServiceResp.SLAScore = source.SLAScore
 	dtoContestAWDWorkspaceServiceResp.DefenseScore = source.DefenseScore
 	dtoContestAWDWorkspaceServiceResp.AttackScore = source.AttackScore
-	dtoContestAWDWorkspaceServiceResp.DefenseScope = c.pQueriesAWDDefenseScopeResultToPDtoAWDDefenseScopeResp(source.DefenseScope)
+	dtoContestAWDWorkspaceServiceResp.DefenseConnection = c.pQueriesAWDDefenseConnectionResultToPDtoAWDDefenseConnectionResp(source.DefenseConnection)
 	dtoContestAWDWorkspaceServiceResp.UpdatedAt = CopyTimePtr(source.UpdatedAt)
 	return dtoContestAWDWorkspaceServiceResp
 }
@@ -976,31 +976,16 @@ func (c *ContestRequestMapperImpl) domainAWDCheckerPreviewContextToDtoAWDChecker
 	dtoAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
 	return dtoAWDCheckerPreviewContextResp
 }
-func (c *ContestRequestMapperImpl) pQueriesAWDDefenseScopeResultToPDtoAWDDefenseScopeResp(source *queries.AWDDefenseScopeResult) *dto.AWDDefenseScopeResp {
-	var pDtoAWDDefenseScopeResp *dto.AWDDefenseScopeResp
+func (c *ContestRequestMapperImpl) pQueriesAWDDefenseConnectionResultToPDtoAWDDefenseConnectionResp(source *queries.AWDDefenseConnectionResult) *dto.AWDDefenseConnectionResp {
+	var pDtoAWDDefenseConnectionResp *dto.AWDDefenseConnectionResp
 	if source != nil {
-		var dtoAWDDefenseScopeResp dto.AWDDefenseScopeResp
-		if (*source).EditablePaths != nil {
-			dtoAWDDefenseScopeResp.EditablePaths = make([]string, len((*source).EditablePaths))
-			for i := 0; i < len((*source).EditablePaths); i++ {
-				dtoAWDDefenseScopeResp.EditablePaths[i] = (*source).EditablePaths[i]
-			}
-		}
-		if (*source).ProtectedPaths != nil {
-			dtoAWDDefenseScopeResp.ProtectedPaths = make([]string, len((*source).ProtectedPaths))
-			for j := 0; j < len((*source).ProtectedPaths); j++ {
-				dtoAWDDefenseScopeResp.ProtectedPaths[j] = (*source).ProtectedPaths[j]
-			}
-		}
-		if (*source).ServiceContracts != nil {
-			dtoAWDDefenseScopeResp.ServiceContracts = make([]string, len((*source).ServiceContracts))
-			for k := 0; k < len((*source).ServiceContracts); k++ {
-				dtoAWDDefenseScopeResp.ServiceContracts[k] = (*source).ServiceContracts[k]
-			}
-		}
-		pDtoAWDDefenseScopeResp = &dtoAWDDefenseScopeResp
+		var dtoAWDDefenseConnectionResp dto.AWDDefenseConnectionResp
+		dtoAWDDefenseConnectionResp.EntryMode = (*source).EntryMode
+		dtoAWDDefenseConnectionResp.WorkspaceStatus = (*source).WorkspaceStatus
+		dtoAWDDefenseConnectionResp.WorkspaceRevision = (*source).WorkspaceRevision
+		pDtoAWDDefenseConnectionResp = &dtoAWDDefenseConnectionResp
 	}
-	return pDtoAWDDefenseScopeResp
+	return pDtoAWDDefenseConnectionResp
 }
 func (c *ContestRequestMapperImpl) pQueriesAWDRoundMetricsResultToPDtoAWDRoundMetrics(source *queries.AWDRoundMetricsResult) *dto.AWDRoundMetrics {
 	var pDtoAWDRoundMetrics *dto.AWDRoundMetrics

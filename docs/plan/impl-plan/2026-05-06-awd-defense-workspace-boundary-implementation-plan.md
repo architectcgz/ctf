@@ -394,7 +394,7 @@ git commit -m "feat(awd): 切换 defense ssh 到 workspace scope"
 
 **Review focus:** 学生态 workspace 返回的是否只剩“连接入口状态”和 battle 必需事实，不再夹带任何文件级修补线索。
 
-- [ ] **Step 1: 先写 query/DTO 失败测试**
+- [x] **Step 1: 先写 query/DTO 失败测试**
 
 在 `awd_service_test.go` 中改断言：
 
@@ -402,7 +402,7 @@ git commit -m "feat(awd): 切换 defense ssh 到 workspace scope"
 - 自己队伍的服务会返回 `defense_connection` 或等价 workspace 摘要
 - 未入队学生仍看不到目标目录
 
-- [ ] **Step 2: 改 ports 和 infrastructure**
+- [x] **Step 2: 改 ports 和 infrastructure**
 
 把 `AWDServiceDefinition` / repository 映射从 `DefenseScope` 改成最小 `DefenseWorkspaceSummary`，字段只保留：
 
@@ -410,11 +410,11 @@ git commit -m "feat(awd): 切换 defense ssh 到 workspace scope"
 - `workspace_status`
 - `workspace_revision` 或 `updated_at`
 
-- [ ] **Step 3: 改 query result、DTO 和 HTTP mapper**
+- [x] **Step 3: 改 query result、DTO 和 HTTP mapper**
 
 从 `awd_workspace_result.go`、`contest_awd_workspace.go` 和 mapper 中移除 `editable_paths`、`protected_paths`、`service_contracts`，改成新的连接摘要结构。
 
-- [ ] **Step 4: 跑 contest workspace 查询测试**
+- [x] **Step 4: 跑 contest workspace 查询测试**
 
 Run:
 

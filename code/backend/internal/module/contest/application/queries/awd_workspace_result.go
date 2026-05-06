@@ -17,29 +17,29 @@ type AWDWorkspaceTeamResult struct {
 }
 
 type AWDWorkspaceServiceResult struct {
-	ServiceID            int64                  `json:"service_id"`
-	AWDChallengeID       int64                  `json:"awd_challenge_id"`
-	InstanceID           int64                  `json:"instance_id,omitempty"`
-	InstanceStatus       string                 `json:"instance_status,omitempty"`
-	AccessURL            string                 `json:"access_url,omitempty"`
-	ServiceStatus        string                 `json:"service_status,omitempty"`
-	OperationStatus      string                 `json:"operation_status,omitempty"`
-	OperationType        string                 `json:"operation_type,omitempty"`
-	OperationReason      string                 `json:"operation_reason,omitempty"`
-	OperationSLABillable *bool                  `json:"operation_sla_billable,omitempty"`
-	CheckerType          string                 `json:"checker_type,omitempty"`
-	AttackReceived       int                    `json:"attack_received"`
-	SLAScore             int                    `json:"sla_score"`
-	DefenseScore         int                    `json:"defense_score"`
-	AttackScore          int                    `json:"attack_score"`
-	DefenseScope         *AWDDefenseScopeResult `json:"defense_scope,omitempty"`
-	UpdatedAt            *time.Time             `json:"updated_at,omitempty"`
+	ServiceID            int64                       `json:"service_id"`
+	AWDChallengeID       int64                       `json:"awd_challenge_id"`
+	InstanceID           int64                       `json:"instance_id,omitempty"`
+	InstanceStatus       string                      `json:"instance_status,omitempty"`
+	AccessURL            string                      `json:"access_url,omitempty"`
+	ServiceStatus        string                      `json:"service_status,omitempty"`
+	OperationStatus      string                      `json:"operation_status,omitempty"`
+	OperationType        string                      `json:"operation_type,omitempty"`
+	OperationReason      string                      `json:"operation_reason,omitempty"`
+	OperationSLABillable *bool                       `json:"operation_sla_billable,omitempty"`
+	CheckerType          string                      `json:"checker_type,omitempty"`
+	AttackReceived       int                         `json:"attack_received"`
+	SLAScore             int                         `json:"sla_score"`
+	DefenseScore         int                         `json:"defense_score"`
+	AttackScore          int                         `json:"attack_score"`
+	DefenseConnection    *AWDDefenseConnectionResult `json:"defense_connection,omitempty"`
+	UpdatedAt            *time.Time                  `json:"updated_at,omitempty"`
 }
 
-type AWDDefenseScopeResult struct {
-	EditablePaths    []string `json:"editable_paths,omitempty"`
-	ProtectedPaths   []string `json:"protected_paths,omitempty"`
-	ServiceContracts []string `json:"service_contracts,omitempty"`
+type AWDDefenseConnectionResult struct {
+	EntryMode         string `json:"entry_mode,omitempty"`
+	WorkspaceStatus   string `json:"workspace_status,omitempty"`
+	WorkspaceRevision int64  `json:"workspace_revision,omitempty"`
 }
 
 type AWDWorkspaceTargetTeamResult struct {

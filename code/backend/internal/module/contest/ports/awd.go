@@ -88,6 +88,10 @@ type AWDServiceInstanceQuery interface {
 	ListServiceInstancesByContest(ctx context.Context, contestID int64, serviceIDs []int64) ([]AWDServiceInstance, error)
 }
 
+type AWDDefenseWorkspaceSummaryQuery interface {
+	ListDefenseWorkspaceSummariesByContestTeam(ctx context.Context, contestID, teamID int64, serviceIDs []int64) ([]AWDDefenseWorkspaceSummaryRecord, error)
+}
+
 type AWDServiceOperationQuery interface {
 	ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]model.AWDServiceOperation, error)
 	HasSystemRecoveryOperationAt(ctx context.Context, contestID, teamID, serviceID int64, checkedAt time.Time) (bool, error)
@@ -126,21 +130,26 @@ type AWDFlagAssignment struct {
 }
 
 type AWDServiceDefinition struct {
-	ServiceID      int64
-	ServiceName    string
-	AWDChallengeID int64
-	FlagPrefix     string
-	CheckerType    model.AWDCheckerType
-	CheckerConfig  string
-	SLAScore       int
-	DefenseScore   int
-	DefenseScope   AWDDefenseScope
+	ServiceID        int64
+	ServiceName      string
+	AWDChallengeID   int64
+	FlagPrefix       string
+	CheckerType      model.AWDCheckerType
+	CheckerConfig    string
+	SLAScore         int
+	DefenseScore     int
+	DefenseWorkspace AWDDefenseWorkspaceSummary
 }
 
-type AWDDefenseScope struct {
-	EditablePaths    []string
-	ProtectedPaths   []string
-	ServiceContracts []string
+type AWDDefenseWorkspaceSummary struct {
+	EntryMode         string
+	WorkspaceStatus   string
+	WorkspaceRevision int64
+}
+
+type AWDDefenseWorkspaceSummaryRecord struct {
+	ServiceID int64
+	Summary   AWDDefenseWorkspaceSummary
 }
 
 type AWDReadinessChallengeRecord struct {

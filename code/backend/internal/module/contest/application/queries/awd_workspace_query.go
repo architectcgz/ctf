@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -75,7 +76,10 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	for _, definition := range definitions {
 		serviceIDs = append(serviceIDs, definition.ServiceID)
 		item := ensureAWDWorkspaceService(serviceMap, definition.ServiceID, definition.AWDChallengeID)
-		item.DefenseScope = toAWDWorkspaceDefenseScope(definition.DefenseScope)
+		mergeAWDWorkspaceDefenseConnection(item, definition.DefenseWorkspace)
+	}
+	if err := s.populateAWDWorkspaceDefenseConnections(ctx, contestID, myTeam.ID, serviceIDs, serviceMap); err != nil {
+		return nil, err
 	}
 	targetMap := make(map[int64]*AWDWorkspaceTargetTeamResult)
 	for teamID, team := range teams {
@@ -157,6 +161,23 @@ func (s *AWDService) populateAWDWorkspaceLatestOperations(
 		item.OperationReason = operation.Reason
 		slaBillable := operation.SLABillable
 		item.OperationSLABillable = &slaBillable
+	}
+	return nil
+}
+
+func (s *AWDService) populateAWDWorkspaceDefenseConnections(
+	ctx context.Context,
+	contestID, myTeamID int64,
+	serviceIDs []int64,
+	serviceMap map[int64]*AWDWorkspaceServiceResult,
+) error {
+	summaries, err := s.repo.ListDefenseWorkspaceSummariesByContestTeam(ctx, contestID, myTeamID, serviceIDs)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	for _, summary := range summaries {
+		item := ensureAWDWorkspaceService(serviceMap, summary.ServiceID, 0)
+		mergeAWDWorkspaceDefenseConnection(item, summary.Summary)
 	}
 	return nil
 }
@@ -246,14 +267,28 @@ func ensureAWDWorkspaceService(items map[int64]*AWDWorkspaceServiceResult, servi
 	return item
 }
 
-func toAWDWorkspaceDefenseScope(scope contestports.AWDDefenseScope) *AWDDefenseScopeResult {
-	if len(scope.EditablePaths) == 0 && len(scope.ProtectedPaths) == 0 && len(scope.ServiceContracts) == 0 {
-		return nil
+func mergeAWDWorkspaceDefenseConnection(item *AWDWorkspaceServiceResult, summary contestports.AWDDefenseWorkspaceSummary) {
+	if item == nil {
+		return
 	}
-	return &AWDDefenseScopeResult{
-		EditablePaths:    scope.EditablePaths,
-		ProtectedPaths:   scope.ProtectedPaths,
-		ServiceContracts: scope.ServiceContracts,
+
+	entryMode := strings.TrimSpace(summary.EntryMode)
+	workspaceStatus := strings.TrimSpace(summary.WorkspaceStatus)
+	if entryMode == "" && workspaceStatus == "" && summary.WorkspaceRevision <= 0 {
+		return
+	}
+
+	if item.DefenseConnection == nil {
+		item.DefenseConnection = &AWDDefenseConnectionResult{}
+	}
+	if entryMode != "" {
+		item.DefenseConnection.EntryMode = entryMode
+	}
+	if workspaceStatus != "" {
+		item.DefenseConnection.WorkspaceStatus = workspaceStatus
+	}
+	if summary.WorkspaceRevision > 0 {
+		item.DefenseConnection.WorkspaceRevision = summary.WorkspaceRevision
 	}
 }
 

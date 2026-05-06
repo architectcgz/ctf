@@ -23,6 +23,12 @@ type awdContestServiceRuntimeRow struct {
 	LastPreviewResult string                          `gorm:"column:last_preview_result"`
 }
 
+type awdDefenseWorkspaceSummaryRow struct {
+	ServiceID         int64  `gorm:"column:service_id"`
+	WorkspaceStatus   string `gorm:"column:workspace_status"`
+	WorkspaceRevision int64  `gorm:"column:workspace_revision"`
+}
+
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
 	var contests []model.Contest
 	query := r.dbWithContext(ctx).
@@ -103,18 +109,51 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
 		definitions = append(definitions, contestports.AWDServiceDefinition{
-			ServiceID:      row.ServiceID,
-			ServiceName:    resolveContestAWDServiceTitle(snapshot, row.DisplayName),
-			AWDChallengeID: row.AWDChallengeID,
-			FlagPrefix:     resolveContestAWDServiceFlagPrefix(snapshot),
-			CheckerType:    resolveContestAWDServiceCheckerType(runtimeConfig),
-			CheckerConfig:  resolveContestAWDServiceCheckerConfig(runtimeConfig),
-			SLAScore:       resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
-			DefenseScore:   resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
-			DefenseScope:   resolveContestAWDServiceDefenseScope(runtimeConfig),
+			ServiceID:        row.ServiceID,
+			ServiceName:      resolveContestAWDServiceTitle(snapshot, row.DisplayName),
+			AWDChallengeID:   row.AWDChallengeID,
+			FlagPrefix:       resolveContestAWDServiceFlagPrefix(snapshot),
+			CheckerType:      resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig:    resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			SLAScore:         resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
+			DefenseScore:     resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
+			DefenseWorkspace: resolveContestAWDServiceDefenseWorkspaceSummary(snapshot, runtimeConfig),
 		})
 	}
 	return definitions, nil
+}
+
+func (r *AWDRepository) ListDefenseWorkspaceSummariesByContestTeam(
+	ctx context.Context,
+	contestID, teamID int64,
+	serviceIDs []int64,
+) ([]contestports.AWDDefenseWorkspaceSummaryRecord, error) {
+	if len(serviceIDs) == 0 {
+		return nil, nil
+	}
+
+	var rows []awdDefenseWorkspaceSummaryRow
+	if err := r.dbWithContext(ctx).
+		Table("awd_defense_workspaces AS dw").
+		Select("dw.service_id AS service_id, dw.status AS workspace_status, dw.workspace_revision AS workspace_revision").
+		Where("dw.contest_id = ? AND dw.team_id = ?", contestID, teamID).
+		Where("dw.service_id IN ?", serviceIDs).
+		Order("dw.service_id ASC").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	records := make([]contestports.AWDDefenseWorkspaceSummaryRecord, 0, len(rows))
+	for _, row := range rows {
+		records = append(records, contestports.AWDDefenseWorkspaceSummaryRecord{
+			ServiceID: row.ServiceID,
+			Summary: contestports.AWDDefenseWorkspaceSummary{
+				WorkspaceStatus:   strings.TrimSpace(row.WorkspaceStatus),
+				WorkspaceRevision: row.WorkspaceRevision,
+			},
+		})
+	}
+	return records, nil
 }
 
 func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, contestID int64) ([]contestports.AWDReadinessChallengeRecord, error) {
@@ -277,26 +316,38 @@ func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string 
 	return ""
 }
 
-func resolveContestAWDServiceDefenseScope(runtimeConfig map[string]any) contestports.AWDDefenseScope {
+func resolveContestAWDServiceDefenseWorkspaceSummary(
+	snapshot model.ContestAWDServiceSnapshot,
+	runtimeConfig map[string]any,
+) contestports.AWDDefenseWorkspaceSummary {
+	entryMode := strings.TrimSpace(snapshot.DefenseEntryMode)
+	if entryMode == "" {
+		entryMode = resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig)
+	}
+	return contestports.AWDDefenseWorkspaceSummary{
+		EntryMode: entryMode,
+	}
+}
+
+func resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig map[string]any) string {
 	if runtimeConfig == nil {
-		return contestports.AWDDefenseScope{}
-	}
-	raw := runtimeConfig["defense_scope"]
-	if raw == nil {
-		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
-			raw = challengeRuntime["defense_scope"]
-		}
-	}
-	payload, ok := raw.(map[string]any)
-	if !ok {
-		return contestports.AWDDefenseScope{}
+		return ""
 	}
 
-	return contestports.AWDDefenseScope{
-		EditablePaths:    normalizeContestAWDServiceStringSlice(payload["editable_paths"]),
-		ProtectedPaths:   normalizeContestAWDServiceStringSlice(payload["protected_paths"]),
-		ServiceContracts: normalizeContestAWDServiceStringSlice(payload["service_contracts"]),
+	raw := runtimeConfig["defense_workspace"]
+	if raw == nil {
+		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+			raw = challengeRuntime["defense_workspace"]
+		}
 	}
+
+	payload, ok := raw.(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	value, _ := payload["entry_mode"].(string)
+	return strings.TrimSpace(value)
 }
 
 func resolveContestAWDServiceRuntimeImageID(runtimeConfig map[string]any) int64 {
