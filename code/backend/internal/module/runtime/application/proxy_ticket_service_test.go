@@ -169,13 +169,14 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 				t.Fatalf("unexpected defense ssh lookup args: user=%d contest=%d service=%d", userID, contestID, serviceID)
 			}
 			return &runtimeports.AWDDefenseSSHScope{
-				InstanceID:     9001,
-				ContestID:      contestID,
-				TeamID:         5001,
-				ServiceID:      serviceID,
-				AWDChallengeID: 6001,
-				ContainerID:    "ctr-red-web",
-				ShareScope:     model.InstanceSharingPerTeam,
+				InstanceID:        9001,
+				ContestID:         contestID,
+				TeamID:            5001,
+				ServiceID:         serviceID,
+				AWDChallengeID:    6001,
+				WorkspaceRevision: 7,
+				ContainerID:       "workspace-red-web",
+				ShareScope:        model.InstanceSharingPerTeam,
 			}, nil
 		},
 	}, 15*time.Minute)
@@ -208,6 +209,9 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 	}
 	if store.savedClaims.AWDChallengeID == nil || *store.savedClaims.AWDChallengeID != 6001 {
 		t.Fatalf("unexpected challenge claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDWorkspaceRevision == nil || *store.savedClaims.AWDWorkspaceRevision != 7 {
+		t.Fatalf("unexpected workspace revision claims: %+v", store.savedClaims)
 	}
 }
 
@@ -248,6 +252,35 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
 	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {
 		t.Fatalf("expected invalid ticket error, got %v", err)
+	}
+}
+
+func TestProxyTicketServiceResolveTicketRejectsDefenseClaimsWithoutWorkspaceRevision(t *testing.T) {
+	t.Parallel()
+
+	contestID := int64(3001)
+	teamID := int64(5001)
+	serviceID := int64(4001)
+	challengeID := int64(6001)
+	store := &stubProxyTicketStore{
+		findClaims: &runtimeports.ProxyTicketClaims{
+			UserID:            1001,
+			Username:          "alice",
+			Role:              model.RoleStudent,
+			InstanceID:        2001,
+			ContestID:         &contestID,
+			ShareScope:        model.InstanceSharingPerTeam,
+			Purpose:           runtimeports.ProxyTicketPurposeAWDDefenseSSH,
+			AWDAttackerTeamID: &teamID,
+			AWDServiceID:      &serviceID,
+			AWDChallengeID:    &challengeID,
+		},
+	}
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
+
+	_, err := service.ResolveTicket(context.Background(), "ticket-1")
+	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {
+		t.Fatalf("expected invalid defense ssh ticket without workspace revision, got %v", err)
 	}
 }
 

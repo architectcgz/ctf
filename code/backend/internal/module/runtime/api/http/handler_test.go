@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubRuntimeService struct{}
@@ -215,52 +215,11 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 }
 
-func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T) {
+func TestAWDDefenseWorkbenchHandlersAreDisabled(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	handler := NewHandler(
-		stubAWDDefenseWorkbenchRuntimeService{
-			fileResp: &dto.AWDDefenseFileResp{
-				Path:    "app.py",
-				Content: "print('vuln')",
-				Size:    13,
-			},
-			directoryResp: &dto.AWDDefenseDirectoryResp{
-				Path: ".",
-				Entries: []dto.AWDDefenseDirectoryEntryResp{
-					{Name: "app.py", Path: "app.py", Type: "file", Size: 13},
-					{Name: "templates", Path: "templates", Type: "dir"},
-				},
-			},
-			saveResp: &dto.AWDDefenseFileSaveResp{
-				Path:       "app.py",
-				Size:       14,
-				BackupPath: "app.py.bak.1",
-			},
-			commandResp: &dto.AWDDefenseCommandResp{
-				Command: "ls",
-				Output:  "app.py\nrequirements.txt\n",
-			},
-			readFn: func(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
-				if contestID != 5 || serviceID != 12 {
-					return nil, errors.New("unexpected read scope")
-				}
-				switch filePath {
-				case "app.py":
-					return &dto.AWDDefenseFileResp{
-						Path:    "app.py",
-						Content: "print('vuln')",
-						Size:    13,
-					}, nil
-				case ".env", ".ssh/id_rsa":
-					return nil, errcode.ErrForbidden
-				case "../app.py":
-					return nil, errcode.ErrInvalidParams
-				default:
-					return nil, errors.New("unexpected read path")
-				}
-			},
-		},
+		stubAWDDefenseWorkbenchRuntimeService{},
 		nil,
 		CookieConfig{},
 		nil,
@@ -277,55 +236,26 @@ func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T)
 	router.PUT("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.SaveAWDDefenseFile)
 	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/commands", handler.RunAWDDefenseCommand)
 
-	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
-	readResp := httptest.NewRecorder()
-	router.ServeHTTP(readResp, readReq)
-	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), "print('vuln')") {
-		t.Fatalf("expected read response with file content, status=%d body=%s", readResp.Code, readResp.Body.String())
+	cases := []struct {
+		method string
+		target string
+		body   io.Reader
+	}{
+		{method: http.MethodGet, target: "/api/v1/contests/5/awd/services/12/defense/files?path=app.py"},
+		{method: http.MethodGet, target: "/api/v1/contests/5/awd/services/12/defense/directories?path=."},
+		{method: http.MethodPut, target: "/api/v1/contests/5/awd/services/12/defense/files", body: strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`)},
+		{method: http.MethodPost, target: "/api/v1/contests/5/awd/services/12/defense/commands", body: strings.NewReader(`{"command":"ls"}`)},
 	}
-
-	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
-	listResp := httptest.NewRecorder()
-	router.ServeHTTP(listResp, listReq)
-	if listResp.Code != http.StatusOK || !strings.Contains(listResp.Body.String(), "templates") {
-		t.Fatalf("expected list response with directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
-	}
-
-	forbiddenReadReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=.env", nil)
-	forbiddenReadResp := httptest.NewRecorder()
-	router.ServeHTTP(forbiddenReadResp, forbiddenReadReq)
-	if forbiddenReadResp.Code != http.StatusForbidden || strings.Contains(forbiddenReadResp.Body.String(), "DB_PASSWORD") {
-		t.Fatalf("expected forbidden sensitive read response, status=%d body=%s", forbiddenReadResp.Code, forbiddenReadResp.Body.String())
-	}
-
-	forbiddenKeyReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=.ssh/id_rsa", nil)
-	forbiddenKeyResp := httptest.NewRecorder()
-	router.ServeHTTP(forbiddenKeyResp, forbiddenKeyReq)
-	if forbiddenKeyResp.Code != http.StatusForbidden || strings.Contains(forbiddenKeyResp.Body.String(), "BEGIN OPENSSH PRIVATE KEY") {
-		t.Fatalf("expected forbidden ssh key response, status=%d body=%s", forbiddenKeyResp.Code, forbiddenKeyResp.Body.String())
-	}
-
-	invalidReadReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=../app.py", nil)
-	invalidReadResp := httptest.NewRecorder()
-	router.ServeHTTP(invalidReadResp, invalidReadReq)
-	if invalidReadResp.Code != http.StatusBadRequest {
-		t.Fatalf("expected invalid traversal path to be rejected, status=%d body=%s", invalidReadResp.Code, invalidReadResp.Body.String())
-	}
-
-	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))
-	saveReq.Header.Set("Content-Type", "application/json")
-	saveResp := httptest.NewRecorder()
-	router.ServeHTTP(saveResp, saveReq)
-	if saveResp.Code != http.StatusOK || !strings.Contains(saveResp.Body.String(), `"backup_path":"app.py.bak.1"`) {
-		t.Fatalf("expected successful save response with backup path, status=%d body=%s", saveResp.Code, saveResp.Body.String())
-	}
-
-	commandReq := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/commands", strings.NewReader(`{"command":"ls"}`))
-	commandReq.Header.Set("Content-Type", "application/json")
-	commandResp := httptest.NewRecorder()
-	router.ServeHTTP(commandResp, commandReq)
-	if commandResp.Code != http.StatusForbidden || strings.Contains(commandResp.Body.String(), "requirements.txt") {
-		t.Fatalf("expected forbidden command response without shell output, status=%d body=%s", commandResp.Code, commandResp.Body.String())
+	for _, item := range cases {
+		req := httptest.NewRequest(item.method, item.target, item.body)
+		if item.body != nil {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		if rec.Code != http.StatusForbidden {
+			t.Fatalf("%s %s expected 403, got %d body=%s", item.method, item.target, rec.Code, rec.Body.String())
+		}
 	}
 }
 

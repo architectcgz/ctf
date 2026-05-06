@@ -39,7 +39,15 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1002, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1001, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9601, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{
+		ID:             serviceID,
+		ContestID:      contestID,
+		AWDChallengeID: challengeID,
+		DisplayName:    "Web",
+		IsVisible:      true,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          instanceID,
 		UserID:      1002,
@@ -107,7 +115,6 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	})
-
 	scope, err := NewRepository(db).FindAWDTargetProxyScope(context.Background(), 1003, contestID, serviceID, teamID)
 	if err != nil {
 		t.Fatalf("FindAWDTargetProxyScope() error = %v", err)
@@ -132,7 +139,16 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{
+		ID:             serviceID,
+		ContestID:      contestID,
+		AWDChallengeID: challengeID,
+		DisplayName:    "Web",
+		IsVisible:      true,
+		RuntimeConfig:  `{"challenge_runtime":{"defense_scope":{"editable_paths":["docker/challenge_app.py"],"protected_paths":["docker/app.py","docker/ctf_runtime.py","docker/check/check.py","challenge.yml"]}}}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          instanceID,
 		UserID:      1004,
@@ -148,6 +164,18 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	})
+	seedAWDTargetProxyRow(t, db, &model.AWDDefenseWorkspace{
+		ContestID:         contestID,
+		TeamID:            teamID,
+		ServiceID:         serviceID,
+		InstanceID:        instanceID,
+		WorkspaceRevision: 7,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-red-web",
+		SeedSignature:     "seed:v1",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	})
 
 	scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1004, contestID, serviceID)
 	if err != nil {
@@ -156,10 +184,10 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 	if scope == nil {
 		t.Fatal("expected defense ssh scope")
 	}
-	if scope.InstanceID != instanceID || scope.ContainerID != "ctr-red-web" {
+	if scope.InstanceID != instanceID || scope.ContainerID != "workspace-red-web" {
 		t.Fatalf("unexpected instance scope: %+v", scope)
 	}
-	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID {
+	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID || scope.WorkspaceRevision != 7 {
 		t.Fatalf("unexpected team/service scope: %+v", scope)
 	}
 }
@@ -222,6 +250,7 @@ func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 		&model.AWDRound{},
 		&model.ContestAWDService{},
 		&model.Instance{},
+		&model.AWDDefenseWorkspace{},
 	); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}

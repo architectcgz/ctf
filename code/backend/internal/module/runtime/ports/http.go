@@ -93,18 +93,19 @@ type TeacherInstanceRow struct {
 }
 
 type ProxyTicketClaims struct {
-	UserID            int64            `json:"user_id"`
-	Username          string           `json:"username"`
-	Role              string           `json:"role"`
-	InstanceID        int64            `json:"instance_id"`
-	ContestID         *int64           `json:"contest_id,omitempty"`
-	ShareScope        model.ShareScope `json:"share_scope"`
-	Purpose           string           `json:"purpose,omitempty"`
-	AWDAttackerTeamID *int64           `json:"awd_attacker_team_id,omitempty"`
-	AWDVictimTeamID   *int64           `json:"awd_victim_team_id,omitempty"`
-	AWDServiceID      *int64           `json:"awd_service_id,omitempty"`
-	AWDChallengeID    *int64           `json:"awd_challenge_id,omitempty"`
-	IssuedAt          time.Time        `json:"issued_at"`
+	UserID               int64            `json:"user_id"`
+	Username             string           `json:"username"`
+	Role                 string           `json:"role"`
+	InstanceID           int64            `json:"instance_id"`
+	ContestID            *int64           `json:"contest_id,omitempty"`
+	ShareScope           model.ShareScope `json:"share_scope"`
+	Purpose              string           `json:"purpose,omitempty"`
+	AWDAttackerTeamID    *int64           `json:"awd_attacker_team_id,omitempty"`
+	AWDVictimTeamID      *int64           `json:"awd_victim_team_id,omitempty"`
+	AWDServiceID         *int64           `json:"awd_service_id,omitempty"`
+	AWDChallengeID       *int64           `json:"awd_challenge_id,omitempty"`
+	AWDWorkspaceRevision *int64           `json:"awd_workspace_revision,omitempty"`
+	IssuedAt             time.Time        `json:"issued_at"`
 }
 
 const (
@@ -140,14 +141,15 @@ type AWDDefenseSSHScope struct {
 }
 
 type AWDDefenseSSHSession struct {
-	UserID      int64
-	Username    string
-	InstanceID  int64
-	ContestID   int64
-	TeamID      int64
-	ServiceID   int64
-	ChallengeID int64
-	ContainerID string
+	UserID            int64
+	Username          string
+	InstanceID        int64
+	ContestID         int64
+	TeamID            int64
+	ServiceID         int64
+	ChallengeID       int64
+	WorkspaceRevision int64
+	ContainerID       string
 }
 
 type ContainerDirectoryEntry struct {

@@ -209,10 +209,10 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/ssh", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/directories", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "PUT", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/commands", "internal/module/runtime")
+	assertRouteMissing(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/files")
+	assertRouteMissing(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/directories")
+	assertRouteMissing(t, router, "PUT", "/api/v1/contests/:id/awd/services/:sid/defense/files")
+	assertRouteMissing(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/commands")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
@@ -1101,6 +1101,16 @@ func assertRouteHandlerContains(t *testing.T, router *gin.Engine, method, path, 
 	}
 
 	t.Fatalf("route not found: %s %s", method, path)
+}
+
+func assertRouteMissing(t *testing.T, router *gin.Engine, method, path string) {
+	t.Helper()
+
+	for _, route := range router.Routes() {
+		if route.Method == method && route.Path == path {
+			t.Fatalf("unexpected route registered: %s %s", method, path)
+		}
+	}
 }
 
 func assertFieldType(t *testing.T, structType reflect.Type, fieldName string, want reflect.Type) {

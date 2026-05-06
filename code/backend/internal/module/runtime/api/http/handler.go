@@ -229,51 +229,15 @@ func (h *Handler) AccessAWDDefenseSSH(c *gin.Context) {
 }
 
 func (h *Handler) ReadAWDDefenseFile(c *gin.Context) {
-	currentUser := authctx.MustCurrentUser(c)
-	contestID := c.GetInt64("id")
-	serviceID := c.GetInt64("sid")
-
-	resp, err := h.service.ReadAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, c.Query("path"))
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
+	response.FromError(c, errcode.ErrForbidden)
 }
 
 func (h *Handler) ListAWDDefenseDirectory(c *gin.Context) {
-	currentUser := authctx.MustCurrentUser(c)
-	contestID := c.GetInt64("id")
-	serviceID := c.GetInt64("sid")
-
-	resp, err := h.service.ListAWDDefenseDirectory(c.Request.Context(), currentUser, contestID, serviceID, c.Query("path"))
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
+	response.FromError(c, errcode.ErrForbidden)
 }
 
 func (h *Handler) SaveAWDDefenseFile(c *gin.Context) {
-	currentUser := authctx.MustCurrentUser(c)
-	contestID := c.GetInt64("id")
-	serviceID := c.GetInt64("sid")
-
-	var req dto.AWDDefenseFileSaveReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
-		return
-	}
-
-	resp, err := h.service.SaveAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, req)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
+	response.FromError(c, errcode.ErrForbidden)
 }
 
 func (h *Handler) RunAWDDefenseCommand(c *gin.Context) {

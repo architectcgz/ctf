@@ -329,7 +329,7 @@ git commit -m "feat(awd): 实现 defense workspace companion provisioning"
 
 **Review focus:** 学生侧是否已经失去浏览器文件/命令入口，且 SSH 票据只会指向当前 workspace revision。
 
-- [ ] **Step 1: 先写 scope 与路由失败测试**
+- [x] **Step 1: 先写 scope 与路由失败测试**
 
 补测试覆盖：
 
@@ -337,11 +337,11 @@ git commit -m "feat(awd): 实现 defense workspace companion provisioning"
 - SSH ticket 绑定 `workspace_revision`
 - 学生路由不再注册 `defense/files`、`defense/directories`、`defense/commands`
 
-- [ ] **Step 2: 改 proxy ticket 和 repository scope**
+- [x] **Step 2: 改 proxy ticket 和 repository scope**
 
 让 proxy ticket 在签发和鉴权时读取 `workspace_revision`，repository scope 返回 workspace container 及其状态。
 
-- [ ] **Step 3: 改 SSH gateway**
+- [x] **Step 3: 改 SSH gateway**
 
 在 `awd_defense_ssh_gateway.go` 中：
 
@@ -349,7 +349,7 @@ git commit -m "feat(awd): 实现 defense workspace companion provisioning"
 - 默认工作目录切到 `/workspace`
 - 拒绝 runtime container fallback
 
-- [ ] **Step 4: 删除学生态浏览器防守接口**
+- [x] **Step 4: 删除学生态浏览器防守接口**
 
 从 `runtime` handler / adapter / router 中移除或硬禁用：
 
@@ -360,7 +360,7 @@ git commit -m "feat(awd): 实现 defense workspace companion provisioning"
 
 只保留 `POST /defense/ssh`。
 
-- [ ] **Step 5: 跑 runtime API 与 router 测试**
+- [x] **Step 5: 跑 runtime API 与 router 测试**
 
 Run:
 
@@ -371,7 +371,7 @@ go test ./internal/module/runtime/... ./internal/app -run 'DefenseSSH|ProxyTicke
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/runtime code/backend/internal/app

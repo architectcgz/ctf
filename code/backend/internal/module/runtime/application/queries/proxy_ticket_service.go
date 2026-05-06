@@ -118,7 +118,7 @@ func (s *ProxyTicketService) IssueAWDDefenseSSHTicket(ctx context.Context, user 
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
-	if scope == nil || scope.ContainerID == "" {
+	if scope == nil || scope.ContainerID == "" || scope.WorkspaceRevision <= 0 {
 		return "", time.Time{}, errcode.ErrForbidden
 	}
 
@@ -128,17 +128,18 @@ func (s *ProxyTicketService) IssueAWDDefenseSSHTicket(ctx context.Context, user 
 	}
 
 	claims := runtimeports.ProxyTicketClaims{
-		UserID:            user.UserID,
-		Username:          user.Username,
-		Role:              user.Role,
-		InstanceID:        scope.InstanceID,
-		ContestID:         &scope.ContestID,
-		ShareScope:        scope.ShareScope,
-		Purpose:           runtimeports.ProxyTicketPurposeAWDDefenseSSH,
-		AWDAttackerTeamID: &scope.TeamID,
-		AWDServiceID:      &scope.ServiceID,
-		AWDChallengeID:    &scope.AWDChallengeID,
-		IssuedAt:          time.Now().UTC(),
+		UserID:               user.UserID,
+		Username:             user.Username,
+		Role:                 user.Role,
+		InstanceID:           scope.InstanceID,
+		ContestID:            &scope.ContestID,
+		ShareScope:           scope.ShareScope,
+		Purpose:              runtimeports.ProxyTicketPurposeAWDDefenseSSH,
+		AWDAttackerTeamID:    &scope.TeamID,
+		AWDServiceID:         &scope.ServiceID,
+		AWDChallengeID:       &scope.AWDChallengeID,
+		AWDWorkspaceRevision: &scope.WorkspaceRevision,
+		IssuedAt:             time.Now().UTC(),
 	}
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
 
@@ -196,7 +197,7 @@ func (s *ProxyTicketService) ResolveTicket(ctx context.Context, ticket string) (
 	if claims.Purpose == runtimeports.ProxyTicketPurposeAWDAttack && (claims.ContestID == nil || claims.AWDAttackerTeamID == nil || claims.AWDVictimTeamID == nil || claims.AWDServiceID == nil || claims.AWDChallengeID == nil) {
 		return nil, errcode.ErrProxyTicketInvalid
 	}
-	if claims.Purpose == runtimeports.ProxyTicketPurposeAWDDefenseSSH && (claims.ContestID == nil || claims.AWDAttackerTeamID == nil || claims.AWDServiceID == nil || claims.AWDChallengeID == nil) {
+	if claims.Purpose == runtimeports.ProxyTicketPurposeAWDDefenseSSH && (claims.ContestID == nil || claims.AWDAttackerTeamID == nil || claims.AWDServiceID == nil || claims.AWDChallengeID == nil || claims.AWDWorkspaceRevision == nil || *claims.AWDWorkspaceRevision <= 0) {
 		return nil, errcode.ErrProxyTicketInvalid
 	}
 

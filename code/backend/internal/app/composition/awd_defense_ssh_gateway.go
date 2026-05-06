@@ -21,6 +21,8 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+const awdDefenseSSHWorkspaceDir = "/workspace"
+
 type AWDDefenseSSHGateway struct {
 	proxyTickets runtimeHTTPProxyTicketService
 	scopeReader  runtimeports.ProxyTicketInstanceReader
@@ -184,19 +186,21 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		scope.InstanceID != claims.InstanceID ||
 		scope.TeamID != *claims.AWDAttackerTeamID ||
 		scope.AWDChallengeID != *claims.AWDChallengeID ||
+		scope.WorkspaceRevision != *claims.AWDWorkspaceRevision ||
 		scope.ContainerID == "" {
 		return nil, errcode.ErrForbidden
 	}
 
 	return &runtimeports.AWDDefenseSSHSession{
-		UserID:      claims.UserID,
-		Username:    claims.Username,
-		InstanceID:  scope.InstanceID,
-		ContestID:   scope.ContestID,
-		TeamID:      scope.TeamID,
-		ServiceID:   scope.ServiceID,
-		ChallengeID: scope.AWDChallengeID,
-		ContainerID: scope.ContainerID,
+		UserID:            claims.UserID,
+		Username:          claims.Username,
+		InstanceID:        scope.InstanceID,
+		ContestID:         scope.ContestID,
+		TeamID:            scope.TeamID,
+		ServiceID:         scope.ServiceID,
+		ChallengeID:       scope.AWDChallengeID,
+		WorkspaceRevision: scope.WorkspaceRevision,
+		ContainerID:       scope.ContainerID,
 	}, nil
 }
 
@@ -261,7 +265,7 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel
 			}
 			started = true
 			_ = req.Reply(true, nil)
-			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh"})
+			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh", "-lc", fmt.Sprintf("cd %s && exec /bin/sh", awdDefenseSSHWorkspaceDir)})
 			return
 		case "exec":
 			if started {
@@ -275,7 +279,7 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel
 			}
 			started = true
 			_ = req.Reply(true, nil)
-			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh", "-lc", command})
+			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh", "-lc", fmt.Sprintf("cd %s && %s", awdDefenseSSHWorkspaceDir, command)})
 			return
 		default:
 			_ = req.Reply(false, nil)
@@ -339,7 +343,7 @@ func sshSessionFromPermissions(permissions *ssh.Permissions) (*runtimeports.AWDD
 	if err := json.Unmarshal([]byte(payload), &session); err != nil {
 		return nil, err
 	}
-	if session.ContainerID == "" || session.InstanceID <= 0 {
+	if session.ContainerID == "" || session.InstanceID <= 0 || session.WorkspaceRevision <= 0 {
 		return nil, errcode.ErrProxyTicketInvalid
 	}
 	return &session, nil
