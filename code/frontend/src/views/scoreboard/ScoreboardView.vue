@@ -396,7 +396,7 @@ const {
 }
 
 .scoreboard-card {
-  padding: 22px 0;
+  padding: var(--space-5) var(--space-4-5);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
