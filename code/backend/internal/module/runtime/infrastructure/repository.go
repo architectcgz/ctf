@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -221,6 +222,98 @@ func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance
 			"status":          instance.Status,
 			"updated_at":      time.Now(),
 		}).Error
+}
+
+func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error) {
+	var workspace model.AWDDefenseWorkspace
+	err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
+		First(&workspace).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &workspace, nil
+}
+
+func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error {
+	if workspace == nil {
+		return nil
+	}
+
+	if workspace.WorkspaceRevision <= 0 {
+		workspace.WorkspaceRevision = 1
+	}
+	if strings.TrimSpace(workspace.Status) == "" {
+		workspace.Status = model.AWDDefenseWorkspaceStatusPending
+	}
+
+	now := time.Now()
+	if err := r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "contest_id"},
+			{Name: "team_id"},
+			{Name: "service_id"},
+		},
+		DoUpdates: clause.Assignments(map[string]any{
+			"instance_id":        workspace.InstanceID,
+			"workspace_revision": workspace.WorkspaceRevision,
+			"status":             workspace.Status,
+			"container_id":       workspace.ContainerID,
+			"seed_signature":     workspace.SeedSignature,
+			"updated_at":         now,
+		}),
+	}).Create(workspace).Error; err != nil {
+		return err
+	}
+
+	stored, err := r.FindAWDDefenseWorkspace(ctx, workspace.ContestID, workspace.TeamID, workspace.ServiceID)
+	if err != nil {
+		return err
+	}
+	if stored != nil {
+		*workspace = *stored
+	}
+	return nil
+}
+
+func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error {
+	now := time.Now()
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var workspace model.AWDDefenseWorkspace
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
+			First(&workspace).Error
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			return tx.Create(&model.AWDDefenseWorkspace{
+				ContestID:         contestID,
+				TeamID:            teamID,
+				ServiceID:         serviceID,
+				InstanceID:        instanceID,
+				WorkspaceRevision: 1,
+				Status:            model.AWDDefenseWorkspaceStatusProvisioning,
+				SeedSignature:     seedSignature,
+				CreatedAt:         now,
+				UpdatedAt:         now,
+			}).Error
+		}
+
+		return tx.Model(&model.AWDDefenseWorkspace{}).
+			Where("id = ?", workspace.ID).
+			Updates(map[string]any{
+				"instance_id":        instanceID,
+				"workspace_revision": workspace.WorkspaceRevision + 1,
+				"status":             model.AWDDefenseWorkspaceStatusProvisioning,
+				"container_id":       "",
+				"seed_signature":     seedSignature,
+				"updated_at":         now,
+			}).Error
+	})
 }
 
 func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error) {

@@ -49,6 +49,15 @@ type TeacherInstanceFilter struct {
 	StudentNo string
 }
 
+type AWDDefenseWorkspaceLookupRepository interface {
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
+}
+
+type AWDDefenseWorkspaceWriteRepository interface {
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
+}
+
 type UserVisibleInstanceRow struct {
 	ID             int64
 	ContestMode    string
@@ -118,13 +127,16 @@ type AWDTargetProxyScope struct {
 }
 
 type AWDDefenseSSHScope struct {
-	InstanceID     int64
-	ContestID      int64
-	TeamID         int64
-	ServiceID      int64
-	AWDChallengeID int64
-	ContainerID    string
-	ShareScope     model.ShareScope
+	InstanceID        int64
+	ContestID         int64
+	TeamID            int64
+	ServiceID         int64
+	AWDChallengeID    int64
+	WorkspaceRevision int64
+	ContainerID       string
+	ShareScope        model.ShareScope
+	EditablePaths     []string `gorm:"-"`
+	ProtectedPaths    []string `gorm:"-"`
 }
 
 type AWDDefenseSSHSession struct {

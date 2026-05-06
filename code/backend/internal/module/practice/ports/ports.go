@@ -143,6 +143,15 @@ type PracticeContestAWDInstanceRepository interface {
 	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error)
 }
 
+type PracticeAWDDefenseWorkspaceLookupRepository interface {
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
+}
+
+type PracticeAWDDefenseWorkspaceWriteRepository interface {
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
+}
+
 type PracticeContestTeamRepository interface {
 	FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error)
 	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)

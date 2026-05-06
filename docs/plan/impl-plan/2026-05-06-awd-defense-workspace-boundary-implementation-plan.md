@@ -177,7 +177,7 @@ go test ./internal/module/challenge/domain ./internal/module/challenge/applicati
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/module/challenge challenges/awd
@@ -198,7 +198,7 @@ git commit -m "feat(awd): 切换目录级 defense workspace 契约"
 
 **Review focus:** workspace 状态是否从实例 runtime 状态中独立出来，能否表达 `workspace revision`、container id 和 reseed 生命周期。
 
-- [ ] **Step 1: 先定义迁移和唯一键**
+- [x] **Step 1: 先定义迁移和唯一键**
 
 新增 `awd_defense_workspaces`，至少包含：
 
@@ -214,11 +214,11 @@ git commit -m "feat(awd): 切换目录级 defense workspace 契约"
 
 并为 `contest_id + team_id + service_id` 建唯一约束。
 
-- [ ] **Step 2: 写 model 和 ports**
+- [x] **Step 2: 写 model 和 ports**
 
 新增 `AWDDefenseWorkspace` model，并把 runtime / practice 所需的读写接口补到对应 ports 中。
 
-- [ ] **Step 3: 实现仓储 CRUD**
+- [x] **Step 3: 实现仓储 CRUD**
 
 在 runtime repository 中实现：
 
@@ -227,11 +227,11 @@ git commit -m "feat(awd): 切换目录级 defense workspace 契约"
 - bump `workspace_revision`
 - runtime restart 与 reseed 时的状态更新
 
-- [ ] **Step 4: 补仓储与 AutoMigrate 测试**
+- [x] **Step 4: 补仓储与 AutoMigrate 测试**
 
 为仓储行为补测试，并把新 model 接入 `contest/testsupport/db.go`，保证现有 AWD 测试基线可继续起库。
 
-- [ ] **Step 5: 跑状态模型相关测试**
+- [x] **Step 5: 跑状态模型相关测试**
 
 Run:
 
