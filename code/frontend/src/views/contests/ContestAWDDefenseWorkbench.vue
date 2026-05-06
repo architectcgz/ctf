@@ -18,32 +18,30 @@ const {
   openFile,
   loadDirectory,
   refreshDirectory,
+  saveError,
+  saveFile,
+  saveLoading,
   serviceCard,
   serviceTitle,
 } = useContestAwdDefenseWorkbenchPage()
 
 const editablePaths = computed(() => serviceCard.value?.defenseScope?.editable_paths || [])
-const protectedPaths = computed(() => serviceCard.value?.defenseScope?.protected_paths || [])
-const serviceContracts = computed(() => serviceCard.value?.defenseScope?.service_contracts || [])
-const hasDefenseScope = computed(
-  () =>
-    editablePaths.value.length > 0 ||
-    protectedPaths.value.length > 0 ||
-    serviceContracts.value.length > 0
-)
 </script>
 
 <template>
   <section class="workspace-shell journal-shell journal-shell-user awd-defense-page">
-    <RouterLink class="defense-back-link" :to="backLink">
-      <ArrowLeft class="defense-icon" />
-      <span>返回战场</span>
-    </RouterLink>
-
     <header class="defense-hero">
       <div class="defense-hero__main">
-        <div class="defense-hero__eyebrow">防守内容</div>
+        <div class="defense-hero__nav">
+          <RouterLink class="defense-hero__back ui-btn ui-btn--sm ui-btn--ghost" :to="backLink">
+            <ArrowLeft class="defense-icon" />
+            <span>返回战场</span>
+          </RouterLink>
+          <div class="defense-hero__eyebrow">防守工作台</div>
+        </div>
         <h1>{{ serviceTitle }}</h1>
+      </div>
+      <div class="defense-hero__side">
         <div class="defense-hero__meta">
           <span class="defense-chip">
             <ShieldCheck class="h-3.5 w-3.5" />
@@ -54,38 +52,17 @@ const hasDefenseScope = computed(
             <span class="font-mono">{{ currentDirectoryPath }}</span>
           </span>
         </div>
+        <button
+          class="defense-refresh ui-btn ui-btn--sm ui-btn--secondary"
+          type="button"
+          :disabled="loading"
+          @click="refreshDirectory"
+        >
+          <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': loading }" />
+          <span>刷新当前目录</span>
+        </button>
       </div>
-      <button class="defense-refresh" type="button" :disabled="loading" @click="refreshDirectory">
-        <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': loading }" />
-        <span>刷新当前目录</span>
-      </button>
     </header>
-
-    <section class="defense-scope" aria-label="防守范围">
-      <div class="defense-scope__header">
-        <div>
-          <div class="defense-scope__eyebrow">防守范围</div>
-          <h2 class="defense-scope__title">只读摘要</h2>
-        </div>
-      </div>
-      <div v-if="hasDefenseScope" class="defense-scope__body">
-        <div v-if="editablePaths.length > 0" class="defense-scope__group">
-          <span>可编辑</span>
-          <code v-for="path in editablePaths" :key="`editable:${path}`">{{ path }}</code>
-        </div>
-        <div v-if="protectedPaths.length > 0" class="defense-scope__group">
-          <span>受保护</span>
-          <code v-for="path in protectedPaths" :key="`protected:${path}`">{{ path }}</code>
-        </div>
-        <div v-if="serviceContracts.length > 0" class="defense-scope__group">
-          <span>服务契约</span>
-          <strong v-for="contract in serviceContracts" :key="`contract:${contract}`">
-            {{ contract }}
-          </strong>
-        </div>
-      </div>
-      <div v-else class="defense-scope__empty">当前服务暂无防守范围数据。</div>
-    </section>
 
     <AWDDefenseFileWorkbench
       :service-title="serviceTitle"
@@ -95,9 +72,13 @@ const hasDefenseScope = computed(
       :file-loading="fileLoading"
       :error="error"
       :file-error="fileError"
-      @refresh="refreshDirectory"
+      :save-error="saveError"
+      :saving="saveLoading"
+      :editable-paths="editablePaths"
+      :current-directory-path="currentDirectoryPath"
       @open-directory="loadDirectory"
       @open-file="openFile"
+      @save-file="saveFile"
     />
   </section>
 </template>
@@ -107,31 +88,8 @@ const hasDefenseScope = computed(
   min-height: 100%;
   display: grid;
   align-content: start;
-  gap: var(--space-6);
+  gap: var(--space-5);
   padding: var(--space-6);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 28rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 92%, black), var(--color-bg-page));
-}
-
-.defense-back-link {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--control-height-sm);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-bg-elevated) 90%, transparent);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-}
-
-.defense-back-link:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
 }
 
 .defense-icon {
@@ -140,14 +98,27 @@ const hasDefenseScope = computed(
 }
 
 .defense-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-4);
-  padding: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent);
+  padding: 0 0 var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  background: transparent;
+}
+
+.defense-hero__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.defense-hero__back {
+  --ui-btn-color: var(--color-text-secondary);
+  --ui-btn-hover-background: color-mix(in srgb, var(--color-bg-page) 84%, var(--color-bg-surface));
+  --ui-btn-hover-color: var(--color-text-primary);
 }
 
 .defense-hero__eyebrow {
@@ -159,21 +130,26 @@ const hasDefenseScope = computed(
 }
 
 .defense-hero h1 {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-3) 0 0;
   color: var(--color-text-primary);
   font-size: var(--workspace-page-title-font-size);
   line-height: var(--workspace-page-title-line-height);
+}
+
+.defense-hero__side {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-3);
 }
 
 .defense-hero__meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+  justify-content: flex-end;
 }
 
-.defense-chip,
-.defense-refresh {
+.defense-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -194,84 +170,15 @@ const hasDefenseScope = computed(
 }
 
 .defense-refresh {
-  min-height: var(--control-height-sm);
-  background: color-mix(in srgb, var(--color-bg-page) 68%, transparent);
-  color: var(--color-text-primary);
-  padding: 0 var(--space-3);
+  --ui-btn-background: color-mix(in srgb, var(--color-bg-page) 68%, transparent);
+  --ui-btn-color: var(--color-text-primary);
+  --ui-btn-hover-background: color-mix(in srgb, var(--color-bg-page) 82%, transparent);
+  --ui-btn-hover-color: var(--color-text-primary);
 }
 
 .defense-refresh:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.defense-scope {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--color-bg-elevated) 82%, transparent);
-}
-
-.defense-scope__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.defense-scope__eyebrow {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.defense-scope__title {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-16);
-  font-weight: 800;
-}
-
-.defense-scope__body {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.defense-scope__group {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.defense-scope__group span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 900;
-}
-
-.defense-scope__group code,
-.defense-scope__group strong {
-  overflow-wrap: anywhere;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-12);
-  font-weight: 800;
-}
-
-.defense-scope__group code {
-  width: fit-content;
-  max-width: 100%;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--ui-control-radius-sm);
-  background: color-mix(in srgb, var(--color-bg-page) 72%, transparent);
-  padding: var(--space-1) var(--space-2);
-}
-
-.defense-scope__empty {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-12);
 }
 
 @media (max-width: 899px) {
@@ -281,7 +188,22 @@ const hasDefenseScope = computed(
   }
 
   .defense-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 0 var(--space-4);
+  }
+
+  .defense-hero__nav {
+    align-items: flex-start;
     flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .defense-hero__side {
+    justify-items: start;
+  }
+
+  .defense-hero__meta {
+    justify-content: flex-start;
   }
 
   .defense-refresh {

@@ -529,6 +529,12 @@ export interface AWDDefenseFileData {
   size: number
 }
 
+export interface AWDDefenseFileSaveData {
+  path: string
+  size: number
+  backup_path?: string
+}
+
 export interface AWDDefenseDirectoryEntryData {
   name: string
   path: string

@@ -316,8 +316,8 @@ func TestAWDDefenseWorkbenchHandlersAllowReadOnlyBrowserFileAccess(t *testing.T)
 	saveReq.Header.Set("Content-Type", "application/json")
 	saveResp := httptest.NewRecorder()
 	router.ServeHTTP(saveResp, saveReq)
-	if saveResp.Code != http.StatusForbidden || strings.Contains(saveResp.Body.String(), "app.py.bak.1") {
-		t.Fatalf("expected forbidden save response without backup path, status=%d body=%s", saveResp.Code, saveResp.Body.String())
+	if saveResp.Code != http.StatusOK || !strings.Contains(saveResp.Body.String(), `"backup_path":"app.py.bak.1"`) {
+		t.Fatalf("expected successful save response with backup path, status=%d body=%s", saveResp.Code, saveResp.Body.String())
 	}
 
 	commandReq := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/commands", strings.NewReader(`{"command":"ls"}`))

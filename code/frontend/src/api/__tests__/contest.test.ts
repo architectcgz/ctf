@@ -11,6 +11,7 @@ import {
   getContestAWDWorkspace,
   requestContestAWDDefenseDirectory,
   requestContestAWDDefenseFile,
+  requestContestAWDDefenseFileSave,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
   restartContestAWDServiceInstance,
@@ -316,6 +317,31 @@ describe('contest api contract', () => {
       params: { path: 'app.py' },
     })
     expect(result.content).toBe("print('vuln')")
+  })
+
+  it('保存 AWD 防守文件时应调用写入接口', async () => {
+    requestMock.mockResolvedValue({
+      path: 'app.py',
+      size: 14,
+      backup_path: 'app.py.bak.1715000000',
+    })
+
+    const result = await requestContestAWDDefenseFileSave('7', '7009', {
+      path: 'app.py',
+      content: "print('fixed')",
+      backup: true,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/contests/7/awd/services/7009/defense/files',
+      data: {
+        path: 'app.py',
+        content: "print('fixed')",
+        backup: true,
+      },
+    })
+    expect(result.backup_path).toBe('app.py.bak.1715000000')
   })
 
 })

@@ -5,6 +5,7 @@ import type {
   AWDAttackLogData,
   AWDDefenseDirectoryData,
   AWDDefenseFileData,
+  AWDDefenseFileSaveData,
   AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
@@ -453,6 +454,22 @@ export async function requestContestAWDDefenseFile(
     method: 'GET',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
     params: { path },
+  })
+}
+
+export async function requestContestAWDDefenseFileSave(
+  contestId: string,
+  serviceId: string,
+  payload: {
+    path: string
+    content: string
+    backup?: boolean
+  }
+): Promise<AWDDefenseFileSaveData> {
+  return request<AWDDefenseFileSaveData>({
+    method: 'PUT',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
+    data: payload,
   })
 }
 

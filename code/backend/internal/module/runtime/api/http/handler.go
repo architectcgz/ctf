@@ -257,7 +257,23 @@ func (h *Handler) ListAWDDefenseDirectory(c *gin.Context) {
 }
 
 func (h *Handler) SaveAWDDefenseFile(c *gin.Context) {
-	response.FromError(c, errcode.ErrForbidden)
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+
+	var req dto.AWDDefenseFileSaveReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SaveAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }
 
 func (h *Handler) RunAWDDefenseCommand(c *gin.Context) {

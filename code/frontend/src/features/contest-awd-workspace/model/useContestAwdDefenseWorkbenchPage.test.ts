@@ -13,6 +13,7 @@ const contestApiMocks = vi.hoisted(() => ({
   getContestChallenges: vi.fn(),
   requestContestAWDDefenseDirectory: vi.fn(),
   requestContestAWDDefenseFile: vi.fn(),
+  requestContestAWDDefenseFileSave: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -38,6 +39,7 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
     contestApiMocks.getContestChallenges.mockReset()
     contestApiMocks.requestContestAWDDefenseDirectory.mockReset()
     contestApiMocks.requestContestAWDDefenseFile.mockReset()
+    contestApiMocks.requestContestAWDDefenseFileSave.mockReset()
 
     contestApiMocks.getContestAWDWorkspace.mockResolvedValue({
       contest_id: '7',
@@ -50,6 +52,10 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
           instance_id: '9001',
           instance_status: 'running',
           service_status: 'up',
+          defense_scope: {
+            editable_paths: ['app/app.py', 'app/utils/crypto.py'],
+            protected_paths: ['nginx/conf.d/default.conf'],
+          },
           attack_received: 0,
           updated_at: '2026-05-05T08:00:00Z',
         },
@@ -72,12 +78,12 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
       },
     ])
     contestApiMocks.requestContestAWDDefenseDirectory.mockResolvedValue({
-      path: '.',
+      path: 'app',
       entries: [{ name: 'app.py', path: 'app.py', type: 'file', size: 13 }],
     })
   })
 
-  it('进入页面后应自动加载根目录并生成返回战场链接', async () => {
+  it('进入页面后应优先加载首个可编辑目录并生成返回战场链接', async () => {
     let result!: ReturnType<typeof useContestAwdDefenseWorkbenchPage>
 
     mount(
@@ -96,10 +102,57 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
       params: { id: '7' },
       query: { panel: 'challenges' },
     })
-    expect(contestApiMocks.requestContestAWDDefenseDirectory).toHaveBeenCalledWith('7', '7009', '.')
+    expect(contestApiMocks.requestContestAWDDefenseDirectory).toHaveBeenCalledWith(
+      '7',
+      '7009',
+      'app'
+    )
     expect(result.serviceTitle.value).toBe('Bank Portal')
-    expect(result.currentDirectoryPath.value).toBe('.')
+    expect(result.currentDirectoryPath.value).toBe('app')
     expect(result.error.value).toBe('')
+  })
+
+  it('服务实例未就绪时应直接显示友好提示，而不是继续请求目录', async () => {
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '7',
+      current_round: null,
+      my_team: { team_id: '13', team_name: 'Red' },
+      services: [
+        {
+          service_id: '7009',
+          awd_challenge_id: '9',
+          instance_id: '9001',
+          instance_status: 'creating',
+          service_status: 'up',
+          defense_scope: {
+            editable_paths: ['app/app.py'],
+            protected_paths: ['nginx/conf.d/default.conf'],
+          },
+          attack_received: 0,
+          updated_at: '2026-05-05T08:00:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [],
+    })
+
+    let result!: ReturnType<typeof useContestAwdDefenseWorkbenchPage>
+
+    mount(
+      defineComponent({
+        setup() {
+          result = useContestAwdDefenseWorkbenchPage()
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    expect(contestApiMocks.requestContestAWDDefenseDirectory).not.toHaveBeenCalled()
+    expect(result.error.value).toBe('当前服务实例正在启动，容器就绪后再试。')
+    expect(result.file.value).toBeNull()
+    expect(result.directory.value).toBeNull()
   })
 
   it('旧文件响应晚到时不应覆盖当前文件状态', async () => {
@@ -167,6 +220,28 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
 
     void result.openFile('app.py')
 
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '7',
+      current_round: null,
+      my_team: { team_id: '13', team_name: 'Red' },
+      services: [
+        {
+          service_id: '7010',
+          awd_challenge_id: '10',
+          instance_id: '9010',
+          instance_status: 'creating',
+          service_status: 'up',
+          defense_scope: {
+            editable_paths: ['service/main.py'],
+            protected_paths: ['nginx/conf.d/default.conf'],
+          },
+          attack_received: 0,
+          updated_at: '2026-05-05T08:10:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [],
+    })
     contestApiMocks.getContestChallenges.mockResolvedValueOnce([
       {
         id: '22',
@@ -181,7 +256,6 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
         is_solved: false,
       },
     ])
-    contestApiMocks.requestContestAWDDefenseDirectory.mockRejectedValueOnce({ status: 403 })
 
     routeState.value!.params.serviceId = '7010'
     await flushPromises()
@@ -190,7 +264,49 @@ describe('useContestAwdDefenseWorkbenchPage', () => {
     resolveOldFile({ path: 'app.py', content: "print('late old service')", size: 25 })
     await flushPromises()
 
-    expect(contestApiMocks.requestContestAWDDefenseDirectory).toHaveBeenCalledWith('7', '7010', '.')
+    expect(contestApiMocks.requestContestAWDDefenseDirectory).toHaveBeenCalledTimes(1)
     expect(result.file.value).toBeNull()
+  })
+
+  it('保存可编辑文件后应更新当前文件内容和大小', async () => {
+    contestApiMocks.requestContestAWDDefenseFile.mockResolvedValue({
+      path: 'app.py',
+      content: "print('vuln')",
+      size: 13,
+    })
+    contestApiMocks.requestContestAWDDefenseFileSave.mockResolvedValue({
+      path: 'app.py',
+      size: 14,
+      backup_path: 'app.py.bak.1715000000',
+    })
+
+    let result!: ReturnType<typeof useContestAwdDefenseWorkbenchPage>
+
+    mount(
+      defineComponent({
+        setup() {
+          result = useContestAwdDefenseWorkbenchPage()
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await result.openFile('app.py')
+    await flushPromises()
+    await result.saveFile('app.py', "print('fixed')")
+
+    expect(contestApiMocks.requestContestAWDDefenseFileSave).toHaveBeenCalledWith('7', '7009', {
+      path: 'app.py',
+      content: "print('fixed')",
+      backup: true,
+    })
+    expect(result.file.value).toEqual({
+      path: 'app.py',
+      content: "print('fixed')",
+      size: 14,
+    })
+    expect(result.saveError.value).toBe('')
+    expect(result.saveLoading.value).toBe(false)
   })
 })
