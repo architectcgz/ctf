@@ -9,6 +9,7 @@
 - 不开放管理员级流量明细、全量服务状态矩阵或 readiness 运维动作给学生
 - 不改现有 AWD 计分、checker、轮次调度和教师复盘语义
 - 不做复杂反作弊、批量攻击脚本托管或自动化 exploit 编排
+- 不提供浏览器文件树、在线文件编辑或平台圈定修补文件列表
 
 ## 背景
 
@@ -108,7 +109,7 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 4. 对指定队伍提交 stolen flag
 5. 在同页看到成功/失败反馈、最近攻防记录和实时排行榜变化
 6. 在运行中比赛里持续获取新的轮次快照，并快速识别本队异常服务
-7. 为本队服务生成防守 SSH 连接信息，便于学生进入自己的服务环境修复
+7. 为本队服务生成防守 SSH 连接信息，便于学生进入独立 defense workspace 自行侦察和修补
 
 ## 总体设计
 
@@ -142,12 +143,13 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 - 当前运行轮次
 - 当前用户所属队伍
 - 当前用户所在队伍的服务状态与已有访问地址
+- 当前用户所在队伍各服务的 defense workspace 入口状态
 - 其他队伍的目标目录（只暴露题目对应访问地址，不暴露管理端运维字段）
 - 当前轮与本队相关的最近攻防事件
 
 ### 防守重启与攻击访问反馈
 
-学生工作台里的“重启本队服务”表示防守方在更新防守文件后，请求平台重新拉起本队对应 service 的比赛容器。它不是“打开实例”或“复用已有实例”，也不表示服务已被攻破。
+学生工作台里的“重启本队服务”表示防守方在 defense workspace 完成修补后，请求平台重新拉起本队对应 service 的比赛容器。它不是“打开实例”或“复用已有实例”，也不表示服务已被攻破。
 
 后端应提供显式重启动作：
 
@@ -192,19 +194,39 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 
 不做免罚窗口的原因是避免队伍通过频繁重启规避攻击或规避 checker。若后续确实需要重启宽限，应单独设计频率限制、最大宽限秒数和审计记录，不能隐式放进本次重启语义。
 
+这里还要明确 defense workspace 与 restart 的关系：
+
+- `restart` 只重建运行容器，不清空 defense workspace
+- 学生已改动的业务文件在普通 restart 后继续保留
+- 只有管理员触发的 `recreate / reseed` 才会重置 defense workspace 并使旧连接失效
+
+### 防守连接入口语义
+
+`POST /api/v1/contests/:id/awd/services/:sid/defense/ssh` 的语义应固定为“签发 defense workspace 连接票据”，而不是“进入 service 容器 shell”。
+
+约束如下：
+
+- 连接目标是本队该服务对应的 `defense workspace container`
+- 返回内容只包含连接所需主机、端口、用户名、短时票据和命令示例
+- 不返回文件树、文件路径、`editable_paths`、`protected_paths` 或 `service_contracts`
+- 若 workspace 暂未就绪，应返回受控不可用状态，而不是退回 service 容器
+- battle 页可以展示连接命令与使用提示，但不再跳转浏览器防守文件页
+
 ### 数据来源
 
-复用现有 `contestports.AWDRepository` 能力：
+复用现有 `contestports.AWDRepository` 聚合比赛事实，并额外读取队伍服务级 `defense workspace` 状态：
 
 - `FindContestTeamByMember`
-- `ListChallengesByContest`
-- `ListServiceInstancesByContest`
 - `FindRunningRound`
+- `FindTeamsByContest`
+- `ListChallengesByContest`
+- `ListServiceDefinitionsByContest`
+- `ListServiceInstancesByContest`
+- `ListDefenseWorkspaceSummariesByContestTeam`
 - `ListServicesByRound`
 - `ListAttackLogsByRound`
-- `FindTeamsByContest`
 
-不新建专门的学生 AWD 表。
+`GET /api/v1/contests/:id/awd/workspace` 不新建学生专用 read model 表；防守工作区状态直接复用 `awd_defense_workspaces` 持久化表，并在 query 阶段与 contest/service/instance 数据聚合。
 
 ### 权限边界
 
@@ -227,6 +249,8 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 其中：
 
 - `services` 只表示“我的队伍”
+- `services` 不再返回 `defense_scope`，只通过 `defense_connection` 暴露防守入口摘要
+- `services.defense_connection` 只返回 `entry_mode`、`workspace_status`、`workspace_revision` 三个字段，用于判断 SSH 入口是否可用、当前 workspace 是否就绪，以及 `reseed / recreate` 后连接是否已轮换；不下发 `container_id`、挂载根或文件路径
 - `targets` 只表示“其他队伍”
 - `targets.services` 只返回 `reachable` 等代理可达状态，不向学生端暴露对方实例的原始 `access_url`
 - `services` 可返回本队运行实例的 `instance_id`，学生打开本队服务时也通过 `/instances/:id/access` 获取平台代理地址，不直接展示容器内网 `access_url`
@@ -278,6 +302,10 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 - 生成防守 SSH 时：
   - 调用 `POST /contests/:id/awd/services/:sid/defense/ssh`
   - 前端临时展示连接命令和 OpenSSH 配置，并提供复制入口
+  - 不再跳转浏览器文件工作台
+- 防守方点击 restart 后：
+  - 主区继续保留 defense workspace 入口
+  - 只提示“服务正在重启”，不把工作区视为被清空
 - 排行榜继续复用现有 `getScoreboard` + websocket 刷新
 
 ### UI 约束
@@ -296,13 +324,14 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 2. 路由
    - 新用户态 workspace 路由已注册到 contest AWD handler
 3. 前端 API
-   - workspace 查询、比赛实例启动、AWD 攻击提交的请求与返回归一化
+   - workspace 查询、比赛实例启动、AWD 攻击提交、defense SSH 的请求与返回归一化
 4. 前端页面
    - AWD 赛事显示“战场”页签而不是通用题目页
    - 启动服务、提交 stolen flag、刷新最近反馈与排行榜
    - 运行中的战场每 15 秒自动刷新
    - 异常服务会进入防守告警摘要
    - 目标目录支持队伍筛选与可用地址过滤
+   - 学生侧不再出现浏览器防守文件路由和相关 API 调用
    - 未入队时显示受限空态
 
 ## 与毕业设计要求的对应
