@@ -17,6 +17,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	networktypes "github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
@@ -121,14 +122,17 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 	containerCfg := &container.Config{
 		Image:        cfg.Image,
 		Env:          cfg.Env,
+		Cmd:          append([]string(nil), cfg.Command...),
 		ExposedPorts: exposedPorts,
 		User:         cfg.Security.User,
 		Labels:       cfg.Labels,
+		WorkingDir:   strings.TrimSpace(cfg.WorkingDir),
 	}
 
 	hostCfg := &container.HostConfig{
 		PortBindings:   portBindings,
 		Resources:      resources,
+		Mounts:         buildContainerMounts(cfg.Mounts),
 		NetworkMode:    container.NetworkMode(cfg.Network),
 		Privileged:     false,
 		ReadonlyRootfs: cfg.Security.ReadonlyRootfs,
@@ -227,6 +231,30 @@ func buildContainerNetworkingConfig(networkName string, aliases []string) *netwo
 			networkName: endpoint,
 		},
 	}
+}
+
+func buildContainerMounts(mounts []model.ContainerMount) []mount.Mount {
+	if len(mounts) == 0 {
+		return nil
+	}
+	result := make([]mount.Mount, 0, len(mounts))
+	for _, item := range mounts {
+		source := strings.TrimSpace(item.Source)
+		target := strings.TrimSpace(item.Target)
+		if source == "" || target == "" {
+			continue
+		}
+		result = append(result, mount.Mount{
+			Type:     mount.TypeVolume,
+			Source:   source,
+			Target:   target,
+			ReadOnly: item.ReadOnly,
+		})
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func (e *Engine) ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error {

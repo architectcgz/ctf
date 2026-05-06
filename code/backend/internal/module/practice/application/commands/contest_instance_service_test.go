@@ -371,6 +371,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.TeamMember{},
 		&model.Instance{},
 		&model.AWDServiceOperation{},
+		&model.AWDDefenseWorkspace{},
 		&model.PortAllocation{},
 		&model.Submission{},
 	); err != nil {
@@ -551,21 +552,53 @@ func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contest
 		t.Fatalf("load challenge for awd service snapshot: %v", err)
 	}
 	if err := db.Create(&model.ContestAWDService{
-		ID:              serviceID,
-		ContestID:       contestID,
-		AWDChallengeID:  challengeID,
-		DisplayName:     "Bank Portal",
-		Order:           1,
-		IsVisible:       true,
-		ScoreConfig:     `{"points":100}`,
-		RuntimeConfig:   `{"checker_type":"http_standard"}`,
-		ServiceSnapshot: fmt.Sprintf(`{"name":"Bank Portal","category":"%s","difficulty":"%s","runtime_config":{"image_id":%d,"instance_sharing":"per_team"},"flag_config":{"flag_type":"%s","flag_prefix":"%s"}}`, challenge.Category, challenge.Difficulty, challenge.ImageID, challenge.FlagType, "flag"),
+		ID:             serviceID,
+		ContestID:      contestID,
+		AWDChallengeID: challengeID,
+		DisplayName:    "Bank Portal",
+		Order:          1,
+		IsVisible:      true,
+		ScoreConfig:    `{"points":100}`,
+		RuntimeConfig:  `{"checker_type":"http_standard"}`,
+		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, model.ContestAWDServiceSnapshot{
+			Name:       "Bank Portal",
+			Category:   challenge.Category,
+			Difficulty: challenge.Difficulty,
+			RuntimeConfig: map[string]any{
+				"image_id":         challenge.ImageID,
+				"instance_sharing": string(model.InstanceSharingPerTeam),
+				"defense_workspace": map[string]any{
+					"entry_mode":      "ssh",
+					"seed_root":       "runtime/workspace",
+					"workspace_roots": []string{"runtime/workspace/app"},
+					"writable_roots":  []string{"runtime/workspace/app"},
+					"readonly_roots":  []string{},
+					"runtime_mounts": []map[string]any{
+						{"source": "runtime/workspace/app", "target": "/workspace/app", "mode": "rw"},
+					},
+				},
+			},
+			FlagConfig: map[string]any{
+				"flag_type":   challenge.FlagType,
+				"flag_prefix": "flag",
+			},
+		}),
 		ValidationState: model.AWDCheckerValidationStatePending,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
+}
+
+func mustEncodeContestInstanceAWDServiceSnapshot(t *testing.T, snapshot model.ContestAWDServiceSnapshot) string {
+	t.Helper()
+
+	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	if err != nil {
+		t.Fatalf("encode contest awd service snapshot: %v", err)
+	}
+	return raw
 }
 
 func seedContestInstanceJeopardyContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {

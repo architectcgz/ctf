@@ -17,6 +17,16 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}
 
+	awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+	}
+
 	spec, err := model.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -27,9 +37,28 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return err
 	}
 	applyAWDStableNetworkToTopologyRequest(instance, chal, request)
+	if awdWorkspacePlan != nil {
+		applyAWDDefenseWorkspaceRuntimeMounts(request, awdWorkspacePlan.runtimeMounts)
+	}
 	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
+		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
+			_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+		}
 		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if awdWorkspacePlan != nil {
+		workspaceContainerID := awdWorkspacePlan.workspaceContainerID
+		if awdWorkspacePlan.createWorkspace {
+			workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
+			if err != nil {
+				_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+				return errcode.ErrContainerCreateFailed.WithCause(err)
+			}
+		}
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
 	}
 	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
 	if err != nil {
@@ -58,6 +87,20 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
 	targetProtocol := normalizeChallengeTargetProtocol(chal.TargetProtocol)
 	if isAWDInstance(instance) || targetProtocol == model.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
+		awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+				return errcode.ErrContainerCreateFailed.WithCause(err)
+			}
+		}
+		runtimeMounts := []model.ContainerMount(nil)
+		if awdWorkspacePlan != nil {
+			runtimeMounts = append(runtimeMounts, awdWorkspacePlan.runtimeMounts...)
+		}
+
 		networks := []practiceports.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		}
@@ -82,11 +125,28 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 					IsEntryPoint:    true,
 					NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
 					NetworkAliases:  nodeAliases,
+					Mounts:          runtimeMounts,
 				},
 			},
 		})
 		if err != nil {
+			if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
+				_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+			}
 			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		if awdWorkspacePlan != nil {
+			workspaceContainerID := awdWorkspacePlan.workspaceContainerID
+			if awdWorkspacePlan.createWorkspace {
+				workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
+				if err != nil {
+					_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+					return errcode.ErrContainerCreateFailed.WithCause(err)
+				}
+			}
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+				return errcode.ErrContainerCreateFailed.WithCause(err)
+			}
 		}
 		runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
 		if err != nil {

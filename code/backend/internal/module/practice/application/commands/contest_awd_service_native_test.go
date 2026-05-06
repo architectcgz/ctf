@@ -29,17 +29,39 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 		t.Fatalf("create image: %v", err)
 	}
 	if err := db.Create(&model.ContestAWDService{
-		ID:              7901,
-		ContestID:       3901,
-		AWDChallengeID:  2801,
-		DisplayName:     "Bank Portal",
-		Order:           1,
-		IsVisible:       true,
-		ScoreConfig:     `{"points":180}`,
-		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/ready"}}}`,
-		ServiceSnapshot: `{"name":"Bank Portal","category":"web","difficulty":"medium","runtime_config":{"image_id":9901,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"awd"}}`,
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		ID:             7901,
+		ContestID:      3901,
+		AWDChallengeID: 2801,
+		DisplayName:    "Bank Portal",
+		Order:          1,
+		IsVisible:      true,
+		ScoreConfig:    `{"points":180}`,
+		RuntimeConfig:  `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/ready"}}}`,
+		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, model.ContestAWDServiceSnapshot{
+			Name:       "Bank Portal",
+			Category:   "web",
+			Difficulty: "medium",
+			RuntimeConfig: map[string]any{
+				"image_id":         int64(9901),
+				"instance_sharing": string(model.InstanceSharingPerTeam),
+				"defense_workspace": map[string]any{
+					"entry_mode":      "ssh",
+					"seed_root":       "runtime/workspace",
+					"workspace_roots": []string{"runtime/workspace/app"},
+					"writable_roots":  []string{"runtime/workspace/app"},
+					"readonly_roots":  []string{},
+					"runtime_mounts": []map[string]any{
+						{"source": "runtime/workspace/app", "target": "/workspace/app", "mode": "rw"},
+					},
+				},
+			},
+			FlagConfig: map[string]any{
+				"flag_type":   model.FlagTypeStatic,
+				"flag_prefix": "awd",
+			},
+		}),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}

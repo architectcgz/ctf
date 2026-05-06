@@ -9,7 +9,12 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-const runtimeContainerNamePrefix = "ctf-instance-"
+const (
+	runtimeContainerNamePrefix        = "ctf-instance-"
+	workspaceContainerNamePrefix      = "ctf-workspace-"
+	workspaceVolumeNamePrefix         = "ctf-workspace-root-"
+	workspaceVolumeDefaultRootSegment = "root"
+)
 
 func isAWDInstance(instance *model.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.ServiceID != nil
@@ -111,6 +116,28 @@ func buildRuntimeContainerName(chal *model.Challenge, instance *model.Instance) 
 		challengeSegment = "challenge"
 	}
 	return fmt.Sprintf("%s%s-c%d-t%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID)
+}
+
+func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *model.Instance, revision int64) string {
+	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
+		return ""
+	}
+	challengeSegment := sanitizeRuntimeContainerSegment(resolveRuntimeChallengeName(chal))
+	if challengeSegment == "" {
+		challengeSegment = "workspace"
+	}
+	return fmt.Sprintf("%s%s-c%d-t%d-s%d-r%d", workspaceContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision)
+}
+
+func buildAWDDefenseWorkspaceVolumeName(instance *model.Instance, revision int64, rootRelative string) string {
+	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
+		return ""
+	}
+	rootSegment := sanitizeRuntimeContainerSegment(rootRelative)
+	if rootSegment == "" {
+		rootSegment = workspaceVolumeDefaultRootSegment
+	}
+	return fmt.Sprintf("%sc%d-t%d-s%d-r%d-%s", workspaceVolumeNamePrefix, *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision, rootSegment)
 }
 
 func resolveRuntimeChallengeName(chal *model.Challenge) string {

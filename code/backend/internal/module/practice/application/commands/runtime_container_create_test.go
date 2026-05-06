@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 	"fmt"
 	"testing"
@@ -106,54 +107,103 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	contestID := int64(7001)
 	teamID := int64(7101)
 	serviceID := int64(8001)
-	var createTopologyCalled bool
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "AWD Service",
+		RuntimeConfig: map[string]any{
+			"image_id":         501,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "docker/workspace",
+				"workspace_roots": []string{"docker/workspace/src"},
+				"writable_roots":  []string{"docker/workspace/src"},
+				"readonly_roots":  []string{},
+				"runtime_mounts": []map[string]any{
+					{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
+	}
+	createTopologyCalls := 0
 	service := &Service{
-		imageRepo: challengeinfra.NewImageRepository(db),
+		repo: &stubPracticeRepository{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+				return &model.ContestAWDService{
+					ID:              gotServiceID,
+					ContestID:       gotContestID,
+					AWDChallengeID:  501,
+					IsVisible:       true,
+					ServiceSnapshot: serviceSnapshot,
+				}, nil
+			},
+		},
+		imageRepo:    challengeinfra.NewImageRepository(db),
+		instanceRepo: runtimeinfrarepo.NewRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
-				createTopologyCalled = true
-				if req.ReservedHostPort != 0 {
-					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
-				}
-				if req.ContainerName != "ctf-instance-challenge-c7001-t7101" {
-					t.Fatalf("expected awd container name, got %q", req.ContainerName)
-				}
-				if !req.DisableEntryPortPublishing {
-					t.Fatal("expected entry port publishing to be disabled")
-				}
-				if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7001" || !req.Networks[0].Shared {
-					t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
-				}
-				if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
-					t.Fatalf("unexpected topology request: %+v", req)
-				}
-				if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7001-t7101-s8001" {
-					t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
-				}
-				return &practiceports.TopologyCreateResult{
-					PrimaryContainerID: "awd-private-ctr",
-					NetworkID:          "net-awd-contest-7001",
-					AccessURL:          "http://awd-c7001-t7101-s8001:8080",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
-							{
-								Key:       model.TopologyDefaultNetworkKey,
-								Name:      "ctf-awd-contest-7001",
-								NetworkID: "net-awd-contest-7001",
-								Shared:    true,
+				createTopologyCalls++
+				switch createTopologyCalls {
+				case 1:
+					if req.ReservedHostPort != 0 {
+						t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+					}
+					if req.ContainerName != "ctf-instance-challenge-c7001-t7101" {
+						t.Fatalf("expected awd container name, got %q", req.ContainerName)
+					}
+					if !req.DisableEntryPortPublishing {
+						t.Fatal("expected entry port publishing to be disabled")
+					}
+					if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7001" || !req.Networks[0].Shared {
+						t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
+					}
+					if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
+						t.Fatalf("unexpected runtime topology request: %+v", req)
+					}
+					if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7001-t7101-s8001" {
+						t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
+					}
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "awd-private-ctr",
+						NetworkID:          "net-awd-contest-7001",
+						AccessURL:          "http://awd-c7001-t7101-s8001:8080",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Networks: []model.InstanceRuntimeNetwork{
+								{
+									Key:       model.TopologyDefaultNetworkKey,
+									Name:      "ctf-awd-contest-7001",
+									NetworkID: "net-awd-contest-7001",
+									Shared:    true,
+								},
+							},
+							Containers: []model.InstanceRuntimeContainer{
+								{
+									NodeKey:        "default",
+									ContainerID:    "awd-private-ctr",
+									ServicePort:    8080,
+									IsEntryPoint:   true,
+									NetworkAliases: []string{"awd-c7001-t7101-s8001"},
+								},
 							},
 						},
-						Containers: []model.InstanceRuntimeContainer{
-							{
-								NodeKey:        "default",
-								ContainerID:    "awd-private-ctr",
-								ServicePort:    8080,
-								IsEntryPoint:   true,
-								NetworkAliases: []string{"awd-c7001-t7101-s8001"},
+					}, nil
+				case 2:
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "workspace-ctr",
+						NetworkID:          "net-awd-contest-7001",
+						AccessURL:          "tcp://172.30.0.20:22",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
-					},
-				}, nil
+					}, nil
+				default:
+					t.Fatalf("unexpected topology create call #%d", createTopologyCalls)
+					return nil, nil
+				}
 			},
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
 				t.Fatal("AWD service instances must not use host-port CreateContainer")
@@ -177,8 +227,8 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v", err)
 	}
-	if !createTopologyCalled {
-		t.Fatal("expected private topology creation")
+	if createTopologyCalls != 2 {
+		t.Fatalf("expected runtime and workspace topology creation, got %d calls", createTopologyCalls)
 	}
 	if instance.HostPort != 0 {
 		t.Fatalf("expected instance host port to remain empty, got %d", instance.HostPort)
@@ -207,43 +257,92 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	contestID := int64(7003)
 	teamID := int64(7103)
 	serviceID := int64(8003)
-	var createTopologyCalled bool
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "AWD Topology",
+		RuntimeConfig: map[string]any{
+			"image_id":         503,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "docker/workspace",
+				"workspace_roots": []string{"docker/workspace/src"},
+				"writable_roots":  []string{"docker/workspace/src"},
+				"readonly_roots":  []string{},
+				"runtime_mounts": []map[string]any{
+					{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
+	}
+	createTopologyCalls := 0
 	service := &Service{
-		imageRepo: challengeinfra.NewImageRepository(db),
+		repo: &stubPracticeRepository{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+				return &model.ContestAWDService{
+					ID:              gotServiceID,
+					ContestID:       gotContestID,
+					AWDChallengeID:  503,
+					IsVisible:       true,
+					ServiceSnapshot: serviceSnapshot,
+				}, nil
+			},
+		},
+		imageRepo:    challengeinfra.NewImageRepository(db),
+		instanceRepo: runtimeinfrarepo.NewRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
-				createTopologyCalled = true
-				if req.ReservedHostPort != 0 {
-					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
-				}
-				if req.ContainerName != "ctf-instance-challenge-c7003-t7103" {
-					t.Fatalf("expected awd container name, got %q", req.ContainerName)
-				}
-				if !req.DisableEntryPortPublishing {
-					t.Fatal("expected entry port publishing to be disabled")
-				}
-				if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7003" || !req.Networks[0].Shared {
-					t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
-				}
-				if len(req.Nodes) != 1 || req.Nodes[0].Key != "web" || !req.Nodes[0].IsEntryPoint {
-					t.Fatalf("unexpected topology nodes: %+v", req.Nodes)
-				}
-				if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7003-t7103-s8003" {
-					t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
-				}
-				return &practiceports.TopologyCreateResult{
-					PrimaryContainerID: "awd-topology-ctr",
-					NetworkID:          "net-awd-contest-7003",
-					AccessURL:          "http://awd-c7003-t7103-s8003:8080",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
-							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+				createTopologyCalls++
+				switch createTopologyCalls {
+				case 1:
+					if req.ReservedHostPort != 0 {
+						t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+					}
+					if req.ContainerName != "ctf-instance-challenge-c7003-t7103" {
+						t.Fatalf("expected awd container name, got %q", req.ContainerName)
+					}
+					if !req.DisableEntryPortPublishing {
+						t.Fatal("expected entry port publishing to be disabled")
+					}
+					if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7003" || !req.Networks[0].Shared {
+						t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
+					}
+					if len(req.Nodes) != 1 || req.Nodes[0].Key != "web" || !req.Nodes[0].IsEntryPoint {
+						t.Fatalf("unexpected topology nodes: %+v", req.Nodes)
+					}
+					if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7003-t7103-s8003" {
+						t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
+					}
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "awd-topology-ctr",
+						NetworkID:          "net-awd-contest-7003",
+						AccessURL:          "http://awd-c7003-t7103-s8003:8080",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Networks: []model.InstanceRuntimeNetwork{
+								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+							},
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "web", ContainerID: "awd-topology-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
+							},
 						},
-						Containers: []model.InstanceRuntimeContainer{
-							{NodeKey: "web", ContainerID: "awd-topology-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
+					}, nil
+				case 2:
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "workspace-ctr",
+						NetworkID:          "net-awd-contest-7003",
+						AccessURL:          "tcp://172.30.0.21:22",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+							},
 						},
-					},
-				}, nil
+					}, nil
+				default:
+					t.Fatalf("unexpected topology create call #%d", createTopologyCalls)
+					return nil, nil
+				}
 			},
 		},
 	}
@@ -275,11 +374,174 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	}, "flag{demo}"); err != nil {
 		t.Fatalf("createContainer() error = %v", err)
 	}
-	if !createTopologyCalled {
-		t.Fatal("expected private topology creation")
+	if createTopologyCalls != 2 {
+		t.Fatalf("expected runtime and workspace topology creation, got %d calls", createTopologyCalls)
 	}
 	if instance.AccessURL != "http://awd-c7003-t7103-s8003:8080" {
 		t.Fatalf("unexpected access url: %s", instance.AccessURL)
+	}
+}
+
+func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        601,
+		Name:      "ctf/awd-workspace",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7601)
+	teamID := int64(7701)
+	serviceID := int64(7801)
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "Campus Drive",
+		RuntimeConfig: map[string]any{
+			"image_id":         601,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "docker/workspace",
+				"workspace_roots": []string{"docker/workspace/src", "docker/workspace/data"},
+				"writable_roots":  []string{"docker/workspace/src"},
+				"readonly_roots":  []string{"docker/workspace/data"},
+				"runtime_mounts": []map[string]any{
+					{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+					{"source": "docker/workspace/data", "target": "/workspace/data", "mode": "ro"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
+	}
+
+	repo := &stubPracticeRepository{
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			if gotContestID != contestID || gotServiceID != serviceID {
+				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
+			}
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				DisplayName:     "Campus Drive",
+				AWDChallengeID:  8601,
+				IsVisible:       true,
+				ServiceSnapshot: serviceSnapshot,
+			}, nil
+		},
+	}
+
+	var requests []*practiceports.TopologyCreateRequest
+	service := &Service{
+		repo:         repo,
+		imageRepo:    challengeinfra.NewImageRepository(db),
+		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				requests = append(requests, req)
+				switch len(requests) {
+				case 1:
+					if len(req.Nodes) != 1 || req.Nodes[0].Image != "ctf/awd-workspace:v1" {
+						t.Fatalf("unexpected runtime topology request: %+v", req)
+					}
+					if len(req.Nodes[0].Mounts) != 2 {
+						t.Fatalf("expected runtime mounts, got %+v", req.Nodes[0].Mounts)
+					}
+					if req.Nodes[0].Mounts[0].Target != "/workspace/src" || req.Nodes[0].Mounts[1].Target != "/workspace/data" {
+						t.Fatalf("unexpected runtime mount targets: %+v", req.Nodes[0].Mounts)
+					}
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "runtime-ctr",
+						NetworkID:          "net-awd-contest-7601",
+						AccessURL:          "http://awd-c7601-t7701-s7801:8080",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Networks: []model.InstanceRuntimeNetwork{
+								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7601", NetworkID: "net-awd-contest-7601", Shared: true},
+							},
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "default", ContainerID: "runtime-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7601-t7701-s7801"}},
+							},
+						},
+					}, nil
+				case 2:
+					if len(req.Nodes) != 1 || req.Nodes[0].WorkingDir != "/workspace" {
+						t.Fatalf("unexpected workspace topology request: %+v", req)
+					}
+					if len(req.Nodes[0].Mounts) != 2 {
+						t.Fatalf("expected workspace mounts, got %+v", req.Nodes[0].Mounts)
+					}
+					if req.Nodes[0].Mounts[0].Source != requests[0].Nodes[0].Mounts[0].Source || req.Nodes[0].Mounts[1].Source != requests[0].Nodes[0].Mounts[1].Source {
+						t.Fatalf("expected shared workspace sources, runtime=%+v workspace=%+v", requests[0].Nodes[0].Mounts, req.Nodes[0].Mounts)
+					}
+					if req.Nodes[0].Mounts[0].Target != "/workspace/src" || req.Nodes[0].Mounts[1].Target != "/workspace/data" {
+						t.Fatalf("unexpected workspace mount targets: %+v", req.Nodes[0].Mounts)
+					}
+					if req.Nodes[0].Mounts[0].ReadOnly {
+						t.Fatalf("expected src root to stay writable, got %+v", req.Nodes[0].Mounts[0])
+					}
+					if !req.Nodes[0].Mounts[1].ReadOnly {
+						t.Fatalf("expected data root to stay readonly, got %+v", req.Nodes[0].Mounts[1])
+					}
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "workspace-ctr",
+						NetworkID:          "net-awd-contest-7601",
+						AccessURL:          "tcp://172.30.0.40:22",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+							},
+						},
+					}, nil
+				default:
+					t.Fatalf("unexpected topology create call #%d", len(requests))
+					return nil, nil
+				}
+			},
+		},
+		config: &config.Config{},
+	}
+
+	instance := &model.Instance{
+		ID:          9001,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ChallengeID: 601,
+	}
+	challenge := &model.Challenge{
+		ID:          601,
+		ImageID:     601,
+		FlagType:    model.FlagTypeStatic,
+		PackageSlug: stringPtr("campus-drive"),
+	}
+
+	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+		t.Fatalf("createSingleContainer() error = %v", err)
+	}
+	if len(requests) != 2 {
+		t.Fatalf("expected runtime and workspace topology creation, got %d calls", len(requests))
+	}
+	if instance.ContainerID != "runtime-ctr" || instance.AccessURL != "http://awd-c7601-t7701-s7801:8080" {
+		t.Fatalf("unexpected runtime instance after createSingleContainer(): %+v", instance)
+	}
+
+	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
+	}
+	if workspace == nil {
+		t.Fatal("expected workspace row to be created")
+	}
+	if workspace.WorkspaceRevision != 1 || workspace.Status != model.AWDDefenseWorkspaceStatusRunning || workspace.ContainerID != "workspace-ctr" {
+		t.Fatalf("unexpected workspace state: %+v", workspace)
 	}
 }
 
@@ -372,4 +634,8 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	if len(lookups) != 2 || lookups[0] != 1 || lookups[1] != 2 {
 		t.Fatalf("expected image lookups [1 2], got %v", lookups)
 	}
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

@@ -242,7 +242,7 @@ go test ./internal/model ./internal/module/runtime/infrastructure ./internal/mod
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/model code/backend/migrations code/backend/internal/module/runtime code/backend/internal/module/practice/ports code/backend/internal/module/contest/testsupport
@@ -269,7 +269,7 @@ git commit -m "feat(awd): 增加 defense workspace 状态模型"
 
 **Review focus:** runtime restart 是否只重建 service runtime，workspace roots 和 workspace container 是否默认保留。
 
-- [ ] **Step 1: 先写 mount-aware 失败测试**
+- [x] **Step 1: 先写 mount-aware 失败测试**
 
 补测试覆盖：
 
@@ -277,15 +277,15 @@ git commit -m "feat(awd): 增加 defense workspace 状态模型"
 - create/provision 路径会额外创建 workspace container
 - restart 不清空 workspace revision 和 workspace roots
 
-- [ ] **Step 2: 给 runtime container config 增加挂载能力**
+- [x] **Step 2: 给 runtime container config 增加挂载能力**
 
 在 `container.go`、`topology.go` 和 `practice/ports.go` 增加 mount 描述结构，支持 `rw / ro` 模式和 companion node 不对外发布端口。
 
-- [ ] **Step 3: 实现 Docker engine 与 provisioning service 的目录挂载**
+- [x] **Step 3: 实现 Docker engine 与 provisioning service 的目录挂载**
 
 在 `engine.go` 和 `provisioning_service.go` 中把 mount 配置真正映射到 Docker create request，并支持创建仅供 SSH 使用的 workspace container。
 
-- [ ] **Step 4: 接入 practice 实例生命周期**
+- [x] **Step 4: 接入 practice 实例生命周期**
 
 在 `runtime_container_create.go`、`instance_provisioning.go`、`instance_start_service.go` 中：
 
@@ -293,7 +293,7 @@ git commit -m "feat(awd): 增加 defense workspace 状态模型"
 - 普通 restart 仅 cleanup/recreate runtime container
 - `reseed / recreate` 路径才 bump workspace revision 并重建 workspace container
 
-- [ ] **Step 5: 跑 provisioning 与 restart 测试**
+- [x] **Step 5: 跑 provisioning 与 restart 测试**
 
 Run:
 
@@ -304,7 +304,7 @@ go test ./internal/module/runtime/... ./internal/module/practice/application/com
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/backend/internal/model/container.go code/backend/internal/module/runtime code/backend/internal/module/practice/application/commands code/backend/internal/module/practice/ports

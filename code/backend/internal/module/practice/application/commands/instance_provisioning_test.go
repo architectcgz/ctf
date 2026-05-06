@@ -383,20 +383,47 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	contestID := int64(7002)
 	teamID := int64(7102)
 	serviceID := int64(8002)
-	instanceStore := &stubPracticeInstanceStore{
-		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
-			if instance.Status != model.InstanceStatusRunning {
-				t.Fatalf("expected running status, got %+v", instance)
-			}
-			if instance.AccessURL != "http://awd-c7002-t7102-s8002:8080" {
-				t.Fatalf("expected stable alias access url, got %q", instance.AccessURL)
-			}
-			return nil
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "AWD Service",
+		RuntimeConfig: map[string]any{
+			"image_id":         502,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "runtime/workspace",
+				"workspace_roots": []string{"runtime/workspace/app"},
+				"writable_roots":  []string{"runtime/workspace/app"},
+				"readonly_roots":  []string{},
+				"runtime_mounts": []map[string]any{
+					{"source": "runtime/workspace/app", "target": "/workspace/app", "mode": "rw"},
+				},
+			},
 		},
+		FlagConfig: map[string]any{
+			"flag_type":   model.FlagTypeStatic,
+			"flag_prefix": "flag",
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
 	}
 	service := &Service{
+		repo: &stubPracticeRepository{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+				if gotContestID != contestID || gotServiceID != serviceID {
+					t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
+				}
+				return &model.ContestAWDService{
+					ID:              serviceID,
+					ContestID:       contestID,
+					AWDChallengeID:  502,
+					IsVisible:       true,
+					ServiceSnapshot: serviceSnapshot,
+				}, nil
+			},
+		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: instanceStore,
+		instanceRepo: runtimeinfrarepo.NewRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				return &practiceports.TopologyCreateResult{
@@ -432,6 +459,9 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 		ChallengeID: 502,
 		Status:      model.InstanceStatusCreating,
 	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
 	challenge := &model.Challenge{
 		ID:       502,
 		ImageID:  502,
@@ -440,6 +470,16 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 
 	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{demo}"); err != nil {
 		t.Fatalf("provisionInstance() should not host-probe AWD alias URL: %v", err)
+	}
+	var stored model.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("load stored instance: %v", err)
+	}
+	if stored.Status != model.InstanceStatusRunning {
+		t.Fatalf("expected running status, got %+v", stored)
+	}
+	if stored.AccessURL != "http://awd-c7002-t7102-s8002:8080" {
+		t.Fatalf("expected stable alias access url, got %+v", stored)
 	}
 }
 

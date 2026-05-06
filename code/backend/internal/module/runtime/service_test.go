@@ -903,6 +903,68 @@ func TestServiceCreateTopologyUsesPreferredContainerName(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-mounts",
+		containerIDs: []string{"workspace-ctr"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			return map[string]string{engine.createdNetworkName: "172.30.0.44"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		DisableEntryPortPublishing: true,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "workspace",
+				Image:           "python:3.12-alpine",
+				ServicePort:     22,
+				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				WorkingDir:      "/workspace",
+				Command:         []string{"tail", "-f", "/dev/null"},
+				Mounts: []model.ContainerMount{
+					{Source: "ctf-ws-src", Target: "/workspace/src"},
+					{Source: "ctf-ws-data", Target: "/workspace/data", ReadOnly: true},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if engine.createdContainerCfg == nil {
+		t.Fatal("expected container config to be created")
+	}
+	if engine.createdContainerCfg.WorkingDir != "/workspace" {
+		t.Fatalf("expected working dir /workspace, got %q", engine.createdContainerCfg.WorkingDir)
+	}
+	if len(engine.createdContainerCfg.Command) != 3 || engine.createdContainerCfg.Command[0] != "tail" {
+		t.Fatalf("expected workspace keepalive command, got %+v", engine.createdContainerCfg.Command)
+	}
+	if len(engine.createdContainerCfg.Mounts) != 2 {
+		t.Fatalf("expected two mounts, got %+v", engine.createdContainerCfg.Mounts)
+	}
+	if engine.createdContainerCfg.Mounts[0].Source != "ctf-ws-src" || engine.createdContainerCfg.Mounts[0].Target != "/workspace/src" {
+		t.Fatalf("unexpected writable mount: %+v", engine.createdContainerCfg.Mounts[0])
+	}
+	if engine.createdContainerCfg.Mounts[1].Source != "ctf-ws-data" || engine.createdContainerCfg.Mounts[1].Target != "/workspace/data" || !engine.createdContainerCfg.Mounts[1].ReadOnly {
+		t.Fatalf("unexpected readonly mount: %+v", engine.createdContainerCfg.Mounts[1])
+	}
+}
+
 func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 	t.Parallel()
 

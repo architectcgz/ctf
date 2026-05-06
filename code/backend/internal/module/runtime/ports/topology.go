@@ -6,11 +6,14 @@ type TopologyCreateNode struct {
 	Key             string
 	Image           string
 	Env             map[string]string
+	Command         []string
+	WorkingDir      string
 	ServicePort     int
 	ServiceProtocol string
 	IsEntryPoint    bool
 	NetworkKeys     []string
 	NetworkAliases  []string
+	Mounts          []model.ContainerMount
 	Resources       *model.ResourceLimits
 }
 
