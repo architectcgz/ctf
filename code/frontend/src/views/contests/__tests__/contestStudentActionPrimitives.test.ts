@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import awdDefenseServiceListSource from '@/components/contests/awd/AWDDefenseServiceList.vue?raw'
 import contestChallengeWorkspaceSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
 import contestTeamPanelSource from '@/components/contests/ContestTeamPanel.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
@@ -22,16 +23,18 @@ describe('contest student action primitives', () => {
   })
 
   it('AWD 工作台应保留当前战场控件原语与稳定选择器', () => {
-    expect(awdWorkspaceSource).toContain('class="hud-refresh-btn"')
-    expect(awdWorkspaceSource).toContain('class="asset-btn asset-btn--primary"')
-    expect(awdWorkspaceSource).toContain('class="war-room-select"')
-    expect(awdWorkspaceSource).toContain('class="war-room-input"')
-    expect(awdWorkspaceSource).toContain('class="flag-input"')
-    expect(awdWorkspaceSource).toContain('class="submit-btn"')
-    expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
-    expect(awdWorkspaceSource).toContain('id="awd-target-search"')
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn--primary\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn--ghost\s*\{/m)
+    const awdActionSurfaceSource = `${awdWorkspaceSource}\n${awdDefenseServiceListSource}`
+
+    expect(awdActionSurfaceSource).toContain('class="hud-refresh-btn"')
+    expect(awdActionSurfaceSource).toContain('class="asset-btn asset-btn--primary"')
+    expect(awdActionSurfaceSource).toContain('class="war-room-select"')
+    expect(awdActionSurfaceSource).toContain('class="war-room-input"')
+    expect(awdActionSurfaceSource).toContain('class="flag-input"')
+    expect(awdActionSurfaceSource).toContain('class="submit-btn"')
+    expect(awdActionSurfaceSource).toContain('id="awd-target-challenge"')
+    expect(awdActionSurfaceSource).toContain('id="awd-target-search"')
+    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn\s*\{/m)
+    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn--primary\s*\{/m)
+    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn--ghost\s*\{/m)
   })
 })
