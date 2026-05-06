@@ -1,6 +1,6 @@
 import type { Component } from 'vue'
 import { Bell, Flag, GraduationCap, Info, Trophy, X } from 'lucide-vue-next'
-import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { markAsRead as markAsReadApi } from '@/api/notification'
@@ -58,7 +58,6 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
   const toast = useToast()
   const open = ref(false)
   const trigger = useTemplateRef<HTMLButtonElement>('trigger')
-  const panel = useTemplateRef<HTMLDivElement>('panel')
 
   const unreadCount = computed(() => store.unreadCount)
   const items = computed(() => store.notifications)
@@ -125,32 +124,11 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
     }
   }
 
-  function handleDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      close()
-    }
-  }
-
-  watch(open, (isOpen) => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    if (isOpen) {
-      document.addEventListener('keydown', handleDocumentKeydown)
-      return
-    }
-    document.removeEventListener('keydown', handleDocumentKeydown)
-  })
-
-  onBeforeUnmount(() => {
-    document.body.style.overflow = ''
-    document.removeEventListener('keydown', handleDocumentKeydown)
-  })
-
   return {
     Bell,
     X,
     open,
     trigger,
-    panel,
     unreadCount,
     items,
     statusMeta,

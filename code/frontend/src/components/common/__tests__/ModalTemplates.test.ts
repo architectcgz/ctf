@@ -164,8 +164,11 @@ describe('modal templates', () => {
     expect(classicSource).not.toContain('background: rgba(219, 234, 254, 1);')
 
     expect(drawerSource).toContain('.modal-template-panel--drawer')
+    expect(drawerSource).toContain('.modal-template-drawer__head-main')
+    expect(drawerSource).toContain('.modal-template-drawer__title-block')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
-    expect(drawerSource).toContain('高度承载')
+    expect(drawerSource).not.toContain("eyebrow: 'Advanced Editor'")
+    expect(drawerSource).not.toContain('高度承载')
     expect(drawerSource).not.toContain('background: #ffffff;')
     expect(drawerSource).not.toContain('color: #059669;')
     expect(drawerSource).not.toContain('background: rgba(236, 253, 245, 1);')

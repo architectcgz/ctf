@@ -16,8 +16,7 @@ const props = withDefaults(
   }>(),
   {
     title: '题目高级配置',
-    subtitle: '在这里放置长表单、复杂配置或带有高度承载需求的内容。',
-    eyebrow: 'Advanced Editor',
+    eyebrow: '',
     width: '32rem',
     closeOnBackdrop: true,
     closeOnEscape: true,
@@ -68,10 +67,23 @@ function forwardClose(): void {
     <div class="modal-template-drawer">
       <header class="modal-template-drawer__header">
         <div class="modal-template-drawer__head-row">
-          <div class="modal-template-drawer__icon">
-            <slot name="icon">
-              <AlignLeft class="h-5 w-5" />
-            </slot>
+          <div class="modal-template-drawer__head-main">
+            <div class="modal-template-drawer__icon">
+              <slot name="icon">
+                <AlignLeft class="h-5 w-5" />
+              </slot>
+            </div>
+            <div class="modal-template-drawer__title-block">
+              <p
+                v-if="eyebrow"
+                class="modal-template-drawer__eyebrow"
+              >
+                {{ eyebrow }}
+              </p>
+              <h2 class="modal-template-drawer__title">
+                {{ title }}
+              </h2>
+            </div>
           </div>
           <button
             type="button"
@@ -82,22 +94,18 @@ function forwardClose(): void {
             <X class="h-4 w-4" />
           </button>
         </div>
-
-        <p
-          v-if="eyebrow"
-          class="modal-template-drawer__eyebrow"
-        >
-          {{ eyebrow }}
-        </p>
-        <h2 class="modal-template-drawer__title">
-          {{ title }}
-        </h2>
         <p
           v-if="subtitle"
           class="modal-template-drawer__subtitle"
         >
           {{ subtitle }}
         </p>
+        <div
+          v-if="$slots['header-extra']"
+          class="modal-template-drawer__header-extra"
+        >
+          <slot name="header-extra" />
+        </div>
       </header>
 
       <div class="modal-template-drawer__body">
@@ -150,6 +158,13 @@ function forwardClose(): void {
   gap: 1rem;
 }
 
+.modal-template-drawer__head-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.875rem;
+}
+
 .modal-template-drawer__icon {
   display: inline-flex;
   align-items: center;
@@ -161,6 +176,12 @@ function forwardClose(): void {
   background: color-mix(in srgb, var(--modal-template-drawer-accent) 10%, var(--color-bg-surface));
   color: color-mix(in srgb, var(--modal-template-drawer-accent) 92%, var(--color-text-primary));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--modal-template-drawer-accent) 10%, transparent);
+}
+
+.modal-template-drawer__title-block {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
 }
 
 .modal-template-drawer__close {
@@ -182,7 +203,7 @@ function forwardClose(): void {
 }
 
 .modal-template-drawer__eyebrow {
-  margin: 1rem 0 0;
+  margin: 0;
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -191,7 +212,7 @@ function forwardClose(): void {
 }
 
 .modal-template-drawer__title {
-  margin: 0.55rem 0 0;
+  margin: 0;
   font-size: 1.6rem;
   font-weight: 900;
   line-height: 1.08;
@@ -199,10 +220,14 @@ function forwardClose(): void {
 }
 
 .modal-template-drawer__subtitle {
-  margin: 0.75rem 0 0;
+  margin: 0.9rem 0 0;
   font-size: 0.8rem;
   line-height: 1.7;
   color: var(--color-text-secondary);
+}
+
+.modal-template-drawer__header-extra {
+  margin-top: 1rem;
 }
 
 .modal-template-drawer__body {

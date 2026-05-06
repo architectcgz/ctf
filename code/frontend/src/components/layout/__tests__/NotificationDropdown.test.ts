@@ -82,65 +82,69 @@ describe('NotificationDropdown', () => {
     ])
   })
 
-  it('uses the notification spec drawer shell instead of the old floating panel', () => {
-    expect(notificationDropdownSource).toContain('<Transition')
-    expect(notificationDropdownSource).toContain('name="notification-shell"')
-    expect(notificationDropdownSource).toContain('Notification Hub')
-    expect(notificationDropdownSource).toContain('class="notification-drawer')
-    expect(notificationDropdownSource).toContain('fixed top-0 right-0')
-    expect(notificationDropdownSource).toContain('h-screen')
-    expect(notificationDropdownSource).toContain('@media (min-width: 640px)')
-    expect(notificationDropdownSource).toContain('width: 420px;')
+  it('uses the notification spec drawer shell with compact header chrome', () => {
+    expect(notificationDropdownSource).toContain('SlideOverDrawer')
+    expect(notificationDropdownSource).toContain('class="notification-shell"')
+    expect(notificationDropdownSource).toContain('title="通知中心"')
+    expect(notificationDropdownSource).toContain('width="24.5rem"')
+    expect(notificationDropdownSource).toContain('<template #header-extra>')
     expect(notificationDropdownSource).toContain('全部标为已读')
-    expect(notificationDropdownSource).toContain('End of Notifications')
-    expect(notificationDropdownSource).toContain('.notification-shell-enter-active')
-    expect(notificationDropdownSource).not.toContain('notification-panel overflow-hidden border-l-2')
+    expect(notificationDropdownSource).toContain('查看全部')
+    expect(notificationDropdownSource).toContain(":deep(.notification-shell .modal-template-panel--drawer)")
+    expect(notificationDropdownSource).not.toContain('eyebrow="Notification Hub"')
+    expect(notificationDropdownSource).not.toContain('subtitle="集中查看系统、竞赛与训练相关提醒。"')
   })
 
-  it('tokenizes drawer and timeline surfaces so dark theme does not leak white panels', () => {
+  it('tokenizes drawer surfaces and keeps header compact around counts, status, and toolbar', () => {
     expect(notificationDropdownSource).toContain('--notification-surface')
     expect(notificationDropdownSource).toContain('--notification-line')
-    expect(notificationDropdownSource).toContain('class="notification-drawer')
-    expect(notificationDropdownSource).toContain('class="notification-panel-head')
-    expect(notificationDropdownSource).toContain('class="notification-panel-body')
-    expect(notificationDropdownSource).toContain(":global([data-theme='dark']) .notification-drawer")
+    expect(notificationDropdownSource).toContain('class="notification-overview"')
+    expect(notificationDropdownSource).toContain('class="notification-overview-row"')
+    expect(notificationDropdownSource).toContain('class="notification-counts"')
+    expect(notificationDropdownSource).toContain('class="notification-connection"')
+    expect(notificationDropdownSource).toContain('class="notification-toolbar"')
+    expect(notificationDropdownSource).toContain('--modal-template-shell-overlay')
+    expect(notificationDropdownSource).toContain(":deep(.notification-shell .modal-template-drawer)")
   })
 
-  it('notification summary chrome should avoid low-level arbitrary tailwind values', () => {
+  it('notification redesign should avoid arbitrary tailwind literals in the drawer chrome', () => {
     expect(notificationDropdownSource).not.toContain('text-[12px]')
+    expect(notificationDropdownSource).not.toContain('text-[10px]')
     expect(notificationDropdownSource).not.toContain('w-[1px]')
     expect(notificationDropdownSource).not.toContain('h-[1px]')
   })
 
-  it('通知抽屉头部应将消息数收进一行，并把操作按钮放到同一行', () => {
-    expect(notificationDropdownSource).toContain('class="notification-summary-stack mt-2"')
-    expect(notificationDropdownSource).toContain(
-      'class="notification-summary notification-summary-line text-xs font-medium"'
-    )
-    expect(notificationDropdownSource).toContain('消息数')
-    expect(notificationDropdownSource).toContain('未读数')
-    expect(notificationDropdownSource).toContain('class="notification-summary-actions"')
-    expect(notificationDropdownSource).toMatch(
-      /\.notification-summary-actions\s*\{[^}]*align-items:\s*center;[^}]*justify-content:\s*space-between;[^}]*gap:\s*var\(--space-3\);/s
-    )
-    expect(notificationDropdownSource).toMatch(
-      /\.notification-summary__value,\s*\.notification-summary__accent\s*\{[^}]*font-size:\s*var\(--font-size-16\);/s
-    )
-    expect(notificationDropdownSource).toContain(
-      'class="notification-summary-link notification-summary-action-row text-xs font-bold transition-colors"'
-    )
-    expect(notificationDropdownSource).not.toContain(
-      'class="flex items-center justify-between mt-2"'
-    )
-    expect(notificationDropdownSource).not.toContain('notification-summary-divider')
+  it('通知头部应使用紧凑统计、连接状态和文字工具条，而不是旧的摘要块', () => {
+    expect(notificationDropdownSource).toContain('class="notification-counts__value"')
+    expect(notificationDropdownSource).toContain('class="notification-counts__total"')
+    expect(notificationDropdownSource).toContain('class="notification-connection__dot"')
+    expect(notificationDropdownSource).toContain('class="notification-toolbar__divider"')
+    expect(notificationDropdownSource).toContain('未读')
+    expect(notificationDropdownSource).toContain('总计')
+    expect(notificationDropdownSource).not.toContain('notification-summary-cluster')
+    expect(notificationDropdownSource).not.toContain('notification-summary-actions')
   })
 
-  it('navigates to notification detail when clicking a timeline item', async () => {
+  it('通知列表应重构为整行可点击卡片，移除冗余详情按钮与旧时间轴痕迹', () => {
+    expect(notificationDropdownSource).toContain('class="notification-list"')
+    expect(notificationDropdownSource).toContain('class="notification-item-icon"')
+    expect(notificationDropdownSource).toContain('class="notification-item-main"')
+    expect(notificationDropdownSource).toContain('class="notification-item-meta"')
+    expect(notificationDropdownSource).toContain('class="notification-item-title-row"')
+    expect(notificationDropdownSource).toContain('class="notification-item-snippet"')
+    expect(notificationDropdownSource).toContain('class="notification-item-unread-dot"')
+    expect(notificationDropdownSource).toContain('gap: var(--space-2-5);')
+    expect(notificationDropdownSource).toContain('padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);')
+    expect(notificationDropdownSource).toContain('-webkit-line-clamp: 2;')
+    expect(notificationDropdownSource).not.toContain('查看详情')
+    expect(notificationDropdownSource).not.toContain('notification-rail')
+    expect(notificationDropdownSource).not.toContain('notification-endcap')
+  })
+
+  it('navigates to notification detail when clicking a notification row', async () => {
     const { wrapper, router } = await openDropdown()
 
-    const timelineItem = Array.from(document.body.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('打开详情并自动已读')
-    )
+    const timelineItem = document.body.querySelector('.notification-item')
 
     expect(timelineItem).toBeTruthy()
 

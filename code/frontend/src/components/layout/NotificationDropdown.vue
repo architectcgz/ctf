@@ -17,187 +17,140 @@
       </span>
     </button>
 
-    <Teleport to="body">
-      <Transition
-        appear
-        name="notification-shell"
-      >
-        <div
-          v-if="open"
-          class="fixed inset-0 z-[120]"
-        >
-          <div
-            class="notification-backdrop fixed inset-0 backdrop-blur-sm"
-            @click="close"
-          />
+    <SlideOverDrawer
+      :open="open"
+      class="notification-shell"
+      title="通知中心"
+      width="24.5rem"
+      @update:open="open = $event"
+      @close="close"
+    >
+      <template #icon>
+        <Bell class="h-5 w-5" />
+      </template>
 
-          <div
-            ref="panel"
-            class="notification-drawer fixed top-0 right-0 z-[130] flex h-screen w-full flex-col shadow-2xl"
-            @click.stop
-          >
-            <div class="notification-panel-head relative z-10 flex flex-col gap-4 px-6 py-6">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="notification-panel-kicker mb-1.5 flex items-center gap-1.5">
-                    <Bell class="h-3 w-3" /> Notification Hub
-                  </p>
-                  <h2 class="notification-panel-title text-2xl font-black tracking-tight">
-                    通知中心
-                  </h2>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div
-                    class="notification-status-pill inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-bold"
-                    :style="statusPillStyle"
-                  >
-                    <span
-                      class="inline-flex h-1.5 w-1.5 rounded-full animate-pulse"
-                      :style="{ backgroundColor: statusMeta.accentColor }"
-                    />
-                    {{ statusMeta.label }}
-                  </div>
-                  <button
-                    type="button"
-                    class="notification-mini-button flex h-8 w-8 items-center justify-center rounded-lg border transition-colors"
-                    aria-label="关闭通知中心"
-                    @click="close"
-                  >
-                    <X class="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div class="notification-summary-stack mt-2">
-                <span class="notification-summary notification-summary-line text-xs font-medium">
-                  <span class="notification-summary-label">消息数</span>
-                  <span class="notification-summary__value font-bold">{{ items.length }}</span>
-                  <span class="notification-summary-label">未读数</span>
-                  <span class="notification-summary__accent font-bold">{{ unreadCount }}</span>
-                </span>
-                <div class="notification-summary-actions">
-                  <button
-                    type="button"
-                    class="notification-summary-action notification-summary-action-row text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="unreadCount === 0"
-                    @click="markAllRead"
-                  >
-                    全部标为已读
-                  </button>
-                  <button
-                    type="button"
-                    class="notification-summary-link notification-summary-action-row text-xs font-bold transition-colors"
-                    @click="goToNotifications"
-                  >
-                    查看全部 <ChevronRight class="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+      <template #header-extra>
+        <div class="notification-overview">
+          <div class="notification-overview-row">
+            <div class="notification-counts">
+              <span class="notification-counts__value">{{ unreadCount }}</span>
+              <span class="notification-counts__label">未读</span>
+              <span class="notification-counts__split">/</span>
+              <span class="notification-counts__total">{{ items.length }} 总计</span>
             </div>
 
-            <div class="notification-panel-body relative flex-1 overflow-y-auto">
-              <div
-                v-if="items.length > 0"
-                class="notification-rail absolute top-0 bottom-0 z-0 w-px"
+            <div
+              class="notification-connection"
+              :title="statusMeta.label"
+            >
+              <span
+                class="notification-connection__dot"
+                :style="{ backgroundColor: statusMeta.accentColor }"
               />
-
-              <div
-                v-if="items.length === 0"
-                class="flex h-full items-center justify-center px-6 py-10"
-              >
-                <AppEmpty
-                  title="暂无通知"
-                  description="新的系统、训练或竞赛消息会在这里实时出现。"
-                  icon="Bell"
-                />
-              </div>
-
-              <div
-                v-else
-                class="notification-timeline py-2"
-              >
-                <div
-                  v-for="item in items"
-                  :key="item.id"
-                  class="notification-item group relative border-b pl-14 pr-6 py-6 transition-colors last:border-b-0"
-                  :class="item.unread ? 'notification-item--unread' : 'notification-item--read'"
-                >
-                  <div
-                    class="notification-item-dot absolute z-10 rounded-full transition-colors"
-                    :class="
-                      item.unread
-                        ? 'notification-item-dot--unread'
-                        : 'notification-item-dot--read'
-                    "
-                  />
-
-                  <div class="flex justify-between items-center mb-3 gap-3">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span
-                        class="notification-item-type rounded border px-2 py-0.5 font-black uppercase"
-                        :style="typeMeta(item.type).badgeStyle"
-                      >
-                        {{ typeMeta(item.type).label }}
-                      </span>
-                      <span
-                        v-if="item.unread"
-                        class="notification-item-unread rounded px-2 py-0.5 font-black uppercase"
-                      >
-                        未读
-                      </span>
-                    </div>
-                    <span class="notification-item-time shrink-0 font-mono font-bold">
-                      {{ formatDate(item.created_at) }}
-                    </span>
-                  </div>
-
-                  <h3
-                    class="notification-item-title mb-1.5 font-black tracking-tight"
-                    :class="{ 'notification-item-title--read': !item.unread }"
-                  >
-                    {{ item.title }}
-                  </h3>
-                  <p
-                    v-if="item.content"
-                    class="notification-entry-copy notification-item-copy mb-4 font-medium"
-                  >
-                    {{ item.content }}
-                  </p>
-
-                  <button
-                    type="button"
-                    class="notification-item-link inline-flex items-center gap-1.5 font-black transition-colors"
-                    :style="{ color: typeMeta(item.type).accentColor }"
-                    @click="goToNotificationDetail(item.id)"
-                  >
-                    <component
-                      :is="typeMeta(item.type).icon"
-                      class="h-3 w-3"
-                    />
-                    {{ item.unread ? '打开详情并自动已读' : '查看详情' }}
-                  </button>
-                </div>
-
-                <div class="notification-endcap flex items-center justify-center gap-3 py-8 text-center opacity-60">
-                  <div class="notification-endcap__line h-px w-12" />
-                  <span class="notification-endcap__label font-black uppercase">
-                    End of Notifications
-                  </span>
-                  <div class="notification-endcap__line h-px w-12" />
-                </div>
-              </div>
+              <span class="notification-connection__label">{{ statusMeta.label }}</span>
             </div>
           </div>
+
+          <div class="notification-toolbar">
+            <button
+              type="button"
+              class="notification-toolbar__link"
+              :disabled="unreadCount === 0"
+              @click="markAllRead"
+            >
+              全部标为已读
+            </button>
+            <span
+              class="notification-toolbar__divider"
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              class="notification-toolbar__link"
+              @click="goToNotifications"
+            >
+              查看全部
+            </button>
+          </div>
         </div>
-      </Transition>
-    </Teleport>
+      </template>
+
+      <div class="notification-panel-body relative flex-1 overflow-y-auto">
+        <div
+          v-if="items.length === 0"
+          class="notification-empty"
+        >
+          <div class="notification-empty__icon">
+            <Bell class="h-8 w-8" />
+          </div>
+          <p class="notification-empty__title">暂无新通知</p>
+          <p class="notification-empty__copy">新的系统、训练或竞赛消息会在这里出现。</p>
+        </div>
+
+        <div
+          v-else
+          class="notification-list"
+        >
+          <button
+            v-for="item in items"
+            :key="item.id"
+            type="button"
+            class="notification-item"
+            :class="{ 'notification-item--unread': item.unread }"
+            @click="goToNotificationDetail(item.id)"
+          >
+            <span
+              class="notification-item-icon"
+              :style="typeMeta(item.type).iconWrapStyle"
+            >
+              <component
+                :is="typeMeta(item.type).icon"
+                class="h-3.5 w-3.5"
+                :style="{ color: typeMeta(item.type).accentColor }"
+              />
+            </span>
+
+            <span class="notification-item-main">
+              <span class="notification-item-meta">
+                <span
+                  class="notification-item-type"
+                  :style="{ color: typeMeta(item.type).accentColor }"
+                >
+                  {{ typeMeta(item.type).label }}
+                </span>
+                <span class="notification-item-time">
+                  {{ formatDate(item.created_at) }}
+                </span>
+              </span>
+
+              <span class="notification-item-title-row">
+                <span class="notification-item-title">
+                  {{ item.title }}
+                </span>
+                <span
+                  v-if="item.unread"
+                  class="notification-item-unread-dot"
+                />
+              </span>
+
+              <span
+                v-if="item.content"
+                class="notification-item-snippet"
+              >
+                {{ item.content }}
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </SlideOverDrawer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Bell, ChevronRight, X } from 'lucide-vue-next'
+import { Bell } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
 import { useNotificationDropdown } from '@/features/notifications'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { formatDate } from '@/utils/format'
@@ -209,11 +162,9 @@ const props = defineProps<{
 const {
   open,
   trigger,
-  panel,
   unreadCount,
   items,
   statusMeta,
-  statusPillStyle,
   typeMeta,
   close,
   toggleOpen,
@@ -224,7 +175,11 @@ const {
 </script>
 
 <style scoped>
-.notification-drawer {
+:deep(.notification-shell.modal-template-shell--drawer) {
+  --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 45%, transparent);
+}
+
+:deep(.notification-shell .modal-template-panel--drawer) {
   --notification-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
   --notification-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-bg-surface));
   --notification-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 90%, var(--color-bg-surface));
@@ -233,164 +188,295 @@ const {
   --notification-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
   --notification-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
   --notification-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
-  --notification-accent-soft: color-mix(in srgb, var(--color-primary) 10%, var(--notification-surface));
   border-left: 1px solid var(--notification-line-strong);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--notification-surface-subtle) 96%, var(--color-bg-base))
-    );
+  box-shadow:
+    0 24px 56px color-mix(in srgb, var(--color-shadow-strong) 24%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 40%, transparent);
 }
 
-@media (min-width: 640px) {
-  .notification-drawer {
-    width: 420px;
-  }
+:deep(.notification-shell .modal-template-drawer) {
+  background: var(--notification-surface);
 }
 
-.notification-panel-head {
+:deep(.notification-shell .modal-template-drawer__header) {
+  padding: var(--space-5) var(--space-7) var(--space-3);
   border-bottom: 1px solid var(--notification-line);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--notification-surface-subtle) 92%, var(--color-bg-base))
-    );
+  background: var(--notification-surface);
 }
 
-.notification-panel-kicker {
-  font-size: 0.625rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--notification-faint);
+:deep(.notification-shell .modal-template-drawer__icon) {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--notification-line));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--notification-surface));
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-text));
 }
 
-.notification-panel-title {
+:deep(.notification-shell .modal-template-drawer__title) {
+  margin-top: var(--space-3);
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--notification-text);
 }
 
-.notification-summary-stack,
-.notification-summary-actions {
-  display: flex;
+:deep(.notification-shell .modal-template-drawer__header-extra) {
+  margin-top: var(--space-3);
 }
 
-.notification-summary-stack {
-  flex-direction: column;
+:deep(.notification-shell .modal-template-drawer__body) {
+  padding: 0;
+  background: var(--notification-surface);
+}
+
+:deep(.notification-shell .modal-template-drawer__close) {
+  border-color: var(--notification-line);
+  background: var(--notification-surface-subtle);
+  color: var(--notification-faint);
+}
+
+:deep(.notification-shell .modal-template-drawer__close:hover) {
+  border-color: var(--notification-line-strong);
+  background: var(--notification-surface-elevated);
+  color: var(--notification-text);
+}
+
+.notification-overview {
+  display: grid;
   gap: var(--space-2);
 }
 
-.notification-summary-actions {
+.notification-overview-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.notification-summary {
+.notification-counts {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1-5);
+}
+
+.notification-counts__value {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-18);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.notification-counts__label {
+  font-size: var(--font-size-11);
+  font-weight: 700;
   color: var(--notification-muted);
 }
 
-.notification-summary-line {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  white-space: nowrap;
-}
-
-.notification-summary-label {
-  margin-right: var(--space-1);
+.notification-counts__split {
+  font-size: var(--font-size-11);
   color: var(--notification-faint);
 }
 
-.notification-summary__value,
-.notification-summary__accent {
-  margin-right: var(--space-3);
-  font-size: var(--font-size-16);
-  line-height: 1.25rem;
-}
-
-.notification-summary__value {
-  color: var(--notification-text);
-}
-
-.notification-summary__accent,
-.notification-summary-link {
-  color: color-mix(in srgb, var(--color-primary) 90%, var(--notification-text));
-}
-
-.notification-summary__accent {
-  margin-right: 0;
-}
-
-.notification-summary-action {
-  color: var(--notification-muted);
-}
-
-.notification-summary-action-row {
-  display: inline-flex;
-  min-height: 1.75rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-}
-
-.notification-summary-link {
-  gap: var(--space-1);
-}
-
-.notification-summary-action:hover,
-.notification-summary-action:focus-visible {
-  color: color-mix(in srgb, var(--color-primary) 90%, var(--notification-text));
-}
-
-.notification-rail,
-.notification-endcap__line {
-  background: color-mix(in srgb, var(--notification-line) 86%, transparent);
-}
-
-.notification-status-pill,
-.notification-item-time,
-.notification-item-link {
+.notification-counts__total {
   font-size: var(--font-size-11);
+  font-weight: 600;
+  color: var(--notification-faint);
 }
 
-.notification-rail {
-  left: 35px;
+.notification-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0-5) var(--space-1-5);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--notification-line) 12%, transparent);
 }
 
-.notification-item-dot {
-  top: 2rem;
-  left: 31.5px;
-  width: 8px;
-  height: 8px;
-  box-shadow: 0 0 0 4px var(--tw-ring-color);
+.notification-connection__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
 }
 
-.notification-item-type,
-.notification-item-unread,
-.notification-endcap__label {
+.notification-connection__label {
   font-size: var(--font-size-10);
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--notification-faint);
 }
 
-.notification-item-title {
-  font-size: 0.875rem;
-  color: var(--notification-text);
+.notification-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.notification-item-copy {
-  font-size: 0.8125rem;
-  line-height: 1.625rem;
+.notification-toolbar__link {
+  font-size: var(--font-size-11);
+  font-weight: 700;
   color: var(--notification-muted);
+  transition: color 0.18s ease;
+}
+
+.notification-toolbar__link:hover:not(:disabled),
+.notification-toolbar__link:focus-visible:not(:disabled) {
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-text));
+}
+
+.notification-toolbar__link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.notification-toolbar__divider {
+  width: 1px;
+  height: 0.75rem;
+  background: color-mix(in srgb, var(--notification-line-strong) 88%, transparent);
 }
 
 .notification-panel-body {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--notification-surface-subtle) 90%, var(--color-bg-base))
-  );
+  background: var(--notification-surface);
+}
+
+.notification-empty {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+
+.notification-empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--notification-line) 14%, transparent);
+  color: var(--notification-faint);
+}
+
+.notification-empty__title {
+  margin-top: var(--space-4);
+  font-size: var(--font-size-14);
+  font-weight: 700;
+  color: var(--notification-text);
+}
+
+.notification-empty__copy {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-12);
+  color: var(--notification-muted);
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: var(--space-2-5);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--notification-line);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.notification-item:hover,
+.notification-item:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--notification-surface-subtle));
+  border-bottom-color: color-mix(in srgb, var(--color-primary) 14%, var(--notification-line));
+}
+
+.notification-item--unread {
+  background: color-mix(in srgb, var(--color-primary) 2%, transparent);
+}
+
+.notification-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.notification-item-main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.notification-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.notification-item-type {
+  font-size: var(--font-size-10);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.notification-item-time {
+  font-family: var(--font-family-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--notification-faint);
+  white-space: nowrap;
+}
+
+.notification-item-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.notification-item-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--notification-text);
+}
+
+.notification-item-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: var(--font-size-12);
+  line-height: 1.5;
+  color: var(--notification-muted);
+}
+
+.notification-item-unread-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-primary);
 }
 
 .notification-trigger {
@@ -416,158 +502,14 @@ const {
   box-shadow: 0 0 0 2px var(--notification-surface, var(--color-bg-surface));
 }
 
-.notification-backdrop {
-  background: color-mix(in srgb, var(--color-bg-base) 44%, transparent);
-}
-
-.notification-mini-button {
-  border-color: var(--notification-line);
-  background: var(--notification-surface-subtle);
-  color: var(--notification-faint);
-}
-
-.notification-mini-button:hover {
-  border-color: var(--notification-line-strong);
-  background: var(--notification-surface-elevated);
-  color: var(--notification-text);
-}
-
-.notification-mini-button:focus-visible,
 .notification-trigger:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
   outline-offset: 2px;
 }
 
-.notification-entry-copy {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.notification-item {
-  border-bottom-color: color-mix(in srgb, var(--notification-line) 72%, transparent);
-}
-
-.notification-item--unread {
-  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
-}
-
-.notification-item--read:hover {
-  background: color-mix(in srgb, var(--notification-line) 18%, transparent);
-}
-
-.notification-item-dot--unread {
-  background: color-mix(in srgb, var(--color-primary) 90%, var(--notification-text));
-  --tw-ring-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
-}
-
-.notification-item-dot--read {
-  background: color-mix(in srgb, var(--notification-faint) 92%, transparent);
-  --tw-ring-color: var(--notification-surface);
-}
-
-.group:hover .notification-item-dot--read {
-  background: color-mix(in srgb, var(--notification-muted) 92%, transparent);
-  --tw-ring-color: color-mix(in srgb, var(--notification-line) 28%, transparent);
-}
-
-.notification-item-type {
-  border-color: color-mix(in srgb, var(--notification-line-strong) 90%, transparent);
-  background: color-mix(in srgb, var(--notification-line) 18%, var(--notification-surface-subtle));
-  color: var(--notification-muted);
-}
-
-.notification-item-unread {
-  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-text));
-}
-
-.notification-item-time,
-.notification-endcap__label {
-  color: var(--notification-faint);
-}
-
-.notification-item-title--read {
-  color: color-mix(in srgb, var(--notification-text) 78%, var(--notification-muted));
-}
-
-:global([data-theme='light']) .notification-drawer {
-  --notification-surface: var(--color-bg-surface);
-  --notification-surface-subtle: var(--color-bg-elevated);
-  --notification-surface-elevated: var(--color-bg-surface);
-  --notification-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --notification-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --notification-text: var(--color-text-primary);
-  --notification-muted: var(--color-text-secondary);
-  --notification-faint: var(--color-text-muted);
-}
-
-:global([data-theme='dark']) .notification-drawer {
-  --notification-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --notification-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
-  --notification-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
-  --notification-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --notification-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --notification-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --notification-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --notification-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
-  box-shadow:
-    0 24px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 48%, transparent);
-}
-
-.notification-shell-enter-active,
-.notification-shell-leave-active {
-  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.notification-shell-enter-active .notification-backdrop,
-.notification-shell-leave-active .notification-backdrop,
-.notification-shell-enter-active .notification-drawer,
-.notification-shell-leave-active .notification-drawer {
-  transition:
-    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.notification-shell-enter-from,
-.notification-shell-leave-to {
-  opacity: 0;
-}
-
-.notification-shell-enter-from .notification-backdrop,
-.notification-shell-leave-to .notification-backdrop {
-  opacity: 0;
-}
-
-.notification-shell-enter-from .notification-drawer,
-.notification-shell-leave-to .notification-drawer {
-  opacity: 0;
-  transform: translate3d(28px, 0, 0);
-}
-
-.notification-shell-enter-to .notification-drawer,
-.notification-shell-leave-from .notification-drawer {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .notification-trigger,
-  .notification-shell-enter-active,
-  .notification-shell-leave-active,
-  .notification-shell-enter-active .notification-backdrop,
-  .notification-shell-leave-active .notification-backdrop,
-  .notification-shell-enter-active .notification-drawer,
-  .notification-shell-leave-active .notification-drawer {
+  .notification-trigger {
     transition-duration: 0.01ms !important;
-  }
-
-  .notification-shell-enter-from .notification-drawer,
-  .notification-shell-leave-to .notification-drawer {
-    transform: none;
   }
 }
 </style>
