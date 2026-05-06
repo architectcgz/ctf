@@ -487,7 +487,7 @@ npx vitest run src/api/__tests__/contest.test.ts src/views/contests/__tests__/Co
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add code/frontend/src
