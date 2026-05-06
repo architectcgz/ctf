@@ -507,7 +507,7 @@ git commit -m "feat(awd): 收敛学生侧 defense workspace 入口"
 
 **Review focus:** 设计事实源、实现计划和最终代码是否仍然对齐，是否还遗留任何学生可见的防守线索接口。
 
-- [ ] **Step 1: 跑后端集成验证**
+- [x] **Step 1: 跑后端集成验证**
 
 Run:
 
@@ -518,7 +518,7 @@ go test ./internal/module/challenge/... ./internal/module/practice/... ./interna
 
 Expected: PASS
 
-- [ ] **Step 2: 跑前端集成验证**
+- [x] **Step 2: 跑前端集成验证**
 
 Run:
 
@@ -529,7 +529,7 @@ npx vitest run src/api/__tests__/contest.test.ts src/views/contests/__tests__ sr
 
 Expected: PASS
 
-- [ ] **Step 3: 跑 harness 一致性检查**
+- [x] **Step 3: 跑 harness 一致性检查**
 
 Run:
 
@@ -540,7 +540,7 @@ bash scripts/check-consistency.sh
 
 Expected: PASS
 
-- [ ] **Step 4: 写独立 review 归档**
+- [x] **Step 4: 写独立 review 归档**
 
 按 `docs/reviews/architecture/` 约定记录：
 
@@ -548,7 +548,7 @@ Expected: PASS
 - restart / reseed 语义是否符合设计
 - workspace revision 与 SSH ticket 是否有遗漏
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/reviews/architecture docs/architecture/features challenges/awd/challenge-package-contract.md
