@@ -1,16 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type {
-  ContestAWDWorkspaceServiceData,
-  ContestChallengeItem,
-} from '@/api/contracts'
+import type { ContestAWDWorkspaceServiceData, ContestChallengeItem } from '@/api/contracts'
 import { toDefenseServiceCards } from './awdDefensePresentation'
 
-function challenge(
-  id: string,
-  title: string,
-  serviceId = `service-${id}`
-): ContestChallengeItem {
+function challenge(id: string, title: string, serviceId = `service-${id}`): ContestChallengeItem {
   return {
     id,
     challenge_id: `challenge-${id}`,
@@ -34,6 +27,11 @@ function service(
     awd_challenge_id: `awd-${serviceId}`,
     instance_id: `instance-${serviceId}`,
     instance_status: 'running',
+    defense_connection: {
+      entry_mode: 'ssh',
+      workspace_status: 'running',
+      workspace_revision: 1,
+    },
     service_status: 'up',
     attack_received: 0,
     sla_score: 100,
@@ -60,9 +58,13 @@ describe('awdDefensePresentation', () => {
       service('service-creating', { instance_status: 'creating' }),
     ]
 
-    expect(
-      toDefenseServiceCards({ challenges, services }).map((card) => card.title)
-    ).toEqual(['Compromised', 'Down', 'Attacked', 'Creating', 'Stable'])
+    expect(toDefenseServiceCards({ challenges, services }).map((card) => card.title)).toEqual([
+      'Compromised',
+      'Down',
+      'Attacked',
+      'Creating',
+      'Stable',
+    ])
   })
 
   it('生成服务卡状态、操作能力和风险原因', () => {

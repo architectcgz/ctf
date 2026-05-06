@@ -449,10 +449,10 @@ export interface ContestAWDWorkspaceTeamData {
   team_name: string
 }
 
-export interface AWDDefenseScopeData {
-  editable_paths?: string[]
-  protected_paths?: string[]
-  service_contracts?: string[]
+export interface AWDDefenseConnectionData {
+  entry_mode?: string
+  workspace_status?: string
+  workspace_revision?: number
 }
 
 export interface ContestAWDWorkspaceServiceData {
@@ -477,7 +477,7 @@ export interface ContestAWDWorkspaceServiceData {
   sla_score: number
   defense_score: number
   attack_score: number
-  defense_scope?: AWDDefenseScopeData
+  defense_connection?: AWDDefenseConnectionData
   updated_at?: ISODateTime
 }
 

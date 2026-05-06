@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExternalLink, ShieldCheck } from 'lucide-vue-next'
+import { ExternalLink } from 'lucide-vue-next'
 
 import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
 
@@ -13,7 +13,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   selectService: [serviceId: string]
-  openDefense: [serviceId: string]
   openService: [serviceId: string]
   requestSsh: [serviceId: string]
   restartService: [serviceId: string]
@@ -65,14 +64,6 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
       </div>
       <div class="asset-actions" role="group" :aria-label="`${service.title} 防守操作`">
         <button
-          class="asset-btn"
-          type="button"
-          @click.stop="emit('openDefense', service.serviceId)"
-        >
-          <ShieldCheck class="h-3 w-3" />
-          <span>防守</span>
-        </button>
-        <button
           v-if="service.instanceId"
           :disabled="!service.canOpenService || openingServiceKey === service.instanceId"
           class="asset-btn"
@@ -82,7 +73,6 @@ function isActionPending(card: AWDDefenseServiceCard): boolean {
           <ExternalLink class="h-3 w-3" />
         </button>
         <button
-          v-if="service.instanceId"
           :disabled="!service.canRequestSSH || openingSshKey === service.serviceId"
           class="asset-btn"
           type="button"

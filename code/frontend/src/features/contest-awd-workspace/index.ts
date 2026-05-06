@@ -6,10 +6,6 @@ export {
   getVSCodeSSHCommand,
   toDefenseServiceCards,
   useAwdDefenseServiceSelection,
-  useContestAwdDefenseWorkbenchPage,
   useContestAWDWorkspace,
 } from './model'
-export type {
-  AWDDefenseRiskLevel,
-  AWDDefenseServiceCard,
-} from './model'
+export type { AWDDefenseRiskLevel, AWDDefenseServiceCard } from './model'

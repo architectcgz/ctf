@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
 describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
@@ -10,7 +11,6 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('攻击向量')
     expect(awdWorkspaceSource).toContain('战场情报')
     expect(awdWorkspaceSource).toContain('最近战报')
-    expect(awdWorkspaceSource).toContain('ContestAWDDefenseWorkbench')
     expect(awdWorkspaceSource).toContain('目标题目')
     expect(awdWorkspaceSource).toContain('队伍筛选')
     expect(awdWorkspaceSource).toContain('输入获取到的 Flag...')
@@ -28,7 +28,9 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdDefenseConnectionPanelSource).toContain('票据将在')
     expect(awdDefenseConnectionPanelSource).toContain('expires_at')
     expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
-    expect(awdWorkspaceSource).toContain('openDefenseWorkbench')
+    expect(awdWorkspaceSource).not.toContain('openDefenseWorkbench')
+    expect(studentRoutesSource).not.toContain("name: 'ContestAWDDefenseWorkbench'")
+    expect(studentRoutesSource).not.toContain("path: 'contests/:id/awd/defense/:serviceId'")
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {

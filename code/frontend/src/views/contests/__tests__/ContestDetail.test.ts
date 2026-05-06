@@ -174,7 +174,6 @@ describe('ContestDetail', () => {
       routes: [
         { path: '/contests', component: { template: '<div>contests</div>' } },
         { path: '/contests/:id', component: { template: '<div />' } },
-        { path: '/contests/:id/awd/defense/:serviceId', name: 'ContestAWDDefenseWorkbench', component: { template: '<div>defense</div>' } },
       ],
     })
     await router.push('/contests/1')
@@ -196,7 +195,9 @@ describe('ContestDetail', () => {
   })
 
   it('页面应通过 feature route model 获取路由与派生状态，不再直接管理 tab 和 contest 可见性逻辑', () => {
-    expect(contestDetailSource).toContain("useContestDetailRoutePage } from '@/features/contest-detail'")
+    expect(contestDetailSource).toContain(
+      "useContestDetailRoutePage } from '@/features/contest-detail'"
+    )
     expect(contestDetailSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
     expect(contestDetailSource).not.toContain("from '@/stores/auth'")
     expect(contestDetailSource).not.toContain("from '@/utils/contest'")
@@ -866,7 +867,7 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('服务 #7010')
   })
 
-  it('点击防守按钮后应跳转到独立防守内容页', async () => {
+  it('学生 AWD 战场不再暴露独立防守工作台入口按钮', async () => {
     contestApiMocks.getContestDetail.mockResolvedValueOnce({
       id: '1',
       title: '2026 春季校园 AWD 联赛',
@@ -933,17 +934,9 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    const defenseButton = wrapper.findAll('button').find((node) => node.text().includes('防守'))
-    expect(defenseButton).toBeTruthy()
-
-    await defenseButton!.trigger('click')
-    await flushPromises()
-
-    expect(router.currentRoute.value.name).toBe('ContestAWDDefenseWorkbench')
-    expect(router.currentRoute.value.params).toMatchObject({
-      id: '1',
-      serviceId: '7009',
-    })
+    const defenseButton = wrapper.findAll('button').find((node) => node.text().trim() === '防守')
+    expect(defenseButton).toBeUndefined()
+    expect(router.currentRoute.value.fullPath).toBe('/contests/1')
   })
 
   it('学生 AWD 工作台应优先用 awd service 标识匹配运行态服务', async () => {

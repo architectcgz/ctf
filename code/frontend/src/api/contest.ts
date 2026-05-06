@@ -3,9 +3,6 @@ import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
-  AWDDefenseDirectoryData,
-  AWDDefenseFileData,
-  AWDDefenseFileSaveData,
   AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
@@ -430,46 +427,6 @@ export async function requestContestAWDDefenseSSH(
   return request<AWDDefenseSSHAccessData>({
     method: 'POST',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/ssh`,
-  })
-}
-
-export async function requestContestAWDDefenseDirectory(
-  contestId: string,
-  serviceId: string,
-  path: string
-): Promise<AWDDefenseDirectoryData> {
-  return request<AWDDefenseDirectoryData>({
-    method: 'GET',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/directories`,
-    params: { path },
-  })
-}
-
-export async function requestContestAWDDefenseFile(
-  contestId: string,
-  serviceId: string,
-  path: string
-): Promise<AWDDefenseFileData> {
-  return request<AWDDefenseFileData>({
-    method: 'GET',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
-    params: { path },
-  })
-}
-
-export async function requestContestAWDDefenseFileSave(
-  contestId: string,
-  serviceId: string,
-  payload: {
-    path: string
-    content: string
-    backup?: boolean
-  }
-): Promise<AWDDefenseFileSaveData> {
-  return request<AWDDefenseFileSaveData>({
-    method: 'PUT',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
-    data: payload,
   })
 }
 

@@ -452,7 +452,7 @@ git commit -m "feat(awd): 清理学生态 defense workspace DTO"
 
 **Review focus:** 学生侧是否只剩 battle panel 内的 SSH 连接信息展示，不再有“打开防守文件页”的路由和 API 调用。
 
-- [ ] **Step 1: 先改测试断言**
+- [x] **Step 1: 先改测试断言**
 
 让前端测试先表达新行为：
 
@@ -460,11 +460,11 @@ git commit -m "feat(awd): 清理学生态 defense workspace DTO"
 - battle panel 不再调用 `requestContestAWDDefenseDirectory` / `requestContestAWDDefenseFile` / `requestContestAWDDefenseFileSave`
 - defense 区只依赖 workspace summary + `requestContestAWDDefenseSSH`
 
-- [ ] **Step 2: 更新 API contracts**
+- [x] **Step 2: 更新 API contracts**
 
 把 `ContestAWDWorkspaceServiceData` 从 `defense_scope` 切换到新的连接摘要字段，同时删除浏览器 defense file API 类型依赖。
 
-- [ ] **Step 3: 清理 battle panel 与展示模型**
+- [x] **Step 3: 清理 battle panel 与展示模型**
 
 在 `ContestAWDWorkspacePanel.vue` 和 `awdDefensePresentation.ts` 中：
 
@@ -472,11 +472,11 @@ git commit -m "feat(awd): 清理学生态 defense workspace DTO"
 - 保留 SSH 命令、连接状态和 restart 反馈
 - 保证页面仍然能快速打开本队服务和目标服务
 
-- [ ] **Step 4: 删除路由和 workbench 文件**
+- [x] **Step 4: 删除路由和 workbench 文件**
 
 删掉独立 `ContestAWDDefenseWorkbench` 页面、对应 composable 和学生路由注册；同步清理相关测试。
 
-- [ ] **Step 5: 跑前端 AWD 相关测试**
+- [x] **Step 5: 跑前端 AWD 相关测试**
 
 Run:
 

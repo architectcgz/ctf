@@ -1,5 +1,5 @@
 import type {
-  AWDDefenseScopeData,
+  AWDDefenseConnectionData,
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ID,
@@ -16,7 +16,7 @@ export interface AWDDefenseServiceCard {
   riskReasons: string[]
   serviceStatusLabel: string
   instanceStatusLabel: string
-  defenseScope?: AWDDefenseScopeData
+  defenseConnection?: AWDDefenseConnectionData
   canOpenService: boolean
   canRequestSSH: boolean
   canRestart: boolean
@@ -66,9 +66,9 @@ export function toDefenseServiceCards({
         riskReasons: risk.reasons,
         serviceStatusLabel: getDisplayedServiceStatus(service).label,
         instanceStatusLabel: getDefenseInstanceStatusLabel(service),
-        defenseScope: service?.defense_scope,
+        defenseConnection: service?.defense_connection,
         canOpenService: canOpenDefenseService(service),
-        canRequestSSH: canOpenDefenseService(service),
+        canRequestSSH: canRequestDefenseSSH(service),
         canRestart: Boolean(service?.service_id),
         sortIndex: index,
       }
@@ -127,19 +127,23 @@ export function getDefenseServiceStatusLabel(status?: string): string {
 }
 
 export function getDefenseInstanceStatusLabel(service?: ContestAWDWorkspaceServiceData): string {
+  const workspaceStatus = service?.defense_connection?.workspace_status
   switch (service?.instance_status) {
     case 'pending':
-      return '重启队列中'
+      return workspaceStatus === 'running' ? '工作区可用，服务重启中' : '重启队列中'
     case 'creating':
-      return '正在启动'
+      return workspaceStatus === 'running' ? '工作区可用，服务启动中' : '正在启动'
     case 'running':
       if (service.service_status === 'down') {
         return '平台代理已就绪，等待状态同步'
       }
       return '平台代理已就绪'
     case 'failed':
-      return '启动失败'
+      return workspaceStatus === 'running' ? '工作区可用，服务启动失败' : '启动失败'
     default:
+      if (workspaceStatus === 'running') {
+        return '工作区已就绪'
+      }
       return service?.instance_id ? '已通过平台代理就绪' : '等待分配实例'
   }
 }
@@ -147,6 +151,14 @@ export function getDefenseInstanceStatusLabel(service?: ContestAWDWorkspaceServi
 export function canOpenDefenseService(service?: ContestAWDWorkspaceServiceData): boolean {
   return Boolean(
     service?.instance_id && (!service.instance_status || service.instance_status === 'running')
+  )
+}
+
+export function canRequestDefenseSSH(service?: ContestAWDWorkspaceServiceData): boolean {
+  return Boolean(
+    service?.service_id &&
+    service.defense_connection?.entry_mode === 'ssh' &&
+    service.defense_connection?.workspace_status === 'running'
   )
 }
 

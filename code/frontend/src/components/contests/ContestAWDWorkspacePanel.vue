@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   ShieldAlert,
   Sword,
@@ -38,7 +37,6 @@ const props = defineProps<{
   challenges: ContestChallengeItem[]
 }>()
 
-const router = useRouter()
 const toast = useToast()
 const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
@@ -103,12 +101,12 @@ const defenseServiceActionPendingById = computed(() => {
     const service = servicesByServiceId.value.get(card.serviceId)
     pendingById[card.serviceId] = Boolean(
       startingServiceKey.value === card.serviceId ||
-        serviceActionPendingById.value[card.serviceId] ||
-        service?.instance_status === 'pending' ||
-        service?.instance_status === 'creating' ||
-        service?.operation_status === 'requested' ||
-        service?.operation_status === 'provisioning' ||
-        service?.operation_status === 'recovering'
+      serviceActionPendingById.value[card.serviceId] ||
+      service?.instance_status === 'pending' ||
+      service?.instance_status === 'creating' ||
+      service?.operation_status === 'requested' ||
+      service?.operation_status === 'provisioning' ||
+      service?.operation_status === 'recovering'
     )
   }
   return pendingById
@@ -269,7 +267,10 @@ function getAWDChallengeId(challenge: ContestChallengeItem): string {
   return challenge.awd_challenge_id || challenge.challenge_id
 }
 
-function getChallengeTitleForEvent(event: { service_id?: string; awd_challenge_id: string }): string {
+function getChallengeTitleForEvent(event: {
+  service_id?: string
+  awd_challenge_id: string
+}): string {
   if (event.service_id) {
     const matchedByService = challengeByServiceId.value.get(event.service_id)
     if (matchedByService) return matchedByService.title
@@ -313,17 +314,6 @@ function openDefenseService(serviceId: string): void {
   const instanceId = servicesByServiceId.value.get(serviceId)?.instance_id
   if (!instanceId) return
   void openService(instanceId)
-}
-
-function openDefenseWorkbench(serviceId: string): void {
-  if (!serviceId || !props.contest.id) return
-  void router.push({
-    name: 'ContestAWDDefenseWorkbench',
-    params: {
-      id: props.contest.id,
-      serviceId,
-    },
-  })
 }
 
 async function copyTextToClipboard(text: string, successMessage: string): Promise<boolean> {
@@ -470,7 +460,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               :opening-ssh-key="openingSSHKey"
               :service-action-pending-by-id="defenseServiceActionPendingById"
               @select-service="selectService"
-              @open-defense="openDefenseWorkbench"
               @open-service="openDefenseService"
               @request-ssh="openDefenseSSH"
               @restart-service="restartService"
@@ -481,7 +470,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               :opening-service-key="openingServiceKey"
               :opening-ssh-key="openingSSHKey"
               :action-pending="
-                selectedServiceId ? Boolean(defenseServiceActionPendingById[selectedServiceId]) : false
+                selectedServiceId
+                  ? Boolean(defenseServiceActionPendingById[selectedServiceId])
+                  : false
               "
               :loading="loading"
               :access="getSSHAccess(selectedServiceId)"
@@ -492,7 +483,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               @refresh="refreshAll"
               @copy-command="copySSHCommand"
             />
-
           </div>
         </section>
       </aside>

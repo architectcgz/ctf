@@ -9,9 +9,6 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
-  requestContestAWDDefenseDirectory,
-  requestContestAWDDefenseFile,
-  requestContestAWDDefenseFileSave,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
   restartContestAWDServiceInstance,
@@ -84,6 +81,11 @@ describe('contest api contract', () => {
           awd_challenge_id: 9,
           instance_id: 9001,
           instance_status: 'running',
+          defense_connection: {
+            entry_mode: 'ssh',
+            workspace_status: 'running',
+            workspace_revision: 7,
+          },
           service_status: 'up',
           checker_type: 'http_standard',
           attack_received: 0,
@@ -135,6 +137,11 @@ describe('contest api contract', () => {
     expect(result.services[0].instance_id).toBe('9001')
     expect(result.services[0].instance_status).toBe('running')
     expect(result.services[0].access_url).toBeUndefined()
+    expect(result.services[0].defense_connection).toEqual({
+      entry_mode: 'ssh',
+      workspace_status: 'running',
+      workspace_revision: 7,
+    })
     expect(result.targets[0].services[0].service_id).toBe('7009')
     expect(result.targets[0].services[0].awd_challenge_id).toBe('9')
     expect(result.targets[0].services[0].reachable).toBe(true)
@@ -285,63 +292,4 @@ describe('contest api contract', () => {
     expect(result.username).toBe('student+7+7009')
     expect(result.password).toBe('ticket-secret')
   })
-
-  it('请求 AWD 防守目录时应调用只读目录接口', async () => {
-    requestMock.mockResolvedValue({
-      path: '.',
-      entries: [{ name: 'app.py', path: 'app.py', type: 'file', size: 13 }],
-    })
-
-    const result = await requestContestAWDDefenseDirectory('7', '7009', '.')
-
-    expect(requestMock).toHaveBeenCalledWith({
-      method: 'GET',
-      url: '/contests/7/awd/services/7009/defense/directories',
-      params: { path: '.' },
-    })
-    expect(result.entries[0].path).toBe('app.py')
-  })
-
-  it('请求 AWD 防守文件时应调用只读文件接口', async () => {
-    requestMock.mockResolvedValue({
-      path: 'app.py',
-      content: "print('vuln')",
-      size: 13,
-    })
-
-    const result = await requestContestAWDDefenseFile('7', '7009', 'app.py')
-
-    expect(requestMock).toHaveBeenCalledWith({
-      method: 'GET',
-      url: '/contests/7/awd/services/7009/defense/files',
-      params: { path: 'app.py' },
-    })
-    expect(result.content).toBe("print('vuln')")
-  })
-
-  it('保存 AWD 防守文件时应调用写入接口', async () => {
-    requestMock.mockResolvedValue({
-      path: 'app.py',
-      size: 14,
-      backup_path: 'app.py.bak.1715000000',
-    })
-
-    const result = await requestContestAWDDefenseFileSave('7', '7009', {
-      path: 'app.py',
-      content: "print('fixed')",
-      backup: true,
-    })
-
-    expect(requestMock).toHaveBeenCalledWith({
-      method: 'PUT',
-      url: '/contests/7/awd/services/7009/defense/files',
-      data: {
-        path: 'app.py',
-        content: "print('fixed')",
-        backup: true,
-      },
-    })
-    expect(result.backup_path).toBe('app.py.bak.1715000000')
-  })
-
 })
