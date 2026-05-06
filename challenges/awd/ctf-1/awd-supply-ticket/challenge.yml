@@ -31,7 +31,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/awd/awd-supply-ticket:latest
+    tag: latest
 
 topology:
   entry_node_key: web
@@ -100,14 +100,29 @@ extensions:
       instance_sharing: per_team
       service_port: 8080
       checker_token_env: CHECKER_TOKEN
+      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: rw
       defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
         protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
+          - docker/runtime/requirements.txt
           - docker/check/check.py
-          - docker/requirements.txt
           - challenge.yml
         service_contracts:
           - /health 必须返回 200

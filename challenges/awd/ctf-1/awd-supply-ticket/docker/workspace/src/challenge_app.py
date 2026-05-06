@@ -6,7 +6,7 @@ from flask import g, redirect, render_template_string, request, session, url_for
 
 from ctf_runtime import read_flag
 
-DB_PATH = Path("/data/ticket.db")
+DB_PATH = Path("/workspace/data/ticket.db")
 
 
 def db():

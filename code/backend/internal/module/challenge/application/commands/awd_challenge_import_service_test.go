@@ -491,23 +491,12 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+` + awdImportRuntimeConfigYAML(false) + `
 `,
-		slug + "/statement.md":            "银行门户存在越权修改 flag 的逻辑。",
-		slug + "/docker/app.py":           "print('entry')\n",
-		slug + "/docker/ctf_runtime.py":   "print('runtime')\n",
-		slug + "/docker/challenge_app.py": "print('challenge')\n",
-		slug + "/docker/check/check.py":   "print('check')\n",
+		slug + "/statement.md":          "银行门户存在越权修改 flag 的逻辑。",
+		slug + "/docker/check/check.py": "print('check')\n",
 	}
+	addAWDWorkspaceFixtureFiles(files, slug)
 
 	var buffer bytes.Buffer
 	writer := zip.NewWriter(&buffer)
@@ -585,24 +574,13 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+` + awdImportRuntimeConfigYAML(false) + `
 `,
-		"awd-platform-build/statement.md":            "平台构建 AWD 服务。",
-		"awd-platform-build/docker/Dockerfile":       "FROM python:3.12-alpine\nCOPY . /app\n",
-		"awd-platform-build/docker/app.py":           "print('entry')\n",
-		"awd-platform-build/docker/ctf_runtime.py":   "print('runtime')\n",
-		"awd-platform-build/docker/challenge_app.py": "print('challenge')\n",
-		"awd-platform-build/docker/check/check.py":   "print('check')\n",
+		"awd-platform-build/statement.md":                "平台构建 AWD 服务。",
+		"awd-platform-build/docker/runtime/Dockerfile":   "FROM python:3.12-alpine\nWORKDIR /app\nCOPY runtime /app/runtime\n",
+		"awd-platform-build/docker/check/check.py":       "print('check')\n",
 	}
+	addAWDWorkspaceFixtureFiles(files, "awd-platform-build")
 
 	var buffer bytes.Buffer
 	writer := zip.NewWriter(&buffer)
@@ -671,23 +649,12 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - PING 必须返回 PONG
+` + awdImportRuntimeConfigYAML(false) + `
 `,
-		"awd-tcp-length-gate/statement.md":            "TCP checker service.",
-		"awd-tcp-length-gate/docker/app.py":           "print('entry')\n",
-		"awd-tcp-length-gate/docker/ctf_runtime.py":   "print('runtime')\n",
-		"awd-tcp-length-gate/docker/challenge_app.py": "print('challenge')\n",
-		"awd-tcp-length-gate/docker/check/check.py":   "print('check')\n",
+		"awd-tcp-length-gate/statement.md":          "TCP checker service.",
+		"awd-tcp-length-gate/docker/check/check.py": "print('check')\n",
 	}
+	addAWDWorkspaceFixtureFiles(files, "awd-tcp-length-gate")
 
 	var buffer bytes.Buffer
 	writer := zip.NewWriter(&buffer)
@@ -771,23 +738,12 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+` + awdImportRuntimeConfigYAML(false) + `
 `,
-		slug + "/statement.md":            "Script checker service.",
-		slug + "/docker/check/check.py":   checkerContent,
-		slug + "/docker/app.py":           "print('entry')\n",
-		slug + "/docker/ctf_runtime.py":   "print('runtime')\n",
-		slug + "/docker/challenge_app.py": "print('challenge')\n",
+		slug + "/statement.md":          "Script checker service.",
+		slug + "/docker/check/check.py": checkerContent,
 	}
+	addAWDWorkspaceFixtureFiles(files, slug)
 
 	var buffer bytes.Buffer
 	writer := zip.NewWriter(&buffer)
@@ -857,25 +813,14 @@ extensions:
       service_port: 8080
     runtime_config:
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+` + awdImportRuntimeConfigYAML(false) + `
 `,
 		"script-checker-files/statement.md":                "Script checker service.",
 		"script-checker-files/docker/check/check.py":       "import protocol\nprint(protocol.STATUS)\n",
 		"script-checker-files/docker/check/protocol.py":    "STATUS = '{\"status\":\"ok\"}'\n",
 		"script-checker-files/docker/check/unused_file.py": "SHOULD_NOT_IMPORT = True\n",
-		"script-checker-files/docker/app.py":               "print('entry')\n",
-		"script-checker-files/docker/ctf_runtime.py":       "print('runtime')\n",
-		"script-checker-files/docker/challenge_app.py":     "print('challenge')\n",
 	}
+	addAWDWorkspaceFixtureFiles(files, "script-checker-files")
 
 	var buffer bytes.Buffer
 	writer := zip.NewWriter(&buffer)
@@ -892,4 +837,57 @@ extensions:
 		t.Fatalf("Close() error = %v", err)
 	}
 	return buffer.Bytes()
+}
+
+func awdImportRuntimeConfigYAML(includeCheckerToken bool) string {
+	extra := ""
+	if includeCheckerToken {
+		extra = "      checker_token_env: CHECKER_TOKEN\n"
+	}
+	return extra + `      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/templates
+            target: /workspace/templates
+            mode: rw
+          - source: docker/workspace/static
+            target: /workspace/static
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: ro
+      defense_scope:
+        protected_paths:
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+`
+}
+
+func addAWDWorkspaceFixtureFiles(files map[string]string, prefix string) {
+	files[prefix+"/docker/runtime/app.py"] = "print('entry')\n"
+	files[prefix+"/docker/runtime/ctf_runtime.py"] = "print('runtime')\n"
+	files[prefix+"/docker/workspace/src/app.py"] = "print('workspace entry')\n"
+	files[prefix+"/docker/workspace/src/service.py"] = "print('service logic')\n"
+	files[prefix+"/docker/workspace/templates/index.html"] = "<h1>workspace</h1>\n"
+	files[prefix+"/docker/workspace/static/site.css"] = "body { color: black; }\n"
+	files[prefix+"/docker/workspace/data/seed.txt"] = "seed\n"
 }

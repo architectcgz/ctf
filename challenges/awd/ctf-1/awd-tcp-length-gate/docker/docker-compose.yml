@@ -1,26 +1,24 @@
 name: ctf
 
 services:
-  ticket-app:
-    image: ctf/awd/awd-supply-ticket:latest
+  tcp-gate:
+    image: ctf/awd/awd-tcp-length-gate:latest
     build:
       context: .
       dockerfile: runtime/Dockerfile
     labels:
       ctf.project: ctf
       ctf.source: challenge-library
-      ctf.challenge.slug: awd-supply-ticket
+      ctf.challenge.slug: awd-tcp-length-gate
     ports:
-      - "18081:8080"
+      - "18084:8080"
     environment:
-      FLAG: "flag{awd_supply_ticket_demo}"
-      ADMIN_PASSWORD: "admin123"
-      CHECKER_TOKEN: "demo-checker-token"
+      FLAG: "flag{awd_tcp_length_gate_demo}"
     volumes:
       - ./runtime/app.py:/app/app.py:ro
       - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
       - ./workspace/src:/workspace/src:rw
-      - ticket-data:/workspace/data
+      - tcp-gate-data:/workspace/data
 
 volumes:
-  ticket-data:
+  tcp-gate-data:

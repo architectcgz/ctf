@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import redirect, request, send_file, url_for
 from werkzeug.utils import secure_filename
 
-DATA_DIR = Path("/data/uploads")
+DATA_DIR = Path("/workspace/data/uploads")
 ALLOWED_EXT = {".txt", ".png", ".jpg", ".jpeg", ".pdf"}
 
 

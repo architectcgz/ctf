@@ -1,44 +1,18 @@
 package domain
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"ctf-platform/pkg/errcode"
 )
 
-func TestParseAWDChallengePackageDir(t *testing.T) {
-	rootDir := t.TempDir()
-
-	manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: awd-bank-portal-01
-  title: Bank Portal AWD
-  category: web
-  difficulty: hard
-  points: 500
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    ref: registry.example.edu/ctf/awd-bank-portal:v1
-
-extensions:
-  awd:
-    service_type: web_http
-    deployment_mode: single_container
-    version: v2026.04
-    checker:
-      type: http_standard
+const (
+	defaultHTTPCheckerYAML = `      type: http_standard
       config:
         put_flag:
           method: PUT
@@ -54,52 +28,110 @@ extensions:
           method: GET
           path: /healthz
           expected_status: 200
-    flag_policy:
-      mode: dynamic_team
+`
+
+	defaultTCPCheckerYAML = `      type: tcp_standard
       config:
-        flag_prefix: awd
-        rotate_interval_sec: 120
-    defense_entry:
-      mode: http
-    access_config:
-      public_base_url: http://{{TEAM_HOST}}:8080
+        timeout_ms: 3000
+        steps:
+          - send: "PING\n"
+            expect_contains: PONG
+          - send_template: "SET_FLAG {{FLAG}}\n"
+            expect_contains: OK
+          - send: "GET_FLAG\n"
+            expect_contains: "{{FLAG}}"
+`
+
+	defaultHTTPAccessConfigYAML = `      public_base_url: http://{{TEAM_HOST}}:8080
       service_port: 8080
       exposed_ports:
         - port: 8080
           protocol: tcp
           purpose: http
-    runtime_config:
-      instance_sharing: per_team
+`
+
+	defaultTCPAccessConfigYAML = `      public_base_url: tcp://{{TEAM_HOST}}:8080
       service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: tcp
+`
+
+	defaultDefenseWorkspaceYAML = `      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/templates
+            target: /workspace/templates
+            mode: rw
+          - source: docker/workspace/static
+            target: /workspace/static
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: ro
+`
+
+	defaultDefenseScopeYAML = `      defense_scope:
         protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
           - docker/check/check.py
           - challenge.yml
         service_contracts:
           - /health 必须返回 200
 `
+)
 
-	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-		t.Fatalf("write challenge.yml: %v", err)
-	}
-	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
-		t.Fatalf("create docker/check dir: %v", err)
-	}
-	for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
-		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
-			t.Fatalf("write docker/%s: %v", item, err)
-		}
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
-		t.Fatalf("write docker/check/check.py: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("银行门户存在越权修改 flag 的逻辑。"), 0o644); err != nil {
-		t.Fatalf("write statement.md: %v", err)
-	}
+type awdManifestOptions struct {
+	Slug               string
+	Title              string
+	Category           string
+	Difficulty         string
+	ServiceType        string
+	Version            string
+	DefenseEntryMode   string
+	RuntimeImageBlock  string
+	CheckerBlock       string
+	AccessConfigBlock  string
+	RuntimeConfigBlock string
+}
+
+func TestParseAWDChallengePackageDir(t *testing.T) {
+	rootDir := t.TempDir()
+	writeDefaultAWDPackageLayout(t, rootDir, false, nil)
+	writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+		Slug:              "awd-bank-portal-01",
+		Title:             "Bank Portal AWD",
+		Category:          "web",
+		Difficulty:        "hard",
+		ServiceType:       "web_http",
+		Version:           "v2026.04",
+		DefenseEntryMode:  "http",
+		RuntimeImageBlock: "  image:\n    ref: registry.example.edu/ctf/awd-bank-portal:v1\n",
+		CheckerBlock:      defaultHTTPCheckerYAML,
+		AccessConfigBlock: defaultHTTPAccessConfigYAML,
+		RuntimeConfigBlock: joinRuntimeConfigBlocks(
+			"      checker_token_env: CHECKER_TOKEN\n",
+			defaultDefenseWorkspaceYAML,
+			defaultDefenseScopeYAML,
+		),
+	}))
 
 	parsed, err := ParseAWDChallengePackageDir(rootDir)
 	if err != nil {
@@ -127,89 +159,46 @@ extensions:
 	if parsed.RuntimeImageRef != "registry.example.edu/ctf/awd-bank-portal:v1" {
 		t.Fatalf("unexpected runtime image ref: %s", parsed.RuntimeImageRef)
 	}
+
+	defenseWorkspace, ok := parsed.RuntimeConfig["defense_workspace"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected defense_workspace in runtime_config, got %+v", parsed.RuntimeConfig)
+	}
+	workspaceRoots, ok := defenseWorkspace["workspace_roots"].([]any)
+	if !ok || len(workspaceRoots) != 4 {
+		t.Fatalf("unexpected defense_workspace.workspace_roots: %+v", defenseWorkspace)
+	}
+	if defenseWorkspace["seed_root"] != "docker/workspace" {
+		t.Fatalf("unexpected defense_workspace.seed_root: %+v", defenseWorkspace)
+	}
+	defenseScope, ok := parsed.RuntimeConfig["defense_scope"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected defense_scope in runtime_config, got %+v", parsed.RuntimeConfig)
+	}
+	if _, exists := defenseScope["editable_paths"]; exists {
+		t.Fatalf("expected defense_scope.editable_paths to be absent, got %+v", defenseScope)
+	}
 }
 
 func TestParseAWDChallengePackageDirAcceptsTCPStandardChecker(t *testing.T) {
 	rootDir := t.TempDir()
-
-	manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: awd-tcp-length-gate
-  title: TCP Length Gate
-  category: pwn
-  difficulty: medium
-  points: 500
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    ref: registry.example.edu/ctf/awd-tcp-length-gate:v1
-
-extensions:
-  awd:
-    service_type: binary_tcp
-    deployment_mode: single_container
-    version: v2026.04
-    checker:
-      type: tcp_standard
-      config:
-        timeout_ms: 3000
-        steps:
-          - send: "PING\n"
-            expect_contains: PONG
-          - send_template: "SET_FLAG {{FLAG}}\n"
-            expect_contains: OK
-          - send: "GET_FLAG\n"
-            expect_contains: "{{FLAG}}"
-    flag_policy:
-      mode: dynamic_team
-    defense_entry:
-      mode: tcp
-    access_config:
-      public_base_url: tcp://{{TEAM_HOST}}:8080
-      service_port: 8080
-    runtime_config:
-      instance_sharing: per_team
-      service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - PING 必须返回 PONG
-`
-
-	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-		t.Fatalf("write challenge.yml: %v", err)
-	}
-	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
-		t.Fatalf("create docker/check dir: %v", err)
-	}
-	for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
-		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
-			t.Fatalf("write docker/%s: %v", item, err)
-		}
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
-		t.Fatalf("write docker/check/check.py: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("TCP service."), 0o644); err != nil {
-		t.Fatalf("write statement.md: %v", err)
-	}
+	writeDefaultAWDPackageLayout(t, rootDir, false, nil)
+	writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+		Slug:              "awd-tcp-length-gate",
+		Title:             "TCP Length Gate",
+		Category:          "pwn",
+		Difficulty:        "medium",
+		ServiceType:       "binary_tcp",
+		Version:           "v2026.04",
+		DefenseEntryMode:  "tcp",
+		RuntimeImageBlock: "  image:\n    ref: registry.example.edu/ctf/awd-tcp-length-gate:v1\n",
+		CheckerBlock:      defaultTCPCheckerYAML,
+		AccessConfigBlock: defaultTCPAccessConfigYAML,
+		RuntimeConfigBlock: joinRuntimeConfigBlocks(
+			defaultDefenseWorkspaceYAML,
+			defaultDefenseScopeYAML,
+		),
+	}))
 
 	parsed, err := ParseAWDChallengePackageDir(rootDir)
 	if err != nil {
@@ -232,74 +221,23 @@ extensions:
 
 func TestParseAWDChallengePackageDirAllowsPlatformBuildWithoutRuntimeImageRef(t *testing.T) {
 	rootDir := t.TempDir()
-
-	manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: awd-platform-build
-  title: AWD Platform Build
-  category: web
-  difficulty: hard
-  points: 500
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    tag: c1
-
-extensions:
-  awd:
-    service_type: web_http
-    deployment_mode: single_container
-    checker:
-      type: http_standard
-    flag_policy:
-      mode: dynamic_team
-    defense_entry:
-      mode: http
-    access_config:
-      service_port: 8080
-    runtime_config:
-      instance_sharing: per_team
-      service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/challenge_app.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
-`
-
-	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-		t.Fatalf("write challenge.yml: %v", err)
-	}
-	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "check"), 0o755); err != nil {
-		t.Fatalf("create docker/check dir: %v", err)
-	}
-	for _, item := range []string{"Dockerfile", "app.py", "ctf_runtime.py", "challenge_app.py"} {
-		if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("FROM scratch\n"), 0o644); err != nil {
-			t.Fatalf("write docker/%s: %v", item, err)
-		}
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "docker", "check", "check.py"), []byte("print('check')\n"), 0o644); err != nil {
-		t.Fatalf("write docker/check/check.py: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
-		t.Fatalf("write statement.md: %v", err)
-	}
+	writeDefaultAWDPackageLayout(t, rootDir, true, nil)
+	writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+		Slug:              "awd-platform-build",
+		Title:             "AWD Platform Build",
+		Category:          "web",
+		Difficulty:        "hard",
+		ServiceType:       "web_http",
+		Version:           "v2026.05",
+		DefenseEntryMode:  "http",
+		RuntimeImageBlock: "  image:\n    tag: c1\n",
+		CheckerBlock:      defaultHTTPCheckerYAML,
+		AccessConfigBlock: defaultHTTPAccessConfigYAML,
+		RuntimeConfigBlock: joinRuntimeConfigBlocks(
+			defaultDefenseWorkspaceYAML,
+			defaultDefenseScopeYAML,
+		),
+	}))
 
 	parsed, err := ParseAWDChallengePackageDir(rootDir)
 	if err != nil {
@@ -315,187 +253,201 @@ extensions:
 	if parsed.SuggestedImageTag != "c1" {
 		t.Fatalf("SuggestedImageTag = %q, want c1", parsed.SuggestedImageTag)
 	}
-	if parsed.DockerfilePath == "" || parsed.BuildContextPath == "" {
-		t.Fatalf("expected build paths, got dockerfile=%q context=%q", parsed.DockerfilePath, parsed.BuildContextPath)
+	if !strings.HasSuffix(filepath.ToSlash(parsed.DockerfilePath), "docker/runtime/Dockerfile") {
+		t.Fatalf("expected runtime Dockerfile path, got %q", parsed.DockerfilePath)
+	}
+	if !strings.HasSuffix(filepath.ToSlash(parsed.BuildContextPath), "docker") {
+		t.Fatalf("expected docker build context, got %q", parsed.BuildContextPath)
 	}
 }
 
-func TestParseAWDChallengePackageDirRejectsInvalidDefenseScope(t *testing.T) {
+func TestParseAWDChallengePackageDirRejectsInvalidDefenseWorkspace(t *testing.T) {
 	cases := []struct {
-		name        string
-		defenseYAML string
+		name               string
+		runtimeConfigBlock string
+		extraFiles         map[string]string
+		wantContains       string
 	}{
 		{
 			name: "missing",
-			defenseYAML: `      instance_sharing: per_team
-      service_port: 8080
-`,
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				defaultDefenseScopeYAML,
+			),
+			wantContains: "defense_workspace 不能为空",
 		},
 		{
-			name: "editable fixed app entry",
-			defenseYAML: `      instance_sharing: per_team
-      service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/app.py
-        protected_paths:
-          - docker/ctf_runtime.py
-          - docker/check/check.py
+			name: "protected runtime root",
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				`      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/runtime
+        writable_roots:
+          - docker/runtime
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/runtime
+            target: /workspace/runtime
+            mode: rw
+`,
+				defaultDefenseScopeYAML,
+			),
+			wantContains: "不能包含受保护路径: docker/runtime",
+		},
+		{
+			name: "challenge manifest root",
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				`      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
           - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
-`,
-		},
-		{
-			name: "missing editable file",
-			defenseYAML: `      instance_sharing: per_team
-      service_port: 8080
-      defense_scope:
-        editable_paths:
-          - docker/missing.py
-        protected_paths:
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
+        writable_roots:
           - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: challenge.yml
+            target: /workspace/challenge.yml
+            mode: rw
 `,
+				defaultDefenseScopeYAML,
+			),
+			wantContains: "不能包含受保护路径: challenge.yml",
 		},
 		{
-			name: "overlap",
-			defenseYAML: `      instance_sharing: per_team
-      service_port: 8080
-      defense_scope:
-        editable_paths:
+			name: "single file legacy boundary",
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				`      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
           - docker/challenge_app.py
-        protected_paths:
+        writable_roots:
           - docker/challenge_app.py
-          - docker/app.py
-          - docker/ctf_runtime.py
-          - docker/check/check.py
-          - challenge.yml
-        service_contracts:
-          - /health 必须返回 200
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/challenge_app.py
+            target: /workspace/challenge_app.py
+            mode: rw
 `,
+				defaultDefenseScopeYAML,
+			),
+			extraFiles: map[string]string{
+				"docker/challenge_app.py": "print('legacy')\n",
+			},
+			wantContains: "必须指向目录: docker/challenge_app.py",
+		},
+		{
+			name: "overlap writable and readonly",
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				`      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+        readonly_roots:
+          - docker/workspace/src
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+`,
+				defaultDefenseScopeYAML,
+			),
+			wantContains: "writable_roots 与 readonly_roots 不能重叠",
+		},
+		{
+			name: "mount source outside workspace roots",
+			runtimeConfigBlock: joinRuntimeConfigBlocks(
+				`      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+          - docker/workspace/templates
+          - docker/workspace/static
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/private
+            target: /workspace/private
+            mode: rw
+`,
+				defaultDefenseScopeYAML,
+			),
+			extraFiles: map[string]string{
+				"docker/workspace/private/secret.txt": "secret\n",
+			},
+			wantContains: "runtime_mounts.source 必须来自 workspace_roots",
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			rootDir := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(rootDir, "docker"), 0o755); err != nil {
-				t.Fatalf("create docker dir: %v", err)
+			writeDefaultAWDPackageLayout(t, rootDir, false, tc.extraFiles)
+			writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+				Slug:              "awd-defense-workspace",
+				Title:             "AWD Defense Workspace",
+				Category:          "web",
+				Difficulty:        "hard",
+				ServiceType:       "web_http",
+				Version:           "v2026.04",
+				DefenseEntryMode:  "http",
+				RuntimeImageBlock: "  image:\n    ref: registry.example.edu/ctf/awd-defense-workspace:v1\n",
+				CheckerBlock:      defaultHTTPCheckerYAML,
+				AccessConfigBlock: defaultHTTPAccessConfigYAML,
+				RuntimeConfigBlock: tc.runtimeConfigBlock,
+			}))
+
+			_, err := ParseAWDChallengePackageDir(rootDir)
+			if err == nil {
+				t.Fatal("expected invalid defense_workspace to be rejected")
 			}
-			for _, item := range []string{"app.py", "ctf_runtime.py", "challenge_app.py"} {
-				if err := os.WriteFile(filepath.Join(rootDir, "docker", item), []byte("print('ok')\n"), 0o644); err != nil {
-					t.Fatalf("write docker/%s: %v", item, err)
-				}
-			}
-			if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
-				t.Fatalf("write statement.md: %v", err)
-			}
-
-			manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: awd-defense-scope
-  title: AWD Defense Scope
-  category: web
-  difficulty: hard
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    ref: registry.example.edu/ctf/awd-defense-scope:v1
-
-extensions:
-  awd:
-    service_type: web_http
-    deployment_mode: single_container
-    checker:
-      type: http_standard
-    flag_policy:
-      mode: dynamic_team
-    defense_entry:
-      mode: http
-    access_config:
-      service_port: 8080
-    runtime_config:
-` + tc.defenseYAML
-			if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-				t.Fatalf("write challenge.yml: %v", err)
-			}
-			if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
-				t.Fatal("expected invalid defense_scope to be rejected")
-			}
+			assertAppErrorCauseContains(t, err, tc.wantContains)
 		})
 	}
 }
 
-func TestParseAWDChallengePackageDirRejectsNestedDockerfile(t *testing.T) {
+func TestParseAWDChallengePackageDirRejectsLegacyDockerfileLayout(t *testing.T) {
 	rootDir := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(rootDir, "docker", "app"), 0o755); err != nil {
-		t.Fatalf("create docker/app dir: %v", err)
+	writeDefaultAWDPackageLayout(t, rootDir, false, map[string]string{
+		"docker/Dockerfile": "FROM python:3.12-alpine\n",
+	})
+	writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+		Slug:              "awd-legacy-dockerfile",
+		Title:             "AWD Legacy Dockerfile",
+		Category:          "web",
+		Difficulty:        "hard",
+		ServiceType:       "web_http",
+		Version:           "v2026.04",
+		DefenseEntryMode:  "http",
+		RuntimeImageBlock: "  image:\n    tag: c1\n",
+		CheckerBlock:      defaultHTTPCheckerYAML,
+		AccessConfigBlock: defaultHTTPAccessConfigYAML,
+		RuntimeConfigBlock: joinRuntimeConfigBlocks(
+			defaultDefenseWorkspaceYAML,
+			defaultDefenseScopeYAML,
+		),
+	}))
+
+	_, err := ParseAWDChallengePackageDir(rootDir)
+	if err == nil {
+		t.Fatal("expected legacy Dockerfile layout to be rejected")
 	}
-	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("awd statement"), 0o644); err != nil {
-		t.Fatalf("write statement.md: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(rootDir, "docker", "app", "Dockerfile"), []byte("FROM python:3.12-slim"), 0o644); err != nil {
-		t.Fatalf("write nested Dockerfile: %v", err)
-	}
-
-	manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: awd-nested-dockerfile
-  title: AWD Nested Dockerfile
-  category: web
-  difficulty: hard
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    ref: registry.example.edu/ctf/awd-nested-dockerfile:v1
-
-extensions:
-  awd:
-    service_type: web_http
-    deployment_mode: single_container
-    checker:
-      type: http_standard
-    flag_policy:
-      mode: dynamic_team
-    defense_entry:
-      mode: http
-    access_config:
-      service_port: 8080
-`
-	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-		t.Fatalf("write challenge.yml: %v", err)
-	}
-
-	if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
-		t.Fatal("expected nested Dockerfile to be rejected")
-	}
+	assertAppErrorCauseContains(t, err, "docker/runtime/Dockerfile")
 }
 
 func TestParseAWDChallengePackageDirRejectsInvalidScriptCheckerFiles(t *testing.T) {
@@ -513,61 +465,35 @@ func TestParseAWDChallengePackageDirRejectsInvalidScriptCheckerFiles(t *testing.
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			rootDir := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(rootDir, "docker/check"), 0o755); err != nil {
-				t.Fatalf("create checker dir: %v", err)
-			}
-			if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("script statement"), 0o644); err != nil {
-				t.Fatalf("write statement.md: %v", err)
-			}
-			if err := os.WriteFile(filepath.Join(rootDir, "docker/check/check.py"), []byte("print('ok')\n"), 0o644); err != nil {
-				t.Fatalf("write check.py: %v", err)
-			}
-			if err := os.WriteFile(filepath.Join(rootDir, "docker/check/protocol.py"), []byte("OK=True\n"), 0o644); err != nil {
-				t.Fatalf("write protocol.py: %v", err)
-			}
-
-			manifest := `api_version: v1
-kind: challenge
-
-meta:
-  mode: awd
-  slug: script-checker-files
-  title: Script Checker Files
-  category: web
-  difficulty: hard
-
-content:
-  statement: statement.md
-
-flag:
-  type: dynamic
-  prefix: awd
-
-runtime:
-  type: container
-  image:
-    ref: registry.example.edu/ctf/script:v1
-
-extensions:
-  awd:
-    service_type: web_http
-    deployment_mode: single_container
-    checker:
-      type: script_checker
+			writeDefaultAWDPackageLayout(t, rootDir, false, map[string]string{
+				"docker/check/protocol.py": "OK = True\n",
+			})
+			writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
+				Slug:              "script-checker-files",
+				Title:             "Script Checker Files",
+				Category:          "web",
+				Difficulty:        "hard",
+				ServiceType:       "web_http",
+				Version:           "v2026.04",
+				DefenseEntryMode:  "http",
+				RuntimeImageBlock: "  image:\n    ref: registry.example.edu/ctf/script:v1\n",
+				CheckerBlock: `      type: script_checker
       config:
         runtime: python3
         entry: docker/check/check.py
         files:
-` + tc.filesYAML + `    flag_policy:
-      mode: dynamic_team
-    defense_entry:
-      mode: http
-    access_config:
-      service_port: 8080
-`
-			if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
-				t.Fatalf("write challenge.yml: %v", err)
-			}
+` + tc.filesYAML + `        timeout_sec: 10
+        args:
+          - "{{TARGET_URL}}"
+        output: json
+`,
+				AccessConfigBlock: "      service_port: 8080\n",
+				RuntimeConfigBlock: joinRuntimeConfigBlocks(
+					defaultDefenseWorkspaceYAML,
+					defaultDefenseScopeYAML,
+				),
+			}))
+
 			if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
 				t.Fatal("expected invalid script_checker files to be rejected")
 			}
@@ -609,5 +535,139 @@ func TestBuildParsedChallengePackageRejectsAwdModeForJeopardyImport(t *testing.T
 
 	if _, err := buildParsedChallengePackage(rootDir, manifest, ""); err == nil {
 		t.Fatal("expected buildParsedChallengePackage() to reject awd mode")
+	}
+}
+
+func buildAWDManifest(opts awdManifestOptions) string {
+	category := opts.Category
+	if category == "" {
+		category = "web"
+	}
+	difficulty := opts.Difficulty
+	if difficulty == "" {
+		difficulty = "hard"
+	}
+	serviceType := opts.ServiceType
+	if serviceType == "" {
+		serviceType = "web_http"
+	}
+	version := opts.Version
+	if version == "" {
+		version = "v2026.04"
+	}
+	defenseEntryMode := opts.DefenseEntryMode
+	if defenseEntryMode == "" {
+		defenseEntryMode = "http"
+	}
+	return fmt.Sprintf(`api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: %s
+  title: %s
+  category: %s
+  difficulty: %s
+  points: 500
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+%sextensions:
+  awd:
+    service_type: %s
+    deployment_mode: single_container
+    version: %s
+    checker:
+%s    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: awd
+        rotate_interval_sec: 120
+    defense_entry:
+      mode: %s
+    access_config:
+%s    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+%s`,
+		opts.Slug,
+		opts.Title,
+		category,
+		difficulty,
+		opts.RuntimeImageBlock,
+		serviceType,
+		version,
+		opts.CheckerBlock,
+		defenseEntryMode,
+		opts.AccessConfigBlock,
+		opts.RuntimeConfigBlock,
+	)
+}
+
+func joinRuntimeConfigBlocks(blocks ...string) string {
+	var builder strings.Builder
+	for _, block := range blocks {
+		builder.WriteString(block)
+	}
+	return builder.String()
+}
+
+func writeAWDChallengeManifest(t *testing.T, rootDir, manifest string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+}
+
+func writeDefaultAWDPackageLayout(t *testing.T, rootDir string, withRuntimeDockerfile bool, extraFiles map[string]string) {
+	t.Helper()
+	files := map[string]string{
+		"statement.md":                     "AWD package statement.",
+		"docker/runtime/app.py":           "print('entry')\n",
+		"docker/runtime/ctf_runtime.py":   "print('runtime')\n",
+		"docker/workspace/src/app.py":     "print('workspace entry')\n",
+		"docker/workspace/src/service.py": "print('service logic')\n",
+		"docker/workspace/templates/index.html": "<h1>workspace</h1>\n",
+		"docker/workspace/static/site.css":      "body { color: black; }\n",
+		"docker/workspace/data/seed.txt":        "seed\n",
+		"docker/check/check.py":                 "print('check')\n",
+	}
+	if withRuntimeDockerfile {
+		files["docker/runtime/Dockerfile"] = "FROM python:3.12-alpine\nWORKDIR /app\nCOPY runtime /app/runtime\n"
+	}
+	for path, content := range extraFiles {
+		files[path] = content
+	}
+	writeTestFiles(t, rootDir, files)
+}
+
+func writeTestFiles(t *testing.T, rootDir string, files map[string]string) {
+	t.Helper()
+	for relPath, content := range files {
+		fullPath := filepath.Join(rootDir, relPath)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			t.Fatalf("create parent for %s: %v", relPath, err)
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+			t.Fatalf("write %s: %v", relPath, err)
+		}
+	}
+}
+
+func assertAppErrorCauseContains(t *testing.T, err error, want string) {
+	t.Helper()
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T (%v)", err, err)
+	}
+	if appErr.Cause == nil || !strings.Contains(appErr.Cause.Error(), want) {
+		t.Fatalf("expected cause containing %q, got %v", want, appErr.Cause)
 	}
 }

@@ -4,8 +4,8 @@ from pathlib import Path
 
 from flask import g, jsonify, request
 
-DB_PATH = Path("/data/iot.db")
-FIRMWARE_DIR = Path("/data/firmware")
+DB_PATH = Path("/workspace/data/iot.db")
+FIRMWARE_DIR = Path("/workspace/data/firmware")
 
 
 def db():
