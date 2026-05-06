@@ -425,7 +425,7 @@ go test ./internal/module/contest/application/queries ./internal/module/contest/
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add code/backend/internal/module/contest code/backend/internal/dto
