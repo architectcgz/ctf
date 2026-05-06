@@ -22,6 +22,7 @@
       class="notification-shell"
       title="通知中心"
       width="24.5rem"
+      body-padding="var(--space-0)"
       @update:open="open = $event"
       @close="close"
     >
@@ -222,8 +223,7 @@ const {
   margin-top: var(--space-3);
 }
 
-:global(.notification-shell .modal-template-panel--drawer .modal-template-drawer__body) {
-  padding: 0;
+:deep(.notification-shell .modal-template-drawer__body) {
   background: var(--notification-surface);
 }
 

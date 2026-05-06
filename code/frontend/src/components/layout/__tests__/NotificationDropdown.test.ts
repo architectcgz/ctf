@@ -87,6 +87,7 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('class="notification-shell"')
     expect(notificationDropdownSource).toContain('title="通知中心"')
     expect(notificationDropdownSource).toContain('width="24.5rem"')
+    expect(notificationDropdownSource).toContain('body-padding="var(--space-0)"')
     expect(notificationDropdownSource).toContain('<template #header-extra>')
     expect(notificationDropdownSource).toContain('全部标为已读')
     expect(notificationDropdownSource).toContain('查看全部')
@@ -105,6 +106,7 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('class="notification-toolbar"')
     expect(notificationDropdownSource).toContain('--modal-template-shell-overlay')
     expect(notificationDropdownSource).toContain(":deep(.notification-shell .modal-template-drawer)")
+    expect(notificationDropdownSource).not.toContain(':global(.notification-shell')
   })
 
   it('notification redesign should avoid arbitrary tailwind literals in the drawer chrome', () => {

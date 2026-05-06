@@ -11,6 +11,7 @@ const props = withDefaults(
     subtitle?: string
     eyebrow?: string
     width?: string
+    bodyPadding?: string
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
   }>(),
@@ -18,6 +19,7 @@ const props = withDefaults(
     title: '题目高级配置',
     eyebrow: '',
     width: '32rem',
+    bodyPadding: 'var(--space-8)',
     closeOnBackdrop: true,
     closeOnEscape: true,
   }
@@ -32,6 +34,7 @@ const overlayClass = 'modal-template-shell--drawer'
 // 将布局参数和视觉参数统一通过 CSS 变量传递
 const panelStyle = computed<Record<string, string>>(() => ({
   '--modal-template-drawer-width': props.width,
+  '--modal-template-drawer-body-padding': props.bodyPadding,
   '--drawer-overlay-blur': '12px',
   '--drawer-overlay-bg': 'color-mix(in srgb, var(--color-bg-base) 45%, transparent)',
 }))
@@ -233,7 +236,7 @@ function forwardClose(): void {
 .modal-template-drawer__body {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 2rem;
+  padding: var(--modal-template-drawer-body-padding);
 }
 
 .modal-template-drawer__footer {

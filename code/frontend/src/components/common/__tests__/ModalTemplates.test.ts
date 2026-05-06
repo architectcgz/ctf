@@ -164,6 +164,9 @@ describe('modal templates', () => {
     expect(classicSource).not.toContain('background: rgba(219, 234, 254, 1);')
 
     expect(drawerSource).toContain('.modal-template-panel--drawer')
+    expect(drawerSource).toContain('bodyPadding?: string')
+    expect(drawerSource).toContain("'--modal-template-drawer-body-padding': props.bodyPadding")
+    expect(drawerSource).toContain('padding: var(--modal-template-drawer-body-padding);')
     expect(drawerSource).toContain('.modal-template-drawer__head-main')
     expect(drawerSource).toContain('.modal-template-drawer__title-block')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
