@@ -433,6 +433,14 @@ func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ st
 	return fmt.Sprintf("contest-container-%d", reservedHostPort), fmt.Sprintf("contest-network-%d", reservedHostPort), reservedHostPort, 8080, nil
 }
 
+func (contestInstanceTestRuntimeService) InspectManagedContainer(context.Context, string) (*practiceports.ManagedContainerState, error) {
+	return &practiceports.ManagedContainerState{
+		Exists:  true,
+		Running: true,
+		Status:  "running",
+	}, nil
+}
+
 func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
 	t.Helper()
 

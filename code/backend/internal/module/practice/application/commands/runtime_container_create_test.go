@@ -107,6 +107,52 @@ func TestBuildRuntimeContainerNameIncludesServiceIDWhenChallengeSlugMissing(t *t
 	}
 }
 
+func TestApplyAWDStableNetworkToTopologyRequestSkipsContainerNameForMultiNodeTopology(t *testing.T) {
+	t.Parallel()
+
+	contestID := int64(10)
+	teamID := int64(17)
+	serviceID := int64(23)
+	packageSlug := "Campus Drive"
+	request := &practiceports.TopologyCreateRequest{
+		Networks: []practiceports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []practiceports.TopologyCreateNode{
+			{
+				Key:          "web",
+				IsEntryPoint: true,
+				NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+			},
+			{
+				Key:         "worker",
+				NetworkKeys: []string{model.TopologyDefaultNetworkKey},
+			},
+		},
+	}
+
+	applyAWDStableNetworkToTopologyRequest(&model.Instance{
+		ContestID: &contestID,
+		TeamID:    &teamID,
+		ServiceID: &serviceID,
+	}, &model.Challenge{
+		PackageSlug: &packageSlug,
+	}, request)
+
+	if request.ContainerName != "" {
+		t.Fatalf("expected multi-node AWD topology to skip preferred container name, got %q", request.ContainerName)
+	}
+	if len(request.Networks) != 1 || request.Networks[0].Name != "ctf-awd-contest-10" || !request.Networks[0].Shared {
+		t.Fatalf("expected shared AWD contest network, got %+v", request.Networks)
+	}
+	if len(request.Nodes[0].NetworkAliases) != 1 || request.Nodes[0].NetworkAliases[0] != "awd-c10-t17-s23" {
+		t.Fatalf("expected stable AWD alias on entry node, got %+v", request.Nodes[0].NetworkAliases)
+	}
+	if len(request.Nodes[1].NetworkAliases) != 0 {
+		t.Fatalf("expected non-entry node aliases unchanged, got %+v", request.Nodes[1].NetworkAliases)
+	}
+}
+
 func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	t.Parallel()
 
@@ -217,6 +263,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 					if len(req.Nodes) != 1 || len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-ws-c7001-t7101-s8001-r1" {
 						t.Fatalf("expected stable workspace alias, got %+v", req.Nodes)
 					}
+					assertAWDDefenseWorkspaceShellNode(t, req.Nodes[0])
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7001",
@@ -513,6 +560,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 					if len(req.Nodes) != 1 || req.Nodes[0].WorkingDir != "/workspace" {
 						t.Fatalf("unexpected workspace topology request: %+v", req)
 					}
+					assertAWDDefenseWorkspaceShellNode(t, req.Nodes[0])
 					if len(req.Nodes[0].Mounts) != 2 {
 						t.Fatalf("expected workspace mounts, got %+v", req.Nodes[0].Mounts)
 					}

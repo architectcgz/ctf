@@ -1013,6 +1013,7 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 			{
 				Key:             "workspace",
 				Image:           "python:3.12-alpine",
+				Env:             map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "TERM": "xterm-256color"},
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
@@ -1046,6 +1047,18 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 	}
 	if engine.createdContainerCfg.Mounts[1].Source != "ctf-ws-data" || engine.createdContainerCfg.Mounts[1].Target != "/workspace/data" || !engine.createdContainerCfg.Mounts[1].ReadOnly {
 		t.Fatalf("unexpected readonly mount: %+v", engine.createdContainerCfg.Mounts[1])
+	}
+	for _, wantEnv := range []string{"LANG=C.UTF-8", "LC_ALL=C.UTF-8", "TERM=xterm-256color"} {
+		found := false
+		for _, gotEnv := range engine.createdContainerCfg.Env {
+			if gotEnv == wantEnv {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected env %q in container config, got %+v", wantEnv, engine.createdContainerCfg.Env)
+		}
 	}
 }
 

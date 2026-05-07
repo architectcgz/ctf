@@ -16,7 +16,16 @@ import (
 const (
 	awdDefenseWorkspaceShellImage = "python:3.12-alpine"
 	awdDefenseWorkspaceWorkingDir = "/workspace"
+	// Keep the companion shell usable out of the box instead of relying on the
+	// SSH client to negotiate locale/editor state each time.
+	awdDefenseWorkspaceBootstrapCommand = "if ! command -v git >/dev/null 2>&1 || ! command -v vim >/dev/null 2>&1 || ! command -v nano >/dev/null 2>&1; then apk add --no-cache git vim nano; fi && exec tail -f /dev/null"
 )
+
+var awdDefenseWorkspaceShellEnv = map[string]string{
+	"LANG":   "C.UTF-8",
+	"LC_ALL": "C.UTF-8",
+	"TERM":   "xterm-256color",
+}
 
 type awdDefenseWorkspaceRepository interface {
 	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
@@ -359,7 +368,8 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 			{
 				Key:             "workspace",
 				Image:           awdDefenseWorkspaceShellImage,
-				Command:         []string{"tail", "-f", "/dev/null"},
+				Env:             cloneAWDDefenseWorkspaceShellEnv(),
+				Command:         []string{"/bin/sh", "-lc", awdDefenseWorkspaceBootstrapCommand},
 				WorkingDir:      awdDefenseWorkspaceWorkingDir,
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
@@ -374,4 +384,12 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 		return "", err
 	}
 	return strings.TrimSpace(result.PrimaryContainerID), nil
+}
+
+func cloneAWDDefenseWorkspaceShellEnv() map[string]string {
+	cloned := make(map[string]string, len(awdDefenseWorkspaceShellEnv))
+	for key, value := range awdDefenseWorkspaceShellEnv {
+		cloned[key] = value
+	}
+	return cloned
 }

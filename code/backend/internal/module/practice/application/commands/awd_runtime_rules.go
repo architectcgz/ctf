@@ -48,7 +48,9 @@ func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, chal *mode
 	if !isAWDInstance(instance) || request == nil {
 		return
 	}
-	request.ContainerName = buildRuntimeContainerName(chal, instance)
+	if len(request.Nodes) == 1 {
+		request.ContainerName = buildRuntimeContainerName(chal, instance)
+	}
 	entryIndex := -1
 	for idx := range request.Nodes {
 		if request.Nodes[idx].IsEntryPoint {

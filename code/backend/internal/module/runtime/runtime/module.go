@@ -265,7 +265,7 @@ type runtimePracticeDeps struct {
 func buildRuntimePracticeDeps(deps runtimeModuleDeps) runtimePracticeDeps {
 	return runtimePracticeDeps{
 		instanceRepository: deps.practiceInstanceRepo,
-		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService),
+		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService, deps.input.Engine),
 	}
 }
 

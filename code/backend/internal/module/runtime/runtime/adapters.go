@@ -416,15 +416,21 @@ func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 type runtimePracticeServiceAdapter struct {
 	cleaner     *runtimecmd.RuntimeCleanupService
 	provisioner *runtimecmd.ProvisioningService
+	inspector   runtimePracticeContainerInspector
 }
 
-func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService) practiceports.RuntimeInstanceService {
-	if cleaner == nil && provisioner == nil {
+type runtimePracticeContainerInspector interface {
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
+}
+
+func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, inspector runtimePracticeContainerInspector) practiceports.RuntimeInstanceService {
+	if cleaner == nil && provisioner == nil && inspector == nil {
 		return nil
 	}
 	return &runtimePracticeServiceAdapter{
 		cleaner:     cleaner,
 		provisioner: provisioner,
+		inspector:   inspector,
 	}
 }
 
@@ -454,6 +460,22 @@ func (a *runtimePracticeServiceAdapter) CreateContainer(ctx context.Context, ima
 	return a.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
+func (a *runtimePracticeServiceAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
+	if a == nil || a.inspector == nil {
+		return nil, nil
+	}
+	state, err := a.inspector.InspectManagedContainer(ctx, containerID)
+	if err != nil || state == nil {
+		return nil, err
+	}
+	return &practiceports.ManagedContainerState{
+		ID:      state.ID,
+		Exists:  state.Exists,
+		Running: state.Running,
+		Status:  state.Status,
+	}, nil
+}
+
 func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {
 	if req == nil {
 		return nil
@@ -475,11 +497,14 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 			Key:             node.Key,
 			Image:           node.Image,
 			Env:             cloneRuntimeStringMap(node.Env),
+			Command:         append([]string(nil), node.Command...),
+			WorkingDir:      node.WorkingDir,
 			ServicePort:     node.ServicePort,
 			ServiceProtocol: node.ServiceProtocol,
 			IsEntryPoint:    node.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
 			NetworkAliases:  append([]string(nil), node.NetworkAliases...),
+			Mounts:          append([]model.ContainerMount(nil), node.Mounts...),
 			Resources:       cloneRuntimeResourceLimits(node.Resources),
 		})
 	}
@@ -490,6 +515,7 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
+		ContainerName:              req.ContainerName,
 	}
 }
 

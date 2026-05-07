@@ -555,6 +555,17 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(context.Context, *model.Instance) error { return nil },
+			inspectManagedContainerFn: func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
+				if containerID != "workspace-existing" {
+					t.Fatalf("unexpected workspace inspect: %s", containerID)
+				}
+				return &practiceports.ManagedContainerState{
+					ID:      containerID,
+					Exists:  true,
+					Running: true,
+					Status:  "running",
+				}, nil
+			},
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				createTopologyCalls.Add(1)
 				return &practiceports.TopologyCreateResult{
@@ -610,6 +621,238 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	}
 	if workspace.ContainerID != "workspace-existing" {
 		t.Fatalf("expected workspace container to be reused, got %+v", workspace)
+	}
+}
+
+func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	contestID := int64(9201)
+	teamID := int64(9202)
+	serviceID := int64(9203)
+	userID := int64(9204)
+	imageID := int64(9205)
+	challengeID := int64(9206)
+
+	if err := db.Create(&model.Image{
+		ID:        imageID,
+		Name:      "ctf/awd-runtime",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:        challengeID,
+		Title:     "Restart Service",
+		ImageID:   imageID,
+		Status:    model.ChallengeStatusPublished,
+		FlagType:  model.FlagTypeStatic,
+		FlagHash:  "flag{restart}",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Restart Recreate",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.User{ID: userID, Username: "restart-student-2", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := db.Create(&model.ContestRegistration{
+		ContestID: contestID,
+		UserID:    userID,
+		TeamID:    &teamID,
+		Status:    model.ContestRegistrationStatusApproved,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create registration: %v", err)
+	}
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "Restart Service",
+		RuntimeConfig: map[string]any{
+			"image_id":         imageID,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "docker/workspace",
+				"workspace_roots": []string{"docker/workspace/src"},
+				"writable_roots":  []string{"docker/workspace/src"},
+				"readonly_roots":  []string{},
+				"runtime_mounts": []map[string]any{
+					{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
+	}
+	if err := db.Create(&model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		AWDChallengeID:  challengeID,
+		DisplayName:     "Restart Service",
+		ServiceSnapshot: serviceSnapshot,
+		IsVisible:       true,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create awd service: %v", err)
+	}
+
+	instance := &model.Instance{
+		ID:          9301,
+		UserID:      userID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ShareScope:  model.InstanceSharingPerTeam,
+		ContainerID: "runtime-old",
+		NetworkID:   "net-old",
+		AccessURL:   "http://awd-c9201-t9202-s9203:8080",
+		Nonce:       "nonce",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+	if err := db.Create(&model.AWDDefenseWorkspace{
+		ContestID:         contestID,
+		TeamID:            teamID,
+		ServiceID:         serviceID,
+		InstanceID:        instance.ID,
+		WorkspaceRevision: 4,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-missing",
+		SeedSignature:     "seed:v1",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}).Error; err != nil {
+		t.Fatalf("create workspace row: %v", err)
+	}
+
+	var createTopologyCalls atomic.Int32
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(context.Context, *model.Instance) error { return nil },
+			inspectManagedContainerFn: func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
+				if containerID != "workspace-missing" {
+					t.Fatalf("unexpected workspace inspect: %s", containerID)
+				}
+				return &practiceports.ManagedContainerState{
+					ID:      containerID,
+					Exists:  false,
+					Running: false,
+					Status:  "missing",
+				}, nil
+			},
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				createTopologyCalls.Add(1)
+				switch createTopologyCalls.Load() {
+				case 1:
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "runtime-new",
+						NetworkID:          "net-awd-contest-9201",
+						AccessURL:          "http://awd-c9201-t9202-s9203:8080",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Networks: []model.InstanceRuntimeNetwork{
+								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9201", NetworkID: "net-awd-contest-9201", Shared: true},
+							},
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "default", ContainerID: "runtime-new", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c9201-t9202-s9203"}},
+							},
+						},
+					}, nil
+				case 2:
+					if len(req.Nodes) != 1 {
+						t.Fatalf("expected one workspace node, got %+v", req.Nodes)
+					}
+					assertAWDDefenseWorkspaceShellNode(t, req.Nodes[0])
+					if req.Nodes[0].WorkingDir != "/workspace" {
+						t.Fatalf("expected workspace working dir, got %+v", req.Nodes[0])
+					}
+					if len(req.Nodes[0].Mounts) != 1 || req.Nodes[0].Mounts[0].Target != "/workspace/src" {
+						t.Fatalf("unexpected workspace mounts: %+v", req.Nodes[0].Mounts)
+					}
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "workspace-recreated",
+						NetworkID:          "net-awd-contest-9201",
+						AccessURL:          "tcp://172.30.0.51:22",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "workspace", ContainerID: "workspace-recreated", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+							},
+						},
+					}, nil
+				default:
+					t.Fatalf("unexpected topology create call #%d", createTopologyCalls.Load())
+					return nil, nil
+				}
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				FlagGlobalSecret:     "restart-secret",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("RestartContestAWDService() error = %v", err)
+	}
+	if resp.Status != model.InstanceStatusRunning {
+		t.Fatalf("expected restarted instance to be running, got %+v", resp)
+	}
+	if createTopologyCalls.Load() != 2 {
+		t.Fatalf("expected runtime and workspace recreation, got %d topology calls", createTopologyCalls.Load())
+	}
+
+	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
+	}
+	if workspace == nil {
+		t.Fatal("expected workspace row to remain")
+	}
+	if workspace.WorkspaceRevision != 4 {
+		t.Fatalf("expected workspace revision 4 to be preserved, got %+v", workspace)
+	}
+	if workspace.ContainerID != "workspace-recreated" {
+		t.Fatalf("expected workspace container to be recreated, got %+v", workspace)
 	}
 }
 

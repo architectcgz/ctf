@@ -6,6 +6,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type InstanceScope struct {
@@ -54,6 +55,8 @@ type TopologyCreateResult struct {
 	AccessURL          string
 	RuntimeDetails     model.InstanceRuntimeDetails
 }
+
+type ManagedContainerState = runtimeports.ManagedContainerState
 
 type PracticeInstanceScopeLockRepository interface {
 	LockInstanceScope(ctx context.Context, userID, challengeID int64, scope InstanceScope) error
@@ -258,4 +261,5 @@ type RuntimeInstanceService interface {
 	CleanupRuntime(ctx context.Context, instance *model.Instance) error
 	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*ManagedContainerState, error)
 }

@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -197,6 +199,95 @@ func TestRuntimePracticeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
 	}
 }
 
+func TestRuntimePracticeTopologyAdapterPreservesWorkspaceShellFields(t *testing.T) {
+	req := &practiceports.TopologyCreateRequest{
+		ContainerName: "workspace-companion",
+		Nodes: []practiceports.TopologyCreateNode{
+			{
+				Key:             "workspace",
+				Image:           "python:3.12-alpine",
+				Env:             map[string]string{"LANG": "C.UTF-8"},
+				Command:         []string{"/bin/sh", "-lc", "apk add --no-cache git vim nano && exec tail -f /dev/null"},
+				WorkingDir:      "/workspace",
+				ServicePort:     22,
+				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkAliases:  []string{"awd-c8-t15-s21-workspace"},
+				Mounts: []model.ContainerMount{
+					{Source: "workspace-src", Target: "/workspace/src"},
+					{Source: "workspace-data", Target: "/workspace/data", ReadOnly: true},
+				},
+			},
+		},
+	}
+
+	got := toRuntimeTopologyCreateRequest(req)
+	if got.ContainerName != "workspace-companion" {
+		t.Fatalf("expected container name preserved, got %+v", got)
+	}
+	if len(got.Nodes) != 1 {
+		t.Fatalf("expected one node, got %+v", got.Nodes)
+	}
+	node := got.Nodes[0]
+	if !reflect.DeepEqual(node.Command, req.Nodes[0].Command) {
+		t.Fatalf("expected command preserved, got %+v", node.Command)
+	}
+	if node.WorkingDir != req.Nodes[0].WorkingDir {
+		t.Fatalf("expected working dir preserved, got %q", node.WorkingDir)
+	}
+	if !reflect.DeepEqual(node.Mounts, req.Nodes[0].Mounts) {
+		t.Fatalf("expected mounts preserved, got %+v", node.Mounts)
+	}
+	if !reflect.DeepEqual(node.Env, req.Nodes[0].Env) {
+		t.Fatalf("expected env preserved, got %+v", node.Env)
+	}
+}
+
+func TestRuntimePracticeServiceAdapterInspectManagedContainerDelegatesToInspector(t *testing.T) {
+	adapter := newRuntimePracticeServiceAdapter(nil, nil, stubRuntimePracticeContainerInspector{
+		inspectFn: func(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+			if containerID != "workspace-ctr" {
+				t.Fatalf("unexpected container inspect target: %s", containerID)
+			}
+			return &runtimeports.ManagedContainerState{
+				ID:      containerID,
+				Exists:  true,
+				Running: true,
+				Status:  "running",
+			}, nil
+		},
+	})
+
+	got, err := adapter.InspectManagedContainer(context.Background(), "workspace-ctr")
+	if err != nil {
+		t.Fatalf("InspectManagedContainer() error = %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected managed container state")
+	}
+	if got.ID != "workspace-ctr" || !got.Exists || !got.Running || got.Status != "running" {
+		t.Fatalf("unexpected managed container state: %+v", got)
+	}
+}
+
+func TestRuntimePracticeServiceAdapterInspectManagedContainerPropagatesErrors(t *testing.T) {
+	wantErr := errors.New("inspect failed")
+	adapter := newRuntimePracticeServiceAdapter(nil, nil, stubRuntimePracticeContainerInspector{
+		inspectFn: func(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+			return nil, wantErr
+		},
+	})
+
+	got, err := adapter.InspectManagedContainer(context.Background(), "workspace-ctr")
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("expected inspect error %v, got %v", wantErr, err)
+	}
+	if got != nil {
+		t.Fatalf("expected nil managed container state on error, got %+v", got)
+	}
+}
+
 type stubRuntimeHTTPProxyTickets struct {
 	ticket    string
 	expiresAt time.Time
@@ -285,4 +376,15 @@ func (s *recordingRuntimeHTTPDefenseWorkbench) WriteFileToContainer(context.Cont
 
 func (s *recordingRuntimeHTTPDefenseWorkbench) ExecContainerCommand(context.Context, string, []string, []byte, int64) ([]byte, error) {
 	return nil, nil
+}
+
+type stubRuntimePracticeContainerInspector struct {
+	inspectFn func(context.Context, string) (*runtimeports.ManagedContainerState, error)
+}
+
+func (s stubRuntimePracticeContainerInspector) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+	if s.inspectFn == nil {
+		return nil, nil
+	}
+	return s.inspectFn(ctx, containerID)
 }

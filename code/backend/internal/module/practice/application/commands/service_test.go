@@ -12,6 +12,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 	"net"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -19,9 +20,10 @@ import (
 )
 
 type stubPracticeRuntimeService struct {
-	cleanupRuntimeFn  func(ctx context.Context, instance *model.Instance) error
-	createTopologyFn  func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
-	createContainerFn func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+	cleanupRuntimeFn          func(ctx context.Context, instance *model.Instance) error
+	createTopologyFn          func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
+	createContainerFn         func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+	inspectManagedContainerFn func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error)
 }
 
 func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
@@ -43,6 +45,13 @@ func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageN
 		return "", "", 0, 0, errors.New("unexpected CreateContainer call")
 	}
 	return s.createContainerFn(ctx, imageName, env, reservedHostPort)
+}
+
+func (s *stubPracticeRuntimeService) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
+	if s.inspectManagedContainerFn == nil {
+		return nil, errors.New("unexpected InspectManagedContainer call")
+	}
+	return s.inspectManagedContainerFn(ctx, containerID)
 }
 
 type stubPracticeEventBus struct {
@@ -128,6 +137,21 @@ func parseHTTPServerEndpoint(t *testing.T, rawURL string) (string, int) {
 		t.Fatalf("parse server port: %v", err)
 	}
 	return parsed.Hostname(), port
+}
+
+func assertAWDDefenseWorkspaceShellNode(t *testing.T, node practiceports.TopologyCreateNode) {
+	t.Helper()
+
+	if node.Image != awdDefenseWorkspaceShellImage {
+		t.Fatalf("unexpected workspace shell image: %q", node.Image)
+	}
+	if !reflect.DeepEqual(node.Env, awdDefenseWorkspaceShellEnv) {
+		t.Fatalf("unexpected workspace shell env: %+v", node.Env)
+	}
+	wantCommand := []string{"/bin/sh", "-lc", awdDefenseWorkspaceBootstrapCommand}
+	if !reflect.DeepEqual(node.Command, wantCommand) {
+		t.Fatalf("unexpected workspace shell command: %+v", node.Command)
+	}
 }
 
 type stubAssessmentService struct {
