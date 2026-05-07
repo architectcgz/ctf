@@ -80,26 +80,99 @@ func requireEventually(t *testing.T, timeout time.Duration, check func() bool) {
 	t.Fatal("condition was not satisfied before timeout")
 }
 
-func TestAWDDefenseWorkspaceBootstrapCommandInitializesGitRepo(t *testing.T) {
-	requiredFragments := []string{
-		"set -e",
-		"[ -d /workspace/src ]",
-		"[ ! -d /workspace/src/.git ]",
-		"git -C /workspace/src init",
-		"git -C /workspace/src config user.name workspace",
-		"git -C /workspace/src config user.email workspace@local",
-		"git -C /workspace/src add --all",
-		"git -C /workspace/src commit --allow-empty -m 'Initial workspace snapshot'",
+func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(t *testing.T) {
+	contestID := int64(8)
+	teamID := int64(15)
+	serviceID := int64(21)
+
+	service := &Service{
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				if len(req.Nodes) != 1 {
+					t.Fatalf("expected one workspace node, got %+v", req.Nodes)
+				}
+				if len(req.Nodes[0].Command) != 3 {
+					t.Fatalf("unexpected workspace shell command: %+v", req.Nodes[0].Command)
+				}
+
+				command := req.Nodes[0].Command[2]
+				requiredFragments := []string{
+					"set -e",
+					"[ -d '/workspace/app' ]",
+					"[ ! -d '/workspace/app/.git' ]",
+					"git -C '/workspace/app' init",
+					"[ -d '/workspace/templates' ]",
+					"[ ! -d '/workspace/templates/.git' ]",
+					"git -C '/workspace/templates' init",
+					"git -C '/workspace/templates' commit --allow-empty -m 'Initial workspace snapshot'",
+				}
+				for _, fragment := range requiredFragments {
+					if !strings.Contains(command, fragment) {
+						t.Fatalf("expected workspace bootstrap command to contain %q, got %q", fragment, command)
+					}
+				}
+				if strings.Contains(command, "/workspace/data/.git") {
+					t.Fatalf("expected readonly workspace root to skip git initialization, got %q", command)
+				}
+
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "workspace-ctr",
+				}, nil
+			},
+		},
 	}
 
-	for _, fragment := range requiredFragments {
-		if !strings.Contains(awdDefenseWorkspaceBootstrapCommand, fragment) {
-			t.Fatalf("expected bootstrap command to contain %q, got %q", fragment, awdDefenseWorkspaceBootstrapCommand)
-		}
+	_, err := service.createAWDDefenseWorkspaceCompanion(context.Background(), &model.Instance{
+		ContestID: &contestID,
+		TeamID:    &teamID,
+		ServiceID: &serviceID,
+	}, &awdDefenseWorkspacePlan{
+		workspaceRevision:      2,
+		workspaceContainerName: "ctf-workspace-custom",
+		workspaceMounts: []model.ContainerMount{
+			{Source: "ws-app", Target: "/workspace/app"},
+			{Source: "ws-templates", Target: "/workspace/templates"},
+			{Source: "ws-data", Target: "/workspace/data", ReadOnly: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("createAWDDefenseWorkspaceCompanion() error = %v", err)
+	}
+}
+
+func TestParseAWDDefenseWorkspaceConfigTreatsRootsOutsideWritableSetAsReadonly(t *testing.T) {
+	config, err := parseAWDDefenseWorkspaceConfig(map[string]any{
+		"defense_workspace": map[string]any{
+			"seed_root":       "docker/workspace",
+			"workspace_roots": []string{"docker/workspace/src", "docker/workspace/templates", "docker/workspace/data"},
+			"writable_roots":  []string{"docker/workspace/src"},
+			"readonly_roots":  []string{"docker/workspace/data"},
+			"runtime_mounts": []any{
+				map[string]any{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+				map[string]any{"source": "docker/workspace/templates", "target": "/workspace/templates", "mode": "ro"},
+				map[string]any{"source": "docker/workspace/data", "target": "/workspace/data", "mode": "ro"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("parseAWDDefenseWorkspaceConfig() error = %v", err)
+	}
+	if len(config.workspaceRoots) != 3 {
+		t.Fatalf("expected three workspace roots, got %+v", config.workspaceRoots)
 	}
 
-	if strings.Contains(awdDefenseWorkspaceBootstrapCommand, "git -C /workspace init") {
-		t.Fatalf("expected git repo to be initialized under /workspace/src only, got %q", awdDefenseWorkspaceBootstrapCommand)
+	readonlyBySource := make(map[string]bool, len(config.workspaceRoots))
+	for _, root := range config.workspaceRoots {
+		readonlyBySource[root.source] = root.readOnly
+	}
+	if readonlyBySource["docker/workspace/src"] {
+		t.Fatalf("expected src root to stay writable, got %+v", config.workspaceRoots)
+	}
+	if !readonlyBySource["docker/workspace/templates"] {
+		t.Fatalf("expected template root outside writable_roots to default readonly, got %+v", config.workspaceRoots)
+	}
+	if !readonlyBySource["docker/workspace/data"] {
+		t.Fatalf("expected readonly root to stay readonly, got %+v", config.workspaceRoots)
 	}
 }
 
@@ -171,7 +244,7 @@ func assertAWDDefenseWorkspaceShellNode(t *testing.T, node practiceports.Topolog
 	if !reflect.DeepEqual(node.Env, awdDefenseWorkspaceShellEnv) {
 		t.Fatalf("unexpected workspace shell env: %+v", node.Env)
 	}
-	wantCommand := []string{"/bin/sh", "-lc", awdDefenseWorkspaceBootstrapCommand}
+	wantCommand := []string{"/bin/sh", "-lc", buildAWDDefenseWorkspaceBootstrapCommand(node.Mounts)}
 	if !reflect.DeepEqual(node.Command, wantCommand) {
 		t.Fatalf("unexpected workspace shell command: %+v", node.Command)
 	}

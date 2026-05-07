@@ -18,18 +18,13 @@ const (
 	awdDefenseWorkspaceWorkingDir = "/workspace"
 	// Keep the companion shell usable out of the box instead of relying on the
 	// SSH client to negotiate locale/editor state each time.
-	awdDefenseWorkspaceBootstrapCommand = `set -e
+	awdDefenseWorkspaceBootstrapPrelude = `set -e
 if ! command -v git >/dev/null 2>&1 || ! command -v vim >/dev/null 2>&1 || ! command -v nano >/dev/null 2>&1; then
   apk add --no-cache git vim nano
-fi
-if [ -d /workspace/src ] && [ ! -d /workspace/src/.git ]; then
-  git -C /workspace/src init
-  git -C /workspace/src config user.name workspace
-  git -C /workspace/src config user.email workspace@local
-  git -C /workspace/src add --all
-  git -C /workspace/src commit --allow-empty -m 'Initial workspace snapshot'
-fi
-exec tail -f /dev/null`
+fi`
+	awdDefenseWorkspaceGitUserName          = "workspace"
+	awdDefenseWorkspaceGitUserEmail         = "workspace@local"
+	awdDefenseWorkspaceInitialCommitMessage = "Initial workspace snapshot"
 )
 
 var awdDefenseWorkspaceShellEnv = map[string]string{
@@ -81,6 +76,72 @@ func resolveAWDDefenseWorkspaceRepository(repo any) awdDefenseWorkspaceRepositor
 	}
 	value, _ := repo.(awdDefenseWorkspaceRepository)
 	return value
+}
+
+func buildAWDDefenseWorkspaceBootstrapCommand(mounts []model.ContainerMount) string {
+	var builder strings.Builder
+	builder.WriteString(awdDefenseWorkspaceBootstrapPrelude)
+
+	for _, target := range listAWDDefenseWorkspaceWritableTargets(mounts) {
+		quotedTarget := shellQuoteForPOSIXSh(target)
+		quotedGitDir := shellQuoteForPOSIXSh(path.Join(target, ".git"))
+		builder.WriteString("\nif [ -d ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" ] && [ ! -d ")
+		builder.WriteString(quotedGitDir)
+		builder.WriteString(" ]; then\n")
+		builder.WriteString("  git -C ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" init\n")
+		builder.WriteString("  git -C ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" config user.name ")
+		builder.WriteString(shellQuoteForPOSIXSh(awdDefenseWorkspaceGitUserName))
+		builder.WriteString("\n")
+		builder.WriteString("  git -C ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" config user.email ")
+		builder.WriteString(shellQuoteForPOSIXSh(awdDefenseWorkspaceGitUserEmail))
+		builder.WriteString("\n")
+		builder.WriteString("  git -C ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" add --all\n")
+		builder.WriteString("  git -C ")
+		builder.WriteString(quotedTarget)
+		builder.WriteString(" commit --allow-empty -m ")
+		builder.WriteString(shellQuoteForPOSIXSh(awdDefenseWorkspaceInitialCommitMessage))
+		builder.WriteString("\nfi")
+	}
+
+	builder.WriteString("\nexec tail -f /dev/null")
+	return builder.String()
+}
+
+func listAWDDefenseWorkspaceWritableTargets(mounts []model.ContainerMount) []string {
+	if len(mounts) == 0 {
+		return nil
+	}
+	targets := make([]string, 0, len(mounts))
+	seen := make(map[string]struct{}, len(mounts))
+	for _, mount := range mounts {
+		if mount.ReadOnly {
+			continue
+		}
+		target := strings.TrimSpace(mount.Target)
+		if target == "" {
+			continue
+		}
+		if _, exists := seen[target]; exists {
+			continue
+		}
+		seen[target] = struct{}{}
+		targets = append(targets, target)
+	}
+	return targets
+}
+
+func shellQuoteForPOSIXSh(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", `'"'"'`) + "'"
 }
 
 func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *model.Instance, chal *model.Challenge) (*awdDefenseWorkspacePlan, error) {
@@ -218,17 +279,17 @@ func parseAWDDefenseWorkspaceConfig(runtimeConfig map[string]any) (*awdDefenseWo
 	if len(workspaceRoots) == 0 {
 		return nil, fmt.Errorf("awd defense workspace roots are empty")
 	}
-	readonlyRootSet := make(map[string]struct{})
-	for _, root := range readStringListFromAny(payload["readonly_roots"]) {
-		readonlyRootSet[root] = struct{}{}
+	writableRootSet := make(map[string]struct{})
+	for _, root := range readStringListFromAny(payload["writable_roots"]) {
+		writableRootSet[root] = struct{}{}
 	}
 
 	roots := make([]awdDefenseWorkspaceRoot, 0, len(workspaceRoots))
 	for _, root := range workspaceRoots {
-		_, readOnly := readonlyRootSet[root]
+		_, writable := writableRootSet[root]
 		roots = append(roots, awdDefenseWorkspaceRoot{
 			source:   root,
-			readOnly: readOnly,
+			readOnly: !writable,
 		})
 	}
 
@@ -380,7 +441,7 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 				Key:             "workspace",
 				Image:           awdDefenseWorkspaceShellImage,
 				Env:             cloneAWDDefenseWorkspaceShellEnv(),
-				Command:         []string{"/bin/sh", "-lc", awdDefenseWorkspaceBootstrapCommand},
+				Command:         []string{"/bin/sh", "-lc", buildAWDDefenseWorkspaceBootstrapCommand(plan.workspaceMounts)},
 				WorkingDir:      awdDefenseWorkspaceWorkingDir,
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
