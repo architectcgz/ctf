@@ -1482,6 +1482,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	})
 
 	now := time.Now()
+	const previewSecret = "preview-secret-12345678901234567890"
 	createAWDContestFixture(t, db, 26, now)
 	if err := db.Create(&model.Image{
 		ID:        26001,
@@ -1504,7 +1505,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
-		RuntimeConfig:  `{"image_id":26001,"image_ref":"registry.example.edu/ctf/awd-preview:v1"}`,
+		RuntimeConfig:  `{"image_id":26001,"image_ref":"registry.example.edu/ctf/awd-preview:v1","checker_token_env":"CHECKER_TOKEN"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}).Error; err != nil {
@@ -1534,7 +1535,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		awdRepo,
 		contestRepo,
 		redisClient,
-		"",
+		previewSecret,
 		config.ContestAWDConfig{
 			CheckerTimeout:    time.Second,
 			CheckerHealthPath: "/healthz",
@@ -1543,7 +1544,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 			CheckerTimeout:    time.Second,
 			CheckerHealthPath: "/healthz",
-		}, "", nil, zap.NewNop()),
+		}, previewSecret, nil, zap.NewNop()),
 		imageRepo,
 		awdChallengeRepo,
 		runtimeProbe,
@@ -1576,6 +1577,9 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	}
 	if runtimeProbe.lastEnv["FLAG"] != "flag{preview}" {
 		t.Fatalf("unexpected preview FLAG env: %+v", runtimeProbe.lastEnv)
+	}
+	if runtimeProbe.lastEnv["CHECKER_TOKEN"] != contestdomain.BuildAWDCheckerPreviewToken(26, 0, 2601, previewSecret) {
+		t.Fatalf("unexpected preview CHECKER_TOKEN env: %+v", runtimeProbe.lastEnv)
 	}
 	if resp.PreviewContext.AccessURL != server.URL {
 		t.Fatalf("unexpected preview access url: %s", resp.PreviewContext.AccessURL)

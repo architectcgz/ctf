@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -32,6 +33,8 @@ type awdDefenseWorkspacePlan struct {
 	workspaceMounts        []model.ContainerMount
 	workspaceContainerID   string
 	workspaceContainerName string
+	checkerTokenEnv        string
+	checkerToken           string
 	createWorkspace        bool
 }
 
@@ -139,10 +142,37 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 		workspaceMounts:        workspaceMounts,
 		workspaceContainerName: buildAWDDefenseWorkspaceContainerName(chal, instance, workspaceRevision),
 	}
+	checkerTokenEnv := strings.TrimSpace(readStringFromAny(snapshot.RuntimeConfig["checker_token_env"]))
+	if checkerTokenEnv != "" {
+		challengeID := service.AWDChallengeID
+		if challengeID <= 0 {
+			challengeID = instance.ChallengeID
+		}
+		secret := ""
+		if s.config != nil {
+			secret = s.config.Container.FlagGlobalSecret
+		}
+		checkerToken := contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, challengeID, secret)
+		if strings.TrimSpace(checkerToken) == "" {
+			return nil, fmt.Errorf("awd checker token secret is not configured")
+		}
+		plan.checkerTokenEnv = checkerTokenEnv
+		plan.checkerToken = checkerToken
+	}
 	if current != nil {
 		plan.workspaceContainerID = strings.TrimSpace(current.ContainerID)
 	}
 	plan.createWorkspace = current == nil || current.Status != model.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
+	if !plan.createWorkspace {
+		state, err := s.runtimeService.InspectManagedContainer(ctx, plan.workspaceContainerID)
+		if err != nil {
+			return nil, err
+		}
+		if state == nil || !state.Exists || !state.Running {
+			plan.workspaceContainerID = ""
+			plan.createWorkspace = true
+		}
+	}
 	return plan, nil
 }
 
@@ -335,6 +365,7 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkAliases:  []string{buildAWDDefenseWorkspaceAlias(instance, plan.workspaceRevision)},
 				Mounts:          append([]model.ContainerMount(nil), plan.workspaceMounts...),
 			},
 		},

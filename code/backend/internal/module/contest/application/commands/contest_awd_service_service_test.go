@@ -602,6 +602,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		1006,
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
+		"",
 		&dto.AWDCheckerPreviewResp{
 			CheckerType:   model.AWDCheckerTypeHTTPStandard,
 			ServiceStatus: model.AWDServiceStatusUp,
@@ -807,6 +808,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		1007,
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
+		"",
 		&dto.AWDCheckerPreviewResp{
 			CheckerType:   model.AWDCheckerTypeHTTPStandard,
 			ServiceStatus: model.AWDServiceStatusUp,
@@ -922,6 +924,160 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}
 	if !strings.Contains(err.Error(), "试跑结果已失效") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerTokenEnvMismatched(t *testing.T) {
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        2806,
+		Title:     "awd-service-preview-token-env-mismatch",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+		ID:         29806,
+		Title:      "preview-service-token-env",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+		ID:             2106,
+		Name:           "Preview Service Token Env",
+		Slug:           "preview-service-token-env",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://preview-token-env.internal"}`,
+		RuntimeConfig:  `{"checker_token_env":"CHECKER_TOKEN"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create AWD challenge: %v", err)
+	}
+
+	checkerConfig := map[string]any{
+		"get_flag": map[string]any{
+			"path": "/flag",
+		},
+	}
+	rawCheckerConfig, err := contestdomain.MarshalAWDCheckerConfig(checkerConfig)
+	if err != nil {
+		t.Fatalf("marshal checker config: %v", err)
+	}
+	token, err := storeAWDCheckerPreviewToken(
+		context.Background(),
+		redisClient,
+		2806,
+		0,
+		2106,
+		model.AWDCheckerTypeHTTPStandard,
+		rawCheckerConfig,
+		"",
+		&dto.AWDCheckerPreviewResp{
+			CheckerType:   model.AWDCheckerTypeHTTPStandard,
+			ServiceStatus: model.AWDServiceStatusUp,
+			CheckResult: map[string]any{
+				"checked_at": now.Format(time.RFC3339),
+			},
+			PreviewContext: dto.AWDCheckerPreviewContextResp{
+				AccessURL:      "http://preview-token-env.internal",
+				PreviewFlag:    "flag{preview}",
+				AWDChallengeID: 2106,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatalf("storeAWDCheckerPreviewToken() error = %v", err)
+	}
+
+	_, err = service.CreateContestAWDService(context.Background(), 2806, CreateContestAWDServiceInput{
+		AWDChallengeID:         2106,
+		Points:                 100,
+		Order:                  1,
+		IsVisible:              boolPtr(true),
+		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerConfig:          checkerConfig,
+		AWDCheckerPreviewToken: stringPtr(token),
+	})
+	if err == nil {
+		t.Fatal("expected CreateContestAWDService() to reject mismatched checker token env")
+	}
+	if !strings.Contains(err.Error(), "试跑结果已失效") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestBuildContestAWDServiceValidationUpdateMarksStaleWhenCheckerTokenEnvChanges(t *testing.T) {
+	now := time.Now().UTC()
+	checkerConfig := `{"get_flag":{"path":"/flag"}}`
+	current := &model.ContestAWDService{
+		ID:                51,
+		AWDChallengeID:    61,
+		ValidationState:   model.AWDCheckerValidationStatePassed,
+		LastPreviewAt:     &now,
+		LastPreviewResult: `{"checked_at":"2026-05-07T00:00:00Z"}`,
+		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
+			model.AWDCheckerTypeHTTPStandard,
+			checkerConfig,
+			`{}`,
+		),
+	}
+
+	state, previewAt, previewResult, changed, err := buildContestAWDServiceValidationUpdate(
+		context.Background(),
+		nil,
+		current,
+		1001,
+		model.AWDCheckerTypeHTTPStandard,
+		checkerConfig,
+		"CHECKER_TOKEN",
+		"",
+	)
+	if err != nil {
+		t.Fatalf("buildContestAWDServiceValidationUpdate() error = %v", err)
+	}
+	if !changed {
+		t.Fatal("expected validation change when checker_token_env changes")
+	}
+	if state != model.AWDCheckerValidationStateStale {
+		t.Fatalf("ValidationState = %s, want stale", state)
+	}
+	if previewAt == nil || !previewAt.Equal(now) {
+		t.Fatalf("unexpected previewAt: %+v", previewAt)
+	}
+	if previewResult != current.LastPreviewResult {
+		t.Fatalf("unexpected preview result: %s", previewResult)
 	}
 }
 

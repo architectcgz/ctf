@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
@@ -111,6 +112,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
+	const checkerSecret = "practice-secret-12345678901234567890"
 	if err := db.Create(&model.Image{
 		ID:        501,
 		Name:      "ctf/awd-web",
@@ -128,8 +130,9 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
-			"image_id":         501,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"image_id":          501,
+			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -179,6 +182,9 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 					}
 					if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
 						t.Fatalf("unexpected runtime topology request: %+v", req)
+					}
+					if req.Nodes[0].Env["CHECKER_TOKEN"] != contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, 501, checkerSecret) {
+						t.Fatalf("unexpected checker token env: %+v", req.Nodes[0].Env)
 					}
 					if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7001-t7101-s8001" {
 						t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
@@ -231,6 +237,9 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 				return "", "", 0, 0, nil
 			},
 		},
+		config: &config.Config{
+			Container: config.ContainerConfig{FlagGlobalSecret: checkerSecret},
+		},
 	}
 	instance := &model.Instance{
 		ID:          9001,
@@ -264,6 +273,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
+	const checkerSecret = "practice-topology-secret-1234567890123"
 	if err := db.Create(&model.Image{
 		ID:        503,
 		Name:      "ctf/awd-topology",
@@ -281,8 +291,9 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
 		Name: "AWD Topology",
 		RuntimeConfig: map[string]any{
-			"image_id":         503,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"image_id":          503,
+			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -333,6 +344,9 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 					if len(req.Nodes) != 1 || req.Nodes[0].Key != "web" || !req.Nodes[0].IsEntryPoint {
 						t.Fatalf("unexpected topology nodes: %+v", req.Nodes)
 					}
+					if req.Nodes[0].Env["CHECKER_TOKEN"] != contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, 503, checkerSecret) {
+						t.Fatalf("unexpected checker token env: %+v", req.Nodes[0].Env)
+					}
 					if len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-c7003-t7103-s8003" {
 						t.Fatalf("expected stable AWD service alias, got %+v", req.Nodes[0].NetworkAliases)
 					}
@@ -365,6 +379,9 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 					return nil, nil
 				}
 			},
+		},
+		config: &config.Config{
+			Container: config.ContainerConfig{FlagGlobalSecret: checkerSecret},
 		},
 	}
 	instance := &model.Instance{

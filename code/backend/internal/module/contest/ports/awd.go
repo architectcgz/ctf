@@ -136,6 +136,8 @@ type AWDServiceDefinition struct {
 	FlagPrefix       string
 	CheckerType      model.AWDCheckerType
 	CheckerConfig    string
+	CheckerTokenEnv  string
+	CheckerToken     string
 	SLAScore         int
 	DefenseScore     int
 	DefenseWorkspace AWDDefenseWorkspaceSummary
@@ -211,12 +213,14 @@ type AWDCheckerPreviewContext struct {
 }
 
 type AWDServicePreviewRequest struct {
-	ServiceID      int64
-	AWDChallengeID int64
-	CheckerType    model.AWDCheckerType
-	CheckerConfig  string
-	AccessURL      string
-	PreviewFlag    string
+	ServiceID       int64
+	AWDChallengeID  int64
+	CheckerType     model.AWDCheckerType
+	CheckerConfig   string
+	CheckerTokenEnv string
+	CheckerToken    string
+	AccessURL       string
+	PreviewFlag     string
 }
 
 type AWDServicePreviewResult struct {

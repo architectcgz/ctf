@@ -69,14 +69,14 @@ extensions:
           method: PUT
           path: /api/flag
           headers:
-            X-AWD-Checker-Token: demo-checker-token
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
           expected_status: 200
           body_template: "{{FLAG}}"
         get_flag:
           method: GET
           path: /api/flag
           headers:
-            X-AWD-Checker-Token: demo-checker-token
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
           expected_status: 200
           expected_substring: "{{FLAG}}"
         havoc:

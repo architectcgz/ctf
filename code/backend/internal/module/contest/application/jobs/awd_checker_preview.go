@@ -25,10 +25,12 @@ func (u *AWDRoundUpdater) PreviewServiceCheck(ctx context.Context, req contestpo
 		AWDChallengeID: req.AWDChallengeID,
 	}
 	definition := contestports.AWDServiceDefinition{
-		ServiceID:      req.ServiceID,
-		AWDChallengeID: req.AWDChallengeID,
-		CheckerType:    checkerType,
-		CheckerConfig:  req.CheckerConfig,
+		ServiceID:       req.ServiceID,
+		AWDChallengeID:  req.AWDChallengeID,
+		CheckerType:     checkerType,
+		CheckerConfig:   req.CheckerConfig,
+		CheckerTokenEnv: req.CheckerTokenEnv,
+		CheckerToken:    req.CheckerToken,
 	}
 	instances := []contestports.AWDServiceInstance{
 		{

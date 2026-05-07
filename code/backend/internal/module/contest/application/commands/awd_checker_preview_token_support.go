@@ -19,13 +19,14 @@ import (
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
 
 type storedAWDCheckerPreviewToken struct {
-	ContestID      int64                                 `json:"contest_id"`
-	ServiceID      int64                                 `json:"service_id"`
-	AWDChallengeID int64                                 `json:"awd_challenge_id"`
-	CheckerType    model.AWDCheckerType                  `json:"checker_type"`
-	CheckerConfig  string                                `json:"checker_config"`
-	Result         contestdomain.AWDCheckerPreviewResult `json:"result"`
-	CreatedAt      time.Time                             `json:"created_at"`
+	ContestID       int64                                 `json:"contest_id"`
+	ServiceID       int64                                 `json:"service_id"`
+	AWDChallengeID  int64                                 `json:"awd_challenge_id"`
+	CheckerType     model.AWDCheckerType                  `json:"checker_type"`
+	CheckerConfig   string                                `json:"checker_config"`
+	CheckerTokenEnv string                                `json:"checker_token_env,omitempty"`
+	Result          contestdomain.AWDCheckerPreviewResult `json:"result"`
+	CreatedAt       time.Time                             `json:"created_at"`
 }
 
 func storeAWDCheckerPreviewToken(
@@ -34,6 +35,7 @@ func storeAWDCheckerPreviewToken(
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
+	checkerTokenEnv string,
 	result *dto.AWDCheckerPreviewResp,
 ) (string, error) {
 	if redisClient == nil || result == nil {
@@ -42,13 +44,14 @@ func storeAWDCheckerPreviewToken(
 
 	token := uuid.NewString()
 	record := storedAWDCheckerPreviewToken{
-		ContestID:      contestID,
-		ServiceID:      serviceID,
-		AWDChallengeID: awdChallengeID,
-		CheckerType:    checkerType,
-		CheckerConfig:  checkerConfig,
-		Result:         *awdPreviewResultMapper.ToDomainPtr(result),
-		CreatedAt:      time.Now().UTC(),
+		ContestID:       contestID,
+		ServiceID:       serviceID,
+		AWDChallengeID:  awdChallengeID,
+		CheckerType:     checkerType,
+		CheckerConfig:   checkerConfig,
+		CheckerTokenEnv: strings.TrimSpace(checkerTokenEnv),
+		Result:          *awdPreviewResultMapper.ToDomainPtr(result),
+		CreatedAt:       time.Now().UTC(),
 	}
 	raw, err := json.Marshal(record)
 	if err != nil {
@@ -66,12 +69,13 @@ func consumeCheckerPreviewValidationState(
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
+	checkerTokenEnv string,
 	previewToken string,
 ) (model.AWDCheckerValidationState, *time.Time, string, error) {
 	if strings.TrimSpace(previewToken) != "" && redisClient == nil {
 		return model.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
 	}
-	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, previewToken)
+	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv, previewToken)
 	if err != nil {
 		return model.AWDCheckerValidationStatePending, nil, "", err
 	}
@@ -103,6 +107,7 @@ func consumeAWDCheckerPreviewToken(
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
+	checkerTokenEnv string,
 	previewToken string,
 ) (*storedAWDCheckerPreviewToken, error) {
 	if redisClient == nil || strings.TrimSpace(previewToken) == "" {
@@ -122,7 +127,7 @@ func consumeAWDCheckerPreviewToken(
 	if err := json.Unmarshal([]byte(raw), &record); err != nil {
 		return nil, err
 	}
-	if !record.matches(contestID, serviceID, awdChallengeID, checkerType, checkerConfig) {
+	if !record.matches(contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv) {
 		return nil, nil
 	}
 	if err := redisClient.Del(ctx, key).Err(); err != nil {
@@ -135,10 +140,12 @@ func (r storedAWDCheckerPreviewToken) matches(
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
+	checkerTokenEnv string,
 ) bool {
 	if r.ContestID != contestID ||
 		r.CheckerType != checkerType ||
-		r.CheckerConfig != checkerConfig {
+		r.CheckerConfig != checkerConfig ||
+		strings.TrimSpace(r.CheckerTokenEnv) != strings.TrimSpace(checkerTokenEnv) {
 		return false
 	}
 	if serviceID > 0 || r.ServiceID > 0 {

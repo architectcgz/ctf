@@ -164,6 +164,15 @@ func parseContestAWDChallengeRuntimeConfig(runtimeConfig string) string {
 	return string(encoded)
 }
 
+func parseContestAWDServiceCheckerTokenEnv(runtimeConfig string) string {
+	value := contestdomain.ParseAWDCheckerConfig(runtimeConfig)
+	if checkerTokenEnv := strings.TrimSpace(readStringFromAny(value["checker_token_env"])); checkerTokenEnv != "" {
+		return checkerTokenEnv
+	}
+	challengeRuntime, _ := value["challenge_runtime"].(map[string]any)
+	return strings.TrimSpace(readStringFromAny(challengeRuntime["checker_token_env"]))
+}
+
 func parseContestAWDServiceScore(scoreConfig string, key string) (int, bool) {
 	value := contestdomain.ParseAWDCheckerConfig(scoreConfig)
 	raw, ok := value[key]
@@ -197,6 +206,7 @@ func buildContestAWDServiceValidationUpdate(
 	contestID int64,
 	nextCheckerType model.AWDCheckerType,
 	nextCheckerConfig string,
+	nextCheckerTokenEnv string,
 	previewToken string,
 ) (model.AWDCheckerValidationState, *time.Time, string, bool, error) {
 	if current == nil {
@@ -211,6 +221,7 @@ func buildContestAWDServiceValidationUpdate(
 		current.AWDChallengeID,
 		nextCheckerType,
 		nextCheckerConfig,
+		nextCheckerTokenEnv,
 		previewToken,
 	)
 	if err != nil {
@@ -224,7 +235,10 @@ func buildContestAWDServiceValidationUpdate(
 	}
 
 	currentCheckerType, currentCheckerConfig := parseContestAWDServiceRuntimeChecker(current.RuntimeConfig)
-	if currentCheckerType == nextCheckerType && currentCheckerConfig == nextCheckerConfig {
+	currentCheckerTokenEnv := parseContestAWDServiceCheckerTokenEnv(current.RuntimeConfig)
+	if currentCheckerType == nextCheckerType &&
+		currentCheckerConfig == nextCheckerConfig &&
+		currentCheckerTokenEnv == nextCheckerTokenEnv {
 		return current.ValidationState, current.LastPreviewAt, current.LastPreviewResult, false, nil
 	}
 

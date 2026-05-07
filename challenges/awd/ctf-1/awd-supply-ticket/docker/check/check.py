@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import time
 import urllib.parse
@@ -6,7 +7,7 @@ import urllib.request
 
 
 BASE = sys.argv[1].rstrip("/") if len(sys.argv) > 1 else "http://127.0.0.1:18081"
-TOKEN = "demo-checker-token"
+TOKEN = os.environ.get("CHECKER_TOKEN", "demo-checker-token")
 
 
 def fail(message):

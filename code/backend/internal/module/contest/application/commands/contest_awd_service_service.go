@@ -88,6 +88,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	if req.AWDCheckerPreviewToken != nil {
 		previewToken = *req.AWDCheckerPreviewToken
 	}
+	checkerTokenEnv := strings.TrimSpace(readStringFromAny(parseContestAWDServiceJSONMap(awdChallenge.RuntimeConfig)["checker_token_env"]))
 	validationState, lastPreviewAt, lastPreviewResult, err := consumeCheckerPreviewValidationState(
 		ctx,
 		s.redis,
@@ -96,6 +97,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		awdChallenge.ID,
 		checkerType,
 		checkerConfig,
+		checkerTokenEnv,
 		previewToken,
 	)
 	if err != nil {
@@ -233,6 +235,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 		contestID,
 		checkerType,
 		checkerConfig,
+		strings.TrimSpace(readStringFromAny(parseContestAWDServiceJSONMap(extraRuntimeConfig)["checker_token_env"])),
 		previewToken,
 	)
 	if err != nil {

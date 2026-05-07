@@ -66,9 +66,9 @@ extensions:
         steps:
           - send: "PING\n"
             expect_contains: PONG
-          - send_template: "SET_FLAG {{FLAG}}\n"
+          - send_template: "SET_FLAG {{CHECKER_TOKEN}} {{FLAG}}\n"
             expect_contains: OK
-          - send: "GET_FLAG\n"
+          - send_template: "GET_FLAG {{CHECKER_TOKEN}}\n"
             expect_contains: "{{FLAG}}"
     flag_policy:
       mode: dynamic_team
@@ -86,6 +86,7 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      checker_token_env: CHECKER_TOKEN
       defense_workspace:
         entry_mode: ssh
         seed_root: docker/workspace
@@ -111,6 +112,7 @@ extensions:
           - challenge.yml
         service_contracts:
           - PING 必须返回 PONG
-          - SET_FLAG 必须写入本轮动态 Flag
-          - GET_FLAG 必须返回最近写入的动态 Flag
+          - SET_FLAG 与 GET_FLAG 必须要求有效 checker token
+          - SET_FLAG 必须在鉴权通过后写入本轮动态 Flag
+          - GET_FLAG 必须在鉴权通过后返回最近写入的动态 Flag
           - CHECK 命令需要保持业务判断入口

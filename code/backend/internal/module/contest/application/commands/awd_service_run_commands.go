@@ -109,8 +109,9 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		return nil, errcode.ErrInvalidParams
 	}
 
-	previewAccessURL, cleanupRuntime, err := s.prepareCheckerPreviewAccessURL(
+	previewAccessURL, checkerTokenEnv, checkerToken, cleanupRuntime, err := s.prepareCheckerPreviewAccessURL(
 		ctx,
+		contestID,
 		previewService,
 		previewChallengeID,
 		req.AccessURL,
@@ -127,12 +128,14 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 	}
 
 	preview, err := s.runPreviewCheckerAttempts(ctx, contestID, req.PreviewRequestID, contestports.AWDServicePreviewRequest{
-		ServiceID:      previewServiceID,
-		AWDChallengeID: previewChallengeID,
-		CheckerType:    checkerType,
-		CheckerConfig:  checkerConfig,
-		AccessURL:      previewAccessURL,
-		PreviewFlag:    req.PreviewFlag,
+		ServiceID:       previewServiceID,
+		AWDChallengeID:  previewChallengeID,
+		CheckerType:     checkerType,
+		CheckerConfig:   checkerConfig,
+		CheckerTokenEnv: checkerTokenEnv,
+		CheckerToken:    checkerToken,
+		AccessURL:       previewAccessURL,
+		PreviewFlag:     req.PreviewFlag,
 	})
 	if cleanupErr := s.cleanupCheckerPreviewRuntime(ctx, cleanupRuntime, err); cleanupErr != nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "预览实例回收失败。", cleanupErr)
@@ -160,7 +163,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", errcode.ErrAWDCheckerPreviewUnavailable)
 		return nil, errcode.ErrAWDCheckerPreviewUnavailable
 	}
-	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.redis, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, resp)
+	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.redis, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, checkerTokenEnv, resp)
 	if err != nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果保存失败。", err)
 		return nil, errcode.ErrInternal.WithCause(err)

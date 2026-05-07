@@ -59,12 +59,16 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromTCPStandard(
 	if len(instances) == 0 {
 		return buildAWDCheckOutcomeWithoutInstances(result)
 	}
+	checkerToken, err := u.resolveAWDCheckerToken(definition, contestID, teamID)
+	if err != nil {
+		return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
+	}
 
 	targets := make([]awdCheckTargetResult, 0, len(instances))
 	status := model.AWDServiceStatusUp
 	statusReason := "healthy"
 	for _, instance := range instances {
-		target, targetStatus, reason := u.runAWDTCPCheckerTarget(ctx, config, contestID, round, teamID, definition, instance, flag)
+		target, targetStatus, reason := u.runAWDTCPCheckerTarget(ctx, config, contestID, round, teamID, definition, instance, flag, checkerToken)
 		targets = append(targets, target)
 		if targetStatus != model.AWDServiceStatusUp && status == model.AWDServiceStatusUp {
 			status = targetStatus
@@ -110,6 +114,7 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 	definition contestports.AWDServiceDefinition,
 	instance contestports.AWDServiceInstance,
 	flag string,
+	checkerToken string,
 ) (awdCheckTargetResult, string, string) {
 	startedAt := time.Now()
 	target := awdCheckTargetResult{
@@ -125,11 +130,11 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 		},
 	}
 	timeout := config.timeout(u.cfg.CheckerTimeout)
-	address, err := resolveAWDTCPCheckerAddress(config, instance, definition, round, teamID, flag)
+	address, err := resolveAWDTCPCheckerAddress(config, instance, definition, round, teamID, flag, checkerToken)
 	if err != nil {
 		target.ErrorCode = "invalid_access_url"
-		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag)
-		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag)
+		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag, checkerToken)
+		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag, checkerToken)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 
@@ -139,36 +144,36 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 	conn, err := dialer.DialContext(runCtx, "tcp", address)
 	if err != nil {
 		target.ErrorCode = "tcp_connect_failed"
-		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag)
-		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag)
+		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag, checkerToken)
+		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag, checkerToken)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 	defer conn.Close()
 
 	for _, step := range append(append([]awdTCPCheckerStepConfig{}, config.Steps...), config.Havoc...) {
-		if err := runAWDTCPCheckerStep(conn, step, timeout, instance, definition, round, teamID, flag); err != nil {
+		if err := runAWDTCPCheckerStep(conn, step, timeout, instance, definition, round, teamID, flag, checkerToken); err != nil {
 			code, message := normalizeAWDCheckError(err, "tcp_step_failed")
 			target.ErrorCode = code
-			target.Error = sanitizeAWDCheckerText(message, flag)
+			target.Error = sanitizeAWDCheckerText(message, flag, checkerToken)
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
-			target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, code, flag)
+			target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, code, flag, checkerToken)
 			return target, model.AWDServiceStatusDown, code
 		}
 	}
 
 	target.Healthy = true
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
-	target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, "healthy", flag)
+	target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, "healthy", flag, checkerToken)
 	return target, model.AWDServiceStatusUp, "healthy"
 }
 
-func resolveAWDTCPCheckerAddress(config awdTCPCheckerConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) (string, error) {
+func resolveAWDTCPCheckerAddress(config awdTCPCheckerConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) (string, error) {
 	host, port := splitAWDScriptCheckerTarget(instance.AccessURL)
 	if configuredHost := strings.TrimSpace(config.Connect.Host); configuredHost != "" {
-		host = renderAWDScriptCheckerValue(configuredHost, instance, definition, round, teamID, flag)
+		host = renderAWDScriptCheckerValue(configuredHost, instance, definition, round, teamID, flag, checkerToken)
 	}
 	if configuredPort := awdTCPCheckerPortString(config.Connect.Port); configuredPort != "" {
-		port = renderAWDScriptCheckerValue(configuredPort, instance, definition, round, teamID, flag)
+		port = renderAWDScriptCheckerValue(configuredPort, instance, definition, round, teamID, flag, checkerToken)
 	}
 	if host == "" || port == "" {
 		return "", fmt.Errorf("tcp checker target host or port is empty")
@@ -189,7 +194,7 @@ func awdTCPCheckerPortString(value any) string {
 	}
 }
 
-func runAWDTCPCheckerStep(conn net.Conn, step awdTCPCheckerStepConfig, defaultTimeout time.Duration, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) error {
+func runAWDTCPCheckerStep(conn net.Conn, step awdTCPCheckerStepConfig, defaultTimeout time.Duration, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) error {
 	timeout := step.timeout(defaultTimeout)
 	if timeout <= 0 {
 		timeout = 3 * time.Second
@@ -197,7 +202,7 @@ func runAWDTCPCheckerStep(conn net.Conn, step awdTCPCheckerStepConfig, defaultTi
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		return newAWDCheckError("tcp_deadline_failed", sanitizeAWDCheckError(err))
 	}
-	payload, err := renderAWDTCPCheckerPayload(step, instance, definition, round, teamID, flag)
+	payload, err := renderAWDTCPCheckerPayload(step, instance, definition, round, teamID, flag, checkerToken)
 	if err != nil {
 		return err
 	}
@@ -209,10 +214,10 @@ func runAWDTCPCheckerStep(conn net.Conn, step awdTCPCheckerStepConfig, defaultTi
 	if strings.TrimSpace(step.ExpectContains) == "" && strings.TrimSpace(step.ExpectRegex) == "" {
 		return nil
 	}
-	return readAWDTCPCheckerExpectation(conn, step, instance, definition, round, teamID, flag)
+	return readAWDTCPCheckerExpectation(conn, step, instance, definition, round, teamID, flag, checkerToken)
 }
 
-func renderAWDTCPCheckerPayload(step awdTCPCheckerStepConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) ([]byte, error) {
+func renderAWDTCPCheckerPayload(step awdTCPCheckerStepConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) ([]byte, error) {
 	if strings.TrimSpace(step.SendHex) != "" {
 		payload, err := hex.DecodeString(strings.ReplaceAll(strings.TrimSpace(step.SendHex), " ", ""))
 		if err != nil {
@@ -221,14 +226,14 @@ func renderAWDTCPCheckerPayload(step awdTCPCheckerStepConfig, instance contestpo
 		return payload, nil
 	}
 	if step.SendTemplate != "" {
-		return []byte(renderAWDScriptCheckerValue(step.SendTemplate, instance, definition, round, teamID, flag)), nil
+		return []byte(renderAWDScriptCheckerValue(step.SendTemplate, instance, definition, round, teamID, flag, checkerToken)), nil
 	}
 	return []byte(step.Send), nil
 }
 
-func readAWDTCPCheckerExpectation(conn net.Conn, step awdTCPCheckerStepConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) error {
-	expectedContains := renderAWDScriptCheckerValue(step.ExpectContains, instance, definition, round, teamID, flag)
-	expectedRegex := renderAWDScriptCheckerValue(step.ExpectRegex, instance, definition, round, teamID, flag)
+func readAWDTCPCheckerExpectation(conn net.Conn, step awdTCPCheckerStepConfig, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) error {
+	expectedContains := renderAWDScriptCheckerValue(step.ExpectContains, instance, definition, round, teamID, flag, checkerToken)
+	expectedRegex := renderAWDScriptCheckerValue(step.ExpectRegex, instance, definition, round, teamID, flag, checkerToken)
 	var compiled *regexp.Regexp
 	if strings.TrimSpace(expectedRegex) != "" {
 		regex, err := regexp.Compile(expectedRegex)

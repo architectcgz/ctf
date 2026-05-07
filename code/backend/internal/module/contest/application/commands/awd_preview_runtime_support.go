@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -24,44 +25,86 @@ func normalizeAWDPreviewFlag(value string) string {
 
 func (s *AWDService) prepareCheckerPreviewAccessURL(
 	ctx context.Context,
+	contestID int64,
 	previewService *model.ContestAWDService,
 	previewChallengeID int64,
 	explicitAccessURL string,
 	previewFlag string,
-) (string, func(context.Context) error, error) {
+) (string, string, string, func(context.Context) error, error) {
+	previewServiceID := int64(0)
+	if previewService != nil {
+		previewServiceID = previewService.ID
+	}
 	if strings.TrimSpace(explicitAccessURL) != "" {
 		if err := s.ensureExplicitPreviewRuntimeImageAvailable(ctx, previewService, previewChallengeID); err != nil {
-			return "", nil, err
+			return "", "", "", nil, err
 		}
-		return strings.TrimSpace(explicitAccessURL), nil, nil
+		_, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
+		if err != nil {
+			if appErr, ok := err.(*errcode.AppError); ok &&
+				(appErr.Code == errcode.ErrNotFound.Code || appErr.Code == errcode.ErrInvalidParams.Code) {
+				return strings.TrimSpace(explicitAccessURL), "", "", nil, nil
+			}
+			return "", "", "", nil, err
+		}
+		checkerTokenEnv, checkerToken, err := s.resolvePreviewCheckerToken(runtimeConfig, contestID, previewServiceID, previewChallengeID)
+		if err != nil {
+			return "", "", "", nil, err
+		}
+		return strings.TrimSpace(explicitAccessURL), checkerTokenEnv, checkerToken, nil, nil
 	}
 	if s.runtimeProbe == nil {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法自动拉起试跑实例，请手动填写目标访问地址"))
+		return "", "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法自动拉起试跑实例，请手动填写目标访问地址"))
 	}
 
 	deploymentMode, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
 	if err != nil {
-		return "", nil, err
+		return "", "", "", nil, err
 	}
 	if deploymentMode != "" && deploymentMode != model.AWDDeploymentModeSingleContainer {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
+		return "", "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
 	}
 
 	imageRef, err := s.resolvePreviewImageRef(ctx, runtimeConfig)
 	if err != nil {
-		return "", nil, err
+		return "", "", "", nil, err
 	}
-
-	accessURL, details, err := s.runtimeProbe.CreateContainer(ctx, imageRef, map[string]string{
-		"FLAG": normalizeAWDPreviewFlag(previewFlag),
-	})
+	checkerTokenEnv, checkerToken, err := s.resolvePreviewCheckerToken(runtimeConfig, contestID, previewServiceID, previewChallengeID)
 	if err != nil {
-		return "", nil, errcode.ErrInternal.WithCause(err)
+		return "", "", "", nil, err
 	}
 
-	return accessURL, func(cleanupCtx context.Context) error {
+	env := map[string]string{
+		"FLAG": normalizeAWDPreviewFlag(previewFlag),
+	}
+	if checkerTokenEnv != "" {
+		env[checkerTokenEnv] = checkerToken
+	}
+	accessURL, details, err := s.runtimeProbe.CreateContainer(ctx, imageRef, env)
+	if err != nil {
+		return "", "", "", nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	return accessURL, checkerTokenEnv, checkerToken, func(cleanupCtx context.Context) error {
 		return s.runtimeProbe.CleanupRuntimeDetails(cleanupCtx, details)
 	}, nil
+}
+
+func (s *AWDService) resolvePreviewCheckerToken(runtimeConfig map[string]any, contestID, serviceID, awdChallengeID int64) (string, string, error) {
+	checkerTokenEnv := strings.TrimSpace(readStringFromAny(runtimeConfig["checker_token_env"]))
+	if checkerTokenEnv == "" {
+		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+			checkerTokenEnv = strings.TrimSpace(readStringFromAny(challengeRuntime["checker_token_env"]))
+		}
+	}
+	if checkerTokenEnv == "" {
+		return "", "", nil
+	}
+	checkerToken := contestdomain.BuildAWDCheckerPreviewToken(contestID, serviceID, awdChallengeID, s.flagSecret)
+	if strings.TrimSpace(checkerToken) == "" {
+		return "", "", errcode.ErrInternal.WithCause(errors.New("checker token secret is not configured"))
+	}
+	return checkerTokenEnv, checkerToken, nil
 }
 
 func (s *AWDService) loadPreviewRuntimeDefinition(

@@ -60,12 +60,16 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromScriptChecker(
 	if len(instances) == 0 {
 		return buildAWDCheckOutcomeWithoutInstances(result)
 	}
+	checkerToken, err := u.resolveAWDCheckerToken(definition, contestID, teamID)
+	if err != nil {
+		return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
+	}
 
 	targets := make([]awdCheckTargetResult, 0, len(instances))
 	status := model.AWDServiceStatusUp
 	statusReason := "healthy"
 	for _, instance := range instances {
-		target, targetStatus, reason := u.runAWDScriptCheckerTarget(ctx, cfg, contestID, round, teamID, definition, instance, flag)
+		target, targetStatus, reason := u.runAWDScriptCheckerTarget(ctx, cfg, contestID, round, teamID, definition, instance, flag, checkerToken)
 		targets = append(targets, target)
 		if targetStatus != model.AWDServiceStatusUp && status == model.AWDServiceStatusUp {
 			status = targetStatus
@@ -99,6 +103,7 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	definition contestports.AWDServiceDefinition,
 	instance contestports.AWDServiceInstance,
 	flag string,
+	checkerToken string,
 ) (awdCheckTargetResult, string, string) {
 	startedAt := time.Now()
 	target := awdCheckTargetResult{
@@ -108,8 +113,8 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	job := contestports.CheckerRunJob{
 		Runtime:         cfg.Runtime,
 		Entry:           cfg.Entry,
-		Args:            renderAWDScriptCheckerValues(cfg.Args, instance, definition, round, teamID, flag),
-		Env:             renderAWDScriptCheckerEnv(cfg.Env, instance, definition, round, teamID, flag),
+		Args:            renderAWDScriptCheckerValues(cfg.Args, instance, definition, round, teamID, flag, checkerToken),
+		Env:             renderAWDScriptCheckerEnv(cfg.Env, instance, definition, round, teamID, flag, checkerToken),
 		OutputMode:      cfg.Output,
 		TargetAllowlist: buildAWDScriptCheckerTargetAllowlist(instance.AccessURL),
 		Timeout:         cfg.timeout(u.cfg.CheckerSandbox.Timeout),
@@ -129,7 +134,7 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	}
 	if files, ok, err := loadAWDScriptCheckerArtifacts(cfg); err != nil {
 		target.ErrorCode = "checker_artifact_unavailable"
-		target.Error = sanitizeAWDCheckerText(err.Error(), flag)
+		target.Error = sanitizeAWDCheckerText(err.Error(), flag, checkerToken)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	} else if ok {
 		job.Files = files
@@ -139,8 +144,8 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
 	if err != nil {
 		target.ErrorCode = "checker_runner_error"
-		target.Error = sanitizeAWDCheckerText(err.Error(), flag)
-		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, contestports.CheckerRunResult{}, target.ErrorCode, flag)
+		target.Error = sanitizeAWDCheckerText(err.Error(), flag, checkerToken)
+		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, contestports.CheckerRunResult{}, target.ErrorCode, flag, checkerToken)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 	if runResult.Status != contestports.CheckerRunStatusOK {
@@ -149,12 +154,12 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			reason = contestports.CheckerReasonFailed
 		}
 		target.ErrorCode = reason
-		target.Error = sanitizeAWDScriptCheckerError(runResult, flag)
-		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, reason, flag)
+		target.Error = sanitizeAWDScriptCheckerError(runResult, flag, checkerToken)
+		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, reason, flag, checkerToken)
 		return target, model.AWDServiceStatusDown, reason
 	}
 	target.Healthy = true
-	target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, "healthy", flag)
+	target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, "healthy", flag, checkerToken)
 	return target, model.AWDServiceStatusUp, "healthy"
 }
 
@@ -250,7 +255,7 @@ func awdCheckerArtifactRoot() string {
 	return defaultAWDCheckerArtifactRoot
 }
 
-func renderAWDScriptCheckerEnv(env map[string]string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) map[string]string {
+func renderAWDScriptCheckerEnv(env map[string]string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) map[string]string {
 	rendered := map[string]string{
 		"TARGET_URL":       strings.TrimSpace(instance.AccessURL),
 		"FLAG":             strings.TrimSpace(flag),
@@ -264,20 +269,20 @@ func renderAWDScriptCheckerEnv(env map[string]string, instance contestports.AWDS
 		if key == "" {
 			continue
 		}
-		rendered[key] = renderAWDScriptCheckerValue(value, instance, definition, round, teamID, flag)
+		rendered[key] = renderAWDScriptCheckerValue(value, instance, definition, round, teamID, flag, checkerToken)
 	}
 	return rendered
 }
 
-func renderAWDScriptCheckerValues(values []string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) []string {
+func renderAWDScriptCheckerValues(values []string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) []string {
 	rendered := make([]string, 0, len(values))
 	for _, value := range values {
-		rendered = append(rendered, renderAWDScriptCheckerValue(value, instance, definition, round, teamID, flag))
+		rendered = append(rendered, renderAWDScriptCheckerValue(value, instance, definition, round, teamID, flag, checkerToken))
 	}
 	return rendered
 }
 
-func renderAWDScriptCheckerValue(value string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) string {
+func renderAWDScriptCheckerValue(value string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string, checkerToken string) string {
 	host, port := splitAWDScriptCheckerTarget(instance.AccessURL)
 	replacer := strings.NewReplacer(
 		"{{TARGET_URL}}", strings.TrimSpace(instance.AccessURL),
@@ -288,6 +293,7 @@ func renderAWDScriptCheckerValue(value string, instance contestports.AWDServiceI
 		"{{TEAM_ID}}", fmt.Sprintf("%d", teamID),
 		"{{CHALLENGE_ID}}", fmt.Sprintf("%d", definition.AWDChallengeID),
 		"{{AWD_CHALLENGE_ID}}", fmt.Sprintf("%d", definition.AWDChallengeID),
+		"{{CHECKER_TOKEN}}", strings.TrimSpace(checkerToken),
 	)
 	return replacer.Replace(value)
 }

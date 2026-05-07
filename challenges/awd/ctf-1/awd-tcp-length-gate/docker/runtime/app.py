@@ -11,6 +11,17 @@ from challenge_app import handle_length_gate
 from ctf_runtime import handle_get_flag, handle_set_flag
 
 
+def parse_checker_command(line, command):
+    parts = line.split(" ", 2 if command == "SET_FLAG" else 1)
+    if command == "SET_FLAG":
+        if len(parts) < 3:
+            return "", ""
+        return parts[1], parts[2]
+    if len(parts) < 2:
+        return "", ""
+    return parts[1], ""
+
+
 class Handler(socketserver.StreamRequestHandler):
     def handle(self):
         self.wfile.write(b"length-gate ready\n")
@@ -25,13 +36,17 @@ class Handler(socketserver.StreamRequestHandler):
             if upper_line == "PING":
                 self.wfile.write(b"PONG\n")
             elif upper_line.startswith("SET_FLAG "):
-                handle_set_flag(self.wfile, line[len("SET_FLAG ") :])
+                token, flag_value = parse_checker_command(line, "SET_FLAG")
+                handle_set_flag(self.wfile, token, flag_value)
             elif upper_line == "GET_FLAG":
-                handle_get_flag(self.wfile)
+                self.wfile.write(b"ERR checker token required\n")
+            elif upper_line.startswith("GET_FLAG "):
+                token, _ = parse_checker_command(line, "GET_FLAG")
+                handle_get_flag(self.wfile, token)
             elif upper_line.startswith("CHECK "):
                 handle_length_gate(self.wfile, line[len("CHECK ") :])
             elif upper_line == "HELP":
-                self.wfile.write(b"PING | SET_FLAG <flag> | GET_FLAG | CHECK <payload>\n")
+                self.wfile.write(b"PING | CHECK <payload> | HELP\n")
             else:
                 self.wfile.write(b"ERR unknown command\n")
             self.wfile.flush()

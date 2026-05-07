@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 
@@ -19,14 +20,15 @@ def main():
     host = sys.argv[1]
     port = int(sys.argv[2])
     flag = "flag{local_tcp_check}"
+    checker_token = os.environ.get("CHECKER_TOKEN", "demo-checker-token")
 
     with socket.create_connection((host, port), timeout=3) as sock:
         recv_until(sock, b"ready\n")
         sock.sendall(b"PING\n")
         assert "PONG" in recv_until(sock, b"\n")
-        sock.sendall(f"SET_FLAG {flag}\n".encode("utf-8"))
+        sock.sendall(f"SET_FLAG {checker_token} {flag}\n".encode("utf-8"))
         assert "OK" in recv_until(sock, b"\n")
-        sock.sendall(b"GET_FLAG\n")
+        sock.sendall(f"GET_FLAG {checker_token}\n".encode("utf-8"))
         assert flag in recv_until(sock, b"\n")
 
     print("ok")

@@ -39,6 +39,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	applyAWDStableNetworkToTopologyRequest(instance, chal, request)
 	if awdWorkspacePlan != nil {
 		applyAWDDefenseWorkspaceRuntimeMounts(request, awdWorkspacePlan.runtimeMounts)
+		applyAWDCheckerTokenToTopologyRequest(request, awdWorkspacePlan.checkerTokenEnv, awdWorkspacePlan.checkerToken)
 	}
 	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
@@ -99,6 +100,9 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 		runtimeMounts := []model.ContainerMount(nil)
 		if awdWorkspacePlan != nil {
 			runtimeMounts = append(runtimeMounts, awdWorkspacePlan.runtimeMounts...)
+			if awdWorkspacePlan.checkerTokenEnv != "" {
+				env[awdWorkspacePlan.checkerTokenEnv] = awdWorkspacePlan.checkerToken
+			}
 		}
 
 		networks := []practiceports.TopologyCreateNetwork{
@@ -280,4 +284,19 @@ func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (
 		return "", errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
 	}
 	return fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag), nil
+}
+
+func applyAWDCheckerTokenToTopologyRequest(req *practiceports.TopologyCreateRequest, checkerTokenEnv, checkerToken string) {
+	if req == nil || strings.TrimSpace(checkerTokenEnv) == "" || strings.TrimSpace(checkerToken) == "" {
+		return
+	}
+	for index := range req.Nodes {
+		if req.Nodes[index].Env == nil {
+			continue
+		}
+		if _, ok := req.Nodes[index].Env["FLAG"]; !ok {
+			continue
+		}
+		req.Nodes[index].Env[checkerTokenEnv] = checkerToken
+	}
 }

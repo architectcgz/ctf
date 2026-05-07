@@ -73,7 +73,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 			"entry": "docker/check/check.py",
 			"timeout_sec": 7,
 			"args": ["{{TARGET_URL}}", "{{FLAG}}"],
-			"env": {"CUSTOM_FLAG": "{{FLAG}}"},
+			"env": {"CUSTOM_FLAG": "{{FLAG}}", "CHECKER_TOKEN": "{{CHECKER_TOKEN}}"},
 			"output": "json",
 			"artifact": {
 				"entry": "docker/check/check.py",
@@ -82,8 +82,10 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 				"size": 12
 			}
 		}`,
-		AccessURL:   "http://10.10.0.23:8080",
-		PreviewFlag: "flag{preview}",
+		CheckerTokenEnv: "CHECKER_TOKEN",
+		CheckerToken:    "preview-checker-token",
+		AccessURL:       "http://10.10.0.23:8080",
+		PreviewFlag:     "flag{preview}",
 	})
 	if err != nil {
 		t.Fatalf("PreviewServiceCheck() error = %v", err)
@@ -104,7 +106,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 	if len(job.Args) != 2 || job.Args[0] != "http://10.10.0.23:8080" || job.Args[1] != "flag{preview}" {
 		t.Fatalf("Args = %#v", job.Args)
 	}
-	if job.Env["TARGET_URL"] != "http://10.10.0.23:8080" || job.Env["CUSTOM_FLAG"] != "flag{preview}" {
+	if job.Env["TARGET_URL"] != "http://10.10.0.23:8080" || job.Env["CUSTOM_FLAG"] != "flag{preview}" || job.Env["CHECKER_TOKEN"] != "preview-checker-token" {
 		t.Fatalf("Env = %#v", job.Env)
 	}
 	if len(job.TargetAllowlist) != 1 || job.TargetAllowlist[0] != "10.10.0.23:8080" {

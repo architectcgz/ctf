@@ -115,6 +115,7 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 			FlagPrefix:       resolveContestAWDServiceFlagPrefix(snapshot),
 			CheckerType:      resolveContestAWDServiceCheckerType(runtimeConfig),
 			CheckerConfig:    resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			CheckerTokenEnv:  resolveContestAWDServiceCheckerTokenEnv(runtimeConfig),
 			SLAScore:         resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
 			DefenseScore:     resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
 			DefenseWorkspace: resolveContestAWDServiceDefenseWorkspaceSummary(snapshot, runtimeConfig),
@@ -312,6 +313,20 @@ func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string 
 				return encoded
 			}
 		}
+	}
+	return ""
+}
+
+func resolveContestAWDServiceCheckerTokenEnv(runtimeConfig map[string]any) string {
+	if runtimeConfig == nil {
+		return ""
+	}
+	if value, ok := runtimeConfig["checker_token_env"].(string); ok && strings.TrimSpace(value) != "" {
+		return strings.TrimSpace(value)
+	}
+	challengeRuntime, _ := runtimeConfig["challenge_runtime"].(map[string]any)
+	if value, ok := challengeRuntime["checker_token_env"].(string); ok && strings.TrimSpace(value) != "" {
+		return value
 	}
 	return ""
 }

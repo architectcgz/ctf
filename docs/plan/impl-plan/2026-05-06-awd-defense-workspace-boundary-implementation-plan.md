@@ -4,7 +4,7 @@
 
 **Goal:** 把 AWD 防守从“学生直接进 service 容器 + 浏览器文件工作台 + `editable_paths` 提示”迁移到“独立 defense workspace + 目录级挂载边界 + 学生端只保留连接入口”的正式实现。
 
-**Architecture:** 题包先切到 `runtime / workspace / check` 三层结构，并在 `challenge.yml` 中用 `defense_workspace` 描述目录级工作区边界；运行时再为每个 `contest + team + service` 维护独立 workspace 状态、共享业务 roots 和 companion workspace 容器。学生侧 battle 页只消费工作区入口状态，不再消费 `defense_scope` 文件提示，也不再暴露浏览器文件树、在线编辑或命令执行接口。
+**Architecture:** 题包先切到 canonical `docker/runtime`、`docker/workspace`、`docker/check` 三层结构，并在 `challenge.yml` 中用 `defense_workspace` 描述目录级工作区边界；运行时再为每个 `contest + team + service` 维护独立 workspace 状态、共享业务 roots 和 companion workspace 容器。学生侧 battle 页只消费工作区入口状态，不再消费 `defense_scope` 文件提示，也不再暴露浏览器文件树、在线编辑或命令执行接口。
 
 **Tech Stack:** Go、Gin、GORM、PostgreSQL migrations、Docker Engine、Vue 3、Vite、Vitest。
 
@@ -12,10 +12,10 @@
 
 ## 输入文档
 
-- `docs/architecture/features/awd-defense-workspace-boundary-design.md`
-- `docs/architecture/features/awd-student-battle-workspace-design.md`
+- `docs/architecture/features/AWD防守工作区与边界设计.md`
+- `docs/architecture/features/AWD学员实战工作台设计.md`
 - `challenges/awd/challenge-package-contract.md`
-- `docs/architecture/features/awd-final-design.md`
+- `docs/architecture/features/校园级CTF-AWD模式完整设计.md`
 
 ## 目标边界
 
@@ -55,7 +55,7 @@
   - `challenges/awd/ctf-1/awd-iot-hub/challenge.yml`
   - `challenges/awd/ctf-1/awd-supply-ticket/challenge.yml`
   - `challenges/awd/ctf-1/awd-tcp-length-gate/challenge.yml`
-  - each package’s `docker/` tree should be migrated to `runtime/`, `workspace/`, `check/`
+  - each package should keep the canonical `docker/runtime`, `docker/workspace`, `docker/check` layout defined in `challenges/awd/challenge-package-contract.md`
 
 ### Workspace 状态与仓储
 
@@ -156,7 +156,7 @@
 
 - [x] **Step 2: 迁移仓库内 AWD 样例题包**
 
-把四个样例包的 `docker/` 目录改成 `runtime/`, `workspace/`, `check/` 三层，并更新 `challenge.yml` 为 `defense_workspace` 目录级配置。
+把四个样例包整理为 `docker/runtime`、`docker/workspace`、`docker/check` 三层，并更新 `challenge.yml` 为 `defense_workspace` 目录级配置。
 
 - [x] **Step 3: 更新 parser 和导入校验**
 
@@ -499,8 +499,8 @@ git commit -m "feat(awd): 收敛学生侧 defense workspace 入口"
 **Files:**
 
 - Modify if implementation differs from design:
-  - `docs/architecture/features/awd-defense-workspace-boundary-design.md`
-  - `docs/architecture/features/awd-student-battle-workspace-design.md`
+  - `docs/architecture/features/AWD防守工作区与边界设计.md`
+  - `docs/architecture/features/AWD学员实战工作台设计.md`
   - `challenges/awd/challenge-package-contract.md`
 - Create review archive:
   - `docs/reviews/architecture/2026-05-06-awd-defense-workspace-review.md`

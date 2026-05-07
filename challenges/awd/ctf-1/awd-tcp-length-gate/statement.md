@@ -10,9 +10,9 @@
 
 ```text
 PING
-SET_FLAG <flag>
-GET_FLAG
 CHECK <payload>
 ```
 
-平台 checker 会使用 `SET_FLAG` 写入本轮 flag，再通过 `GET_FLAG` 回读校验。选手攻击面位于 `CHECK` 命令，满足隐藏条件时服务会返回当前保存的 flag。
+公开攻击面只保留 `PING` 和 `CHECK`。平台 checker 还会通过私有管理通道写入并回读本轮 flag，但该通道不属于选手防守范围，也不会下发到工作区。
+
+选手可修改的业务逻辑位于工作区挂载的 `docker/workspace/src/challenge_app.py`。题目的目标是保留服务可用，同时让 `CHECK` 不再泄露当前保存的 flag。
