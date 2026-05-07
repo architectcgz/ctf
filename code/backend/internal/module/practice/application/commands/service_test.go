@@ -80,6 +80,29 @@ func requireEventually(t *testing.T, timeout time.Duration, check func() bool) {
 	t.Fatal("condition was not satisfied before timeout")
 }
 
+func TestAWDDefenseWorkspaceBootstrapCommandInitializesGitRepo(t *testing.T) {
+	requiredFragments := []string{
+		"set -e",
+		"[ -d /workspace/src ]",
+		"[ ! -d /workspace/src/.git ]",
+		"git -C /workspace/src init",
+		"git -C /workspace/src config user.name workspace",
+		"git -C /workspace/src config user.email workspace@local",
+		"git -C /workspace/src add --all",
+		"git -C /workspace/src commit --allow-empty -m 'Initial workspace snapshot'",
+	}
+
+	for _, fragment := range requiredFragments {
+		if !strings.Contains(awdDefenseWorkspaceBootstrapCommand, fragment) {
+			t.Fatalf("expected bootstrap command to contain %q, got %q", fragment, awdDefenseWorkspaceBootstrapCommand)
+		}
+	}
+
+	if strings.Contains(awdDefenseWorkspaceBootstrapCommand, "git -C /workspace init") {
+		t.Fatalf("expected git repo to be initialized under /workspace/src only, got %q", awdDefenseWorkspaceBootstrapCommand)
+	}
+}
+
 func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

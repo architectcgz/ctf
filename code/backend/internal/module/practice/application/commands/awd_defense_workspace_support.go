@@ -18,7 +18,18 @@ const (
 	awdDefenseWorkspaceWorkingDir = "/workspace"
 	// Keep the companion shell usable out of the box instead of relying on the
 	// SSH client to negotiate locale/editor state each time.
-	awdDefenseWorkspaceBootstrapCommand = "if ! command -v git >/dev/null 2>&1 || ! command -v vim >/dev/null 2>&1 || ! command -v nano >/dev/null 2>&1; then apk add --no-cache git vim nano; fi && exec tail -f /dev/null"
+	awdDefenseWorkspaceBootstrapCommand = `set -e
+if ! command -v git >/dev/null 2>&1 || ! command -v vim >/dev/null 2>&1 || ! command -v nano >/dev/null 2>&1; then
+  apk add --no-cache git vim nano
+fi
+if [ -d /workspace/src ] && [ ! -d /workspace/src/.git ]; then
+  git -C /workspace/src init
+  git -C /workspace/src config user.name workspace
+  git -C /workspace/src config user.email workspace@local
+  git -C /workspace/src add --all
+  git -C /workspace/src commit --allow-empty -m 'Initial workspace snapshot'
+fi
+exec tail -f /dev/null`
 )
 
 var awdDefenseWorkspaceShellEnv = map[string]string{
