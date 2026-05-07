@@ -798,6 +798,9 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 					if len(req.Nodes[0].Mounts) != 1 || req.Nodes[0].Mounts[0].Target != "/workspace/src" {
 						t.Fatalf("unexpected workspace mounts: %+v", req.Nodes[0].Mounts)
 					}
+					if len(req.Nodes) != 1 || len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-ws-c9111-t9112-s9113-r4" {
+						t.Fatalf("expected recreated workspace alias in second topology create, got %+v", req)
+					}
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "workspace-recreated",
 						NetworkID:          "net-awd-contest-9111",
