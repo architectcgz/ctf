@@ -775,6 +775,34 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 			result = append(result, containerID)
 		}
 	}
+
+	var workspaceItems []struct {
+		ContainerID string
+	}
+	if err := r.dbWithContext(ctx).
+		Table("awd_defense_workspaces AS ws").
+		Joins("JOIN instances AS inst ON inst.id = ws.instance_id").
+		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("ws.status = ? AND ws.container_id <> ''", model.AWDDefenseWorkspaceStatusRunning).
+		Select("ws.container_id").
+		Scan(&workspaceItems).Error; err != nil {
+		lowerErr := strings.ToLower(err.Error())
+		if !strings.Contains(lowerErr, "no such table") && !strings.Contains(lowerErr, "does not exist") {
+			return nil, err
+		}
+		return result, nil
+	}
+	for _, item := range workspaceItems {
+		containerID := strings.TrimSpace(item.ContainerID)
+		if containerID == "" {
+			continue
+		}
+		if _, exists := seen[containerID]; exists {
+			continue
+		}
+		seen[containerID] = struct{}{}
+		result = append(result, containerID)
+	}
 	return result, nil
 }
 

@@ -26,6 +26,9 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
+	if err := repo.db.AutoMigrate(&model.AWDDefenseWorkspace{}); err != nil {
+		t.Fatalf("migrate awd defense workspace table: %v", err)
+	}
 	seedInstance(t, repo.db, &model.Instance{
 		UserID:      1,
 		ChallengeID: 101,
@@ -55,13 +58,85 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
+	contestID := int64(301)
+	teamID := int64(401)
+	serviceID := int64(501)
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1005,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ChallengeID: 105,
+		ContainerID: "runtime-awd",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	})
+	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+		ContestID:         contestID,
+		TeamID:            teamID,
+		ServiceID:         serviceID,
+		InstanceID:        1005,
+		WorkspaceRevision: 1,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-running",
+		SeedSignature:     "seed-running",
+	})
+	stoppedContestID := int64(302)
+	stoppedTeamID := int64(402)
+	stoppedServiceID := int64(502)
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1006,
+		UserID:      1,
+		ContestID:   &stoppedContestID,
+		TeamID:      &stoppedTeamID,
+		ServiceID:   &stoppedServiceID,
+		ChallengeID: 106,
+		ContainerID: "runtime-awd-stopped",
+		Status:      model.InstanceStatusStopped,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	})
+	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+		ContestID:         stoppedContestID,
+		TeamID:            stoppedTeamID,
+		ServiceID:         stoppedServiceID,
+		InstanceID:        1006,
+		WorkspaceRevision: 1,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-stopped",
+		SeedSignature:     "seed-stopped",
+	})
+	failedContestID := int64(303)
+	failedTeamID := int64(403)
+	failedServiceID := int64(503)
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1007,
+		UserID:      1,
+		ContestID:   &failedContestID,
+		TeamID:      &failedTeamID,
+		ServiceID:   &failedServiceID,
+		ChallengeID: 107,
+		ContainerID: "runtime-awd-failed",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	})
+	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+		ContestID:         failedContestID,
+		TeamID:            failedTeamID,
+		ServiceID:         failedServiceID,
+		InstanceID:        1007,
+		WorkspaceRevision: 1,
+		Status:            model.AWDDefenseWorkspaceStatusFailed,
+		ContainerID:       "workspace-failed",
+		SeedSignature:     "seed-failed",
+	})
 
 	containerIDs, err := repo.ListActiveContainerIDs(context.Background())
 	if err != nil {
 		t.Fatalf("ListActiveContainerIDs() error = %v", err)
 	}
-	if len(containerIDs) != 3 {
-		t.Fatalf("expected 3 active container ids, got %d (%v)", len(containerIDs), containerIDs)
+	if len(containerIDs) != 6 {
+		t.Fatalf("expected 6 active container ids, got %d (%v)", len(containerIDs), containerIDs)
 	}
 
 	got := make(map[string]struct{}, len(containerIDs))
@@ -76,6 +151,15 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	}
 	if _, exists := got["sidecar-1"]; !exists {
 		t.Fatalf("sidecar container not returned: %v", containerIDs)
+	}
+	if _, exists := got["workspace-running"]; !exists {
+		t.Fatalf("running workspace container not returned: %v", containerIDs)
+	}
+	if _, exists := got["workspace-stopped"]; exists {
+		t.Fatalf("workspace container for stopped instance should not be returned: %v", containerIDs)
+	}
+	if _, exists := got["workspace-failed"]; exists {
+		t.Fatalf("failed workspace container should not be returned: %v", containerIDs)
 	}
 }
 
@@ -1801,6 +1885,14 @@ func seedInstance(t *testing.T, db *gorm.DB, instance *model.Instance) {
 
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
+	}
+}
+
+func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *model.AWDDefenseWorkspace) {
+	t.Helper()
+
+	if err := db.Create(workspace).Error; err != nil {
+		t.Fatalf("seed awd defense workspace: %v", err)
 	}
 }
 
