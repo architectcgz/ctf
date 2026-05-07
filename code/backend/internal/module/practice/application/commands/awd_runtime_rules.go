@@ -34,6 +34,16 @@ func buildAWDServiceAlias(instance *model.Instance) string {
 	return fmt.Sprintf("awd-c%d-t%d-s%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
+func buildAWDDefenseWorkspaceAlias(instance *model.Instance, revision int64) string {
+	if instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
+		return ""
+	}
+	if revision <= 0 {
+		revision = 1
+	}
+	return fmt.Sprintf("awd-ws-c%d-t%d-s%d-r%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision)
+}
+
 func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, chal *model.Challenge, request *practiceports.TopologyCreateRequest) {
 	if !isAWDInstance(instance) || request == nil {
 		return
@@ -108,14 +118,14 @@ func usesAWDStableNetworkAlias(instance *model.Instance) bool {
 }
 
 func buildRuntimeContainerName(chal *model.Challenge, instance *model.Instance) string {
-	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil {
+	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
 	challengeSegment := sanitizeRuntimeContainerSegment(resolveRuntimeChallengeName(chal))
 	if challengeSegment == "" {
 		challengeSegment = "challenge"
 	}
-	return fmt.Sprintf("%s%s-c%d-t%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID)
+	return fmt.Sprintf("%s%s-c%d-t%d-s%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
 func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *model.Instance, revision int64) string {

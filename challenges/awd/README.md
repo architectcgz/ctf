@@ -25,10 +25,8 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 │   ├── statement.md
 │   ├── docker/
 │   │   ├── docker-compose.yml
-│   │   ├── app.py
-│   │   ├── ctf_runtime.py
-│   │   ├── challenge_app.py
-│   │   ├── requirements.txt
+│   │   ├── runtime/
+│   │   ├── workspace/
 │   │   └── check/
 │   └── writeup/
 │       ├── attack.md
@@ -40,11 +38,12 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 补充约定：
 
 - `docker/` 是题目本地调试入口，不是平台运行归属依据
-- Web 题固定入口为 `docker/app.py`，学生主要审计和修补的业务代码为 `docker/challenge_app.py`
-- TCP 题固定入口为 `docker/app.py`，学生主要审计和修补的业务逻辑为 `docker/challenge_app.py`
+- Web 题固定入口为 `docker/runtime/app.py`，学生主要审计和修补的业务代码位于 `docker/workspace/src/`
+- TCP 题固定入口为 `docker/runtime/app.py`，学生主要审计和修补的业务逻辑位于 `docker/workspace/src/`
 - `ctf_runtime.py` 承载 `/health`、`/api/flag`、checker token、动态 Flag 写入读取等平台运行契约，默认放入 `protected_paths`
 - `challenge.yml` 的 `extensions.awd.runtime_config.defense_scope` 必须声明 `editable_paths`、`protected_paths`、`service_contracts`
 - 平台是否把实例识别为 `ctf` 项目下的受管容器，只看运行时 label，不看题目放在哪个目录、老师从哪个目录执行 compose
+- `runtime` 镜像必须内置 `/workspace/` 种子内容，否则平台首次挂载 named volume 时会得到空工作区
 
 ## 平台导入
 

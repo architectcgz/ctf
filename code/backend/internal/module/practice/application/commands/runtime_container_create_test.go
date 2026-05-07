@@ -82,7 +82,25 @@ func TestBuildRuntimeContainerNameUsesChallengeSlugAndContestIdentity(t *testing
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
 	})
-	want := "ctf-instance-bank-portal-c8-t15"
+	want := "ctf-instance-bank-portal-c8-t15-s21"
+	if got != want {
+		t.Fatalf("expected runtime container name %q, got %q", want, got)
+	}
+}
+
+func TestBuildRuntimeContainerNameIncludesServiceIDWhenChallengeSlugMissing(t *testing.T) {
+	t.Parallel()
+
+	contestID := int64(9)
+	teamID := int64(16)
+	serviceID := int64(22)
+
+	got := buildRuntimeContainerName(&model.Challenge{}, &model.Instance{
+		ContestID: &contestID,
+		TeamID:    &teamID,
+		ServiceID: &serviceID,
+	})
+	want := "ctf-instance-challenge-c9-t16-s22"
 	if got != want {
 		t.Fatalf("expected runtime container name %q, got %q", want, got)
 	}
@@ -150,7 +168,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 					if req.ReservedHostPort != 0 {
 						t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
 					}
-					if req.ContainerName != "ctf-instance-challenge-c7001-t7101" {
+					if req.ContainerName != "ctf-instance-challenge-c7001-t7101-s8001" {
 						t.Fatalf("expected awd container name, got %q", req.ContainerName)
 					}
 					if !req.DisableEntryPortPublishing {
@@ -190,6 +208,9 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 						},
 					}, nil
 				case 2:
+					if len(req.Nodes) != 1 || len(req.Nodes[0].NetworkAliases) != 1 || req.Nodes[0].NetworkAliases[0] != "awd-ws-c7001-t7101-s8001-r1" {
+						t.Fatalf("expected stable workspace alias, got %+v", req.Nodes)
+					}
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7001",
@@ -300,7 +321,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 					if req.ReservedHostPort != 0 {
 						t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
 					}
-					if req.ContainerName != "ctf-instance-challenge-c7003-t7103" {
+					if req.ContainerName != "ctf-instance-challenge-c7003-t7103-s8003" {
 						t.Fatalf("expected awd container name, got %q", req.ContainerName)
 					}
 					if !req.DisableEntryPortPublishing {

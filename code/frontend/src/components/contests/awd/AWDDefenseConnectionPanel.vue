@@ -9,10 +9,12 @@ const props = defineProps<{
   access?: AWDDefenseSSHAccessData
   serviceId: string
   copiedCommand: boolean
+  copiedPassword: boolean
 }>()
 
 const emit = defineEmits<{
   copyCommand: [serviceId: string]
+  copyPassword: [serviceId: string]
 }>()
 
 const command = computed(() => props.access?.command || '')
@@ -54,7 +56,13 @@ const expiresAtLabel = computed(() =>
     </dl>
     <div class="asset-ssh__secret">
       <span>密码</span>
-      <code>{{ access.password }}</code>
+      <div class="asset-ssh__secret-value">
+        <code :title="access.password">{{ access.password }}</code>
+        <button class="asset-ssh__copy" type="button" @click="emit('copyPassword', serviceId)">
+          <Copy class="h-3 w-3" />
+          <span>{{ copiedPassword ? '已复制' : '复制密码' }}</span>
+        </button>
+      </div>
     </div>
     <div v-if="expiresAtLabel" class="asset-ssh__expires">
       {{ expiresAtLabel }}
@@ -114,11 +122,21 @@ const expiresAtLabel = computed(() =>
   font-weight: 800;
 }
 
+.asset-ssh__secret-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 .asset-ssh__secret code {
   min-width: 0;
+  flex: 1;
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
   overflow: hidden;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -188,6 +206,20 @@ const expiresAtLabel = computed(() =>
 @media (max-width: 42rem) {
   .asset-ssh__meta {
     grid-template-columns: 1fr;
+  }
+
+  .asset-ssh__secret {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .asset-ssh__secret-value {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .asset-ssh__secret code {
+    text-align: left;
   }
 }
 </style>

@@ -133,8 +133,8 @@ container:
   defense_ssh_enabled: false
   defense_ssh_host: 127.0.0.1
   defense_ssh_port: 2222
-  defense_workbench_readonly_enabled: false
-  defense_workbench_root: ""
+  defense_workbench_readonly_enabled: true
+  defense_workbench_root: /app
   registry:
     enabled: false
     scheme: https

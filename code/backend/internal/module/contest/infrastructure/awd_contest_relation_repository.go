@@ -320,34 +320,39 @@ func resolveContestAWDServiceDefenseWorkspaceSummary(
 	snapshot model.ContestAWDServiceSnapshot,
 	runtimeConfig map[string]any,
 ) contestports.AWDDefenseWorkspaceSummary {
-	entryMode := strings.TrimSpace(snapshot.DefenseEntryMode)
+	entryMode := resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig, snapshot.RuntimeConfig)
 	if entryMode == "" {
-		entryMode = resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig)
+		entryMode = strings.TrimSpace(snapshot.DefenseEntryMode)
 	}
 	return contestports.AWDDefenseWorkspaceSummary{
 		EntryMode: entryMode,
 	}
 }
 
-func resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig map[string]any) string {
-	if runtimeConfig == nil {
-		return ""
-	}
+func resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfigs ...map[string]any) string {
+	for _, runtimeConfig := range runtimeConfigs {
+		if runtimeConfig == nil {
+			continue
+		}
 
-	raw := runtimeConfig["defense_workspace"]
-	if raw == nil {
-		if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
-			raw = challengeRuntime["defense_workspace"]
+		raw := runtimeConfig["defense_workspace"]
+		if raw == nil {
+			if challengeRuntime, ok := runtimeConfig["challenge_runtime"].(map[string]any); ok {
+				raw = challengeRuntime["defense_workspace"]
+			}
+		}
+
+		payload, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		value, _ := payload["entry_mode"].(string)
+		if resolved := strings.TrimSpace(value); resolved != "" {
+			return resolved
 		}
 	}
-
-	payload, ok := raw.(map[string]any)
-	if !ok {
-		return ""
-	}
-
-	value, _ := payload["entry_mode"].(string)
-	return strings.TrimSpace(value)
+	return ""
 }
 
 func resolveContestAWDServiceRuntimeImageID(runtimeConfig map[string]any) int64 {

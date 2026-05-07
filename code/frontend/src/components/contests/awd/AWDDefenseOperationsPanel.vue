@@ -15,6 +15,7 @@ const props = defineProps<{
   loading: boolean
   access?: AWDDefenseSSHAccessData
   copiedCommand: boolean
+  copiedPassword: boolean
 }>()
 
 const emit = defineEmits<{
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   restartService: [serviceId: ID]
   refresh: []
   copyCommand: [serviceId: string]
+  copyPassword: [serviceId: string]
 }>()
 
 const serviceId = computed(() => props.serviceCard?.serviceId || '')
@@ -141,7 +143,9 @@ function emitRestartService(): void {
         :access="access"
         :service-id="serviceId"
         :copied-command="copiedCommand"
+        :copied-password="copiedPassword"
         @copy-command="emit('copyCommand', $event)"
+        @copy-password="emit('copyPassword', $event)"
       />
     </div>
   </section>

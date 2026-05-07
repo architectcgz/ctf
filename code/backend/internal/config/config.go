@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -149,6 +150,7 @@ type ContainerConfig struct {
 	DefenseSSHEnabled               bool                     `mapstructure:"defense_ssh_enabled"`
 	DefenseSSHHost                  string                   `mapstructure:"defense_ssh_host"`
 	DefenseSSHPort                  int                      `mapstructure:"defense_ssh_port"`
+	DefenseSSHHostKeyPath           string                   `mapstructure:"defense_ssh_host_key_path"`
 	DefenseWorkbenchReadOnlyEnabled bool                     `mapstructure:"defense_workbench_readonly_enabled"`
 	DefenseWorkbenchRoot            string                   `mapstructure:"defense_workbench_root"`
 	Registry                        ContainerRegistryConfig  `mapstructure:"registry"`
@@ -373,6 +375,10 @@ func (c *Config) Validate() error {
 		}
 		if c.Container.DefenseSSHPort <= 0 || c.Container.DefenseSSHPort > 65535 {
 			return fmt.Errorf("container.defense_ssh_port must be between 1 and 65535")
+		}
+		hostKeyPath := filepath.Clean(strings.TrimSpace(c.Container.DefenseSSHHostKeyPath))
+		if hostKeyPath == "" || hostKeyPath == "." {
+			return fmt.Errorf("container.defense_ssh_host_key_path must not be empty when container.defense_ssh_enabled is true")
 		}
 	}
 	if c.Container.DefenseWorkbenchReadOnlyEnabled {
@@ -665,8 +671,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_ssh_enabled", false)
 	v.SetDefault("container.defense_ssh_host", "127.0.0.1")
 	v.SetDefault("container.defense_ssh_port", 2222)
-	v.SetDefault("container.defense_workbench_readonly_enabled", false)
-	v.SetDefault("container.defense_workbench_root", "")
+	v.SetDefault("container.defense_ssh_host_key_path", "storage/runtime/awd-defense-ssh-host-key.pem")
+	v.SetDefault("container.defense_workbench_readonly_enabled", true)
+	v.SetDefault("container.defense_workbench_root", "/app")
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.scheme", "https")
 	v.SetDefault("container.registry.server", "")

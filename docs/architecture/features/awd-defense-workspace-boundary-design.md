@@ -444,6 +444,35 @@ extensions:
 - `reseed / recreate` 必须轮换 `workspace revision`
 - 用户侧拿到的是短时票据，不是长期固定容器口令
 
+#### SSH host key 持久化
+
+SSH 网关的服务端 `host key` 必须和短时票据分开处理。
+
+- `host key` 表示网关自身身份，属于稳定入口契约的一部分
+- 短时票据只用于当前用户的临时认证，不承担“服务端身份稳定”的职责
+- 对固定入口 `host:port` 而言，如果 `host key` 在每次进程重启后都重新生成，客户端会持续触发 `REMOTE HOST IDENTIFICATION HAS CHANGED`
+
+因此这里的正式约束是：
+
+1. SSH 网关启动时优先从配置指定路径读取持久化私钥。
+2. 当私钥文件不存在时，只允许首次生成一次新 key，并立刻写回该路径。
+3. 写回后的私钥文件权限必须收敛到仅当前进程用户可读写，例如 `0600`。
+4. 后续普通重启、代码热更新、runtime 容器重建、workspace 容器重建，都不得隐式轮换 `host key`。
+5. 只有管理员显式替换 key 文件，或执行明确的 key rotation 流程时，`host key` 才允许变化。
+
+配置与部署约束：
+
+- 新增独立配置项，例如 `container.defense_ssh_host_key_path`
+- 默认值可落在后端本地持久化目录，例如 `storage/runtime/awd-defense-ssh-host-key.pem`
+- 单机开发环境允许使用本地文件
+- 如果未来同一个 `defense_ssh_host:port` 背后接入多个 API 实例，这些实例必须共享同一份 host key，而不是各自生成
+
+故障与回退语义：
+
+- 如果 `defense_ssh_enabled=true` 且配置路径上的 key 文件存在但不可解析，启动应直接失败，而不是静默回退到重新生成
+- 如果目录不可写且文件又不存在，启动同样应失败，因为这意味着服务端身份无法稳定落盘
+- 删除 key 文件等价于显式轮换，客户端 `known_hosts` 需要重新确认，这是可预期的运维行为，不应伪装成普通重启
+
 ### 8.4 审计语义
 
 平台应记录“防守动作元数据”，但不应把工作区内的一切都伪装成官方裁判证据。

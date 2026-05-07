@@ -23,6 +23,7 @@ describe('AWDDefenseConnectionPanel', () => {
         access: access(),
         serviceId: '21',
         copiedCommand: false,
+        copiedPassword: false,
       },
     })
 
@@ -42,11 +43,29 @@ describe('AWDDefenseConnectionPanel', () => {
         access: access(),
         serviceId: '21',
         copiedCommand: false,
+        copiedPassword: false,
       },
     })
 
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('.asset-ssh__copy--primary').trigger('click')
 
     expect(wrapper.emitted('copyCommand')).toEqual([['21']])
+  })
+
+  it('向父组件上抛复制密码事件', async () => {
+    const wrapper = mount(AWDDefenseConnectionPanel, {
+      props: {
+        access: access(),
+        serviceId: '21',
+        copiedCommand: false,
+        copiedPassword: false,
+      },
+    })
+
+    const passwordCopyButton = wrapper.findAll('button')[1]
+    expect(passwordCopyButton).toBeDefined()
+    await passwordCopyButton.trigger('click')
+
+    expect(wrapper.emitted('copyPassword')).toEqual([['21']])
   })
 })

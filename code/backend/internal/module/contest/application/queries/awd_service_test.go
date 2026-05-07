@@ -612,6 +612,68 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	}
 }
 
+func TestAWDServiceGetUserWorkspacePrefersDefenseWorkspaceEntryModeOverLegacySnapshotField(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 15, 30, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 802, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8021, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 802, 8021, now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8201, 802, "Red", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 802, 8201, 9201, now)
+
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(802, 8021)
+	var contestService model.ContestAWDService
+	if err := db.Where("contest_id = ? AND awd_challenge_id = ?", 802, 8021).First(&contestService).Error; err != nil {
+		t.Fatalf("load awd contest service: %v", err)
+	}
+	snapshot, err := model.DecodeContestAWDServiceSnapshot(contestService.ServiceSnapshot)
+	if err != nil {
+		t.Fatalf("decode awd contest service snapshot: %v", err)
+	}
+	snapshot.DefenseEntryMode = "http"
+	snapshot.RuntimeConfig["defense_workspace"] = map[string]any{
+		"entry_mode": "ssh",
+	}
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	if err != nil {
+		t.Fatalf("encode awd contest service snapshot: %v", err)
+	}
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("id = ?", serviceID).
+		Updates(map[string]any{
+			"service_snapshot": serviceSnapshot,
+			"runtime_config":   `{}`,
+		}).Error; err != nil {
+		t.Fatalf("update awd contest service snapshot: %v", err)
+	}
+
+	seedAWDWorkspaceInstance(t, db, 10, 9201, 802, 8201, 8021, "http://red-ssh.internal", now)
+	seedAWDDefenseWorkspace(t, db, &model.AWDDefenseWorkspace{
+		ContestID:         802,
+		TeamID:            8201,
+		ServiceID:         serviceID,
+		InstanceID:        10,
+		WorkspaceRevision: 3,
+		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-red-ssh",
+		SeedSignature:     "seed:red:ssh",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	})
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9201, 802)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if len(resp.Services) != 1 || resp.Services[0].DefenseConnection == nil {
+		t.Fatalf("expected one own service with defense connection, got %+v", resp.Services)
+	}
+	if resp.Services[0].DefenseConnection.EntryMode != "ssh" {
+		t.Fatalf("expected defense entry mode ssh, got %+v", resp.Services[0].DefenseConnection)
+	}
+}
+
 func TestAWDServiceGetUserWorkspaceIncludesQueuedOwnServiceWithoutAccessURL(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Date(2026, 4, 12, 16, 0, 0, 0, time.UTC)

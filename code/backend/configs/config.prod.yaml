@@ -32,8 +32,8 @@ container:
   defense_ssh_enabled: false
   defense_ssh_host: ctf.example.com
   defense_ssh_port: 2222
-  defense_workbench_readonly_enabled: false
-  defense_workbench_root: ""
+  defense_workbench_readonly_enabled: true
+  defense_workbench_root: /app
   # 启动判定会在容器创建后探测访问地址，只有探测通过才进入 running
   start_probe_timeout: 800ms
   start_probe_interval: 300ms

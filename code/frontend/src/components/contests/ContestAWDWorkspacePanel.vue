@@ -43,6 +43,7 @@ const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
 const copiedSSHCommandKey = ref('')
+const copiedSSHPasswordKey = ref('')
 
 const {
   workspace,
@@ -341,6 +342,15 @@ async function copySSHCommand(serviceId?: string): Promise<void> {
   }
 }
 
+async function copySSHPassword(serviceId?: string): Promise<void> {
+  if (!serviceId) return
+  const password = getSSHAccess(serviceId)?.password || ''
+  const copied = await copyTextToClipboard(password, 'SSH 密码已复制')
+  if (copied) {
+    copiedSSHPasswordKey.value = serviceId
+  }
+}
+
 function isTargetServiceForChallenge(
   service: { service_id?: string; awd_challenge_id: string },
   challenge: ContestChallengeItem
@@ -477,11 +487,13 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               :loading="loading"
               :access="getSSHAccess(selectedServiceId)"
               :copied-command="copiedSSHCommandKey === selectedServiceId"
+              :copied-password="copiedSSHPasswordKey === selectedServiceId"
               @open-service="openDefenseService"
               @request-ssh="openDefenseSSH"
               @restart-service="restartService"
               @refresh="refreshAll"
               @copy-command="copySSHCommand"
+              @copy-password="copySSHPassword"
             />
           </div>
         </section>

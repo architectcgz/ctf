@@ -199,6 +199,12 @@ func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	if cfg.Redis.Password != "" {
 		t.Fatalf("expected empty redis password in dev baseline config, got %q", cfg.Redis.Password)
 	}
+	if !cfg.Container.DefenseWorkbenchReadOnlyEnabled {
+		t.Fatal("expected defense workbench readonly mode enabled in dev baseline config")
+	}
+	if cfg.Container.DefenseWorkbenchRoot != "/app" {
+		t.Fatalf("expected defense workbench root /app in dev baseline config, got %q", cfg.Container.DefenseWorkbenchRoot)
+	}
 }
 
 func TestValidateRejectsProductionPlaceholderSecrets(t *testing.T) {
@@ -241,6 +247,34 @@ func TestValidateRejectsInvalidContainerPortRangeBounds(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "container.port_range_start and container.port_range_end must be between 1 and 65535") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsEnabledDefenseSSHWithoutHostKeyPath(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.DefenseSSHEnabled = true
+	cfg.Container.DefenseSSHHost = "127.0.0.1"
+	cfg.Container.DefenseSSHPort = 2222
+	cfg.Container.DefenseSSHHostKeyPath = ""
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject enabled defense ssh without host key path, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.defense_ssh_host_key_path must not be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateAllowsEnabledDefenseSSHWithHostKeyPath(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.DefenseSSHEnabled = true
+	cfg.Container.DefenseSSHHost = "127.0.0.1"
+	cfg.Container.DefenseSSHPort = 2222
+	cfg.Container.DefenseSSHHostKeyPath = "storage/runtime/awd-defense-ssh-host-key.pem"
+
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("expected Validate() to allow enabled defense ssh with host key path, got %v", err)
 	}
 }
 

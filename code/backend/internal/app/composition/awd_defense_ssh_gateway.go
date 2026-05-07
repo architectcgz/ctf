@@ -4,10 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,6 +32,7 @@ type AWDDefenseSSHGateway struct {
 	proxyTickets runtimeHTTPProxyTicketService
 	scopeReader  runtimeports.ProxyTicketInstanceReader
 	executor     runtimeContainerInteractiveExecutor
+	hostKeyPath  string
 	port         int
 	logger       *zap.Logger
 
@@ -48,6 +54,7 @@ func NewAWDDefenseSSHGateway(
 	proxyTickets runtimeHTTPProxyTicketService,
 	scopeReader runtimeports.ProxyTicketInstanceReader,
 	executor runtimeContainerInteractiveExecutor,
+	hostKeyPath string,
 	port int,
 	logger *zap.Logger,
 ) *AWDDefenseSSHGateway {
@@ -58,6 +65,7 @@ func NewAWDDefenseSSHGateway(
 		proxyTickets: proxyTickets,
 		scopeReader:  scopeReader,
 		executor:     executor,
+		hostKeyPath:  strings.TrimSpace(hostKeyPath),
 		port:         port,
 		logger:       logger,
 	}
@@ -127,11 +135,8 @@ func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
 }
 
 func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerConfig, error) {
-	hostKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return nil, err
-	}
-	signer, err := ssh.NewSignerFromKey(hostKey)
+	_ = ctx
+	signer, err := loadOrCreateAWDDefenseSSHHostKeySigner(g.hostKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +161,76 @@ func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerCon
 	}
 	config.AddHostKey(signer)
 	return config, nil
+}
+
+func loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath string) (ssh.Signer, error) {
+	cleanPath := filepath.Clean(strings.TrimSpace(hostKeyPath))
+	if cleanPath == "" || cleanPath == "." {
+		return nil, fmt.Errorf("awd defense ssh host key path is empty")
+	}
+
+	signer, err := loadAWDDefenseSSHHostKeySignerFromFile(cleanPath)
+	if err == nil {
+		return signer, nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(cleanPath), 0o700); err != nil {
+		return nil, fmt.Errorf("create awd defense ssh host key dir %q: %w", filepath.Dir(cleanPath), err)
+	}
+
+	hostKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, fmt.Errorf("generate awd defense ssh host key: %w", err)
+	}
+	signer, err = ssh.NewSignerFromKey(hostKey)
+	if err != nil {
+		return nil, fmt.Errorf("build awd defense ssh signer: %w", err)
+	}
+
+	encoded := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(hostKey),
+	})
+	file, err := os.OpenFile(cleanPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return loadAWDDefenseSSHHostKeySignerFromFile(cleanPath)
+		}
+		return nil, fmt.Errorf("create awd defense ssh host key %q: %w", cleanPath, err)
+	}
+	written := false
+	defer func() {
+		if !written {
+			_ = file.Close()
+			_ = os.Remove(cleanPath)
+		}
+	}()
+	if _, err := file.Write(encoded); err != nil {
+		return nil, fmt.Errorf("write awd defense ssh host key %q: %w", cleanPath, err)
+	}
+	if err := file.Chmod(0o600); err != nil {
+		return nil, fmt.Errorf("chmod awd defense ssh host key %q: %w", cleanPath, err)
+	}
+	if err := file.Close(); err != nil {
+		return nil, fmt.Errorf("close awd defense ssh host key %q: %w", cleanPath, err)
+	}
+	written = true
+	return signer, nil
+}
+
+func loadAWDDefenseSSHHostKeySignerFromFile(hostKeyPath string) (ssh.Signer, error) {
+	raw, err := os.ReadFile(hostKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := ssh.ParsePrivateKey(raw)
+	if err != nil {
+		return nil, fmt.Errorf("parse awd defense ssh host key %q: %w", hostKeyPath, err)
+	}
+	return signer, nil
 }
 
 func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, password string) (*runtimeports.AWDDefenseSSHSession, error) {

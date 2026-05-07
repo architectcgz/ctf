@@ -59,6 +59,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 			module.ProxyTicketService,
 			module.ProxyTicketReader,
 			module.SSHExecutor,
+			cfg.Container.DefenseSSHHostKeyPath,
 			cfg.Container.DefenseSSHPort,
 			log.Named("awd_defense_ssh_gateway"),
 		)
