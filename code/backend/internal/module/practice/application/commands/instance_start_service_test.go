@@ -772,8 +772,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 				}, nil
 			},
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
-				createTopologyCalls.Add(1)
-				switch createTopologyCalls.Load() {
+				switch createTopologyCalls.Add(1) {
 				case 1:
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "runtime-new",

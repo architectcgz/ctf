@@ -5,6 +5,7 @@
 ## Change type
 - schema
 - content
+- service
 
 ## Existing code searched
 - code/frontend/src/views
@@ -19,6 +20,8 @@
 - code/backend/data/challenge-attachments/imports
 - scripts/challenges
 - scripts/challenges/jeopardy_batch
+- code/backend/internal/module/practice/application/commands
+- code/backend/internal/module/runtime/runtime
 
 ## Similar implementations found
 - challenges/jeopardy/packs/crypto-caesar-postcard/challenge.yml
@@ -31,14 +34,21 @@
 - scripts/challenges/jeopardy_batch/generate.py
 - scripts/challenges/jeopardy_batch/registry.py
 - scripts/challenges/verify_jeopardy_packs.py
+- code/backend/internal/module/practice/application/commands/awd_defense_workspace_support.go
+- code/backend/internal/module/practice/application/commands/runtime_container_create.go
+- code/backend/internal/module/practice/application/commands/runtime_container_create_test.go
+- code/backend/internal/module/runtime/runtime/adapters.go
 
 ## Decision
 - create_new_with_reason
+- extend_existing
 
 ## Reason
 - This change expands the Jeopardy pack catalog, but it does not introduce a parallel pack format.
 - The new packs reuse the existing challenge.yml plus statement/writeup/attachments structure and the shared generator plus verifier workflow under scripts/challenges.
 - Creating new challenge slugs is appropriate here because the repo is intentionally adding more training content, while still following the existing pack schema and import layout.
+- The AWD stale-workspace repair reuses the existing workspace companion bootstrap and runtime adapter flow.
+- We are extending the current `practice` service tests and runtime ports to cover the missing-companion recovery path instead of introducing a separate restart workflow.
 
 ## Files to modify
 - challenges/jeopardy/packs/crypto-affine-badge/challenge.yml
@@ -106,3 +116,6 @@
 - challenges/jeopardy/packs/web-ssti-render-lab/challenge.yml
 - challenges/jeopardy/packs/web-workflow-step-bypass/challenge.yml
 - challenges/jeopardy/packs/web-xxe-local-reader/challenge.yml
+- code/backend/internal/module/practice/application/commands/instance_start_service_test.go
+- code/backend/internal/module/practice/application/commands/service_test.go
+- code/backend/internal/module/practice/ports/ports.go

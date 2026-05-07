@@ -49,7 +49,12 @@ func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageN
 
 func (s *stubPracticeRuntimeService) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
 	if s.inspectManagedContainerFn == nil {
-		return nil, errors.New("unexpected InspectManagedContainer call")
+		return &practiceports.ManagedContainerState{
+			ID:      containerID,
+			Exists:  true,
+			Running: true,
+			Status:  "running",
+		}, nil
 	}
 	return s.inspectManagedContainerFn(ctx, containerID)
 }
