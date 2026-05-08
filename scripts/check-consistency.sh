@@ -101,6 +101,7 @@ check_contains "practice/AGENTS.md" 'superpowers-plan-index\.md' "practice AGENT
 check_contains "practice/AGENTS.md" 'planning-archive-index\.md' "practice AGENTS references planning archive"
 check_contains "prompts/AGENTS.md" 'ctf-ui-theme-system-skill\.md' "prompts AGENTS references UI theme skill"
 check_contains "prompts/AGENTS.md" 'harness-router\.md' "prompts AGENTS references harness router"
+check_contains "prompts/AGENTS.md" 'architecture-diagram-generation\.md' "prompts AGENTS references architecture diagram prompt"
 check_contains "references/AGENTS.md" 'ctf-instance-lifecycle-research\.md' "references AGENTS references lifecycle research"
 check_contains "works/AGENTS.md" 'harness-migration-map\.md' "works AGENTS references migration map"
 
@@ -119,6 +120,9 @@ check_contains "AGENTS.md" 'docs/plan/impl-plan/' "AGENTS references docs/plan/i
 check_contains "AGENTS.md" 'docs/reviews/' "AGENTS references docs/reviews"
 check_contains "AGENTS.md" 'docs/todos/' "AGENTS references docs/todos"
 check_contains "AGENTS.md" 'docs/operations/' "AGENTS references docs/operations"
+
+echo "[C8b] documentation references stay current"
+python3 scripts/check-docs-consistency.py
 
 echo "[C9] works index covers harness good practices"
 check_file "works/harness-good-practices.md"

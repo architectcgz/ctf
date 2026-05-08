@@ -13,3 +13,4 @@
 - `ctf-ui-theme-system-skill.md`：CTF UI theme skill 的 harness 入口。
 - `harness-router.md`：默认进入 harness、简单任务除外的路由提示词。
 - `experience-extraction-closeout.md`：任务完成前主动判断是否有可提炼经验，并向用户报告。
+- `architecture-diagram-generation.md`：根据当前事实源生成架构图的输入包模板。

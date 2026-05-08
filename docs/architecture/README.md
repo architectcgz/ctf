@@ -15,7 +15,7 @@
 2. `docs/contracts/`
 3. `docs/architecture/backend/`、`docs/architecture/frontend/`
 4. `docs/architecture/backend/design/`
-5. `docs/architecture/frontend/01-architecture-overview.md` 到 `09-spacing-system.md`
+5. `docs/architecture/frontend/01-architecture-overview.md` 到 `docs/architecture/frontend/09-spacing-system.md`
 6. `docs/architecture/frontend/pages/`
 7. `docs/architecture/features/`
 

@@ -1,6 +1,7 @@
 # 前端组件体系设计
 
-> 对应：design-system/MASTER.md 组件规范
+> 状态：Current
+> 对应：`01-architecture-overview.md` 与 `09-spacing-system.md`
 
 ---
 
