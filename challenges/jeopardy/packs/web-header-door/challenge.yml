@@ -34,4 +34,4 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/web-header-door:20260428
+    ref: 127.0.0.1:5000/jeopardy/web-header-door:20260428

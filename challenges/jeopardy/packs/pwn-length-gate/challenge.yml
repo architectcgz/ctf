@@ -33,7 +33,7 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/pwn-length-gate:20260428
+    ref: 127.0.0.1:5000/jeopardy/pwn-length-gate:20260428
   service:
     protocol: tcp
     port: 8080

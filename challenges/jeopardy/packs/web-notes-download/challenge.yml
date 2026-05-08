@@ -32,4 +32,4 @@ hints:
 runtime:
   type: container
   image:
-    ref: 127.0.0.1:5000/ctf/web-notes-download:20260409
+    ref: 127.0.0.1:5000/jeopardy/web-notes-download:20260409
