@@ -434,12 +434,19 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 
 	var challenges []*model.Challenge
 	query := r.dbWithContext(ctx).Model(&model.Challenge{}).
-		Distinct("challenges.*").
-		Joins("LEFT JOIN challenge_tags ON challenge_tags.challenge_id = challenges.id").
-		Joins("LEFT JOIN tags ON tags.id = challenge_tags.tag_id").
 		Where("challenges.status = ?", model.ChallengeStatusPublished).
 		Where(
-			"(LOWER(challenges.category) IN ? OR (tags.type = ? AND LOWER(tags.name) IN ?))",
+			`(
+				LOWER(challenges.category) IN ?
+				OR EXISTS (
+					SELECT 1
+					FROM challenge_tags
+					JOIN tags ON tags.id = challenge_tags.tag_id
+					WHERE challenge_tags.challenge_id = challenges.id
+						AND tags.type = ?
+						AND LOWER(tags.name) IN ?
+				)
+			)`,
 			normalized,
 			model.TagTypeKnowledge,
 			normalized,

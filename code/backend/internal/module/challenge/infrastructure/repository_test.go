@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -125,6 +126,74 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	}
 	if !has {
 		t.Fatal("should have running instances")
+	}
+}
+
+func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
+	db := testsupport.SetupTagTestDB(t)
+	repo := NewRepository(db)
+
+	solved := &model.Challenge{
+		Title:      "Solved Pwn",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyBeginner,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+	}
+	fresh := &model.Challenge{
+		Title:      "Fresh Pwn",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     120,
+		Status:     model.ChallengeStatusPublished,
+	}
+	tagged := &model.Challenge{
+		Title:      "Tagged Web",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     150,
+		Status:     model.ChallengeStatusPublished,
+	}
+	ignoredDraft := &model.Challenge{
+		Title:      "Draft Pwn",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyBeginner,
+		Points:     90,
+		Status:     model.ChallengeStatusDraft,
+	}
+	for _, challenge := range []*model.Challenge{solved, fresh, tagged, ignoredDraft} {
+		if err := db.Create(challenge).Error; err != nil {
+			t.Fatalf("create challenge %s: %v", challenge.Title, err)
+		}
+	}
+
+	knowledgeTag := &model.Tag{
+		Name: "pwn",
+		Type: model.TagTypeKnowledge,
+	}
+	if err := db.Create(knowledgeTag).Error; err != nil {
+		t.Fatalf("create knowledge tag: %v", err)
+	}
+	if err := db.Create(&model.ChallengeTag{
+		ChallengeID: tagged.ID,
+		TagID:       knowledgeTag.ID,
+	}).Error; err != nil {
+		t.Fatalf("create challenge tag: %v", err)
+	}
+
+	items, err := repo.FindPublishedForRecommendation(context.Background(), 5, []string{"pwn"}, []int64{solved.ID})
+	if err != nil {
+		t.Fatalf("FindPublishedForRecommendation() error = %v", err)
+	}
+
+	gotTitles := make([]string, 0, len(items))
+	for _, item := range items {
+		gotTitles = append(gotTitles, item.Title)
+	}
+
+	wantTitles := []string{"Fresh Pwn", "Tagged Web"}
+	if !reflect.DeepEqual(gotTitles, wantTitles) {
+		t.Fatalf("unexpected recommendation titles: got=%v want=%v", gotTitles, wantTitles)
 	}
 }
 
