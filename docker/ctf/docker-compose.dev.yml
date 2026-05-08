@@ -101,6 +101,24 @@ services:
     networks:
       - ctf-network
 
+  ctf-registry:
+    profiles:
+      - registry
+    container_name: ${CTF_REGISTRY_CONTAINER_NAME:-ctf-registry}
+    image: ${CTF_REGISTRY_IMAGE:-registry:2}
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: ctf-registry
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    ports:
+      - "127.0.0.1:${CTF_REGISTRY_PORT:-5000}:5000"
+    restart: ${CTF_REGISTRY_RESTART_POLICY:-always}
+    volumes:
+      - ${CTF_REGISTRY_DATA_DIR:-${HOME}/ctf-registry/data}:/var/lib/registry
+      - ${CTF_REGISTRY_AUTH_DIR:-${HOME}/ctf-registry/auth}:/auth:ro
+    networks:
+      - ctf-network
+
 volumes:
   ctf-postgres-data:
   ctf-redis-data:

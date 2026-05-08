@@ -18,6 +18,7 @@ REGISTRY_IMAGE="${REGISTRY_IMAGE:-registry:2}"
 HTPASSWD_IMAGE="${HTPASSWD_IMAGE:-httpd:2.4-alpine}"
 REGISTRY_RESTART_POLICY="${REGISTRY_RESTART_POLICY:-always}"
 FORCE_RECREATE=false
+REGISTRY_COMPOSE_SERVICE="${REGISTRY_COMPOSE_SERVICE:-ctf-registry}"
 
 usage() {
   cat <<'EOF'
@@ -63,6 +64,9 @@ usage() {
   CTF_CONTAINER_REGISTRY_SCHEME=http
   CTF_CONTAINER_REGISTRY_USERNAME=ctf
   CTF_CONTAINER_REGISTRY_PASSWORD=...
+
+当前实现会把 registry 作为 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry`
+service 启动到同一个 `ctf` Compose 项目里，不再长期依赖手工 `docker run`。
 EOF
 }
 
@@ -144,6 +148,20 @@ CTF_CONTAINER_REGISTRY_USERNAME=${REGISTRY_USERNAME}
 CTF_CONTAINER_REGISTRY_PASSWORD=${REGISTRY_PASSWORD}
 EOF
   chmod 600 "${path}"
+}
+
+compose_registry() {
+  CTF_HOST_ROOT="${REPO_ROOT}" \
+  CTF_REGISTRY_CONTAINER_NAME="${REGISTRY_NAME}" \
+  CTF_REGISTRY_PORT="${REGISTRY_PORT}" \
+  CTF_REGISTRY_DATA_DIR="${REGISTRY_DATA_DIR}" \
+  CTF_REGISTRY_AUTH_DIR="${REGISTRY_AUTH_DIR}" \
+  CTF_REGISTRY_IMAGE="${REGISTRY_IMAGE}" \
+  CTF_REGISTRY_RESTART_POLICY="${REGISTRY_RESTART_POLICY}" \
+    docker compose \
+      --profile registry \
+      -f "${REPO_ROOT}/docker/ctf/docker-compose.dev.yml" \
+      "$@"
 }
 
 ORIGINAL_ARGS=("$@")
@@ -265,6 +283,7 @@ fi
 
 log_info "部署参数:"
 log_info "  container: ${REGISTRY_NAME}"
+log_info "  compose:   ctf/${REGISTRY_COMPOSE_SERVICE}"
 log_info "  listen:    127.0.0.1:${REGISTRY_PORT}"
 log_info "  server:    ${REGISTRY_SERVER}"
 log_info "  scheme:    ${REGISTRY_SCHEME}"
@@ -294,18 +313,9 @@ docker run --rm "${HTPASSWD_IMAGE}" \
 chmod 600 "${REGISTRY_AUTH_DIR}/htpasswd"
 log_success "认证文件已写入 ${REGISTRY_AUTH_DIR}/htpasswd"
 
-log_info "启动 Docker Registry 容器"
-docker run -d \
-  --name "${REGISTRY_NAME}" \
-  --restart "${REGISTRY_RESTART_POLICY}" \
-  -p "${REGISTRY_PORT}:5000" \
-  -v "${REGISTRY_DATA_DIR}:/var/lib/registry" \
-  -v "${REGISTRY_AUTH_DIR}:/auth" \
-  -e REGISTRY_AUTH=htpasswd \
-  -e REGISTRY_AUTH_HTPASSWD_REALM=ctf-registry \
-  -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
-  "${REGISTRY_IMAGE}" >/dev/null
-log_success "容器已启动: ${REGISTRY_NAME}"
+log_info "启动 ctf Compose 项目下的 registry service"
+compose_registry up -d --force-recreate "${REGISTRY_COMPOSE_SERVICE}" >/dev/null
+log_success "registry service 已启动: ${REGISTRY_NAME}"
 
 log_info "等待 registry 健康检查通过: http://127.0.0.1:${REGISTRY_PORT}/v2/"
 timeout 30 bash -c 'until curl -fsS -u "$0:$1" "http://127.0.0.1:$2/v2/" >/dev/null; do sleep 1; done' \
@@ -327,6 +337,7 @@ fi
 cat <<EOF
 Registry 已部署:
   container: ${REGISTRY_NAME}
+  compose:   ctf/${REGISTRY_COMPOSE_SERVICE}
   listen:    127.0.0.1:${REGISTRY_PORT}
   server:    ${REGISTRY_SERVER}
   scheme:    ${REGISTRY_SCHEME}

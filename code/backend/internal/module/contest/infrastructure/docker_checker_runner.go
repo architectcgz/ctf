@@ -267,18 +267,14 @@ func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob,
 		WorkingDir:      workDir,
 		User:            strings.TrimSpace(r.cfg.User),
 		NetworkDisabled: networkDisabled,
-		Labels: map[string]string{
-			runtimedomain.ProjectLabelKey:     runtimedomain.ProjectLabelValue,
-			runtimedomain.ManagedByLabelKey:   runtimedomain.ManagedByLabelValue,
-			runtimedomain.CheckerRoleLabelKey: runtimedomain.CheckerRoleLabelValue,
-			"ctf.checker.contest":             fmt.Sprintf("%d", job.Metadata.ContestID),
-			"ctf.checker.service":             fmt.Sprintf("%d", job.Metadata.ServiceID),
-			"ctf.checker.team":                fmt.Sprintf("%d", job.Metadata.TeamID),
-			"ctf.checker.round":               fmt.Sprintf("%d", job.Metadata.RoundNumber),
-		},
-		AttachStdout: true,
-		AttachStderr: true,
+		Labels:          runtimedomain.CheckerSandboxLabels(),
+		AttachStdout:    true,
+		AttachStderr:    true,
 	}
+	containerCfg.Labels["ctf.checker.contest"] = fmt.Sprintf("%d", job.Metadata.ContestID)
+	containerCfg.Labels["ctf.checker.service"] = fmt.Sprintf("%d", job.Metadata.ServiceID)
+	containerCfg.Labels["ctf.checker.team"] = fmt.Sprintf("%d", job.Metadata.TeamID)
+	containerCfg.Labels["ctf.checker.round"] = fmt.Sprintf("%d", job.Metadata.RoundNumber)
 	if strings.TrimSpace(r.cfg.User) != "" {
 		containerCfg.User = strings.TrimSpace(r.cfg.User)
 	}

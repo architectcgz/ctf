@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/model"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -248,6 +249,15 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 	if _, exists := engine.createdContainerCfg.Ports["80"]; !exists {
 		t.Fatalf("expected container to publish resolved service port 80, got %+v", engine.createdContainerCfg.Ports)
+	}
+	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeProjectLabelKey]; got != runtimedomain.ProjectLabelValue {
+		t.Fatalf("expected compose project label %q, got %q", runtimedomain.ProjectLabelValue, got)
+	}
+	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
+		t.Fatalf("expected jeopardy compose service label, got %q", got)
+	}
+	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
+		t.Fatalf("expected jeopardy network label, got %q", got)
 	}
 }
 
@@ -984,6 +994,78 @@ func TestServiceCreateTopologyUsesPreferredContainerName(t *testing.T) {
 	}
 	if engine.createdContainerCfg.Name != preferredName {
 		t.Fatalf("expected preferred container name %q, got %q", preferredName, engine.createdContainerCfg.Name)
+	}
+}
+
+func TestServiceCreateContainerMarksAWDImagesAsAWDComposeService(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:           "net-awd-image",
+		containerID:         "ctr-awd-image",
+		resolvedServicePort: 8080,
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+	}, nil)
+
+	if _, _, _, _, err := service.CreateContainer(context.Background(), "127.0.0.1:5000/awd/awd-supply-ticket:latest", nil, 0); err != nil {
+		t.Fatalf("CreateContainer() error = %v", err)
+	}
+	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+		t.Fatalf("expected awd compose service label, got %q", got)
+	}
+	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+		t.Fatalf("expected awd network label, got %q", got)
+	}
+}
+
+func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-awd-workspace",
+		containerIDs: []string{"workspace-ctr"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			return map[string]string{engine.createdNetworkName: "172.30.0.44"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		DisableEntryPortPublishing: true,
+		ContainerName:              "ctf-workspace-workspace-c8-t15-s21-r2",
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "workspace",
+				Image:           "python:3.12-alpine",
+				ServicePort:     22,
+				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkAliases:  []string{"awd-ws-c8-t15-s21-r2"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+		t.Fatalf("expected awd compose service label, got %q", got)
+	}
+	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+		t.Fatalf("expected awd network label, got %q", got)
 	}
 }
 

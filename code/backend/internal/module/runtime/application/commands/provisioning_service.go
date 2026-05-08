@@ -18,6 +18,8 @@ import (
 const (
 	managedContainerNamePrefix = "ctf-instance-"
 	managedNetworkNamePrefix   = "ctf-net-"
+	awdContestNetworkPrefix    = "ctf-awd-contest-"
+	awdWorkspaceNamePrefix     = "ctf-workspace-"
 )
 
 type provisioningRepository interface {
@@ -155,9 +157,10 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
 	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
+	managedLabels := managedContainerLabels(req)
 	for _, network := range networks {
 		networkName := resolveCreateNetworkName(network)
-		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels(), network.Internal, network.Shared)
+		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared)
 		if err != nil {
 			s.cleanupTopologyResources(ctx, nil, collectOwnedNetworkIDs(createdNetworks))
 			return nil, err
@@ -215,7 +218,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			WorkingDir:     strings.TrimSpace(node.WorkingDir),
 			Ports:          ports,
 			Mounts:         append([]model.ContainerMount(nil), node.Mounts...),
-			Labels:         managedContainerLabels(),
+			Labels:         managedLabels,
 			Resources:      node.Resources,
 			Network:        primaryNetwork.name,
 			NetworkAliases: normalizedNetworkAliases(node.NetworkAliases),
@@ -469,12 +472,65 @@ func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string
 	return buildManagedNetworkName(network.Key)
 }
 
-func managedContainerLabels() map[string]string {
-	return runtimedomain.ChallengeInstanceLabels()
+func managedContainerLabels(req *runtimeports.TopologyCreateRequest) map[string]string {
+	return runtimedomain.ChallengeInstanceLabels(resolveManagedComposeService(req))
 }
 
-func managedNetworkLabels() map[string]string {
-	return runtimedomain.ChallengeInstanceLabels()
+func resolveManagedComposeService(req *runtimeports.TopologyCreateRequest) string {
+	if isAWDTopology(req) {
+		return runtimedomain.ComposeServiceAWD
+	}
+	return runtimedomain.ComposeServiceJeopardy
+}
+
+func isAWDTopology(req *runtimeports.TopologyCreateRequest) bool {
+	if req == nil {
+		return false
+	}
+	if strings.HasPrefix(strings.TrimSpace(req.ContainerName), awdWorkspaceNamePrefix) {
+		return true
+	}
+	for _, network := range req.Networks {
+		if strings.HasPrefix(strings.TrimSpace(network.Name), awdContestNetworkPrefix) {
+			return true
+		}
+	}
+	for _, node := range req.Nodes {
+		if looksLikeAWDImage(node.Image) {
+			return true
+		}
+		for _, alias := range node.NetworkAliases {
+			trimmed := strings.TrimSpace(alias)
+			if strings.HasPrefix(trimmed, "awd-c") || strings.HasPrefix(trimmed, "awd-ws-c") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func looksLikeAWDImage(image string) bool {
+	image = strings.ToLower(strings.TrimSpace(image))
+	if image == "" {
+		return false
+	}
+	repository := image
+	if digestIndex := strings.Index(repository, "@"); digestIndex >= 0 {
+		repository = repository[:digestIndex]
+	}
+	lastSlash := strings.LastIndex(repository, "/")
+	if tagIndex := strings.LastIndex(repository, ":"); tagIndex > lastSlash {
+		repository = repository[:tagIndex]
+	}
+	base := repository
+	if lastSlash = strings.LastIndex(repository, "/"); lastSlash >= 0 {
+		parent := repository[:lastSlash]
+		base = repository[lastSlash+1:]
+		if parent == "awd" || strings.HasSuffix(parent, "/awd") {
+			return true
+		}
+	}
+	return base == "awd" || strings.HasPrefix(base, "awd-")
 }
 
 func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {

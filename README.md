@@ -92,7 +92,7 @@ scripts/registry/deploy-private-registry.sh --force-recreate
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api
 ```
 
-`docker/ctf/.env.registry` 只会被 `ctf-api` 加载，用于平台构建、推送、manifest 校验、pull/inspect 和镜像注册；不要把这些凭据写进题包或题目容器。
+脚本会把私有 registry 作为 `ctf` Compose 项目里的 `ctf-registry` service 启动。`docker/ctf/.env.registry` 只会被 `ctf-api` 加载，用于平台构建、推送、manifest 校验、pull/inspect 和镜像注册；不要把这些凭据写进题包或题目容器。
 
 Docker 编排规范见：`docs/docker-compose-rules.md`。
 
@@ -100,6 +100,7 @@ Docker 编排规范见：`docs/docker-compose-rules.md`。
 
 - CTF 相关容器统一放在 `docker/ctf/` 下
 - CTF 相关容器统一由一个 Compose 项目管理（建议 `name: ctf`）
+- 动态题目容器统一补 Compose 风格项目/服务标签，AWD 归到 `ctf/awd`，普通题目归到 `ctf/jeopardy`
 - CTF 内部统一使用 `ctf-network`
 - 禁止 CTF 容器混用 Compose 与手工 `docker run`
 

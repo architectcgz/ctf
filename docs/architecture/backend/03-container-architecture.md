@@ -1362,7 +1362,7 @@ scripts/registry/deploy-private-registry.sh
 scripts/registry/deploy-private-registry.sh --config /etc/ctf/private-registry.conf
 ```
 
-脚本会启动 `registry:2` 容器，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
+脚本会通过 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry` service 启动 `registry:2`，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
 
 ```bash
 source "$HOME/ctf-registry/auth/ctf-platform-registry.env"
@@ -1422,6 +1422,13 @@ container:
 
 当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 或 registry manifest client 传递认证信息。例如 `registry.ctf.local:5000/awd/awd-demo:c1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
 
+为了让 Docker Desktop / Docker UI 里的展示归属更稳定，平台动态创建的题目容器还会补充 Compose 风格标签：
+
+- `com.docker.compose.project=ctf`
+- `com.docker.compose.service=awd|jeopardy`
+
+其中 AWD 题目实例、AWD 防守工作区和 checker sandbox 统一归到 `ctf/awd`，普通题目实例和自检试跑实例归到 `ctf/jeopardy`。这组标签只用于展示归属与运维筛选，不改变现有实例命名、生命周期、清理过滤条件和 ACL 行为。
+
 开发 compose project 的推荐落点是：
 
 ```text
@@ -1429,7 +1436,7 @@ docker/ctf/docker-compose.dev.yml
 docker/ctf/.env.registry
 ```
 
-`scripts/registry/deploy-private-registry.sh` 会同时写入 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 和 `docker/ctf/.env.registry`。前者适合本地 shell `source` 后启动后端，后者由 `ctf-api` compose service 通过 `env_file` 加载。两者都只服务平台后端。
+`scripts/registry/deploy-private-registry.sh` 会同时写入 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 和 `docker/ctf/.env.registry`，并把 `ctf-registry` service 启动到同一个 `ctf` Compose 项目下。前者适合本地 shell `source` 后启动后端，后者由 `ctf-api` compose service 通过 `env_file` 加载。两者都只服务平台后端。
 
 平台内部题包导入不应通过 HTTP API 自调用 `/authoring/images` 注册镜像，而应在导入 application service 内创建 `images` 和 `image_build_jobs`。这样题目记录、镜像记录和构建任务可以保持同一事务边界；HTTP API 只保留给管理员手动登记外部镜像。
 
