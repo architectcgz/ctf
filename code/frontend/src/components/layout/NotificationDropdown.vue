@@ -252,17 +252,20 @@ const emptyState = computed(() => {
   --modal-shell-blur: var(--space-0-5);
   --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 28%, transparent);
   --modal-template-drawer-radius: calc(var(--ui-dialog-radius-wide) + var(--space-1));
-  --modal-template-drawer-header-padding-block-start: var(--space-12);
-  --modal-template-drawer-header-padding-inline: var(--space-9);
-  --modal-template-drawer-header-padding-block-end: var(--space-6);
-  --modal-template-drawer-header-extra-margin-top: var(--space-7);
-  --modal-template-drawer-divider-margin-inline: var(--space-9);
-  --modal-template-drawer-footer-padding: var(--space-6) var(--space-9) var(--space-10);
-  --modal-template-drawer-icon-size: calc(var(--space-6) * 2);
-  --modal-template-drawer-icon-glyph-size: var(--space-6);
-  --modal-template-drawer-close-size: calc(var(--space-5) * 2);
-  --modal-template-drawer-close-glyph-size: var(--font-size-1-10);
-  --modal-template-drawer-title-size: var(--font-size-2-00);
+  --modal-template-drawer-header-padding-block-start: var(--space-10);
+  --modal-template-drawer-header-padding-inline: calc(var(--space-8) - var(--space-0-5));
+  --modal-template-drawer-header-padding-block-end: var(--space-0);
+  --modal-template-drawer-header-extra-margin-top: var(--space-0);
+  --modal-template-drawer-head-row-gap: var(--space-3-5);
+  --modal-template-drawer-head-main-gap: var(--space-3-5);
+  --modal-template-drawer-divider-margin-inline: calc(var(--space-8) - var(--space-0-5));
+  --modal-template-drawer-footer-padding: var(--space-5) calc(var(--space-8) - var(--space-0-5))
+    var(--space-8);
+  --modal-template-drawer-icon-size: calc(var(--space-5) + var(--space-4));
+  --modal-template-drawer-icon-glyph-size: calc(var(--space-5) + var(--space-0-5));
+  --modal-template-drawer-close-size: calc(var(--space-10) - var(--space-0-5));
+  --modal-template-drawer-close-glyph-size: var(--font-size-1-00);
+  --modal-template-drawer-title-size: var(--font-size-1-90);
   --modal-template-drawer-title-line-height: 1.18;
   --modal-template-drawer-header-surface: var(--notification-surface);
   --modal-template-drawer-body-surface: var(--notification-surface);
@@ -302,6 +305,7 @@ const emptyState = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  padding-inline: var(--space-0-5);
 }
 
 .notification-counts {
@@ -365,6 +369,7 @@ const emptyState = computed(() => {
   align-items: center;
   gap: var(--space-3-5);
   margin-top: var(--space-6);
+  padding-inline-start: var(--space-0-5);
 }
 
 .notification-filter {
