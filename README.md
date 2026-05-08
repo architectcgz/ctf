@@ -3,8 +3,8 @@
 本仓库主要包含平台实现、架构与契约文档、题目与题包，以及开发过程中沉淀的规则和资料。
 
 - 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前按 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 等模块组织
-- 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Element Plus
-- 开发依赖：可复用根目录 `infra/` 的共享 PostgreSQL + Redis，也可用 `docker/ctf/docker-compose.dev.yml` 启动 CTF 完整容器栈（`ctf-api` + `ctf-postgres` + `ctf-redis`）
+- 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Tailwind CSS 4 + 仓库内通用前端原语
+- 开发依赖：本项目自带的 Compose 与 infra 入口位于 `docker/ctf/` 和 `docker/ctf/infra/`，可直接启动 `ctf-api`、`ctf-postgres`、`ctf-redis`、`ctf-registry`
 - 文档入口：架构和页面设计主要看 `docs/architecture/`，接口与题包契约主要看 `docs/contracts/`
 
 ## 启动方式
@@ -67,7 +67,7 @@ cd code/frontend && npm run dev
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
 
-复用共享基础设施（推荐，避免重复占用资源）：
+先只启动 CTF 自己的 PostgreSQL / Redis：
 
 ```bash
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
@@ -85,20 +85,21 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 - `ctf-postgres`: `15432`
 - `ctf-redis`: `16379`
 
-题包镜像构建需要先配置私有 registry。推荐通过脚本部署 registry 并生成 `docker/ctf/.env.registry`：
+题包镜像构建需要先配置私有 registry。推荐通过脚本部署 registry 并生成 `docker/ctf/infra/registry/ctf-platform-registry.env`：
 
 ```bash
 scripts/registry/deploy-private-registry.sh --force-recreate
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api
 ```
 
-脚本会把私有 registry 作为 `ctf` Compose 项目里的 `ctf-registry` service 启动。`docker/ctf/.env.registry` 只会被 `ctf-api` 加载，用于平台构建、推送、manifest 校验、pull/inspect 和镜像注册；不要把这些凭据写进题包或题目容器。
+脚本会把私有 registry 作为 `ctf` Compose 项目里的 `ctf-registry` service 启动，并把平台后端唯一使用的 registry env 写到 `docker/ctf/infra/registry/ctf-platform-registry.env`。脚本首次切到新目录时会复用旧的 `$HOME/ctf-registry` 数据和已有凭据；不要把这些凭据写进题包或题目容器。
 
 Docker 编排规范见：`docs/docker-compose-rules.md`。
 
 强制要求摘要：
 
 - CTF 相关容器统一放在 `docker/ctf/` 下
+- CTF 相关 infra 入口统一收口到 `docker/ctf/infra/`
 - CTF 相关容器统一由一个 Compose 项目管理（建议 `name: ctf`）
 - 动态题目容器统一补 Compose 风格项目/服务标签，AWD 归到 `ctf/awd`，普通题目归到 `ctf/jeopardy`
 - CTF 内部统一使用 `ctf-network`

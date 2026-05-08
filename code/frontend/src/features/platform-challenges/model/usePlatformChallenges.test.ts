@@ -23,10 +23,8 @@ vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
-vi.mock('element-plus', () => ({
-  ElMessageBox: {
-    confirm: confirmMock,
-  },
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: confirmMock,
 }))
 
 function deferred<T>() {
@@ -47,6 +45,7 @@ describe('usePlatformChallenges', () => {
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
     confirmMock.mockReset()
+    confirmMock.mockResolvedValue(true)
 
     adminApiMocks.getChallenges.mockResolvedValue({
       list: [
@@ -228,7 +227,6 @@ describe('usePlatformChallenges', () => {
   })
 
   it('preserves specific delete failure messages', async () => {
-    confirmMock.mockResolvedValue(true)
     adminApiMocks.deleteChallenge.mockRejectedValue(
       new ApiError('还有学生正在解题，暂时不能删除', { code: 10007, status: 409 })
     )
@@ -249,6 +247,27 @@ describe('usePlatformChallenges', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('还有学生正在解题，暂时不能删除')
     expect(toastMocks.error).not.toHaveBeenCalledWith('删除失败')
+  })
+
+  it('删除题目时应先经过统一危险确认', async () => {
+    let composable!: ReturnType<typeof usePlatformChallenges>
+    const Harness = defineComponent({
+      setup() {
+        composable = usePlatformChallenges()
+        return () => null
+      },
+    })
+
+    mount(Harness)
+    await flushPromises()
+
+    await composable.remove('1')
+    await flushPromises()
+
+    expect(confirmMock).toHaveBeenCalledWith({
+      message: '确定要删除这道题目吗？',
+    })
+    expect(adminApiMocks.deleteChallenge).toHaveBeenCalledWith('1')
   })
 
   it('忽略翻页后才返回的旧发布状态结果', async () => {

@@ -19,7 +19,7 @@ views/           # 页面级组件（路由对应）
 原则：
 - `common/` 组件不依赖任何 Store 或 API，仅通过 props/emits 通信
 - 组件统一使用 `<script setup lang="ts">`，Props/Emits 必须有明确类型
-- **Element Plus 优先直用**：页面中可直接使用 `El*` 组件；`App*` 组件仅在需要统一业务行为/视觉 token 时封装
+- **共享原语优先直用**：页面优先使用仓库内已有 `App*`、workspace 组件和 modal / drawer 模板；只有在当前契约无法覆盖时才新增通用组件
 - 页面内复用 ≤ 2 次的子组件放在同目录下，不提升到全局
 - 图表组件统一封装 ECharts 初始化/销毁/resize 逻辑
 
@@ -27,7 +27,7 @@ views/           # 页面级组件（路由对应）
 
 ## 2. 基础组件清单
 
-> 说明：以下 `App*` 组件为“统一业务行为/样式 token 的薄封装”。基础表单/表格/弹窗优先使用 Element Plus 的 `El*` 组件，避免重复造轮子。
+> 说明：以下 `App*`、workspace 组件与 modal 模板是当前前端共享原语。表单、目录、弹窗、抽屉与危险确认优先在这一层收口，避免页面自行散落不同交互契约。
 
 ### 2.1 AppButton（可选封装）
 
@@ -39,7 +39,7 @@ views/           # 页面级组件（路由对应）
 | disabled | boolean | false | 禁用态 |
 | icon | string | - | Lucide 图标名（按钮前置图标） |
 
-实现建议：内部使用 `ElButton`，统一 `loading/disabled` 行为与主题色映射。
+实现建议：统一 `loading/disabled` 行为、主题色映射与焦点反馈，不依赖外部 UI 组件库的运行时实现。
 
 ### 2.2 AppCard
 
@@ -67,7 +67,7 @@ Slots: `default`, `header`, `footer`
 | prefix | string | 前置图标名 |
 | suffix | string | 后置图标名 |
 
-实现建议：普通输入优先用 `ElInput`；`type='flag'` 可做 `AppFlagInput`（更贴合业务），而不是强行扩展通用 Input。
+实现建议：普通输入优先复用仓库内 `ui-field / ui-control` 原语；`type='flag'` 可做 `AppFlagInput`（更贴合业务），而不是强行扩展通用 Input。
 
 ### 2.4 AppTable
 
@@ -81,7 +81,7 @@ Slots: `default`, `header`, `footer`
 
 Events: `@select`, `@row-click`
 
-实现建议：管理端表格优先使用 `ElTable`；排行榜等需要“高亮/动画/冻结状态”的场景才考虑封装自定义表格展示组件。
+实现建议：管理端目录优先复用 `WorkspaceDataTable` 及其周边工具条 / 分页原语；排行榜等需要“高亮/动画/冻结状态”的场景再使用专用展示组件。
 
 ### 2.5 AppPagination
 

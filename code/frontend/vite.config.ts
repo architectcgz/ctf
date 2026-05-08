@@ -4,7 +4,6 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => {
@@ -17,12 +16,10 @@ export default defineConfig(({ mode }) => {
       vue(),
       tailwindcss(),
       AutoImport({
-        resolvers: [ElementPlusResolver()],
         imports: ['vue', 'vue-router', 'pinia'],
         dts: 'src/auto-imports.d.ts',
       }),
       Components({
-        resolvers: [ElementPlusResolver()],
         dts: 'src/components.d.ts',
       }),
     ],
@@ -84,10 +81,6 @@ export default defineConfig(({ mode }) => {
 
             if (id.includes('/echarts/')) {
               return 'echarts-runtime'
-            }
-
-            if (id.includes('element-plus')) {
-              return 'element-plus'
             }
 
             if (id.includes('/vue-router/') || id.includes('/pinia/') || id.includes('/@vueuse/core/')) {

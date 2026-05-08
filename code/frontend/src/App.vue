@@ -13,12 +13,14 @@
       </Transition>
     </RouterView>
     <AppToast />
+    <AppDestructiveConfirm />
   </div>
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
+import AppDestructiveConfirm from '@/components/common/AppDestructiveConfirm.vue'
 import AppToast from '@/components/common/AppToast.vue'
 import { useTheme } from '@/composables/useTheme'
 

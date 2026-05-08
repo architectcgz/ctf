@@ -16,8 +16,8 @@
 | 构建 | Vite | 7.x | 开发热更新快，Tailwind CSS 官方插件支持 |
 | 路由 | Vue Router 4 | 4.x | 路由守卫做权限控制，支持嵌套路由和懒加载 |
 | 状态管理 | Pinia | 3.x | Vue 3 官方推荐，TypeScript 友好，DevTools 集成 |
-| UI 组件库 | Element Plus | 2.x | 覆盖表格/表单/弹窗等高频组件，减少自研成本，提升一致性与交付速度 |
-| 样式 | Tailwind CSS 4 | 4.x | 原子化 CSS，通过 `@theme` 定义设计令牌，并以 CSS 变量桥接 Element Plus 主题 |
+| UI 原语 | 仓库内共享组件 + modal / drawer 模板 | - | 围绕业务工作台、主题 token 和交互一致性组织，减少外部组件库耦合 |
+| 样式 | Tailwind CSS 4 + 语义化 CSS 变量 | 4.x | 原子类负责布局，语义类和 token 负责工作台、弹窗、表格与状态风格 |
 | HTTP | Axios | 1.x | 拦截器统一处理 Token 刷新和错误码映射 |
 | 图表 | ECharts + vue-echarts | 6.x + 8.x | 能力雷达图、排行榜趋势图、仪表盘统计 |
 | 图标 | Lucide Vue Next | 0.x（锁版本） | 统一图标风格，Tree-shakable |
@@ -25,13 +25,13 @@
 | 终端 | xterm.js | 5.x | WebSocket + xterm 实现浏览器内 SSH 连接靶机（Phase 2） |
 | WebSocket | 原生 WebSocket | - | 封装 composable，支持心跳、重连、ticket 认证 |
 
-### Element Plus 使用边界（必须）
+### 共享前端原语使用边界（必须）
 
-- **优先直接使用 Element Plus 组件**（`ElButton/ElInput/ElTable/ElDialog/...`），减少“二次封装造成的 API 漂移”。
-- **只在两类场景封装 `App*` 组件**：
+- **优先复用仓库内共享原语**（如 `ui-btn`、`WorkspaceDataTable`、`AdminSurfaceModal`、`DeleteConfirmModal`），避免同一工作流出现两套交互契约。
+- **只在两类场景新增通用组件**：
   - 需要统一业务行为（如：权限控制按钮、提交 loading、防重复点击、统一错误展示）
-  - 需要统一视觉 token 映射（如：Flag 输入、排行榜高亮行、冻结横幅）
-- **主题统一**：以 Tailwind `@theme` 设计令牌为唯一来源，通过 CSS 变量桥接到 Element Plus（例如 `--el-color-primary: var(--color-primary)`），避免双套主题体系。
+  - 需要统一主题 token 与工作台视觉骨架（如：危险确认、目录分页、侧边抽屉、指标卡片）
+- **主题统一**：以全局设计令牌和语义化 CSS 变量为唯一来源，不再维护外部 UI 组件库的第二套主题桥接变量。
 
 ---
 

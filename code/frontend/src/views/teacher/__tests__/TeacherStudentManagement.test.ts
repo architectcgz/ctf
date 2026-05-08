@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
-import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import TeacherStudentManagement from '../TeacherStudentManagement.vue'
 import teacherStudentManagementSource from '../TeacherStudentManagement.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const ElTable = { template: '<div><slot /></div>' }
+const ElTableColumn = { template: '<div><slot /></div>' }
+const ElButton = { template: '<button><slot /></button>' }
 
 const pushMock = vi.fn()
 

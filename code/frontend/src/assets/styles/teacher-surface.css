@@ -83,48 +83,6 @@
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
-.teacher-surface-table {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-expanded-cell-bg-color: transparent;
-  --el-table-header-bg-color: var(--journal-surface);
-  --el-table-border-color: var(--journal-border);
-  --el-table-row-hover-bg-color: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  --el-table-text-color: var(--journal-ink);
-  --el-table-header-text-color: var(--journal-muted);
-  --el-fill-color-blank: var(--journal-surface);
-  border: 1px solid var(--journal-border);
-  border-radius: 16px;
-  background: var(--journal-surface);
-  padding: 0.35rem 0.35rem 0.15rem;
-}
-
-.teacher-surface-table.el-table,
-.teacher-surface-table .el-table__inner-wrapper,
-.teacher-surface-table .el-scrollbar,
-.teacher-surface-table .el-scrollbar__view,
-.teacher-surface-table .el-table__body-wrapper,
-.teacher-surface-table .el-table__header-wrapper {
-  background: var(--journal-surface);
-}
-
-.teacher-surface-table th.el-table__cell {
-  background: var(--journal-surface);
-  font-size: var(--font-size-0-75);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.teacher-surface-table td.el-table__cell,
-.teacher-surface-table th.el-table__cell {
-  border-bottom-color: var(--journal-border);
-}
-
-.teacher-surface-table .el-table__inner-wrapper::before {
-  display: none;
-}
-
 .teacher-surface-filter {
   border: 1px solid var(--journal-border);
   background: var(--journal-surface-subtle);

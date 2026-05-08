@@ -1,6 +1,6 @@
 # CTF Frontend
 
-基于 `ctf/docs/architecture/frontend` 初始化的前端工程骨架。
+当前前端实现目录，保留学生、教师、管理员三侧页面、共享组件原语与页面级能力封装。
 
 ## 技术栈
 
@@ -9,8 +9,8 @@
 - Vue Router 4
 - Pinia 3
 - Axios
-- Element Plus
 - Tailwind CSS 4
+- Lucide Vue Next
 
 ## 已就绪能力
 
@@ -21,12 +21,6 @@
 - 学员、教师、管理员页面占位视图
 
 ## 常用命令
-
-新建 worktree 时，如果仓库里已有其他 worktree 安装过同一份前端依赖，优先在仓库根目录执行：
-
-```bash
-./scripts/bootstrap-frontend-deps.sh
-```
 
 ```bash
 npm run dev

@@ -40,7 +40,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'echarts': ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/renderers', 'vue-echarts'],
-          'vendor': ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios', 'element-plus']
+          'vendor': ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios']
         }
       }
     }
@@ -48,16 +48,16 @@ export default defineConfig({
 })
 ```
 
-### 1.2.1 Element Plus（按需引入建议）
+### 1.2.1 本地共享组件自动注册
 
-- 推荐使用自动按需引入（减少手动 import、支持 tree-shaking）：`unplugin-auto-import` + `unplugin-vue-components` + `ElementPlusResolver`。
-- 主题建议走 CSS 变量：在全局样式中用项目的 `@theme` token 映射 Element Plus 变量（例如 `--el-color-primary` 等），避免双套主题体系。
+- 推荐保留 `unplugin-auto-import` 与 `unplugin-vue-components`，用于 Vue / Router / Pinia API 和仓库内本地组件的自动声明生成。
+- 主题统一走全局设计令牌与语义化 CSS 变量，不再维护外部 UI 组件库的第二套主题桥接变量。
 
 ### 1.3 分包策略
 
 | Chunk | 包含内容 | 预估大小 |
 |-------|----------|----------|
-| vendor | Vue + Router + Pinia + Axios + Element Plus | ~80KB gzip |
+| vendor | Vue + Router + Pinia + Axios | ~60KB gzip |
 | echarts | ECharts 按需模块 | ~120KB gzip |
 | views/* | 各页面按路由自动分割 | 各 5-20KB |
 | index | 入口 + 全局组件 + 样式 | ~30KB gzip |
@@ -134,7 +134,7 @@ npm run build → dist/ → 复制到 Nginx 静态目录 → reload Nginx
 - Emits 使用 `defineEmits` 显式声明
 - 模板中使用 PascalCase 引用组件
 - 样式使用 Tailwind 类名，避免 `<style>` 块（除非需要深度选择器）
-- Element Plus 组件优先使用 CSS 变量/Props 控制样式，避免大面积 `:deep()` 覆盖内部样式（升级成本高）
+- 共享组件与本地 modal / drawer 模板优先使用主题 token 与语义类控制样式，避免新增依赖特定外部组件库内部 DOM 的 `:deep()` 覆盖
 
 ### 3.4 类型检查（建议加入 CI）
 

@@ -1,21 +1,4 @@
-:root {
-  --el-color-primary: var(--color-primary);
-  --el-color-primary-light-3: color-mix(in srgb, var(--color-primary-hover) 78%, white);
-  --el-color-primary-light-5: color-mix(in srgb, var(--color-primary-hover) 58%, white);
-  --el-bg-color: #161b22;
-  --el-bg-color-page: #0f1117;
-  --el-text-color-primary: #e6edf3;
-  --el-text-color-regular: #8b949e;
-  --el-border-color: #30363d;
-}
-
-[data-theme='light'] {
-  --el-color-primary: var(--color-primary);
-  --el-color-primary-light-3: color-mix(in srgb, var(--color-primary-hover) 78%, white);
-  --el-color-primary-light-5: color-mix(in srgb, var(--color-primary-hover) 58%, white);
-  --el-bg-color: #ffffff;
-  --el-bg-color-page: #f4f7fb;
-  --el-text-color-primary: #0f172a;
-  --el-text-color-regular: #475569;
-  --el-border-color: #d9e1ec;
-}
+/*
+ * Historical external UI theme bridge.
+ * 2026-05-08 起运行时已不再引入该文件，保留空壳仅为避免旧路径在开发机上短暂失效。
+ */

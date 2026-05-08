@@ -2,34 +2,26 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+const deleteConfirmModalSource = readFileSync(
+  `${process.cwd()}/src/components/common/DeleteConfirmModal.vue`,
+  'utf-8'
+)
+const destructiveConfirmHostSource = readFileSync(
+  `${process.cwd()}/src/components/common/AppDestructiveConfirm.vue`,
+  'utf-8'
+)
 
 describe('destructive confirm theme alignment', () => {
-  it('危险确认框应通过主题 token 适配深浅色，而不是继续写死旧颜色回退', () => {
-    expect(sharedStylesSource).toContain('.app-destructive-confirm-box.el-message-box {')
-    expect(sharedStylesSource).toContain('--destructive-confirm-accent: var(--color-danger);')
-    expect(sharedStylesSource).toMatch(
-      /--destructive-confirm-border:\s*color-mix\([\s\S]*var\(--destructive-confirm-accent\) 24%,[\s\S]*var\(--journal-border,\s*var\(--color-border-default\)\)[\s\S]*\);/
+  it('危险确认框应复用本地 modal shell 和主题 token，而不是继续依赖 ElMessageBox', () => {
+    expect(deleteConfirmModalSource).toContain(
+      "from '@/components/common/modal-templates/ModalTemplateShell.vue'"
     )
-    expect(sharedStylesSource).toMatch(
-      /--destructive-confirm-soft-bg:\s*color-mix\([\s\S]*var\(--destructive-confirm-accent\) 10%,[\s\S]*var\(--journal-surface,\s*var\(--color-bg-surface\)\)[\s\S]*\);/
-    )
-    expect(sharedStylesSource).toMatch(
-      /--destructive-confirm-soft-text:\s*color-mix\([\s\S]*var\(--destructive-confirm-accent\) 88%,[\s\S]*var\(--journal-ink,\s*var\(--color-text-primary\)\)[\s\S]*\);/
-    )
-    expect(sharedStylesSource).toContain('border: 1px solid var(--destructive-confirm-border);')
-    expect(sharedStylesSource).toMatch(
-      /\.app-destructive-confirm-box\.el-message-box\s*\{[\s\S]*var\(--destructive-confirm-soft-bg\) 62%/s
-    )
-    expect(sharedStylesSource).toMatch(
-      /\.app-destructive-confirm-modal\s*\{[\s\S]*var\(--destructive-confirm-accent,\s*var\(--color-danger\)\) 8%/s
-    )
-    expect(sharedStylesSource).not.toContain('#5f6f83')
-    expect(sharedStylesSource).not.toContain('#a4b2c2')
-    expect(sharedStylesSource).not.toContain('#b91c1c')
-    expect(sharedStylesSource).not.toContain('#dc2626')
-    expect(sharedStylesSource).not.toMatch(
-      /\[data-theme="light"\] \.app-destructive-confirm-box \.el-message-box__btns/
-    )
+    expect(deleteConfirmModalSource).toContain('var(--color-danger)')
+    expect(deleteConfirmModalSource).toContain('color-mix(')
+    expect(deleteConfirmModalSource).toContain('frosted')
+    expect(deleteConfirmModalSource).not.toContain('ElMessageBox')
+    expect(deleteConfirmModalSource).not.toContain('element-plus')
+    expect(deleteConfirmModalSource).not.toContain('#dc2626')
+    expect(destructiveConfirmHostSource).toContain('<DeleteConfirmModal')
   })
 })

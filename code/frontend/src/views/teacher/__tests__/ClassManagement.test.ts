@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
-import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const ElTable = { template: '<div><slot /></div>' }
+const ElTableColumn = { template: '<div><slot /></div>' }
+const ElButton = { template: '<button><slot /></button>' }
 
 const pushMock = vi.fn()
 
