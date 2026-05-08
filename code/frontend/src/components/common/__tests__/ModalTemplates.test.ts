@@ -1,10 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import { mount } from '@vue/test-utils'
+import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 const shellPath = `${process.cwd()}/src/components/common/modal-templates/ModalTemplateShell.vue`
+const overlayPortalPath = `${process.cwd()}/src/components/common/modal-templates/OverlayPortal.vue`
+const overlayBehaviorPath = `${process.cwd()}/src/components/common/modal-templates/useOverlayBehavior.ts`
 const classicPath = `${process.cwd()}/src/components/common/modal-templates/ClassicCenteredModal.vue`
 const drawerPath = `${process.cwd()}/src/components/common/modal-templates/SlideOverDrawer.vue`
 const minimalPath = `${process.cwd()}/src/components/common/modal-templates/MinimalFloatingModal.vue`
@@ -34,13 +36,22 @@ async function loadComponent(path: string) {
   return ((await loader()) as { default: unknown }).default
 }
 
+async function loadOverlayPortal() {
+  return loadComponent('../modal-templates/OverlayPortal.vue')
+}
+
+enableAutoUnmount(afterEach)
+
 afterEach(() => {
   document.body.innerHTML = ''
+  document.body.style.overflow = ''
 })
 
 describe('modal templates', () => {
   it('应该提供共享弹窗壳、既有模板和 C 端模板组件', () => {
     expect(existsSync(shellPath)).toBe(true)
+    expect(existsSync(overlayPortalPath)).toBe(true)
+    expect(existsSync(overlayBehaviorPath)).toBe(true)
     expect(existsSync(classicPath)).toBe(true)
     expect(existsSync(drawerPath)).toBe(true)
     expect(existsSync(minimalPath)).toBe(true)
@@ -139,6 +150,105 @@ describe('modal templates', () => {
     }
   })
 
+  it('headless overlay 应支持 backdrop、Escape 和禁用关闭入口', async () => {
+    const OverlayPortal = await loadOverlayPortal()
+
+    expect(OverlayPortal).not.toBeNull()
+    if (!OverlayPortal) return
+
+    const wrapper = mount(OverlayPortal, {
+      props: {
+        open: true,
+        shellClass: 'overlay-portal-test',
+        closeOnBackdrop: false,
+        closeOnEscape: false,
+      },
+      slots: {
+        default: '<section class="overlay-portal-panel">内容</section>',
+      },
+      global: {
+        stubs: {
+          teleport: true,
+        },
+      },
+    })
+
+    await nextTick()
+
+    expect(document.body.style.overflow).toBe('hidden')
+    await wrapper.get('.overlay-portal-test').trigger('click')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+
+    expect(wrapper.emitted('close')).toBeUndefined()
+
+    await wrapper.setProps({ closeOnBackdrop: true, closeOnEscape: true } as never)
+    await nextTick()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+
+    expect(wrapper.emitted('close')?.length).toBe(1)
+
+    wrapper.unmount()
+    expect(document.body.style.overflow).toBe('')
+  })
+
+  it('headless overlay 应只让栈顶响应 Escape，并在多个 overlay 下保持滚动锁', async () => {
+    const OverlayPortal = await loadOverlayPortal()
+
+    expect(OverlayPortal).not.toBeNull()
+    if (!OverlayPortal) return
+
+    document.body.style.overflow = 'auto'
+
+    const first = mount(OverlayPortal, {
+      props: {
+        open: true,
+        shellClass: 'overlay-portal-first',
+      },
+      slots: {
+        default: '<section>first</section>',
+      },
+      global: {
+        stubs: {
+          teleport: true,
+        },
+      },
+    })
+    const second = mount(OverlayPortal, {
+      props: {
+        open: true,
+        shellClass: 'overlay-portal-second',
+      },
+      slots: {
+        default: '<section>second</section>',
+      },
+      global: {
+        stubs: {
+          teleport: true,
+        },
+      },
+    })
+
+    await nextTick()
+    expect(document.body.style.overflow).toBe('hidden')
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+
+    expect(first.emitted('close')).toBeUndefined()
+    expect(second.emitted('close')?.length).toBe(1)
+
+    await first.setProps({ open: false } as never)
+    await nextTick()
+    expect(document.body.style.overflow).toBe('hidden')
+
+    second.unmount()
+    expect(document.body.style.overflow).toBe('auto')
+    first.unmount()
+    document.body.style.overflow = ''
+  })
+
   it('侧滑抽屉应把关闭按钮放在头部操作区，并在点击后发出关闭事件', async () => {
     const SlideOverDrawer = await loadComponent('../modal-templates/SlideOverDrawer.vue')
 
@@ -165,7 +275,9 @@ describe('modal templates', () => {
     const headActions = wrapper.get('.modal-template-drawer__head-actions')
     const closeButton = headActions.get('.modal-template-drawer__close')
 
-    expect(wrapper.find('.modal-template-drawer > .modal-template-drawer__close').exists()).toBe(false)
+    expect(wrapper.find('.modal-template-drawer > .modal-template-drawer__close').exists()).toBe(
+      false
+    )
 
     await closeButton.trigger('click')
 
@@ -175,6 +287,8 @@ describe('modal templates', () => {
 
   it('模板组件应保留文档里的关键视觉骨架', () => {
     const shellSource = readSource(shellPath)
+    const overlayPortalSource = readSource(overlayPortalPath)
+    const overlayBehaviorSource = readSource(overlayBehaviorPath)
     const classicSource = readSource(classicPath)
     const drawerSource = readSource(drawerPath)
     const minimalSource = readSource(minimalPath)
@@ -185,9 +299,17 @@ describe('modal templates', () => {
     const adminModalSource = readSource(adminModalPath)
     const adminDrawerSource = readSource(adminDrawerPath)
 
-    expect(shellSource).toContain('Teleport to="body"')
+    expect(overlayPortalSource).toContain('Teleport to="body"')
+    expect(overlayPortalSource).toContain('useOverlayBehavior')
+    expect(overlayBehaviorSource).toContain('window.addEventListener')
+    expect(overlayBehaviorSource).toContain("document.body.style.overflow = 'hidden'")
+    expect(shellSource).toContain('OverlayPortal')
     expect(shellSource).toContain("emit('update:open', false)")
     expect(shellSource).toContain('.modal-template-shell')
+    expect(shellSource).toContain('<style>')
+    expect(shellSource).not.toContain('<style scoped>')
+    expect(shellSource).not.toContain('window.addEventListener')
+    expect(shellSource).not.toContain('document.body.style.overflow')
     expect(shellSource).not.toContain('background: rgba(15, 23, 42, 0.4);')
 
     expect(classicSource).toContain('.modal-template-panel--classic')

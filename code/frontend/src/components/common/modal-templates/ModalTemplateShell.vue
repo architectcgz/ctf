@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, useAttrs, watch } from 'vue'
+import OverlayPortal from './OverlayPortal.vue'
 
 defineOptions({
   inheritAttrs: false,
@@ -36,82 +36,40 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const attrs = useAttrs()
-
 function closeDialog(): void {
   emit('update:open', false)
   emit('close')
 }
-
-function handleBackdropClick(): void {
-  if (!props.closeOnBackdrop) return
-  closeDialog()
-}
-
-function handleWindowKeydown(event: KeyboardEvent): void {
-  if (!props.open || !props.closeOnEscape || event.key !== 'Escape') return
-  closeDialog()
-}
-
-// 统一管理副作用：键盘监听与滚动锁定
-watch(
-  () => [props.open, props.closeOnEscape] as const,
-  ([open, closeOnEscape]) => {
-    if (typeof window === 'undefined') return
-
-    // 处理键盘事件
-    window.removeEventListener('keydown', handleWindowKeydown)
-    if (open && closeOnEscape) {
-      window.addEventListener('keydown', handleWindowKeydown)
-    }
-
-    // 处理背景滚动锁定
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-  },
-  { immediate: true }
-)
-
-onBeforeUnmount(() => {
-  if (typeof window === 'undefined') return
-  window.removeEventListener('keydown', handleWindowKeydown)
-  // 确保组件销毁时恢复滚动
-  document.body.style.overflow = ''
-})
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="modal-template-fade">
-      <div
-        v-if="open"
-        v-bind="attrs"
-        :class="[
-          'modal-template-shell',
-          overlayClass,
-          { 'modal-template-shell--frosted': frosted },
-        ]"
-        @click.self="handleBackdropClick"
-      >
-        <component
-          :is="panelTag"
-          :class="['modal-template-panel', panelClass]"
-          :style="panelStyle"
-          :role="role"
-          :aria-label="ariaLabel"
-          aria-modal="true"
-        >
-          <slot />
-        </component>
-      </div>
-    </Transition>
-  </Teleport>
+  <OverlayPortal
+    v-bind="$attrs"
+    :open="open"
+    :shell-class="[
+      'modal-template-shell',
+      overlayClass,
+      { 'modal-template-shell--frosted': frosted },
+    ]"
+    :close-on-backdrop="closeOnBackdrop"
+    :close-on-escape="closeOnEscape"
+    transition-name="modal-template-fade"
+    @close="closeDialog"
+  >
+    <component
+      :is="panelTag"
+      :class="['modal-template-panel', panelClass]"
+      :style="panelStyle"
+      :role="role"
+      :aria-label="ariaLabel"
+      aria-modal="true"
+    >
+      <slot />
+    </component>
+  </OverlayPortal>
 </template>
 
-<style scoped>
+<style>
 .modal-template-shell {
   --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 40%, transparent);
   position: fixed;

@@ -12,6 +12,7 @@
 - `feedback/2026-05-04-pipeline-review-gate-subagent.md` ← Pipeline review gate must use subagent
 - `feedback/2026-05-05-touched-structural-debt-must-close.md` ← Touched structural debt must be closed in pipeline
 - `feedback/2026-05-05-review-oversized-frontend-debt.md` ← Review touching oversized frontend files must record residual debt
+- `feedback/2026-05-08-specialized-drawer-should-not-inherit-modal-template.md` ← 业务专用抽屉不应继承通用弹窗视觉模板
 
 ## 后续规则
 
