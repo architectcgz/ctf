@@ -1,10 +1,11 @@
-# CTF 平台项目骨架
+# CTF 平台项目
 
-按 `docs/architecture` 的前后端说明初始化的项目骨架：
+当前项目事实以 `docs/architecture/` 和 `docs/contracts/` 为准，仓库本身同时保留实现、专题设计、题包与 harness 积累。
 
-- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap，分层目录为 `code/backend/cmd/`、`code/backend/internal/handler/`、`code/backend/internal/service/`、`code/backend/internal/repository/`、`code/backend/internal/model/`、`code/backend/internal/middleware/`、`code/backend/pkg/`
+- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前采用单体部署下的模块化 Onion Architecture，核心模块为 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel`
 - 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Element Plus
 - 开发依赖：可复用根目录 `infra/` 的共享 PostgreSQL + Redis，也可用 `docker/ctf/docker-compose.dev.yml` 启动 CTF 完整容器栈（`ctf-api` + `ctf-postgres` + `ctf-redis`）
+- 文档入口：`docs/architecture/README.md` 为最终架构与页面设计事实源，`docs/contracts/` 为契约事实源
 
 ## 启动方式
 
@@ -110,11 +111,12 @@ Docker 编排规范见：`docs/docker-compose-rules.md`。
 - CTF 内部统一使用 `ctf-network`
 - 禁止 CTF 容器混用 Compose 与手工 `docker run`
 
-## 当前骨架范围
+## 当前仓库范围
 
-- 已提供统一响应结构、请求 ID 中间件、访问日志、中断优雅退出、健康检查接口
-- 已在 `backend/internal/` 下预留 `auth`、`challenge`、`practice`、`contest`、`assessment`、`system`、`container` 分层目录
-- 前端现有路由、状态管理、API 封装与布局结构保留，并补充项目级说明文件
+- 后端已经按 `internal/module/<module>/api | application | domain | ports | infrastructure | runtime | contracts` 收敛，进程级装配入口位于 `code/backend/internal/app/composition/`
+- 前端保留学生、教师、管理员工作台与 AWD 相关页面，页面最终设计稿统一回收到 `docs/architecture/frontend/pages/`
+- 题目与题包事实优先保留在 `challenges/` 自身目录；单题题面、源码、writeup 与防守说明不再伪装成全局架构专题
+- 仓库顶层已按严格 harness 收敛出 `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`prompts/`、`references/`，用于沉淀长期规则、实验、反馈和外部资料
 
 <!-- BEGIN HARNESS ENGINEERING: readme-harness -->
 ## Harness Engineering
