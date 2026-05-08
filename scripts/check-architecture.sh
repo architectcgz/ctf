@@ -27,6 +27,11 @@ run_overlay_checks() {
   )
 }
 
+run_frontend_theme_checks() {
+  echo "[architecture] frontend theme token boundaries"
+  (cd "$ROOT_DIR/code/frontend" && npm run check:theme-tail)
+}
+
 case "$MODE" in
   --quick|quick)
     run_backend_checks
@@ -36,6 +41,7 @@ case "$MODE" in
     run_backend_checks
     run_frontend_checks
     run_overlay_checks
+    run_frontend_theme_checks
     ;;
   *)
     echo "usage: scripts/check-architecture.sh [--quick|--full]" >&2

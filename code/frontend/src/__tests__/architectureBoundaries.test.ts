@@ -93,6 +93,50 @@ const widgetLegacyComponentImportAllowlist = new Set([
   'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue',
 ])
 
+const componentNonContractApiAllowlist = new Set([
+  'components/teacher/StudentInsightPanel.vue -> @/api/teacher',
+  'components/teacher/class-management/StudentAnalysisPage.vue -> @/api/teacher',
+  'components/teacher/student-insight/StudentInsightAttackSessionsSection.vue -> @/api/teacher',
+])
+
+const widgetNonContractApiAllowlist = new Set([
+  'widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.vue -> @/api/teacher',
+])
+
+const commonForbiddenImportAllowlist = new Set([
+  'components/common/InstancePanel.vue -> @/api/contracts',
+  'entities/challenge/model/presentation.ts -> @/api/contracts',
+  'entities/challenge/ui/ChallengeCategoryDifficultyPills.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeCategoryPill.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeCategoryText.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeDifficultyText.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeDirectoryRow.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeMetaStrip.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeProfileMetaGrid.vue -> @/api/contracts',
+  'entities/challenge/ui/ChallengeProfileSummaryStrip.vue -> @/api/contracts',
+])
+
+const legacyComponentPageAllowlist = new Set([
+  'components/dashboard/student/StudentCategoryProgressPage.vue',
+  'components/dashboard/student/StudentDifficultyPage.vue',
+  'components/dashboard/student/StudentOverviewPage.vue',
+  'components/dashboard/student/StudentRecommendationPage.vue',
+  'components/dashboard/student/StudentTimelinePage.vue',
+  'components/platform/awd-service/AWDChallengeLibraryPage.vue',
+  'components/platform/contest/ContestOrchestrationPage.vue',
+  'components/platform/dashboard/PlatformOverviewPage.vue',
+  'components/platform/topology/ChallengeTopologyStudioPage.vue',
+  'components/platform/user/UserGovernancePage.vue',
+  'components/platform/writeup/ChallengeWriteupEditorPage.vue',
+  'components/platform/writeup/ChallengeWriteupViewPage.vue',
+  'components/teacher/class-management/ClassManagementPage.vue',
+  'components/teacher/class-management/ClassStudentsPage.vue',
+  'components/teacher/class-management/StudentAnalysisPage.vue',
+  'components/teacher/dashboard/TeacherDashboardPage.vue',
+  'components/teacher/instance-management/TeacherInstanceManagementPage.vue',
+  'components/teacher/student-management/StudentManagementPage.vue',
+])
+
 function collectSourceFiles(directory: string): SourceFile[] {
   return readdirSync(directory).flatMap((entry) => {
     const absolutePath = join(directory, entry)
@@ -176,6 +220,18 @@ function collectImportKeys(files: SourceFile[], importPathPrefix: string): strin
   })
 }
 
+function expectBaseline(
+  actualEntries: string[],
+  allowlist: Set<string>,
+  violationLabel: string
+): void {
+  const violations = actualEntries.filter((key) => !allowlist.has(key))
+  const staleAllowlistEntries = Array.from(allowlist).filter((key) => !actualEntries.includes(key))
+
+  expect(violations, violationLabel).toEqual([])
+  expect(staleAllowlistEntries, `${violationLabel} stale allowlist`).toEqual([])
+}
+
 describe('frontend architecture boundaries', () => {
   const sourceFiles = collectSourceFiles(sourceRoot)
 
@@ -197,13 +253,7 @@ describe('frontend architecture boundaries', () => {
       file.relativePath.startsWith(`components${sep}`)
     )
     const featureImports = collectImportKeys(componentFiles, '@/features')
-    const violations = featureImports.filter((key) => !componentFeatureImportAllowlist.has(key))
-    const staleAllowlistEntries = Array.from(componentFeatureImportAllowlist).filter(
-      (key) => !featureImports.includes(key)
-    )
-
-    expect(violations).toEqual([])
-    expect(staleAllowlistEntries).toEqual([])
+    expectBaseline(featureImports, componentFeatureImportAllowlist, 'component feature imports')
   })
 
   it('widgets should not add new dependencies on legacy business component directories', () => {
@@ -218,15 +268,11 @@ describe('frontend architecture boundaries', () => {
         )
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
-    const violations = legacyComponentImports.filter(
-      (key) => !widgetLegacyComponentImportAllowlist.has(key)
+    expectBaseline(
+      legacyComponentImports,
+      widgetLegacyComponentImportAllowlist,
+      'widget legacy component imports'
     )
-    const staleAllowlistEntries = Array.from(widgetLegacyComponentImportAllowlist).filter(
-      (key) => !legacyComponentImports.includes(key)
-    )
-
-    expect(violations).toEqual([])
-    expect(staleAllowlistEntries).toEqual([])
   })
 
   it('new route views should stay below the page-size threshold', () => {
@@ -247,5 +293,65 @@ describe('frontend architecture boundaries', () => {
 
     expect(violations).toEqual([])
     expect(staleAllowlistEntries).toEqual([])
+  })
+
+  it('components and widgets should not add new non-contract API imports', () => {
+    const componentFiles = sourceFiles.filter((file) =>
+      file.relativePath.startsWith(`components${sep}`)
+    )
+    const widgetFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`widgets${sep}`))
+
+    const componentApiImports = collectImportKeys(componentFiles, '@/api/').filter(
+      (key) => !key.includes(' -> @/api/contracts')
+    )
+    const widgetApiImports = collectImportKeys(widgetFiles, '@/api/').filter(
+      (key) => !key.includes(' -> @/api/contracts')
+    )
+
+    expectBaseline(componentApiImports, componentNonContractApiAllowlist, 'component API imports')
+    expectBaseline(widgetApiImports, widgetNonContractApiAllowlist, 'widget API imports')
+  })
+
+  it('common and entity layers should stay free of app services, router, and stores', () => {
+    const lowLevelFiles = sourceFiles.filter(
+      (file) =>
+        file.relativePath.startsWith(`components${sep}common${sep}`) ||
+        file.relativePath.startsWith(`entities${sep}`)
+    )
+    const forbiddenImports = lowLevelFiles.flatMap((file) => {
+      const source = readFileSync(file.absolutePath, 'utf-8')
+      return extractImports(source)
+        .filter(
+          (importPath) =>
+            /^@\/(api|features|widgets|views|stores|router)/.test(importPath) ||
+            importPath === 'vue-router' ||
+            importPath === 'pinia'
+        )
+        .map((importPath) => `${file.relativePath} -> ${importPath}`)
+    })
+
+    expectBaseline(forbiddenImports, commonForbiddenImportAllowlist, 'low-level forbidden imports')
+  })
+
+  it('feature UI files should not import non-contract API modules directly', () => {
+    const featureUiFiles = sourceFiles.filter(
+      (file) =>
+        file.relativePath.startsWith(`features${sep}`) &&
+        file.relativePath.includes(`${sep}ui${sep}`)
+    )
+    const apiImports = collectImportKeys(featureUiFiles, '@/api/').filter(
+      (key) => !key.includes(' -> @/api/contracts')
+    )
+
+    expect(apiImports).toEqual([])
+  })
+
+  it('new page components should be route views or widgets instead of legacy component pages', () => {
+    const componentPageFiles = sourceFiles
+      .map((file) => file.relativePath)
+      .filter((relativePath) => relativePath.startsWith(`components${sep}`))
+      .filter((relativePath) => /Page\.vue$/.test(relativePath))
+
+    expectBaseline(componentPageFiles, legacyComponentPageAllowlist, 'legacy component page files')
   })
 })

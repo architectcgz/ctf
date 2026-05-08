@@ -109,6 +109,156 @@ var allowedCrossModulePrivateImports = map[string]struct{}{
 	"practice/application/commands/awd_defense_workspace_support.go -> ctf-platform/internal/module/contest/domain": {},
 }
 
+var allowedDomainInternalImports = map[string]struct{}{
+	"assessment/domain/profile.go -> ctf-platform/internal/config":                    {},
+	"assessment/domain/profile.go -> ctf-platform/internal/dto":                       {},
+	"assessment/domain/profile.go -> ctf-platform/internal/model":                     {},
+	"assessment/domain/recommendation.go -> ctf-platform/internal/config":             {},
+	"assessment/domain/report.go -> ctf-platform/internal/config":                     {},
+	"assessment/domain/report.go -> ctf-platform/internal/model":                      {},
+	"challenge/domain/awd_package_parser.go -> ctf-platform/internal/model":           {},
+	"challenge/domain/image_delivery.go -> ctf-platform/internal/model":               {},
+	"challenge/domain/mappers.go -> ctf-platform/internal/dto":                        {},
+	"challenge/domain/mappers.go -> ctf-platform/internal/model":                      {},
+	"challenge/domain/package_parser.go -> ctf-platform/internal/model":               {},
+	"challenge/domain/package_topology_parser.go -> ctf-platform/internal/dto":        {},
+	"challenge/domain/package_topology_parser.go -> ctf-platform/internal/model":      {},
+	"challenge/domain/response_mapper_goverter.go -> ctf-platform/internal/dto":       {},
+	"challenge/domain/response_mapper_goverter.go -> ctf-platform/internal/model":     {},
+	"challenge/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/dto":   {},
+	"challenge/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/model": {},
+	"challenge/domain/topology_codec.go -> ctf-platform/internal/dto":                 {},
+	"challenge/domain/topology_codec.go -> ctf-platform/internal/model":               {},
+	"contest/domain/awd_checker_validation_support.go -> ctf-platform/internal/model": {},
+	"contest/domain/awd_service_config.go -> ctf-platform/internal/model":             {},
+	"contest/domain/awd_source_support.go -> ctf-platform/internal/model":             {},
+	"contest/domain/contest.go -> ctf-platform/internal/model":                        {},
+	"contest/domain/registration.go -> ctf-platform/internal/model":                   {},
+	"practice/domain/mappers.go -> ctf-platform/internal/dto":                         {},
+	"practice/domain/mappers.go -> ctf-platform/internal/model":                       {},
+	"practice/domain/response_mapper_goverter.go -> ctf-platform/internal/dto":        {},
+	"practice/domain/response_mapper_goverter.go -> ctf-platform/internal/model":      {},
+	"practice/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/dto":    {},
+	"practice/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/model":  {},
+	"practice/domain/score.go -> ctf-platform/internal/model":                         {},
+	"practice/domain/topology_runtime.go -> ctf-platform/internal/model":              {},
+	"runtime/domain/resources.go -> ctf-platform/internal/model":                      {},
+	"runtime/domain/topology_acl.go -> ctf-platform/internal/model":                   {},
+}
+
+var allowedModuleDependencies = map[string]struct{}{
+	"assessment -> contest":            {},
+	"assessment -> practice":           {},
+	"auth -> identity":                 {},
+	"contest -> auth":                  {},
+	"contest -> challenge":             {},
+	"contest -> runtime":               {},
+	"identity -> auth":                 {},
+	"ops -> auth":                      {},
+	"ops -> practice":                  {},
+	"practice -> assessment":           {},
+	"practice -> challenge":            {},
+	"practice -> contest":              {},
+	"practice -> runtime":              {},
+	"runtime -> challenge":             {},
+	"runtime -> contest":               {},
+	"runtime -> ops":                   {},
+	"runtime -> practice":              {},
+	"teaching_readmodel -> assessment": {},
+}
+
+var allowedTransactionFiles = map[string]struct{}{
+	"challenge/application/commands/awd_challenge_import_service.go":       {},
+	"challenge/application/commands/challenge_import_service.go":           {},
+	"challenge/application/commands/challenge_package_revision_service.go": {},
+	"challenge/infrastructure/repository.go":                               {},
+	"challenge/infrastructure/tag_repository.go":                           {},
+	"contest/infrastructure/awd_repository.go":                             {},
+	"contest/infrastructure/contest_status_update_repository.go":           {},
+	"contest/infrastructure/submission_repository.go":                      {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go":       {},
+	"contest/infrastructure/team_membership_repository.go":                 {},
+	"identity/infrastructure/repository.go":                                {},
+	"ops/infrastructure/notification_repository.go":                        {},
+	"practice/infrastructure/repository.go":                                {},
+	"runtime/infrastructure/repository.go":                                 {},
+}
+
+var allowedOversizedRuntimeModules = map[string]struct{}{
+	"challenge/runtime/module.go": {},
+	"runtime/runtime/module.go":   {},
+}
+
+var allowedTimeNowFiles = map[string]struct{}{
+	"assessment/application/commands/profile_service.go":                   {},
+	"assessment/application/commands/report_service.go":                    {},
+	"assessment/application/queries/teacher_awd_review_service.go":         {},
+	"assessment/infrastructure/report_repository.go":                       {},
+	"assessment/infrastructure/repository.go":                              {},
+	"auth/application/commands/cas_service.go":                             {},
+	"auth/application/commands/service.go":                                 {},
+	"auth/infrastructure/token_service.go":                                 {},
+	"challenge/application/commands/awd_challenge_import_service.go":       {},
+	"challenge/application/commands/challenge_import_service.go":           {},
+	"challenge/application/commands/challenge_package_revision_service.go": {},
+	"challenge/application/commands/challenge_service.go":                  {},
+	"challenge/application/commands/image_build_service.go":                {},
+	"challenge/application/commands/topology_service.go":                   {},
+	"challenge/application/commands/writeup_service.go":                    {},
+	"challenge/application/queries/writeup_service.go":                     {},
+	"contest/application/commands/awd_attack_log_transaction.go":           {},
+	"contest/application/commands/awd_attack_submit_support.go":            {},
+	"contest/application/commands/awd_checker_preview_token_support.go":    {},
+	"contest/application/commands/awd_current_round_support.go":            {},
+	"contest/application/commands/awd_round_window_support.go":             {},
+	"contest/application/commands/awd_service_run_commands.go":             {},
+	"contest/application/commands/awd_service_upsert_commands.go":          {},
+	"contest/application/commands/contest_awd_service_service.go":          {},
+	"contest/application/commands/contest_update_commands.go":              {},
+	"contest/application/commands/participation_announcement_commands.go":  {},
+	"contest/application/commands/participation_register_commands.go":      {},
+	"contest/application/commands/participation_review_commands.go":        {},
+	"contest/application/commands/realtime_broadcast.go":                   {},
+	"contest/application/commands/scoreboard_admin_freeze_commands.go":     {},
+	"contest/application/commands/submission_submit_validation.go":         {},
+	"contest/application/jobs/awd_check_run.go":                            {},
+	"contest/application/jobs/awd_checker_preview.go":                      {},
+	"contest/application/jobs/awd_http_checker_runner.go":                  {},
+	"contest/application/jobs/awd_probe_runtime.go":                        {},
+	"contest/application/jobs/awd_round_updater.go":                        {},
+	"contest/application/jobs/awd_script_checker_runner.go":                {},
+	"contest/application/jobs/awd_service_check_result.go":                 {},
+	"contest/application/jobs/awd_tcp_checker_runner.go":                   {},
+	"contest/application/jobs/status_transition_service.go":                {},
+	"contest/application/jobs/status_update_runner.go":                     {},
+	"contest/application/queries/scoreboard_list_query.go":                 {},
+	"contest/domain/awd_check_result_support.go":                           {},
+	"contest/infrastructure/awd_round_repository.go":                       {},
+	"contest/infrastructure/contest_repository.go":                         {},
+	"contest/infrastructure/docker_checker_runner.go":                      {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go":       {},
+	"contest/infrastructure/team_membership_repository.go":                 {},
+	"contest/infrastructure/team_registration_binding.go":                  {},
+	"identity/infrastructure/repository.go":                                {},
+	"ops/application/commands/notification_service.go":                     {},
+	"ops/application/queries/risk_service.go":                              {},
+	"practice/application/commands/contest_awd_operations.go":              {},
+	"practice/application/commands/instance_provisioning.go":               {},
+	"practice/application/commands/instance_start_service.go":              {},
+	"practice/application/commands/manual_review_service.go":               {},
+	"practice/application/commands/score_service.go":                       {},
+	"practice/application/commands/submission_service.go":                  {},
+	"practice/infrastructure/repository.go":                                {},
+	"runtime/application/commands/instance_service.go":                     {},
+	"runtime/application/commands/provisioning_service.go":                 {},
+	"runtime/application/commands/runtime_maintenance_service.go":          {},
+	"runtime/application/queries/instance_service.go":                      {},
+	"runtime/application/queries/proxy_ticket_service.go":                  {},
+	"runtime/infrastructure/repository.go":                                 {},
+	"runtime/runtime/adapters.go":                                          {},
+	"teaching_readmodel/application/queries/service.go":                    {},
+}
+
 func TestModuleArchitectureBoundaries(t *testing.T) {
 	t.Parallel()
 
@@ -120,6 +270,7 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 
 		switch layer {
 		case "domain":
+			assertDomainInternalImportsAreAllowlisted(t, file, imports)
 			assertNoForbiddenImports(t, file, imports, []string{
 				"github.com/gin-gonic/gin",
 				"github.com/redis/go-redis",
@@ -158,6 +309,52 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 				"infrastructure",
 				"runtime",
 			})
+		}
+	}
+}
+
+func TestModuleDependencyAllowlistIsCurrent(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	actual := make(map[string]struct{})
+	for _, file := range files {
+		for _, importPath := range parseImports(t, file) {
+			if key, ok := moduleDependencyKey(file, importPath); ok {
+				actual[key] = struct{}{}
+				if _, allowed := allowedModuleDependencies[key]; !allowed {
+					t.Fatalf("module dependency is not allowlisted: %s via %s", key, file)
+				}
+			}
+		}
+	}
+
+	for allowed := range allowedModuleDependencies {
+		if _, exists := actual[allowed]; !exists {
+			t.Fatalf("module dependency allowlist entry is stale: %s", allowed)
+		}
+	}
+}
+
+func TestDomainInternalImportAllowlistIsCurrent(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	actual := make(map[string]struct{})
+	for _, file := range files {
+		if moduleLayer(file) != "domain" {
+			continue
+		}
+		for _, importPath := range parseImports(t, file) {
+			if isDomainInternalImport(importPath) {
+				actual[domainInternalImportKey(file, importPath)] = struct{}{}
+			}
+		}
+	}
+
+	for allowed := range allowedDomainInternalImports {
+		if _, exists := actual[allowed]; !exists {
+			t.Fatalf("domain internal import allowlist entry is stale: %s", allowed)
 		}
 	}
 }
@@ -201,6 +398,88 @@ func TestCrossModulePrivateImportAllowlistIsCurrent(t *testing.T) {
 	for allowed := range allowedCrossModulePrivateImports {
 		if _, exists := actual[allowed]; !exists {
 			t.Fatalf("cross-module private import allowlist entry is stale: %s", allowed)
+		}
+	}
+}
+
+func TestModuleRuntimeCodeDoesNotCreateRootContext(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	for _, file := range files {
+		content := readFile(t, file)
+		if strings.Contains(content, "context.Background()") || strings.Contains(content, "context.TODO()") {
+			t.Fatalf("%s must receive context from its caller instead of creating a root context", file)
+		}
+	}
+}
+
+func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	actual := make(map[string]struct{})
+	for _, file := range files {
+		if strings.Contains(readFile(t, file), "time.Now(") {
+			actual[moduleFileKey(file)] = struct{}{}
+		}
+	}
+
+	for file := range actual {
+		if _, allowed := allowedTimeNowFiles[file]; !allowed {
+			t.Fatalf("%s uses time.Now; use UTC business time or add a reviewed allowlist entry", file)
+		}
+	}
+	for allowed := range allowedTimeNowFiles {
+		if _, exists := actual[allowed]; !exists {
+			t.Fatalf("time.Now allowlist entry is stale: %s", allowed)
+		}
+	}
+}
+
+func TestTransactionBoundaryAllowlistIsCurrent(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	actual := make(map[string]struct{})
+	for _, file := range files {
+		if strings.Contains(readFile(t, file), ".Transaction(") {
+			actual[file] = struct{}{}
+		}
+	}
+
+	for file := range actual {
+		if _, allowed := allowedTransactionFiles[file]; !allowed {
+			t.Fatalf("%s opens a transaction outside the reviewed boundary allowlist", file)
+		}
+	}
+	for allowed := range allowedTransactionFiles {
+		if _, exists := actual[allowed]; !exists {
+			t.Fatalf("transaction allowlist entry is stale: %s", allowed)
+		}
+	}
+}
+
+func TestRuntimeModulesStaySmallAndWiringOnly(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoRuntimeFiles(t, ".")
+	for _, file := range files {
+		if !strings.HasSuffix(filepath.ToSlash(file), "/runtime/module.go") {
+			continue
+		}
+		lineCount := len(strings.Split(readFile(t, file), "\n"))
+		if lineCount <= 250 {
+			continue
+		}
+		if _, allowed := allowedOversizedRuntimeModules[file]; !allowed {
+			t.Fatalf("%s has %d lines; runtime module files should stay wiring-only", file, lineCount)
+		}
+	}
+	for allowed := range allowedOversizedRuntimeModules {
+		content := readFile(t, allowed)
+		if len(strings.Split(content, "\n")) <= 250 {
+			t.Fatalf("runtime module size allowlist entry is stale: %s", allowed)
 		}
 	}
 }
@@ -273,6 +552,20 @@ func parseImports(t *testing.T, filePath string) []string {
 	return imports
 }
 
+func readFile(t *testing.T, filePath string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read %s: %v", filePath, err)
+	}
+	return string(content)
+}
+
+func moduleFileKey(filePath string) string {
+	return filepath.ToSlash(filePath)
+}
+
 func assertNoForbiddenImports(t *testing.T, filePath string, imports []string, forbidden []string) {
 	t.Helper()
 
@@ -318,6 +611,46 @@ func assertNoCrossModulePrivateImports(t *testing.T, filePath string, imports []
 			t.Fatalf("%s must not import private layer from another module: %s", filePath, importPath)
 		}
 	}
+}
+
+func assertDomainInternalImportsAreAllowlisted(t *testing.T, filePath string, imports []string) {
+	t.Helper()
+
+	for _, importPath := range imports {
+		if !isDomainInternalImport(importPath) {
+			continue
+		}
+		key := domainInternalImportKey(filePath, importPath)
+		if _, allowed := allowedDomainInternalImports[key]; !allowed {
+			t.Fatalf("%s imports %s from domain; move through a domain-owned type or update the reviewed baseline", filePath, importPath)
+		}
+	}
+}
+
+func isDomainInternalImport(importPath string) bool {
+	return importPath == "ctf-platform/internal/model" ||
+		importPath == "ctf-platform/internal/dto" ||
+		importPath == "ctf-platform/internal/config" ||
+		strings.HasPrefix(importPath, "ctf-platform/internal/model/") ||
+		strings.HasPrefix(importPath, "ctf-platform/internal/dto/") ||
+		strings.HasPrefix(importPath, "ctf-platform/internal/config/")
+}
+
+func domainInternalImportKey(filePath string, importPath string) string {
+	return filepath.ToSlash(filePath) + " -> " + importPath
+}
+
+func moduleDependencyKey(filePath string, importPath string) (string, bool) {
+	if !strings.HasPrefix(importPath, moduleImportPrefix) {
+		return "", false
+	}
+	currentModule := moduleOwner(filePath)
+	modulePath := strings.TrimPrefix(importPath, moduleImportPrefix)
+	parts := strings.Split(modulePath, "/")
+	if len(parts) == 0 || parts[0] == currentModule {
+		return "", false
+	}
+	return currentModule + " -> " + parts[0], true
 }
 
 func isCrossModulePrivateImport(filePath string, importPath string) bool {

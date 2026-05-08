@@ -29,6 +29,27 @@
 - `features/`：面向产品能力或业务专题的最终架构事实，也承接专题当前已经固定的内部边界结论。
   - 目录索引：`features/专题架构索引.md`
 
+## 机械化 Guardrail
+
+当前架构边界不只依赖文档约定，也由本地检查执行：
+
+- `scripts/check-architecture.sh --quick`：提交前快速检查后端模块依赖方向、前端分层边界和关键历史腐蚀基线。
+- `scripts/check-architecture.sh --full`：在 quick 基础上补充 overlay 结构约束和前端主题 token 检查。
+- `scripts/check-consistency.sh`：检查 harness 目录、入口导航和本地架构 guardrail 是否接入 git hook。
+
+后端规则落点：
+
+- `code/backend/internal/module/architecture_test.go`
+
+前端规则落点：
+
+- `code/frontend/src/__tests__/architectureBoundaries.test.ts`
+- `code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- `code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
+- `code/frontend/scripts/check-theme-tail.mjs`
+
+这些测试使用 allowlist 锁住历史例外；新增同类腐蚀应优先通过重构消除，不能默认扩大 allowlist。
+
 ## AWD Checker 扩展
 
 - `features/AWD-http_standard检查器架构.md`：当前已实现的 `http_standard` checker 事实源。
