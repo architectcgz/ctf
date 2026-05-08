@@ -20,6 +20,9 @@ fi
 if [[ -x scripts/check-consistency.sh ]]; then
   bash scripts/check-consistency.sh
 fi
+if [[ -x scripts/check-architecture.sh ]]; then
+  bash scripts/check-architecture.sh --quick
+fi
 # END HARNESS ENGINEERING: pre-commit
 
 if [[ "$needs_sync" -eq 0 ]]; then

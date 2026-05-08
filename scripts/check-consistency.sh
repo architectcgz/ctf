@@ -117,6 +117,11 @@ echo "[C9] works index covers harness good practices"
 check_file "works/harness-good-practices.md"
 check_contains "works/AGENTS.md" 'harness-good-practices\.md' "works AGENTS references harness good practices"
 
+echo "[C10] local architecture guardrails are wired"
+check_file "scripts/check-architecture.sh"
+check_contains ".githooks/pre-commit" 'scripts/check-architecture\.sh --quick' "pre-commit runs quick architecture checks"
+check_contains ".githooks/README.md" 'scripts/check-architecture\.sh --quick' "hook docs mention architecture checks"
+
 if [[ "$fail" -eq 0 ]]; then
   echo "$(green '✓ all harness consistency checks passed')"
 else
