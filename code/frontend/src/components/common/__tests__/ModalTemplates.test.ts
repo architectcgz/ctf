@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import path from 'node:path'
 
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -19,6 +20,25 @@ const adminDrawerPath = `${process.cwd()}/src/components/common/modal-templates/
 
 function readSource(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8') : ''
+}
+
+function listSourceFiles(directory: string): string[] {
+  if (!existsSync(directory)) return []
+
+  return readdirSync(directory).flatMap((entry) => {
+    const fullPath = path.join(directory, entry)
+    const stat = statSync(fullPath)
+
+    if (stat.isDirectory()) {
+      return listSourceFiles(fullPath)
+    }
+
+    if (!/\.(vue|ts)$/.test(entry)) {
+      return []
+    }
+
+    return [fullPath]
+  })
 }
 
 async function loadClassicCenteredModal() {
@@ -247,6 +267,32 @@ describe('modal templates', () => {
     expect(document.body.style.overflow).toBe('auto')
     first.unmount()
     document.body.style.overflow = ''
+  })
+
+  it('业务代码新增弹窗不应直接继承 ModalTemplateShell 视觉包装', () => {
+    const sourceRoot = path.join(process.cwd(), 'src')
+    const scannedFiles = [
+      ...listSourceFiles(path.join(sourceRoot, 'components')),
+      ...listSourceFiles(path.join(sourceRoot, 'views')),
+      ...listSourceFiles(path.join(sourceRoot, 'features')),
+    ]
+    const allowedDirectUsers = new Set([
+      path.join(sourceRoot, 'components/common/DeleteConfirmModal.vue'),
+      path.join(sourceRoot, 'components/common/modal-templates/ClassicCenteredModal.vue'),
+      path.join(sourceRoot, 'components/common/modal-templates/CFocusedInputDialog.vue'),
+      path.join(sourceRoot, 'components/common/modal-templates/CImmersiveConfirmDialog.vue'),
+      path.join(sourceRoot, 'components/common/modal-templates/MinimalFloatingModal.vue'),
+      path.join(sourceRoot, 'components/common/modal-templates/SlideOverDrawer.vue'),
+    ])
+
+    const disallowedUsers = scannedFiles
+      .filter((file) => !file.includes(`${path.sep}__tests__${path.sep}`))
+      .filter((file) => !file.endsWith(`${path.sep}components.d.ts`))
+      .filter((file) => !allowedDirectUsers.has(file))
+      .filter((file) => readSource(file).includes('ModalTemplateShell'))
+      .map((file) => path.relative(sourceRoot, file))
+
+    expect(disallowedUsers).toEqual([])
   })
 
   it('侧滑抽屉应把关闭按钮放在头部操作区，并在点击后发出关闭事件', async () => {

@@ -100,7 +100,7 @@ Events: `@change(page)`, `@size-change(size)`
 | color | string | 标签颜色（支持分类色标/难度色标/自定义） |
 | size | `'sm' \| 'md'` | 尺寸 |
 
-### 2.7 AppDialog / AppDrawer
+### 2.7 AppDialog / AppDrawer / Overlay
 
 | Prop | 类型 | 说明 |
 |------|------|------|
@@ -109,6 +109,14 @@ Events: `@change(page)`, `@size-change(size)`
 | width | string | 宽度（Drawer 默认 `480px`，Dialog 默认 `480px`） |
 
 Slots: `default`, `footer`
+
+Overlay 选型约定：
+
+- `OverlayPortal` / `useOverlayBehavior` 是 headless 行为层，只提供 Teleport、过渡承载、点击遮罩、Escape、body scroll lock 和多 overlay 栈管理。
+- `ModalTemplateShell` 是兼容包装，不作为业务弹窗/抽屉的默认入口。
+- 标准确认弹窗、居中弹窗、表单抽屉优先使用 `ClassicCenteredModal`、`SlideOverDrawer`、`AdminSurfaceModal`、`AdminSurfaceDrawer` 等共享模板。
+- 业务专用抽屉、导航级系统面板、强设计稿还原的 overlay 应自己拥有 DOM 和 CSS，只复用 headless 行为层，不通过 `panelStyle`、`overlayClass` 或 `:deep()` 去适配通用视觉模板。
+- 新增业务代码直接引用 `ModalTemplateShell` 默认视为架构异常，需要实现方案和 review 明确说明为什么标准模板或 headless 行为层都不适用。
 
 ### 2.8 AppToast
 

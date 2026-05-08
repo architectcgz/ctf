@@ -69,6 +69,10 @@
 - 教师端页面允许保留必要的教学语义和状态说明，但不应出现产品设计说明、布局介绍或“workspace 理念解释”类文案。
 - 模板组件不得自带会直接渲染到 UI 的脚手架说明文案。
   通用 `modal / drawer / panel` 若需要 `subtitle`、`description` 或 helper 区域，默认只提供结构，不提供演示型说明文字；示例文案只能留在测试、文档或注释里，不能作为运行时默认值进入页面。
+- 新增弹窗、抽屉或 overlay 时，必须先判断是“标准模板”还是“业务专用系统面板”。
+  - 标准确认弹窗、居中弹窗、表单抽屉优先使用现有 `ClassicCenteredModal`、`SlideOverDrawer`、`AdminSurfaceModal`、`AdminSurfaceDrawer` 等共享模板。
+  - 业务专用抽屉、导航级系统面板、需要特定设计稿 1:1 还原的 overlay，不得直接继承 `ModalTemplateShell` 或通过 `panelStyle`、`overlayClass`、`:deep()` 反向适配通用视觉模板；应直接拥有 DOM/CSS，并只复用 `OverlayPortal` / `useOverlayBehavior` 这类 headless 行为层。
+  - `ModalTemplateShell` 只作为共享模板内部的兼容包装使用，业务代码新增直接引用必须有明确架构理由并配套 review。
 - 前端实现禁止在同一个 `.vue` 页面文件里持续堆叠路由状态、接口调用、派生数据、交互流程和大段模板判断。
   当页面已经承担 2 个以上独立职责时，应优先拆分为 composable 或子组件，而不是继续把逻辑塞回当前文件。
 - 对于以下类型的逻辑，默认优先考虑抽成 composable：
