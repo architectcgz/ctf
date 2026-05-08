@@ -166,12 +166,18 @@ describe('modal templates', () => {
     expect(drawerSource).toContain('.modal-template-panel--drawer')
     expect(drawerSource).toContain('bodyPadding?: string')
     expect(drawerSource).toContain("'--modal-template-drawer-body-padding': props.bodyPadding")
+    expect(drawerSource).toContain('--modal-template-drawer-panel-border')
+    expect(drawerSource).toContain('--modal-template-drawer-header-padding-inline')
+    expect(drawerSource).toContain(
+      "bodyPadding: 'var(--modal-template-drawer-default-body-padding, 0 var(--space-7))'"
+    )
     expect(drawerSource).toContain('padding: var(--modal-template-drawer-body-padding);')
     expect(drawerSource).toContain('.modal-template-drawer__head-main')
     expect(drawerSource).toContain('.modal-template-drawer__title-block')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
     expect(drawerSource).not.toContain("eyebrow: 'Advanced Editor'")
     expect(drawerSource).not.toContain('高度承载')
+    expect(drawerSource).not.toContain('h-[18px]')
     expect(drawerSource).not.toContain('background: #ffffff;')
     expect(drawerSource).not.toContain('color: #059669;')
     expect(drawerSource).not.toContain('background: rgba(236, 253, 245, 1);')

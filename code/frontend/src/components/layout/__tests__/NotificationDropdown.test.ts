@@ -86,26 +86,32 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('SlideOverDrawer')
     expect(notificationDropdownSource).toContain('class="notification-shell"')
     expect(notificationDropdownSource).toContain('title="通知中心"')
-    expect(notificationDropdownSource).toContain('width="24.5rem"')
+    expect(notificationDropdownSource).toContain('width="26.875rem"')
     expect(notificationDropdownSource).toContain('body-padding="var(--space-0)"')
     expect(notificationDropdownSource).toContain('<template #header-extra>')
+    expect(notificationDropdownSource).toContain('<template #footer>')
     expect(notificationDropdownSource).toContain('全部标为已读')
-    expect(notificationDropdownSource).toContain('查看全部')
-    expect(notificationDropdownSource).toContain(":deep(.notification-shell .modal-template-panel--drawer)")
+    expect(notificationDropdownSource).toContain('查看全部通知')
+    expect(notificationDropdownSource).toContain('--modal-template-drawer-panel-border')
+    expect(notificationDropdownSource).toContain('--modal-template-drawer-header-padding-inline')
     expect(notificationDropdownSource).not.toContain('eyebrow="Notification Hub"')
-    expect(notificationDropdownSource).not.toContain('subtitle="集中查看系统、竞赛与训练相关提醒。"')
+    expect(notificationDropdownSource).not.toContain(
+      'subtitle="集中查看系统、竞赛与训练相关提醒。"'
+    )
   })
 
-  it('tokenizes drawer surfaces and keeps header compact around counts, status, and toolbar', () => {
+  it('tokenizes drawer surfaces and keeps header compact around counts, filters, and bottom action', () => {
     expect(notificationDropdownSource).toContain('--notification-surface')
     expect(notificationDropdownSource).toContain('--notification-line')
     expect(notificationDropdownSource).toContain('class="notification-overview"')
-    expect(notificationDropdownSource).toContain('class="notification-overview-row"')
+    expect(notificationDropdownSource).toContain('class="notification-summary"')
     expect(notificationDropdownSource).toContain('class="notification-counts"')
-    expect(notificationDropdownSource).toContain('class="notification-connection"')
-    expect(notificationDropdownSource).toContain('class="notification-toolbar"')
+    expect(notificationDropdownSource).toContain('class="notification-filter-tabs"')
+    expect(notificationDropdownSource).toContain('class="notification-filter"')
+    expect(notificationDropdownSource).toContain('class="notification-view-all"')
     expect(notificationDropdownSource).toContain('--modal-template-shell-overlay')
-    expect(notificationDropdownSource).toContain(":deep(.notification-shell .modal-template-drawer)")
+    expect(notificationDropdownSource).toContain('--modal-template-drawer-header-surface')
+    expect(notificationDropdownSource).toContain('--modal-template-drawer-close-border')
     expect(notificationDropdownSource).not.toContain(':global(.notification-shell')
   })
 
@@ -116,15 +122,20 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).not.toContain('h-[1px]')
   })
 
-  it('通知头部应使用紧凑统计、连接状态和文字工具条，而不是旧的摘要块', () => {
+  it('通知头部应使用紧凑统计和筛选 pills，并保留补充动作入口', () => {
     expect(notificationDropdownSource).toContain('class="notification-counts__value"')
     expect(notificationDropdownSource).toContain('class="notification-counts__total"')
-    expect(notificationDropdownSource).toContain('class="notification-connection__dot"')
-    expect(notificationDropdownSource).toContain('class="notification-toolbar__divider"')
+    expect(notificationDropdownSource).toContain('class="notification-summary__action"')
+    expect(notificationDropdownSource).toContain(
+      "'notification-filter--active': activeFilter === filter.value"
+    )
+    expect(notificationDropdownSource).toContain("label: '全部'")
+    expect(notificationDropdownSource).toContain("label: '未读'")
+    expect(notificationDropdownSource).toContain("label: '已读'")
     expect(notificationDropdownSource).toContain('未读')
     expect(notificationDropdownSource).toContain('总计')
-    expect(notificationDropdownSource).not.toContain('notification-summary-cluster')
-    expect(notificationDropdownSource).not.toContain('notification-summary-actions')
+    expect(notificationDropdownSource).not.toContain('notification-connection__dot')
+    expect(notificationDropdownSource).not.toContain('notification-toolbar__divider')
   })
 
   it('通知列表应重构为整行可点击卡片，移除冗余详情按钮与旧时间轴痕迹', () => {
@@ -135,12 +146,49 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('class="notification-item-title-row"')
     expect(notificationDropdownSource).toContain('class="notification-item-snippet"')
     expect(notificationDropdownSource).toContain('class="notification-item-unread-dot"')
-    expect(notificationDropdownSource).toContain('gap: var(--space-2-5);')
-    expect(notificationDropdownSource).toContain('padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);')
-    expect(notificationDropdownSource).toContain('-webkit-line-clamp: 2;')
+    expect(notificationDropdownSource).toContain(
+      'grid-template-columns: calc(var(--space-5) + var(--space-4)) minmax(0, 1fr) var(--space-2);'
+    )
+    expect(notificationDropdownSource).toContain('gap: var(--space-4);')
+    expect(notificationDropdownSource).toContain(
+      'padding: var(--space-4) var(--space-2-5) var(--space-4) var(--space-1-5);'
+    )
+    expect(notificationDropdownSource).toContain('font-size: var(--font-size-1-00);')
+    expect(notificationDropdownSource).toContain('font-size: var(--font-size-14);')
+    expect(notificationDropdownSource).toContain('white-space: nowrap;')
     expect(notificationDropdownSource).not.toContain('查看详情')
     expect(notificationDropdownSource).not.toContain('notification-rail')
     expect(notificationDropdownSource).not.toContain('notification-endcap')
+  })
+
+  it('supports switching between all, unread, and read notification filters', async () => {
+    const { wrapper } = await openDropdown()
+    const store = useNotificationStore()
+
+    store.markAsRead('1')
+    await flushPromises()
+
+    const unreadFilter = Array.from(document.body.querySelectorAll('button')).find(
+      (node) => node.textContent?.trim() === '未读'
+    )
+    const readFilter = Array.from(document.body.querySelectorAll('button')).find(
+      (node) => node.textContent?.trim() === '已读'
+    )
+
+    expect(unreadFilter).toBeTruthy()
+    expect(readFilter).toBeTruthy()
+
+    unreadFilter!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flushPromises()
+    expect(document.body.textContent).toContain('赛事通知')
+    expect(document.body.textContent).not.toContain('系统升级公告')
+
+    readFilter!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flushPromises()
+    expect(document.body.textContent).toContain('系统升级公告')
+    expect(document.body.textContent).not.toContain('赛事通知')
+
+    wrapper.unmount()
   })
 
   it('navigates to notification detail when clicking a notification row', async () => {
@@ -167,7 +215,7 @@ describe('NotificationDropdown', () => {
       node.textContent?.includes('全部标为已读')
     )
     const viewAllButton = Array.from(document.body.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('查看全部')
+      node.textContent?.includes('查看全部通知')
     )
 
     expect(markAllButton).toBeTruthy()

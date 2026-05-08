@@ -18,7 +18,7 @@ const props = withDefaults(
   {
     eyebrow: '',
     width: '26.25rem',
-    bodyPadding: '0 var(--space-8)',
+    bodyPadding: 'var(--modal-template-drawer-default-body-padding, 0 var(--space-7))',
     closeOnBackdrop: true,
     closeOnEscape: true,
   }
@@ -43,6 +43,11 @@ function forwardOpen(value: boolean): void {
 function forwardClose(): void {
   emit('close')
 }
+
+function handleCloseClick(): void {
+  forwardClose()
+  forwardOpen(false)
+}
 </script>
 
 <template>
@@ -61,7 +66,7 @@ function forwardClose(): void {
       '--modal-shell-align': 'stretch',
       '--modal-shell-padding': '0',
       '--modal-shell-blur': '12px',
-      '--modal-template-shell-overlay': 'color-mix(in srgb, var(--color-bg-base) 18%, transparent)'
+      '--modal-template-shell-overlay': 'color-mix(in srgb, var(--color-bg-base) 18%, transparent)',
     }"
     @update:open="forwardOpen"
     @close="forwardClose"
@@ -72,9 +77,9 @@ function forwardClose(): void {
         type="button"
         class="modal-template-drawer__close"
         aria-label="关闭抽屉"
-        @click="forwardClose(), forwardOpen(false)"
+        @click="handleCloseClick"
       >
-        <X class="h-[18px] w-[18px]" />
+        <X class="modal-template-drawer__close-glyph" />
       </button>
 
       <header class="modal-template-drawer__header">
@@ -83,14 +88,11 @@ function forwardClose(): void {
             <!-- 头部图标：圆形背景 + 细边框 -->
             <div class="modal-template-drawer__icon">
               <slot name="icon">
-                <AlignLeft class="h-5 w-5" />
+                <AlignLeft class="modal-template-drawer__icon-glyph" />
               </slot>
             </div>
             <div class="modal-template-drawer__title-block">
-              <p
-                v-if="eyebrow"
-                class="modal-template-drawer__eyebrow"
-              >
+              <p v-if="eyebrow" class="modal-template-drawer__eyebrow">
                 {{ eyebrow }}
               </p>
               <h2 class="modal-template-drawer__title">
@@ -101,10 +103,7 @@ function forwardClose(): void {
         </div>
 
         <!-- 副标题区域：常用于展示“未读/总计” -->
-        <div
-          v-if="subtitle || $slots.subtitle"
-          class="modal-template-drawer__subtitle-area"
-        >
+        <div v-if="subtitle || $slots.subtitle" class="modal-template-drawer__subtitle-area">
           <slot name="subtitle">
             <p class="modal-template-drawer__subtitle">
               {{ subtitle }}
@@ -113,10 +112,7 @@ function forwardClose(): void {
         </div>
 
         <!-- 额外头部内容：如 Tab 切换 -->
-        <div
-          v-if="$slots['header-extra']"
-          class="modal-template-drawer__header-extra"
-        >
+        <div v-if="$slots['header-extra']" class="modal-template-drawer__header-extra">
           <slot name="header-extra" />
         </div>
       </header>
@@ -130,10 +126,7 @@ function forwardClose(): void {
       </div>
 
       <!-- 底部操作：通常是一个浮动风格的按钮/卡片 -->
-      <footer
-        v-if="$slots.footer"
-        class="modal-template-drawer__footer"
-      >
+      <footer v-if="$slots.footer" class="modal-template-drawer__footer">
         <slot name="footer" />
       </footer>
     </div>
@@ -167,18 +160,82 @@ function forwardClose(): void {
   --modal-template-drawer-text: color-mix(in srgb, var(--color-text-primary) 96%, transparent);
   --modal-template-drawer-muted: color-mix(in srgb, var(--color-text-secondary) 94%, transparent);
   --modal-template-drawer-faint: color-mix(in srgb, var(--color-text-muted) 94%, transparent);
+  --modal-template-drawer-radius: calc(var(--ui-dialog-radius-wide) + var(--space-0-5));
+  --modal-template-drawer-header-padding-block-start: var(--space-8);
+  --modal-template-drawer-header-padding-inline: var(--space-7);
+  --modal-template-drawer-header-padding-block-end: var(--space-5);
+  --modal-template-drawer-header-extra-margin-top: var(--space-6);
+  --modal-template-drawer-divider-margin-inline: var(--space-7);
+  --modal-template-drawer-footer-padding: var(--space-6) var(--space-7) var(--space-7);
+  --modal-template-drawer-icon-size: calc(var(--space-5-5) * 2);
+  --modal-template-drawer-icon-glyph-size: var(--space-5);
+  --modal-template-drawer-close-size: calc(var(--space-4-5) * 2);
+  --modal-template-drawer-close-glyph-size: calc(var(--space-4-5) * 0.9);
+  --modal-template-drawer-close-offset: var(--space-7);
+  --modal-template-drawer-title-size: var(--font-size-1-80);
+  --modal-template-drawer-title-line-height: 1.15;
+  --modal-template-drawer-title-spacing: -0.04em;
+  --modal-template-drawer-eyebrow-size: var(--font-size-11);
+  --modal-template-drawer-subtitle-size: var(--font-size-15);
+  --modal-template-drawer-panel-shadow:
+    calc(var(--space-6) * -1) 0 var(--space-12)
+      color-mix(in srgb, var(--color-shadow-strong) 18%, transparent),
+    calc(var(--space-0-5) * -1) 0 0 color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  --modal-template-drawer-panel-border: 1px solid var(--modal-template-drawer-line-strong);
+  --modal-template-drawer-header-surface: var(--modal-template-drawer-surface);
+  --modal-template-drawer-body-surface: var(--modal-template-drawer-surface);
+  --modal-template-drawer-footer-surface: var(--modal-template-drawer-surface);
+  --modal-template-drawer-icon-surface: linear-gradient(
+    180deg,
+    color-mix(
+      in srgb,
+      var(--modal-template-drawer-accent) 12%,
+      var(--modal-template-drawer-surface)
+    ),
+    color-mix(
+      in srgb,
+      var(--modal-template-drawer-accent) 6%,
+      var(--modal-template-drawer-surface-subtle)
+    )
+  );
+  --modal-template-drawer-icon-border: 1px solid
+    color-mix(in srgb, var(--modal-template-drawer-accent) 18%, var(--modal-template-drawer-line));
+  --modal-template-drawer-icon-color: color-mix(
+    in srgb,
+    var(--modal-template-drawer-accent) 88%,
+    var(--modal-template-drawer-text)
+  );
+  --modal-template-drawer-icon-shadow: 0 var(--space-3) var(--space-7)
+    color-mix(in srgb, var(--modal-template-drawer-accent) 12%, transparent);
+  --modal-template-drawer-close-surface: color-mix(
+    in srgb,
+    var(--modal-template-drawer-surface-muted) 96%,
+    transparent
+  );
+  --modal-template-drawer-close-border: 1px solid transparent;
+  --modal-template-drawer-close-color: var(--modal-template-drawer-faint);
+  --modal-template-drawer-close-hover-surface: color-mix(
+    in srgb,
+    var(--modal-template-drawer-line) 24%,
+    var(--modal-template-drawer-surface-subtle)
+  );
+  --modal-template-drawer-close-hover-color: var(--modal-template-drawer-text);
+  --modal-template-drawer-close-hover-transform: rotate(90deg);
 }
 
 :deep(.modal-template-panel--drawer) {
-  width: var(--modal-template-drawer-width);
+  width: min(100%, var(--modal-template-drawer-width));
   max-width: 100%;
   height: 100%;
   background-color: var(--modal-template-drawer-surface);
-  border-top-left-radius: 28px;
-  border-bottom-left-radius: 28px;
-  box-shadow: -20px 0 60px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent);
+  border: var(--modal-template-drawer-panel-border);
+  border-right: none;
+  border-top-left-radius: var(--modal-template-drawer-radius);
+  border-bottom-left-radius: var(--modal-template-drawer-radius);
+  box-shadow: var(--modal-template-drawer-panel-shadow);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-template-drawer {
@@ -190,91 +247,113 @@ function forwardClose(): void {
 }
 
 .modal-template-drawer__header {
-  padding: 36px 32px 20px;
+  padding: var(--modal-template-drawer-header-padding-block-start)
+    calc(
+      var(--modal-template-drawer-header-padding-inline) + var(--modal-template-drawer-close-size) +
+        var(--space-3)
+    )
+    var(--modal-template-drawer-header-padding-block-end)
+    var(--modal-template-drawer-header-padding-inline);
   position: relative;
+  background: var(--modal-template-drawer-header-surface);
 }
 
 .modal-template-drawer__head-row {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .modal-template-drawer__head-main {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .modal-template-drawer__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: var(--modal-template-drawer-icon-size);
+  height: var(--modal-template-drawer-icon-size);
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--modal-template-drawer-accent) 12%, var(--modal-template-drawer-surface)),
-    color-mix(in srgb, var(--modal-template-drawer-accent) 6%, var(--modal-template-drawer-surface-subtle))
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--modal-template-drawer-accent) 18%, var(--modal-template-drawer-line));
-  color: color-mix(in srgb, var(--modal-template-drawer-accent) 88%, var(--modal-template-drawer-text));
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--modal-template-drawer-accent) 12%, transparent);
+  flex-shrink: 0;
+  background: var(--modal-template-drawer-icon-surface);
+  border: var(--modal-template-drawer-icon-border);
+  color: var(--modal-template-drawer-icon-color);
+  box-shadow: var(--modal-template-drawer-icon-shadow);
+}
+
+.modal-template-drawer__icon-glyph,
+.modal-template-drawer__close-glyph {
+  width: var(--modal-template-drawer-icon-glyph-size);
+  height: var(--modal-template-drawer-icon-glyph-size);
+}
+
+.modal-template-drawer__close-glyph {
+  width: var(--modal-template-drawer-close-glyph-size);
+  height: var(--modal-template-drawer-close-glyph-size);
 }
 
 .modal-template-drawer__close {
   position: absolute;
-  right: 28px;
-  top: 28px;
+  right: var(--modal-template-drawer-close-offset);
+  top: var(--modal-template-drawer-close-offset);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
+  width: var(--modal-template-drawer-close-size);
+  height: var(--modal-template-drawer-close-size);
+  border: var(--modal-template-drawer-close-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--modal-template-drawer-surface-muted) 96%, transparent);
-  color: var(--modal-template-drawer-faint);
+  background: var(--modal-template-drawer-close-surface);
+  color: var(--modal-template-drawer-close-color);
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background-color var(--ui-motion-fast),
+    color var(--ui-motion-fast),
+    transform var(--ui-motion-fast),
+    border-color var(--ui-motion-fast);
   cursor: pointer;
   z-index: 20;
 }
 
 .modal-template-drawer__close:hover {
-  background: color-mix(in srgb, var(--modal-template-drawer-line) 24%, var(--modal-template-drawer-surface-subtle));
-  color: var(--modal-template-drawer-text);
-  transform: rotate(90deg);
+  background: var(--modal-template-drawer-close-hover-surface);
+  color: var(--modal-template-drawer-close-hover-color);
+  transform: var(--modal-template-drawer-close-hover-transform);
 }
 
 .modal-template-drawer__close:focus-visible {
-  outline: 2px solid
-    color-mix(in srgb, var(--modal-template-drawer-accent) 44%, var(--modal-template-drawer-line-strong));
-  outline-offset: 2px;
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(
+      in srgb,
+      var(--modal-template-drawer-accent) 44%,
+      var(--modal-template-drawer-line-strong)
+    );
+  outline-offset: var(--space-0-5);
 }
 
 .modal-template-drawer__title-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
 }
 
 .modal-template-drawer__title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--modal-template-drawer-title-size);
+  font-weight: 800;
+  letter-spacing: var(--modal-template-drawer-title-spacing);
   color: var(--modal-template-drawer-text);
-  line-height: 1.2;
+  line-height: var(--modal-template-drawer-title-line-height);
 }
 
 .modal-template-drawer__eyebrow {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--modal-template-drawer-eyebrow-size);
   font-weight: 800;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -282,47 +361,50 @@ function forwardClose(): void {
 }
 
 .modal-template-drawer__subtitle-area {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .modal-template-drawer__subtitle {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--modal-template-drawer-subtitle-size);
   font-weight: 500;
   color: var(--modal-template-drawer-muted);
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--space-1);
+  line-height: 1.6;
 }
 
 .modal-template-drawer__header-extra {
-  margin-top: 24px;
+  margin-top: var(--modal-template-drawer-header-extra-margin-top);
 }
 
 .modal-template-drawer__divider {
-  margin: 0 32px;
-  height: 1px;
+  margin: 0 var(--modal-template-drawer-divider-margin-inline);
+  height: var(--space-0-5);
   background-color: var(--modal-template-drawer-line);
 }
 
 .modal-template-drawer__body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--modal-template-drawer-body-padding);
+  background: var(--modal-template-drawer-body-surface);
 }
 
 .modal-template-drawer__body::-webkit-scrollbar {
-  width: 4px;
+  width: var(--space-1);
 }
 
 .modal-template-drawer__body::-webkit-scrollbar-thumb {
   background: var(--modal-template-drawer-line);
-  border-radius: 10px;
+  border-radius: var(--ui-badge-radius-pill);
 }
 
 .modal-template-drawer__footer {
-  padding: 32px;
-  background: var(--modal-template-drawer-surface);
+  padding: var(--modal-template-drawer-footer-padding);
+  background: var(--modal-template-drawer-footer-surface);
   position: relative;
 }
 
@@ -330,18 +412,23 @@ function forwardClose(): void {
 :deep(.drawer-footer-action) {
   display: flex;
   width: 100%;
-  height: 58px;
+  min-height: var(--ui-control-height-lg);
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 var(--space-5);
   background: var(--modal-template-drawer-surface);
   border: 1px solid var(--modal-template-drawer-line);
-  border-radius: 16px;
-  font-size: 15px;
+  border-radius: var(--ui-control-radius-lg);
+  font-size: var(--font-size-15);
   font-weight: 600;
   color: var(--modal-template-drawer-muted);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
-  transition: all 0.2s;
+  box-shadow: 0 var(--space-2) var(--space-6)
+    color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
+  transition:
+    border-color var(--ui-motion-fast),
+    background-color var(--ui-motion-fast),
+    color var(--ui-motion-fast),
+    box-shadow var(--ui-motion-fast);
   cursor: pointer;
 }
 
@@ -356,12 +443,38 @@ function forwardClose(): void {
     var(--modal-template-drawer-accent) 6%,
     var(--modal-template-drawer-surface-subtle)
   );
-  color: color-mix(in srgb, var(--modal-template-drawer-accent) 82%, var(--modal-template-drawer-text));
+  color: color-mix(
+    in srgb,
+    var(--modal-template-drawer-accent) 82%,
+    var(--modal-template-drawer-text)
+  );
 }
 
 :deep(.drawer-footer-action:focus-visible) {
-  outline: 2px solid
-    color-mix(in srgb, var(--modal-template-drawer-accent) 44%, var(--modal-template-drawer-line-strong));
-  outline-offset: 2px;
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(
+      in srgb,
+      var(--modal-template-drawer-accent) 44%,
+      var(--modal-template-drawer-line-strong)
+    );
+  outline-offset: var(--space-0-5);
+}
+
+@media (max-width: 768px) {
+  .modal-template-shell--drawer {
+    --modal-template-drawer-header-padding-block-start: var(--space-6);
+    --modal-template-drawer-header-padding-inline: var(--space-5);
+    --modal-template-drawer-header-padding-block-end: var(--space-4);
+    --modal-template-drawer-header-extra-margin-top: var(--space-4);
+    --modal-template-drawer-divider-margin-inline: var(--space-5);
+    --modal-template-drawer-footer-padding: var(--space-5);
+    --modal-template-drawer-close-offset: var(--space-5);
+    --modal-template-drawer-title-size: var(--font-size-1-45);
+  }
+
+  :deep(.modal-template-panel--drawer) {
+    border-top-left-radius: var(--ui-dialog-radius-wide);
+    border-bottom-left-radius: var(--ui-dialog-radius-wide);
+  }
 }
 </style>
