@@ -152,7 +152,7 @@
 
 .journal-soft-surface .journal-btn-primary:focus-visible,
 .journal-soft-surface .journal-btn-outline:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
   outline-offset: 2px;
 }
 

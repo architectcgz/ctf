@@ -218,9 +218,9 @@ const emit = defineEmits<{
   border: 1px solid var(--color-border-default);
   border-radius: var(--space-6);
   padding: var(--space-10) var(--space-12);
-  box-shadow: 
+  box-shadow:
     0 40px 100px -20px color-mix(in srgb, var(--color-shadow-strong) 40%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, white 10%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--color-border-default) 18%, transparent);
 }
 
 .auth-panel__eyebrow {

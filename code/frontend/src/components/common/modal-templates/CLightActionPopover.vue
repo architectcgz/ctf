@@ -265,7 +265,8 @@ onBeforeUnmount(() => {
 .c-light-action-popover__trigger:focus-visible,
 .c-light-action-popover__textarea:focus-visible,
 .c-light-action-popover__action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--c-light-action-popover-accent) 42%, white);
+  outline: 2px solid
+    color-mix(in srgb, var(--c-light-action-popover-accent) 42%, var(--c-light-action-popover-line-strong));
   outline-offset: 2px;
 }
 </style>

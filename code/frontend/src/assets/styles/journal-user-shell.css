@@ -60,7 +60,11 @@
 }
 
 .journal-shell.journal-shell-user .journal-btn:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline: 2px solid
+    var(
+      --journal-user-button-focus-ring,
+      color-mix(in srgb, var(--journal-accent) 52%, var(--journal-border))
+    );
   outline-offset: 2px;
 }
 
@@ -158,6 +162,29 @@
     --journal-shell-dark-surface-subtle,
     color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base))
   );
+  --journal-user-button-focus-ring: color-mix(
+    in srgb,
+    var(--journal-accent) 52%,
+    var(--journal-border)
+  );
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 24%, var(--journal-border));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface-subtle)
+  );
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 30%, var(--journal-border));
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 48%, var(--journal-border));
+  --ui-dialog-overlay: color-mix(in srgb, var(--color-bg-base) 36%, transparent);
+  --ui-dialog-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --ui-dialog-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --ui-dialog-shadow: 0 24px 70px
+    color-mix(in srgb, var(--color-shadow-strong) 26%, transparent);
+  --ui-workbench-nav-active-bg: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  --ui-workbench-nav-active-color: var(--journal-accent-strong);
+  --ui-card-action-hover: color-mix(in srgb, var(--journal-border) 14%, var(--journal-surface-subtle));
 }
 
 .journal-shell.journal-shell-user {
@@ -165,22 +192,58 @@
   --ui-btn-font-size: var(--font-size-13);
   --ui-btn-primary-background: var(--color-primary);
   --ui-btn-primary-hover-background: var(--color-primary-hover);
-  --ui-btn-secondary-background: #ffffff;
-  --ui-btn-secondary-color: #475569;
-  --ui-btn-secondary-border: #e2e8f0;
-  --ui-btn-secondary-hover-background: #f8fafc;
-  --ui-btn-secondary-hover-border: #d9e2ec;
-  --ui-btn-ghost-color: #64748b;
-  --ui-btn-ghost-hover-background: #f8fafc;
-  --ui-btn-ghost-hover-color: #0f172a;
-  --ui-btn-danger-background: #ffffff;
-  --ui-btn-danger-border: rgba(220, 38, 38, 0.18);
-  --ui-btn-danger-color: #dc2626;
-  --ui-btn-danger-hover-background: #fef2f2;
-  --ui-btn-danger-hover-border: rgba(220, 38, 38, 0.24);
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 96%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-color: color-mix(
+    in srgb,
+    var(--journal-ink, var(--color-text-primary)) 80%,
+    var(--journal-muted, var(--color-text-secondary))
+  );
+  --ui-btn-secondary-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 88%,
+    transparent
+  );
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-elevated)
+  );
+  --ui-btn-secondary-hover-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 96%,
+    transparent
+  );
+  --ui-btn-ghost-color: var(--journal-muted, var(--color-text-secondary));
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 16%,
+    transparent
+  );
+  --ui-btn-ghost-hover-color: var(--journal-ink, var(--color-text-primary));
+  --ui-btn-danger-background: color-mix(
+    in srgb,
+    var(--color-danger) 6%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 18%, transparent);
+  --ui-btn-danger-color: color-mix(
+    in srgb,
+    var(--color-danger) 88%,
+    var(--journal-ink, var(--color-text-primary))
+  );
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 10%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 24%, transparent);
   --ui-field-label-weight: 600;
-  --ui-field-label-color: #1e293b;
-  --ui-field-hint-color: #94a3b8;
+  --ui-field-label-color: var(--journal-ink, var(--color-text-primary));
+  --ui-field-hint-color: var(--journal-muted, var(--color-text-muted));
   --ui-control-radius: 0.25rem;
   --ui-control-background: color-mix(
     in srgb,
@@ -208,13 +271,25 @@
     color-mix(in srgb, var(--journal-accent, var(--color-primary)) 12%, transparent);
   --ui-control-adornment: var(--journal-muted, var(--color-text-muted));
   --ui-badge-radius: var(--ui-badge-radius-pill);
-  --ui-dialog-overlay: rgba(15, 23, 42, 0.3);
-  --ui-dialog-surface: #ffffff;
-  --ui-dialog-border: rgba(148, 163, 184, 0.14);
-  --ui-dialog-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+  --ui-dialog-overlay: color-mix(in srgb, var(--color-bg-base) 30%, transparent);
+  --ui-dialog-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --ui-dialog-border: color-mix(in srgb, var(--color-border-default) 16%, transparent);
+  --ui-dialog-shadow: 0 24px 70px color-mix(in srgb, var(--color-shadow-strong) 20%, transparent);
   --ui-dialog-radius: 0.5rem;
   --ui-dialog-radius-wide: 0.75rem;
-  --ui-workbench-nav-active-bg: rgba(42, 122, 88, 0.08);
-  --ui-workbench-nav-active-color: #2a7a58;
-  --ui-card-action-hover: #f8fafc;
+  --ui-workbench-nav-active-bg: color-mix(
+    in srgb,
+    var(--journal-accent, var(--color-primary)) 10%,
+    transparent
+  );
+  --ui-workbench-nav-active-color: color-mix(
+    in srgb,
+    var(--journal-accent-strong, var(--color-primary)) 88%,
+    var(--journal-ink, var(--color-text-primary))
+  );
+  --ui-card-action-hover: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 14%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
 }

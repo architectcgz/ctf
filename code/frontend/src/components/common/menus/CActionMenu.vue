@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
 
 .c-action-menu :deep(.c-action-menu__trigger:focus-visible),
 .c-action-menu__content :deep(.c-action-menu__item:focus-visible) {
-  outline: 2px solid color-mix(in srgb, var(--c-action-menu-accent) 42%, white);
+  outline: 2px solid color-mix(in srgb, var(--c-action-menu-accent) 42%, var(--c-action-menu-line-strong));
   outline-offset: 2px;
 }
 </style>

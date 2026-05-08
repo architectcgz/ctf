@@ -757,7 +757,7 @@ const skillRadarHeightClass = 'skill-radar-height'
 }
 
 .skill-recommend-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 52%, var(--journal-soft-border));
   outline-offset: 2px;
 }
 

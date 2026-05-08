@@ -337,7 +337,7 @@ const {
   );
   color: var(--challenge-summary-accent);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 35%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--journal-border) 32%, transparent),
     0 8px 18px color-mix(in srgb, var(--challenge-summary-accent) 8%, transparent);
 }
 

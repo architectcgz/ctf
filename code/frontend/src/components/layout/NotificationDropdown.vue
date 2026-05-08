@@ -507,7 +507,7 @@ const {
 }
 
 .notification-trigger:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, var(--notification-line-strong));
   outline-offset: 2px;
 }
 
