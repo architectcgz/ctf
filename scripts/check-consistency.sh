@@ -110,6 +110,8 @@ check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentat
 check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
 check_contains "AGENTS.md" '架构文档规范化流程' "AGENTS references architecture docs normalization workflow"
 check_contains "docs/文档规范.md" '架构文档规范化流程' "documentation guide defines architecture docs normalization workflow"
+check_contains "AGENTS.md" '架构图生成规范' "AGENTS references architecture diagram generation workflow"
+check_contains "docs/文档规范.md" '架构图生成规范' "documentation guide defines architecture diagram generation workflow"
 check_contains "AGENTS.md" 'docs/architecture/' "AGENTS references docs/architecture"
 check_contains "AGENTS.md" 'docs/contracts/' "AGENTS references docs/contracts"
 check_contains "AGENTS.md" 'docs/design/' "AGENTS references docs/design"
