@@ -3,7 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-DEFAULT_REGISTRY_ENV="${HOME}/ctf-registry/auth/ctf-platform-registry.env"
+DEFAULT_REGISTRY_ENV="${REPO_ROOT}/docker/ctf/infra/registry/ctf-platform-registry.env"
+LEGACY_REGISTRY_ENV="${HOME}/ctf-registry/auth/ctf-platform-registry.env"
 DEFAULT_REGISTRY_CONFIG="${SCRIPT_DIR}/deploy-private-registry.conf"
 DEFAULT_REGISTRY_SERVER="${DEFAULT_REGISTRY_SERVER:-127.0.0.1:5000}"
 DEFAULT_REGISTRY_SCHEME="${DEFAULT_REGISTRY_SCHEME:-http}"
@@ -18,6 +19,8 @@ REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-}"
 REGISTRY_SCHEME="${REGISTRY_SCHEME:-}"
 UPDATE_MANIFEST=false
 NO_LOGIN=false
+DOCKER_CONTEXT=""
+DOCKERFILE=""
 
 usage() {
   cat <<'EOF'
@@ -27,12 +30,12 @@ usage() {
 说明:
   面向题目作者/管理员的镜像交付脚本。
   传入题目包目录后，脚本会读取 challenge.yml 的 meta.slug 与 meta.mode，
-  使用 docker/ 目录构建镜像，打上私有 registry 标签并 push。
+  使用题包里的 Dockerfile 构建镜像，打上私有 registry 标签并 push。
   题目包目录既可以传当前目录相对路径，也可以传仓库根目录相对路径。
 
 选项:
   --tag TAG              镜像标签；默认优先复用 challenge.yml 里的 runtime.image.ref 标签，否则使用当前日期时间
-  --registry-env FILE    平台 registry 环境变量文件，默认 $HOME/ctf-registry/auth/ctf-platform-registry.env
+  --registry-env FILE    平台 registry 环境变量文件，默认 docker/ctf/infra/registry/ctf-platform-registry.env
   --registry-config FILE registry 部署配置文件，默认 scripts/registry/deploy-private-registry.conf
   --registry SERVER      registry 地址，不带 http/https，例如 192.168.1.10:5000
   --registry-scheme http|https
@@ -44,10 +47,10 @@ usage() {
   -h, --help             显示帮助
 
 示例:
-  scripts/registry/build-and-push-challenge-image.sh challenges/packs/web-notes-download
+  scripts/registry/build-and-push-challenge-image.sh challenges/jeopardy/packs/web-notes-download
 
   scripts/registry/build-and-push-challenge-image.sh \
-    challenges/packs/web-notes-download \
+    challenges/jeopardy/packs/web-notes-download \
     --registry 192.168.1.10:5000 \
     --tag 20260409 \
     --update-manifest
@@ -146,6 +149,11 @@ apply_registry_config_file() {
 load_registry_settings() {
   local loaded=false
 
+  if [[ ! -f "${REGISTRY_ENV}" && "${REGISTRY_ENV}" == "${DEFAULT_REGISTRY_ENV}" && -f "${LEGACY_REGISTRY_ENV}" ]]; then
+    log_info "未找到新 registry 环境文件，回退到旧路径: ${LEGACY_REGISTRY_ENV}"
+    REGISTRY_ENV="${LEGACY_REGISTRY_ENV}"
+  fi
+
   if [[ -f "${REGISTRY_ENV}" ]]; then
     log_info "读取 registry 环境文件: ${REGISTRY_ENV}"
     apply_registry_env_file
@@ -161,6 +169,28 @@ load_registry_settings() {
   if [[ "${loaded}" != "true" ]]; then
     log_info "未找到 registry 配置文件，使用命令行参数、环境变量或默认 registry"
   fi
+}
+
+resolve_docker_build_paths() {
+  local pack_dir="$1"
+  local standard_dockerfile awd_dockerfile
+
+  standard_dockerfile="${pack_dir}/docker/Dockerfile"
+  awd_dockerfile="${pack_dir}/docker/runtime/Dockerfile"
+
+  if [[ -f "${standard_dockerfile}" ]]; then
+    DOCKERFILE="${standard_dockerfile}"
+    DOCKER_CONTEXT="${pack_dir}/docker"
+    return 0
+  fi
+
+  if [[ -f "${awd_dockerfile}" ]]; then
+    DOCKERFILE="${awd_dockerfile}"
+    DOCKER_CONTEXT="${pack_dir}/docker"
+    return 0
+  fi
+
+  die "题目包缺少可用 Dockerfile: ${pack_dir}/docker/Dockerfile 或 ${pack_dir}/docker/runtime/Dockerfile"
 }
 
 parse_yaml_with_python() {
@@ -278,6 +308,33 @@ extract_repository_from_ref() {
   printf '%s\n' "${without_tag}"
 }
 
+fetch_manifest_digest() {
+  local image_ref="$1"
+  local repository tag url digest
+  local -a curl_args
+
+  repository="$(extract_repository_from_ref "${image_ref}")"
+  [[ -n "${repository}" ]] || return 0
+
+  tag="$(extract_tag_from_ref "${image_ref}")"
+  if [[ -z "${tag}" ]]; then
+    tag="latest"
+  fi
+
+  url="${REGISTRY_SCHEME}://${REGISTRY_SERVER}/v2/${repository}/manifests/${tag}"
+  curl_args=(-fsSI -H 'Accept: application/vnd.docker.distribution.manifest.v2+json')
+  if [[ -n "${REGISTRY_USERNAME}" && -n "${REGISTRY_PASSWORD}" ]]; then
+    curl_args+=(-u "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}")
+  fi
+  curl_args+=("${url}")
+
+  digest="$(
+    curl "${curl_args[@]}" \
+      | awk -F': ' 'BEGIN { IGNORECASE=1 } /^Docker-Content-Digest:/ { gsub("\r", "", $2); print $2; exit }'
+  )"
+  printf '%s\n' "${digest}"
+}
+
 update_manifest_image_ref() {
   local manifest="$1"
   local image_ref="$2"
@@ -371,11 +428,9 @@ require_command python3
 
 PACK_DIR="$(resolve_pack_dir "${PACK_DIR}")"
 MANIFEST="${PACK_DIR}/challenge.yml"
-DOCKER_DIR="${PACK_DIR}/docker"
-DOCKERFILE="${DOCKER_DIR}/Dockerfile"
 
 [[ -f "${MANIFEST}" ]] || die "题目包缺少 challenge.yml: ${MANIFEST}"
-[[ -f "${DOCKERFILE}" ]] || die "题目包缺少 docker/Dockerfile: ${DOCKERFILE}"
+resolve_docker_build_paths "${PACK_DIR}"
 
 load_registry_settings
 if [[ -z "${REGISTRY_SERVER}" ]]; then
@@ -425,6 +480,8 @@ log_info "registry: ${REGISTRY_SERVER}"
 log_info "registry scheme: ${REGISTRY_SCHEME}"
 log_info "local image: ${LOCAL_REF}"
 log_info "target image: ${IMAGE_REF}"
+log_info "docker context: ${DOCKER_CONTEXT}"
+log_info "dockerfile: ${DOCKERFILE}"
 
 if [[ "${NO_LOGIN}" != "true" ]]; then
   if [[ -n "${REGISTRY_USERNAME}" && -n "${REGISTRY_PASSWORD}" ]]; then
@@ -441,7 +498,7 @@ if [[ "${NO_LOGIN}" != "true" ]]; then
 fi
 
 log_info "docker build 开始"
-docker build -t "${LOCAL_REF}" "${DOCKER_DIR}"
+docker build -f "${DOCKERFILE}" -t "${LOCAL_REF}" "${DOCKER_CONTEXT}"
 log_success "docker build 完成"
 
 log_info "docker tag ${LOCAL_REF} -> ${IMAGE_REF}"
@@ -449,8 +506,22 @@ docker tag "${LOCAL_REF}" "${IMAGE_REF}"
 log_success "docker tag 完成"
 
 log_info "docker push 开始"
-docker push "${IMAGE_REF}"
+PUSH_OUTPUT="$(docker push "${IMAGE_REF}" 2>&1)"
+printf '%s\n' "${PUSH_OUTPUT}"
 log_success "docker push 完成"
+
+DIGEST="$(
+  printf '%s\n' "${PUSH_OUTPUT}" \
+    | awk '/digest: sha256:/{for (i = 1; i <= NF; i++) if ($i == "digest:") { print $(i+1); exit }}'
+)"
+if [[ -z "${DIGEST}" ]]; then
+  DIGEST="$(fetch_manifest_digest "${IMAGE_REF}" || true)"
+fi
+if [[ -n "${DIGEST}" ]]; then
+  log_success "registry digest: ${DIGEST}"
+else
+  log_info "未获取到 registry digest，可在后续数据库同步阶段补查"
+fi
 
 if [[ "${UPDATE_MANIFEST}" == "true" ]]; then
   log_info "更新 challenge.yml runtime.image.ref"
@@ -462,3 +533,6 @@ else
 fi
 
 printf 'IMAGE_REF=%s\n' "${IMAGE_REF}"
+if [[ -n "${DIGEST}" ]]; then
+  printf 'IMAGE_DIGEST=%s\n' "${DIGEST}"
+fi

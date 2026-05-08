@@ -61,8 +61,12 @@ code/frontend/docs/
 /docker/*
 !/docker/ctf/
 !/docker/ctf/docker-compose.dev.yml
-!/docker/ctf/.env.registry.example
+!/docker/ctf/infra/
+!/docker/ctf/infra/**
 /docker/ctf/.env.registry
+/docker/ctf/infra/registry/ctf-platform-registry.env
+/docker/ctf/infra/registry/runtime/*
+!/docker/ctf/infra/registry/runtime/.gitignore
 /docker/ctf/runtime/
 /output/
 /code/backend/Makefile

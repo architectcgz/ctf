@@ -345,6 +345,12 @@ AWD 题目加入赛事前，readiness 必须检查镜像状态；镜像不可用
 
 在实现完成前，不应把题包契约改成“已支持平台构建”，避免文档提前承诺未落地能力。
 
+当前本地开发约定已经补充为：
+
+- `docker/ctf/infra/registry/ctf-platform-registry.env` 是平台后端与 `ctf-api` 唯一读取的 registry 配置事实源。
+- `scripts/registry/build-and-push-challenge-image.sh` 同时支持 Jeopardy 的 `docker/Dockerfile` 和 AWD 的 `docker/runtime/Dockerfile`。
+- `scripts/registry/sync-challenge-registry-state.py` 负责把 registry 回灌结果同步到 `images`、`challenges`、`awd_challenges`、`contest_awd_services`。
+
 ## 实施阶段
 
 ### 阶段 1：命名与引用统一

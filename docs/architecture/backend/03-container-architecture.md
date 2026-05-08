@@ -1362,18 +1362,18 @@ scripts/registry/deploy-private-registry.sh
 scripts/registry/deploy-private-registry.sh --config /etc/ctf/private-registry.conf
 ```
 
-脚本会通过 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry` service 启动 `registry:2`，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
+脚本会通过 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry` service 启动 `registry:2`，生成 htpasswd 认证文件，并把平台后端唯一使用的 registry env 写到：
 
 ```bash
-source "$HOME/ctf-registry/auth/ctf-platform-registry.env"
+source "docker/ctf/infra/registry/ctf-platform-registry.env"
 ```
 
-这两个文件要看成同一次部署产物：
+这两个运行态目录要看成同一次部署产物：
 
-- `$HOME/ctf-registry/auth/htpasswd`
-- `$HOME/ctf-registry/auth/ctf-platform-registry.env`
+- `docker/ctf/infra/registry/runtime/auth/htpasswd`
+- `docker/ctf/infra/registry/runtime/data/`
 
-如果要重置用户名或密码，必须重新执行 `deploy-private-registry.sh`，让脚本同时更新这两处并按需重建 `ctf-registry` 容器。不要只手改其中一份，否则很容易出现下面这种错位状态：
+如果要重置用户名或密码，必须重新执行 `deploy-private-registry.sh`，让脚本同时更新 `htpasswd`、平台 env 文件并按需重建 `ctf-registry` 容器。不要只手改其中一份，否则很容易出现下面这种错位状态：
 
 - 后端环境变量里还是旧用户名或旧密码
 - `ctf-registry` 容器实际加载的是另一份新 `htpasswd`
@@ -1392,21 +1392,11 @@ scripts/registry/deploy-private-registry.sh \
   --force-recreate
 ```
 
-如果需要手工部署，等价流程如下：
+当前推荐路径只保留 Compose 管理。若要理解底层资源关系，可以把它看成：
 
-```bash
-# 使用 Docker Registry 搭建私有镜像仓库
-docker run -d \
-  --name registry \
-  --restart always \
-  -p 5000:5000 \
-  -v /data/registry:/var/lib/registry \
-  registry:2
-
-# 题目镜像推送到私有 Registry
-docker tag challenge-web:v1 registry.ctf.local:5000/challenge-web:v1
-docker push registry.ctf.local:5000/challenge-web:v1
-```
+- 宿主机目录 `docker/ctf/infra/registry/runtime/data` 挂到容器 `/var/lib/registry`
+- 宿主机目录 `docker/ctf/infra/registry/runtime/auth` 挂到容器 `/auth`
+- 平台后端统一读取 `docker/ctf/infra/registry/ctf-platform-registry.env`
 
 平台运行节点拉取私有镜像、平台构建题包镜像并推送到私有 registry 时，都通过后端 `container.registry` 配置读取 registry 地址和凭据。该配置属于 `ctf` 平台部署配置，只加载到 `ctf-api`；不要写进题包、题目容器或学生防守容器。
 
@@ -1433,10 +1423,11 @@ container:
 
 ```text
 docker/ctf/docker-compose.dev.yml
-docker/ctf/.env.registry
+docker/ctf/infra/
+docker/ctf/infra/registry/ctf-platform-registry.env
 ```
 
-`scripts/registry/deploy-private-registry.sh` 会同时写入 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 和 `docker/ctf/.env.registry`，并把 `ctf-registry` service 启动到同一个 `ctf` Compose 项目下。前者适合本地 shell `source` 后启动后端，后者由 `ctf-api` compose service 通过 `env_file` 加载。两者都只服务平台后端。
+`scripts/registry/deploy-private-registry.sh` 会把 `ctf-registry` service 启动到同一个 `ctf` Compose 项目下，并把平台后端唯一使用的 registry env 写入 `docker/ctf/infra/registry/ctf-platform-registry.env`。`ctf-api` compose service 与本地 shell 都应复用这一份文件，不再额外维护 `docker/ctf/.env.registry` 或 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 的重复副本。脚本在首次迁移时会复用旧路径上的已有数据和凭据。
 
 平台内部题包导入不应通过 HTTP API 自调用 `/authoring/images` 注册镜像，而应在导入 application service 内创建 `images` 和 `image_build_jobs`。这样题目记录、镜像记录和构建任务可以保持同一事务边界；HTTP API 只保留给管理员手动登记外部镜像。
 

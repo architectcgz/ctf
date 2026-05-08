@@ -3,6 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REGISTRY_INFRA_ROOT="${REPO_ROOT}/docker/ctf/infra/registry"
+LEGACY_REGISTRY_ROOT="${HOME}/ctf-registry"
+LEGACY_REGISTRY_DATA_DIR="${LEGACY_REGISTRY_ROOT}/data"
+LEGACY_REGISTRY_AUTH_DIR="${LEGACY_REGISTRY_ROOT}/auth"
+LEGACY_PLATFORM_ENV_FILE="${LEGACY_REGISTRY_AUTH_DIR}/ctf-platform-registry.env"
+LEGACY_COMPOSE_REGISTRY_ENV_FILE="${REPO_ROOT}/docker/ctf/.env.registry"
 CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/deploy-private-registry.conf}"
 CONFIG_FILE_EXPLICIT=false
 REGISTRY_NAME="${REGISTRY_NAME:-ctf-registry}"
@@ -11,9 +17,9 @@ REGISTRY_SERVER="${REGISTRY_SERVER:-}"
 REGISTRY_SCHEME="${REGISTRY_SCHEME:-http}"
 REGISTRY_USERNAME="${REGISTRY_USERNAME:-ctf}"
 REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-}"
-REGISTRY_DATA_DIR="${REGISTRY_DATA_DIR:-${HOME}/ctf-registry/data}"
-REGISTRY_AUTH_DIR="${REGISTRY_AUTH_DIR:-${HOME}/ctf-registry/auth}"
-CTF_COMPOSE_REGISTRY_ENV_FILE="${CTF_COMPOSE_REGISTRY_ENV_FILE:-${REPO_ROOT}/docker/ctf/.env.registry}"
+REGISTRY_DATA_DIR="${REGISTRY_DATA_DIR:-${REGISTRY_INFRA_ROOT}/runtime/data}"
+REGISTRY_AUTH_DIR="${REGISTRY_AUTH_DIR:-${REGISTRY_INFRA_ROOT}/runtime/auth}"
+CTF_COMPOSE_REGISTRY_ENV_FILE="${CTF_COMPOSE_REGISTRY_ENV_FILE:-${REGISTRY_INFRA_ROOT}/ctf-platform-registry.env}"
 REGISTRY_IMAGE="${REGISTRY_IMAGE:-registry:2}"
 HTPASSWD_IMAGE="${HTPASSWD_IMAGE:-httpd:2.4-alpine}"
 REGISTRY_RESTART_POLICY="${REGISTRY_RESTART_POLICY:-always}"
@@ -37,9 +43,9 @@ usage() {
   --scheme http|https     供构建脚本访问 registry API 使用的协议，默认 http
   --username USER         Registry 用户名，默认 ctf
   --password PASSWORD     Registry 密码；未提供时自动生成
-  --data-dir DIR          镜像数据目录，默认 $HOME/ctf-registry/data
-  --auth-dir DIR          认证文件目录，默认 $HOME/ctf-registry/auth
-  --ctf-env-file FILE     同步写入 ctf compose 可加载的 registry env，默认 docker/ctf/.env.registry
+  --data-dir DIR          镜像数据目录，默认 docker/ctf/infra/registry/runtime/data
+  --auth-dir DIR          认证文件目录，默认 docker/ctf/infra/registry/runtime/auth
+  --ctf-env-file FILE     平台与 ctf-api 共用的 registry env，默认 docker/ctf/infra/registry/ctf-platform-registry.env
   --no-ctf-env-file       不写入 ctf compose registry env
   --image IMAGE           Registry 镜像，默认 registry:2
   --htpasswd-image IMAGE  用于生成 htpasswd 的镜像，默认 httpd:2.4-alpine
@@ -55,7 +61,7 @@ usage() {
   REGISTRY_PORT=15000 REGISTRY_PASSWORD='change-me' scripts/registry/deploy-private-registry.sh
 
 输出:
-  <auth-dir>/ctf-platform-registry.env
+  docker/ctf/infra/registry/ctf-platform-registry.env
 
 该文件可供后端部署环境加载，内容形如:
   CTF_CONTAINER_REGISTRY_ENABLED=true
@@ -148,6 +154,73 @@ CTF_CONTAINER_REGISTRY_USERNAME=${REGISTRY_USERNAME}
 CTF_CONTAINER_REGISTRY_PASSWORD=${REGISTRY_PASSWORD}
 EOF
   chmod 600 "${path}"
+}
+
+merge_platform_env_file() {
+  local env_file="$1"
+  local current_server current_username current_password current_scheme
+  local file_server file_username file_password file_scheme
+
+  current_server="${REGISTRY_SERVER}"
+  current_username="${REGISTRY_USERNAME}"
+  current_password="${REGISTRY_PASSWORD}"
+  current_scheme="${REGISTRY_SCHEME}"
+
+  # shellcheck source=/dev/null
+  source "${env_file}"
+
+  file_server="${CTF_CONTAINER_REGISTRY_SERVER:-${REGISTRY_SERVER:-}}"
+  file_username="${CTF_CONTAINER_REGISTRY_USERNAME:-${REGISTRY_USERNAME:-}}"
+  file_password="${CTF_CONTAINER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}"
+  file_scheme="${CTF_CONTAINER_REGISTRY_SCHEME:-${REGISTRY_SCHEME:-}}"
+
+  REGISTRY_SERVER="${current_server:-${file_server}}"
+  REGISTRY_USERNAME="${current_username:-${file_username}}"
+  REGISTRY_PASSWORD="${current_password:-${file_password}}"
+  REGISTRY_SCHEME="${current_scheme:-${file_scheme}}"
+}
+
+load_existing_platform_env() {
+  local env_file
+
+  for env_file in \
+    "${CTF_COMPOSE_REGISTRY_ENV_FILE}" \
+    "${LEGACY_COMPOSE_REGISTRY_ENV_FILE}" \
+    "${REGISTRY_AUTH_DIR}/ctf-platform-registry.env" \
+    "${LEGACY_PLATFORM_ENV_FILE}"; do
+    if [[ -z "${env_file}" || ! -f "${env_file}" ]]; then
+      continue
+    fi
+    log_info "复用现有 registry 环境变量文件: ${env_file}"
+    merge_platform_env_file "${env_file}"
+    return 0
+  done
+}
+
+dir_has_entries() {
+  local dir="$1"
+  [[ -d "${dir}" ]] && [[ -n "$(ls -A "${dir}" 2>/dev/null)" ]]
+}
+
+migrate_legacy_registry_dir() {
+  local label="$1"
+  local legacy_dir="$2"
+  local target_dir="$3"
+
+  if [[ "${legacy_dir}" == "${target_dir}" ]]; then
+    return 0
+  fi
+  if ! dir_has_entries "${legacy_dir}"; then
+    return 0
+  fi
+  if dir_has_entries "${target_dir}"; then
+    return 0
+  fi
+
+  log_info "迁移旧 ${label} 目录: ${legacy_dir} -> ${target_dir}"
+  mkdir -p "${target_dir}"
+  cp -R "${legacy_dir}/." "${target_dir}/"
+  log_success "已迁移 ${label} 目录"
 }
 
 compose_registry() {
@@ -265,6 +338,8 @@ done
 require_command docker
 require_command curl
 
+load_existing_platform_env
+
 [[ -n "${REGISTRY_NAME}" ]] || die "--name 不能为空"
 [[ -n "${REGISTRY_USERNAME}" ]] || die "--username 不能为空"
 [[ -n "${REGISTRY_DATA_DIR}" ]] || die "--data-dir 不能为空"
@@ -302,6 +377,8 @@ if container_exists "${REGISTRY_NAME}"; then
 fi
 
 log_info "创建数据目录和认证目录"
+migrate_legacy_registry_dir "registry 数据" "${LEGACY_REGISTRY_DATA_DIR}" "${REGISTRY_DATA_DIR}"
+migrate_legacy_registry_dir "registry 认证" "${LEGACY_REGISTRY_AUTH_DIR}" "${REGISTRY_AUTH_DIR}"
 mkdir -p "${REGISTRY_DATA_DIR}" "${REGISTRY_AUTH_DIR}"
 chmod 700 "${REGISTRY_AUTH_DIR}"
 log_success "目录已准备"
@@ -322,16 +399,22 @@ timeout 30 bash -c 'until curl -fsS -u "$0:$1" "http://127.0.0.1:$2/v2/" >/dev/n
   "${REGISTRY_USERNAME}" "${REGISTRY_PASSWORD}" "${REGISTRY_PORT}"
 log_success "registry 已可访问"
 
-PLATFORM_ENV_FILE="${REGISTRY_AUTH_DIR}/ctf-platform-registry.env"
-log_info "写入平台后端环境变量文件"
-write_platform_env "${PLATFORM_ENV_FILE}"
-log_success "平台后端环境变量文件已写入 ${PLATFORM_ENV_FILE}"
-
+PLATFORM_ENV_FILE=""
 if [[ -n "${CTF_COMPOSE_REGISTRY_ENV_FILE}" ]]; then
-  log_info "写入 ctf compose registry 环境变量文件"
+  PLATFORM_ENV_FILE="${CTF_COMPOSE_REGISTRY_ENV_FILE}"
+  log_info "写入平台后端与 ctf-api 共用的 registry 环境变量文件"
   mkdir -p "$(dirname "${CTF_COMPOSE_REGISTRY_ENV_FILE}")"
   write_platform_env "${CTF_COMPOSE_REGISTRY_ENV_FILE}"
-  log_success "ctf compose registry 环境变量文件已写入 ${CTF_COMPOSE_REGISTRY_ENV_FILE}"
+  log_success "registry 环境变量文件已写入 ${CTF_COMPOSE_REGISTRY_ENV_FILE}"
+else
+  log_warn "未写入 registry 环境变量文件；ctf-api 需要手工注入 container.registry 配置"
+fi
+
+LEGACY_RUNTIME_ENV_FILE="${REGISTRY_AUTH_DIR}/ctf-platform-registry.env"
+if [[ -n "${PLATFORM_ENV_FILE}" && "${LEGACY_RUNTIME_ENV_FILE}" != "${PLATFORM_ENV_FILE}" && -f "${LEGACY_RUNTIME_ENV_FILE}" ]]; then
+  log_info "移除旧的重复 registry env 副本: ${LEGACY_RUNTIME_ENV_FILE}"
+  rm -f "${LEGACY_RUNTIME_ENV_FILE}"
+  log_success "已移除重复 registry env 副本"
 fi
 
 cat <<EOF
@@ -343,17 +426,14 @@ Registry 已部署:
   scheme:    ${REGISTRY_SCHEME}
   data_dir:  ${REGISTRY_DATA_DIR}
   auth_dir:  ${REGISTRY_AUTH_DIR}
-
-平台后端环境变量已写入:
-  ${PLATFORM_ENV_FILE}
-$(if [[ -n "${CTF_COMPOSE_REGISTRY_ENV_FILE}" ]]; then printf '\nctf compose registry 环境变量已写入:\n  %s\n' "${CTF_COMPOSE_REGISTRY_ENV_FILE}"; fi)
+$(if [[ -n "${PLATFORM_ENV_FILE}" ]]; then printf '\n平台后端 registry 环境变量已写入:\n  %s\n' "${PLATFORM_ENV_FILE}"; fi)
 
 后端配置等价于:
   container.registry.enabled=true
   container.registry.build_enabled=true
   container.registry.server=${REGISTRY_SERVER}
   container.registry.username=${REGISTRY_USERNAME}
-  container.registry.password=<见 ${PLATFORM_ENV_FILE}>
+  container.registry.password=<见 ${PLATFORM_ENV_FILE:-自定义注入}>
 
 镜像引用示例:
   ${REGISTRY_SERVER}/awd/awd-supply-ticket:v1
