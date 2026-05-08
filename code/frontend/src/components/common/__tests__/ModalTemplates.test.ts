@@ -175,6 +175,8 @@ describe('modal templates', () => {
     expect(drawerSource).toContain('.modal-template-drawer__head-main')
     expect(drawerSource).toContain('.modal-template-drawer__title-block')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
+    expect(drawerSource).toContain('top: calc(')
+    expect(drawerSource).toContain('var(--modal-template-drawer-header-padding-block-start)')
     expect(drawerSource).not.toContain("eyebrow: 'Advanced Editor'")
     expect(drawerSource).not.toContain('高度承载')
     expect(drawerSource).not.toContain('h-[18px]')

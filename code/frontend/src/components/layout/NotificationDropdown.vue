@@ -331,17 +331,40 @@ const emptyState = computed(() => {
   min-height: calc(var(--space-8) + var(--space-1));
   padding: 0 var(--space-4-5);
   border-radius: var(--ui-badge-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--notification-line-strong) 96%, transparent);
-  background: var(--notification-surface);
-  color: color-mix(in srgb, var(--notification-muted) 94%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--notification-line-strong) 82%, var(--notification-muted));
+  background: color-mix(in srgb, var(--notification-surface-subtle) 52%, var(--notification-surface));
+  color: color-mix(in srgb, var(--notification-text) 72%, var(--notification-muted));
   font-size: var(--font-size-14);
   font-weight: 690;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 14%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
   transition:
     border-color var(--ui-motion-fast),
     background-color var(--ui-motion-fast),
     box-shadow var(--ui-motion-fast),
     color var(--ui-motion-fast);
+}
+
+.notification-filter:hover,
+.notification-filter:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--notification-line-strong));
+  background: color-mix(
+    in srgb,
+    var(--notification-surface-elevated) 62%,
+    var(--notification-surface)
+  );
+  color: var(--notification-text);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 82%, transparent),
+    0 var(--space-2) var(--space-4) color-mix(in srgb, var(--color-shadow-soft) 18%, transparent);
+}
+
+.notification-filter:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 42%, var(--notification-line-strong));
+  outline-offset: var(--space-0-5);
 }
 
 .notification-filter--active {

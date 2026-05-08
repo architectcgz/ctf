@@ -112,6 +112,8 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('--modal-template-shell-overlay')
     expect(notificationDropdownSource).toContain('--modal-template-drawer-header-surface')
     expect(notificationDropdownSource).toContain('--modal-template-drawer-close-border')
+    expect(notificationDropdownSource).toContain('.notification-filter:hover')
+    expect(notificationDropdownSource).toContain('outline: var(--ui-focus-ring-width) solid')
     expect(notificationDropdownSource).not.toContain(':global(.notification-shell')
   })
 

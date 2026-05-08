@@ -299,7 +299,10 @@ function handleCloseClick(): void {
 .modal-template-drawer__close {
   position: absolute;
   right: var(--modal-template-drawer-close-offset);
-  top: var(--modal-template-drawer-close-offset);
+  top: calc(
+    var(--modal-template-drawer-header-padding-block-start) +
+      (var(--modal-template-drawer-icon-size) - var(--modal-template-drawer-close-size)) / 2
+  );
   display: inline-flex;
   align-items: center;
   justify-content: center;
