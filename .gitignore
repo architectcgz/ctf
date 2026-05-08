@@ -10,6 +10,7 @@ __pycache__/
 *.pyc
 coverage.out
 logs/
+node_modules/
 docs/*
 !docs/文档规范.md
 !docs/reviews/general/
@@ -59,6 +60,9 @@ code/frontend/docs/
 /backups/
 /TODO/
 /code/backend/data/challenge-import-previews/
+/code/backend/data/challenge-image-build-sources/
+/code/backend/internal/module/challenge/application/commands/data/challenge-image-build-sources/
+/code/backend/internal/module/challenge/runtime/data/challenge-image-build-sources/
 /docker/*
 !/docker/ctf/
 !/docker/ctf/docker-compose.dev.yml

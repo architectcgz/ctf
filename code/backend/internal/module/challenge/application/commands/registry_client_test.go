@@ -46,6 +46,34 @@ func TestRegistryClientCheckManifestReturnsDigest(t *testing.T) {
 	}
 }
 
+func TestRegistryClientCheckManifestAcceptsOCIIndexResponses(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("Accept"); !strings.Contains(got, "application/vnd.oci.image.index.v1+json") {
+			t.Fatalf("accept header missing oci index: %q", got)
+		}
+		if got := r.Header.Get("Accept"); !strings.Contains(got, "application/vnd.docker.distribution.manifest.list.v2+json") {
+			t.Fatalf("accept header missing docker manifest list: %q", got)
+		}
+		w.Header().Set("Docker-Content-Digest", "sha256:index")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	host := strings.TrimPrefix(server.URL, "http://")
+	client := NewRegistryClient(RegistryClientConfig{
+		Scheme: "http",
+		Server: host,
+	}, server.Client())
+
+	digest, err := client.CheckManifest(context.Background(), host+"/jeopardy/web-demo:v1")
+	if err != nil {
+		t.Fatalf("CheckManifest() error = %v", err)
+	}
+	if digest != "sha256:index" {
+		t.Fatalf("digest = %q, want sha256:index", digest)
+	}
+}
+
 func TestRegistryClientCheckManifestRejectsMismatchedRegistry(t *testing.T) {
 	client := NewRegistryClient(RegistryClientConfig{Scheme: "http", Server: "registry.example.edu"}, nil)
 

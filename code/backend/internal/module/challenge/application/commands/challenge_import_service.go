@@ -148,8 +148,23 @@ func (s *ChallengeService) CommitChallengeImport(
 		return nil, err
 	}
 
+	buildSource, err := persistImportedImageBuildSource(
+		domain.ChallengePackageModeJeopardy,
+		parsed.Slug,
+		record.ID,
+		parsed.RootDir,
+		parsed.DockerfilePath,
+		parsed.BuildContextPath,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	attachmentURL, err := persistImportedAttachmentBundle(parsed)
 	if err != nil {
+		if buildSource != nil {
+			_ = os.RemoveAll(buildSource.RootDir)
+		}
 		return nil, err
 	}
 
@@ -160,7 +175,7 @@ func (s *ChallengeService) CommitChallengeImport(
 			return err
 		}
 
-		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, tx, actorUserID, parsed)
+		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, tx, actorUserID, parsed, buildSource)
 		if err != nil {
 			return err
 		}
@@ -268,6 +283,9 @@ func (s *ChallengeService) CommitChallengeImport(
 		challenge = &current
 		return nil
 	}); err != nil {
+		if buildSource != nil {
+			_ = os.RemoveAll(buildSource.RootDir)
+		}
 		for _, cleanupPath := range cleanupPaths {
 			if strings.TrimSpace(cleanupPath) == "" {
 				continue
@@ -353,6 +371,7 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 	tx *gorm.DB,
 	actorUserID int64,
 	parsed *domain.ParsedChallengePackage,
+	buildSource *importedImageBuildSource,
 ) (int64, error) {
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
 		return s.resolveExternalImageRefForCommit(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
@@ -363,13 +382,21 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 	if s == nil || s.imageBuild == nil {
 		return 0, fmt.Errorf("image build service is not configured")
 	}
+	sourceDir := parsed.RootDir
+	dockerfilePath := parsed.DockerfilePath
+	contextPath := parsed.BuildContextPath
+	if buildSource != nil {
+		sourceDir = buildSource.SourceDir
+		dockerfilePath = buildSource.DockerfilePath
+		contextPath = buildSource.ContextPath
+	}
 	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeJeopardy,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
-		SourceDir:      parsed.RootDir,
-		DockerfilePath: parsed.DockerfilePath,
-		ContextPath:    parsed.BuildContextPath,
+		SourceDir:      sourceDir,
+		DockerfilePath: dockerfilePath,
+		ContextPath:    contextPath,
 		CreatedBy:      actorUserID,
 	})
 	if err != nil {

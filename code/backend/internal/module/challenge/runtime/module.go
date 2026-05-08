@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -106,19 +107,58 @@ type moduleDeps struct {
 	runtimeProbe challengeports.ChallengeRuntimeProbe
 }
 
+type backgroundTaskGroup []BackgroundTaskCloser
+
+func (g backgroundTaskGroup) Close(ctx context.Context) error {
+	var errs []error
+	for _, closer := range g {
+		if closer == nil {
+			continue
+		}
+		if err := closer.Close(ctx); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+var (
+	imageBuildDockerBuilderFactory = func(registry config.ContainerRegistryConfig) challengeports.DockerImageBuilder {
+		return challengecmd.NewDockerCLIImageBuilderWithConfig(challengecmd.DockerCLIImageBuilderConfig{
+			RegistryServer: registry.Server,
+			Username:       registry.Username,
+			Password:       registry.Password,
+			IdentityToken:  registry.IdentityToken,
+		})
+	}
+	imageBuildRegistryVerifierFactory = func(registry config.ContainerRegistryConfig) challengeports.RegistryVerifier {
+		return challengecmd.NewRegistryClient(challengecmd.RegistryClientConfig{
+			Scheme:        registry.Scheme,
+			Server:        registry.Server,
+			Username:      registry.Username,
+			Password:      registry.Password,
+			IdentityToken: registry.IdentityToken,
+		}, nil)
+	}
+)
+
 func Build(deps Deps) (*Module, error) {
 	internalDeps := newModuleDeps(deps)
 
 	imageCommandService, imageHandler := buildImageHandler(internalDeps)
-	coreService, coreHandler := buildCoreHandler(internalDeps)
+	imageBuildService := buildImageBuildService(internalDeps)
+	coreService, coreHandler := buildCoreHandler(internalDeps, imageBuildService)
 	flagHandler, flagValidator, err := buildFlagHandler(internalDeps)
 	if err != nil {
 		return nil, err
 	}
+	if imageBuildService != nil && deps.Config != nil && deps.Config.Container.Registry.BuildEnabled {
+		imageBuildService.StartBackgroundTasks(deps.AppContext)
+	}
 
 	module := &Module{
-		BackgroundTasks:     imageCommandService,
-		AWDChallengeHandler: buildAWDChallengeHandler(internalDeps),
+		BackgroundTasks:     backgroundTaskGroup{imageCommandService, imageBuildService},
+		AWDChallengeHandler: buildAWDChallengeHandler(internalDeps, imageBuildService),
 		AWDChallengeQuery:   internalDeps.awdChallengeQueryRepo,
 		Catalog:             internalDeps.catalog,
 		FlagHandler:         flagHandler,
@@ -161,8 +201,39 @@ func newModuleDeps(deps Deps) moduleDeps {
 	}
 }
 
-func buildAWDChallengeHandler(deps moduleDeps) *challengehttp.AWDChallengeHandler {
-	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.input.DB, deps.awdChallengeCommandRepo)
+func buildImageBuildService(deps moduleDeps) *challengecmd.ImageBuildService {
+	cfg := deps.input.Config
+	if cfg == nil {
+		return nil
+	}
+	registry := cfg.Container.Registry
+	if !registry.Enabled && !registry.BuildEnabled {
+		return nil
+	}
+
+	options := []challengecmd.ImageBuildOption{
+		challengecmd.WithImageBuildLogger(deps.input.Logger.Named("image_build_service")),
+	}
+	if builder := imageBuildDockerBuilderFactory(registry); builder != nil {
+		options = append(options, challengecmd.WithImageBuildDockerBuilder(builder))
+	}
+	if verifier := imageBuildRegistryVerifierFactory(registry); verifier != nil {
+		options = append(options, challengecmd.WithImageBuildRegistryVerifier(verifier))
+	}
+
+	return challengecmd.NewImageBuildService(
+		deps.imageRepo,
+		challengecmd.ImageBuildConfig{
+			Registry:         registry.Server,
+			BuildTimeout:     registry.BuildTimeout,
+			BuildConcurrency: registry.BuildConcurrency,
+		},
+		options...,
+	)
+}
+
+func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) *challengehttp.AWDChallengeHandler {
+	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.input.DB, deps.awdChallengeCommandRepo, imageBuildService)
 	queryService := challengeqry.NewAWDChallengeQueryService(deps.awdChallengeQueryRepo)
 	return challengehttp.NewAWDChallengeHandler(commandService, queryService)
 }
@@ -179,7 +250,7 @@ func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengeh
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }
 
-func buildCoreHandler(deps moduleDeps) (*challengecmd.ChallengeService, *challengehttp.Handler) {
+func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengecmd.ChallengeService, *challengehttp.Handler) {
 	cfg := deps.input.Config
 	challengeCommandService := challengecmd.NewChallengeService(
 		deps.input.DB,
@@ -197,6 +268,7 @@ func buildCoreHandler(deps moduleDeps) (*challengecmd.ChallengeService, *challen
 		deps.input.Logger.Named("challenge_command_service"),
 		deps.input.Notifications,
 	)
+	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, deps.input.Cache, &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))

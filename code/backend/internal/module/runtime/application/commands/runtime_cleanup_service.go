@@ -128,6 +128,10 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := s.engine.RemoveNetwork(timeoutCtx, networkID); err != nil {
+		if isMissingNetworkError(err) {
+			s.logger.Info("删除网络跳过，网络不存在", zap.String("network_id", networkID))
+			return nil
+		}
 		return err
 	}
 	s.logger.Info("删除网络", zap.String("network_id", networkID))
@@ -150,6 +154,13 @@ func isMissingContainerError(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "no such container")
+}
+
+func isMissingNetworkError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "network") && strings.Contains(strings.ToLower(err.Error()), "not found")
 }
 
 func errRuntimeEngineUnavailable() error {

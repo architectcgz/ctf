@@ -214,6 +214,62 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	}
 }
 
+func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_IMAGE_BUILD_SOURCE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service.SetImageBuildService(imageBuildService)
+
+	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
+	preview, err := service.PreviewChallengeImport(
+		context.Background(),
+		4,
+		"web-platform-build.zip",
+		bytes.NewReader(buildZipArchiveFromDir(t, packageDir)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewChallengeImport() error = %v", err)
+	}
+
+	resp, err := service.CommitChallengeImport(context.Background(), 4, preview.ID)
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+
+	var challenge model.Challenge
+	if err := db.First(&challenge, resp.ID).Error; err != nil {
+		t.Fatalf("load challenge: %v", err)
+	}
+	image, err := imageRepo.FindByID(context.Background(), challenge.ImageID)
+	if err != nil {
+		t.Fatalf("FindByID(image) error = %v", err)
+	}
+	if image.BuildJobID == nil {
+		t.Fatal("expected challenge image build job")
+	}
+
+	job, err := imageRepo.FindImageBuildJobByID(context.Background(), *image.BuildJobID)
+	if err != nil {
+		t.Fatalf("FindImageBuildJobByID() error = %v", err)
+	}
+	if _, err := os.Stat(job.ContextPath); err != nil {
+		t.Fatalf("expected build context path to exist after commit, got %v", err)
+	}
+	if _, err := os.Stat(job.DockerfilePath); err != nil {
+		t.Fatalf("expected Dockerfile path to exist after commit, got %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(tempDir, preview.ID)); !os.IsNotExist(err) {
+		t.Fatalf("expected preview dir to be removed after commit, stat err = %v", err)
+	}
+}
+
 func TestCommitChallengeImportRejectsSoftDeletedDuplicateSlug(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)

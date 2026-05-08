@@ -159,13 +159,25 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil, err
 	}
 
+	buildSource, err := persistImportedImageBuildSource(
+		domain.ChallengePackageModeAWD,
+		parsed.Slug,
+		record.ID,
+		parsed.RootDir,
+		parsed.DockerfilePath,
+		parsed.BuildContextPath,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	var challenge *model.AWDChallenge
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := rejectImportedAWDChallengeSlugConflict(tx, parsed.Slug); err != nil {
 			return err
 		}
 
-		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, tx, actorUserID, parsed)
+		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, tx, actorUserID, parsed, buildSource)
 		if err != nil {
 			return err
 		}
@@ -229,6 +241,9 @@ func (s *AWDChallengeImportService) CommitImport(
 		challenge = &current
 		return nil
 	}); err != nil {
+		if buildSource != nil {
+			_ = os.RemoveAll(buildSource.RootDir)
+		}
 		return nil, err
 	}
 
@@ -284,6 +299,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	tx *gorm.DB,
 	actorUserID int64,
 	parsed *domain.ParsedAWDChallengePackage,
+	buildSource *importedImageBuildSource,
 ) (int64, string, error) {
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
 		if s == nil || s.imageBuild == nil {
@@ -302,13 +318,21 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	if s == nil || s.imageBuild == nil {
 		return 0, "", fmt.Errorf("image build service is not configured")
 	}
+	sourceDir := parsed.RootDir
+	dockerfilePath := parsed.DockerfilePath
+	contextPath := parsed.BuildContextPath
+	if buildSource != nil {
+		sourceDir = buildSource.SourceDir
+		dockerfilePath = buildSource.DockerfilePath
+		contextPath = buildSource.ContextPath
+	}
 	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeAWD,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
-		SourceDir:      parsed.RootDir,
-		DockerfilePath: parsed.DockerfilePath,
-		ContextPath:    parsed.BuildContextPath,
+		SourceDir:      sourceDir,
+		DockerfilePath: dockerfilePath,
+		ContextPath:    contextPath,
 		CreatedBy:      actorUserID,
 	})
 	if err != nil {

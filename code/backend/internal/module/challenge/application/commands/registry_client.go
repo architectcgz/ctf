@@ -10,6 +10,13 @@ import (
 	"ctf-platform/internal/module/challenge/domain"
 )
 
+var registryManifestAcceptHeader = strings.Join([]string{
+	"application/vnd.docker.distribution.manifest.v2+json",
+	"application/vnd.docker.distribution.manifest.list.v2+json",
+	"application/vnd.oci.image.manifest.v1+json",
+	"application/vnd.oci.image.index.v1+json",
+}, ", ")
+
 type RegistryClientConfig struct {
 	Scheme        string
 	Server        string
@@ -61,7 +68,7 @@ func (c *RegistryClient) CheckManifest(ctx context.Context, imageRef string) (st
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json")
+	req.Header.Set("Accept", registryManifestAcceptHeader)
 	if strings.TrimSpace(c.config.IdentityToken) != "" {
 		req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(c.config.IdentityToken))
 	} else if strings.TrimSpace(c.config.Username) != "" || strings.TrimSpace(c.config.Password) != "" {

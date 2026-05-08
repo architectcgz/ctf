@@ -461,6 +461,27 @@ func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 	}
 }
 
+func TestServiceCleanupRuntimeIgnoresMissingNetwork(t *testing.T) {
+	t.Parallel()
+
+	engine := &fakeRuntimeEngine{
+		removeNetworkErr: errors.New("Error response from daemon: network net-missing not found"),
+	}
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
+
+	instance := &model.Instance{
+		ID:        3004,
+		NetworkID: "net-missing",
+	}
+
+	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+		t.Fatalf("expected missing network to be ignored, got %v", err)
+	}
+	if engine.removedNetworkID != "net-missing" {
+		t.Fatalf("expected cleanup to attempt removing net-missing, got %s", engine.removedNetworkID)
+	}
+}
+
 func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	t.Parallel()
 

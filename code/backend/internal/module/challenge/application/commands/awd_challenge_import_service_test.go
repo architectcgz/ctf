@@ -141,6 +141,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("CHALLENGE_IMAGE_BUILD_SOURCE_DIR", t.TempDir())
 
 	preview, err := service.PreviewImport(
 		context.Background(),
@@ -184,6 +185,15 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if job.Status != model.ImageBuildJobStatusPending ||
 		job.TargetRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
 		t.Fatalf("unexpected build job: %+v", job)
+	}
+	if _, err := os.Stat(job.ContextPath); err != nil {
+		t.Fatalf("expected build context path to exist after commit, got %v", err)
+	}
+	if _, err := os.Stat(job.DockerfilePath); err != nil {
+		t.Fatalf("expected Dockerfile path to exist after commit, got %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(previewDir, preview.ID)); !os.IsNotExist(err) {
+		t.Fatalf("expected preview dir to be removed after commit, stat err = %v", err)
 	}
 }
 
@@ -576,9 +586,9 @@ extensions:
       service_port: 8080
 ` + awdImportRuntimeConfigYAML(false) + `
 `,
-		"awd-platform-build/statement.md":                "平台构建 AWD 服务。",
-		"awd-platform-build/docker/runtime/Dockerfile":   "FROM python:3.12-alpine\nWORKDIR /app\nCOPY runtime /app/runtime\n",
-		"awd-platform-build/docker/check/check.py":       "print('check')\n",
+		"awd-platform-build/statement.md":              "平台构建 AWD 服务。",
+		"awd-platform-build/docker/runtime/Dockerfile": "FROM python:3.12-alpine\nWORKDIR /app\nCOPY runtime /app/runtime\n",
+		"awd-platform-build/docker/check/check.py":     "print('check')\n",
 	}
 	addAWDWorkspaceFixtureFiles(files, "awd-platform-build")
 
