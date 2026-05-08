@@ -103,16 +103,16 @@ describe('NotificationDropdown', () => {
   it('tokenizes drawer surfaces and keeps header compact around counts, filters, and bottom action', () => {
     expect(notificationDropdownSource).toContain('--notification-surface')
     expect(notificationDropdownSource).toContain('--notification-line')
-    expect(notificationDropdownSource).toContain('class="notification-overview"')
-    expect(notificationDropdownSource).toContain('class="notification-summary"')
-    expect(notificationDropdownSource).toContain('class="notification-counts"')
-    expect(notificationDropdownSource).toContain('class="notification-filter-tabs"')
-    expect(notificationDropdownSource).toContain('class="notification-filter"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-overview"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-summary"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-counts"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-filters"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-filter"')
     expect(notificationDropdownSource).toContain('class="notification-view-all"')
     expect(notificationDropdownSource).toContain('--modal-template-shell-overlay')
     expect(notificationDropdownSource).toContain('--modal-template-drawer-header-surface')
     expect(notificationDropdownSource).toContain('--modal-template-drawer-close-border')
-    expect(notificationDropdownSource).toContain('.notification-filter:hover')
+    expect(notificationDropdownSource).toContain('.notification-drawer-filter:hover')
     expect(notificationDropdownSource).toContain('outline: var(--ui-focus-ring-width) solid')
     expect(notificationDropdownSource).not.toContain(':global(.notification-shell')
   })
@@ -125,11 +125,11 @@ describe('NotificationDropdown', () => {
   })
 
   it('通知头部应使用紧凑统计和筛选 pills，并保留补充动作入口', () => {
-    expect(notificationDropdownSource).toContain('class="notification-counts__value"')
-    expect(notificationDropdownSource).toContain('class="notification-counts__total"')
-    expect(notificationDropdownSource).toContain('class="notification-summary__action"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-counts__value"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-counts__total"')
+    expect(notificationDropdownSource).toContain('class="notification-drawer-summary__action"')
     expect(notificationDropdownSource).toContain(
-      "'notification-filter--active': activeFilter === filter.value"
+      "'notification-drawer-filter--active': activeFilter === filter.value"
     )
     expect(notificationDropdownSource).toContain("label: '全部'")
     expect(notificationDropdownSource).toContain("label: '未读'")
@@ -140,6 +140,7 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).not.toContain('notification-toolbar__divider')
     expect(notificationDropdownSource).not.toContain('!important')
     expect(notificationDropdownSource).not.toContain('.modal-template-drawer__head-row')
+    expect(notificationDropdownSource).not.toContain('class="notification-summary"')
   })
 
   it('通知列表应重构为整行可点击卡片，移除冗余详情按钮与旧时间轴痕迹', () => {

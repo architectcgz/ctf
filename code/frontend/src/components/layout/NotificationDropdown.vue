@@ -31,19 +31,19 @@
       </template>
 
       <template #header-extra>
-        <div class="notification-overview">
-          <div class="notification-summary">
-            <div class="notification-counts">
-              <span class="notification-counts__value">{{ unreadCount }}</span>
-              <span class="notification-counts__label">未读</span>
-              <span class="notification-counts__split">/</span>
-              <span class="notification-counts__total">{{ items.length }} 总计</span>
+        <div class="notification-drawer-overview">
+          <div class="notification-drawer-summary">
+            <div class="notification-drawer-counts">
+              <span class="notification-drawer-counts__value">{{ unreadCount }}</span>
+              <span class="notification-drawer-counts__label">未读</span>
+              <span class="notification-drawer-counts__split">/</span>
+              <span class="notification-drawer-counts__total">{{ items.length }} 总计</span>
             </div>
 
             <button
               v-if="unreadCount > 0"
               type="button"
-              class="notification-summary__action"
+              class="notification-drawer-summary__action"
               @click="markAllRead"
             >
               全部标为已读
@@ -51,7 +51,7 @@
           </div>
 
           <div
-            class="notification-filter-tabs"
+            class="notification-drawer-filters"
             role="tablist"
             aria-label="通知筛选"
           >
@@ -59,8 +59,8 @@
               v-for="filter in filterOptions"
               :key="filter.value"
               type="button"
-              class="notification-filter"
-              :class="{ 'notification-filter--active': activeFilter === filter.value }"
+              class="notification-drawer-filter"
+              :class="{ 'notification-drawer-filter--active': activeFilter === filter.value }"
               :aria-pressed="activeFilter === filter.value"
               @click="activeFilter = filter.value"
             >
@@ -173,6 +173,10 @@ import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer
 import { useNotificationDropdown } from '@/features/notifications'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { formatDate } from '@/utils/format'
+
+defineOptions({
+  name: 'NotificationDrawer',
+})
 
 const props = defineProps<{
   realtimeStatus: WebSocketStatus
@@ -295,26 +299,26 @@ const emptyState = computed(() => {
   --modal-template-drawer-close-hover-transform: none;
 }
 
-.notification-overview {
+.notification-drawer-overview {
   display: grid;
   gap: var(--space-0);
 }
 
-.notification-summary {
+.notification-drawer-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding-inline: var(--space-0-5);
+  padding-inline: var(--space-2);
 }
 
-.notification-counts {
+.notification-drawer-counts {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
 }
 
-.notification-counts__value {
+.notification-drawer-counts__value {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-1-80);
   font-weight: 870;
@@ -323,24 +327,24 @@ const emptyState = computed(() => {
   letter-spacing: -0.04em;
 }
 
-.notification-counts__label {
+.notification-drawer-counts__label {
   font-size: var(--font-size-1-05);
   font-weight: 700;
   color: var(--notification-text);
 }
 
-.notification-counts__split {
+.notification-drawer-counts__split {
   font-size: var(--font-size-1-05);
   color: var(--notification-faint);
 }
 
-.notification-counts__total {
+.notification-drawer-counts__total {
   font-size: var(--font-size-1-05);
   font-weight: 700;
   color: var(--notification-faint);
 }
 
-.notification-summary__action {
+.notification-drawer-summary__action {
   display: inline-flex;
   align-items: center;
   min-height: var(--ui-control-height-sm);
@@ -356,23 +360,23 @@ const emptyState = computed(() => {
   transition: all var(--ui-motion-fast);
 }
 
-.notification-summary__action:hover,
-.notification-summary__action:focus-visible {
+.notification-drawer-summary__action:hover,
+.notification-drawer-summary__action:focus-visible {
   border-color: color-mix(in srgb, var(--color-primary) 82%, var(--notification-line-strong));
   background: color-mix(in srgb, var(--color-primary) 10%, var(--notification-surface-elevated));
   color: var(--color-primary);
   box-shadow: 0 2px 5px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
-.notification-filter-tabs {
+.notification-drawer-filters {
   display: flex;
   align-items: center;
   gap: var(--space-3-5);
   margin-top: var(--space-6);
-  padding-inline-start: var(--space-0-5);
+  padding-inline: var(--space-2);
 }
 
-.notification-filter {
+.notification-drawer-filter {
   min-width: calc(var(--space-12) + var(--space-3));
   min-height: calc(var(--space-8) + var(--space-1));
   padding: 0 var(--space-4-5);
@@ -393,8 +397,8 @@ const emptyState = computed(() => {
     color var(--ui-motion-fast);
 }
 
-.notification-filter:hover,
-.notification-filter:focus-visible {
+.notification-drawer-filter:hover,
+.notification-drawer-filter:focus-visible {
   border-color: color-mix(in srgb, var(--color-primary) 18%, var(--notification-line-strong));
   background: color-mix(
     in srgb,
@@ -407,13 +411,13 @@ const emptyState = computed(() => {
     0 var(--space-2) var(--space-4) color-mix(in srgb, var(--color-shadow-soft) 18%, transparent);
 }
 
-.notification-filter:focus-visible {
+.notification-drawer-filter:focus-visible {
   outline: var(--ui-focus-ring-width) solid
     color-mix(in srgb, var(--color-primary) 42%, var(--notification-line-strong));
   outline-offset: var(--space-0-5);
 }
 
-.notification-filter--active {
+.notification-drawer-filter--active {
   color: var(--color-bg-surface);
   border-color: color-mix(in srgb, var(--color-primary) 78%, var(--notification-line-strong));
   background: linear-gradient(
@@ -677,12 +681,12 @@ const emptyState = computed(() => {
 }
 
 @media (max-width: 768px) {
-  .notification-summary {
+  .notification-drawer-summary {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .notification-filter-tabs {
+  .notification-drawer-filters {
     flex-wrap: wrap;
   }
 
