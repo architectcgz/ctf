@@ -1,0 +1,35 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-zero-width-briefing
+  title: Invisible Sprint Briefing
+  category: misc
+  difficulty: easy
+  points: 100
+  tags:
+    - topic:steganography
+    - kp:zero-width
+    - stack:python
+    - src:team-collaboration
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 题面文件本身是正常 Markdown，重点不在可见字符。
+  - level: 2
+    title: Hint 2
+    content: 留意 Unicode 里那些“看不见”的字符。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/misc-zero-width-briefing:20260508

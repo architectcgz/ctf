@@ -1,0 +1,25 @@
+name: ctf
+
+services:
+  drive-app:
+    image: 127.0.0.1:5000/awd/awd-webhook-inspector:20260508
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      ctf.project: ctf
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-webhook-inspector
+    ports:
+      - "18086:8080"
+    environment:
+      FLAG: "flag{awd_webhook_inspector_demo}"
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - drive-data:/workspace/data
+
+volumes:
+  drive-data:

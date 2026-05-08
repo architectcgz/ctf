@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-agent-cache-key
+  title: Agent Cache Keygen
+  category: reverse
+  difficulty: medium
+  points: 100
+  tags:
+    - topic:pyc
+    - tool:python-dis
+    - stack:python
+    - kp:bytecode
+    - src:agent-tooling
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 页面给了一个调试 helper 的编译产物，不需要爆破，先把它还原成人能读懂的逻辑。
+  - level: 2
+    title: Hint 2
+    content: 这份 helper 不会直接打印答案，但常量和恢复函数都还在字节码里。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/reverse-agent-cache-key:20260508

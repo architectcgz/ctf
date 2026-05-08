@@ -1,0 +1,25 @@
+name: ctf
+
+services:
+  tcp-gate:
+    image: 127.0.0.1:5000/awd/awd-passkey-sync-gateway:20260508
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      ctf.project: ctf
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-passkey-sync-gateway
+    ports:
+      - "18087:8080"
+    environment:
+      FLAG: "flag{awd_passkey_sync_gateway_demo}"
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - tcp-gate-data:/workspace/data
+
+volumes:
+  tcp-gate-data:

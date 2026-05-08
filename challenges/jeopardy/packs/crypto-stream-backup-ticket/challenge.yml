@@ -1,0 +1,35 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-stream-backup-ticket
+  title: Stream Backup Ticket
+  category: crypto
+  difficulty: medium
+  points: 100
+  tags:
+    - topic:stream-cipher
+    - kp:keystream-reuse
+    - stack:python
+    - src:browser-backup
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 两份备份材料使用了同一段流密钥，先想办法还原 keystream。
+  - level: 2
+    title: Hint 2
+    content: 其中一份明文内容是已知的，不需要猜。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/crypto-stream-backup-ticket:20260508

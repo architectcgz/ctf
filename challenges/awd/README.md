@@ -14,6 +14,11 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 - `ctf-1/awd-campus-drive/`：校园网盘，Flask 文件上传与预览，核心漏洞为路径穿越和上传校验绕过。
 - `ctf-1/awd-iot-hub/`：IoT 设备管理平台，Flask 模拟 MQTT Topic，核心漏洞为默认设备密钥和 Topic 前缀越权。
 
+当前 `ctf-2/` 期次题目：
+
+- `ctf-2/awd-webhook-inspector/`：Webhook 文档预览器，核心漏洞为 SSRF 与粗糙本地地址黑名单。
+- `ctf-2/awd-passkey-sync-gateway/`：Passkey 同步网关，核心漏洞为调试导出命令里的固定支持密钥。
+
 每期比赛单独建立子目录，例如 `ctf-1/`、`ctf-2/`。只把可导入、可运行的完整题目包放入期次目录；顶层 Markdown 可保留为设计说明或候选题草案。
 
 ## 目录结构

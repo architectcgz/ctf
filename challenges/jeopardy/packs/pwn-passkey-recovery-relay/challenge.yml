@@ -1,0 +1,37 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-passkey-recovery-relay
+  title: "Passkey 恢复中继"
+  category: pwn
+  difficulty: easy
+  points: 100
+  tags:
+    - stack:linux
+    - kp:stack-overflow
+    - kp:ret2win
+    - src:modern-auth
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/relay.bin
+      name: relay.bin
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 程序里有一个不会在正常流程中进入的恢复函数，先确认它的地址。
+  - level: 2
+    title: Hint 2
+    content: 这是个非常传统的 64 位 ret2win，没有 PIE，也没有栈保护。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/pwn-passkey-recovery-relay:20260508

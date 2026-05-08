@@ -1,0 +1,132 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-webhook-inspector
+  title: Webhook Inspector
+  category: web
+  difficulty: medium
+  points: 100
+  tags:
+    - mode:awd
+    - stack:web
+    - stack:flask
+    - topic:ssrf
+    - topic:preview-fetch
+    - topic:webhook-security
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 预览器会代表你去抓取 webhook 文档，先确认它拦截本地地址的方式是否可靠。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/awd/awd-webhook-inspector:20260508
+
+topology:
+  entry_node_key: api
+  networks:
+    - key: public
+      name: Public attack surface
+    - key: service
+      name: Internal inspector plane
+      internal: true
+  nodes:
+    - key: api
+      name: Webhook Inspector API
+      service_port: 8080
+      inject_flag: true
+      network_keys: [public, service]
+  policies:
+    - source_node_key: api
+      target_node_key: api
+      action: allow
+      protocol: tcp
+      ports: [8080]
+
+extensions:
+  topology:
+    enabled: true
+    source: challenge.yml
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: v2026.04
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /health
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: flag
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      checker_token_env: CHECKER_TOKEN
+      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: rw
+      defense_scope:
+        protected_paths:
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
+          - docker/runtime/requirements.txt
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+          - /api/flag 必须保留 X-AWD-Checker-Token 校验
+          - /api/flag 必须支持 PUT 写入与 GET 读取本轮动态 Flag
+          - 首页、示例 manifest 与预览入口需要保持可用

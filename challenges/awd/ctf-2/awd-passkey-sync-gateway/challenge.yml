@@ -1,0 +1,120 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-passkey-sync-gateway
+  title: Passkey Sync Gateway
+  category: misc
+  difficulty: medium
+  points: 100
+  tags:
+    - mode:awd
+    - stack:tcp
+    - stack:python
+    - topic:weak-default-secret
+    - topic:protocol
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 业务协议里有一条支持导出同步快照的调试命令。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/awd/awd-passkey-sync-gateway:20260508
+
+topology:
+  entry_node_key: relay
+  networks:
+    - key: public
+      name: Public TCP surface
+  nodes:
+    - key: relay
+      name: Passkey Sync Gateway
+      service_port: 8080
+      inject_flag: true
+      network_keys: [public]
+  policies:
+    - source_node_key: relay
+      target_node_key: relay
+      action: allow
+      protocol: tcp
+      ports: [8080]
+
+extensions:
+  topology:
+    enabled: true
+    source: challenge.yml
+  awd:
+    service_type: binary_tcp
+    deployment_mode: single_container
+    version: v2026.04
+    checker:
+      type: tcp_standard
+      config:
+        timeout_ms: 3000
+        steps:
+          - send: "PING\n"
+            expect_contains: PONG
+          - send_template: "SET_FLAG {{CHECKER_TOKEN}} {{FLAG}}\n"
+            expect_contains: OK
+          - send_template: "GET_FLAG {{CHECKER_TOKEN}}\n"
+            expect_contains: "{{FLAG}}"
+          - send: "PUSH ios ok\n"
+            expect_contains: QUEUED
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: flag
+    defense_entry:
+      mode: tcp
+    access_config:
+      public_base_url: tcp://{{TEAM_HOST}}:8080
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: tcp
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      checker_token_env: CHECKER_TOKEN
+      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: rw
+      defense_scope:
+        protected_paths:
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
+          - docker/check/check.py
+          - challenge.yml
+        service_contracts:
+          - PING 必须返回 PONG
+          - SET_FLAG 与 GET_FLAG 必须要求有效 checker token
+          - SET_FLAG 必须在鉴权通过后写入本轮动态 Flag
+          - GET_FLAG 必须在鉴权通过后返回最近写入的动态 Flag
+          - PUSH 与 STATUS 需要保持业务可用

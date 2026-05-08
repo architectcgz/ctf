@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-mcp-manifest-ssrf
+  title: MCP Manifest 预览器
+  category: web
+  difficulty: medium
+  points: 100
+  tags:
+    - topic:ssrf
+    - kp:mcp-manifest
+    - stack:python
+    - stack:flask
+    - src:agent-tooling
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 预览器会主动帮你抓取远程 manifest，先确认它到底拦了什么地址。
+  - level: 2
+    title: Hint 2
+    content: 黑名单只检查了原始 URL 字符串，没有检查真正解析出来的目标地址。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/web-mcp-manifest-ssrf:20260508

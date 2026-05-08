@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-ci-preview-artifact
+  title: CI Preview Artifact Leak
+  category: forensics
+  difficulty: medium
+  points: 100
+  tags:
+    - topic:artifact
+    - topic:log-analysis
+    - stack:python
+    - kp:base64
+    - src:ci-cd
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 先把工件包里的日志、摘要和环境变量痕迹整体看一遍。
+  - level: 2
+    title: Hint 2
+    content: token 不会明文放在一个文件里，但并没有真正加密。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/jeopardy/forensics-ci-preview-artifact:20260508
