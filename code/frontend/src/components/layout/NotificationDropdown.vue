@@ -43,7 +43,7 @@
             <button
               v-if="unreadCount > 0"
               type="button"
-              class="ui-btn ui-btn--sm ui-btn--secondary notification-summary__action"
+              class="notification-summary__action"
               @click="markAllRead"
             >
               全部标为已读
@@ -263,7 +263,6 @@ const emptyState = computed(() => {
   --modal-template-drawer-icon-glyph-size: calc(var(--space-5) + var(--space-0-5));
   --modal-template-drawer-close-size: calc(var(--space-10) - var(--space-0-5));
   --modal-template-drawer-close-glyph-size: var(--font-size-1-00);
-  --modal-template-drawer-close-offset: calc(var(--space-8) - var(--space-0-5));
   --modal-template-drawer-title-size: var(--font-size-1-90);
   --modal-template-drawer-title-line-height: 1.18;
   --modal-template-drawer-header-surface: var(--notification-surface);
@@ -294,25 +293,6 @@ const emptyState = computed(() => {
   --modal-template-drawer-close-hover-transform: none;
 }
 
-:deep(.notification-shell .modal-template-drawer__head-row) {
-  flex-direction: row-reverse !important;
-  justify-content: space-between !important;
-}
-
-:deep(.notification-shell .modal-template-drawer__title-block) {
-  flex: none !important;
-  text-align: right !important;
-}
-
-:deep(.notification-shell .modal-template-drawer__icon) {
-  order: 2 !important;
-}
-
-:deep(.notification-shell .modal-template-drawer__close) {
-  position: static !important;
-  order: -1 !important;
-}
-
 .notification-overview {
   display: grid;
   gap: var(--space-0);
@@ -323,14 +303,12 @@ const emptyState = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-top: var(--space-2);
 }
 
 .notification-counts {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  padding-left: var(--space-2);
 }
 
 .notification-counts__value {
@@ -388,7 +366,6 @@ const emptyState = computed(() => {
   align-items: center;
   gap: var(--space-3-5);
   margin-top: var(--space-6);
-  margin-left: var(--space-0-5);
 }
 
 .notification-filter {
@@ -691,7 +668,7 @@ const emptyState = computed(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .notification-trigger {
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.01ms;
   }
 }
 

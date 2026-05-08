@@ -139,6 +139,40 @@ describe('modal templates', () => {
     }
   })
 
+  it('侧滑抽屉应把关闭按钮放在头部操作区，并在点击后发出关闭事件', async () => {
+    const SlideOverDrawer = await loadComponent('../modal-templates/SlideOverDrawer.vue')
+
+    expect(SlideOverDrawer).not.toBeNull()
+    if (!SlideOverDrawer) return
+
+    const wrapper = mount(SlideOverDrawer, {
+      props: {
+        open: true,
+        title: '通知中心',
+      },
+      slots: {
+        default: '<div class="drawer-body-slot">内容</div>',
+      },
+      global: {
+        stubs: {
+          teleport: true,
+        },
+      },
+    })
+
+    await nextTick()
+
+    const headActions = wrapper.get('.modal-template-drawer__head-actions')
+    const closeButton = headActions.get('.modal-template-drawer__close')
+
+    expect(wrapper.find('.modal-template-drawer > .modal-template-drawer__close').exists()).toBe(false)
+
+    await closeButton.trigger('click')
+
+    expect(wrapper.emitted('close')?.[0]).toEqual([])
+    expect(wrapper.emitted('update:open')?.[0]).toEqual([false])
+  })
+
   it('模板组件应保留文档里的关键视觉骨架', () => {
     const shellSource = readSource(shellPath)
     const classicSource = readSource(classicPath)
@@ -173,10 +207,13 @@ describe('modal templates', () => {
     )
     expect(drawerSource).toContain('padding: var(--modal-template-drawer-body-padding);')
     expect(drawerSource).toContain('.modal-template-drawer__head-main')
+    expect(drawerSource).toContain('.modal-template-drawer__head-actions')
     expect(drawerSource).toContain('.modal-template-drawer__title-block')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
-    expect(drawerSource).toContain('top: calc(')
-    expect(drawerSource).toContain('var(--modal-template-drawer-header-padding-block-start)')
+    expect(drawerSource).toContain('justify-content: space-between;')
+    expect(drawerSource).toContain('text-align: var(--modal-template-drawer-title-align, left);')
+    expect(drawerSource).not.toContain('top: calc(')
+    expect(drawerSource).not.toContain('--modal-template-drawer-close-offset')
     expect(drawerSource).not.toContain("eyebrow: 'Advanced Editor'")
     expect(drawerSource).not.toContain('高度承载')
     expect(drawerSource).not.toContain('h-[18px]')

@@ -138,6 +138,8 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('总计')
     expect(notificationDropdownSource).not.toContain('notification-connection__dot')
     expect(notificationDropdownSource).not.toContain('notification-toolbar__divider')
+    expect(notificationDropdownSource).not.toContain('!important')
+    expect(notificationDropdownSource).not.toContain('.modal-template-drawer__head-row')
   })
 
   it('通知列表应重构为整行可点击卡片，移除冗余详情按钮与旧时间轴痕迹', () => {

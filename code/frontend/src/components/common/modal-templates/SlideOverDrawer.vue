@@ -72,16 +72,6 @@ function handleCloseClick(): void {
     @close="forwardClose"
   >
     <div class="modal-template-drawer">
-      <!-- 关闭按钮：移至最右上角，圆形，带背景 -->
-      <button
-        type="button"
-        class="modal-template-drawer__close"
-        aria-label="关闭抽屉"
-        @click="handleCloseClick"
-      >
-        <X class="modal-template-drawer__close-glyph" />
-      </button>
-
       <header class="modal-template-drawer__header">
         <div class="modal-template-drawer__head-row">
           <div class="modal-template-drawer__head-main">
@@ -102,6 +92,16 @@ function handleCloseClick(): void {
                 {{ title }}
               </h2>
             </div>
+          </div>
+          <div class="modal-template-drawer__head-actions">
+            <button
+              type="button"
+              class="modal-template-drawer__close"
+              aria-label="关闭抽屉"
+              @click="handleCloseClick"
+            >
+              <X class="modal-template-drawer__close-glyph" />
+            </button>
           </div>
         </div>
 
@@ -177,13 +177,16 @@ function handleCloseClick(): void {
   --modal-template-drawer-header-padding-inline: var(--space-7);
   --modal-template-drawer-header-padding-block-end: var(--space-5);
   --modal-template-drawer-header-extra-margin-top: var(--space-6);
+  --modal-template-drawer-head-row-gap: var(--space-4);
+  --modal-template-drawer-head-row-margin-bottom: var(--space-5);
+  --modal-template-drawer-head-main-gap: var(--space-4);
+  --modal-template-drawer-head-actions-gap: var(--space-3);
   --modal-template-drawer-divider-margin-inline: var(--space-7);
   --modal-template-drawer-footer-padding: var(--space-6) var(--space-7) var(--space-7);
   --modal-template-drawer-icon-size: calc(var(--space-5-5) * 2);
   --modal-template-drawer-icon-glyph-size: var(--space-5);
   --modal-template-drawer-close-size: calc(var(--space-4-5) * 2);
   --modal-template-drawer-close-glyph-size: calc(var(--space-4-5) * 0.9);
-  --modal-template-drawer-close-offset: var(--space-7);
   --modal-template-drawer-title-size: var(--font-size-1-80);
   --modal-template-drawer-title-line-height: 1.15;
   --modal-template-drawer-title-spacing: -0.04em;
@@ -261,11 +264,7 @@ function handleCloseClick(): void {
 .modal-template-drawer__header {
   padding: var(--modal-template-drawer-header-padding-block-start)
     var(--modal-template-drawer-header-padding-inline)
-    var(--modal-template-drawer-header-padding-block-end)
-    calc(
-      var(--modal-template-drawer-header-padding-inline) + var(--modal-template-drawer-close-size) +
-        var(--space-3)
-    );
+    var(--modal-template-drawer-header-padding-block-end);
   position: relative;
   background: var(--modal-template-drawer-header-surface);
 }
@@ -273,14 +272,25 @@ function handleCloseClick(): void {
 .modal-template-drawer__head-row {
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-5);
+  justify-content: space-between;
+  gap: var(--modal-template-drawer-head-row-gap);
+  margin-bottom: var(--modal-template-drawer-head-row-margin-bottom);
 }
 
 .modal-template-drawer__head-main {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--modal-template-drawer-head-main-gap);
   min-width: 0;
+  flex: 1;
+}
+
+.modal-template-drawer__head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--modal-template-drawer-head-actions-gap);
+  flex-shrink: 0;
 }
 
 .modal-template-drawer__icon {
@@ -309,12 +319,6 @@ function handleCloseClick(): void {
 }
 
 .modal-template-drawer__close {
-  position: absolute;
-  left: var(--modal-template-drawer-close-offset);
-  top: calc(
-    var(--modal-template-drawer-header-padding-block-start) +
-      (var(--modal-template-drawer-icon-size) - var(--modal-template-drawer-close-size)) / 2
-  );
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -355,6 +359,7 @@ function handleCloseClick(): void {
   gap: var(--space-1);
   min-width: 0;
   flex: 1;
+  text-align: var(--modal-template-drawer-title-align, left);
 }
 
 .modal-template-drawer__title {
@@ -483,7 +488,6 @@ function handleCloseClick(): void {
     --modal-template-drawer-header-extra-margin-top: var(--space-4);
     --modal-template-drawer-divider-margin-inline: var(--space-5);
     --modal-template-drawer-footer-padding: var(--space-5);
-    --modal-template-drawer-close-offset: var(--space-5);
     --modal-template-drawer-title-size: var(--font-size-1-45);
   }
 
