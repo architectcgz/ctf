@@ -295,11 +295,22 @@ const emptyState = computed(() => {
 }
 
 :deep(.notification-shell .modal-template-drawer__head-row) {
-  justify-content: flex-end;
+  flex-direction: row-reverse !important;
+  justify-content: space-between !important;
 }
 
 :deep(.notification-shell .modal-template-drawer__title-block) {
-  flex: none;
+  flex: none !important;
+  text-align: right !important;
+}
+
+:deep(.notification-shell .modal-template-drawer__icon) {
+  order: 2 !important;
+}
+
+:deep(.notification-shell .modal-template-drawer__close) {
+  position: static !important;
+  order: -1 !important;
 }
 
 .notification-overview {
@@ -319,7 +330,7 @@ const emptyState = computed(() => {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  padding-left: var(--space-1);
+  padding-left: var(--space-2);
 }
 
 .notification-counts__value {
@@ -353,8 +364,8 @@ const emptyState = computed(() => {
   align-items: center;
   min-height: var(--ui-control-height-sm);
   padding: 0 var(--space-4);
-  border: 1px solid
-    color-mix(in srgb, var(--color-primary) 32%, var(--notification-line-strong));
+  border: 1.5px solid
+    color-mix(in srgb, var(--color-primary) 42%, var(--notification-line-strong));
   border-radius: var(--ui-badge-radius-pill);
   background: color-mix(in srgb, var(--color-primary) 4%, var(--notification-surface-subtle));
   color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-muted));
@@ -366,10 +377,10 @@ const emptyState = computed(() => {
 
 .notification-summary__action:hover,
 .notification-summary__action:focus-visible {
-  border-color: color-mix(in srgb, var(--color-primary) 64%, var(--notification-line-strong));
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--notification-surface-elevated));
+  border-color: color-mix(in srgb, var(--color-primary) 82%, var(--notification-line-strong));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--notification-surface-elevated));
   color: var(--color-primary);
-  box-shadow: 0 2px 4px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .notification-filter-tabs {
