@@ -12,7 +12,9 @@ describe('ChallengeList panel extraction', () => {
   })
 
   it('题目目录面板应继续把单行题目展示下沉到 challenge entity ui', () => {
-    expect(challengeDirectoryPanelSource).toContain("ChallengeDirectoryRow,\n} from '@/entities/challenge'")
+    expect(challengeDirectoryPanelSource).toContain(
+      "import { ChallengeDirectoryRow } from '@/entities/challenge'"
+    )
     expect(challengeDirectoryPanelSource).toContain('<ChallengeDirectoryRow')
     expect(challengeDirectoryPanelSource).not.toContain('class="challenge-row"')
   })

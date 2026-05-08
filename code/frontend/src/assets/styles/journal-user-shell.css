@@ -182,14 +182,31 @@
   --ui-field-label-color: #1e293b;
   --ui-field-hint-color: #94a3b8;
   --ui-control-radius: 0.25rem;
-  --ui-control-background: #f8fafc;
-  --ui-control-border: #e2e8f0;
-  --ui-control-color: #0f172a;
-  --ui-control-placeholder: #94a3b8;
-  --ui-control-focus-border: #2a7a58;
-  --ui-control-focus-background: #ffffff;
-  --ui-control-focus-shadow: none;
-  --ui-control-adornment: #94a3b8;
+  --ui-control-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 94%,
+    var(--color-bg-base)
+  );
+  --ui-control-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 88%,
+    transparent
+  );
+  --ui-control-color: var(--journal-ink, var(--color-text-primary));
+  --ui-control-placeholder: var(--journal-muted, var(--color-text-muted));
+  --ui-control-focus-border: color-mix(
+    in srgb,
+    var(--journal-accent, var(--color-primary)) 54%,
+    transparent
+  );
+  --ui-control-focus-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 98%,
+    var(--color-bg-base)
+  );
+  --ui-control-focus-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--journal-accent, var(--color-primary)) 12%, transparent);
+  --ui-control-adornment: var(--journal-muted, var(--color-text-muted));
   --ui-badge-radius: var(--ui-badge-radius-pill);
   --ui-dialog-overlay: rgba(15, 23, 42, 0.3);
   --ui-dialog-surface: #ffffff;

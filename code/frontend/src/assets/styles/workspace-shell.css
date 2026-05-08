@@ -228,7 +228,10 @@
 }
 
 .ui-btn--primary {
-  --ui-btn-border: var(--ui-btn-primary-border, color-mix(in srgb, var(--color-primary) 22%, transparent));
+  --ui-btn-border: var(
+    --ui-btn-primary-border,
+    color-mix(in srgb, var(--color-primary) 22%, transparent)
+  );
   --ui-btn-background: var(--ui-btn-primary-background, var(--color-primary));
   --ui-btn-color: var(--ui-btn-primary-color, #ffffff);
   --ui-btn-hover-background: var(--ui-btn-primary-hover-background, var(--color-primary-hover));
@@ -238,7 +241,10 @@
 }
 
 .ui-btn--secondary {
-  --ui-btn-border: var(--ui-btn-secondary-border, color-mix(in srgb, var(--color-border-default) 84%, transparent));
+  --ui-btn-border: var(
+    --ui-btn-secondary-border,
+    color-mix(in srgb, var(--color-border-default) 84%, transparent)
+  );
   --ui-btn-background: var(--ui-btn-secondary-background, var(--color-bg-surface));
   --ui-btn-color: var(--ui-btn-secondary-color, var(--color-text-secondary));
   --ui-btn-hover-background: var(--ui-btn-secondary-hover-background, var(--color-bg-elevated));
@@ -250,16 +256,31 @@
   --ui-btn-border: transparent;
   --ui-btn-background: transparent;
   --ui-btn-color: var(--ui-btn-ghost-color, var(--color-text-secondary));
-  --ui-btn-hover-background: var(--ui-btn-ghost-hover-background, color-mix(in srgb, var(--color-text-primary) 5%, transparent));
+  --ui-btn-hover-background: var(
+    --ui-btn-ghost-hover-background,
+    color-mix(in srgb, var(--color-text-primary) 5%, transparent)
+  );
   --ui-btn-hover-color: var(--ui-btn-ghost-hover-color, var(--color-text-primary));
 }
 
 .ui-btn--danger {
-  --ui-btn-border: var(--ui-btn-danger-border, color-mix(in srgb, var(--color-danger) 20%, transparent));
-  --ui-btn-background: var(--ui-btn-danger-background, color-mix(in srgb, var(--color-danger) 8%, transparent));
+  --ui-btn-border: var(
+    --ui-btn-danger-border,
+    color-mix(in srgb, var(--color-danger) 20%, transparent)
+  );
+  --ui-btn-background: var(
+    --ui-btn-danger-background,
+    color-mix(in srgb, var(--color-danger) 8%, transparent)
+  );
   --ui-btn-color: var(--ui-btn-danger-color, var(--color-danger));
-  --ui-btn-hover-background: var(--ui-btn-danger-hover-background, color-mix(in srgb, var(--color-danger) 14%, transparent));
-  --ui-btn-hover-border: var(--ui-btn-danger-hover-border, color-mix(in srgb, var(--color-danger) 26%, transparent));
+  --ui-btn-hover-background: var(
+    --ui-btn-danger-hover-background,
+    color-mix(in srgb, var(--color-danger) 14%, transparent)
+  );
+  --ui-btn-hover-border: var(
+    --ui-btn-danger-hover-border,
+    color-mix(in srgb, var(--color-danger) 26%, transparent)
+  );
   --ui-btn-hover-color: var(--ui-btn-danger-hover-color, var(--color-danger));
 }
 
@@ -323,7 +344,8 @@
   gap: 0;
   overflow: hidden;
   min-height: var(--ui-control-height, var(--ui-control-height-md));
-  border: 1px solid var(--ui-control-border, color-mix(in srgb, var(--color-border-default) 84%, transparent));
+  border: 1px solid
+    var(--ui-control-border, color-mix(in srgb, var(--color-border-default) 84%, transparent));
   border-radius: var(--ui-control-radius, var(--ui-control-radius-md));
   background: var(--ui-control-background, var(--color-bg-surface));
   box-shadow: var(--ui-control-shadow, none);
@@ -336,7 +358,10 @@
 .ui-control-wrap:focus-within {
   border-color: var(--ui-control-focus-border, var(--color-primary));
   background: var(--ui-control-focus-background, var(--color-bg-surface));
-  box-shadow: var(--ui-control-focus-shadow, 0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent));
+  box-shadow: var(
+    --ui-control-focus-shadow,
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent)
+  );
 }
 
 .ui-control-wrap.is-disabled {
@@ -345,12 +370,21 @@
 }
 
 .ui-control-wrap.is-error {
-  border-color: var(--ui-control-error-border, color-mix(in srgb, var(--color-danger) 56%, transparent));
-  background: var(--ui-control-error-background, color-mix(in srgb, var(--color-danger) 4%, var(--color-bg-surface)));
+  border-color: var(
+    --ui-control-error-border,
+    color-mix(in srgb, var(--color-danger) 56%, transparent)
+  );
+  background: var(
+    --ui-control-error-background,
+    color-mix(in srgb, var(--color-danger) 4%, var(--color-bg-surface))
+  );
 }
 
 .ui-control-wrap.is-error:focus-within {
-  box-shadow: var(--ui-control-error-shadow, 0 0 0 4px color-mix(in srgb, var(--color-danger) 10%, transparent));
+  box-shadow: var(
+    --ui-control-error-shadow,
+    0 0 0 4px color-mix(in srgb, var(--color-danger) 10%, transparent)
+  );
 }
 
 .ui-control,
@@ -361,9 +395,11 @@
   min-width: 0;
   border: 0;
   background: transparent;
-  padding: var(--ui-control-padding-y, 0.75rem) var(--ui-control-padding-x, var(--ui-control-padding-x-md));
+  padding: var(--ui-control-padding-y, 0.75rem)
+    var(--ui-control-padding-x, var(--ui-control-padding-x-md));
   font-size: var(--ui-control-font-size, var(--font-size-13));
   color: var(--ui-control-color, var(--color-text-primary));
+  caret-color: var(--ui-control-caret, var(--ui-control-color, var(--color-text-primary)));
   outline: none;
 }
 
@@ -421,9 +457,21 @@
 }
 
 .ui-badge--soft {
-  --ui-badge-background: color-mix(in srgb, var(--ui-badge-tone, var(--color-border-default)) 10%, transparent);
-  --ui-badge-border: color-mix(in srgb, var(--ui-badge-tone, var(--color-border-default)) 18%, transparent);
-  --ui-badge-color: color-mix(in srgb, var(--ui-badge-tone, var(--color-text-secondary)) 88%, var(--color-text-primary));
+  --ui-badge-background: color-mix(
+    in srgb,
+    var(--ui-badge-tone, var(--color-border-default)) 10%,
+    transparent
+  );
+  --ui-badge-border: color-mix(
+    in srgb,
+    var(--ui-badge-tone, var(--color-border-default)) 18%,
+    transparent
+  );
+  --ui-badge-color: color-mix(
+    in srgb,
+    var(--ui-badge-tone, var(--color-text-secondary)) 88%,
+    var(--color-text-primary)
+  );
 }
 
 .ui-badge--solid {
@@ -434,15 +482,33 @@
 
 .ui-badge--outline {
   --ui-badge-background: transparent;
-  --ui-badge-border: color-mix(in srgb, var(--ui-badge-tone, var(--color-border-default)) 34%, transparent);
-  --ui-badge-color: color-mix(in srgb, var(--ui-badge-tone, var(--color-text-secondary)) 90%, var(--color-text-primary));
+  --ui-badge-border: color-mix(
+    in srgb,
+    var(--ui-badge-tone, var(--color-border-default)) 34%,
+    transparent
+  );
+  --ui-badge-color: color-mix(
+    in srgb,
+    var(--ui-badge-tone, var(--color-text-secondary)) 90%,
+    var(--color-text-primary)
+  );
 }
 
-.ui-badge--neutral { --ui-badge-tone: var(--color-text-muted); }
-.ui-badge--success { --ui-badge-tone: var(--color-success); }
-.ui-badge--warning { --ui-badge-tone: var(--color-warning); }
-.ui-badge--danger { --ui-badge-tone: var(--color-danger); }
-.ui-badge--info { --ui-badge-tone: #2563eb; }
+.ui-badge--neutral {
+  --ui-badge-tone: var(--color-text-muted);
+}
+.ui-badge--success {
+  --ui-badge-tone: var(--color-success);
+}
+.ui-badge--warning {
+  --ui-badge-tone: var(--color-warning);
+}
+.ui-badge--danger {
+  --ui-badge-tone: var(--color-danger);
+}
+.ui-badge--info {
+  --ui-badge-tone: #2563eb;
+}
 
 .ui-confirm-overlay,
 .ui-workbench-modal-overlay {
@@ -563,7 +629,10 @@
 
 .ui-workbench-modal__nav-button:hover,
 .ui-workbench-modal__nav-button.is-active {
-  background: var(--ui-workbench-nav-active-bg, color-mix(in srgb, var(--color-primary) 10%, transparent));
+  background: var(
+    --ui-workbench-nav-active-bg,
+    color-mix(in srgb, var(--color-primary) 10%, transparent)
+  );
   color: var(--ui-workbench-nav-active-color, var(--color-primary));
 }
 
@@ -622,9 +691,14 @@
   --ui-row-action-button-width: 5.25rem;
   --ui-row-action-menu-width: 1.95rem;
   --ui-row-action-gap: var(--ui-action-gap);
-  --ui-row-action-fixed-width: calc(var(--ui-row-action-main-width) + var(--ui-row-action-button-width) + var(--ui-row-action-menu-width) + var(--ui-row-action-gap) * 2);
+  --ui-row-action-fixed-width: calc(
+    var(--ui-row-action-main-width) + var(--ui-row-action-button-width) +
+      var(--ui-row-action-menu-width) + var(--ui-row-action-gap) * 2
+  );
   display: grid;
-  grid-template-columns: var(--ui-row-action-main-width) var(--ui-row-action-button-width) var(--ui-row-action-menu-width);
+  grid-template-columns: var(--ui-row-action-main-width) var(--ui-row-action-button-width) var(
+      --ui-row-action-menu-width
+    );
   gap: 0 var(--ui-row-action-gap);
   justify-content: flex-end;
   justify-items: stretch;

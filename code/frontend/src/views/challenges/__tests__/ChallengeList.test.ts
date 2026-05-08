@@ -90,7 +90,7 @@ describe('ChallengeList', () => {
 
     expect(wrapper.text()).toContain('Challenges')
     expect(wrapper.text()).toContain('靶场训练')
-    expect(wrapper.text()).toContain('当前题库概况')
+    expect(wrapper.text()).toContain('题库概况')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目总数')
     expect(wrapper.text()).toContain('开始做题')
@@ -430,7 +430,8 @@ describe('ChallengeList', () => {
     expect(combinedSource).toContain(
       'class="workspace-directory-section challenge-directory-section"'
     )
-    expect(combinedSource).toContain('class="list-heading"')
+    expect(combinedSource).toContain('list-heading')
+    expect(combinedSource).not.toContain('challenge-directory-meta')
     expect(combinedSource).not.toContain('challenge-controls-title')
     expect(combinedSource).not.toContain('challenge-controls-copy')
     expect(combinedSource).not.toContain('challenge-filter-pill')
@@ -443,6 +444,7 @@ describe('ChallengeList', () => {
     expect(combinedSource).toContain('题目列表')
     expect(combinedSource).toContain('challenge-search-input')
     expect(combinedSource).toContain('搜索题目标题或描述')
+    expect(combinedSource).not.toContain('当前页展示')
     expect(combinedSource).not.toContain('challenge-row-index')
     expect(combinedSource).not.toContain('CH-{{ challengeIndex(index) }}')
     expect(combinedSource).toContain('<span>分类</span>')
@@ -453,9 +455,7 @@ describe('ChallengeList', () => {
     expect(combinedSource).toContain('class="challenge-row-difficulty"')
     expect(combinedSource).toContain('class="challenge-row-solved"')
     expect(combinedSource).toContain('class="challenge-row-attempts"')
-    expect(combinedSource).toMatch(
-      /class="challenge-row-title"[\s\S]*:title="challenge\.title"/s
-    )
+    expect(combinedSource).toMatch(/class="challenge-row-title"[\s\S]*:title="challenge\.title"/s)
     expect(combinedSource).toMatch(
       /\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )

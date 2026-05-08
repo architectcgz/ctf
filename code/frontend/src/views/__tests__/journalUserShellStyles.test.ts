@@ -22,6 +22,10 @@ const surfaceShellBackgroundSource = readFileSync(
   `${process.cwd()}/src/assets/styles/surface-shell-background.css`,
   'utf-8'
 )
+const workspaceShellSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/workspace-shell.css`,
+  'utf-8'
+)
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -105,6 +109,21 @@ describe('journal user shell shared styles', () => {
     )
     expect(journalUserShellSource).not.toMatch(
       /\.journal-shell\.journal-shell-user :is\(\.profile-summary-value, \.security-summary-value\)\s*\{[\s\S]*font-size:\s*var\(--font-size-0-98\)/s
+    )
+  })
+
+  it('学生侧共享控件应通过主题变量驱动文本与光标，而不是写死浅色模式颜色', () => {
+    expect(journalUserShellSource).toContain('--ui-control-background: color-mix(')
+    expect(journalUserShellSource).toContain(
+      '--ui-control-color: var(--journal-ink, var(--color-text-primary));'
+    )
+    expect(journalUserShellSource).toContain(
+      '--ui-control-placeholder: var(--journal-muted, var(--color-text-muted));'
+    )
+    expect(journalUserShellSource).not.toContain('--ui-control-background: #f8fafc;')
+    expect(journalUserShellSource).not.toContain('--ui-control-color: #0f172a;')
+    expect(workspaceShellSource).toContain(
+      'caret-color: var(--ui-control-caret, var(--ui-control-color, var(--color-text-primary)));'
     )
   })
 })
