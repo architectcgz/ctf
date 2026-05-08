@@ -64,15 +64,15 @@ export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
   const items = computed(() => store.notifications)
   const statusMeta = computed<StatusMeta>(() => {
     if (realtimeStatus() === 'open') {
-      return { label: '实时在线', accentColor: 'var(--color-success)' }
+      return { label: '在线', accentColor: 'var(--color-success)' }
     }
     if (realtimeStatus() === 'connecting') {
-      return { label: '连接中', accentColor: 'var(--color-warning)' }
+      return { label: '同步中', accentColor: 'var(--color-warning)' }
     }
     if (realtimeStatus() === 'error') {
       return { label: '连接异常', accentColor: 'var(--color-danger)' }
     }
-    return { label: '手动刷新', accentColor: 'var(--color-text-muted)' }
+    return { label: '手动查看', accentColor: 'var(--color-text-muted)' }
   })
   const statusPillStyle = computed<Record<string, string>>(() => ({
     color: statusMeta.value.accentColor,

@@ -63,7 +63,7 @@ export function useNotificationRealtime() {
     try {
       await connect()
     } catch (error) {
-      toast.warning('实时通知连接失败，已切换为手动刷新')
+      toast.warning('实时通知连接失败，请改为手动查看通知')
     }
   }
 
