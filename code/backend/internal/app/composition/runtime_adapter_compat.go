@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -89,60 +90,47 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 }
 
 func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
-	scope, cleanPath, err := a.resolveDefenseScope(ctx, user, contestID, serviceID, filePath, false)
+	scope, root, err := a.resolveDefenseWorkbenchScope(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
-	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, cleanPath, 256*1024)
+	cleanPath, containerPath, err := resolveEditableDefenseFilePath(scope, root, filePath)
+	if err != nil {
+		return nil, err
+	}
+	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, containerPath, 256*1024)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.AWDDefenseFileResp{Path: filePath, Content: string(content), Size: len(content)}, nil
+	return &dto.AWDDefenseFileResp{Path: cleanPath, Content: string(content), Size: len(content)}, nil
 }
 
 func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
-	scope, cleanPath, err := a.resolveDefenseScope(ctx, user, contestID, serviceID, dirPath, true)
+	scope, root, err := a.resolveDefenseWorkbenchScope(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
-	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, cleanPath, 300)
+	cleanPath, containerPath, err := resolveEditableDefenseDirectoryPath(scope, root, dirPath)
+	if err != nil {
+		return nil, err
+	}
+	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, containerPath, 300)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	resp := &dto.AWDDefenseDirectoryResp{Path: dirPath, Entries: make([]dto.AWDDefenseDirectoryEntryResp, 0, len(entries))}
-	for _, entry := range entries {
-		if isSensitiveDefensePath(entry.Name) {
-			continue
-		}
-		resp.Entries = append(resp.Entries, dto.AWDDefenseDirectoryEntryResp{
-			Path: entry.Name,
-			Type: entry.Type,
-			Size: entry.Size,
-		})
-	}
-	return resp, nil
+	return &dto.AWDDefenseDirectoryResp{
+		Path:    cleanPath,
+		Entries: buildEditableDefenseDirectoryEntries(scope.EditablePaths, cleanPath, entries, 300),
+	}, nil
 }
 
-func (a *runtimeHTTPServiceAdapter) resolveDefenseScope(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, inputPath string, dir bool) (*runtimeports.AWDDefenseSSHScope, string, error) {
+func (a *runtimeHTTPServiceAdapter) resolveDefenseWorkbenchScope(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, string, error) {
 	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
 		return nil, "", errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	root := strings.TrimSpace(a.defenseWorkbenchRoot)
 	if !strings.HasPrefix(root, "/") || root == "/" {
 		return nil, "", errcode.ErrInvalidParams
-	}
-	var cleanPath string
-	var err error
-	if dir {
-		cleanPath, err = normalizeAWDDefenseDirectoryPath(inputPath)
-	} else {
-		cleanPath, err = normalizeAWDDefensePath(inputPath)
-	}
-	if err != nil {
-		return nil, "", err
-	}
-	if isSensitiveDefensePath(cleanPath) {
-		return nil, "", errcode.ErrForbidden
 	}
 	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
@@ -151,10 +139,10 @@ func (a *runtimeHTTPServiceAdapter) resolveDefenseScope(ctx context.Context, use
 	if scope == nil || scope.ContainerID == "" {
 		return nil, "", errcode.ErrForbidden
 	}
-	if cleanPath == "." {
-		return scope, root, nil
+	if len(normalizeDefenseEditablePaths(scope.EditablePaths)) == 0 {
+		return nil, "", errcode.ErrForbidden
 	}
-	return scope, path.Join(root, cleanPath), nil
+	return scope, root, nil
 }
 
 func normalizeAWDDefenseDirectoryPath(input string) (string, error) {
@@ -175,6 +163,200 @@ func normalizeAWDDefensePath(input string) (string, error) {
 		return "", errcode.ErrInvalidParams
 	}
 	return cleaned, nil
+}
+
+func mapAWDDefensePackagePathToContainer(pathValue string) string {
+	if pathValue == "." || pathValue == "" {
+		return "."
+	}
+	if pathValue == "docker" {
+		return "."
+	}
+	if strings.HasPrefix(pathValue, "docker/") {
+		mapped := strings.TrimPrefix(pathValue, "docker/")
+		if mapped == "" {
+			return "."
+		}
+		return mapped
+	}
+	return pathValue
+}
+
+func defenseWorkbenchContainerPath(root, contractPath string) string {
+	mapped := mapAWDDefensePackagePathToContainer(contractPath)
+	if mapped == "." {
+		return root
+	}
+	return path.Join(root, mapped)
+}
+
+func normalizeDefenseEditablePaths(paths []string) []string {
+	if len(paths) == 0 {
+		return nil
+	}
+	normalized := make([]string, 0, len(paths))
+	seen := make(map[string]struct{}, len(paths))
+	for _, item := range paths {
+		clean, err := normalizeAWDDefensePath(item)
+		if err != nil {
+			continue
+		}
+		if _, exists := seen[clean]; exists {
+			continue
+		}
+		seen[clean] = struct{}{}
+		normalized = append(normalized, clean)
+	}
+	if len(normalized) == 0 {
+		return nil
+	}
+	return normalized
+}
+
+func isEditableDefenseFileAllowed(editablePaths []string, contractPath string) bool {
+	for _, item := range normalizeDefenseEditablePaths(editablePaths) {
+		if item == contractPath {
+			return true
+		}
+	}
+	return false
+}
+
+func hasEditableDefenseDirectoryAccess(editablePaths []string, dirPath string) bool {
+	normalized := normalizeDefenseEditablePaths(editablePaths)
+	if len(normalized) == 0 {
+		return false
+	}
+	if dirPath == "." {
+		return true
+	}
+	prefix := dirPath + "/"
+	for _, item := range normalized {
+		if strings.HasPrefix(item, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func resolveEditableDefenseFilePath(scope *runtimeports.AWDDefenseSSHScope, root, inputPath string) (string, string, error) {
+	cleanPath, err := normalizeAWDDefensePath(inputPath)
+	if err != nil {
+		return "", "", err
+	}
+	if !isEditableDefenseFileAllowed(scope.EditablePaths, cleanPath) {
+		return "", "", errcode.ErrForbidden
+	}
+	containerPath := defenseWorkbenchContainerPath(root, cleanPath)
+	if isSensitiveDefensePath(containerPath) {
+		return "", "", errcode.ErrForbidden
+	}
+	return cleanPath, containerPath, nil
+}
+
+func resolveEditableDefenseDirectoryPath(scope *runtimeports.AWDDefenseSSHScope, root, inputPath string) (string, string, error) {
+	cleanPath, err := normalizeAWDDefenseDirectoryPath(inputPath)
+	if err != nil {
+		return "", "", err
+	}
+	if !hasEditableDefenseDirectoryAccess(scope.EditablePaths, cleanPath) {
+		return "", "", errcode.ErrForbidden
+	}
+	containerPath := defenseWorkbenchContainerPath(root, cleanPath)
+	if isSensitiveDefensePath(containerPath) {
+		return "", "", errcode.ErrForbidden
+	}
+	return cleanPath, containerPath, nil
+}
+
+func buildEditableDefenseDirectoryEntries(editablePaths []string, dirPath string, actualEntries []runtimeports.ContainerDirectoryEntry, limit int) []dto.AWDDefenseDirectoryEntryResp {
+	normalized := normalizeDefenseEditablePaths(editablePaths)
+	if len(normalized) == 0 {
+		return []dto.AWDDefenseDirectoryEntryResp{}
+	}
+
+	actualByName := make(map[string]runtimeports.ContainerDirectoryEntry, len(actualEntries))
+	for _, entry := range actualEntries {
+		actualByName[entry.Name] = entry
+	}
+
+	type virtualEntry struct {
+		name string
+		path string
+		typ  string
+	}
+
+	collected := make(map[string]virtualEntry)
+	for _, item := range normalized {
+		name, entryPath, entryType, ok := nextEditableDefenseDirectoryEntry(dirPath, item)
+		if !ok {
+			continue
+		}
+		existing, exists := collected[entryPath]
+		if !exists || (existing.typ == "file" && entryType == "dir") {
+			collected[entryPath] = virtualEntry{name: name, path: entryPath, typ: entryType}
+		}
+	}
+
+	if len(collected) == 0 {
+		return []dto.AWDDefenseDirectoryEntryResp{}
+	}
+
+	result := make([]dto.AWDDefenseDirectoryEntryResp, 0, len(collected))
+	for _, entry := range collected {
+		size := int64(0)
+		if entry.typ == "file" {
+			if actual, ok := actualByName[entry.name]; ok && actual.Type == "file" {
+				size = actual.Size
+			}
+		}
+		result = append(result, dto.AWDDefenseDirectoryEntryResp{
+			Name: entry.name,
+			Path: entry.path,
+			Type: entry.typ,
+			Size: size,
+		})
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].Type != result[j].Type {
+			return result[i].Type == "dir"
+		}
+		return result[i].Name < result[j].Name
+	})
+	if len(result) > limit {
+		return result[:limit]
+	}
+	return result
+}
+
+func nextEditableDefenseDirectoryEntry(dirPath, filePath string) (string, string, string, bool) {
+	if dirPath == "." {
+		parts := strings.Split(filePath, "/")
+		if len(parts) == 0 || parts[0] == "" {
+			return "", "", "", false
+		}
+		if len(parts) == 1 {
+			return parts[0], parts[0], "file", true
+		}
+		return parts[0], parts[0], "dir", true
+	}
+
+	prefix := dirPath + "/"
+	if !strings.HasPrefix(filePath, prefix) {
+		return "", "", "", false
+	}
+	remainder := strings.TrimPrefix(filePath, prefix)
+	if remainder == "" {
+		return "", "", "", false
+	}
+	parts := strings.Split(remainder, "/")
+	childName := parts[0]
+	childPath := path.Join(dirPath, childName)
+	if len(parts) == 1 {
+		return childName, childPath, "file", true
+	}
+	return childName, childPath, "dir", true
 }
 
 func isSensitiveDefensePath(value string) bool {

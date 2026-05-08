@@ -629,12 +629,12 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	contestID := int64(9201)
-	teamID := int64(9202)
-	serviceID := int64(9203)
-	userID := int64(9204)
-	imageID := int64(9205)
-	challengeID := int64(9206)
+	contestID := int64(9111)
+	teamID := int64(9112)
+	serviceID := int64(9113)
+	userID := int64(9114)
+	imageID := int64(9115)
+	challengeID := int64(9116)
 
 	if err := db.Create(&model.Image{
 		ID:        imageID,
@@ -660,7 +660,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}
 	if err := db.Create(&model.Contest{
 		ID:        contestID,
-		Title:     "AWD Restart Recreate",
+		Title:     "AWD Restart Missing Workspace",
 		Mode:      model.ContestModeAWD,
 		Status:    model.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
@@ -670,7 +670,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.User{ID: userID, Username: "restart-student-2", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&model.User{ID: userID, Username: "restart-student-missing", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	if err := db.Create(&model.ContestRegistration{
@@ -684,7 +684,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		t.Fatalf("create registration: %v", err)
 	}
 	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
-		Name: "Restart Service",
+		Name: "Restart Service Missing Workspace",
 		RuntimeConfig: map[string]any{
 			"image_id":         imageID,
 			"instance_sharing": string(model.InstanceSharingPerTeam),
@@ -707,7 +707,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  challengeID,
-		DisplayName:     "Restart Service",
+		DisplayName:     "Restart Service Missing Workspace",
 		ServiceSnapshot: serviceSnapshot,
 		IsVisible:       true,
 		CreatedAt:       now,
@@ -717,7 +717,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}
 
 	instance := &model.Instance{
-		ID:          9301,
+		ID:          9211,
 		UserID:      userID,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -727,7 +727,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		ShareScope:  model.InstanceSharingPerTeam,
 		ContainerID: "runtime-old",
 		NetworkID:   "net-old",
-		AccessURL:   "http://awd-c9201-t9202-s9203:8080",
+		AccessURL:   "http://awd-c9111-t9112-s9113:8080",
 		Nonce:       "nonce",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -777,14 +777,14 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 				case 1:
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "runtime-new",
-						NetworkID:          "net-awd-contest-9201",
-						AccessURL:          "http://awd-c9201-t9202-s9203:8080",
+						NetworkID:          "net-awd-contest-9111",
+						AccessURL:          "http://awd-c9111-t9112-s9113:8080",
 						RuntimeDetails: model.InstanceRuntimeDetails{
 							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9201", NetworkID: "net-awd-contest-9201", Shared: true},
+								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9111", NetworkID: "net-awd-contest-9111", Shared: true},
 							},
 							Containers: []model.InstanceRuntimeContainer{
-								{NodeKey: "default", ContainerID: "runtime-new", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c9201-t9202-s9203"}},
+								{NodeKey: "default", ContainerID: "runtime-new", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c9111-t9112-s9113"}},
 							},
 						},
 					}, nil
@@ -801,8 +801,8 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 					}
 					return &practiceports.TopologyCreateResult{
 						PrimaryContainerID: "workspace-recreated",
-						NetworkID:          "net-awd-contest-9201",
-						AccessURL:          "tcp://172.30.0.51:22",
+						NetworkID:          "net-awd-contest-9111",
+						AccessURL:          "tcp://172.30.0.55:22",
 						RuntimeDetails: model.InstanceRuntimeDetails{
 							Containers: []model.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-recreated", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},

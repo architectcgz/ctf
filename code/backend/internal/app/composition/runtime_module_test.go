@@ -74,15 +74,17 @@ func TestRuntimeHTTPServiceAdapterReadsAWDDefenseWorkbenchWhenEnabled(t *testing
 		nil,
 		nil,
 		nil,
-		stubRuntimeHTTPProxyTicketReader{scope: &runtimeports.AWDDefenseSSHScope{ContainerID: "container-12"}},
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
 		stubRuntimeHTTPDefenseWorkbench{
 			files: map[string][]byte{
-				"/home/student/app.py": []byte("print('vuln')"),
+				"/home/student/challenge_app.py": []byte("print('vuln')"),
 			},
 			entries: []runtimeports.ContainerDirectoryEntry{
 				{Name: "app.py", Type: "file", Size: 13},
-				{Name: ".env", Type: "file", Size: 10},
-				{Name: ".ssh", Type: "dir"},
+				{Name: "ctf_runtime.py", Type: "file", Size: 64},
+				{Name: "requirements.txt", Type: "file", Size: 128},
+				{Name: "challenge_app.py", Type: "file", Size: 42},
+				{Name: "templates", Type: "dir"},
 			},
 		},
 		0,
@@ -93,19 +95,25 @@ func TestRuntimeHTTPServiceAdapterReadsAWDDefenseWorkbenchWhenEnabled(t *testing
 		"/home/student",
 	)
 
-	fileResp, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "app.py")
+	fileResp, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py")
 	if err != nil {
 		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
 	}
-	if fileResp.Path != "app.py" || fileResp.Content != "print('vuln')" {
+	if fileResp.Path != "docker/challenge_app.py" || fileResp.Content != "print('vuln')" {
 		t.Fatalf("unexpected file response: %+v", fileResp)
 	}
 
-	dirResp, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, ".")
+	dirResp, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker")
 	if err != nil {
 		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
 	}
-	if len(dirResp.Entries) != 1 || dirResp.Entries[0].Path != "app.py" {
+	if dirResp.Path != "docker" || len(dirResp.Entries) != 2 {
+		t.Fatalf("unexpected directory response: %+v", dirResp)
+	}
+	if dirResp.Entries[0].Path != "docker/templates" || dirResp.Entries[0].Type != "dir" {
+		t.Fatalf("expected editable templates directory, got %+v", dirResp.Entries)
+	}
+	if dirResp.Entries[1].Path != "docker/challenge_app.py" || dirResp.Entries[1].Name != "challenge_app.py" {
 		t.Fatalf("unexpected directory response: %+v", dirResp)
 	}
 }
@@ -115,7 +123,7 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseWorkbenchWhenDisabled(t *test
 		nil,
 		nil,
 		nil,
-		stubRuntimeHTTPProxyTicketReader{scope: &runtimeports.AWDDefenseSSHScope{ContainerID: "container-12"}},
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
 		stubRuntimeHTTPDefenseWorkbench{},
 		0,
 		false,
@@ -125,10 +133,10 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseWorkbenchWhenDisabled(t *test
 		"/home/student",
 	)
 
-	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "app.py"); err == nil {
+	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err == nil {
 		t.Fatal("expected disabled workbench read to fail")
 	}
-	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "."); err == nil {
+	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker"); err == nil {
 		t.Fatal("expected disabled workbench list to fail")
 	}
 }
@@ -138,7 +146,7 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseSensitivePaths(t *testing.T) 
 		nil,
 		nil,
 		nil,
-		stubRuntimeHTTPProxyTicketReader{scope: &runtimeports.AWDDefenseSSHScope{ContainerID: "container-12"}},
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
 		stubRuntimeHTTPDefenseWorkbench{},
 		0,
 		false,
@@ -154,8 +162,14 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseSensitivePaths(t *testing.T) 
 			t.Fatalf("expected read path %q to fail", path)
 		}
 	}
+	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/app.py"); err == nil {
+		t.Fatal("expected protected path to fail")
+	}
 	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "../app.py"); err == nil {
 		t.Fatal("expected traversal path to fail")
+	}
+	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/check"); err == nil {
+		t.Fatal("expected protected directory to fail")
 	}
 }
 
@@ -166,7 +180,7 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseWorkbenchWithoutAbsoluteRoot(
 			nil,
 			nil,
 			nil,
-			stubRuntimeHTTPProxyTicketReader{scope: &runtimeports.AWDDefenseSSHScope{ContainerID: "container-12"}},
+			stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
 			stubRuntimeHTTPDefenseWorkbench{},
 			0,
 			false,
@@ -175,7 +189,7 @@ func TestRuntimeHTTPServiceAdapterRejectsAWDDefenseWorkbenchWithoutAbsoluteRoot(
 			true,
 			root,
 		)
-		if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "app.py"); err == nil {
+		if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err == nil {
 			t.Fatalf("expected root %q to fail", root)
 		}
 	}
@@ -189,7 +203,7 @@ func TestRuntimeHTTPServiceAdapterRootsAWDDefenseContainerPath(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		stubRuntimeHTTPProxyTicketReader{scope: &runtimeports.AWDDefenseSSHScope{ContainerID: "container-12"}},
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScopeWithEditable("docker/src/app.py")},
 		workbench,
 		0,
 		false,
@@ -199,18 +213,51 @@ func TestRuntimeHTTPServiceAdapterRootsAWDDefenseContainerPath(t *testing.T) {
 		"/home/student",
 	)
 
-	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "src/app.py"); err != nil {
+	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/src/app.py"); err != nil {
 		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
 	}
 	if workbench.readPath != "/home/student/src/app.py" {
 		t.Fatalf("expected rooted read path, got %q", workbench.readPath)
 	}
 
-	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "."); err != nil {
+	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/src"); err != nil {
+		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
+	}
+	if workbench.listPath != "/home/student/src" {
+		t.Fatalf("expected rooted list path, got %q", workbench.listPath)
+	}
+}
+
+func TestRuntimeHTTPServiceAdapterMapsAWDPackageDockerPathsToContainerRoot(t *testing.T) {
+	workbench := &recordingRuntimeHTTPDefenseWorkbench{
+		fileContent: []byte("print('vuln')"),
+	}
+	adapter := newRuntimeHTTPServiceAdapter(
+		nil,
+		nil,
+		nil,
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
+		workbench,
+		0,
+		false,
+		"",
+		0,
+		true,
+		"/home/student",
+	)
+
+	if _, err := adapter.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err != nil {
+		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
+	}
+	if workbench.readPath != "/home/student/challenge_app.py" {
+		t.Fatalf("expected mapped read path, got %q", workbench.readPath)
+	}
+
+	if _, err := adapter.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker"); err != nil {
 		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
 	}
 	if workbench.listPath != "/home/student" {
-		t.Fatalf("expected rooted list path, got %q", workbench.listPath)
+		t.Fatalf("expected mapped docker directory path, got %q", workbench.listPath)
 	}
 }
 
@@ -293,7 +340,10 @@ func (s *recordingRuntimeHTTPDefenseWorkbench) ReadFileFromContainer(_ context.C
 
 func (s *recordingRuntimeHTTPDefenseWorkbench) ListDirectoryFromContainer(_ context.Context, _ string, dirPath string, _ int) ([]runtimeports.ContainerDirectoryEntry, error) {
 	s.listPath = dirPath
-	return []runtimeports.ContainerDirectoryEntry{{Name: "app.py", Type: "file", Size: 13}}, nil
+	return []runtimeports.ContainerDirectoryEntry{
+		{Name: "challenge_app.py", Type: "file", Size: 13},
+		{Name: "templates", Type: "dir"},
+	}, nil
 }
 
 func (s *recordingRuntimeHTTPDefenseWorkbench) WriteFileToContainer(context.Context, string, string, []byte) error {
@@ -302,4 +352,16 @@ func (s *recordingRuntimeHTTPDefenseWorkbench) WriteFileToContainer(context.Cont
 
 func (s *recordingRuntimeHTTPDefenseWorkbench) ExecContainerCommand(context.Context, string, []string, []byte, int64) ([]byte, error) {
 	return nil, nil
+}
+
+func testAWDDefenseSSHScope() *runtimeports.AWDDefenseSSHScope {
+	return testAWDDefenseSSHScopeWithEditable("docker/challenge_app.py", "docker/templates/mail.html")
+}
+
+func testAWDDefenseSSHScopeWithEditable(editablePaths ...string) *runtimeports.AWDDefenseSSHScope {
+	return &runtimeports.AWDDefenseSSHScope{
+		ContainerID:    "container-12",
+		EditablePaths:  append([]string(nil), editablePaths...),
+		ProtectedPaths: []string{"docker/app.py", "docker/ctf_runtime.py", "docker/check/check.py", "challenge.yml"},
+	}
 }
