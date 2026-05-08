@@ -16,6 +16,83 @@ interface SourceFile {
 const importPattern =
   /(?:import|export)\s+(?:type\s+)?(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)/g
 
+const viewLineLimit = 500
+
+const oversizedViewAllowlist = new Set([
+  'views/challenges/ChallengeDetail.vue',
+  'views/contests/ContestDetail.vue',
+  'views/instances/InstanceList.vue',
+  'views/platform/ContestAwdConfig.vue',
+  'views/profile/SkillProfile.vue',
+  'views/profile/UserProfile.vue',
+  'views/scoreboard/ScoreboardView.vue',
+])
+
+const componentFeatureImportAllowlist = new Set([
+  'components/challenge/ChallengeSolutionsPanel.vue -> @/features/challenge-detail',
+  'components/challenge/ChallengeSubmissionRecordsPanel.vue -> @/features/challenge-detail',
+  'components/contests/ContestAWDWorkspacePanel.vue -> @/features/contest-awd-workspace',
+  'components/contests/ContestAnnouncementRealtimeBridge.vue -> @/features/contest-announcements',
+  'components/contests/awd/AWDDefenseOperationsPanel.vue -> @/features/contest-awd-workspace',
+  'components/contests/awd/AWDDefenseServiceList.vue -> @/features/contest-awd-workspace',
+  'components/dashboard/student/dashboardPanelRegistry.ts -> @/features/student-dashboard',
+  'components/layout/AppLayout.vue -> @/features/notifications',
+  'components/layout/NotificationDrawer.vue -> @/features/notifications',
+  'components/layout/TopNav.vue -> @/features/auth',
+  'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
+  'components/platform/awd-service/AWDChallengeEditorDialog.vue -> @/features/platform-awd-challenges',
+  'components/platform/awd-service/AWDChallengeLibraryPage.vue -> @/features/platform-awd-challenges',
+  'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
+  'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
+  'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',
+  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/awd-inspector',
+  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/contest-awd-config',
+  'components/platform/contest/AWDChallengeConfigPanel.vue -> @/features/awd-inspector',
+  'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
+  'components/platform/contest/AWDRoundInspector.vue -> @/features/awd-inspector',
+  'components/platform/contest/AWDTrafficPanel.vue -> @/features/awd-inspector',
+  'components/platform/contest/ContestAnnouncementManageDrawer.vue -> @/features/contest-announcements',
+  'components/platform/contest/ContestChallengeFilterStrip.vue -> @/features/contest-workbench',
+  'components/platform/contest/ContestChallengeOrchestrationPanel.vue -> @/features/contest-workbench',
+  'components/platform/contest/ContestEditWorkspacePanel.vue -> @/features/contest-workbench',
+  'components/platform/contest/ContestEditWorkspacePanel.vue -> @/features/platform-contests',
+  'components/platform/contest/ContestOrchestrationPage.vue -> @/features/platform-contests',
+  'components/platform/contest/ContestWorkbenchStageTabs.vue -> @/features/contest-workbench',
+  'components/platform/contest/ContestWorkbenchSummaryStrip.vue -> @/features/contest-workbench',
+  'components/platform/contest/PlatformContestFormDialog.vue -> @/features/platform-contests',
+  'components/platform/contest/PlatformContestFormPanel.vue -> @/features/platform-contests',
+  'components/platform/contest/awdInspector.types.ts -> @/features/awd-inspector',
+  'components/platform/dashboard/PlatformOverviewPage.vue -> @/features/platform-overview',
+  'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio',
+  'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyConnectivitySections.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyNodeEditor.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyNodeSection.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/user/PlatformUserFormDialog.vue -> @/features/platform-users',
+  'components/platform/writeup/ChallengeWriteupEditorPage.vue -> @/features/challenge-writeup-editor',
+  'components/platform/writeup/ChallengeWriteupManagePanel.vue -> @/features/challenge-writeup-editor',
+  'components/platform/writeup/ChallengeWriteupViewPage.vue -> @/features/challenge-writeup-editor',
+  'components/scoreboard/ScoreboardRealtimeBridge.vue -> @/features/scoreboard',
+  'components/teacher/TeacherInterventionPanel.vue -> @/features/teacher-student-analysis',
+  'components/teacher/dashboard/TeacherDashboardPage.vue -> @/features/teacher-dashboard',
+  'components/teacher/reports/TeacherClassReportExportDialog.vue -> @/features/teacher-class-report-export',
+])
+
+const widgetLegacyComponentImportAllowlist = new Set([
+  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeTopbarPanel.vue',
+  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeWorkspaceTabs.vue',
+  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue',
+  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue',
+  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue',
+  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue',
+  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveEvidencePanel.vue',
+  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveHero.vue',
+  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveObservationStrip.vue',
+  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue',
+])
+
 function collectSourceFiles(directory: string): SourceFile[] {
   return readdirSync(directory).flatMap((entry) => {
     const absolutePath = join(directory, entry)
@@ -90,6 +167,15 @@ function collectLayerViolations(
   })
 }
 
+function collectImportKeys(files: SourceFile[], importPathPrefix: string): string[] {
+  return files.flatMap((file) => {
+    const source = readFileSync(file.absolutePath, 'utf-8')
+    return extractImports(source)
+      .filter((importPath) => importPath.startsWith(importPathPrefix))
+      .map((importPath) => `${file.relativePath} -> ${importPath}`)
+  })
+}
+
 describe('frontend architecture boundaries', () => {
   const sourceFiles = collectSourceFiles(sourceRoot)
 
@@ -104,5 +190,62 @@ describe('frontend architecture boundaries', () => {
     })
 
     expect(violations).toEqual([])
+  })
+
+  it('legacy business components should not add new direct feature imports', () => {
+    const componentFiles = sourceFiles.filter((file) =>
+      file.relativePath.startsWith(`components${sep}`)
+    )
+    const featureImports = collectImportKeys(componentFiles, '@/features')
+    const violations = featureImports.filter((key) => !componentFeatureImportAllowlist.has(key))
+    const staleAllowlistEntries = Array.from(componentFeatureImportAllowlist).filter(
+      (key) => !featureImports.includes(key)
+    )
+
+    expect(violations).toEqual([])
+    expect(staleAllowlistEntries).toEqual([])
+  })
+
+  it('widgets should not add new dependencies on legacy business component directories', () => {
+    const widgetFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`widgets${sep}`))
+    const legacyComponentImports = widgetFiles.flatMap((file) => {
+      const source = readFileSync(file.absolutePath, 'utf-8')
+      return extractImports(source)
+        .filter((importPath) =>
+          /^@\/components\/(platform|teacher|notifications|challenge|dashboard|contests|scoreboard)/.test(
+            importPath
+          )
+        )
+        .map((importPath) => `${file.relativePath} -> ${importPath}`)
+    })
+    const violations = legacyComponentImports.filter(
+      (key) => !widgetLegacyComponentImportAllowlist.has(key)
+    )
+    const staleAllowlistEntries = Array.from(widgetLegacyComponentImportAllowlist).filter(
+      (key) => !legacyComponentImports.includes(key)
+    )
+
+    expect(violations).toEqual([])
+    expect(staleAllowlistEntries).toEqual([])
+  })
+
+  it('new route views should stay below the page-size threshold', () => {
+    const viewFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`views${sep}`))
+    const oversizedViews = viewFiles
+      .map((file) => ({
+        file: file.relativePath,
+        lines: readFileSync(file.absolutePath, 'utf-8').split(/\r?\n/).length,
+      }))
+      .filter(({ lines }) => lines > viewLineLimit)
+
+    const violations = oversizedViews
+      .filter(({ file }) => !oversizedViewAllowlist.has(file))
+      .map(({ file, lines }) => `${file} has ${lines} lines`)
+    const staleAllowlistEntries = Array.from(oversizedViewAllowlist).filter(
+      (file) => !oversizedViews.some((view) => view.file === file)
+    )
+
+    expect(violations).toEqual([])
+    expect(staleAllowlistEntries).toEqual([])
   })
 })
