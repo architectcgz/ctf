@@ -152,7 +152,7 @@
 - `docs/reports/`：阶段性报告、汇总结论、差距报告和分析输出。
 - `docs/Q&A/`：会被重复引用的问答式说明，适合解释“某个能力是怎么工作的”。
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不要混入产品事实源。
-- `docs/ui-theme/`：历史或补充型 UI 资料；当前最终 UI 事实源仍是 `docs/architecture/frontend/design-system/` 和 `docs/architecture/frontend/pages/`。
+- `docs/ui-theme/`：历史或补充型 UI 资料；当前最终 UI 事实源仍是 `docs/architecture/frontend/`，页面参考稿进入 `docs/architecture/frontend/pages/`。
 - `concepts/`：项目级长期概念、原则和 harness 定义。
 - `thinking/`：尚未落地、但需要保存的判断、质疑和取舍分析。
 - `practice/`：实验记录、迁移过程、历史计划索引、实践说明；它不是最终设计入口。

@@ -15,7 +15,7 @@
 2. `docs/contracts/`
 3. `docs/architecture/backend/`、`docs/architecture/frontend/`
 4. `docs/architecture/backend/design/`
-5. `docs/architecture/frontend/design-system/`
+5. `docs/architecture/frontend/01-architecture-overview.md` 到 `09-spacing-system.md`
 6. `docs/architecture/frontend/pages/`
 7. `docs/architecture/features/`
 
@@ -24,8 +24,8 @@
 - `backend/`：后端总体架构、数据库、容器、API、关键流程等长期文档。
 - `backend/design/`：已采用、但不适合并入总览文档的后端专题设计。
 - `frontend/`：前端架构、路由、状态管理、API 层、组件体系等长期文档。
-- `frontend/design-system/`：全局 UI 风格、主题、技术边界。
-- `frontend/pages/`：页面级最终设计稿。
+- `frontend/`：全局 UI 风格、主题、技术边界、前端分层、页面数据流和间距体系。
+- `frontend/pages/`：页面参考稿、截图和可复用设计样本；最终页面规则仍需回收到 `frontend/` 或对应专题事实源。
 - `features/`：面向产品能力或业务专题的最终架构事实，也承接专题当前已经固定的内部边界结论。
   - 目录索引：`features/专题架构索引.md`
 

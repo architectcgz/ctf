@@ -23,6 +23,7 @@ docs/design/*
 !docs/design/README.md
 !docs/design/AWD题目配置面板方案.md
 !docs/design/AWD能力画像回流方案.md
+!docs/design/教学复盘建议优化方案.md
 !docs/plan/
 !docs/plan/impl-plan/
 !docs/plan/impl-plan/*.md
