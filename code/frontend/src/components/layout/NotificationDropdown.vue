@@ -43,14 +43,18 @@
             <button
               v-if="unreadCount > 0"
               type="button"
-              class="notification-summary__action"
+              class="ui-btn ui-btn--sm ui-btn--secondary notification-summary__action"
               @click="markAllRead"
             >
               全部标为已读
             </button>
           </div>
 
-          <div class="notification-filter-tabs" role="tablist" aria-label="通知筛选">
+          <div
+            class="notification-filter-tabs"
+            role="tablist"
+            aria-label="通知筛选"
+          >
             <button
               v-for="filter in filterOptions"
               :key="filter.value"
@@ -67,15 +71,25 @@
       </template>
 
       <div class="notification-panel-body relative flex-1 overflow-y-auto">
-        <div v-if="filteredItems.length === 0" class="notification-empty">
+        <div
+          v-if="filteredItems.length === 0"
+          class="notification-empty"
+        >
           <div class="notification-empty__icon">
             <Bell class="h-8 w-8" />
           </div>
-          <p class="notification-empty__title">{{ emptyState.title }}</p>
-          <p class="notification-empty__copy">{{ emptyState.copy }}</p>
+          <p class="notification-empty__title">
+            {{ emptyState.title }}
+          </p>
+          <p class="notification-empty__copy">
+            {{ emptyState.copy }}
+          </p>
         </div>
 
-        <div v-else class="notification-list">
+        <div
+          v-else
+          class="notification-list"
+        >
           <button
             v-for="item in filteredItems"
             :key="item.id"
@@ -84,7 +98,10 @@
             :class="{ 'notification-item--unread': item.unread }"
             @click="goToNotificationDetail(item.id)"
           >
-            <span class="notification-item-icon" :style="typeMeta(item.type).iconWrapStyle">
+            <span
+              class="notification-item-icon"
+              :style="typeMeta(item.type).iconWrapStyle"
+            >
               <component
                 :is="typeMeta(item.type).icon"
                 class="h-3.5 w-3.5"
@@ -109,10 +126,16 @@
                 <span class="notification-item-title">
                   {{ item.title }}
                 </span>
-                <span v-if="item.unread" class="notification-item-unread-dot" />
+                <span
+                  v-if="item.unread"
+                  class="notification-item-unread-dot"
+                />
               </span>
 
-              <span v-if="item.content" class="notification-item-snippet">
+              <span
+                v-if="item.content"
+                class="notification-item-snippet"
+              >
                 {{ item.content }}
               </span>
             </span>
@@ -121,7 +144,11 @@
       </div>
 
       <template #footer>
-        <button type="button" class="notification-view-all" @click="goToNotifications">
+        <button
+          type="button"
+          class="notification-view-all"
+          @click="goToNotifications"
+        >
           <AlignLeft class="notification-view-all__icon" />
           <span>查看全部通知</span>
           <ChevronRight class="notification-view-all__chevron" />
@@ -308,14 +335,20 @@ const emptyState = computed(() => {
   display: inline-flex;
   align-items: center;
   min-height: var(--ui-control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--notification-line-strong);
+  border-radius: var(--ui-badge-radius-pill);
+  background: var(--notification-surface-subtle);
   color: var(--notification-muted);
   font-size: var(--font-size-12);
   font-weight: 700;
-  transition: color var(--ui-motion-fast);
+  transition: all var(--ui-motion-fast);
 }
 
 .notification-summary__action:hover,
 .notification-summary__action:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--notification-line-strong));
+  background: var(--notification-surface-elevated);
   color: var(--notification-text);
 }
 
@@ -324,6 +357,7 @@ const emptyState = computed(() => {
   align-items: center;
   gap: var(--space-3-5);
   margin-top: var(--space-6);
+  margin-left: var(--space-0-5);
 }
 
 .notification-filter {

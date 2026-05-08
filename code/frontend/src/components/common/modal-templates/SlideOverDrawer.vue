@@ -92,7 +92,10 @@ function handleCloseClick(): void {
               </slot>
             </div>
             <div class="modal-template-drawer__title-block">
-              <p v-if="eyebrow" class="modal-template-drawer__eyebrow">
+              <p
+                v-if="eyebrow"
+                class="modal-template-drawer__eyebrow"
+              >
                 {{ eyebrow }}
               </p>
               <h2 class="modal-template-drawer__title">
@@ -103,7 +106,10 @@ function handleCloseClick(): void {
         </div>
 
         <!-- 副标题区域：常用于展示“未读/总计” -->
-        <div v-if="subtitle || $slots.subtitle" class="modal-template-drawer__subtitle-area">
+        <div
+          v-if="subtitle || $slots.subtitle"
+          class="modal-template-drawer__subtitle-area"
+        >
           <slot name="subtitle">
             <p class="modal-template-drawer__subtitle">
               {{ subtitle }}
@@ -112,7 +118,10 @@ function handleCloseClick(): void {
         </div>
 
         <!-- 额外头部内容：如 Tab 切换 -->
-        <div v-if="$slots['header-extra']" class="modal-template-drawer__header-extra">
+        <div
+          v-if="$slots['header-extra']"
+          class="modal-template-drawer__header-extra"
+        >
           <slot name="header-extra" />
         </div>
       </header>
@@ -126,7 +135,10 @@ function handleCloseClick(): void {
       </div>
 
       <!-- 底部操作：通常是一个浮动风格的按钮/卡片 -->
-      <footer v-if="$slots.footer" class="modal-template-drawer__footer">
+      <footer
+        v-if="$slots.footer"
+        class="modal-template-drawer__footer"
+      >
         <slot name="footer" />
       </footer>
     </div>
@@ -248,12 +260,12 @@ function handleCloseClick(): void {
 
 .modal-template-drawer__header {
   padding: var(--modal-template-drawer-header-padding-block-start)
+    var(--modal-template-drawer-header-padding-inline)
+    var(--modal-template-drawer-header-padding-block-end)
     calc(
       var(--modal-template-drawer-header-padding-inline) + var(--modal-template-drawer-close-size) +
         var(--space-3)
-    )
-    var(--modal-template-drawer-header-padding-block-end)
-    var(--modal-template-drawer-header-padding-inline);
+    );
   position: relative;
   background: var(--modal-template-drawer-header-surface);
 }
@@ -298,7 +310,7 @@ function handleCloseClick(): void {
 
 .modal-template-drawer__close {
   position: absolute;
-  right: var(--modal-template-drawer-close-offset);
+  left: var(--modal-template-drawer-close-offset);
   top: calc(
     var(--modal-template-drawer-header-padding-block-start) +
       (var(--modal-template-drawer-icon-size) - var(--modal-template-drawer-close-size)) / 2
