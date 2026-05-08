@@ -139,13 +139,13 @@ func (h *Handler) GetStudentRecommendations(c *gin.Context) {
 		return
 	}
 
-	items, err := h.service.GetStudentRecommendations(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit)
+	recommendations, err := h.service.GetStudentRecommendations(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.Success(c, items)
+	response.Success(c, recommendations)
 }
 
 func (h *Handler) GetStudentTimeline(c *gin.Context) {

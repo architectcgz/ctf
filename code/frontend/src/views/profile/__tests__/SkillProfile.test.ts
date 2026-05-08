@@ -51,17 +51,32 @@ describe('SkillProfile', () => {
         { key: 'crypto', name: '密码', value: 45 },
       ],
     })
-    assessmentApiMocks.getRecommendations.mockResolvedValue([
-      {
-        challenge_id: 'chal-1',
-        title: '密码学入门',
-        category: 'crypto',
-        difficulty: 'easy',
-        reason: '优先补强密码分析能力',
-      },
-    ])
+    assessmentApiMocks.getRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.88,
+          evidence: '当前密码维度已经形成低分与足量训练样本的组合信号。',
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: 'chal-1',
+          title: '密码学入门',
+          category: 'crypto',
+          difficulty: 'easy',
+          summary: '优先补强密码分析能力',
+          evidence: '当前密码维度已经形成低分与足量训练样本的组合信号。',
+        },
+      ],
+    })
     teacherApiMocks.getClassStudents.mockResolvedValue([])
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([])
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [],
+      challenges: [],
+    })
     teacherApiMocks.getStudentSkillProfile.mockResolvedValue(null)
   })
 
@@ -141,6 +156,38 @@ describe('SkillProfile', () => {
       wrapper.find('#skill-profile-panel-recommendations .skill-overview-actions').exists()
     ).toBe(false)
     expect(wrapper.text()).toContain('密码学入门')
+  })
+
+  it('当 advice 未给出薄弱维度时，不应再按画像低分自行判定弱项', async () => {
+    assessmentApiMocks.getRecommendations.mockResolvedValue({
+      weak_dimensions: [],
+      challenges: [],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
+
+    const wrapper = mount(SkillProfile, {
+      global: {
+        stubs: {
+          RadarChart: {
+            template: '<div data-test="radar-chart">Radar</div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#skill-profile-tab-weakness').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('暂时没有明显短板')
+    expect(wrapper.text()).not.toContain('建议加强密码')
   })
 
   it('应该将页面顶部标签栏放在内容区外，保持与学生仪表盘一致的层级位置', () => {

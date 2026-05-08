@@ -65,10 +65,7 @@ const skillRadarHeightClass = 'skill-radar-height'
   <section
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
-    <main
-      v-if="loading"
-      class="content-pane"
-    >
+    <main v-if="loading" class="content-pane">
       <div class="space-y-6">
         <div class="space-y-6">
           <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90" />
@@ -82,10 +79,7 @@ const skillRadarHeightClass = 'skill-radar-height'
       </div>
     </main>
 
-    <main
-      v-else-if="error"
-      class="content-pane"
-    >
+    <main v-else-if="error" class="content-pane">
       <div class="py-8 text-center">
         <TriangleAlert class="skill-error-icon mx-auto h-10 w-10" />
         <p class="skill-error-copy mt-3 text-sm">
@@ -101,10 +95,7 @@ const skillRadarHeightClass = 'skill-radar-height'
       </div>
     </main>
 
-    <main
-      v-else-if="!skillProfile"
-      class="content-pane"
-    >
+    <main v-else-if="!skillProfile" class="content-pane">
       <AppEmpty
         title="暂无能力画像数据"
         description="完成更多靶场题目后，系统将为你生成能力画像。"
@@ -112,15 +103,8 @@ const skillRadarHeightClass = 'skill-radar-height'
       />
     </main>
 
-    <div
-      v-else
-      class="skill-profile-page"
-    >
-      <nav
-        class="workspace-tabbar top-tabs"
-        role="tablist"
-        aria-label="能力画像内容切换"
-      >
+    <div v-else class="skill-profile-page">
+      <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="能力画像内容切换">
         <button
           v-for="(tab, index) in contentTabs"
           :id="tab.buttonId"
@@ -142,34 +126,14 @@ const skillRadarHeightClass = 'skill-radar-height'
 
       <main class="content-pane">
         <div class="skill-profile-content">
-          <div
-            v-if="isTeacher"
-            class="skill-teacher-panel"
-          >
-            <div class="skill-section-kicker">
-              Teacher View
-            </div>
-            <h3 class="workspace-tab-heading__title">
-              查看学员能力画像
-            </h3>
-            <label
-              for="skill-student-select"
-              class="skill-field-label mt-3 block"
-            >选择学员</label>
+          <div v-if="isTeacher" class="skill-teacher-panel">
+            <div class="skill-section-kicker">Teacher View</div>
+            <h3 class="workspace-tab-heading__title">查看学员能力画像</h3>
+            <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
             <div class="ui-control-wrap mt-2 w-full max-w-sm">
-              <select
-                id="skill-student-select"
-                v-model="selectedStudentId"
-                class="ui-control"
-              >
-                <option value="">
-                  我的能力画像
-                </option>
-                <option
-                  v-for="student in students"
-                  :key="student.id"
-                  :value="student.id"
-                >
+              <select id="skill-student-select" v-model="selectedStudentId" class="ui-control">
+                <option value="">我的能力画像</option>
+                <option v-for="student in students" :key="student.id" :value="student.id">
                   {{ student.name || student.username }} ({{ student.username }})
                 </option>
               </select>
@@ -195,16 +159,8 @@ const skillRadarHeightClass = 'skill-radar-height'
                     <p class="skill-overview-copy workspace-page-copy">
                       查看当前能力维度表现，并根据薄弱项获取推荐靶场。
                     </p>
-                    <div
-                      class="skill-overview-actions"
-                      role="group"
-                      aria-label="能力画像快捷操作"
-                    >
-                      <button
-                        type="button"
-                        class="journal-btn"
-                        @click="loadCurrentData"
-                      >
+                    <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
+                      <button type="button" class="journal-btn" @click="loadCurrentData">
                         刷新
                       </button>
                       <button
@@ -217,12 +173,8 @@ const skillRadarHeightClass = 'skill-radar-height'
                     </div>
                   </div>
 
-                  <div class="skill-section-kicker">
-                    Radar Analysis
-                  </div>
-                  <h3 class="workspace-tab-heading__title">
-                    能力维度分析
-                  </h3>
+                  <div class="skill-section-kicker">Radar Analysis</div>
+                  <h3 class="workspace-tab-heading__title">能力维度分析</h3>
 
                   <div class="skill-dimension-wrap mt-5">
                     <div class="skill-dimension-list mt-2">
@@ -253,17 +205,13 @@ const skillRadarHeightClass = 'skill-radar-height'
                             <div class="skill-dimension-legend__name">
                               {{ dim.name }}
                             </div>
-                            <div class="skill-dimension-legend__hint mt-1">
-                              当前维度表现
-                            </div>
+                            <div class="skill-dimension-legend__hint mt-1">当前维度表现</div>
                           </div>
                           <div class="text-right">
                             <div class="skill-dimension-legend__score tech-font">
                               {{ dim.value }}
                             </div>
-                            <div class="skill-dimension-legend__total text-xs">
-                              / 100
-                            </div>
+                            <div class="skill-dimension-legend__total text-xs">/ 100</div>
                           </div>
                         </article>
                       </div>
@@ -283,38 +231,22 @@ const skillRadarHeightClass = 'skill-radar-height'
               :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
             >
               <div class="skill-weak-wrap">
-                <div class="skill-section-kicker">
-                  Weak Points
-                </div>
+                <div class="skill-section-kicker">Weak Points</div>
                 <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
                   <Flame class="skill-weak-title__icon h-5 w-5" />
                   薄弱项提示
                 </div>
-                <div
-                  v-if="weakDimensions.length > 0"
-                  class="skill-weak-list mt-5"
-                >
-                  <div
-                    v-for="dim in weakDimensions.slice(0, 4)"
-                    :key="dim"
-                    class="skill-weak-item"
-                  >
-                    <div class="journal-note-label">
-                      建议加强
-                    </div>
+                <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
+                  <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
+                    <div class="journal-note-label">建议加强</div>
                     <div class="skill-weak-dimension mt-2 text-sm font-semibold">
                       {{ dim }}
                     </div>
                   </div>
                 </div>
-                <div
-                  v-else
-                  class="skill-weak-list mt-5"
-                >
+                <div v-else class="skill-weak-list mt-5">
                   <div class="skill-weak-item">
-                    <div class="journal-note-label">
-                      当前状态
-                    </div>
+                    <div class="journal-note-label">当前状态</div>
                     <div class="skill-weak-dimension mt-2 text-sm font-semibold">
                       暂时没有明显短板
                     </div>
@@ -332,15 +264,9 @@ const skillRadarHeightClass = 'skill-radar-height'
               aria-labelledby="skill-profile-tab-recommendations"
               :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
             >
-              <div class="skill-section-kicker">
-                Recommendations
-              </div>
-              <h3 class="workspace-tab-heading__title">
-                推荐靶场
-              </h3>
-              <p class="skill-section-copy mt-2 text-sm leading-6">
-                优先从当前最匹配的题目开始。
-              </p>
+              <div class="skill-section-kicker">Recommendations</div>
+              <h3 class="workspace-tab-heading__title">推荐靶场</h3>
+              <p class="skill-section-copy mt-2 text-sm leading-6">优先从当前最匹配的题目开始。</p>
 
               <div
                 v-if="loadingRecommendations"
@@ -357,10 +283,7 @@ const skillRadarHeightClass = 'skill-radar-height'
                 暂无推荐靶场，完成更多题目后会自动生成。
               </div>
 
-              <div
-                v-else
-                class="skill-recommend-list mt-5"
-              >
+              <div v-else class="skill-recommend-list mt-5">
                 <button
                   v-for="item in recommendations"
                   :key="item.challenge_id"
@@ -382,7 +305,13 @@ const skillRadarHeightClass = 'skill-radar-height'
                         </span>
                       </div>
                       <p class="skill-recommend-reason mt-1 text-xs leading-5">
-                        {{ item.reason }}
+                        {{ item.summary }}
+                      </p>
+                      <p
+                        v-if="item.evidence"
+                        class="skill-recommend-evidence mt-2 text-xs leading-5"
+                      >
+                        {{ item.evidence }}
                       </p>
                     </div>
                     <ChevronRight class="skill-recommend-arrow h-4 w-4 shrink-0" />
@@ -659,7 +588,8 @@ const skillRadarHeightClass = 'skill-radar-height'
 .skill-dimension-legend__total,
 .skill-section-copy,
 .skill-recommend-feedback,
-.skill-recommend-reason {
+.skill-recommend-reason,
+.skill-recommend-evidence {
   color: var(--journal-muted);
 }
 

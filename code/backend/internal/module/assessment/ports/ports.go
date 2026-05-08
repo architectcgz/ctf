@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -36,6 +37,10 @@ type RecommendationProfileRepository interface {
 	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
 }
 
+type RecommendationTeachingFactRepository interface {
+	GetStudentTeachingFactSnapshot(ctx context.Context, userID int64) (*teachingadvice.StudentFactSnapshot, error)
+}
+
 type RecommendationSolvedChallengeRepository interface {
 	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
 }
@@ -54,6 +59,7 @@ type ProfileRepository interface {
 
 type RecommendationRepository interface {
 	RecommendationProfileRepository
+	RecommendationTeachingFactRepository
 	RecommendationSolvedChallengeRepository
 }
 

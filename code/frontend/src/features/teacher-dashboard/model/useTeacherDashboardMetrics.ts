@@ -140,7 +140,7 @@ export function useTeacherDashboardMetrics({
   const interventionTips = computed(() =>
     buildInterventionTips({
       activeRate: summary.value?.active_rate,
-      firstReviewTitle: review.value?.items[0]?.title,
+      firstReviewTitle: review.value?.items[0]?.summary,
       dominantWeakDimension: dominantWeakDimension.value,
     })
   )
@@ -162,7 +162,7 @@ export function useTeacherDashboardMetrics({
     buildPortraitSummaryNotes({
       strongestDimensionCount: strongestDimensionCount.value,
       dominantWeakDimension: dominantWeakDimension.value,
-      firstReviewTitle: review.value?.items[0]?.title,
+      firstReviewTitle: review.value?.items[0]?.summary,
     })
   )
 

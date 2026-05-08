@@ -3,6 +3,7 @@ package queries_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -46,7 +47,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.SkillProfile{}, &model.Submission{}, &model.AWDAttackLog{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.SkillProfile{}, &model.Submission{}, &model.AWDAttackLog{}); err != nil {
 		t.Fatalf("migrate recommendation tables: %v", err)
 	}
 	return db
@@ -76,7 +77,7 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	cached := []*dto.ChallengeRecommendation{
-		{ID: 1, Title: "cached-web", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Reason: "cached"},
+		{ID: 1, Title: "cached-web", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Summary: "cached"},
 	}
 	payload, err := json.Marshal(cached)
 	if err != nil {
@@ -103,6 +104,24 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
+	if err := db.Create(&model.User{
+		ID:       7,
+		Username: "student-7",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+
+	challenges := []model.Challenge{
+		{ID: 101, Title: "web-intro", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished},
+		{ID: 202, Title: "pwn-intro", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Points: 150, Status: model.ChallengeStatusPublished},
+	}
+	for _, challenge := range challenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed challenge: %v", err)
+		}
+	}
+
 	profiles := []model.SkillProfile{
 		{UserID: 7, Dimension: model.DimensionWeb, Score: 0.2, UpdatedAt: now},
 		{UserID: 7, Dimension: model.DimensionCrypto, Score: 0.8, UpdatedAt: now},
@@ -116,27 +135,14 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 
 	submissions := []model.Submission{
 		{UserID: 7, ChallengeID: 101, IsCorrect: true, SubmittedAt: now},
-		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now},
+		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now.Add(1 * time.Minute)},
+		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now.Add(2 * time.Minute)},
+		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now.Add(3 * time.Minute)},
 	}
 	for _, submission := range submissions {
 		if err := db.Create(&submission).Error; err != nil {
 			t.Fatalf("seed submission: %v", err)
 		}
-	}
-	if err := db.Create(&model.AWDAttackLog{
-		ID:                1,
-		RoundID:           701,
-		AttackerTeamID:    801,
-		VictimTeamID:      802,
-		AWDChallengeID:    303,
-		AttackType:        model.AWDAttackTypeFlagCapture,
-		Source:            model.AWDAttackSourceSubmission,
-		IsSuccess:         true,
-		ScoreGained:       80,
-		SubmittedByUserID: ptrRecommendationInt64(7),
-		CreatedAt:         now,
-	}).Error; err != nil {
-		t.Fatalf("seed awd attack log: %v", err)
 	}
 
 	stubRepo := &stubChallengeRecommendationRepo{
@@ -160,14 +166,20 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	if stubRepo.lastLimit != 5 {
 		t.Fatalf("expected limit capped to max limit 5, got %d", stubRepo.lastLimit)
 	}
-	if len(stubRepo.lastDims) != 2 || stubRepo.lastDims[0] != model.DimensionWeb || stubRepo.lastDims[1] != model.DimensionPwn {
+	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != model.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
 	}
 	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
 		t.Fatalf("unexpected solved challenge ids: %+v", stubRepo.lastSolved)
 	}
-	if items[0].Reason == "" || items[1].Reason == "" {
-		t.Fatalf("expected recommendation reason generated, got %+v", items)
+	if items[0].Summary == "" || items[1].Summary == "" {
+		t.Fatalf("expected recommendation summary generated, got %+v", items)
+	}
+	if items[0].Dimension == "" || items[1].Dimension == "" {
+		t.Fatalf("expected recommendation dimensions generated, got %+v", items)
+	}
+	if len(items[0].ReasonCodes) == 0 || len(items[1].ReasonCodes) == 0 {
+		t.Fatalf("expected recommendation reason codes generated, got %+v", items)
 	}
 }
 
@@ -216,7 +228,7 @@ func TestRecommendationServiceRecommendChallengesHonorsCancellation(t *testing.T
 	cancel()
 
 	_, err := service.RecommendChallenges(ctx, 11, 0)
-	if err == nil || err != context.Canceled {
+	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }

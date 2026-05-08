@@ -74,7 +74,8 @@ export function useTeacherInterventionRecommendations(
       .sort((left, right) => {
         const scoreGap = right.score - left.score
         if (scoreGap !== 0) return scoreGap
-        const eventGap = (left.student.recent_event_count ?? 0) - (right.student.recent_event_count ?? 0)
+        const eventGap =
+          (left.student.recent_event_count ?? 0) - (right.student.recent_event_count ?? 0)
         if (eventGap !== 0) return eventGap
         const solvedGap = (left.student.solved_count ?? 0) - (right.student.solved_count ?? 0)
         if (solvedGap !== 0) return solvedGap
@@ -128,11 +129,12 @@ export function useTeacherInterventionRecommendations(
       await Promise.all(
         targetIds.map(async (studentId) => {
           try {
-            const [recommendation] = await getStudentRecommendations(studentId)
+            const { challenges } = await getStudentRecommendations(studentId)
+            const recommendation = challenges[0] ?? null
             if (cancelled) return
             recommendationMap.value = {
               ...recommendationMap.value,
-              [studentId]: recommendation ?? null,
+              [studentId]: recommendation,
             }
           } catch {
             if (cancelled) return

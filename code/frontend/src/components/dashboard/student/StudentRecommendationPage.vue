@@ -69,9 +69,7 @@ const summaryCards = computed(() => [
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="recommendation-header">
-        <div class="workspace-overline">
-          Action Queue
-        </div>
+        <div class="workspace-overline">Action Queue</div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           现在先练这几道
         </h1>
@@ -90,10 +88,7 @@ const summaryCards = computed(() => [
               {{ dim }}
             </span>
           </template>
-          <span
-            v-else
-            class="journal-weak-tag journal-weak-tag--stable"
-          > 暂无明显短板 </span>
+          <span v-else class="journal-weak-tag journal-weak-tag--stable"> 暂无明显短板 </span>
         </div>
 
         <div
@@ -122,51 +117,30 @@ const summaryCards = computed(() => [
         :class="{ 'recommend-board--embedded': embedded }"
       >
         <section class="recommend-section">
-          <div
-            v-if="recommendations.length > 0"
-            class="recommend-toolbar"
-          >
+          <div v-if="recommendations.length > 0" class="recommend-toolbar">
             <p class="recommend-toolbar__copy">
               按当前顺序直接推进，做完这组再回来刷新下一批建议。
             </p>
             <div class="recommend-toolbar__actions">
-              <button
-                type="button"
-                class="journal-btn-outline"
-                @click="emit('openSkillProfile')"
-              >
+              <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
                 能力画像
               </button>
-              <button
-                type="button"
-                class="journal-btn-primary"
-                @click="emit('openChallenges')"
-              >
+              <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
                 浏览全部题目
               </button>
             </div>
           </div>
 
-          <div
-            v-if="recommendations.length === 0"
-            class="journal-soft-empty-state mt-5"
-          >
+          <div v-if="recommendations.length === 0" class="journal-soft-empty-state mt-5">
             当前没有推荐题目，可以先去题目列表探索新的方向。
             <div class="mt-4">
-              <button
-                type="button"
-                class="journal-btn-primary"
-                @click="emit('openChallenges')"
-              >
+              <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
                 浏览全部题目
               </button>
             </div>
           </div>
 
-          <div
-            v-else
-            class="recommend-list mt-4"
-          >
+          <div v-else class="recommend-list mt-4">
             <button
               v-for="(item, index) in recommendations"
               :key="item.challenge_id"
@@ -196,7 +170,10 @@ const summaryCards = computed(() => [
                     </span>
                   </div>
                   <p class="journal-soft-body-copy mt-2 text-sm leading-6">
-                    {{ item.reason }}
+                    {{ item.summary }}
+                  </p>
+                  <p v-if="item.evidence" class="journal-note-helper mt-2 text-xs leading-5">
+                    {{ item.evidence }}
                   </p>
                 </div>
                 <ArrowRight

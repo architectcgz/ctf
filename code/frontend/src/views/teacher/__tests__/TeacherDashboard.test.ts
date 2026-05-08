@@ -72,30 +72,32 @@ describe('TeacherDashboard', () => {
       class_name: 'Class A',
       items: [
         {
-          key: 'activity',
-          title: '班级活跃度需要补强',
-          detail: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
-          accent: 'warning',
+          code: 'activity_risk',
+          severity: 'warning',
+          summary: '班级活跃度需要补强',
+          evidence: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
         },
         {
-          key: 'weak_dimension',
-          title: '优先补薄弱维度',
-          detail: 'crypto 是当前最集中的薄弱项，涉及 1 名学生，建议本周统一布置该维度基础题。',
-          accent: 'primary',
+          code: 'weak_dimension_cluster',
+          severity: 'attention',
+          summary: '优先补薄弱维度',
+          evidence: 'crypto 是当前最集中的薄弱项，涉及 1 名学生，建议本周统一布置该维度基础题。',
+          dimension: 'crypto',
           students: [{ id: 'stu-1', username: 'alice' }],
           recommendation: {
             challenge_id: '12',
             title: 'crypto-lab',
             category: 'crypto',
             difficulty: 'medium',
-            reason: '针对薄弱维度：密码',
+            summary: '针对薄弱维度：密码',
+            evidence: '当前密码维度已经形成高置信度薄弱信号。',
           },
         },
         {
-          key: 'focus_students',
-          title: '先跟进重点学生',
-          detail: '建议教师先跟进 alice，并优先布置推荐题做补强训练。',
-          accent: 'primary',
+          code: 'focus_students',
+          severity: 'attention',
+          summary: '先跟进重点学生',
+          evidence: '建议教师先跟进 alice，并优先布置推荐题做补强训练。',
           students: [{ id: 'stu-1', username: 'alice' }],
         },
       ],
@@ -128,24 +130,35 @@ describe('TeacherDashboard', () => {
       ],
       updated_at: '2026-03-07T12:00:00Z',
     })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([
-      {
-        challenge_id: '12',
-        title: 'crypto-lab',
-        category: 'crypto',
-        difficulty: 'medium',
-        reason: '针对薄弱维度：密码',
-      },
-    ])
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.83,
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: '12',
+          title: 'crypto-lab',
+          category: 'crypto',
+          difficulty: 'medium',
+          summary: '针对薄弱维度：密码',
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+    })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   it('应该展示教师概览且不加载学员详情接口', async () => {
@@ -222,9 +235,7 @@ describe('TeacherDashboard', () => {
   })
 
   it('教师概览首屏应使用共享 metric 渐变卡片和明确的工作台布局', async () => {
-    expect(teacherDashboardPageSource).toContain(
-      'class="content-pane teacher-dashboard-content"'
-    )
+    expect(teacherDashboardPageSource).toContain('class="content-pane teacher-dashboard-content"')
     expect(teacherDashboardPageSource).toContain(
       'class="workspace-hero teacher-dashboard-hero tab-panel"'
     )
@@ -243,7 +254,9 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('class="hero-rail workspace-subpanel"')
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
     expect(teacherDashboardPageSource).not.toContain('--page-top-tabs')
-    expect(teacherDashboardPageSource).toContain('--metric-panel-columns: repeat(4, minmax(0, 1fr));')
+    expect(teacherDashboardPageSource).toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
     expect(teacherDashboardPageSource).toMatch(
       /\.summary-grid\s*\{[\s\S]*--metric-panel-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
     )
@@ -253,9 +266,7 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toMatch(
       /\.hero-rail\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 88%, transparent\);/s
     )
-    expect(teacherDashboardPageSource).not.toMatch(
-      /\.hero-rail\s*\{[\s\S]*radial-gradient\(/s
-    )
+    expect(teacherDashboardPageSource).not.toMatch(/\.hero-rail\s*\{[\s\S]*radial-gradient\(/s)
 
     const wrapper = mount(TeacherDashboard, {
       global: {
@@ -273,7 +284,9 @@ describe('TeacherDashboard', () => {
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')
     expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(summary.findAll('.teacher-overview-card.progress-card.metric-panel-card')).toHaveLength(4)
+    expect(summary.findAll('.teacher-overview-card.progress-card.metric-panel-card')).toHaveLength(
+      4
+    )
     expect(wrapper.find('#overview .hero-rail.workspace-subpanel').exists()).toBe(true)
     expect(wrapper.find('#overview .student-insight-list').exists()).toBe(false)
     expect(wrapper.find('#portrait .weak-list').exists()).toBe(true)
@@ -330,13 +343,12 @@ describe('TeacherDashboard', () => {
 
   it('管理员从教师概览进入班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherDashboard, {
       global: {
@@ -383,9 +395,13 @@ describe('TeacherDashboard', () => {
   })
 
   it('教师概览 tab 内容应使用通用目录区块和扁平内容区', () => {
-    expect(teacherDashboardPageSource).toContain('class="teacher-dashboard-panel-body portrait-grid"')
+    expect(teacherDashboardPageSource).toContain(
+      'class="teacher-dashboard-panel-body portrait-grid"'
+    )
     expect(teacherDashboardPageSource).toContain('class="weak-list workspace-directory-list"')
-    expect(teacherDashboardPageSource).toContain('class="student-insight-list workspace-directory-list"')
+    expect(teacherDashboardPageSource).toContain(
+      'class="student-insight-list workspace-directory-list"'
+    )
     expect(teacherDashboardPageSource).toContain(
       'class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat"'
     )

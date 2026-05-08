@@ -6,11 +6,12 @@ import { getMyProgress, getMyTimeline, getRecommendations, getSkillProfile } fro
 import type {
   MyProgressData,
   RecommendationItem,
+  RecommendationWeakDimension,
   SkillProfileData,
   TimelineEvent,
 } from '@/api/contracts'
 import type { useAuthStore } from '@/stores/auth'
-import { getWeakDimensions } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/utils/skillProfile'
 import type { DashboardHighlightItem } from './studentDashboardTypes'
 
 interface UseStudentDashboardDataOptions {
@@ -18,19 +19,19 @@ interface UseStudentDashboardDataOptions {
   router: Router
 }
 
-export function useStudentDashboardData({
-  authStore,
-  router,
-}: UseStudentDashboardDataOptions) {
+export function useStudentDashboardData({ authStore, router }: UseStudentDashboardDataOptions) {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const progress = ref<MyProgressData | null>(null)
   const timeline = ref<TimelineEvent[]>([])
   const recommendations = ref<RecommendationItem[]>([])
+  const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
   const skillProfile = ref<SkillProfileData | null>(null)
 
   const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
-  const weakDimensions = computed(() => getWeakDimensions(skillProfile.value).slice(0, 3))
+  const weakDimensions = computed(() =>
+    getWeakDimensionLabels(weakDimensionAdvice.value).slice(0, 3)
+  )
   const recommendationCount = computed(() => recommendations.value.length)
   const timelineCount = computed(() => timeline.value.length)
   const categoryStats = computed(() => progress.value?.category_stats ?? [])
@@ -80,15 +81,23 @@ export function useStudentDashboardData({
     error.value = null
     try {
       const [progressPayload, timelinePayload, recommendationPayload, profilePayload] =
-        await Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])
+        await Promise.all([
+          getMyProgress(),
+          getMyTimeline(),
+          getRecommendations(),
+          getSkillProfile(),
+        ])
 
       progress.value = progressPayload
       timeline.value = timelinePayload.slice(0, 6)
-      recommendations.value = recommendationPayload.slice(0, 4)
+      recommendations.value = recommendationPayload.challenges.slice(0, 4)
+      weakDimensionAdvice.value = recommendationPayload.weak_dimensions
       skillProfile.value = profilePayload
     } catch (err) {
       console.error('加载学生仪表盘失败:', err)
       error.value = '加载仪表盘失败，请稍后重试'
+      recommendations.value = []
+      weakDimensionAdvice.value = []
     } finally {
       loading.value = false
     }

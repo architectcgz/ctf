@@ -40,10 +40,13 @@ type TeacherReviewStudentRef struct {
 }
 
 type TeacherClassReviewItem struct {
-	Key            string                     `json:"key"`
-	Title          string                     `json:"title"`
-	Detail         string                     `json:"detail"`
-	Accent         string                     `json:"accent"`
+	Code           string                     `json:"code"`
+	Severity       string                     `json:"severity"`
+	Summary        string                     `json:"summary"`
+	Evidence       string                     `json:"evidence,omitempty"`
+	Action         string                     `json:"action,omitempty"`
+	ReasonCodes    []string                   `json:"reason_codes,omitempty"`
+	Dimension      string                     `json:"dimension,omitempty"`
 	Students       []TeacherReviewStudentRef  `json:"students,omitempty"`
 	Recommendation *TeacherRecommendationItem `json:"recommendation,omitempty"`
 }
@@ -92,12 +95,29 @@ type TeacherProgressResp struct {
 	ByDifficulty     map[string]ProgressBreakdown `json:"by_difficulty,omitempty"`
 }
 
+type TeacherRecommendationWeakDimension struct {
+	Dimension  string  `json:"dimension"`
+	Severity   string  `json:"severity"`
+	Confidence float64 `json:"confidence"`
+	Evidence   string  `json:"evidence,omitempty"`
+}
+
 type TeacherRecommendationItem struct {
-	ChallengeID int64  `json:"challenge_id"`
-	Title       string `json:"title"`
-	Category    string `json:"category"`
-	Difficulty  string `json:"difficulty"`
-	Reason      string `json:"reason"`
+	ChallengeID    int64    `json:"challenge_id"`
+	Title          string   `json:"title"`
+	Category       string   `json:"category"`
+	Difficulty     string   `json:"difficulty"`
+	Dimension      string   `json:"dimension,omitempty"`
+	DifficultyBand string   `json:"difficulty_band,omitempty"`
+	Severity       string   `json:"severity,omitempty"`
+	ReasonCodes    []string `json:"reason_codes,omitempty"`
+	Summary        string   `json:"summary"`
+	Evidence       string   `json:"evidence,omitempty"`
+}
+
+type TeacherRecommendationResp struct {
+	WeakDimensions []TeacherRecommendationWeakDimension `json:"weak_dimensions"`
+	Challenges     []TeacherRecommendationItem          `json:"challenges"`
 }
 
 type TeacherEvidenceQuery struct {

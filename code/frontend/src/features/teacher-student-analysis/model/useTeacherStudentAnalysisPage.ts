@@ -14,6 +14,7 @@ import {
 import type {
   MyProgressData,
   RecommendationItem,
+  RecommendationWeakDimension,
   SkillProfileData,
   TeacherClassItem,
   TeacherStudentItem,
@@ -22,7 +23,7 @@ import type {
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
-import { getWeakDimensions } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/utils/skillProfile'
 import { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
 import { useTeacherReviewWorkspace } from './useTeacherReviewWorkspace'
 import { useTeacherStudentAnalysisNavigation } from './useTeacherStudentAnalysisNavigation'
@@ -48,6 +49,7 @@ export function useTeacherStudentAnalysisPage() {
   const progress = ref<MyProgressData | null>(null)
   const skillProfile = ref<SkillProfileData | null>(null)
   const recommendations = ref<RecommendationItem[]>([])
+  const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
   const timeline = ref<TimelineEvent[]>([])
   const {
     evidence,
@@ -90,7 +92,7 @@ export function useTeacherStudentAnalysisPage() {
       ((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100
     )
   })
-  const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
+  const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
   const writeupTotalPages = computed(() =>
     Math.max(1, Math.ceil(writeupTotal.value / Math.max(1, writeupPageSize.value)))
   )
@@ -148,7 +150,9 @@ export function useTeacherStudentAnalysisPage() {
     }
   }
 
-  function reviewWorkspaceQueryMatchesState(nextQuery: Partial<typeof sessionQuery.value>): boolean {
+  function reviewWorkspaceQueryMatchesState(
+    nextQuery: Partial<typeof sessionQuery.value>
+  ): boolean {
     return (
       (nextQuery.mode || undefined) === (sessionQuery.value.mode || undefined) &&
       (nextQuery.result || undefined) === (sessionQuery.value.result || undefined) &&
@@ -187,6 +191,7 @@ export function useTeacherStudentAnalysisPage() {
       progress.value = null
       skillProfile.value = null
       recommendations.value = []
+      weakDimensionAdvice.value = []
       timeline.value = []
       resetReviewWorkspace()
       resetSubmissionReviewState()
@@ -223,7 +228,8 @@ export function useTeacherStudentAnalysisPage() {
 
       progress.value = nextProgress
       skillProfile.value = nextProfile
-      recommendations.value = nextRecommendations
+      recommendations.value = nextRecommendations.challenges
+      weakDimensionAdvice.value = nextRecommendations.weak_dimensions
       timeline.value = nextTimeline
       void _reviewWorkspaceLoaded
       applyWriteupPagePayload(nextWriteups)

@@ -1,4 +1,11 @@
-import type { ChallengeCategory, RecommendationItem, SkillProfileData } from '@/api/contracts'
+import type {
+  AdviceSeverity,
+  ChallengeCategory,
+  RecommendationData,
+  RecommendationItem,
+  RecommendationWeakDimension,
+  SkillProfileData,
+} from '@/api/contracts'
 
 export interface RawSkillProfileDimension {
   dimension: ChallengeCategory
@@ -12,16 +19,29 @@ export interface RawSkillProfileResponse {
 }
 
 export interface RawRecommendationChallenge {
-  id: string | number
+  id?: string | number
+  challenge_id?: string | number
   title: string
   category: ChallengeCategory
   difficulty: RecommendationItem['difficulty']
-  reason: string
+  dimension?: string
+  difficulty_band?: RecommendationItem['difficulty_band']
+  severity?: AdviceSeverity
+  reason_codes?: string[]
+  summary: string
+  evidence?: string
 }
 
 export interface RawRecommendationResponse {
-  weak_dimensions?: string[]
+  weak_dimensions?: RawRecommendationWeakDimension[]
   challenges: RawRecommendationChallenge[]
+}
+
+export interface RawRecommendationWeakDimension {
+  dimension: string
+  severity: AdviceSeverity
+  confidence: number
+  evidence?: string
 }
 
 const dimensionLabels: Record<ChallengeCategory, string> = {
@@ -53,14 +73,41 @@ export function normalizeSkillProfile(raw: RawSkillProfileResponse): SkillProfil
   }
 }
 
-export function normalizeRecommendations(raw: RawRecommendationResponse): RecommendationItem[] {
-  return raw.challenges.map((challenge) => ({
-    challenge_id: String(challenge.id),
+function toDimensionLabel(dimension: string): string {
+  return dimensionLabels[dimension as ChallengeCategory] || dimension
+}
+
+function normalizeWeakDimensions(
+  weakDimensions: RawRecommendationWeakDimension[] | undefined
+): RecommendationWeakDimension[] {
+  return (weakDimensions ?? []).map((item) => ({
+    ...item,
+    label: toDimensionLabel(item.dimension),
+  }))
+}
+
+function normalizeRecommendationItems(
+  challenges: RawRecommendationChallenge[]
+): RecommendationItem[] {
+  return challenges.map((challenge) => ({
+    challenge_id: String(challenge.challenge_id ?? challenge.id),
     title: challenge.title,
     category: challenge.category,
     difficulty: challenge.difficulty,
-    reason: challenge.reason,
+    dimension: challenge.dimension,
+    difficulty_band: challenge.difficulty_band,
+    severity: challenge.severity,
+    reason_codes: challenge.reason_codes,
+    summary: challenge.summary,
+    evidence: challenge.evidence,
   }))
+}
+
+export function normalizeRecommendationData(raw: RawRecommendationResponse): RecommendationData {
+  return {
+    weak_dimensions: normalizeWeakDimensions(raw.weak_dimensions),
+    challenges: normalizeRecommendationItems(raw.challenges),
+  }
 }
 
 export function toRadarScores(profile: SkillProfileData | null) {
@@ -72,7 +119,6 @@ export function toRadarScores(profile: SkillProfileData | null) {
   }))
 }
 
-export function getWeakDimensions(profile: SkillProfileData | null, threshold = 60): string[] {
-  if (!profile) return []
-  return profile.dimensions.filter((item) => item.value < threshold).map((item) => item.name)
+export function getWeakDimensionLabels(weakDimensions: RecommendationWeakDimension[]): string[] {
+  return weakDimensions.map((item) => item.label)
 }

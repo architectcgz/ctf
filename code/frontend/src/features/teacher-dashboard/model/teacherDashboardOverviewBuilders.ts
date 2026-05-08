@@ -106,12 +106,12 @@ export function buildInterventionTips(options: BuildInterventionTipsOptions): st
 }
 
 export function buildTeachingAdvice(
-  reviewItems: Array<{ title: string; detail: string }>,
+  reviewItems: Array<{ summary: string; evidence?: string }>,
   interventionTips: string[]
 ) {
   const fromReview = reviewItems.slice(0, 3).map((item) => ({
-    title: item.title,
-    detail: item.detail,
+    title: item.summary,
+    detail: item.evidence || item.summary,
   }))
 
   if (fromReview.length > 0) return fromReview

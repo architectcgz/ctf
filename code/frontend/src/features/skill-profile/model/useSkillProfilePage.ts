@@ -3,9 +3,14 @@ import { useRouter } from 'vue-router'
 
 import { getRecommendations, getSkillProfile } from '@/api/assessment'
 import { getClassStudents, getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
-import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
+import type {
+  RecommendationItem,
+  RecommendationWeakDimension,
+  SkillProfileData,
+  TeacherStudentItem,
+} from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
-import { getWeakDimensions } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/utils/skillProfile'
 
 let loadToken = 0
 
@@ -23,8 +28,9 @@ export function useSkillProfilePage() {
 
   const loadingRecommendations = ref(false)
   const recommendations = ref<RecommendationItem[]>([])
+  const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
 
-  const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
+  const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
   const radarIndicators = computed(
     () =>
       skillProfile.value?.dimensions.map((dimension) => ({
@@ -95,13 +101,15 @@ export function useSkillProfilePage() {
         return
       }
 
-      recommendations.value = nextRecommendations
+      recommendations.value = nextRecommendations.challenges
+      weakDimensionAdvice.value = nextRecommendations.weak_dimensions
     } catch (err) {
       console.error('加载推荐靶场失败:', err)
       if (token !== loadToken) {
         return
       }
       recommendations.value = []
+      weakDimensionAdvice.value = []
     } finally {
       if (token === loadToken) {
         loadingRecommendations.value = false

@@ -37,20 +37,10 @@ function openStudent(studentId: string): void {
 </script>
 
 <template>
-  <section
-    class="teacher-panel"
-    :class="{ 'teacher-panel--shellless': bare }"
-  >
-    <header
-      v-if="!bare"
-      class="teacher-panel__header"
-    >
-      <div class="journal-eyebrow">
-        Intervention
-      </div>
-      <h2 class="teacher-panel__title">
-        优先介入学生
-      </h2>
+  <section class="teacher-panel" :class="{ 'teacher-panel--shellless': bare }">
+    <header v-if="!bare" class="teacher-panel__header">
+      <div class="journal-eyebrow">Intervention</div>
+      <h2 class="teacher-panel__title">优先介入学生</h2>
       <p class="teacher-panel__subtitle">
         {{
           className
@@ -67,10 +57,7 @@ function openStudent(studentId: string): void {
       description="当前班级学生的训练活跃度和解题表现暂时没有明显风险。"
     />
 
-    <div
-      v-else
-      class="intervention-list intervention-list--premium"
-    >
+    <div v-else class="intervention-list intervention-list--premium">
       <article
         v-for="item in candidates"
         :key="item.student.id"
@@ -87,7 +74,7 @@ function openStudent(studentId: string): void {
                 @click="openStudent(item.student.id)"
               >
                 <span class="intervention-item__name">{{
-                item.student.name || item.student.username
+                  item.student.name || item.student.username
                 }}</span>
               </button>
               <span class="intervention-item__priority">
@@ -101,10 +88,7 @@ function openStudent(studentId: string): void {
               <span class="intervention-item__meta-inline intervention-item__meta-inline--username">
                 {{ item.student.username }}
               </span>
-              <span
-                v-if="item.student.weak_dimension"
-                class="intervention-item__meta-inline"
-              >
+              <span v-if="item.student.weak_dimension" class="intervention-item__meta-inline">
                 薄弱项 {{ item.student.weak_dimension }}
               </span>
             </div>
@@ -135,12 +119,8 @@ function openStudent(studentId: string): void {
             class="intervention-item__recommendation intervention-item__recommendation--premium"
           >
             <div class="intervention-item__recommendation-heading">
-              <div class="intervention-item__recommendation-label">
-                建议训练题
-              </div>
-              <div class="intervention-item__recommendation-kicker">
-                可直接布置
-              </div>
+              <div class="intervention-item__recommendation-label">建议训练题</div>
+              <div class="intervention-item__recommendation-kicker">可直接布置</div>
             </div>
             <div class="intervention-item__recommendation-body">
               <div class="recommendation-info">
@@ -153,8 +133,14 @@ function openStudent(studentId: string): void {
                 </div>
               </div>
               <div class="intervention-item__recommendation-reason">
-                {{ getRecommendation(item.student.id)?.reason }}
+                {{ getRecommendation(item.student.id)?.summary }}
               </div>
+            </div>
+            <div
+              v-if="getRecommendation(item.student.id)?.evidence"
+              class="intervention-item__recommendation-evidence"
+            >
+              {{ getRecommendation(item.student.id)?.evidence }}
             </div>
           </div>
         </div>
@@ -372,6 +358,13 @@ function openStudent(studentId: string): void {
   font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--panel-muted);
+}
+
+.intervention-item__recommendation-evidence {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-12);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--panel-muted) 82%, var(--panel-ink));
 }
 
 .intervention-item__stats--premium {

@@ -866,9 +866,9 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/recommendations", env.student.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherRecommendations []dto.TeacherRecommendationItem
+	var teacherRecommendations dto.TeacherRecommendationResp
 	decodeFullRouterData(t, resp, &teacherRecommendations)
-	if len(teacherRecommendations) == 0 {
+	if len(teacherRecommendations.Challenges) == 0 {
 		t.Fatalf("expected teacher recommendations, got %+v", teacherRecommendations)
 	}
 

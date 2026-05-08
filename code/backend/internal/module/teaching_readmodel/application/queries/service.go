@@ -14,8 +14,9 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
-	teachingevidence "ctf-platform/internal/teaching/evidence"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
+	teachingadvice "ctf-platform/internal/teaching/advice"
+	teachingevidence "ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -282,10 +283,6 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 	since := time.Now().AddDate(0, 0, -6)
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 
-	students, err := s.repo.ListStudentsByClass(ctx, normalized, "", "", startOfDay)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
 	summary, err := s.repo.GetClassSummary(ctx, normalized, time.Now().AddDate(0, 0, -7))
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -294,72 +291,55 @@ func (s *QueryService) GetClassReview(ctx context.Context, requesterID int64, re
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	snapshots, err := s.repo.ListClassTeachingFactSnapshots(ctx, normalized, time.Now().AddDate(0, 0, -7))
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 
-	studentItems := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(students))
 	summaryDTO := teachingReadmodelMapper.ToClassSummaryPtr(summary)
-	trendDTO := teachingReadmodelMapper.ToClassTrendRespPtr(trend)
-
-	items := make([]dto.TeacherClassReviewItem, 0, 4)
-	riskStudents := selectRiskStudents(studentItems, 3)
-	activeRate := summaryDTO.ActiveRate
-
-	switch {
-	case activeRate < 50:
-		items = append(items, dto.TeacherClassReviewItem{
-			Key:    "activity",
-			Title:  "班级活跃度偏低",
-			Detail: fmt.Sprintf("%s 近 7 天活跃率只有 %.0f%%，建议优先跟进 %d 名低活跃学生。", normalized, activeRate, len(riskStudents)),
-			Accent: "danger",
-		})
-	case activeRate < 75:
-		items = append(items, dto.TeacherClassReviewItem{
-			Key:    "activity",
-			Title:  "班级活跃度需要补强",
-			Detail: fmt.Sprintf("%s 近 7 天活跃率为 %.0f%%，适合通过定向训练把低活跃学生重新拉回训练节奏。", normalized, activeRate),
-			Accent: "warning",
-		})
-	default:
-		items = append(items, dto.TeacherClassReviewItem{
-			Key:    "activity",
-			Title:  "班级训练节奏整体稳定",
-			Detail: fmt.Sprintf("%s 近 7 天活跃率达到 %.0f%%，当前更适合做薄弱维度补强而不是全面催学。", normalized, activeRate),
-			Accent: "success",
-		})
+	classTrend := buildClassTrendSnapshot(trend)
+	evaluations := make(map[int64]teachingadvice.StudentEvaluation, len(snapshots))
+	studentRefs := make(map[int64]dto.TeacherReviewStudentRef, len(snapshots))
+	for _, snapshot := range snapshots {
+		evaluations[snapshot.UserID] = teachingadvice.EvaluateStudent(snapshot)
+		studentRefs[snapshot.UserID] = dto.TeacherReviewStudentRef{
+			ID:       snapshot.UserID,
+			Username: snapshot.Username,
+			Name:     snapshot.Name,
+		}
 	}
 
-	if weakDimension, weakStudents := selectWeakDimensionStudents(studentItems); weakDimension != "" {
+	adviceItems := teachingadvice.BuildClassReview(
+		normalized,
+		teachingadvice.ClassSummarySnapshot{
+			ClassName:        normalized,
+			StudentCount:     len(snapshots),
+			ActiveRate:       summaryDTO.ActiveRate,
+			RecentEventCount: summaryDTO.RecentEventCount,
+		},
+		classTrend,
+		snapshots,
+		evaluations,
+	)
+
+	items := make([]dto.TeacherClassReviewItem, 0, len(adviceItems))
+	for _, adviceItem := range adviceItems {
 		item := dto.TeacherClassReviewItem{
-			Key:      "weak_dimension",
-			Title:    "优先补薄弱维度",
-			Detail:   fmt.Sprintf("%s 是当前最集中的薄弱项，涉及 %d 名学生，建议本周统一布置该维度基础题。", weakDimension, len(weakStudents)),
-			Accent:   "primary",
-			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(limitStudents(weakStudents, 3))),
+			Code:        adviceItem.Code,
+			Severity:    string(adviceItem.Severity),
+			Summary:     adviceItem.Summary,
+			Evidence:    adviceItem.Evidence,
+			Action:      adviceItem.Action,
+			ReasonCodes: append([]string(nil), adviceItem.ReasonCodes...),
+			Dimension:   adviceItem.Dimension,
+			Students:    reviewStudentRefsByIDs(studentRefs, adviceItem.StudentIDs),
 		}
-		if len(weakStudents) >= 3 {
-			item.Accent = "warning"
-		}
-		if recommendation := s.firstStudentRecommendation(ctx, weakStudents, 1); recommendation != nil {
-			item.Recommendation = recommendation
+		if adviceItem.RecommendationStudentID != nil {
+			if recommendation := s.firstStudentRecommendation(ctx, []int64{*adviceItem.RecommendationStudentID}, 1); recommendation != nil {
+				item.Recommendation = recommendation
+			}
 		}
 		items = append(items, item)
-	}
-
-	if len(riskStudents) > 0 {
-		item := dto.TeacherClassReviewItem{
-			Key:      "focus_students",
-			Title:    "先跟进重点学生",
-			Detail:   fmt.Sprintf("建议教师先跟进 %s，并优先布置推荐题做补强训练。", joinStudentNames(riskStudents)),
-			Accent:   "primary",
-			Students: commonmapper.NonNilSlice(teachingReadmodelMapper.ToReviewStudentRefs(riskStudents)),
-		}
-		if recommendation := s.firstStudentRecommendation(ctx, riskStudents, 1); recommendation != nil {
-			item.Recommendation = recommendation
-		}
-		items = append(items, item)
-	}
-
-	if trendItem := buildTrendReviewItem(trendDTO); trendItem != nil {
-		items = append(items, *trendItem)
 	}
 
 	return &dto.TeacherClassReviewResp{
@@ -402,7 +382,7 @@ func (s *QueryService) GetStudentProgress(ctx context.Context, requesterID int64
 	}, nil
 }
 
-func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) ([]dto.TeacherRecommendationItem, error) {
+func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*dto.TeacherRecommendationResp, error) {
 	student, err := s.getAccessibleStudent(ctx, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -412,14 +392,16 @@ func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterI
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	items := make([]dto.TeacherRecommendationItem, 0, len(result.Challenges))
-	for _, challenge := range result.Challenges {
-		if challenge == nil {
-			continue
-		}
-		items = append(items, *teachingReadmodelMapper.ToTeacherRecommendationItemPtr(challenge))
+	if result == nil {
+		return &dto.TeacherRecommendationResp{}, nil
 	}
-	return commonmapper.NonNilSlice(items), nil
+	resp := teachingReadmodelMapper.ToTeacherRecommendationRespPtr(result)
+	if resp == nil {
+		return &dto.TeacherRecommendationResp{}, nil
+	}
+	resp.WeakDimensions = commonmapper.NonNilSlice(resp.WeakDimensions)
+	resp.Challenges = commonmapper.NonNilSlice(resp.Challenges)
+	return resp, nil
 }
 
 func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error) {
@@ -987,36 +969,26 @@ func joinStudentNames(students []dto.TeacherStudentItem) string {
 	return strings.Join(names, "、")
 }
 
-func buildTrendReviewItem(trend *dto.TeacherClassTrendResp) *dto.TeacherClassReviewItem {
+func buildClassTrendSnapshot(trend *readmodelports.ClassTrend) *teachingadvice.ClassTrendSnapshot {
 	if trend == nil || len(trend.Points) < 2 {
 		return nil
 	}
 	first := trend.Points[0]
 	last := trend.Points[len(trend.Points)-1]
-	eventDelta := last.EventCount - first.EventCount
-	solveDelta := last.SolveCount - first.SolveCount
-
-	item := &dto.TeacherClassReviewItem{
-		Key:    "trend",
-		Title:  "观察最近一周走势",
-		Accent: "success",
-		Detail: fmt.Sprintf("最近一周训练事件变化 %d，成功解题变化 %d，说明班级训练投入仍在向前推进。", eventDelta, solveDelta),
+	return &teachingadvice.ClassTrendSnapshot{
+		EventDelta: last.EventCount - first.EventCount,
+		SolveDelta: last.SolveCount - first.SolveCount,
 	}
-	if solveDelta < 0 || eventDelta < 0 {
-		item.Accent = "warning"
-		item.Detail = fmt.Sprintf("最近一周训练事件变化 %d，成功解题变化 %d，需要关注训练投入是否正在下滑。", eventDelta, solveDelta)
-	}
-	return item
 }
 
-func (s *QueryService) firstStudentRecommendation(ctx context.Context, students []dto.TeacherStudentItem, limit int) *dto.TeacherRecommendationItem {
+func (s *QueryService) firstStudentRecommendation(ctx context.Context, studentIDs []int64, limit int) *dto.TeacherRecommendationItem {
 	if s.recommendationService == nil {
 		return nil
 	}
-	for _, student := range students {
-		result, err := s.recommendationService.Recommend(ctx, student.ID, limit)
+	for _, studentID := range studentIDs {
+		result, err := s.recommendationService.Recommend(ctx, studentID, limit)
 		if err != nil {
-			s.logger.Warn("recommend_student_for_class_review_failed", zap.Int64("student_id", student.ID), zap.Error(err))
+			s.logger.Warn("recommend_student_for_class_review_failed", zap.Int64("student_id", studentID), zap.Error(err))
 			continue
 		}
 		if result == nil || len(result.Challenges) == 0 || result.Challenges[0] == nil {
@@ -1025,4 +997,19 @@ func (s *QueryService) firstStudentRecommendation(ctx context.Context, students 
 		return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(result.Challenges[0])
 	}
 	return nil
+}
+
+func reviewStudentRefsByIDs(
+	refsByID map[int64]dto.TeacherReviewStudentRef,
+	studentIDs []int64,
+) []dto.TeacherReviewStudentRef {
+	refs := make([]dto.TeacherReviewStudentRef, 0, len(studentIDs))
+	for _, studentID := range studentIDs {
+		ref, ok := refsByID[studentID]
+		if !ok {
+			continue
+		}
+		refs = append(refs, ref)
+	}
+	return refs
 }

@@ -100,7 +100,7 @@ type studentScenario struct {
 
 type seededStudentResult struct {
 	User            *model.User
-	Recommendations []dto.TeacherRecommendationItem
+	Recommendations dto.TeacherRecommendationResp
 	Archive         *assessmentcmd.ReviewArchiveData
 }
 
@@ -284,13 +284,17 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		if recErr != nil {
 			return nil, fmt.Errorf("load recommendations for %s: %w", student.Username, recErr)
 		}
+		studentRecommendations := dto.TeacherRecommendationResp{}
+		if recommendations != nil {
+			studentRecommendations = *recommendations
+		}
 		archive, archiveErr := reportService.GetStudentReviewArchive(ctx, teacher.ID, student.ID)
 		if archiveErr != nil {
 			return nil, fmt.Errorf("load review archive for %s: %w", student.Username, archiveErr)
 		}
 		results = append(results, seededStudentResult{
 			User:            student,
-			Recommendations: recommendations,
+			Recommendations: studentRecommendations,
 			Archive:         archive,
 		})
 	}
@@ -948,9 +952,24 @@ func printSeedSummary(result *seedResult) {
 	fmt.Println()
 	fmt.Println("班级复盘结论:")
 	for _, item := range result.ClassReview.Items {
-		fmt.Printf("- [%s] %s: %s\n", item.Accent, item.Title, item.Detail)
+		fmt.Printf("- [%s] %s\n", item.Severity, item.Summary)
+		if item.Evidence != "" {
+			fmt.Printf("  证据: %s\n", item.Evidence)
+		}
+		if item.Action != "" {
+			fmt.Printf("  建议: %s\n", item.Action)
+		}
 		if item.Recommendation != nil {
-			fmt.Printf("  推荐题: %s (%s/%s) - %s\n", item.Recommendation.Title, item.Recommendation.Category, item.Recommendation.Difficulty, item.Recommendation.Reason)
+			fmt.Printf(
+				"  推荐题: %s (%s/%s) - %s\n",
+				item.Recommendation.Title,
+				item.Recommendation.Category,
+				item.Recommendation.Difficulty,
+				item.Recommendation.Summary,
+			)
+			if item.Recommendation.Evidence != "" {
+				fmt.Printf("  推荐依据: %s\n", item.Recommendation.Evidence)
+			}
 		}
 	}
 	fmt.Println()
@@ -961,11 +980,14 @@ func printSeedSummary(result *seedResult) {
 			name = student.User.Username
 		}
 		fmt.Printf("- %s (%s / %s)\n", name, student.User.Username, student.User.StudentNo)
-		if len(student.Recommendations) == 0 {
+		if len(student.Recommendations.Challenges) == 0 {
 			fmt.Println("  推荐题: 无")
 		} else {
-			top := student.Recommendations[0]
-			fmt.Printf("  推荐题: %s (%s/%s) - %s\n", top.Title, top.Category, top.Difficulty, top.Reason)
+			top := student.Recommendations.Challenges[0]
+			fmt.Printf("  推荐题: %s (%s/%s) - %s\n", top.Title, top.Category, top.Difficulty, top.Summary)
+			if top.Evidence != "" {
+				fmt.Printf("  推荐依据: %s\n", top.Evidence)
+			}
 		}
 		fmt.Printf(
 			"  归档摘要: solved=%d, attempts=%d, evidence=%d, writeups=%d\n",
@@ -979,7 +1001,13 @@ func printSeedSummary(result *seedResult) {
 			continue
 		}
 		for _, observation := range student.Archive.TeacherObservations.Items {
-			fmt.Printf("  观察结论: [%s] %s - %s\n", observation.Level, observation.Label, observation.Summary)
+			fmt.Printf("  观察结论: [%s] %s - %s\n", observation.Severity, observation.Code, observation.Summary)
+			if observation.Evidence != "" {
+				fmt.Printf("  观察证据: %s\n", observation.Evidence)
+			}
+			if observation.Action != "" {
+				fmt.Printf("  建议动作: %s\n", observation.Action)
+			}
 		}
 	}
 }

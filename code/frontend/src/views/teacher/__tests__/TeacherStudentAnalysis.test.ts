@@ -83,15 +83,27 @@ describe('TeacherStudentAnalysis', () => {
     teacherApiMocks.getStudentSkillProfile.mockResolvedValue({
       dimensions: [{ key: 'crypto', name: '密码', value: 35 }],
     })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([
-      {
-        challenge_id: '12',
-        title: 'crypto-lab',
-        category: 'crypto',
-        difficulty: 'medium',
-        reason: '针对薄弱维度：密码',
-      },
-    ])
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.83,
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: '12',
+          title: 'crypto-lab',
+          category: 'crypto',
+          difficulty: 'medium',
+          summary: '针对薄弱维度：密码',
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+    })
     teacherApiMocks.getStudentTimeline.mockResolvedValue([
       {
         id: 'challenge_detail_view-11-2026-03-11T09:00:00Z',
@@ -345,13 +357,12 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -694,13 +705,12 @@ describe('TeacherStudentAnalysis', () => {
 
   it('管理员从学员分析返回班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
@@ -720,13 +730,12 @@ describe('TeacherStudentAnalysis', () => {
 
   it('管理员在学员分析内继续切换学生链路时应停留在后台路由', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {

@@ -167,31 +167,30 @@ describe('TeacherStudentReviewArchive', () => {
       teacher_observations: {
         items: [
           {
-            key: 'training_closure',
+            code: 'training_closure',
             label: '训练闭环',
-            level: 'good',
+            severity: 'good',
             summary: '已形成从利用到复盘输出的有效闭环。',
             evidence: '命中正确提交 1 次，复盘材料 1 份。',
           },
           {
-            key: 'hint_usage',
-            label: '提示依赖',
-            level: 'attention',
-            summary: '训练过程存在提示介入。',
-            evidence: '共记录提示解锁 1 次。',
+            code: 'hands_on_depth',
+            label: '实操深度',
+            severity: 'good',
+            summary: '实操交互证据比较充分，训练过程可复盘。',
+            evidence: '实例/代理交互 2 次，AWD 成功 1 次。',
           },
         ],
       },
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   it('应该渲染完整复盘页的核心区块', async () => {
@@ -203,7 +202,7 @@ describe('TeacherStudentReviewArchive', () => {
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('教学复盘归档')
     expect(wrapper.text()).toContain('训练闭环')
-    expect(wrapper.text()).toContain('提示依赖')
+    expect(wrapper.text()).toContain('实操深度')
     expect(wrapper.text()).toContain('练习复盘')
     expect(wrapper.text()).toContain('AWD 复盘')
     expect(wrapper.text()).toContain('Blue Team')
@@ -230,13 +229,12 @@ describe('TeacherStudentReviewArchive', () => {
 
   it('管理员在复盘归档页返回分析和班级页时应使用后台路由', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherStudentReviewArchive)
 

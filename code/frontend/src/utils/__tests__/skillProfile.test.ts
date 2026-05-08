@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { getWeakDimensions, normalizeRecommendations, normalizeSkillProfile } from '../skillProfile'
+import {
+  getWeakDimensionLabels,
+  normalizeRecommendationData,
+  normalizeSkillProfile,
+} from '../skillProfile'
 
 describe('skillProfile utils', () => {
   it('应该把后端能力画像转换为前端结构', () => {
@@ -18,29 +22,48 @@ describe('skillProfile utils', () => {
       { key: 'web', name: 'Web', value: 75 },
       { key: 'crypto', name: '密码', value: 32 },
     ])
-    expect(getWeakDimensions(result)).toEqual(['密码'])
   })
 
-  it('应该把推荐题目转换为统一 challenge_id', () => {
-    const result = normalizeRecommendations({
+  it('应该把推荐数据转换为统一契约，并保留后端给出的薄弱维度', () => {
+    const result = normalizeRecommendationData({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          severity: 'warning',
+          confidence: 0.82,
+          evidence: '密码维度已形成低分和足量训练证据。',
+        },
+      ],
       challenges: [
         {
-          id: 12,
+          challenge_id: 12,
           title: 'crypto-lab',
           category: 'crypto',
           difficulty: 'medium',
-          reason: '补强密码维度',
+          summary: '补强密码维度',
+          evidence: '当前密码维度已有足够训练证据，适合继续补基础。',
         },
       ],
     })
 
-    expect(result).toEqual([
+    expect(result.weak_dimensions).toEqual([
+      {
+        dimension: 'crypto',
+        label: '密码',
+        severity: 'warning',
+        confidence: 0.82,
+        evidence: '密码维度已形成低分和足量训练证据。',
+      },
+    ])
+    expect(getWeakDimensionLabels(result.weak_dimensions)).toEqual(['密码'])
+    expect(result.challenges).toEqual([
       {
         challenge_id: '12',
         title: 'crypto-lab',
         category: 'crypto',
         difficulty: 'medium',
-        reason: '补强密码维度',
+        summary: '补强密码维度',
+        evidence: '当前密码维度已有足够训练证据，适合继续补基础。',
       },
     ])
   })

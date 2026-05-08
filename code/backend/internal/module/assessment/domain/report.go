@@ -106,11 +106,13 @@ type ReviewArchiveSummary struct {
 }
 
 type ReviewArchiveObservation struct {
-	Key      string `json:"key"`
-	Label    string `json:"label"`
-	Level    string `json:"level"`
-	Summary  string `json:"summary"`
-	Evidence string `json:"evidence,omitempty"`
+	Code      string  `json:"code"`
+	Label     string  `json:"label"`
+	Severity  string  `json:"severity"`
+	Dimension *string `json:"dimension,omitempty"`
+	Summary   string  `json:"summary"`
+	Evidence  string  `json:"evidence,omitempty"`
+	Action    string  `json:"action,omitempty"`
 }
 
 type ReviewArchiveTeacherObservations struct {
@@ -134,6 +136,7 @@ type ReviewArchiveEvidenceEvent struct {
 	ChallengeID       int64          `json:"challenge_id"`
 	AWDChallengeID    int64          `json:"awd_challenge_id,omitempty"`
 	AWDChallengeTitle string         `json:"awd_challenge_title,omitempty"`
+	Category          string         `json:"-"`
 	Title             string         `json:"title"`
 	Timestamp         time.Time      `json:"timestamp"`
 	Detail            string         `json:"detail,omitempty"`
@@ -143,6 +146,7 @@ type ReviewArchiveEvidenceEvent struct {
 type ReviewArchiveWriteupItem struct {
 	ID               int64      `json:"id"`
 	ChallengeID      int64      `json:"challenge_id"`
+	Category         string     `json:"-"`
 	ChallengeTitle   string     `json:"challenge_title"`
 	Title            string     `json:"title"`
 	SubmissionStatus string     `json:"submission_status"`
@@ -155,6 +159,7 @@ type ReviewArchiveWriteupItem struct {
 type ReviewArchiveManualReviewItem struct {
 	ID             int64      `json:"id"`
 	ChallengeID    int64      `json:"challenge_id"`
+	Category       string     `json:"-"`
 	ChallengeTitle string     `json:"challenge_title"`
 	Answer         string     `json:"answer"`
 	ReviewStatus   string     `json:"review_status"`

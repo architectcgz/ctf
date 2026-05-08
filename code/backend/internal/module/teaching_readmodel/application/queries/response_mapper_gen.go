@@ -83,7 +83,17 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItem(source
 	dtoTeacherRecommendationItem.Title = source.Title
 	dtoTeacherRecommendationItem.Category = source.Category
 	dtoTeacherRecommendationItem.Difficulty = source.Difficulty
-	dtoTeacherRecommendationItem.Reason = source.Reason
+	dtoTeacherRecommendationItem.Dimension = source.Dimension
+	dtoTeacherRecommendationItem.DifficultyBand = source.DifficultyBand
+	dtoTeacherRecommendationItem.Severity = source.Severity
+	if source.ReasonCodes != nil {
+		dtoTeacherRecommendationItem.ReasonCodes = make([]string, len(source.ReasonCodes))
+		for i := 0; i < len(source.ReasonCodes); i++ {
+			dtoTeacherRecommendationItem.ReasonCodes[i] = source.ReasonCodes[i]
+		}
+	}
+	dtoTeacherRecommendationItem.Summary = source.Summary
+	dtoTeacherRecommendationItem.Evidence = source.Evidence
 	return dtoTeacherRecommendationItem
 }
 func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem {
@@ -93,6 +103,38 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItemPtr(sou
 		pDtoTeacherRecommendationItem = &dtoTeacherRecommendationItem
 	}
 	return pDtoTeacherRecommendationItem
+}
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp {
+	var dtoTeacherRecommendationResp dto.TeacherRecommendationResp
+	dtoTeacherRecommendationResp.WeakDimensions = c.ToTeacherRecommendationWeakDimensions(source.WeakDimensions)
+	dtoTeacherRecommendationResp.Challenges = MapTeacherRecommendationItems(source.Challenges)
+	return dtoTeacherRecommendationResp
+}
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp {
+	var pDtoTeacherRecommendationResp *dto.TeacherRecommendationResp
+	if source != nil {
+		dtoTeacherRecommendationResp := c.ToTeacherRecommendationResp((*source))
+		pDtoTeacherRecommendationResp = &dtoTeacherRecommendationResp
+	}
+	return pDtoTeacherRecommendationResp
+}
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
+	var dtoTeacherRecommendationWeakDimension dto.TeacherRecommendationWeakDimension
+	dtoTeacherRecommendationWeakDimension.Dimension = source.Dimension
+	dtoTeacherRecommendationWeakDimension.Severity = source.Severity
+	dtoTeacherRecommendationWeakDimension.Confidence = source.Confidence
+	dtoTeacherRecommendationWeakDimension.Evidence = source.Evidence
+	return dtoTeacherRecommendationWeakDimension
+}
+func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
+	var dtoTeacherRecommendationWeakDimensionList []dto.TeacherRecommendationWeakDimension
+	if source != nil {
+		dtoTeacherRecommendationWeakDimensionList = make([]dto.TeacherRecommendationWeakDimension, len(source))
+		for i := 0; i < len(source); i++ {
+			dtoTeacherRecommendationWeakDimensionList[i] = c.ToTeacherRecommendationWeakDimension(source[i])
+		}
+	}
+	return dtoTeacherRecommendationWeakDimensionList
 }
 func (c *teachingReadmodelResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []dto.TimelineEvent {
 	var dtoTimelineEventList []dto.TimelineEvent

@@ -863,11 +863,43 @@ export interface TeacherReviewStudentRef {
   name?: string
 }
 
-export interface TeacherClassReviewItemData {
-  key: string
+export type AdviceSeverity = 'good' | 'attention' | 'warning' | 'danger'
+export type RecommendationDifficultyBand = 'beginner' | 'easy' | 'medium'
+
+export interface RecommendationWeakDimension {
+  dimension: string
+  label: string
+  severity: AdviceSeverity
+  confidence: number
+  evidence?: string
+}
+
+export interface RecommendationItem {
+  challenge_id: ID
   title: string
-  detail: string
-  accent: 'danger' | 'warning' | 'success' | 'primary'
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  dimension?: string
+  difficulty_band?: RecommendationDifficultyBand
+  severity?: AdviceSeverity
+  reason_codes?: string[]
+  summary: string
+  evidence?: string
+}
+
+export interface RecommendationData {
+  weak_dimensions: RecommendationWeakDimension[]
+  challenges: RecommendationItem[]
+}
+
+export interface TeacherClassReviewItemData {
+  code: string
+  severity: AdviceSeverity
+  summary: string
+  evidence?: string
+  action?: string
+  reason_codes?: string[]
+  dimension?: string
   students?: TeacherReviewStudentRef[]
   recommendation?: RecommendationItem
 }
@@ -1001,14 +1033,6 @@ export interface SkillDimensionScore {
 export interface SkillProfileData {
   dimensions: SkillDimensionScore[]
   updated_at?: ISODateTime
-}
-
-export interface RecommendationItem {
-  challenge_id: ID
-  title: string
-  category: ChallengeCategory
-  difficulty: ChallengeDifficulty
-  reason: string
 }
 
 export interface ReportExportData {
@@ -1195,11 +1219,13 @@ export interface ReviewArchiveManualReviewItemData {
 }
 
 export interface ReviewArchiveObservationItemData {
-  key: string
-  label: string
-  level: string
+  code: string
+  label?: string
+  severity: AdviceSeverity
+  dimension?: string
   summary: string
   evidence?: string
+  action?: string
 }
 
 export interface ReviewArchiveData {

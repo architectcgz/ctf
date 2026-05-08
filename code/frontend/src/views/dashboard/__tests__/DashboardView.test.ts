@@ -120,29 +120,39 @@ describe('DashboardView', () => {
         meta: { raw_type: 'flag_submit' },
       },
     ])
-    assessmentApiMocks.getRecommendations.mockResolvedValue([
-      {
-        challenge_id: '12',
-        title: 'crypto-lab',
-        category: 'crypto',
-        difficulty: 'medium',
-        reason: '补强密码维度',
-      },
-      {
-        challenge_id: '24',
-        title: 'web-xss',
-        category: 'web',
-        difficulty: 'easy',
-        reason: '保持 Web 练习节奏',
-      },
-      {
-        challenge_id: '36',
-        title: 'pwn-intro',
-        category: 'pwn',
-        difficulty: 'easy',
-        reason: '补齐基础利用动作',
-      },
-    ])
+    assessmentApiMocks.getRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.82,
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: '12',
+          title: 'crypto-lab',
+          category: 'crypto',
+          difficulty: 'medium',
+          summary: '补强密码维度',
+        },
+        {
+          challenge_id: '24',
+          title: 'web-xss',
+          category: 'web',
+          difficulty: 'easy',
+          summary: '保持 Web 练习节奏',
+        },
+        {
+          challenge_id: '36',
+          title: 'pwn-intro',
+          category: 'pwn',
+          difficulty: 'easy',
+          summary: '补齐基础利用动作',
+        },
+      ],
+    })
     assessmentApiMocks.getSkillProfile.mockResolvedValue({
       dimensions: [
         { key: 'web', name: 'Web', value: 80 },
@@ -153,13 +163,12 @@ describe('DashboardView', () => {
 
   it('应该展示学生仪表盘内容', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -179,7 +188,9 @@ describe('DashboardView', () => {
     expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
     expect(dashboardViewSource).not.toContain('const dashboardPanelComponents')
     expect(dashboardViewSource).not.toContain('function resolveDashboardPanelComponent(')
-    expect(dashboardViewSource).not.toContain('Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])')
+    expect(dashboardViewSource).not.toContain(
+      'Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])'
+    )
     expect(studentDashboardPageSource).not.toContain(
       "from '@/components/dashboard/student/StudentOverviewPage.vue'"
     )
@@ -199,13 +210,12 @@ describe('DashboardView', () => {
 
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -228,13 +238,12 @@ describe('DashboardView', () => {
 
   it('应该把当前排名区域渲染为独立卡片', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -254,13 +263,12 @@ describe('DashboardView', () => {
     routeState.query = { panel: 'recommendation' }
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -292,16 +300,18 @@ describe('DashboardView', () => {
 
   it('应该在 recommendation 空状态下保留唯一的浏览全部题目主 CTA', async () => {
     routeState.query = { panel: 'recommendation' }
-    assessmentApiMocks.getRecommendations.mockResolvedValue([])
+    assessmentApiMocks.getRecommendations.mockResolvedValue({
+      weak_dimensions: [],
+      challenges: [],
+    })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -324,13 +334,12 @@ describe('DashboardView', () => {
     routeState.query = { panel: 'category' }
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -368,13 +377,12 @@ describe('DashboardView', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -402,13 +410,12 @@ describe('DashboardView', () => {
     routeState.query = { panel: 'difficulty' }
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -444,13 +451,12 @@ describe('DashboardView', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -488,13 +494,12 @@ describe('DashboardView', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -524,13 +529,12 @@ describe('DashboardView', () => {
     routeState.params = { variant: '2' }
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -543,13 +547,12 @@ describe('DashboardView', () => {
     routeState.query = { panel: 'timeline' }
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mountDashboard()
 
@@ -580,13 +583,12 @@ describe('DashboardView', () => {
 
   it('应该把教师用户重定向到教师首页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
 
     mountDashboard()
     await flushPromises()

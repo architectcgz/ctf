@@ -171,7 +171,13 @@ function openChallenge(challengeId: string): void {
                     {{ item.title }}
                   </h5>
                   <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    {{ item.reason }}
+                    {{ item.summary }}
+                  </p>
+                  <p
+                    v-if="item.evidence"
+                    class="mt-2 text-xs leading-5 text-[var(--color-text-tertiary)]"
+                  >
+                    {{ item.evidence }}
                   </p>
                 </div>
                 <span

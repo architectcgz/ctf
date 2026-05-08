@@ -11,6 +11,7 @@ import (
 
 // goverter:converter
 // goverter:extend CopyTime
+// goverter:extend MapTeacherRecommendationItems
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :queries
 type teachingReadmodelResponseMapper interface {
@@ -22,6 +23,10 @@ type teachingReadmodelResponseMapper interface {
 	ToClassTrendRespPtr(source *readmodelports.ClassTrend) *dto.TeacherClassTrendResp
 	ToTimelineEvents(source []readmodelports.TimelineEventRecord) []dto.TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
+	ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
+	ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
+	ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp
+	ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp
 	// goverter:map ID ChallengeID
 	ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem
 	ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem
@@ -31,4 +36,15 @@ var teachingReadmodelMapper teachingReadmodelResponseMapper
 
 func CopyTime(value time.Time) time.Time {
 	return value
+}
+
+func MapTeacherRecommendationItems(source []*dto.ChallengeRecommendation) []dto.TeacherRecommendationItem {
+	items := make([]dto.TeacherRecommendationItem, 0, len(source))
+	for _, item := range source {
+		if item == nil {
+			continue
+		}
+		items = append(items, teachingReadmodelMapper.ToTeacherRecommendationItem(*item))
+	}
+	return items
 }

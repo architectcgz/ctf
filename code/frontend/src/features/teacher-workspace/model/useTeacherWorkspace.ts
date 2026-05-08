@@ -10,12 +10,13 @@ import {
 import type {
   MyProgressData,
   RecommendationItem,
+  RecommendationWeakDimension,
   SkillProfileData,
   TeacherClassItem,
   TeacherStudentItem,
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
-import { getWeakDimensions } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/utils/skillProfile'
 
 export function useTeacherWorkspace() {
   const authStore = useAuthStore()
@@ -33,6 +34,7 @@ export function useTeacherWorkspace() {
   const progress = ref<MyProgressData | null>(null)
   const skillProfile = ref<SkillProfileData | null>(null)
   const recommendations = ref<RecommendationItem[]>([])
+  const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
 
   const selectedClass = computed(
     () => classes.value.find((item) => item.name === selectedClassName.value) ?? null
@@ -46,7 +48,7 @@ export function useTeacherWorkspace() {
       ((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100
     )
   })
-  const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
+  const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
 
   async function initialize(): Promise<void> {
     loadingClasses.value = true
@@ -120,7 +122,8 @@ export function useTeacherWorkspace() {
 
       progress.value = nextProgress
       skillProfile.value = nextProfile
-      recommendations.value = nextRecommendations
+      recommendations.value = nextRecommendations.challenges
+      weakDimensionAdvice.value = nextRecommendations.weak_dimensions
     } catch (err) {
       console.error('加载学员详情失败:', err)
       error.value = '加载学员详情失败，请稍后重试'
@@ -134,6 +137,7 @@ export function useTeacherWorkspace() {
     progress.value = null
     skillProfile.value = null
     recommendations.value = []
+    weakDimensionAdvice.value = []
   }
 
   return {

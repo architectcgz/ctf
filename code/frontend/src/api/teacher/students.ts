@@ -1,8 +1,9 @@
 import { request } from '../request'
 
 import type {
+  AdviceSeverity,
   MyProgressData,
-  RecommendationItem,
+  RecommendationData,
   ReportExportData,
   ReviewArchiveData,
   SkillProfileData,
@@ -11,6 +12,7 @@ import type {
   TimelineEvent,
 } from '../contracts'
 import { normalizeSkillProfile, type RawSkillProfileResponse } from '@/utils/skillProfile'
+import { normalizeRecommendationData, type RawRecommendationResponse } from '@/utils/skillProfile'
 
 export interface TeacherAttackSessionQuery {
   mode?: 'practice' | 'jeopardy' | 'awd'
@@ -92,11 +94,13 @@ interface RawReviewArchiveResponse {
   }>
   teacher_observations: {
     items: Array<{
-      key: string
-      label: string
-      level: string
+      code: string
+      label?: string
+      severity: AdviceSeverity
+      dimension?: string
       summary: string
       evidence?: string
+      action?: string
     }>
   }
 }
@@ -119,9 +123,22 @@ interface RawTeacherEvidenceResponse {
   }>
 }
 
-interface RawTeacherAttackSessionResponse extends Omit<TeacherAttackSessionResponseData, 'sessions'> {
+interface RawTeacherAttackSessionResponse extends Omit<
+  TeacherAttackSessionResponseData,
+  'sessions'
+> {
   sessions: Array<
-    Omit<TeacherAttackSessionResponseData['sessions'][number], 'student_id' | 'team_id' | 'challenge_id' | 'contest_id' | 'round_id' | 'service_id' | 'victim_team_id' | 'events'> & {
+    Omit<
+      TeacherAttackSessionResponseData['sessions'][number],
+      | 'student_id'
+      | 'team_id'
+      | 'challenge_id'
+      | 'contest_id'
+      | 'round_id'
+      | 'service_id'
+      | 'victim_team_id'
+      | 'events'
+    > & {
       student_id: string | number
       team_id?: string | number
       challenge_id?: string | number
@@ -200,21 +217,13 @@ export async function getStudentSkillProfile(id: string): Promise<SkillProfileDa
   return normalizeSkillProfile(payload)
 }
 
-export async function getStudentRecommendations(id: string): Promise<RecommendationItem[]> {
-  const payload = await request<
-    Array<{
-      challenge_id: string | number
-      title: string
-      category: RecommendationItem['category']
-      difficulty: RecommendationItem['difficulty']
-      reason: string
-    }>
-  >({ method: 'GET', url: `/teacher/students/${encodeURIComponent(id)}/recommendations` })
+export async function getStudentRecommendations(id: string): Promise<RecommendationData> {
+  const payload = await request<RawRecommendationResponse>({
+    method: 'GET',
+    url: `/teacher/students/${encodeURIComponent(id)}/recommendations`,
+  })
 
-  return payload.map((item) => ({
-    ...item,
-    challenge_id: String(item.challenge_id),
-  }))
+  return normalizeRecommendationData(payload)
 }
 
 export async function getStudentTimeline(id: string): Promise<TimelineEvent[]> {

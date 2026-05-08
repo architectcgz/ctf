@@ -23,6 +23,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	"ctf-platform/internal/shared/mapperutil"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
@@ -792,7 +793,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 		Evidence:            evidence,
 		Writeups:            writeups,
 		ManualReviews:       manualReviews,
-		TeacherObservations: buildReviewArchiveObservations(summary, evidence, writeups, manualReviews),
+		TeacherObservations: buildReviewArchiveObservations(summary, skillProfile, evidence, writeups, manualReviews),
 	}, nil
 }
 
@@ -881,59 +882,154 @@ func latestReviewArchiveActivity(
 
 func buildReviewArchiveObservations(
 	summary assessmentdomain.ReviewArchiveSummary,
+	skillProfile []*dto.SkillDimension,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 	writeups []assessmentdomain.ReviewArchiveWriteupItem,
 	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
 ) assessmentdomain.ReviewArchiveTeacherObservations {
-	items := make([]assessmentdomain.ReviewArchiveObservation, 0, 4)
+	snapshot := buildReviewArchiveTeachingFactSnapshot(summary, skillProfile, evidence, writeups, manualReviews)
+	evaluation := teachingadvice.EvaluateStudent(snapshot)
+	adviceItems := teachingadvice.BuildReviewArchiveObservations(snapshot, evaluation)
 
-	if summary.CorrectSubmissionCount > 0 && (hasSubmittedWriteup(writeups) || hasApprovedManualReview(manualReviews)) {
+	items := make([]assessmentdomain.ReviewArchiveObservation, 0, len(adviceItems))
+	for _, item := range adviceItems {
 		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "training_closure",
-			Label:    "训练闭环",
-			Level:    "good",
-			Summary:  "已形成从利用到复盘输出的有效闭环。",
-			Evidence: fmt.Sprintf("命中正确提交 %d 次，复盘材料 %d 份，人工审核记录 %d 条。", summary.CorrectSubmissionCount, summary.WriteupCount, summary.ManualReviewCount),
-		})
-	} else if summary.CorrectSubmissionCount > 0 {
-		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "training_closure",
-			Label:    "训练闭环",
-			Level:    "attention",
-			Summary:  "已完成解题，但复盘输出仍偏弱。",
-			Evidence: fmt.Sprintf("命中正确提交 %d 次，但当前复盘材料 %d 份。", summary.CorrectSubmissionCount, summary.WriteupCount),
+			Code:      item.Code,
+			Label:     item.Label,
+			Severity:  string(item.Severity),
+			Dimension: item.Dimension,
+			Summary:   item.Summary,
+			Evidence:  item.Evidence,
+			Action:    item.Action,
 		})
 	}
-
-	items = append(items, assessmentdomain.ReviewArchiveObservation{
-		Key:      "hint_usage",
-		Label:    "提示依赖",
-		Level:    "good",
-		Summary:  "当前归档不再统计提示解锁行为，训练记录聚焦实操与提交表现。",
-		Evidence: "未纳入提示解锁事件。",
-	})
-
-	if hasRepeatedWrongSubmissions(evidence) {
-		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "submission_stability",
-			Label:    "提交稳定性",
-			Level:    "attention",
-			Summary:  "存在连续错误提交，课堂复盘可重点回看试错节奏。",
-			Evidence: "证据链中存在至少 2 次连续未命中提交。",
-		})
-	}
-
-	if hasHandsOnExploit(evidence) {
-		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "hands_on_activity",
-			Label:    "实操参与",
-			Level:    "good",
-			Summary:  "实操交互记录充分，具备课堂演示价值。",
-			Evidence: "证据链中包含实例访问、平台代理请求或 AWD 攻击日志。",
-		})
-	}
-
 	return assessmentdomain.ReviewArchiveTeacherObservations{Items: items}
+}
+
+func buildReviewArchiveTeachingFactSnapshot(
+	summary assessmentdomain.ReviewArchiveSummary,
+	skillProfile []*dto.SkillDimension,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+	writeups []assessmentdomain.ReviewArchiveWriteupItem,
+	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
+) teachingadvice.StudentFactSnapshot {
+	snapshot := teachingadvice.StudentFactSnapshot{
+		CorrectSubmissionCount: summary.CorrectSubmissionCount,
+		WrongSubmissionCount:   max(summary.TotalAttempts-summary.CorrectSubmissionCount, 0),
+		WriteupCount:           summary.WriteupCount,
+		ApprovedReviewCount:    countApprovedManualReviews(manualReviews),
+		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(model.AllDimensions)),
+	}
+
+	factMap := make(map[string]*teachingadvice.DimensionFact, len(model.AllDimensions))
+	for _, dimension := range model.AllDimensions {
+		dimensionCopy := dimension
+		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
+	}
+
+	maxWrongStreak := 0
+	currentWrongStreak := 0
+	handsOnCount := 0
+	awdSuccessCount := 0
+	for _, item := range evidence {
+		isCorrect, tracked := extractEvidenceSubmissionResult(item)
+		if tracked {
+			if isCorrect {
+				currentWrongStreak = 0
+			} else {
+				currentWrongStreak++
+				if currentWrongStreak > maxWrongStreak {
+					maxWrongStreak = currentWrongStreak
+				}
+			}
+		}
+
+		switch item.Type {
+		case "instance_access", "instance_proxy_request", "awd_attack_submission", "awd_traffic":
+			handsOnCount++
+		}
+		if item.Type == "awd_attack_submission" {
+			if success, ok := item.Meta["is_success"].(bool); ok && success {
+				awdSuccessCount++
+			}
+		}
+	}
+	snapshot.MaxWrongStreak = maxWrongStreak
+	snapshot.HandsOnEventCount = handsOnCount
+	snapshot.AWDSuccessCount = awdSuccessCount
+
+	for _, dimension := range skillProfile {
+		if dimension == nil {
+			continue
+		}
+		fact := ensureReviewArchiveDimensionFact(factMap, dimension.Dimension)
+		if fact == nil {
+			continue
+		}
+		fact.ProfileScore = dimension.Score
+	}
+
+	for _, item := range evidence {
+		fact := ensureReviewArchiveDimensionFact(factMap, item.Category)
+		if fact == nil {
+			continue
+		}
+		switch item.Type {
+		case "challenge_submission", "awd_attack_submission":
+			fact.AttemptCount++
+			if success, tracked := extractEvidenceSubmissionResult(item); tracked && success {
+				fact.SuccessCount++
+			}
+			fact.EvidenceCount++
+		case "instance_access", "instance_proxy_request", "awd_traffic":
+			fact.EvidenceCount++
+		}
+	}
+
+	for _, item := range writeups {
+		fact := ensureReviewArchiveDimensionFact(factMap, item.Category)
+		if fact == nil {
+			continue
+		}
+		fact.EvidenceCount++
+	}
+
+	for _, item := range manualReviews {
+		if item.ReviewStatus != "approved" {
+			continue
+		}
+		fact := ensureReviewArchiveDimensionFact(factMap, item.Category)
+		if fact == nil {
+			continue
+		}
+		fact.EvidenceCount++
+	}
+
+	for _, dimension := range model.AllDimensions {
+		fact := ensureReviewArchiveDimensionFact(factMap, dimension)
+		if fact == nil {
+			continue
+		}
+		snapshot.Dimensions = append(snapshot.Dimensions, *fact)
+	}
+
+	return snapshot
+}
+
+func ensureReviewArchiveDimensionFact(
+	facts map[string]*teachingadvice.DimensionFact,
+	dimension string,
+) *teachingadvice.DimensionFact {
+	normalized := strings.ToLower(strings.TrimSpace(dimension))
+	if normalized == "" {
+		return nil
+	}
+	if fact, ok := facts[normalized]; ok {
+		return fact
+	}
+	fact := &teachingadvice.DimensionFact{Dimension: normalized}
+	facts[normalized] = fact
+	return fact
 }
 
 func hasSubmittedWriteup(writeups []assessmentdomain.ReviewArchiveWriteupItem) bool {
@@ -945,13 +1041,18 @@ func hasSubmittedWriteup(writeups []assessmentdomain.ReviewArchiveWriteupItem) b
 	return false
 }
 
-func hasApprovedManualReview(items []assessmentdomain.ReviewArchiveManualReviewItem) bool {
+func countApprovedManualReviews(items []assessmentdomain.ReviewArchiveManualReviewItem) int {
+	count := 0
 	for _, item := range items {
 		if item.ReviewStatus == "approved" {
-			return true
+			count++
 		}
 	}
-	return false
+	return count
+}
+
+func hasApprovedManualReview(items []assessmentdomain.ReviewArchiveManualReviewItem) bool {
+	return countApprovedManualReviews(items) > 0
 }
 
 func hasRepeatedWrongSubmissions(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {

@@ -500,12 +500,14 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 
 	accessRows := make([]struct {
 		ChallengeID int64     `gorm:"column:challenge_id"`
+		Category    string    `gorm:"column:category"`
 		Title       string    `gorm:"column:title"`
 		Timestamp   time.Time `gorm:"column:timestamp"`
 	}, 0)
 	accessQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
 		Select(strings.Join([]string{
 			"i.challenge_id AS challenge_id",
+			"COALESCE(c.category, '') AS category",
 			"COALESCE(c.title, '') AS title",
 			"a.created_at AS timestamp",
 		}, ", ")).
@@ -519,16 +521,19 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		return nil, err
 	}
 	for _, row := range accessRows {
-		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewInstanceAccessEvent(evidence.InstanceAccessInput{
+		event := toReviewArchiveEvidenceEvent(evidence.NewInstanceAccessEvent(evidence.InstanceAccessInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
-		})))
+		}))
+		event.Category = row.Category
+		events = append(events, event)
 	}
 
 	proxyRows := make([]struct {
 		ChallengeID int64     `gorm:"column:challenge_id"`
+		Category    string    `gorm:"column:category"`
 		Title       string    `gorm:"column:title"`
 		Timestamp   time.Time `gorm:"column:timestamp"`
 		Detail      string    `gorm:"column:detail"`
@@ -536,6 +541,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 	proxyQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
 		Select(strings.Join([]string{
 			"i.challenge_id AS challenge_id",
+			"COALESCE(c.category, '') AS category",
 			"COALESCE(c.title, '') AS title",
 			"a.created_at AS timestamp",
 			"a.detail AS detail",
@@ -550,17 +556,20 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		return nil, err
 	}
 	for _, row := range proxyRows {
-		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewProxyRequestEvent(evidence.ProxyRequestInput{
+		event := toReviewArchiveEvidenceEvent(evidence.NewProxyRequestEvent(evidence.ProxyRequestInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
 			RawDetail:   row.Detail,
-		})))
+		}))
+		event.Category = row.Category
+		events = append(events, event)
 	}
 
 	submissionRows := make([]struct {
 		ChallengeID int64     `gorm:"column:challenge_id"`
+		Category    string    `gorm:"column:category"`
 		Title       string    `gorm:"column:title"`
 		Timestamp   time.Time `gorm:"column:timestamp"`
 		IsCorrect   bool      `gorm:"column:is_correct"`
@@ -570,6 +579,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 	submissionQuery := r.db.WithContext(ctx).Table("submissions AS s").
 		Select(strings.Join([]string{
 			"s.challenge_id AS challenge_id",
+			"COALESCE(c.category, '') AS category",
 			"COALESCE(c.title, '') AS title",
 			"s.submitted_at AS timestamp",
 			"s.is_correct AS is_correct",
@@ -585,14 +595,16 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		return nil, err
 	}
 	for _, row := range submissionRows {
-		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewChallengeSubmissionEvent(evidence.ChallengeSubmissionInput{
+		event := toReviewArchiveEvidenceEvent(evidence.NewChallengeSubmissionEvent(evidence.ChallengeSubmissionInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
 			Timestamp:   row.Timestamp,
 			IsCorrect:   row.IsCorrect,
 			Points:      row.Points,
-		})))
+		}))
+		event.Category = row.Category
+		events = append(events, event)
 	}
 
 	awdRows := make([]struct {
@@ -603,6 +615,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		VictimTeamName    string    `gorm:"column:victim_team_name"`
 		ServiceID         int64     `gorm:"column:service_id"`
 		AWDChallengeID    int64     `gorm:"column:awd_challenge_id"`
+		Category          string    `gorm:"column:category"`
 		AWDChallengeTitle string    `gorm:"column:awd_challenge_title"`
 		Timestamp         time.Time `gorm:"column:timestamp"`
 		IsSuccess         bool      `gorm:"column:is_success"`
@@ -625,6 +638,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			"COALESCE(vt.name, '') AS victim_team_name",
 			"al.service_id AS service_id",
 			"al.awd_challenge_id AS awd_challenge_id",
+			"COALESCE(ac.category, '') AS category",
 			"COALESCE(ac.name, '') AS awd_challenge_title",
 			"al.created_at AS timestamp",
 			"al.is_success AS is_success",
@@ -647,7 +661,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		if row.SubmittedByUserID != nil && *row.SubmittedByUserID == userID {
 			scope = "student"
 		}
-		events = append(events, toReviewArchiveEvidenceEvent(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
+		event := toReviewArchiveEvidenceEvent(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
 			UserID:            userID,
 			TeamID:            &row.TeamID,
 			ContestID:         &row.ContestID,
@@ -662,7 +676,9 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			ScoreGained:       row.ScoreGained,
 			Scope:             scope,
 			AttackSource:      row.Source,
-		})))
+		}))
+		event.Category = row.Category
+		events = append(events, event)
 	}
 
 	if r.db.Migrator().HasTable("awd_traffic_events") && r.db.Migrator().HasTable("team_members") {
@@ -674,6 +690,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			VictimTeamName    string    `gorm:"column:victim_team_name"`
 			ServiceID         int64     `gorm:"column:service_id"`
 			AWDChallengeID    int64     `gorm:"column:awd_challenge_id"`
+			Category          string    `gorm:"column:category"`
 			AWDChallengeTitle string    `gorm:"column:awd_challenge_title"`
 			Method            string    `gorm:"column:method"`
 			Path              string    `gorm:"column:path"`
@@ -689,6 +706,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 				"COALESCE(vt.name, '') AS victim_team_name",
 				"te.service_id AS service_id",
 				"te.awd_challenge_id AS awd_challenge_id",
+				"COALESCE(ac.category, '') AS category",
 				"COALESCE(ac.name, '') AS awd_challenge_title",
 				"te.method AS method",
 				"te.path AS path",
@@ -706,7 +724,7 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			return nil, err
 		}
 		for _, row := range trafficRows {
-			events = append(events, toReviewArchiveEvidenceEvent(evidence.NewAWDTrafficEvent(evidence.AWDTrafficInput{
+			event := toReviewArchiveEvidenceEvent(evidence.NewAWDTrafficEvent(evidence.AWDTrafficInput{
 				UserID:            userID,
 				TeamID:            &row.TeamID,
 				ContestID:         &row.ContestID,
@@ -720,7 +738,9 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 				Path:              row.Path,
 				StatusCode:        row.StatusCode,
 				Timestamp:         row.Timestamp,
-			})))
+			}))
+			event.Category = row.Category
+			events = append(events, event)
 		}
 	}
 
@@ -736,6 +756,7 @@ func (r *ReportRepository) ListStudentWriteups(ctx context.Context, userID int64
 		SELECT
 			sw.id,
 			sw.challenge_id,
+			c.category,
 			c.title AS challenge_title,
 			sw.title,
 			sw.submission_status,
@@ -757,6 +778,7 @@ func (r *ReportRepository) ListStudentManualReviews(ctx context.Context, userID 
 		SELECT
 			s.id,
 			s.challenge_id,
+			c.category,
 			c.title AS challenge_title,
 			s.flag AS answer,
 			s.review_status,

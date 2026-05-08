@@ -90,43 +90,57 @@ describe('TeacherClassStudents', () => {
         weak_dimension: 'pwn',
       },
     ])
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([
-      {
-        challenge_id: '12',
-        title: 'crypto-lab',
-        category: 'crypto',
-        difficulty: 'medium',
-        reason: '针对薄弱维度：密码',
-      },
-    ])
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.84,
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: '12',
+          title: 'crypto-lab',
+          category: 'crypto',
+          difficulty: 'medium',
+          summary: '针对薄弱维度：密码',
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+    })
     teacherApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [
         {
-          key: 'activity',
-          title: '班级活跃度需要补强',
-          detail: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
-          accent: 'warning',
+          code: 'activity_risk',
+          severity: 'warning',
+          summary: '班级活跃度需要补强',
+          evidence: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
         },
         {
-          key: 'weak_dimension',
-          title: '优先补薄弱维度',
-          detail: 'crypto 是当前最集中的薄弱项，涉及 1 名学生，建议本周统一布置该维度基础题。',
-          accent: 'primary',
+          code: 'weak_dimension_cluster',
+          severity: 'attention',
+          summary: '优先补薄弱维度',
+          evidence: 'crypto 是当前最集中的薄弱项，涉及 1 名学生，建议本周统一布置该维度基础题。',
+          dimension: 'crypto',
           students: [{ id: 'stu-1', username: 'alice' }],
           recommendation: {
             challenge_id: '12',
             title: 'crypto-lab',
             category: 'crypto',
             difficulty: 'medium',
-            reason: '针对薄弱维度：密码',
+            summary: '针对薄弱维度：密码',
+            evidence: '当前密码维度已经形成高置信度薄弱信号。',
           },
         },
         {
-          key: 'focus_students',
-          title: '先跟进重点学生',
-          detail: '建议教师先跟进 alice，并优先布置推荐题做补强训练。',
-          accent: 'primary',
+          code: 'focus_students',
+          severity: 'attention',
+          summary: '先跟进重点学生',
+          evidence: '建议教师先跟进 alice，并优先布置推荐题做补强训练。',
           students: [{ id: 'stu-1', username: 'alice' }],
         },
       ],
@@ -148,13 +162,12 @@ describe('TeacherClassStudents', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   it('应该展示班级学生列表并支持进入学员分析页', async () => {
@@ -277,13 +290,12 @@ describe('TeacherClassStudents', () => {
 
   it('管理员从班级详情返回班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherClassStudents, {
       global: {
@@ -410,23 +422,35 @@ describe('TeacherClassStudents', () => {
         { date: '2026-03-06', active_student_count: 1, event_count: 3, solve_count: 1 },
       ],
     })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([
-      {
-        challenge_id: '12',
-        title: 'crypto-lab',
-        category: 'crypto',
-        difficulty: 'medium',
-        reason: '针对薄弱维度：密码',
-      },
-    ])
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [
+        {
+          dimension: 'crypto',
+          label: '密码',
+          severity: 'warning',
+          confidence: 0.84,
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+      challenges: [
+        {
+          challenge_id: '12',
+          title: 'crypto-lab',
+          category: 'crypto',
+          difficulty: 'medium',
+          summary: '针对薄弱维度：密码',
+          evidence: '当前密码维度已经形成高置信度薄弱信号。',
+        },
+      ],
+    })
     teacherApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [
         {
-          key: 'activity',
-          title: '班级活跃度需要补强',
-          detail: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
-          accent: 'warning',
+          code: 'activity_risk',
+          severity: 'warning',
+          summary: '班级活跃度需要补强',
+          evidence: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
         },
       ],
     })

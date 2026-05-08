@@ -129,10 +129,13 @@ export async function getClassReview(name: string): Promise<TeacherClassReviewDa
   const payload = await request<{
     class_name: string
     items: Array<{
-      key: string
-      title: string
-      detail: string
-      accent: 'danger' | 'warning' | 'success' | 'primary'
+      code: string
+      severity: TeacherClassReviewData['items'][number]['severity']
+      summary: string
+      evidence?: string
+      action?: string
+      reason_codes?: string[]
+      dimension?: string
       students?: Array<{
         id: string | number
         username: string
@@ -143,7 +146,12 @@ export async function getClassReview(name: string): Promise<TeacherClassReviewDa
         title: string
         category: RecommendationItem['category']
         difficulty: RecommendationItem['difficulty']
-        reason: string
+        dimension?: string
+        difficulty_band?: RecommendationItem['difficulty_band']
+        severity?: RecommendationItem['severity']
+        reason_codes?: string[]
+        summary: string
+        evidence?: string
       }
     }>
   }>({

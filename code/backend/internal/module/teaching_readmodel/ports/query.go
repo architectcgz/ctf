@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -109,4 +110,5 @@ type TeachingStudentActivityRepository interface {
 type TeachingClassInsightRepository interface {
 	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassSummary, error)
 	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassTrend, error)
+	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }

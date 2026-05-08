@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -198,6 +199,66 @@ func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword
 	return items, nil
 }
 
+func (r *Repository) ListClassTeachingFactSnapshots(
+	ctx context.Context,
+	className string,
+	since time.Time,
+) ([]teachingadvice.StudentFactSnapshot, error) {
+	studentRows := make([]struct {
+		ID       int64   `gorm:"column:id"`
+		Username string  `gorm:"column:username"`
+		Name     *string `gorm:"column:name"`
+	}, 0)
+	if err := r.db.WithContext(ctx).Table("users AS u").
+		Select("u.id, u.username, NULLIF(u.name, '') AS name").
+		Where("u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL", className, model.RoleStudent).
+		Order("u.username ASC").
+		Scan(&studentRows).Error; err != nil {
+		return nil, fmt.Errorf("list class teaching fact students: %w", err)
+	}
+	if len(studentRows) == 0 {
+		return []teachingadvice.StudentFactSnapshot{}, nil
+	}
+
+	userIDs := make([]int64, 0, len(studentRows))
+	snapshotByID := make(map[int64]*teachingadvice.StudentFactSnapshot, len(studentRows))
+	for _, row := range studentRows {
+		snapshot := &teachingadvice.StudentFactSnapshot{
+			UserID:   row.ID,
+			Username: row.Username,
+			Name:     row.Name,
+		}
+		userIDs = append(userIDs, row.ID)
+		snapshotByID[row.ID] = snapshot
+	}
+
+	if err := r.fillClassRecentActivity(ctx, userIDs, since, snapshotByID); err != nil {
+		return nil, err
+	}
+	if err := r.fillClassSubmissionStats(ctx, userIDs, snapshotByID); err != nil {
+		return nil, err
+	}
+	if err := r.fillClassWriteupAndReviewStats(ctx, userIDs, snapshotByID); err != nil {
+		return nil, err
+	}
+	if err := r.fillClassHandsOnStats(ctx, userIDs, snapshotByID); err != nil {
+		return nil, err
+	}
+	if err := r.fillClassDimensionFacts(ctx, userIDs, snapshotByID); err != nil {
+		return nil, err
+	}
+
+	snapshots := make([]teachingadvice.StudentFactSnapshot, 0, len(studentRows))
+	for _, row := range studentRows {
+		snapshot := snapshotByID[row.ID]
+		if snapshot == nil {
+			continue
+		}
+		snapshots = append(snapshots, *snapshot)
+	}
+	return snapshots, nil
+}
+
 func (r *Repository) CountPublishedChallenges(ctx context.Context) (int64, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Model(&model.Challenge{}).
@@ -206,6 +267,437 @@ func (r *Repository) CountPublishedChallenges(ctx context.Context) (int64, error
 		return 0, fmt.Errorf("count published challenges: %w", err)
 	}
 	return count, nil
+}
+
+func (r *Repository) fillClassRecentActivity(
+	ctx context.Context,
+	userIDs []int64,
+	since time.Time,
+	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
+) error {
+	type eventRow struct {
+		UserID    int64     `gorm:"column:user_id"`
+		Timestamp time.Time `gorm:"column:timestamp"`
+	}
+
+	classActivityDays := make(map[int64]map[string]struct{}, len(userIDs))
+
+	recordEvent := func(row eventRow) {
+		snapshot := snapshotByID[row.UserID]
+		if snapshot == nil {
+			return
+		}
+		snapshot.RecentEventCount7d++
+		if snapshot.LastActivityAt == nil || row.Timestamp.After(*snapshot.LastActivityAt) {
+			timestamp := row.Timestamp
+			snapshot.LastActivityAt = &timestamp
+		}
+		dateKey := row.Timestamp.UTC().Format("2006-01-02")
+		if snapshotDimensions, ok := classActivityDays[row.UserID]; ok {
+			snapshotDimensions[dateKey] = struct{}{}
+			return
+		}
+		classActivityDays[row.UserID] = map[string]struct{}{dateKey: {}}
+	}
+
+	rows := make([]eventRow, 0)
+	if err := r.db.WithContext(ctx).Table("submissions AS s").
+		Select("s.user_id, s.submitted_at AS timestamp").
+		Where("s.user_id IN ? AND s.submitted_at >= ?", userIDs, since).
+		Scan(&rows).Error; err != nil {
+		return fmt.Errorf("get class submission activity rows: %w", err)
+	}
+	for _, row := range rows {
+		recordEvent(row)
+	}
+
+	if r.db.Migrator().HasTable("audit_logs") {
+		rows = rows[:0]
+		if err := r.db.WithContext(ctx).Table("audit_logs AS a").
+			Select("a.user_id, a.created_at AS timestamp").
+			Where("a.user_id IN ? AND a.resource_type IN (?, ?) AND a.created_at >= ?", userIDs, "instance_access", "instance_proxy_request", since).
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("get class audit activity rows: %w", err)
+		}
+		for _, row := range rows {
+			recordEvent(row)
+		}
+	}
+
+	if r.db.Migrator().HasTable("submission_writeups") {
+		rows = rows[:0]
+		if err := r.db.WithContext(ctx).Table("submission_writeups AS sw").
+			Select("sw.user_id, sw.updated_at AS timestamp").
+			Where("sw.user_id IN ? AND sw.updated_at >= ?", userIDs, since).
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("get class writeup activity rows: %w", err)
+		}
+		for _, row := range rows {
+			recordEvent(row)
+		}
+	}
+
+	if r.db.Migrator().HasTable("awd_attack_logs") {
+		rows = rows[:0]
+		if err := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
+			Select("al.submitted_by_user_id AS user_id, al.created_at AS timestamp").
+			Where("al.submitted_by_user_id IN ? AND al.created_at >= ?", userIDs, since).
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("get class awd activity rows: %w", err)
+		}
+		for _, row := range rows {
+			recordEvent(row)
+		}
+	}
+
+	for userID, days := range classActivityDays {
+		snapshot := snapshotByID[userID]
+		if snapshot == nil {
+			continue
+		}
+		snapshot.ActiveDays7d = len(days)
+	}
+	return nil
+}
+
+func (r *Repository) fillClassSubmissionStats(
+	ctx context.Context,
+	userIDs []int64,
+	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
+) error {
+	type summaryRow struct {
+		UserID                 int64 `gorm:"column:user_id"`
+		CorrectSubmissionCount int   `gorm:"column:correct_submission_count"`
+		WrongSubmissionCount   int   `gorm:"column:wrong_submission_count"`
+	}
+	rows := make([]summaryRow, 0)
+	if err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			s.user_id,
+			COALESCE(SUM(CASE WHEN s.is_correct THEN 1 ELSE 0 END), 0) AS correct_submission_count,
+			COALESCE(SUM(CASE WHEN s.is_correct THEN 0 ELSE 1 END), 0) AS wrong_submission_count
+		FROM submissions s
+		WHERE s.user_id IN ? AND s.contest_id IS NULL
+		GROUP BY s.user_id
+	`, userIDs).Scan(&rows).Error; err != nil {
+		return fmt.Errorf("get class submission summary rows: %w", err)
+	}
+	for _, row := range rows {
+		snapshot := snapshotByID[row.UserID]
+		if snapshot == nil {
+			continue
+		}
+		snapshot.CorrectSubmissionCount = row.CorrectSubmissionCount
+		snapshot.WrongSubmissionCount = row.WrongSubmissionCount
+	}
+
+	type resultRow struct {
+		UserID    int64     `gorm:"column:user_id"`
+		IsCorrect bool      `gorm:"column:is_correct"`
+		Timestamp time.Time `gorm:"column:submitted_at"`
+		ID        int64     `gorm:"column:id"`
+	}
+	results := make([]resultRow, 0)
+	if err := r.db.WithContext(ctx).Table("submissions AS s").
+		Select("s.user_id, s.is_correct, s.submitted_at, s.id").
+		Where("s.user_id IN ? AND s.contest_id IS NULL", userIDs).
+		Order("s.user_id ASC, s.submitted_at ASC, s.id ASC").
+		Scan(&results).Error; err != nil {
+		return fmt.Errorf("list class submission results: %w", err)
+	}
+
+	currentUserID := int64(0)
+	currentWrongStreak := 0
+	maxWrongStreak := 0
+	flush := func() {
+		if currentUserID == 0 {
+			return
+		}
+		snapshot := snapshotByID[currentUserID]
+		if snapshot != nil {
+			snapshot.MaxWrongStreak = maxWrongStreak
+		}
+	}
+	for _, result := range results {
+		if result.UserID != currentUserID {
+			flush()
+			currentUserID = result.UserID
+			currentWrongStreak = 0
+			maxWrongStreak = 0
+		}
+		if result.IsCorrect {
+			currentWrongStreak = 0
+			continue
+		}
+		currentWrongStreak++
+		if currentWrongStreak > maxWrongStreak {
+			maxWrongStreak = currentWrongStreak
+		}
+	}
+	flush()
+	return nil
+}
+
+func (r *Repository) fillClassWriteupAndReviewStats(
+	ctx context.Context,
+	userIDs []int64,
+	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
+) error {
+	if r.db.Migrator().HasTable("submission_writeups") {
+		rows := make([]struct {
+			UserID int64 `gorm:"column:user_id"`
+			Count  int   `gorm:"column:count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Table("submission_writeups AS sw").
+			Select("sw.user_id, COUNT(*) AS count").
+			Where("sw.user_id IN ?", userIDs).
+			Group("sw.user_id").
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("count class writeups: %w", err)
+		}
+		for _, row := range rows {
+			snapshot := snapshotByID[row.UserID]
+			if snapshot != nil {
+				snapshot.WriteupCount = row.Count
+			}
+		}
+	}
+
+	rows := make([]struct {
+		UserID int64 `gorm:"column:user_id"`
+		Count  int   `gorm:"column:count"`
+	}, 0)
+	if err := r.db.WithContext(ctx).Table("submissions AS s").
+		Select("s.user_id, COUNT(*) AS count").
+		Where("s.user_id IN ? AND s.review_status = ?", userIDs, model.SubmissionReviewStatusApproved).
+		Group("s.user_id").
+		Scan(&rows).Error; err != nil {
+		return fmt.Errorf("count class approved reviews: %w", err)
+	}
+	for _, row := range rows {
+		snapshot := snapshotByID[row.UserID]
+		if snapshot != nil {
+			snapshot.ApprovedReviewCount = row.Count
+		}
+	}
+	return nil
+}
+
+func (r *Repository) fillClassHandsOnStats(
+	ctx context.Context,
+	userIDs []int64,
+	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
+) error {
+	if r.db.Migrator().HasTable("audit_logs") {
+		rows := make([]struct {
+			UserID int64 `gorm:"column:user_id"`
+			Count  int   `gorm:"column:count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Table("audit_logs AS a").
+			Select("a.user_id, COUNT(*) AS count").
+			Where("a.user_id IN ? AND a.resource_type IN (?, ?)", userIDs, "instance_access", "instance_proxy_request").
+			Group("a.user_id").
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("count class hands-on events: %w", err)
+		}
+		for _, row := range rows {
+			snapshot := snapshotByID[row.UserID]
+			if snapshot != nil {
+				snapshot.HandsOnEventCount = row.Count
+			}
+		}
+	}
+
+	if r.db.Migrator().HasTable("awd_attack_logs") {
+		rows := make([]struct {
+			UserID int64 `gorm:"column:user_id"`
+			Count  int   `gorm:"column:count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
+			Select("al.submitted_by_user_id AS user_id, COUNT(*) AS count").
+			Where("al.submitted_by_user_id IN ? AND al.is_success = ?", userIDs, true).
+			Group("al.submitted_by_user_id").
+			Scan(&rows).Error; err != nil {
+			return fmt.Errorf("count class awd success events: %w", err)
+		}
+		for _, row := range rows {
+			snapshot := snapshotByID[row.UserID]
+			if snapshot != nil {
+				snapshot.AWDSuccessCount = row.Count
+			}
+		}
+	}
+	return nil
+}
+
+func (r *Repository) fillClassDimensionFacts(
+	ctx context.Context,
+	userIDs []int64,
+	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
+) error {
+	dimensionFactsByUser := make(map[int64]map[string]*teachingadvice.DimensionFact, len(userIDs))
+	for _, userID := range userIDs {
+		dimensionFactsByUser[userID] = make(map[string]*teachingadvice.DimensionFact, len(model.AllDimensions))
+		for _, dimension := range model.AllDimensions {
+			dimensionCopy := dimension
+			dimensionFactsByUser[userID][dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
+		}
+	}
+
+	profiles := make([]struct {
+		UserID    int64   `gorm:"column:user_id"`
+		Dimension string  `gorm:"column:dimension"`
+		Score     float64 `gorm:"column:score"`
+	}, 0)
+	if err := r.db.WithContext(ctx).Table("skill_profiles AS sp").
+		Select("sp.user_id, sp.dimension, sp.score").
+		Where("sp.user_id IN ?", userIDs).
+		Scan(&profiles).Error; err != nil {
+		return fmt.Errorf("get class skill profile facts: %w", err)
+	}
+	for _, profile := range profiles {
+		fact := ensureClassDimensionFact(dimensionFactsByUser, profile.UserID, profile.Dimension)
+		fact.ProfileScore = profile.Score
+	}
+
+	if r.db.Migrator().HasTable("challenges") {
+		attemptRows := make([]struct {
+			UserID       int64  `gorm:"column:user_id"`
+			Dimension    string `gorm:"column:dimension"`
+			AttemptCount int    `gorm:"column:attempt_count"`
+			SuccessCount int    `gorm:"column:success_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				s.user_id,
+				c.category AS dimension,
+				COUNT(*) AS attempt_count,
+				COALESCE(SUM(CASE WHEN s.is_correct THEN 1 ELSE 0 END), 0) AS success_count
+			FROM submissions s
+			JOIN challenges c ON c.id = s.challenge_id
+			WHERE s.user_id IN ? AND s.contest_id IS NULL AND c.status = ?
+			GROUP BY s.user_id, c.category
+		`, userIDs, model.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
+			return fmt.Errorf("get class dimension attempt facts: %w", err)
+		}
+		for _, row := range attemptRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			fact.AttemptCount = row.AttemptCount
+			fact.SuccessCount = row.SuccessCount
+			fact.EvidenceCount += row.AttemptCount
+		}
+
+		if r.db.Migrator().HasTable("audit_logs") && r.db.Migrator().HasTable("instances") {
+			auditRows := make([]struct {
+				UserID    int64  `gorm:"column:user_id"`
+				Dimension string `gorm:"column:dimension"`
+				Count     int    `gorm:"column:count"`
+			}, 0)
+			if err := r.db.WithContext(ctx).Raw(`
+				SELECT
+					a.user_id,
+					c.category AS dimension,
+					COUNT(*) AS count
+				FROM audit_logs a
+				JOIN instances i ON i.id = a.resource_id
+				JOIN challenges c ON c.id = i.challenge_id
+				WHERE a.user_id IN ?
+					AND a.resource_type IN (?, ?)
+					AND c.status = ?
+				GROUP BY a.user_id, c.category
+			`, userIDs, "instance_access", "instance_proxy_request", model.ChallengeStatusPublished).Scan(&auditRows).Error; err != nil {
+				return fmt.Errorf("get class audit dimension facts: %w", err)
+			}
+			for _, row := range auditRows {
+				fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+				fact.EvidenceCount += row.Count
+			}
+		}
+
+		if r.db.Migrator().HasTable("submission_writeups") {
+			writeupRows := make([]struct {
+				UserID    int64  `gorm:"column:user_id"`
+				Dimension string `gorm:"column:dimension"`
+				Count     int    `gorm:"column:count"`
+			}, 0)
+			if err := r.db.WithContext(ctx).Raw(`
+				SELECT
+					sw.user_id,
+					c.category AS dimension,
+					COUNT(*) AS count
+				FROM submission_writeups sw
+				JOIN challenges c ON c.id = sw.challenge_id
+				WHERE sw.user_id IN ? AND c.status = ?
+				GROUP BY sw.user_id, c.category
+			`, userIDs, model.ChallengeStatusPublished).Scan(&writeupRows).Error; err != nil {
+				return fmt.Errorf("get class writeup dimension facts: %w", err)
+			}
+			for _, row := range writeupRows {
+				fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+				fact.EvidenceCount += row.Count
+			}
+		}
+
+		reviewRows := make([]struct {
+			UserID    int64  `gorm:"column:user_id"`
+			Dimension string `gorm:"column:dimension"`
+			Count     int    `gorm:"column:count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				s.user_id,
+				c.category AS dimension,
+				COUNT(*) AS count
+			FROM submissions s
+			JOIN challenges c ON c.id = s.challenge_id
+			WHERE s.user_id IN ?
+				AND s.contest_id IS NULL
+				AND s.review_status = ?
+				AND c.status = ?
+			GROUP BY s.user_id, c.category
+		`, userIDs, model.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
+			return fmt.Errorf("get class review dimension facts: %w", err)
+		}
+		for _, row := range reviewRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			fact.EvidenceCount += row.Count
+		}
+	}
+
+	for userID, dimensions := range dimensionFactsByUser {
+		snapshot := snapshotByID[userID]
+		if snapshot == nil {
+			continue
+		}
+		items := make([]teachingadvice.DimensionFact, 0, len(model.AllDimensions))
+		for _, dimension := range model.AllDimensions {
+			fact := dimensions[dimension]
+			if fact == nil {
+				continue
+			}
+			items = append(items, *fact)
+		}
+		snapshot.Dimensions = items
+	}
+	return nil
+}
+
+func ensureClassDimensionFact(
+	facts map[int64]map[string]*teachingadvice.DimensionFact,
+	userID int64,
+	dimension string,
+) *teachingadvice.DimensionFact {
+	perUser, ok := facts[userID]
+	if !ok {
+		perUser = make(map[string]*teachingadvice.DimensionFact)
+		facts[userID] = perUser
+	}
+	if fact, exists := perUser[dimension]; exists {
+		return fact
+	}
+	fact := &teachingadvice.DimensionFact{Dimension: dimension}
+	perUser[dimension] = fact
+	return fact
 }
 
 func (r *Repository) CountSolvedChallenges(ctx context.Context, userID int64) (int64, error) {

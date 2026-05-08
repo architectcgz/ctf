@@ -2,13 +2,13 @@ import { getAxiosInstance, request } from './request'
 
 import type {
   MyProgressData,
-  RecommendationItem,
+  RecommendationData,
   ReportExportData,
   SkillProfileData,
   TimelineEvent,
 } from './contracts'
 import {
-  normalizeRecommendations,
+  normalizeRecommendationData,
   normalizeSkillProfile,
   type RawRecommendationResponse,
   type RawSkillProfileResponse,
@@ -44,12 +44,12 @@ export async function getSkillProfile(): Promise<SkillProfileData> {
   return normalizeSkillProfile(payload)
 }
 
-export async function getRecommendations(): Promise<RecommendationItem[]> {
+export async function getRecommendations(): Promise<RecommendationData> {
   const payload = await request<RawRecommendationResponse>({
     method: 'GET',
     url: '/users/me/recommendations',
   })
-  return normalizeRecommendations(payload)
+  return normalizeRecommendationData(payload)
 }
 
 export async function getMyProgress(): Promise<MyProgressData> {

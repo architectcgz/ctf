@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
@@ -306,9 +307,9 @@ func newTestSQLiteDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func findObservation(items []assessmentdomain.ReviewArchiveObservation, key string) *assessmentdomain.ReviewArchiveObservation {
+func findObservation(items []assessmentdomain.ReviewArchiveObservation, code string) *assessmentdomain.ReviewArchiveObservation {
 	for index := range items {
-		if items[index].Key == key {
+		if items[index].Code == code {
 			return &items[index]
 		}
 	}
@@ -542,6 +543,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				Type:        "instance_access",
 				ChallengeID: 11,
+				Category:    "web",
 				Title:       "web-1",
 				Timestamp:   submittedAt.Add(1 * time.Minute),
 				Detail:      "访问攻击目标",
@@ -550,6 +552,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				Type:        "instance_proxy_request",
 				ChallengeID: 11,
+				Category:    "web",
 				Title:       "web-1",
 				Timestamp:   submittedAt.Add(2 * time.Minute),
 				Detail:      "经平台代理发起 POST /login",
@@ -558,6 +561,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				Type:        "challenge_hint_unlock",
 				ChallengeID: 11,
+				Category:    "web",
 				Title:       "web-1",
 				Timestamp:   submittedAt,
 				Detail:      "解锁第 1 级提示",
@@ -566,6 +570,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				Type:        "challenge_submission",
 				ChallengeID: 11,
+				Category:    "web",
 				Title:       "web-1",
 				Timestamp:   lastEventAt,
 				Detail:      "提交命中 Flag",
@@ -576,6 +581,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				ID:               1,
 				ChallengeID:      11,
+				Category:         "web",
 				ChallengeTitle:   "web-1",
 				Title:            "从回显到 flag",
 				SubmissionStatus: "published",
@@ -589,6 +595,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 			{
 				ID:             2,
 				ChallengeID:    12,
+				Category:       "misc",
 				ChallengeTitle: "misc-essay",
 				Answer:         "完整答案正文",
 				ReviewStatus:   "approved",
@@ -653,13 +660,13 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 	}
 
 	closure := findObservation(data.TeacherObservations.Items, "training_closure")
-	if closure == nil || closure.Level != "good" {
+	if closure == nil || closure.Severity != "good" {
 		t.Fatalf("expected training_closure observation, got %#v", closure)
 	}
 
-	hint := findObservation(data.TeacherObservations.Items, "hint_usage")
-	if hint == nil || hint.Level != "good" {
-		t.Fatalf("expected hint_usage good observation, got %#v", hint)
+	handsOn := findObservation(data.TeacherObservations.Items, "hands_on_depth")
+	if handsOn == nil || handsOn.Severity != "good" {
+		t.Fatalf("expected hands_on_depth good observation, got %#v", handsOn)
 	}
 }
 
@@ -709,6 +716,7 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 		{
 			Type:        "awd_attack_submission",
 			ChallengeID: 101,
+			Category:    "pwn",
 			Title:       "awd-pwn",
 			Timestamp:   now.Add(-2 * time.Minute),
 			Detail:      "AWD 攻击未命中 red-team",
@@ -717,6 +725,7 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 		{
 			Type:        "awd_attack_submission",
 			ChallengeID: 101,
+			Category:    "pwn",
 			Title:       "awd-pwn",
 			Timestamp:   now.Add(-1 * time.Minute),
 			Detail:      "AWD 攻击未命中 blue-team",
@@ -726,7 +735,11 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 
 	observations := buildReviewArchiveObservations(
 		assessmentdomain.ReviewArchiveSummary{
+			TotalAttempts:          2,
 			CorrectSubmissionCount: 0,
+		},
+		[]*dto.SkillDimension{
+			{Dimension: "pwn", Score: 0.3},
 		},
 		evidence,
 		nil,
@@ -736,8 +749,58 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 	if findObservation(observations.Items, "submission_stability") == nil {
 		t.Fatalf("expected submission_stability observation from repeated AWD failures, got %+v", observations.Items)
 	}
-	if findObservation(observations.Items, "hands_on_activity") == nil {
-		t.Fatalf("expected hands_on_activity observation from AWD exploit evidence, got %+v", observations.Items)
+	if findObservation(observations.Items, "hands_on_depth") == nil {
+		t.Fatalf("expected hands_on_depth observation from AWD exploit evidence, got %+v", observations.Items)
+	}
+}
+
+func TestBuildReviewArchiveTeachingFactSnapshotOnlyMarksDimensionWithRealEvidence(t *testing.T) {
+	t.Parallel()
+
+	snapshot := buildReviewArchiveTeachingFactSnapshot(
+		assessmentdomain.ReviewArchiveSummary{
+			TotalAttempts:          2,
+			CorrectSubmissionCount: 0,
+		},
+		[]*dto.SkillDimension{
+			{Dimension: "web", Score: 0.28},
+			{Dimension: "pwn", Score: 0.24},
+		},
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:        "challenge_submission",
+				ChallengeID: 11,
+				Category:    "web",
+				Title:       "web-1",
+				Timestamp:   time.Date(2026, 4, 13, 15, 0, 0, 0, time.UTC),
+				Detail:      "提交未命中 Flag",
+				Meta:        map[string]any{"is_correct": false},
+			},
+			{
+				Type:        "instance_proxy_request",
+				ChallengeID: 11,
+				Category:    "web",
+				Title:       "web-1",
+				Timestamp:   time.Date(2026, 4, 13, 15, 2, 0, 0, time.UTC),
+				Detail:      "经平台代理发起 POST /login",
+				Meta:        map[string]any{"event_stage": "exploit"},
+			},
+		},
+		nil,
+		nil,
+	)
+
+	evaluation := teachingadvice.EvaluateStudent(snapshot)
+	if len(evaluation.WeakDimensions) != 1 {
+		t.Fatalf("expected exactly one weak dimension, got %+v", evaluation.WeakDimensions)
+	}
+	if evaluation.WeakDimensions[0].Dimension != "web" {
+		t.Fatalf("expected web to remain the only weak dimension, got %+v", evaluation.WeakDimensions)
+	}
+	for _, item := range evaluation.RecommendationTargets {
+		if item.Dimension == "pwn" {
+			t.Fatalf("expected pwn to stay out of recommendation targets without archive evidence, got %+v", evaluation.RecommendationTargets)
+		}
 	}
 }
 
