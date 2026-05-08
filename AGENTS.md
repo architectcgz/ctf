@@ -1,3 +1,9 @@
+## Project Harness Intake
+
+- 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
+- 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`prompts/`、`references/`、`works/`。
+- 可复用提示词见 `prompts/harness-router.md`；机械化检查使用 `bash scripts/check-consistency.sh`。
+
 ## Design Context
 
 ### Users
