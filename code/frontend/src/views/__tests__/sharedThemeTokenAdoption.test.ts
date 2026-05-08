@@ -20,7 +20,7 @@ import studentDifficultySource from '@/components/dashboard/student/StudentDiffi
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
-import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
+import notificationDrawerSource from '@/components/layout/NotificationDrawer.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
@@ -187,7 +187,7 @@ describe('shared theme token adoption', () => {
     expect(appCardSource).not.toContain('text-[13px]')
     expect(appCardSource).not.toContain('text-[10px]')
     expect(appCardSource).not.toContain('w-[3px]')
-    expect(notificationDropdownSource).not.toContain('w-[1px]')
+    expect(notificationDrawerSource).not.toContain('w-[1px]')
     expect(sidebarSource).not.toContain('w-[260px]')
     expect(sidebarSource).not.toContain('text-[10px]')
     expect(sidebarSource).not.toContain('text-[13px]')
@@ -268,7 +268,7 @@ describe('shared theme token adoption', () => {
         'var(--color-bg-elevated, #fff)',
       ]
     )
-    expectNoHardcodedThemeTokens(notificationDropdownSource, 'NotificationDropdown', [
+    expectNoHardcodedThemeTokens(notificationDrawerSource, 'NotificationDrawer', [
       '0 8px 18px rgba(15, 23, 42, 0.04)',
       '0 18px 42px rgba(15, 23, 42, 0.14)',
       'text-white',

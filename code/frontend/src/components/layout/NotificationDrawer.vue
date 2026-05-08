@@ -170,7 +170,7 @@ import { computed, ref } from 'vue'
 import { AlignLeft, Bell, ChevronRight } from 'lucide-vue-next'
 
 import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
-import { useNotificationDropdown } from '@/features/notifications'
+import { useNotificationDrawer } from '@/features/notifications'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { formatDate } from '@/utils/format'
 
@@ -193,7 +193,7 @@ const {
   goToNotifications,
   goToNotificationDetail,
   markAllRead,
-} = useNotificationDropdown(() => props.realtimeStatus)
+} = useNotificationDrawer(() => props.realtimeStatus)
 
 type NotificationFilter = 'all' | 'unread' | 'read'
 

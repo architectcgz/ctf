@@ -145,7 +145,7 @@ declare module 'vue' {
     MetricCard: typeof import('./components/common/MetricCard.vue')['default']
     MinimalFloatingModal: typeof import('./components/common/modal-templates/MinimalFloatingModal.vue')['default']
     ModalTemplateShell: typeof import('./components/common/modal-templates/ModalTemplateShell.vue')['default']
-    NotificationDropdown: typeof import('./components/layout/NotificationDropdown.vue')['default']
+    NotificationDrawer: typeof import('./components/layout/NotificationDrawer.vue')['default']
     PageHeader: typeof import('./components/common/PageHeader.vue')['default']
     PagePaginationControls: typeof import('./components/common/PagePaginationControls.vue')['default']
     PlatformContestFormDialog: typeof import('./components/platform/contest/PlatformContestFormDialog.vue')['default']

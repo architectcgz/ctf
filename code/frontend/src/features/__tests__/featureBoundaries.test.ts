@@ -39,7 +39,7 @@ const migratedComposableImports = [
   '@/composables/useContestWorkbench',
   '@/composables/useImageManagePage',
   '@/composables/useInstanceListPage',
-  '@/composables/useNotificationDropdown',
+  '@/composables/useNotificationDrawer',
   '@/composables/useNotificationRealtime',
   '@/composables/usePlatformContestAwd',
   '@/composables/usePlatformAwdChallenges',

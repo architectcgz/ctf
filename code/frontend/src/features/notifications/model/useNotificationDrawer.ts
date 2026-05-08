@@ -52,7 +52,7 @@ const typeMap: Record<string, NotificationTypeMeta> = {
 
 const fallbackTypeMeta: NotificationTypeMeta = typeMap.system
 
-export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
+export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
   const router = useRouter()
   const store = useNotificationStore()
   const toast = useToast()

@@ -16,11 +16,11 @@ vi.mock('@/features/auth', () => ({
   useAuth: () => authMocks,
 }))
 
-vi.mock('@/components/layout/NotificationDropdown.vue', () => ({
+vi.mock('@/components/layout/NotificationDrawer.vue', () => ({
   default: {
-    name: 'NotificationDropdown',
+    name: 'NotificationDrawer',
     props: ['realtimeStatus'],
-    template: '<div class="notification-dropdown-stub" />',
+    template: '<div class="notification-drawer-stub" />',
   },
 }))
 

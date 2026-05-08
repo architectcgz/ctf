@@ -162,7 +162,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
-import NotificationDrawer from '@/components/layout/NotificationDropdown.vue'
+import NotificationDrawer from '@/components/layout/NotificationDrawer.vue'
 import { useAuth } from '@/features/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
