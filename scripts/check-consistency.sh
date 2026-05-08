@@ -119,8 +119,12 @@ check_contains "works/AGENTS.md" 'harness-good-practices\.md' "works AGENTS refe
 
 echo "[C10] local architecture guardrails are wired"
 check_file "scripts/check-architecture.sh"
+check_file "scripts/doctor-local-harness.sh"
 check_contains ".githooks/pre-commit" 'scripts/check-architecture\.sh --quick' "pre-commit runs quick architecture checks"
 check_contains ".githooks/README.md" 'scripts/check-architecture\.sh --quick' "hook docs mention architecture checks"
+check_contains "docs/architecture/README.md" 'scripts/check-architecture\.sh --full' "architecture README maps full architecture checks"
+check_contains "docs/architecture/README.md" 'code/backend/internal/module/architecture_test\.go' "architecture README references backend guardrail test"
+check_contains "docs/architecture/README.md" 'code/frontend/src/__tests__/architectureBoundaries\.test\.ts' "architecture README references frontend guardrail test"
 
 if [[ "$fail" -eq 0 ]]; then
   echo "$(green '✓ all harness consistency checks passed')"

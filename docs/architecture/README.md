@@ -36,6 +36,7 @@
 - `scripts/check-architecture.sh --quick`：提交前快速检查后端模块依赖方向、前端分层边界和关键历史腐蚀基线。
 - `scripts/check-architecture.sh --full`：在 quick 基础上补充 overlay 结构约束和前端主题 token 检查。
 - `scripts/check-consistency.sh`：检查 harness 目录、入口导航和本地架构 guardrail 是否接入 git hook。
+- `scripts/doctor-local-harness.sh`：检查本机 `core.hooksPath`、hook 可执行权限和本地工具链是否可用。
 
 后端规则落点：
 

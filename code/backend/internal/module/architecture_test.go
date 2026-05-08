@@ -12,253 +12,6 @@ import (
 
 const moduleImportPrefix = "ctf-platform/internal/module/"
 
-var allowedApplicationConcreteImports = map[string]struct{}{
-	"assessment/application/commands/profile_service.go -> github.com/redis/go-redis/v9":                 {},
-	"assessment/application/commands/report_service.go -> gorm.io/gorm":                                  {},
-	"assessment/application/queries/recommendation_service.go -> github.com/redis/go-redis/v9":           {},
-	"auth/application/commands/cas_service.go -> net/http":                                               {},
-	"challenge/application/commands/awd_challenge_command_facade.go -> gorm.io/gorm":                     {},
-	"challenge/application/commands/awd_challenge_import_service.go -> gorm.io/gorm":                     {},
-	"challenge/application/commands/awd_challenge_service.go -> gorm.io/gorm":                            {},
-	"challenge/application/commands/challenge_import_service.go -> gorm.io/gorm":                         {},
-	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":               {},
-	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm/clause":        {},
-	"challenge/application/commands/challenge_service.go -> gorm.io/gorm":                                {},
-	"challenge/application/commands/flag_service.go -> gorm.io/gorm":                                     {},
-	"challenge/application/commands/image_build_service.go -> gorm.io/gorm":                              {},
-	"challenge/application/commands/image_service.go -> gorm.io/gorm":                                    {},
-	"challenge/application/commands/registry_client.go -> net/http":                                      {},
-	"challenge/application/commands/topology_service.go -> gorm.io/gorm":                                 {},
-	"challenge/application/commands/writeup_service.go -> gorm.io/gorm":                                  {},
-	"challenge/application/queries/awd_challenge_service.go -> gorm.io/gorm":                             {},
-	"challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9":                 {},
-	"challenge/application/queries/challenge_service.go -> gorm.io/gorm":                                 {},
-	"challenge/application/queries/flag_service.go -> gorm.io/gorm":                                      {},
-	"challenge/application/queries/image_service.go -> gorm.io/gorm":                                     {},
-	"challenge/application/queries/topology_service.go -> gorm.io/gorm":                                  {},
-	"challenge/application/queries/writeup_service.go -> gorm.io/gorm":                                   {},
-	"contest/application/commands/awd_attack_log_commands.go -> gorm.io/gorm":                            {},
-	"contest/application/commands/awd_checker_preview_token_support.go -> github.com/redis/go-redis/v9":  {},
-	"contest/application/commands/awd_current_round_active_support.go -> gorm.io/gorm":                   {},
-	"contest/application/commands/awd_current_round_fallback_support.go -> github.com/redis/go-redis/v9": {},
-	"contest/application/commands/awd_current_round_fallback_support.go -> gorm.io/gorm":                 {},
-	"contest/application/commands/awd_flag_support.go -> github.com/redis/go-redis/v9":                   {},
-	"contest/application/commands/awd_flag_support.go -> gorm.io/gorm":                                   {},
-	"contest/application/commands/awd_preview_runtime_support.go -> gorm.io/gorm":                        {},
-	"contest/application/commands/awd_resource_validation_support.go -> gorm.io/gorm":                    {},
-	"contest/application/commands/awd_service.go -> github.com/redis/go-redis/v9":                        {},
-	"contest/application/commands/awd_status_cache.go -> github.com/redis/go-redis/v9":                   {},
-	"contest/application/commands/awd_team_validation_support.go -> gorm.io/gorm":                        {},
-	"contest/application/commands/awd_validation_support.go -> gorm.io/gorm":                             {},
-	"contest/application/commands/challenge_add_commands.go -> gorm.io/gorm":                             {},
-	"contest/application/commands/challenge_service.go -> github.com/redis/go-redis/v9":                  {},
-	"contest/application/commands/contest_awd_service_service.go -> github.com/redis/go-redis/v9":        {},
-	"contest/application/commands/contest_awd_service_service.go -> gorm.io/gorm":                        {},
-	"contest/application/commands/contest_awd_service_support.go -> github.com/redis/go-redis/v9":        {},
-	"contest/application/commands/contest_service.go -> github.com/redis/go-redis/v9":                    {},
-	"contest/application/commands/participation_register_commands.go -> gorm.io/gorm":                    {},
-	"contest/application/commands/participation_review_commands.go -> gorm.io/gorm":                      {},
-	"contest/application/commands/scoreboard_admin_score_commands.go -> github.com/redis/go-redis/v9":    {},
-	"contest/application/commands/scoreboard_admin_service.go -> github.com/redis/go-redis/v9":           {},
-	"contest/application/commands/submission_service.go -> github.com/redis/go-redis/v9":                 {},
-	"contest/application/commands/submission_submit_validation.go -> gorm.io/gorm":                       {},
-	"contest/application/commands/submission_validation.go -> gorm.io/gorm":                              {},
-	"contest/application/commands/team_captain_manage_commands.go -> gorm.io/gorm":                       {},
-	"contest/application/commands/team_create_retry_support.go -> gorm.io/gorm":                          {},
-	"contest/application/commands/team_join_commands.go -> gorm.io/gorm":                                 {},
-	"contest/application/commands/team_leave_commands.go -> gorm.io/gorm":                                {},
-	"contest/application/commands/team_support.go -> gorm.io/gorm":                                       {},
-	"contest/application/jobs/awd_check_cache_support.go -> github.com/redis/go-redis/v9":                {},
-	"contest/application/jobs/awd_check_cache_support.go -> gorm.io/gorm":                                {},
-	"contest/application/jobs/awd_http_checker_request.go -> net/http":                                   {},
-	"contest/application/jobs/awd_http_target_client.go -> net/http":                                     {},
-	"contest/application/jobs/awd_probe_runtime.go -> net/http":                                          {},
-	"contest/application/jobs/awd_round_flag_lookup_support.go -> github.com/redis/go-redis/v9":          {},
-	"contest/application/jobs/awd_round_flag_lookup_support.go -> gorm.io/gorm":                          {},
-	"contest/application/jobs/awd_round_runtime.go -> gorm.io/gorm":                                      {},
-	"contest/application/jobs/awd_round_runtime_bridge.go -> net/http":                                   {},
-	"contest/application/jobs/awd_round_updater.go -> github.com/redis/go-redis/v9":                      {},
-	"contest/application/jobs/awd_round_updater.go -> net/http":                                          {},
-	"contest/application/jobs/status_updater.go -> github.com/redis/go-redis/v9":                         {},
-	"contest/application/queries/awd_support.go -> gorm.io/gorm":                                         {},
-	"contest/application/queries/awd_workspace_query.go -> gorm.io/gorm":                                 {},
-	"contest/application/queries/participation_progress_query.go -> gorm.io/gorm":                        {},
-	"contest/application/queries/scoreboard_list_support.go -> github.com/redis/go-redis/v9":             {},
-	"contest/application/queries/scoreboard_rank_query.go -> github.com/redis/go-redis/v9":               {},
-	"contest/application/queries/scoreboard_service.go -> github.com/redis/go-redis/v9":                  {},
-	"contest/application/queries/scoreboard_support.go -> github.com/redis/go-redis/v9":                  {},
-	"contest/application/queries/team_info_query.go -> gorm.io/gorm":                                     {},
-	"contest/application/queries/team_list_query.go -> gorm.io/gorm":                                     {},
-	"contest/application/statusmachine/side_effects.go -> github.com/redis/go-redis/v9":                  {},
-	"ops/application/commands/notification_service.go -> gorm.io/gorm":                                   {},
-	"ops/application/queries/dashboard_service.go -> github.com/redis/go-redis/v9":                       {},
-	"practice/application/commands/contest_awd_operations.go -> gorm.io/gorm":                            {},
-	"practice/application/commands/contest_instance_scope.go -> gorm.io/gorm":                            {},
-	"practice/application/commands/instance_provisioning.go -> net/http":                                 {},
-	"practice/application/commands/manual_review_service.go -> gorm.io/gorm":                             {},
-	"practice/application/commands/score_service.go -> github.com/redis/go-redis/v9":                     {},
-	"practice/application/commands/service.go -> github.com/redis/go-redis/v9":                           {},
-	"practice/application/commands/submission_service.go -> gorm.io/gorm":                                {},
-	"practice/application/queries/score_service.go -> github.com/redis/go-redis/v9":                      {},
-	"practice/application/queries/score_service.go -> gorm.io/gorm":                                      {},
-	"practice_readmodel/application/queries/service.go -> github.com/redis/go-redis/v9":                  {},
-}
-
-var allowedCrossModulePrivateImports = map[string]struct{}{
-	"contest/infrastructure/docker_checker_runner.go -> ctf-platform/internal/module/runtime/domain":                {},
-	"practice/application/commands/awd_defense_workspace_support.go -> ctf-platform/internal/module/contest/domain": {},
-}
-
-var allowedDomainInternalImports = map[string]struct{}{
-	"assessment/domain/profile.go -> ctf-platform/internal/config":                    {},
-	"assessment/domain/profile.go -> ctf-platform/internal/dto":                       {},
-	"assessment/domain/profile.go -> ctf-platform/internal/model":                     {},
-	"assessment/domain/recommendation.go -> ctf-platform/internal/config":             {},
-	"assessment/domain/report.go -> ctf-platform/internal/config":                     {},
-	"assessment/domain/report.go -> ctf-platform/internal/model":                      {},
-	"challenge/domain/awd_package_parser.go -> ctf-platform/internal/model":           {},
-	"challenge/domain/image_delivery.go -> ctf-platform/internal/model":               {},
-	"challenge/domain/mappers.go -> ctf-platform/internal/dto":                        {},
-	"challenge/domain/mappers.go -> ctf-platform/internal/model":                      {},
-	"challenge/domain/package_parser.go -> ctf-platform/internal/model":               {},
-	"challenge/domain/package_topology_parser.go -> ctf-platform/internal/dto":        {},
-	"challenge/domain/package_topology_parser.go -> ctf-platform/internal/model":      {},
-	"challenge/domain/response_mapper_goverter.go -> ctf-platform/internal/dto":       {},
-	"challenge/domain/response_mapper_goverter.go -> ctf-platform/internal/model":     {},
-	"challenge/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/dto":   {},
-	"challenge/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/model": {},
-	"challenge/domain/topology_codec.go -> ctf-platform/internal/dto":                 {},
-	"challenge/domain/topology_codec.go -> ctf-platform/internal/model":               {},
-	"contest/domain/awd_checker_validation_support.go -> ctf-platform/internal/model": {},
-	"contest/domain/awd_service_config.go -> ctf-platform/internal/model":             {},
-	"contest/domain/awd_source_support.go -> ctf-platform/internal/model":             {},
-	"contest/domain/contest.go -> ctf-platform/internal/model":                        {},
-	"contest/domain/registration.go -> ctf-platform/internal/model":                   {},
-	"practice/domain/mappers.go -> ctf-platform/internal/dto":                         {},
-	"practice/domain/mappers.go -> ctf-platform/internal/model":                       {},
-	"practice/domain/response_mapper_goverter.go -> ctf-platform/internal/dto":        {},
-	"practice/domain/response_mapper_goverter.go -> ctf-platform/internal/model":      {},
-	"practice/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/dto":    {},
-	"practice/domain/response_mapper_goverter_gen.go -> ctf-platform/internal/model":  {},
-	"practice/domain/score.go -> ctf-platform/internal/model":                         {},
-	"practice/domain/topology_runtime.go -> ctf-platform/internal/model":              {},
-	"runtime/domain/resources.go -> ctf-platform/internal/model":                      {},
-	"runtime/domain/topology_acl.go -> ctf-platform/internal/model":                   {},
-}
-
-var allowedModuleDependencies = map[string]struct{}{
-	"assessment -> contest":            {},
-	"assessment -> practice":           {},
-	"auth -> identity":                 {},
-	"contest -> auth":                  {},
-	"contest -> challenge":             {},
-	"contest -> runtime":               {},
-	"identity -> auth":                 {},
-	"ops -> auth":                      {},
-	"ops -> practice":                  {},
-	"practice -> assessment":           {},
-	"practice -> challenge":            {},
-	"practice -> contest":              {},
-	"practice -> runtime":              {},
-	"runtime -> challenge":             {},
-	"runtime -> contest":               {},
-	"runtime -> ops":                   {},
-	"runtime -> practice":              {},
-	"teaching_readmodel -> assessment": {},
-}
-
-var allowedTransactionFiles = map[string]struct{}{
-	"challenge/application/commands/awd_challenge_import_service.go":       {},
-	"challenge/application/commands/challenge_import_service.go":           {},
-	"challenge/application/commands/challenge_package_revision_service.go": {},
-	"challenge/infrastructure/repository.go":                               {},
-	"challenge/infrastructure/tag_repository.go":                           {},
-	"contest/infrastructure/awd_repository.go":                             {},
-	"contest/infrastructure/contest_status_update_repository.go":           {},
-	"contest/infrastructure/submission_repository.go":                      {},
-	"contest/infrastructure/team_membership_lifecycle_repository.go":       {},
-	"contest/infrastructure/team_membership_repository.go":                 {},
-	"identity/infrastructure/repository.go":                                {},
-	"ops/infrastructure/notification_repository.go":                        {},
-	"practice/infrastructure/repository.go":                                {},
-	"runtime/infrastructure/repository.go":                                 {},
-}
-
-var allowedOversizedRuntimeModules = map[string]struct{}{
-	"challenge/runtime/module.go": {},
-	"runtime/runtime/module.go":   {},
-}
-
-var allowedTimeNowFiles = map[string]struct{}{
-	"assessment/application/commands/profile_service.go":                   {},
-	"assessment/application/commands/report_service.go":                    {},
-	"assessment/application/queries/teacher_awd_review_service.go":         {},
-	"assessment/infrastructure/report_repository.go":                       {},
-	"assessment/infrastructure/repository.go":                              {},
-	"auth/application/commands/cas_service.go":                             {},
-	"auth/application/commands/service.go":                                 {},
-	"auth/infrastructure/token_service.go":                                 {},
-	"challenge/application/commands/awd_challenge_import_service.go":       {},
-	"challenge/application/commands/challenge_import_service.go":           {},
-	"challenge/application/commands/challenge_package_revision_service.go": {},
-	"challenge/application/commands/challenge_service.go":                  {},
-	"challenge/application/commands/image_build_service.go":                {},
-	"challenge/application/commands/topology_service.go":                   {},
-	"challenge/application/commands/writeup_service.go":                    {},
-	"challenge/application/queries/writeup_service.go":                     {},
-	"contest/application/commands/awd_attack_log_transaction.go":           {},
-	"contest/application/commands/awd_attack_submit_support.go":            {},
-	"contest/application/commands/awd_checker_preview_token_support.go":    {},
-	"contest/application/commands/awd_current_round_support.go":            {},
-	"contest/application/commands/awd_round_window_support.go":             {},
-	"contest/application/commands/awd_service_run_commands.go":             {},
-	"contest/application/commands/awd_service_upsert_commands.go":          {},
-	"contest/application/commands/contest_awd_service_service.go":          {},
-	"contest/application/commands/contest_update_commands.go":              {},
-	"contest/application/commands/participation_announcement_commands.go":  {},
-	"contest/application/commands/participation_register_commands.go":      {},
-	"contest/application/commands/participation_review_commands.go":        {},
-	"contest/application/commands/realtime_broadcast.go":                   {},
-	"contest/application/commands/scoreboard_admin_freeze_commands.go":     {},
-	"contest/application/commands/submission_submit_validation.go":         {},
-	"contest/application/jobs/awd_check_run.go":                            {},
-	"contest/application/jobs/awd_checker_preview.go":                      {},
-	"contest/application/jobs/awd_http_checker_runner.go":                  {},
-	"contest/application/jobs/awd_probe_runtime.go":                        {},
-	"contest/application/jobs/awd_round_updater.go":                        {},
-	"contest/application/jobs/awd_script_checker_runner.go":                {},
-	"contest/application/jobs/awd_service_check_result.go":                 {},
-	"contest/application/jobs/awd_tcp_checker_runner.go":                   {},
-	"contest/application/jobs/status_transition_service.go":                {},
-	"contest/application/jobs/status_update_runner.go":                     {},
-	"contest/application/queries/scoreboard_list_query.go":                 {},
-	"contest/domain/awd_check_result_support.go":                           {},
-	"contest/infrastructure/awd_round_repository.go":                       {},
-	"contest/infrastructure/contest_repository.go":                         {},
-	"contest/infrastructure/docker_checker_runner.go":                      {},
-	"contest/infrastructure/team_membership_lifecycle_repository.go":       {},
-	"contest/infrastructure/team_membership_repository.go":                 {},
-	"contest/infrastructure/team_registration_binding.go":                  {},
-	"identity/infrastructure/repository.go":                                {},
-	"ops/application/commands/notification_service.go":                     {},
-	"ops/application/queries/risk_service.go":                              {},
-	"practice/application/commands/contest_awd_operations.go":              {},
-	"practice/application/commands/instance_provisioning.go":               {},
-	"practice/application/commands/instance_start_service.go":              {},
-	"practice/application/commands/manual_review_service.go":               {},
-	"practice/application/commands/score_service.go":                       {},
-	"practice/application/commands/submission_service.go":                  {},
-	"practice/infrastructure/repository.go":                                {},
-	"runtime/application/commands/instance_service.go":                     {},
-	"runtime/application/commands/provisioning_service.go":                 {},
-	"runtime/application/commands/runtime_maintenance_service.go":          {},
-	"runtime/application/queries/instance_service.go":                      {},
-	"runtime/application/queries/proxy_ticket_service.go":                  {},
-	"runtime/infrastructure/repository.go":                                 {},
-	"runtime/runtime/adapters.go":                                          {},
-	"teaching_readmodel/application/queries/service.go":                    {},
-}
-
 func TestModuleArchitectureBoundaries(t *testing.T) {
 	t.Parallel()
 
@@ -414,6 +167,32 @@ func TestModuleRuntimeCodeDoesNotCreateRootContext(t *testing.T) {
 	}
 }
 
+func TestBackendBusinessCodeDoesNotCreateRootContext(t *testing.T) {
+	t.Parallel()
+
+	files := collectBackendRuntimeFiles(t, "..")
+	allowedRootContextFiles := map[string]struct{}{
+		"../app/composition/root.go": {},
+		"../bootstrap/run.go":        {},
+	}
+	for _, file := range files {
+		content := readFile(t, file)
+		if !strings.Contains(content, "context.Background()") && !strings.Contains(content, "context.TODO()") {
+			continue
+		}
+		if _, allowed := allowedRootContextFiles[filepath.ToSlash(file)]; allowed {
+			continue
+		}
+		t.Fatalf("%s must receive context from its caller instead of creating a root context", file)
+	}
+	for allowed := range allowedRootContextFiles {
+		content := readFile(t, allowed)
+		if !strings.Contains(content, "context.Background()") && !strings.Contains(content, "context.TODO()") {
+			t.Fatalf("root context allowlist entry is stale: %s", allowed)
+		}
+	}
+}
+
 func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
@@ -507,6 +286,34 @@ func collectGoRuntimeFiles(t *testing.T, root string) []string {
 		t.Fatalf("walk module go files: %v", err)
 	}
 
+	return files
+}
+
+func collectBackendRuntimeFiles(t *testing.T, roots ...string) []string {
+	t.Helper()
+
+	files := make([]string, 0)
+	for _, root := range roots {
+		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if entry.IsDir() {
+				switch entry.Name() {
+				case "testsupport", "testdata", "data":
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {
+				files = append(files, path)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("walk backend go files under %s: %v", root, err)
+		}
+	}
 	return files
 }
 

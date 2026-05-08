@@ -3,6 +3,20 @@ import { dirname, join, normalize, relative, resolve, sep } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import {
+  commonForbiddenImportAllowlist,
+  componentFeatureImportAllowlist,
+  componentNonContractApiAllowlist,
+  composableMultiBoundaryAllowlist,
+  featureRouterImportAllowlist,
+  legacyComponentPageAllowlist,
+  oversizedViewAllowlist,
+  utilityBoundaryImportAllowlist,
+  viewLineLimit,
+  widgetLegacyComponentImportAllowlist,
+  widgetNonContractApiAllowlist,
+} from './architectureAllowlist'
+
 const sourceRoot = join(process.cwd(), 'src')
 
 type Layer = 'common' | 'entities' | 'features' | 'widgets' | 'views' | 'other'
@@ -15,127 +29,6 @@ interface SourceFile {
 
 const importPattern =
   /(?:import|export)\s+(?:type\s+)?(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)/g
-
-const viewLineLimit = 500
-
-const oversizedViewAllowlist = new Set([
-  'views/challenges/ChallengeDetail.vue',
-  'views/contests/ContestDetail.vue',
-  'views/instances/InstanceList.vue',
-  'views/platform/ContestAwdConfig.vue',
-  'views/profile/SkillProfile.vue',
-  'views/profile/UserProfile.vue',
-  'views/scoreboard/ScoreboardView.vue',
-])
-
-const componentFeatureImportAllowlist = new Set([
-  'components/challenge/ChallengeSolutionsPanel.vue -> @/features/challenge-detail',
-  'components/challenge/ChallengeSubmissionRecordsPanel.vue -> @/features/challenge-detail',
-  'components/contests/ContestAWDWorkspacePanel.vue -> @/features/contest-awd-workspace',
-  'components/contests/ContestAnnouncementRealtimeBridge.vue -> @/features/contest-announcements',
-  'components/contests/awd/AWDDefenseOperationsPanel.vue -> @/features/contest-awd-workspace',
-  'components/contests/awd/AWDDefenseServiceList.vue -> @/features/contest-awd-workspace',
-  'components/dashboard/student/dashboardPanelRegistry.ts -> @/features/student-dashboard',
-  'components/layout/AppLayout.vue -> @/features/notifications',
-  'components/layout/NotificationDrawer.vue -> @/features/notifications',
-  'components/layout/TopNav.vue -> @/features/auth',
-  'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
-  'components/platform/awd-service/AWDChallengeEditorDialog.vue -> @/features/platform-awd-challenges',
-  'components/platform/awd-service/AWDChallengeLibraryPage.vue -> @/features/platform-awd-challenges',
-  'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
-  'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
-  'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',
-  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/awd-inspector',
-  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/contest-awd-config',
-  'components/platform/contest/AWDChallengeConfigPanel.vue -> @/features/awd-inspector',
-  'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
-  'components/platform/contest/AWDRoundInspector.vue -> @/features/awd-inspector',
-  'components/platform/contest/AWDTrafficPanel.vue -> @/features/awd-inspector',
-  'components/platform/contest/ContestAnnouncementManageDrawer.vue -> @/features/contest-announcements',
-  'components/platform/contest/ContestChallengeFilterStrip.vue -> @/features/contest-workbench',
-  'components/platform/contest/ContestChallengeOrchestrationPanel.vue -> @/features/contest-workbench',
-  'components/platform/contest/ContestEditWorkspacePanel.vue -> @/features/contest-workbench',
-  'components/platform/contest/ContestEditWorkspacePanel.vue -> @/features/platform-contests',
-  'components/platform/contest/ContestOrchestrationPage.vue -> @/features/platform-contests',
-  'components/platform/contest/ContestWorkbenchStageTabs.vue -> @/features/contest-workbench',
-  'components/platform/contest/ContestWorkbenchSummaryStrip.vue -> @/features/contest-workbench',
-  'components/platform/contest/PlatformContestFormDialog.vue -> @/features/platform-contests',
-  'components/platform/contest/PlatformContestFormPanel.vue -> @/features/platform-contests',
-  'components/platform/contest/awdInspector.types.ts -> @/features/awd-inspector',
-  'components/platform/dashboard/PlatformOverviewPage.vue -> @/features/platform-overview',
-  'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio',
-  'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyConnectivitySections.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNodeEditor.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNodeSection.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/user/PlatformUserFormDialog.vue -> @/features/platform-users',
-  'components/platform/writeup/ChallengeWriteupEditorPage.vue -> @/features/challenge-writeup-editor',
-  'components/platform/writeup/ChallengeWriteupManagePanel.vue -> @/features/challenge-writeup-editor',
-  'components/platform/writeup/ChallengeWriteupViewPage.vue -> @/features/challenge-writeup-editor',
-  'components/scoreboard/ScoreboardRealtimeBridge.vue -> @/features/scoreboard',
-  'components/teacher/TeacherInterventionPanel.vue -> @/features/teacher-student-analysis',
-  'components/teacher/dashboard/TeacherDashboardPage.vue -> @/features/teacher-dashboard',
-  'components/teacher/reports/TeacherClassReportExportDialog.vue -> @/features/teacher-class-report-export',
-])
-
-const widgetLegacyComponentImportAllowlist = new Set([
-  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeTopbarPanel.vue',
-  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeWorkspaceTabs.vue',
-  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue',
-  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue',
-  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue',
-  'widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue',
-  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveEvidencePanel.vue',
-  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveHero.vue',
-  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveObservationStrip.vue',
-  'widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue',
-])
-
-const componentNonContractApiAllowlist = new Set([
-  'components/teacher/StudentInsightPanel.vue -> @/api/teacher',
-  'components/teacher/class-management/StudentAnalysisPage.vue -> @/api/teacher',
-  'components/teacher/student-insight/StudentInsightAttackSessionsSection.vue -> @/api/teacher',
-])
-
-const widgetNonContractApiAllowlist = new Set([
-  'widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.vue -> @/api/teacher',
-])
-
-const commonForbiddenImportAllowlist = new Set([
-  'components/common/InstancePanel.vue -> @/api/contracts',
-  'entities/challenge/model/presentation.ts -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryDifficultyPills.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryPill.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryText.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeDifficultyText.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeDirectoryRow.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeMetaStrip.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeProfileMetaGrid.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeProfileSummaryStrip.vue -> @/api/contracts',
-])
-
-const legacyComponentPageAllowlist = new Set([
-  'components/dashboard/student/StudentCategoryProgressPage.vue',
-  'components/dashboard/student/StudentDifficultyPage.vue',
-  'components/dashboard/student/StudentOverviewPage.vue',
-  'components/dashboard/student/StudentRecommendationPage.vue',
-  'components/dashboard/student/StudentTimelinePage.vue',
-  'components/platform/awd-service/AWDChallengeLibraryPage.vue',
-  'components/platform/contest/ContestOrchestrationPage.vue',
-  'components/platform/dashboard/PlatformOverviewPage.vue',
-  'components/platform/topology/ChallengeTopologyStudioPage.vue',
-  'components/platform/user/UserGovernancePage.vue',
-  'components/platform/writeup/ChallengeWriteupEditorPage.vue',
-  'components/platform/writeup/ChallengeWriteupViewPage.vue',
-  'components/teacher/class-management/ClassManagementPage.vue',
-  'components/teacher/class-management/ClassStudentsPage.vue',
-  'components/teacher/class-management/StudentAnalysisPage.vue',
-  'components/teacher/dashboard/TeacherDashboardPage.vue',
-  'components/teacher/instance-management/TeacherInstanceManagementPage.vue',
-  'components/teacher/student-management/StudentManagementPage.vue',
-])
 
 function collectSourceFiles(directory: string): SourceFile[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -216,6 +109,18 @@ function collectImportKeys(files: SourceFile[], importPathPrefix: string): strin
     const source = readFileSync(file.absolutePath, 'utf-8')
     return extractImports(source)
       .filter((importPath) => importPath.startsWith(importPathPrefix))
+      .map((importPath) => `${file.relativePath} -> ${importPath}`)
+  })
+}
+
+function collectImportsMatching(
+  files: SourceFile[],
+  predicate: (file: SourceFile, importPath: string) => boolean
+): string[] {
+  return files.flatMap((file) => {
+    const source = readFileSync(file.absolutePath, 'utf-8')
+    return extractImports(source)
+      .filter((importPath) => predicate(file, importPath))
       .map((importPath) => `${file.relativePath} -> ${importPath}`)
   })
 }
@@ -353,5 +258,71 @@ describe('frontend architecture boundaries', () => {
       .filter((relativePath) => /Page\.vue$/.test(relativePath))
 
     expectBaseline(componentPageFiles, legacyComponentPageAllowlist, 'legacy component page files')
+  })
+
+  it('stores and utilities should not depend on UI or app orchestration layers', () => {
+    const storeFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`stores${sep}`))
+    const storeForbiddenImports = collectImportsMatching(storeFiles, (_file, importPath) =>
+      /^@\/(views|components)/.test(importPath)
+    )
+
+    const utilityFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`utils${sep}`))
+    const utilityForbiddenImports = collectImportsMatching(
+      utilityFiles,
+      (_file, importPath) =>
+        /^@\/(api|features|widgets|views|stores|router|components)/.test(importPath) ||
+        importPath === 'vue' ||
+        importPath === 'vue-router' ||
+        importPath === 'pinia'
+    )
+
+    expect(storeForbiddenImports).toEqual([])
+    expectBaseline(utilityForbiddenImports, utilityBoundaryImportAllowlist, 'utility imports')
+  })
+
+  it('feature router access should stay in reviewed route-aware composables', () => {
+    const featureFiles = sourceFiles.filter((file) =>
+      file.relativePath.startsWith(`features${sep}`)
+    )
+    const routerImports = collectImportsMatching(
+      featureFiles,
+      (_file, importPath) => importPath === 'vue-router' || importPath.startsWith('@/router')
+    )
+
+    expectBaseline(routerImports, featureRouterImportAllowlist, 'feature router imports')
+  })
+
+  it('shared composables should not mix API, router, store, and multiple feature owners', () => {
+    const composableFiles = sourceFiles.filter((file) =>
+      file.relativePath.startsWith(`composables${sep}`)
+    )
+    const mixedComposables = composableFiles
+      .map((file) => {
+        const imports = extractImports(readFileSync(file.absolutePath, 'utf-8'))
+        const flags: string[] = []
+        if (imports.some((importPath) => importPath.startsWith('@/api/'))) flags.push('api')
+        if (
+          imports.some(
+            (importPath) => importPath === 'vue-router' || importPath.startsWith('@/router')
+          )
+        ) {
+          flags.push('router')
+        }
+        if (
+          imports.some((importPath) => importPath === 'pinia' || importPath.startsWith('@/stores'))
+        ) {
+          flags.push('store')
+        }
+        const featureOwners = new Set(
+          imports
+            .filter((importPath) => importPath.startsWith('@/features/'))
+            .map((importPath) => importPath.split('/').slice(0, 3).join('/'))
+        )
+        if (featureOwners.size > 1) flags.push(`features:${featureOwners.size}`)
+        return flags.length > 1 ? `${file.relativePath} -> ${flags.join('+')}` : ''
+      })
+      .filter(Boolean)
+
+    expectBaseline(mixedComposables, composableMultiBoundaryAllowlist, 'mixed shared composables')
   })
 })
