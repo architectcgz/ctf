@@ -1,33 +1,28 @@
 <script setup lang="ts">
-import { LayoutDashboard, Target } from 'lucide-vue-next'
+import type { Component } from 'vue'
+
+import { BookOpen, Layers3, LayoutDashboard, ShieldCheck, Target } from 'lucide-vue-next'
 
 import ChallengeDirectoryPanel from '@/components/challenge/ChallengeDirectoryPanel.vue'
 import { useChallengeListPage } from '@/features/challenge-list'
 
 type ChallengeSummaryKey = 'total' | 'visible' | 'solved' | 'unsolved'
 
-const challengeSummaryVisuals: Record<
-  ChallengeSummaryKey,
-  { badge: string; eyebrow: string; accent: string }
-> = {
+const challengeSummaryVisuals: Record<ChallengeSummaryKey, { icon: Component; accent: string }> = {
   total: {
-    badge: '01',
-    eyebrow: 'Library',
+    icon: BookOpen,
     accent: 'var(--challenge-tone-web)',
   },
   visible: {
-    badge: '02',
-    eyebrow: 'Visible',
+    icon: Layers3,
     accent: 'var(--challenge-tone-crypto)',
   },
   solved: {
-    badge: '03',
-    eyebrow: 'Solved',
+    icon: ShieldCheck,
     accent: 'var(--color-success)',
   },
   unsolved: {
-    badge: '04',
-    eyebrow: 'Pending',
+    icon: Target,
     accent: 'var(--color-warning)',
   },
 }
@@ -75,9 +70,6 @@ const {
           <div class="challenge-heading">
             <div class="workspace-overline">Challenges</div>
             <h1 class="workspace-page-title challenge-title">靶场训练</h1>
-            <p class="challenge-subtitle">
-              统一查看训练题目，按分类、难度和关键词收束范围后直接进入做题。
-            </p>
           </div>
 
           <div class="challenge-hero-rail">
@@ -106,24 +98,30 @@ const {
               class="challenge-summary-item metric-panel-card"
               :style="{ '--challenge-summary-accent': getSummaryVisual(stat.key).accent }"
             >
-              <div class="challenge-summary-ribbon">
-                <span class="challenge-summary-badge">{{ getSummaryVisual(stat.key).badge }}</span>
-                <span class="challenge-summary-eyebrow">{{
-                  getSummaryVisual(stat.key).eyebrow
-                }}</span>
+              <div class="challenge-summary-icon-shell">
+                <component :is="getSummaryVisual(stat.key).icon" class="h-5 w-5" />
               </div>
 
-              <div class="challenge-summary-main">
+              <div class="challenge-summary-content">
                 <div class="challenge-summary-label metric-panel-label">
                   {{ stat.label }}
                 </div>
                 <div class="challenge-summary-value metric-panel-value">
                   {{ stat.value }}
                 </div>
+                <div class="challenge-summary-helper metric-panel-helper">
+                  {{ stat.helper }}
+                </div>
               </div>
 
-              <div class="challenge-summary-helper metric-panel-helper">
-                {{ stat.helper }}
+              <div class="challenge-summary-wave" aria-hidden="true">
+                <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M0 40C30 40 30 20 60 20C90 20 90 40 120 40V60H0V40Z"
+                    fill="currentColor"
+                    fill-opacity="0.08"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -200,17 +198,11 @@ const {
 
 .challenge-page .challenge-heading {
   min-width: 0;
-  display: grid;
-  gap: var(--space-3);
   max-width: min(44rem, 100%);
 }
 
 .challenge-title {
   color: var(--journal-ink);
-}
-
-.challenge-page .challenge-subtitle {
-  max-width: 42rem;
 }
 
 .challenge-hero-rail {
@@ -229,7 +221,7 @@ const {
 
 .challenge-page .challenge-summary {
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
-  --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-grid-gap: var(--space-4);
   display: grid;
   gap: var(--space-4);
   margin-top: var(--space-6);
@@ -254,7 +246,7 @@ const {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2-5);
-  color: var(--journal-ink);
+  color: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
 }
 
 .challenge-summary-title-mark {
@@ -270,65 +262,82 @@ const {
 }
 
 .challenge-page .challenge-summary-item {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--challenge-summary-accent) 20%, var(--journal-border));
-  border-radius: var(--radius-xl);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--challenge-summary-accent) 10%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 96%, transparent)
-  );
-  box-shadow: 0 14px 26px color-mix(in srgb, var(--color-shadow-soft) 18%, transparent);
-}
-
-.challenge-summary-ribbon {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 72%, var(--color-bg-base))
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--challenge-summary-accent) 5%, transparent),
+      transparent 62%
+    );
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--color-shadow-soft) 14%, transparent);
 }
 
-.challenge-summary-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: calc(var(--space-6) + var(--space-1));
-  min-height: calc(var(--space-6) + var(--space-1));
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--challenge-summary-accent) 16%, transparent);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-11);
-  font-weight: 700;
+.challenge-summary-icon-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex-shrink: 0;
+  width: calc(var(--space-12) + var(--space-2));
+  height: calc(var(--space-12) + var(--space-2));
+  place-items: center;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--challenge-summary-accent) 11%, var(--journal-surface));
   color: var(--challenge-summary-accent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 35%, transparent),
+    0 8px 18px color-mix(in srgb, var(--challenge-summary-accent) 8%, transparent);
 }
 
-.challenge-summary-eyebrow {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--challenge-summary-accent) 70%, var(--journal-muted));
-}
-
-.challenge-summary-main {
+.challenge-summary-content {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: var(--space-1-5);
+  min-width: 0;
 }
 
 .challenge-page .challenge-summary-item .challenge-summary-label {
   color: var(--journal-muted);
+  margin: 0;
 }
 
 .challenge-page .challenge-summary-item .challenge-summary-value {
   color: var(--journal-ink);
+  margin: 0;
 }
 
 .challenge-page .challenge-summary-item .challenge-summary-helper {
-  max-width: 20rem;
+  max-width: 16rem;
+  margin: 0;
+}
+
+.challenge-summary-wave {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 7.5rem;
+  color: var(--challenge-summary-accent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.challenge-summary-wave svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (max-width: 960px) {
@@ -349,11 +358,19 @@ const {
   .challenge-page .challenge-summary .challenge-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .challenge-page .challenge-summary-item {
+    padding: var(--space-4);
+  }
 }
 
 @media (max-width: 720px) {
   .challenge-page .challenge-summary .challenge-summary-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .challenge-page .challenge-summary-item {
+    align-items: flex-start;
   }
 }
 </style>

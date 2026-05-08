@@ -94,6 +94,7 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目总数')
     expect(wrapper.text()).toContain('开始做题')
+    expect(wrapper.text()).not.toContain('统一查看训练题目')
     expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
     expect(wrapper.find('.challenge-row-solved').text()).toContain('10 人解出')
     expect(wrapper.find('.challenge-row-attempts').text()).toContain('尝试 20 次')
@@ -124,6 +125,9 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('<div class="journal-eyebrow">Challenges</div>')
     expect(challengeListSource).not.toContain('journal-eyebrow-text')
     expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')
+    expect(challengeListSource).not.toContain(
+      '统一查看训练题目，按分类、难度和关键词收束范围后直接进入做题。'
+    )
   })
 
   it('题目列表不应显示编号前缀', async () => {
@@ -157,9 +161,14 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('class="challenge-summary metric-panel-default-surface"')
     expect(challengeListSource).toContain('class="challenge-summary-grid metric-panel-grid"')
     expect(challengeListSource).toContain('class="challenge-summary-item metric-panel-card"')
+    expect(challengeListSource).toContain('class="challenge-summary-icon-shell"')
+    expect(challengeListSource).toContain('class="challenge-summary-content"')
+    expect(challengeListSource).toContain('class="challenge-summary-wave"')
     expect(challengeListSource).toContain('class="challenge-summary-label metric-panel-label"')
     expect(challengeListSource).toContain('class="challenge-summary-value metric-panel-value"')
     expect(challengeListSource).toContain('class="challenge-summary-helper metric-panel-helper"')
+    expect(challengeListSource).not.toContain('challenge-summary-badge')
+    expect(challengeListSource).not.toContain('challenge-summary-eyebrow')
   })
 
   it('题目列表页操作与筛选控件应接入共享 ui 原语', () => {
