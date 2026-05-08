@@ -20,7 +20,22 @@ vi.mock('@/components/layout/NotificationDrawer.vue', () => ({
   default: {
     name: 'NotificationDrawer',
     props: ['realtimeStatus'],
-    template: '<div class="notification-drawer-stub" />',
+    methods: {
+      noop() {},
+    },
+    template: `
+      <div class="notification-drawer-stub">
+        <slot
+          name="trigger"
+          :open="true"
+          :toggle="noop"
+          :has-unread="true"
+          :unread-count="3"
+          :unread-badge-label="'3'"
+          :set-trigger-ref="noop"
+        />
+      </div>
+    `,
   },
 }))
 
@@ -282,10 +297,23 @@ describe('TopNav', () => {
     wrapper.unmount()
   })
 
-  it('通知按钮应当显式保留和相邻工具按钮一致的外边框', () => {
-    expect(topNavSource).toMatch(
-      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid var\(--topnav-line\);/s
-    )
+  it('通知按钮应通过 trigger slot 由 TopNav 自己渲染，而不是深度覆盖子组件类名', () => {
+    expect(topNavSource).toContain('<template #trigger="{ open, toggle, hasUnread, unreadBadgeLabel, setTriggerRef }">')
+    expect(topNavSource).toContain('class="topnav-icon-button topnav-notification-button"')
+    expect(topNavSource).toContain("'topnav-notification-button--active': open")
+    expect(topNavSource).not.toContain(':deep(.notification-trigger)')
+  })
+
+  it('通知按钮应保留导航按钮样式并显示未读徽标', async () => {
+    const { wrapper } = await mountTopNav()
+    const notificationButton = wrapper.get('button[aria-label="打开通知中心"]')
+
+    expect(notificationButton.classes()).toContain('topnav-icon-button')
+    expect(notificationButton.classes()).toContain('topnav-notification-button')
+    expect(notificationButton.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('.topnav-notification-badge').text()).toBe('3')
+
+    wrapper.unmount()
   })
 
   it('uses shared shell classes instead of page-level arbitrary widths and type sizes', () => {

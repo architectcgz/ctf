@@ -124,7 +124,28 @@
             </div>
           </div>
 
-          <NotificationDrawer :realtime-status="notificationStatus" />
+          <NotificationDrawer :realtime-status="notificationStatus">
+            <template #trigger="{ open, toggle, hasUnread, unreadBadgeLabel, setTriggerRef }">
+              <button
+                :ref="setTriggerRef"
+                type="button"
+                class="topnav-icon-button topnav-notification-button"
+                :class="{ 'topnav-notification-button--active': open }"
+                aria-label="打开通知中心"
+                aria-haspopup="dialog"
+                :aria-expanded="open ? 'true' : 'false'"
+                @click="toggle"
+              >
+                <Bell class="h-4 w-4" />
+                <span
+                  v-if="hasUnread"
+                  class="topnav-notification-badge"
+                >
+                  {{ unreadBadgeLabel }}
+                </span>
+              </button>
+            </template>
+          </NotificationDrawer>
         </div>
 
         <div
@@ -160,7 +181,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
+import { Bell, LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDrawer from '@/components/layout/NotificationDrawer.vue'
 import { useAuth } from '@/features/auth'
@@ -475,23 +496,6 @@ onUnmounted(() => {
     0 0 0 4px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
-.topnav-actions :deep(.notification-trigger) {
-  height: 2.25rem;
-  width: 2.25rem;
-  border-radius: 10px;
-  border: 1px solid var(--topnav-line);
-  background: var(--topnav-surface);
-  color: var(--topnav-muted);
-  box-shadow: none;
-  transition: all 0.2s ease;
-}
-
-.topnav-actions :deep(.notification-trigger:hover) {
-  border-color: var(--topnav-line-strong);
-  background: var(--topnav-surface-subtle);
-  color: var(--topnav-text);
-}
-
 .topnav-icon-button {
   display: inline-flex;
   height: 2.25rem;
@@ -503,6 +507,36 @@ onUnmounted(() => {
   background: var(--topnav-surface);
   color: var(--topnav-muted);
   transition: all 0.2s ease;
+}
+
+.topnav-notification-button {
+  position: relative;
+  overflow: visible;
+}
+
+.topnav-icon-button.topnav-notification-button--active,
+.topnav-icon-button.topnav-notification-button--active:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--topnav-line-strong));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--topnav-surface-subtle));
+  color: color-mix(in srgb, var(--color-primary) 88%, var(--topnav-text));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.topnav-notification-badge {
+  position: absolute;
+  top: calc(var(--space-1) * -1);
+  right: calc(var(--space-1) * -1);
+  display: inline-flex;
+  min-width: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-danger) 88%, var(--topnav-text));
+  color: var(--color-bg-base);
+  font-size: var(--font-size-10);
+  line-height: 1rem;
+  box-shadow: 0 0 0 2px var(--topnav-surface);
 }
 
 .topnav-icon-button:hover {
@@ -610,17 +644,21 @@ onUnmounted(() => {
   border-radius: 999px;
 }
 
-.topnav-shell--admin .topnav-icon-button,
-.topnav-shell--admin .topnav-actions :deep(.notification-trigger) {
+.topnav-shell--admin .topnav-icon-button {
   border-radius: 999px;
   border-color: var(--topnav-line);
   background: var(--topnav-surface);
 }
 
-.topnav-shell--admin .topnav-icon-button:hover,
-.topnav-shell--admin .topnav-actions :deep(.notification-trigger:hover) {
+.topnav-shell--admin .topnav-icon-button:hover {
   border-color: var(--topnav-line-strong);
   background: var(--topnav-surface-subtle);
+}
+
+.topnav-shell--admin .topnav-icon-button.topnav-notification-button--active,
+.topnav-shell--admin .topnav-icon-button.topnav-notification-button--active:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--topnav-line-strong));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--topnav-surface-subtle));
 }
 
 .topnav-user-identity {

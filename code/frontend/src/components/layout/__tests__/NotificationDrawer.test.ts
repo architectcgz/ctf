@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
+import { defineComponent } from 'vue'
 
 import NotificationDrawer from '../NotificationDrawer.vue'
 import notificationDrawerSource from '../NotificationDrawer.vue?raw'
@@ -31,6 +32,27 @@ function createTestRouter() {
   })
 }
 
+const NotificationDrawerSlotHost = defineComponent({
+  components: {
+    NotificationDrawer,
+  },
+  template: `
+    <NotificationDrawer realtime-status="open">
+      <template #trigger="{ open, toggle, unreadBadgeLabel, setTriggerRef }">
+        <button
+          :ref="setTriggerRef"
+          type="button"
+          class="custom-notification-trigger"
+          :aria-expanded="open ? 'true' : 'false'"
+          @click="toggle"
+        >
+          {{ unreadBadgeLabel }}
+        </button>
+      </template>
+    </NotificationDrawer>
+  `,
+})
+
 async function openDrawer() {
   const router = createTestRouter()
   await router.push('/notifications')
@@ -48,6 +70,24 @@ async function openDrawer() {
 
   const trigger = wrapper.find('button[aria-label="打开通知中心"]')
   await trigger.trigger('click')
+  await flushPromises()
+
+  return { wrapper, router }
+}
+
+async function openDrawerWithCustomTrigger() {
+  const router = createTestRouter()
+  await router.push('/notifications')
+  await router.isReady()
+
+  const wrapper = mount(NotificationDrawerSlotHost, {
+    attachTo: document.body,
+    global: {
+      plugins: [router],
+    },
+  })
+
+  await wrapper.get('.custom-notification-trigger').trigger('click')
   await flushPromises()
 
   return { wrapper, router }
@@ -88,6 +128,9 @@ describe('NotificationDrawer', () => {
     expect(notificationDrawerSource).toContain('title="通知中心"')
     expect(notificationDrawerSource).toContain('width="26.875rem"')
     expect(notificationDrawerSource).toContain('body-padding="var(--space-0)"')
+    expect(notificationDrawerSource).toContain('<slot')
+    expect(notificationDrawerSource).toContain('name="trigger"')
+    expect(notificationDrawerSource).toContain(':set-trigger-ref="setTriggerRef"')
     expect(notificationDrawerSource).toContain('<template #header-extra>')
     expect(notificationDrawerSource).toContain('<template #footer>')
     expect(notificationDrawerSource).toContain('全部标为已读')
@@ -105,7 +148,9 @@ describe('NotificationDrawer', () => {
     expect(notificationDrawerSource).toContain('--notification-line')
     expect(notificationDrawerSource).toContain('class="notification-drawer-overview"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-summary"')
+    expect(notificationDrawerSource).toContain('class="notification-drawer-summary__main"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-counts"')
+    expect(notificationDrawerSource).toContain('class="notification-drawer-status"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-filters"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-filter"')
     expect(notificationDrawerSource).toContain('class="notification-view-all"')
@@ -127,6 +172,7 @@ describe('NotificationDrawer', () => {
   it('通知头部应使用紧凑统计和筛选 pills，并保留补充动作入口', () => {
     expect(notificationDrawerSource).toContain('class="notification-drawer-counts__value"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-counts__total"')
+    expect(notificationDrawerSource).toContain('class="notification-drawer-status"')
     expect(notificationDrawerSource).toContain('class="notification-drawer-summary__action"')
     expect(notificationDrawerSource).toContain(
       "'notification-drawer-filter--active': activeFilter === filter.value"
@@ -141,6 +187,7 @@ describe('NotificationDrawer', () => {
     expect(notificationDrawerSource).not.toContain('!important')
     expect(notificationDrawerSource).not.toContain('.modal-template-drawer__head-row')
     expect(notificationDrawerSource).not.toContain('class="notification-summary"')
+    expect(notificationDrawerSource).not.toContain('padding-inline: var(--space-2);')
   })
 
   it('通知列表应重构为整行可点击卡片，移除冗余详情按钮与旧时间轴痕迹', () => {
@@ -158,12 +205,35 @@ describe('NotificationDrawer', () => {
     expect(notificationDrawerSource).toContain(
       'padding: var(--space-4) var(--space-2-5) var(--space-4) var(--space-1-5);'
     )
+    expect(notificationDrawerSource).toContain('.notification-panel-body')
+    expect(notificationDrawerSource).toContain('border-top: 1px solid var(--notification-line);')
     expect(notificationDrawerSource).toContain('font-size: var(--font-size-1-00);')
     expect(notificationDrawerSource).toContain('font-size: var(--font-size-14);')
     expect(notificationDrawerSource).toContain('white-space: nowrap;')
+    expect(notificationDrawerSource).not.toContain(
+      'margin-top: calc(var(--space-7) + var(--space-0-5));'
+    )
     expect(notificationDrawerSource).not.toContain('查看详情')
     expect(notificationDrawerSource).not.toContain('notification-rail')
     expect(notificationDrawerSource).not.toContain('notification-endcap')
+  })
+
+  it('supports a custom trigger slot so navigation can own the button shell', async () => {
+    const { wrapper } = await openDrawerWithCustomTrigger()
+
+    expect(wrapper.find('.notification-drawer-trigger').exists()).toBe(false)
+    expect(wrapper.get('.custom-notification-trigger').text()).toContain('2')
+    expect(document.body.textContent).toContain('通知中心')
+
+    wrapper.unmount()
+  })
+
+  it('renders realtime connection status in the drawer header', async () => {
+    const { wrapper } = await openDrawer()
+
+    expect(document.body.textContent).toContain('实时在线')
+
+    wrapper.unmount()
   })
 
   it('supports switching between all, unread, and read notification filters', async () => {
@@ -236,6 +306,43 @@ describe('NotificationDrawer', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.fullPath).toBe('/notifications')
+
+    wrapper.unmount()
+  })
+
+  it('prevents duplicate mark-all-read batches while a request is already in flight', async () => {
+    notificationApiMocks.markAsRead.mockImplementation(() => new Promise(() => {}))
+
+    const { wrapper } = await openDrawer()
+    const markAllButton = Array.from(document.body.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('全部标为已读')
+    ) as HTMLButtonElement | undefined
+
+    expect(markAllButton).toBeTruthy()
+
+    markAllButton!.click()
+    markAllButton!.click()
+    await flushPromises()
+
+    expect(notificationApiMocks.markAsRead).toHaveBeenCalledTimes(2)
+    expect(markAllButton!.disabled).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  it('restores focus to the trigger after the drawer closes', async () => {
+    const { wrapper } = await openDrawer()
+    const trigger = wrapper.get('button[aria-label="打开通知中心"]')
+    const triggerElement = trigger.element as HTMLButtonElement
+    const closeButton = Array.from(document.body.querySelectorAll('button')).find(
+      (node) => node.getAttribute('aria-label') === '关闭抽屉'
+    )
+
+    triggerElement.focus()
+    closeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flushPromises()
+
+    expect(document.activeElement).toBe(triggerElement)
 
     wrapper.unmount()
   })

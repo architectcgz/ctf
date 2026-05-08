@@ -1,6 +1,6 @@
-import type { Component } from 'vue'
-import { Bell, Flag, GraduationCap, Info, Trophy, X } from 'lucide-vue-next'
-import { computed, ref, useTemplateRef } from 'vue'
+import type { Component, ComponentPublicInstance } from 'vue'
+import { Flag, GraduationCap, Info, Trophy } from 'lucide-vue-next'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { markAsRead as markAsReadApi } from '@/api/notification'
@@ -57,7 +57,8 @@ export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
   const store = useNotificationStore()
   const toast = useToast()
   const open = ref(false)
-  const trigger = useTemplateRef<HTMLButtonElement>('trigger')
+  const triggerRef = ref<HTMLElement | null>(null)
+  const isMarkingAllRead = ref(false)
 
   const unreadCount = computed(() => store.unreadCount)
   const items = computed(() => store.notifications)
@@ -78,6 +79,24 @@ export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
     borderColor: `color-mix(in srgb, ${statusMeta.value.accentColor} 22%, var(--color-border-default))`,
     backgroundColor: `color-mix(in srgb, ${statusMeta.value.accentColor} 10%, transparent)`,
   }))
+
+  watch(open, async (isOpen, wasOpen) => {
+    if (isOpen || !wasOpen) {
+      return
+    }
+
+    await nextTick()
+    triggerRef.value?.focus()
+  })
+
+  function setTriggerRef(element: Element | ComponentPublicInstance | null): void {
+    if (element instanceof HTMLElement) {
+      triggerRef.value = element
+      return
+    }
+
+    triggerRef.value = null
+  }
 
   function typeMeta(type: string): NotificationTypeMeta {
     return typeMap[type] || fallbackTypeMeta
@@ -102,34 +121,43 @@ export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
   }
 
   async function markAllRead() {
+    if (isMarkingAllRead.value) {
+      return
+    }
+
     const unreadItems = store.notifications.filter((item) => item.unread)
     if (unreadItems.length === 0) {
       return
     }
 
-    const results = await Promise.allSettled(unreadItems.map((item) => markAsReadApi(item.id)))
-    const failedCount = results.filter((result) => result.status === 'rejected').length
-    unreadItems.forEach((item, index) => {
-      if (results[index]?.status === 'fulfilled') {
-        store.markAsRead(item.id)
+    isMarkingAllRead.value = true
+
+    try {
+      const results = await Promise.allSettled(unreadItems.map((item) => markAsReadApi(item.id)))
+      const failedCount = results.filter((result) => result.status === 'rejected').length
+      unreadItems.forEach((item, index) => {
+        if (results[index]?.status === 'fulfilled') {
+          store.markAsRead(item.id)
+        }
+      })
+
+      if (failedCount === 0) {
+        store.markAllRead()
       }
-    })
 
-    if (failedCount === 0) {
-      store.markAllRead()
-    }
-
-    if (failedCount > 0) {
-      toast.warning(`部分通知标记失败（${failedCount} 条）`)
+      if (failedCount > 0) {
+        toast.warning(`部分通知标记失败（${failedCount} 条）`)
+      }
+    } finally {
+      isMarkingAllRead.value = false
     }
   }
 
   return {
-    Bell,
-    X,
     open,
-    trigger,
+    setTriggerRef,
     unreadCount,
+    isMarkingAllRead,
     items,
     statusMeta,
     statusPillStyle,

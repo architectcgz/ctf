@@ -1,21 +1,34 @@
 <template>
-  <div class="relative">
-    <button
-      ref="trigger"
-      type="button"
-      class="notification-trigger relative inline-flex h-10 w-10 items-center justify-center"
-      :class="{ 'notification-trigger--open': open }"
-      aria-label="打开通知中心"
-      @click="toggleOpen"
+  <div class="notification-drawer-widget">
+    <slot
+      name="trigger"
+      :open="open"
+      :toggle="toggleOpen"
+      :close="close"
+      :has-unread="hasUnread"
+      :unread-count="unreadCount"
+      :unread-badge-label="unreadBadgeLabel"
+      :set-trigger-ref="setTriggerRef"
     >
-      <Bell class="h-4 w-4" />
-      <span
-        v-if="unreadCount > 0"
-        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1"
+      <button
+        :ref="setTriggerRef"
+        type="button"
+        class="notification-drawer-trigger"
+        :class="{ 'notification-drawer-trigger--open': open }"
+        aria-label="打开通知中心"
+        aria-haspopup="dialog"
+        :aria-expanded="open ? 'true' : 'false'"
+        @click="toggleOpen"
       >
-        {{ unreadCount > 99 ? '99+' : unreadCount }}
-      </span>
-    </button>
+        <Bell class="h-4 w-4" />
+        <span
+          v-if="hasUnread"
+          class="notification-drawer-trigger__badge"
+        >
+          {{ unreadBadgeLabel }}
+        </span>
+      </button>
+    </slot>
 
     <SlideOverDrawer
       :open="open"
@@ -33,17 +46,28 @@
       <template #header-extra>
         <div class="notification-drawer-overview">
           <div class="notification-drawer-summary">
-            <div class="notification-drawer-counts">
-              <span class="notification-drawer-counts__value">{{ unreadCount }}</span>
-              <span class="notification-drawer-counts__label">未读</span>
-              <span class="notification-drawer-counts__split">/</span>
-              <span class="notification-drawer-counts__total">{{ items.length }} 总计</span>
+            <div class="notification-drawer-summary__main">
+              <div class="notification-drawer-counts">
+                <span class="notification-drawer-counts__value">{{ unreadCount }}</span>
+                <span class="notification-drawer-counts__label">未读</span>
+                <span class="notification-drawer-counts__split">/</span>
+                <span class="notification-drawer-counts__total">{{ items.length }} 总计</span>
+              </div>
+
+              <span
+                class="notification-drawer-status"
+                :style="statusPillStyle"
+              >
+                {{ statusMeta.label }}
+              </span>
             </div>
 
             <button
-              v-if="unreadCount > 0"
+              v-if="hasUnread"
               type="button"
               class="notification-drawer-summary__action"
+              :disabled="isMarkingAllRead"
+              :aria-busy="isMarkingAllRead ? 'true' : 'false'"
               @click="markAllRead"
             >
               全部标为已读
@@ -184,9 +208,12 @@ const props = defineProps<{
 
 const {
   open,
-  trigger,
+  setTriggerRef,
   unreadCount,
+  isMarkingAllRead,
   items,
+  statusMeta,
+  statusPillStyle,
   typeMeta,
   close,
   toggleOpen,
@@ -198,6 +225,10 @@ const {
 type NotificationFilter = 'all' | 'unread' | 'read'
 
 const activeFilter = ref<NotificationFilter>('all')
+const hasUnread = computed(() => unreadCount.value > 0)
+const unreadBadgeLabel = computed(() =>
+  unreadCount.value > 99 ? '99+' : String(unreadCount.value)
+)
 
 const filterOptions: Array<{ value: NotificationFilter; label: string }> = [
   { value: 'all', label: '全部' },
@@ -299,17 +330,28 @@ const emptyState = computed(() => {
   --modal-template-drawer-close-hover-transform: none;
 }
 
+.notification-drawer-widget {
+  display: inline-flex;
+}
+
 .notification-drawer-overview {
   display: grid;
-  gap: var(--space-0);
+  gap: var(--space-5);
 }
 
 .notification-drawer-summary {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  padding-inline: var(--space-2);
+}
+
+.notification-drawer-summary__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .notification-drawer-counts {
@@ -344,6 +386,18 @@ const emptyState = computed(() => {
   color: var(--notification-faint);
 }
 
+.notification-drawer-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--space-7) + var(--space-0-5));
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-badge-radius-pill);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .notification-drawer-summary__action {
   display: inline-flex;
   align-items: center;
@@ -360,6 +414,12 @@ const emptyState = computed(() => {
   transition: all var(--ui-motion-fast);
 }
 
+.notification-drawer-summary__action:disabled {
+  cursor: default;
+  opacity: 0.66;
+  box-shadow: none;
+}
+
 .notification-drawer-summary__action:hover,
 .notification-drawer-summary__action:focus-visible {
   border-color: color-mix(in srgb, var(--color-primary) 82%, var(--notification-line-strong));
@@ -368,12 +428,18 @@ const emptyState = computed(() => {
   box-shadow: 0 2px 5px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
+.notification-drawer-summary__action:disabled:hover,
+.notification-drawer-summary__action:disabled:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--notification-line-strong));
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--notification-surface-subtle));
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-muted));
+}
+
 .notification-drawer-filters {
   display: flex;
   align-items: center;
-  gap: var(--space-3-5);
-  margin-top: var(--space-6);
-  padding-inline: var(--space-2);
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .notification-drawer-filter {
@@ -453,6 +519,7 @@ const emptyState = computed(() => {
 
 .notification-panel-body {
   background: var(--notification-surface);
+  border-top: 1px solid var(--notification-line);
 }
 
 .notification-empty {
@@ -492,8 +559,6 @@ const emptyState = computed(() => {
 .notification-list {
   display: flex;
   flex-direction: column;
-  margin-top: calc(var(--space-7) + var(--space-0-5));
-  border-top: 1px solid var(--notification-line);
 }
 
 .notification-item {
@@ -646,7 +711,19 @@ const emptyState = computed(() => {
   justify-self: end;
 }
 
-.notification-trigger {
+.notification-drawer-trigger {
+  position: relative;
+  display: inline-flex;
+  width: var(--space-10);
+  height: var(--space-10);
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--notification-line-strong) 88%, transparent);
+  background: color-mix(in srgb, var(--notification-surface-subtle) 58%, var(--notification-surface));
+  color: var(--notification-muted);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 12%, transparent);
+  cursor: pointer;
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease,
@@ -655,13 +732,28 @@ const emptyState = computed(() => {
     transform 0.2s ease;
 }
 
-.notification-trigger--open {
+.notification-drawer-trigger--open {
   border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: color-mix(in srgb, var(--color-primary) 92%, var(--color-text-primary));
 }
 
-.notification-trigger-badge {
+.notification-drawer-trigger:hover {
+  border-color: var(--notification-line-strong);
+  background: var(--notification-surface-elevated);
+  color: var(--notification-text);
+}
+
+.notification-drawer-trigger__badge {
+  position: absolute;
+  top: calc(var(--space-1) * -1);
+  right: calc(var(--space-1) * -1);
+  display: inline-flex;
+  min-width: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
   font-size: var(--font-size-10);
   line-height: 1rem;
   background: color-mix(in srgb, var(--color-danger) 88%, var(--color-text-primary));
@@ -669,25 +761,24 @@ const emptyState = computed(() => {
   box-shadow: 0 0 0 2px var(--notification-surface, var(--color-bg-surface));
 }
 
-.notification-trigger:focus-visible {
+.notification-drawer-trigger:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, var(--notification-line-strong));
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .notification-trigger {
+  .notification-drawer-trigger {
     transition-duration: 0.01ms;
   }
 }
 
 @media (max-width: 768px) {
   .notification-drawer-summary {
-    align-items: flex-start;
     flex-direction: column;
   }
 
-  .notification-drawer-filters {
-    flex-wrap: wrap;
+  .notification-drawer-summary__main {
+    width: 100%;
   }
 
   .notification-item {
