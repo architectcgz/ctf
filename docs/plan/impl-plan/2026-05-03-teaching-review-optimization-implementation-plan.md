@@ -14,7 +14,7 @@
 
 ### Objective
 
-完成 `docs/architecture/features/teaching-review-optimization-design.md` 的第一阶段可交付版本：
+完成 `docs/architecture/features/教学复盘优化设计.md` 的第一阶段可交付版本：
 
 - 教师实时证据纳入普通训练、AWD 攻击、AWD 流量、Writeup 和人工评审。
 - 新增或整理 `GET /api/v1/teacher/students/:id/attack-sessions`，按会话展示解题和攻击过程。
@@ -32,8 +32,8 @@
 
 ### Source architecture or design docs
 
-- `docs/architecture/features/teaching-review-optimization-design.md`
-- `docs/architecture/features/attack-session-replay-evolution-design.md`
+- `docs/architecture/features/教学复盘优化设计.md`
+- `docs/architecture/features/攻击会话读模型与复盘工作台架构.md`
 - `AGENTS.md`
 
 ### Brainstorming Evidence
@@ -616,7 +616,7 @@ Expected: PASS.
 **Goal:** 完成端到端验证、review 证据归档和必要文档同步。
 
 **Files:**
-- Modify if needed: `docs/architecture/features/teaching-review-optimization-design.md`
+- Modify if needed: `docs/architecture/features/教学复盘优化设计.md`
 - Create review evidence after review: `docs/reviews/{frontend|backend|general}/2026-05-03-teaching-review-optimization-review-*.md`
 - Update this plan checklist as tasks complete.
 

@@ -16,6 +16,11 @@ else
     needs_sync=1
   fi
 fi
+# BEGIN HARNESS ENGINEERING: pre-commit
+if [[ -x scripts/check-consistency.sh ]]; then
+  bash scripts/check-consistency.sh
+fi
+# END HARNESS ENGINEERING: pre-commit
 
 if [[ "$needs_sync" -eq 0 ]]; then
   exit 0

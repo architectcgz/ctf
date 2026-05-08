@@ -12,9 +12,9 @@
 
 ## 输入文档
 
-- `docs/architecture/features/challenge-package-registry-delivery-design.md`
+- `docs/architecture/features/题包Registry交付架构.md`
 - `docs/contracts/challenge-pack-v1.md`
-- `docs/architecture/features/package-topology-sync-design.md`
+- `docs/architecture/features/题包拓扑同步与导出架构.md`
 - `docs/architecture/backend/03-container-architecture.md`
 
 ## 当前实现事实
@@ -129,7 +129,7 @@
 
 - Modify after implementation: `docs/contracts/challenge-pack-v1.md`
 - Modify after implementation: `challenges/awd/challenge-package-contract.md`
-- Modify after implementation: `docs/architecture/features/challenge-package-registry-delivery-design.md` if implementation intentionally differs.
+- Modify after implementation: `docs/architecture/features/题包Registry交付架构.md` if implementation intentionally differs.
 
 ## 目标边界
 
@@ -719,7 +719,7 @@ git commit -m "feat(frontend): 展示题包镜像交付状态"
 - Modify: `scripts/registry/build-and-push-challenge-image.sh`
 - Modify: `docs/contracts/challenge-pack-v1.md`
 - Modify: `challenges/awd/challenge-package-contract.md`
-- Modify: `docs/architecture/features/challenge-package-registry-delivery-design.md` if needed
+- Modify: `docs/architecture/features/题包Registry交付架构.md` if needed
 - Test:
   - shell script dry run or bats if available
   - backend focused tests

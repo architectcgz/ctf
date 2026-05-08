@@ -680,6 +680,11 @@ CREATE INDEX idx_cheat_reports_type ON cheat_reports(type, created_at DESC);
 
 ## 8. AWD 模块
 
+当前实现补充：
+
+- AWD 赛事服务定义由 `contest_awd_services` 承接，`runtime_config / score_config / awd_checker_validation_state` 是运行态配置与 readiness 的主事实源。
+- 下列运行态事实表统一以 `service_id = contest_awd_services.id` 作为主身份，并保留 `awd_challenge_id` 作为题目资产引用字段。
+
 ### 8.1 awd_rounds — AWD 轮次表
 
 ```sql
@@ -710,10 +715,13 @@ CREATE TABLE awd_team_services (
     id              BIGSERIAL       PRIMARY KEY,
     round_id        BIGINT          NOT NULL REFERENCES awd_rounds(id) ON DELETE CASCADE,
     team_id         BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    challenge_id    BIGINT          NOT NULL REFERENCES challenges(id) ON DELETE RESTRICT,
+    service_id      BIGINT          NOT NULL,
+    awd_challenge_id BIGINT         NOT NULL REFERENCES awd_challenges(id) ON DELETE RESTRICT,
     service_status  VARCHAR(16)     NOT NULL DEFAULT 'up',   -- up/down/compromised
-    check_result    JSONB           NOT NULL DEFAULT '{}',   -- 健康检查详情
+    check_result    TEXT            NOT NULL DEFAULT '{}',   -- 健康检查详情 JSON
+    checker_type    VARCHAR(32)     NOT NULL DEFAULT '',
     attack_received INT             NOT NULL DEFAULT 0,      -- 本轮被攻击次数
+    sla_score       INT             NOT NULL DEFAULT 0,      -- 本轮 SLA 得分
     defense_score   INT             NOT NULL DEFAULT 0,      -- 本轮防御得分
     attack_score    INT             NOT NULL DEFAULT 0,      -- 本轮攻击得分
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
@@ -721,10 +729,12 @@ CREATE TABLE awd_team_services (
 );
 
 -- 索引
-CREATE UNIQUE INDEX uk_awd_team_services ON awd_team_services(round_id, team_id, challenge_id);
-  -- 用途：每轮每队每题一条记录，防止重复
+CREATE UNIQUE INDEX uk_awd_team_services ON awd_team_services(round_id, team_id, service_id);
+  -- 用途：每轮每队每个服务一条记录，防止重复
 CREATE INDEX idx_awd_ts_team ON awd_team_services(team_id, round_id);
   -- 用途：查询某队伍各轮次的服务状态
+CREATE INDEX idx_awd_ts_round_team_service ON awd_team_services(round_id, team_id, service_id);
+  -- 用途：按轮次、队伍、服务快速定位官方状态
 ```
 
 ### 8.3 awd_attack_logs — 攻击日志表
@@ -735,9 +745,12 @@ CREATE TABLE awd_attack_logs (
     round_id        BIGINT          NOT NULL REFERENCES awd_rounds(id) ON DELETE CASCADE,
     attacker_team_id BIGINT         NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     victim_team_id  BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    challenge_id    BIGINT          NOT NULL REFERENCES challenges(id) ON DELETE RESTRICT,
+    service_id      BIGINT          NOT NULL,
+    awd_challenge_id BIGINT         NOT NULL REFERENCES awd_challenges(id) ON DELETE RESTRICT,
     attack_type     VARCHAR(32)     NOT NULL,                -- flag_capture/service_exploit
+    source          VARCHAR(32)     NOT NULL DEFAULT 'legacy',
     submitted_flag  VARCHAR(512)    DEFAULT NULL,            -- 提交的 Flag
+    submitted_by_user_id BIGINT     DEFAULT NULL,
     is_success      BOOLEAN         NOT NULL DEFAULT FALSE,  -- 是否攻击成功
     score_gained    INT             NOT NULL DEFAULT 0,      -- 获得分数
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
@@ -748,6 +761,8 @@ CREATE INDEX idx_awd_attack_round ON awd_attack_logs(round_id, attacker_team_id)
   -- 用途：按轮次查询某队的攻击记录
 CREATE INDEX idx_awd_attack_victim ON awd_attack_logs(round_id, victim_team_id);
   -- 用途：按轮次查询某队被攻击记录
+CREATE INDEX idx_awd_attack_round_service_success ON awd_attack_logs(round_id, attacker_team_id, victim_team_id, service_id, is_success);
+  -- 用途：按轮次和服务去重成功攻击记录
 CREATE INDEX idx_awd_attack_success ON awd_attack_logs(round_id, is_success) WHERE is_success = TRUE;
   -- 用途：统计每轮成功攻击次数（部分索引，只索引成功记录）
 ```
@@ -762,7 +777,7 @@ CREATE TABLE awd_traffic_events (
     attacker_team_id BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     victim_team_id   BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     service_id       BIGINT          NOT NULL,
-    challenge_id     BIGINT          NOT NULL REFERENCES challenges(id) ON DELETE RESTRICT,
+    awd_challenge_id BIGINT          NOT NULL REFERENCES awd_challenges(id) ON DELETE RESTRICT,
     method           VARCHAR(16)     NOT NULL,
     path             VARCHAR(1024)   NOT NULL,
     status_code      INT             NOT NULL,

@@ -510,6 +510,7 @@ extensions:
   - 对 `http_standard`，必须至少显式提供 `put_flag / get_flag`；建议同时提供 `havoc`
   - 对 `tcp_standard`，使用 `steps` 描述 TCP connect 后的收发顺序；支持 `send`、`send_template`、`send_hex`、`expect_contains`、`expect_regex`、`timeout_ms`
   - 对 `script_checker`，必须提供 `runtime`、`entry`、`timeout_sec`；可提供 `files` 声明 entry 依赖的同包文件
+  - `tcp_standard` 与 `script_checker` 都可使用 `{{CHECKER_TOKEN}}` 模板变量；只有题目声明了 `extensions.awd.runtime_config.checker_token_env` 时平台才会注入该值
   - 这是 AWD service 的默认裁判契约，题目包导入后会进入 AWD 题库模板，管理员把题目加入赛事时默认继承该配置
 - `extensions.awd.flag_policy.mode`
   - 必填，对应 `flag_mode`
@@ -527,6 +528,7 @@ extensions:
 - `extensions.awd.runtime_config`
   - 可选，对应 `runtime_config`
   - 建议写 `instance_sharing`、`service_port`、拓扑或运行时参数
+  - 若题目需要私有 checker 管理通道，可声明 `checker_token_env`，例如 `CHECKER_TOKEN`；平台会把同一 secret 注入 runtime 容器环境变量，并提供给 `{{CHECKER_TOKEN}}` 模板变量
   - 平台导入时会把平台生成或校验通过的镜像补成 `image_ref` 与 `image_id`
 
 边界说明：
@@ -539,7 +541,7 @@ extensions:
 
 ### 6.1 `tcp_standard` 配置示例
 
-`tcp_standard` 适合简单 TCP / Binary 文本协议，不执行任意脚本。平台会从服务访问地址解析 `{{TARGET_HOST}}` / `{{TARGET_PORT}}`，连接后按 `steps` 顺序执行。
+`tcp_standard` 适合简单 TCP / Binary 文本协议，不执行任意脚本。平台会从服务访问地址解析 `{{TARGET_HOST}}` / `{{TARGET_PORT}}`，连接后按 `steps` 顺序执行。若题目声明了 `runtime_config.checker_token_env`，则 `send_template` 和期望断言里还可以使用 `{{CHECKER_TOKEN}}`，用于访问只供 checker 调用的私有管理命令。
 
 ```yaml
 checker:
@@ -549,9 +551,9 @@ checker:
     steps:
       - send: "PING\n"
         expect_contains: PONG
-      - send_template: "SET_FLAG {{FLAG}}\n"
+      - send_template: "SET_FLAG {{CHECKER_TOKEN}} {{FLAG}}\n"
         expect_contains: OK
-      - send: "GET_FLAG\n"
+      - send_template: "GET_FLAG {{CHECKER_TOKEN}}\n"
         expect_contains: "{{FLAG}}"
 ```
 
@@ -559,7 +561,7 @@ checker:
 
 - `timeout_ms`：总超时，范围 `1-60000`。
 - `steps[].send`：原样发送文本。
-- `steps[].send_template`：发送前替换模板变量，例如 `{{FLAG}}`、`{{ROUND}}`、`{{TEAM_ID}}`、`{{CHALLENGE_ID}}`、`{{TARGET_HOST}}`、`{{TARGET_PORT}}`。
+- `steps[].send_template`：发送前替换模板变量，例如 `{{FLAG}}`、`{{ROUND}}`、`{{TEAM_ID}}`、`{{CHALLENGE_ID}}`、`{{TARGET_HOST}}`、`{{TARGET_PORT}}`、`{{CHECKER_TOKEN}}`。
 - `steps[].send_hex`：发送十六进制 payload；不能与 `send` / `send_template` 同时出现。
 - `steps[].expect_contains`：响应中必须包含指定文本。
 - `steps[].expect_regex`：响应中必须匹配指定正则。
@@ -582,6 +584,7 @@ checker:
     args:
       - "{{TARGET_URL}}"
     env:
+      CHECKER_TOKEN: "{{CHECKER_TOKEN}}"
       FLAG: "{{FLAG}}"
     output: json
 ```
@@ -592,6 +595,7 @@ checker:
 - `files` 可选；未声明时默认只包含 `entry`。
 - `entry` 必须包含在 `files` 内。
 - `files` 只允许题目包内相对文件路径，不支持目录、绝对路径、`..` 或通配符。
+- `env` / `args` 中可使用 `{{CHECKER_TOKEN}}`；只有声明了 `runtime_config.checker_token_env` 时平台才会渲染该值。
 - 平台导入后保存私有 artifact 摘要和服务端存储路径，执行时只读注入 sandbox。
 
 ---

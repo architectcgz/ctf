@@ -59,11 +59,15 @@
   例如解释布局意图、说明“这一块为什么这样设计”、描述“帮助教师快速判断下一步教学策略”这类偏设计汇报口吻的句子，默认不应出现在正式页面中。
 - 优先短句和结果导向表达。
   页面文案应直接服务当前任务，不写“为你提供”“帮助你理解”“在同一块区域里”这类解释 UI 组织方式的句子，除非它本身是必要操作说明。
+- 组件默认文案也遵守同一规则。
+  `modal / drawer / popover / empty state / card` 的默认 `subtitle`、`description`、`helper`、`placeholder` 不得写“在这里放置…”、“该区域用于…”、“支持长表单…”这类实现说明；默认应为空，只有调用方显式传入真实业务文案时才显示。
 
 ### Frontend Guardrails
 - 实现型 agent（如 `backend-engineer`、`frontend-engineer`、`code-agent`）在提交代码时，凡是涉及锁续租、并发收敛、状态机分支、跨上下文释放资源、兼容性兜底这类不看上下文就容易误判的关键实现点，必须补上简洁注释，说明“为什么这样做”，不能只让读代码的人自行猜测。
 - 避免复用容易受全局样式影响的通用类名，尤其是类似 `.overline` 这类在多个页面重复出现的样式标识；新页面优先使用局部命名，减少样式串扰。
 - 教师端页面允许保留必要的教学语义和状态说明，但不应出现产品设计说明、布局介绍或“workspace 理念解释”类文案。
+- 模板组件不得自带会直接渲染到 UI 的脚手架说明文案。
+  通用 `modal / drawer / panel` 若需要 `subtitle`、`description` 或 helper 区域，默认只提供结构，不提供演示型说明文字；示例文案只能留在测试、文档或注释里，不能作为运行时默认值进入页面。
 - 前端实现禁止在同一个 `.vue` 页面文件里持续堆叠路由状态、接口调用、派生数据、交互流程和大段模板判断。
   当页面已经承担 2 个以上独立职责时，应优先拆分为 composable 或子组件，而不是继续把逻辑塞回当前文件。
 - 对于以下类型的逻辑，默认优先考虑抽成 composable：
@@ -119,6 +123,42 @@
 - 只有用户明确要求隔离开发、开分支或开 worktree 时，才使用 worktree。
 - 不要把“文档也可能并发修改”当作默认进入 worktree 的理由；文档类任务默认走轻量流程。
 
+### File Placement Rules
+- 新增文件前，先判断它属于“最终事实”“中间设计”“实施过程”“评审证据”“长期积累”中的哪一类，不要因为顺手就丢进 `docs/architecture/` 或 `docs/plan/`。
+- 架构文档文件名默认首选中文命名；只有用户明确指定其他语言，或必须与外部英文契约保持一致时，才使用英文文件名。
+- `docs/architecture/`：当前架构与最终设计事实源。
+  - `backend/`、`frontend/`：长期架构、运行模型、页面最终设计、设计系统。
+  - `backend/design/`：已采用、但不适合并入总览的后端专题架构。
+  - `features/`：面向产品能力或业务专题的最终架构事实，也可以承接该专题当前已经固定的内部边界结论；不要单独保留“迁移过程/收口过程”专题。
+    - 单题题包设计、题面设计、解法设计不放这里。
+    - 已落地的单题事实优先回到对应题包目录，例如 `challenge.yml`、`statement.md`、题目源码与测试。
+    - 仍在推演的单题方案进入 `docs/design/`，不要伪装成架构专题。
+- `docs/contracts/`：API、OpenAPI、事件、题包格式、导入导出结构等契约。
+- `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明；这里不是最终事实源。
+- `docs/plan/impl-plan/`：结构性实现方案、阶段计划、执行清单和验证步骤。
+- `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings；它们是评审证据，不覆盖当前设计事实。
+- `docs/requirements/`：需求基线、范围说明、差距分析和立项约束。
+- `docs/tasks/`：任务分解、拆解清单和阶段性工作列表；不替代架构或 implementation plan。
+- `docs/todos/`：明确尚未收口的 backlog、延期项和后续跟踪。
+- `docs/operations/`：运维手册、联调步骤、演练记录、运行侧说明。
+- `docs/reports/`：阶段性报告、汇总结论、差距报告和分析输出。
+- `docs/Q&A/`：会被重复引用的问答式说明，适合解释“某个能力是怎么工作的”。
+- `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不要混入产品事实源。
+- `docs/ui-theme/`：历史或补充型 UI 资料；当前最终 UI 事实源仍是 `docs/architecture/frontend/design-system/` 和 `docs/architecture/frontend/pages/`。
+- `concepts/`：项目级长期概念、原则和 harness 定义。
+- `thinking/`：尚未落地、但需要保存的判断、质疑和取舍分析。
+- `practice/`：实验记录、迁移过程、历史计划索引、实践说明；它不是最终设计入口。
+- `feedback/`：agent 工作流、review、prompt、policy、协作方式相关的踩坑与修正规则。
+- `works/`：可直接复用的模板、地图、教程、good practices 和说明稿。
+- `prompts/`：已验证提示词、工作流和可复用 prompt 资产。
+- `references/`：外部文章、仓库、工具和研究资料索引。
+- 已稳定的结论要回收到对应事实源：
+  - 架构结论回 `docs/architecture/`
+  - 契约回 `docs/contracts/`
+  - 页面最终稿回 `docs/architecture/frontend/pages/`
+  - 旧中间稿在原位置标记 `Superseded by ...`
+- 不再新增 `docs/improvements/`、`docs/superpowers/`、`docs/refs/`、`docs/skills/` 作为活动入口；对应内容分别进入 `feedback/`、`practice/`、`references/`、`prompts/`。
+
 ### Review Workflow Preference
 - 需要独立 review，且使用 subagent 执行 review 时，默认使用 `gpt-5.5`，`reasoning_effort` 使用 `medium`。
 - 只有用户明确指定别的 review 模型，或当前任务本身已经带有更强的模型约束时，才偏离这条默认值。
@@ -165,3 +205,21 @@
   - `config/backofficeNavigation.ts`
   - `utils/roleRoutes.ts`
   - 登录跳转、错误页返回入口、侧边栏/顶部导航测试
+
+<!-- BEGIN HARNESS ENGINEERING: root-navigation -->
+## Harness Engineering 学习档案
+
+严格参考 `deusyu/harness-engineering` 的顶层结构：
+
+| 目录 | 内容 | 说明 |
+|------|------|------|
+| `concepts/` | 概念笔记 | Harness 核心概念与 CTF 项目映射 |
+| `thinking/` | 独立思考 | 对项目 harness 边界和取舍的判断 |
+| `practice/` | 动手实践 | 初始化和后续实验记录 |
+| `feedback/` | 反馈记录 | 踩坑、修正和可复用经验 |
+| `works/` | 作品输出 | 可展示模板、报告和说明 |
+| `prompts/` | 提示词积累 | 已验证提示词和工作流 |
+| `references/` | 外部资源 | 文章、仓库和工具索引 |
+
+机械化检查：`bash scripts/check-consistency.sh`。
+<!-- END HARNESS ENGINEERING: root-navigation -->

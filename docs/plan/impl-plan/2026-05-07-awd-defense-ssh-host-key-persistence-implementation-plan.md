@@ -12,7 +12,7 @@
 
 ## 输入文档
 
-- `docs/architecture/features/awd-defense-workspace-boundary-design.md`
+- `docs/architecture/features/AWD防守工作区与边界设计.md`
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
 - `code/backend/internal/app/composition/runtime_module.go`
 - `code/backend/internal/config/config.go`
@@ -25,7 +25,7 @@
 - Modify: `code/backend/internal/config/config.go`
 - Modify: `code/backend/internal/config/config_test.go`
 - Modify: `code/backend/configs/config.dev.yaml`
-- Modify: `docs/architecture/features/awd-defense-workspace-boundary-design.md`
+- Modify: `docs/architecture/features/AWD防守工作区与边界设计.md`
 
 ## 回退与恢复约定
 

@@ -22,8 +22,8 @@
   - `code/frontend/src/features/contest-awd-workspace/model/awdDefensePresentation.ts`
   - `code/frontend/src/router/routes/studentRoutes.ts`
   - `code/frontend/src/views/contests/__tests__/contestStudentActionPrimitives.test.ts`
-  - `docs/architecture/features/awd-defense-workspace-boundary-design.md`
-  - `docs/architecture/features/awd-student-battle-workspace-design.md`
+  - `docs/architecture/features/AWD防守工作区与边界设计.md`
+  - `docs/architecture/features/AWD学员实战工作台设计.md`
   - `challenges/awd/challenge-package-contract.md`
   - `docs/plan/impl-plan/2026-05-06-awd-defense-workspace-boundary-implementation-plan.md`
 

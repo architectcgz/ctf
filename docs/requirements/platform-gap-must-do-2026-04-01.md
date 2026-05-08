@@ -74,5 +74,5 @@
 
 ## 文档索引
 
-- 设计文档：`docs/architecture/features/2026-04-01-*.md`
+- 设计文档：`docs/architecture/features/*.md`
 - 实施计划：`docs/superpowers/plans/2026-04-01-*.md`

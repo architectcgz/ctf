@@ -6,7 +6,7 @@
 
 ## 输入文档
 
-- `docs/architecture/features/awd-student-battle-workspace-design.md`
+- `docs/architecture/features/AWD学员实战工作台设计.md`
 - `docs/architecture/features/awd-web-defense-workbench-design.md`
 - `docs/plan/impl-plan/2026-05-04-awd-defense-workbench-design-implementation-plan.md`
 

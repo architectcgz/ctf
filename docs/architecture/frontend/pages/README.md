@@ -25,4 +25,4 @@
 
 - `topology-editor.md` 是拓扑编排器当前页面设计入口。
 - `env-templates.md` 只描述环境模板列表、保存为模板、导入导出和空状态。
-- `docs/superpowers` 当前没有独立的 topology editor 设计稿；不要再从 AWD 总设计或历史任务拆解里反推拓扑编辑器 UI。
+- 当前没有独立的 topology editor 设计稿；不要再从 AWD 总设计或历史任务拆解里反推拓扑编辑器 UI。

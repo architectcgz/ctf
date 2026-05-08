@@ -11,9 +11,16 @@ __pycache__/
 coverage.out
 logs/
 docs/*
+!docs/reviews/general/
+!docs/reviews/general/*.md
 !docs/architecture/
 !docs/architecture/*.md
 !docs/contracts/
+!docs/design/
+docs/design/*
+!docs/design/README.md
+!docs/design/AWD题目配置面板方案.md
+!docs/design/AWD能力画像回流方案.md
 !docs/plan/
 !docs/plan/impl-plan/
 !docs/plan/impl-plan/*.md
@@ -44,6 +51,7 @@ code/frontend/docs/
 .env
 .env.local
 /scripts/registry/deploy-private-registry.conf
+/scripts/check-harness-consistency.sh
 
 # Local development artifacts
 /.playwright-cli/
@@ -58,3 +66,17 @@ code/frontend/docs/
 /docker/ctf/runtime/
 /output/
 /code/backend/Makefile
+!concepts/
+!concepts/*.md
+!thinking/
+!thinking/*.md
+!practice/
+!practice/**
+!feedback/
+!feedback/*.md
+!works/
+!works/*.md
+!prompts/
+!prompts/*.md
+!references/
+!references/*.md

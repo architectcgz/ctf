@@ -17,16 +17,23 @@
 - 架构与设计总入口：`docs/architecture/README.md`
 - 全局 UI 设计：`docs/architecture/frontend/design-system/MASTER.md`
 - 页面级 UI 设计：`docs/architecture/frontend/pages/README.md`
-- 专题设计索引：`docs/architecture/features/README.md`
+- 专题设计索引：`docs/architecture/features/专题架构索引.md`
 - 前端 review 当前索引：`docs/reviews/frontend/README.md`
 - 后端架构设计索引：`docs/architecture/backend/design/README.md`
+
+## 当前中间方案
+
+- `AWD题目配置面板方案.md`
+  - 说明：后台 AWD service 配置面板的中间设计稿，仍包含方案比较和待落地交互。
+- `AWD能力画像回流方案.md`
+  - 说明：AWD 个人攻击证据接入能力画像与推荐链路的中间方案，仍包含数据归因和事件设计取舍。
 
 ## 专题归属
 
 - 拓扑编排与环境模板：以 `docs/architecture/frontend/pages/topology-editor.md` 和 `docs/architecture/frontend/pages/env-templates.md` 为 UI 设计入口。`docs/superpowers` 当前没有独立的 topology editor 专题最终设计。
-- AWD 运行态与服务模型：以 `docs/architecture/features/2026-04-17-awd-final-design.md` 和 `docs/architecture/backend/design/awd-engine-migration.md` 为准。
-- 社区题解与推荐题解：以 `docs/architecture/features/2026-04-04-community-writeup-and-recommended-solutions-design.md` 为准。
-- 攻防证据链、判题模式、赛事运营增强：以对应 `docs/architecture/features/2026-04-01-*.md` 为专题入口。
+- AWD 运行态与服务模型：以 `docs/architecture/features/校园级CTF-AWD模式完整设计.md` 和 `docs/architecture/backend/design/awd-engine-migration.md` 为准。
+- 社区题解与推荐题解：以 `docs/architecture/features/社区题解与推荐题解设计.md` 为准。
+- 攻防证据链、判题模式、赛事运营增强：以 `docs/architecture/features/攻击证据链与教学复盘架构.md`、`docs/architecture/features/判题模式扩展架构.md`、`docs/architecture/features/赛事导出与复盘归档架构.md` 为专题入口。
 
 ## 过期规则
 
@@ -38,6 +45,6 @@
 ## 已移除的旧设计
 
 - `docs/superpowers/specs/2026-04-01-contestant-writeup-workflow-design.md`
-  - 移除原因：其中“教师评阅学生 writeup”的部分已由 `2026-04-04-community-writeup-and-recommended-solutions-design.md` 替代，当前产品方向改为“社区题解 + 推荐题解”，教师/管理员角色从批改者变为内容运营者。
+  - 移除原因：其中“教师评阅学生 writeup”的部分已由 `社区题解与推荐题解设计.md` 替代，当前产品方向改为“社区题解 + 推荐题解”，教师/管理员角色从批改者变为内容运营者。
 - `docs/superpowers/specs/*.md`
   - 迁移原因：仍有效的专题设计已经统一迁入 `docs/architecture/features/`，`docs/superpowers` 不再保存最终设计副本。

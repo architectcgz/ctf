@@ -1,6 +1,6 @@
 # CTF 网络攻防靶场平台 — 整体架构设计
 
-> 版本：v1.0 | 日期：2026-03-01 | 状态：初稿
+> 版本：v1.1 | 日期：2026-05-07 | 状态：当前事实
 
 ---
 
@@ -42,138 +42,79 @@ flowchart TD
 
 ---
 
-## 2. 分层架构设计
+## 2. Onion 分层架构
 
 ### 2.1 分层总览
 
-```mermaid
-flowchart TD
-    H["Handler 层\nHTTP 路由 · 参数校验 · 响应封装 · WebSocket"]
-    S["Service 层\n业务逻辑编排 · 事务协调 · 权限判断 · 事件发布"]
-    R["Repository 层\n数据访问 · GORM 封装 · 缓存读写 · 查询构建"]
-    D["Docker Engine 层\n容器 CRUD · 网络管理 · 资源限制 · 镜像管理"]
-    I["基础设施层\nPostgreSQL · Redis · Docker Daemon · 文件系统"]
-
-    H --> S
-    S --> R
-    S --> D
-    R --> I
-    D --> I
-```
-
-### 2.2 各层职责与规则
-
-#### Handler 层
-
-- 职责：接收 HTTP 请求，参数绑定与校验，调用 Service，封装统一响应
-- 规则：
-  - 禁止包含任何业务逻辑，只做"入参 → Service 调用 → 出参"的转换
-  - 参数校验使用 Gin 的 `binding` tag + 自定义 validator
-  - 统一通过 `response.Success()` / `response.Error()` 返回，禁止直接 `c.JSON()`
-  - WebSocket 连接的建立和消息分发在此层处理，业务逻辑下沉到 Service
-- 依赖：仅依赖 Service 层接口
-
-```go
-// 示例：Handler 只做参数绑定和调用转发
-func (h *ChallengeHandler) Create(c *gin.Context) {
-    var req dto.CreateChallengeReq
-    if err := c.ShouldBindJSON(&req); err != nil {
-        response.ValidationError(c, err)
-        return
-    }
-    result, err := h.challengeService.Create(c.Request.Context(), &req)
-    if err != nil {
-        response.FromError(c, err)
-        return
-    }
-    response.Success(c, result)
-}
-```
-
-#### Service 层
-
-- 职责：业务逻辑编排、事务管理、跨模块协调、权限判断、事件发布
-- 规则：
-  - 核心业务逻辑全部在此层实现
-  - 通过接口依赖 Repository 层和 Docker Engine 层，不直接操作数据库或 Docker API
-  - 跨模块调用通过注入对方 Service 接口，禁止直接访问对方 Repository
-  - 事务边界在 Service 层控制，Repository 层不自行开启事务
-  - 对外暴露接口（interface），便于单元测试 mock
-- 依赖：Repository 接口、Docker Engine 接口、其他模块 Service 接口
-
-```go
-// 示例：Service 接口定义
-type ChallengeService interface {
-    Create(ctx context.Context, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
-    Update(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
-    Delete(ctx context.Context, id int64) error
-    GetByID(ctx context.Context, id int64) (*dto.ChallengeResp, error)
-    ListByCategory(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error)
-}
-```
-
-#### Repository 层
-
-- 职责：数据持久化、缓存读写、查询构建
-- 规则：
-  - 封装所有 GORM 操作，对上层屏蔽 ORM 细节
-  - 缓存逻辑（Redis）在此层实现，Service 层无需感知缓存存在
-  - 返回领域模型（model），不返回 GORM 的 `*gorm.DB`
-  - 复杂查询使用 QueryBuilder 模式，避免在 Service 层拼接查询条件
-- 依赖：GORM DB 实例、Redis Client
-
-#### Docker Engine 层
-
-- 职责：封装 Docker SDK，提供容器生命周期管理的高层 API
-- 规则：
-  - 对上层屏蔽 Docker SDK 的底层细节（types、API 版本差异等）
-  - 所有容器操作必须设置超时（context.WithTimeout）
-  - 容器创建必须强制设置资源限制（CPU、内存、磁盘）
-  - 网络隔离逻辑在此层实现，上层只需指定隔离级别
-- 依赖：Docker Client（`client.NewClientWithOpts`）
-
-### 2.3 依赖规则
+当前后端采用**单体部署下的 Onion Architecture**：运行时仍是一个 Go API 进程，但代码按模块分域，并在模块内部保持依赖向内。
 
 ```mermaid
 flowchart LR
-    Handler --> Service
-    Service --> Repository
-    Service --> DockerEngine
-    Repository --> DBRedis["DB / Redis"]
-    DockerEngine --> DockerDaemon["Docker Daemon"]
+    API["api\nHTTP · WebSocket · DTO 映射"] --> APP["application\n用例编排 · 权限判断 · 事务边界"]
+    APP --> DOMAIN["domain\n实体 · 规则 · 状态机"]
+    APP --> PORTS["ports\n消费方端口接口"]
+    INFRA["infrastructure\nGORM · Redis · Docker · 导出 · 定时任务"] -.实现.-> PORTS
+    RUNTIME["runtime / composition\n模块装配 · 生命周期"] --> API
+    RUNTIME --> APP
+    RUNTIME --> INFRA
+    INFRA --> EXT["PostgreSQL · Redis · Docker Engine · 文件系统"]
 ```
 
-> 规则：
-> - ✅ 上层可以依赖下层的接口
-> - ❌ 下层禁止依赖上层（禁止反向依赖）
-> - ❌ 同层禁止直接依赖（通过上层 Service 协调）
-> - ✅ 所有跨层依赖通过 interface 注入，不依赖具体实现
+### 2.2 分层职责
+
+| 层级 | 当前位置 | 主要职责 | 约束 |
+|------|----------|----------|------|
+| `api` | `internal/module/*/api` | HTTP / WebSocket 入口、参数校验、请求上下文提取、响应映射 | 不写业务规则；只做协议适配 |
+| `application` | `internal/module/*/application` | 用例编排、事务边界、权限判断、跨模块协作、事件发布 | 通过 `ports` / `contracts` 依赖外部能力，不直接依赖 GORM / Redis / Docker |
+| `domain` | `internal/module/*/domain` | 纯业务规则、状态机、领域对象与校验 | 不感知 Gin、GORM、Redis、Docker SDK |
+| `ports` | `internal/module/*/ports` | 由消费方定义的最小接口，如读写能力、运行时探针、报告查询 | 接口粒度按用例稳定边界组织，而不是按 provider 拼大接口 |
+| `infrastructure` | `internal/module/*/infrastructure` | GORM 仓储、Redis 存储、Docker Engine、导出器、定时任务、外部适配器 | 只实现端口，不向内倒灌框架类型 |
+| `runtime` | `internal/module/*/runtime` | 模块内 wiring、对外暴露组合后的 handler / service / background jobs | 模块唯一允许集中装配依赖的位置 |
+| `contracts` | `internal/module/*/contracts` | 模块对外稳定数据契约 | 只暴露必要 contract，不泄漏内部 persistence 结构 |
+
+补充约定：
+
+- `practice_readmodel`、`teaching_readmodel` 是只读聚合模块，不以写模型 owner 自居。
+- 并不是每个模块都必须拥有全部子目录；例如读模型模块可以没有 `domain`，但依赖方向仍保持一致。
+
+### 2.3 依赖规则
+
+- `api -> application -> domain` 是主链路，业务依赖只能向内。
+- `application -> ports`，由消费方定义所需能力接口。
+- `infrastructure` 负责实现 `ports`，并连接 PostgreSQL、Redis、Docker、文件系统等外部资源。
+- `runtime` 与 `internal/app/composition` 位于最外层，只负责装配，不承载业务规则。
+- 跨模块调用优先走对方的 `application` / `contracts` / `ports`，禁止直接依赖对方 `infrastructure`。
+- 需要跨模块做复杂只读聚合时，进入 `practice_readmodel` 或 `teaching_readmodel`，而不是把教师视角或页面视角写成业务 owner。
 
 ### 2.4 Composition Root 与生命周期
 
-- 当前实现以 `internal/app/buildRouterRuntime` 作为统一 composition root，负责集中装配 repository、service、handler 与共享基础设施依赖。
-- HTTP 路由与后台任务共享同一套关键运行时组件，当前已确认：
-  - `runtimeBaseService` 由 composition root 创建一次，同时复用于：
-    - 运行时清理任务 `runtime/infrastructure.Cleaner`
-    - AWD Flag 注入器 `contest.DockerAWDFlagInjector`
-  - `runtimeInstanceService` 由 composition root 创建一次，专门负责：
-    - HTTP Handler 链路中的实例查询、续期、销毁和教师端用例
-    - 复用 `runtimeBaseService` 提供的运行时资源清理能力
-  - `runtime` 组合模块统一装配：
-    - `runtimeBaseService` 的运行时编排能力
-    - `runtimeInstanceService` 的 HTTP 用例能力
-    - 代理票据应用服务
-  - `assessmentService` 由路由层创建一次，同时复用于：
-    - HTTP Handler 链路
-    - 能力画像后台任务 `assessment.Cleaner`
-- `internal/app/HTTPServer` 只负责启动和停止后台任务，不再重复构建上述核心 service；其关闭流程统一收口：
-  - 先取消 contest 状态更新与 AWD 轮次推进
-  - 再停止 cleaner / assessment rebuild
-  - 最后依次关闭带异步任务的应用组件（当前包括 `reportService`、`imageService`、`practiceService`）
+- 进程级 composition root 是 `internal/app/composition.Root`，统一持有：
+  - `config`
+  - `logger`
+  - `db`
+  - `cache`
+  - `events.Bus`
+  - 后台任务注册表
+- HTTP 路由装配入口是 `internal/app/buildRouterRuntime`。当前装配顺序为：
+  - `runtime`
+  - `ops`
+  - `identity`
+  - `auth`
+  - `challenge`
+  - `assessment`
+  - `teaching_readmodel`
+  - `contest`
+  - `practice`
+  - `practice_readmodel`
+- `runtime` 模块内部统一装配运行时引擎、实例查询/续期能力、代理票据服务、清理任务和运行时统计能力；上层模块只依赖其暴露的 query / service / handler。
+- `HTTPServer` 复用同一套 composition 结果，只负责：
+  - 启动 `composition.Root` 已注册的后台任务
+  - 关闭各模块异步组件
+  - 统一执行进程退出时的 shutdown
 - 约束：
-  - 新增后台任务时必须优先复用 composition root 中已创建的共享 service
-  - 禁止在子流程或后台协程内部私自重新构建同类运行时组件
-  - 需要显式关闭的组件必须纳入统一 lifecycle 管理
+  - 后台任务必须通过 `composition.Root.RegisterBackgroundJob` 注册
+  - 禁止在 handler、协程或子流程中自行重建模块 service
+  - 需要显式关闭的组件必须纳入 `routerRuntime.closers`
 
 ---
 
@@ -182,162 +123,58 @@ flowchart LR
 ### 3.1 模块全景图
 
 ```mermaid
-flowchart TD
-    subgraph Gateway["API Gateway (Gin Router)"]
-        auth["auth\n认证\nRBAC"]
-        challenge["challenge\n靶场管理\n靶机 CRUD\nFlag 管理"]
-        practice["practice\n攻防演练\n实例管理\nFlag 提交"]
-        contest["contest\n竞赛管理\n组队/排行\nAWD 模式"]
-        assessment["assessment\n技能评估\n能力画像\n评估报告"]
-        runtime["runtime\n实例运行时\n访问代理\n资源治理"]
-        system["system\n系统管理\n仪表盘\n审计日志"]
-    end
-
-    subgraph Infra["runtime/infrastructure（基础设施适配层）"]
-        runtimeinfra["Docker Engine · ACL 下发 · 清理任务 · 运行指标采集"]
-    end
-
-    challenge --> runtime
-    practice --> runtime
-    contest --> runtime
-    system --> runtime
-    runtime --> runtimeinfra
-```
-
-### 3.2 各模块职责
-
-#### auth 模块 — 认证与权限
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 用户注册/登录、服务端 session 管理、RBAC 权限控制 |
-| 角色模型 | `admin`（平台管理员）、`teacher`（教师）、`student`（学生） |
-| 关键接口 | 注册、登录、登出、获取当前用户、角色管理 |
-| 数据表 | `users`、`roles`、`user_roles`、`permissions`、`role_permissions` |
-| 对外暴露 | `AuthService` 接口（session 校验）、`AuthMiddleware`（Gin 中间件） |
-| 安全要求 | 密码 bcrypt 加盐、HttpOnly session cookie、登录失败锁定 |
-
-#### challenge 模块 — 靶场管理
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 靶机题目 CRUD、分类管理、Flag 生成策略、难度分级、附件管理 |
-| 题目类型 | `static`（静态 Flag）、`dynamic`（动态 Flag，每用户唯一）、`manual`（人工评判） |
-| Flag 策略 | 静态：管理员手动设置（只存哈希+盐）；动态：`HMAC-SHA256(global_secret + contest_salt, user_id + ":" + challenge_id + ":" + instance_nonce)`（三层密钥分离，详见 ADR-004） |
-| 分类体系 | Web、Pwn、Reverse、Crypto、Misc、Forensics（可扩展） |
-| 数据表 | `challenges`、`challenge_categories`、`challenge_tags`、`challenge_attachments` |
-| 依赖模块 | runtime（获取镜像信息与运行时资源操作） |
-
-#### practice 模块 — 攻防演练
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 用户开启/销毁靶机实例、Flag 提交与判定、解题记录、积分计算 |
-| 实例生命周期 | 创建 → 运行中 → 已过期/已销毁；每用户同时运行实例数上限可配置（默认 3） |
-| 实例超时 | 默认 2 小时自动回收，用户可手动续期一次（+1 小时），通过后台定时任务扫描过期实例 |
-| Flag 提交 | 防刷机制：同一题目 60 秒内限提交 5 次（Redis 滑动窗口）；提交记录全量入库用于分析 |
-| 积分规则 | 静态积分 或 动态积分（首血加成、解题人数衰减），由 challenge 配置决定 |
-| 数据表 | `practice_instances`、`submissions`、`user_scores`、`first_blood_records` |
-| 依赖模块 | challenge（题目信息、Flag 校验）、runtime（实例创建/销毁与访问代理）、auth（用户信息） |
-
-#### contest 模块 — 竞赛管理
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 竞赛创建与配置、组队管理、实时排行榜、多赛制支持 |
-| 赛制支持 | Jeopardy（解题积分）、AWD（攻防对抗）、混合赛制 |
-| 竞赛状态机 | 草稿 → 报名中 → 进行中 → 已结束 → 已归档 |
-| 组队规则 | 可配置：个人赛/团队赛、队伍人数上限、是否允许跨班组队 |
-| 排行榜 | Redis Sorted Set 实时排名 + WebSocket 推送；冻结机制（赛前 N 分钟冻结榜单） |
-| AWD 模式 | 每轮自动检测存活（checker）、攻击得分/防守失分、轮次定时推进 |
-| 数据表 | `contests`、`contest_challenges`、`teams`、`team_members`、`submissions`、`contest_announcements`、`cheat_reports` |
-| 依赖模块 | challenge（题目池）、runtime（AWD 靶机编排）、practice（Flag 提交复用） |
-
-#### assessment 模块 — 技能评估
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 技能评估任务管理、能力画像生成、评估报告导出 |
-| 评估维度 | 按 CTF 分类维度（Web/Pwn/Reverse/Crypto/Misc/Forensics）+ 难度维度交叉评分 |
-| 能力画像 | 基于用户历史解题数据（分类通过率、平均耗时、难度分布）生成雷达图数据 |
-| 评估任务 | 教师可创建定向评估任务：指定题目集 + 时间限制 + 目标班级 |
-| 报告内容 | 个人能力雷达图、班级排名、薄弱项分析、推荐练习题目 |
-| 数据表 | `assessments`、`assessment_tasks`、`assessment_results`、`user_skill_profiles` |
-| 依赖模块 | challenge（题目元数据）、practice（解题记录与积分） |
-
-#### runtime 模块 — 实例运行时与资源治理
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | `application` 负责实例查询/续期/销毁等用例，`service` 负责运行时拓扑编排、容器/网络/ACL 生命周期治理，`api/http` 负责访问代理 |
-| 容器生命周期 | 创建 → 启动 → 运行中 → 停止 → 删除；异常状态自动检测与清理 |
-| 网络隔离 | 每个靶机实例分配独立 Docker Network，禁止容器间互访（AWD 模式除外） |
-| 资源限制 | CPU（默认 0.5 核）、内存（默认 256MB）、磁盘（默认 1GB）、网络带宽，均可按题目配置 |
-| 端口映射 | 动态分配宿主机端口（范围可配置，默认 30000-39999），映射到容器服务端口 |
-| 镜像管理 | 题目镜像元数据由 challenge 模块持有，runtime 负责运行时镜像探测与删除 |
-| 健康检查 | 定时探活（TCP/HTTP），连续失败 N 次标记为异常并通知用户 |
-| 运行时基础设施 | `runtime/infrastructure` 提供 Docker Engine、ACL 下发、清理任务和运行指标采集 |
-| 数据表 | `instances`、`port_allocations` |
-| 依赖模块 | 无业务上游依赖，被 challenge / practice / contest / system 模块调用 |
-
-#### system 模块 — 系统管理
-
-| 项目 | 说明 |
-|------|------|
-| 核心职责 | 管理仪表盘、审计日志、系统通知、全局配置、资源监控 |
-| 仪表盘 | 用户统计、题目统计、容器资源使用率、近期活跃度趋势图 |
-| 审计日志 | 记录关键操作（登录、权限变更、题目修改、容器操作），支持按时间/用户/操作类型筛选 |
-| 通知机制 | 站内通知（WebSocket 推送）：竞赛开始/结束、靶机到期提醒、系统公告 |
-| 全局配置 | 平台名称、注册开关、容器资源默认值、端口范围等运行时可调参数 |
-| 数据表 | `audit_logs`、`notifications`、`system_configs` |
-| 依赖模块 | auth（操作人信息）、runtime（资源监控数据） |
-
-### 3.3 模块间通信方式
-
-校园级单体应用，模块间通信采用**进程内直接调用 + 轻量事件总线**的混合方式：
-
-| 通信方式 | 适用场景 | 实现方案 |
-|----------|----------|----------|
-| 直接调用 | 同步、强一致性场景（如 Flag 提交需实时校验） | Service 接口注入，方法调用 |
-| 事件总线 | 异步、弱一致性场景（如解题后更新排行榜、记录审计日志） | 进程内 EventBus（Go channel） |
-
-#### 事件总线设计
-
-```go
-// 事件定义
-type Event struct {
-    Type      string      // 事件类型，如 "submission.accepted"
-    Payload   interface{} // 事件载体
-    Timestamp time.Time
-    UserID    int64
-}
-
-// 事件类型常量
-const (
-    EventSubmissionAccepted = "submission.accepted"  // Flag 提交成功
-    EventSubmissionRejected = "submission.rejected"  // Flag 提交失败
-    EventContainerCreated   = "container.created"    // 容器创建
-    EventContainerExpired   = "container.expired"    // 容器过期
-    EventContestStarted     = "contest.started"      // 竞赛开始
-    EventContestEnded       = "contest.ended"        // 竞赛结束
-    EventUserLoggedIn       = "user.logged_in"       // 用户登录
-)
-```
-
-#### 模块依赖关系图
-
-```mermaid
 flowchart LR
-    allModules["所有模块"] -->|"认证/权限"| auth
-    practice -->|"题目信息"| challenge
-    contest -->|"题目池"| challenge
-    assessment -->|"题目元数据"| challenge
-    practice -->|"实例管理"| container
-    contest -->|"AWD 靶机"| container
-    contest -->|"Flag 提交复用"| practice
-    assessment -->|"解题记录"| practice
-    allModules2["所有模块"] -->|"审计日志写入"| system
+    auth --> identity
+    practice --> challenge
+    practice --> runtime
+    practice --> assessment
+    contest --> challenge
+    contest --> runtime
+    contest --> ops
+    assessment --> challenge
+    assessment --> practice
+    practiceReadmodel --> practice
+    teachingReadmodel --> assessment
+    teachingReadmodel --> contest
+    ops --> runtime
 ```
+
+### 3.2 当前模块职责
+
+| 模块 | 类型 | 当前职责 | 主要依赖 |
+|------|------|----------|----------|
+| `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket | `identity`、`ops` |
+| `identity` | 写模型 | 用户、角色、权限、当前用户解析、管理端用户能力 | 无业务上游依赖 |
+| `challenge` | 写模型 | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `runtime`（运行时探针与镜像探测） |
+| `runtime` | 写模型 / 基础运行时 | Docker 运行时、实例访问代理、端口与 ACL、清理任务、运行时统计 | PostgreSQL、Redis、Docker Engine |
+| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`runtime`、`assessment` |
+| `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`runtime`、`ops` |
+| `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`、`practice` |
+| `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `runtime` |
+| `practice_readmodel` | 读模型 | 练习态只读聚合查询 | `practice` 等 owner 模块的只读接口 |
+| `teaching_readmodel` | 读模型 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | `assessment`、`contest`、`practice` 等只读数据源 |
+
+边界说明：
+
+- `/api/v1/teacher/*` 只是路由命名空间，不代表存在名为 `teacher` 的业务 owner 模块。
+- `ops` 替代旧的 `system` 叙事，承接通知、审计、运营支撑与运行时可观测能力。
+- `practice_readmodel` 与 `teaching_readmodel` 负责只读聚合，不承担业务状态修改。
+
+### 3.3 模块协作方式
+
+校园级单体应用当前采用**应用服务直连 + 只读聚合 + 进程内事件总线**的混合方式：
+
+| 方式 | 适用场景 | 当前做法 |
+|------|----------|----------|
+| 应用服务调用 | 同步、强一致性用例 | 模块间通过 `application`、`ports`、`contracts` 暴露最小能力 |
+| 读模型聚合 | 教师端、复盘、统计、跨模块列表页 | 进入 `practice_readmodel` / `teaching_readmodel`，避免写模块互相穿透 SQL |
+| 进程内事件 | 异步、非关键路径通知 | 统一复用 `internal/platform/events.Bus` |
+
+### 3.4 架构守卫
+
+- `internal/app/composition/architecture_test.go` 当前已经阻止 composition 和 runtime 回退到旧的 `internal/module/container` 依赖。
+- 新模块必须先确定 owner，再决定是否需要 `domain`、`ports`、`contracts`；禁止先堆目录、后找边界。
+- 后端对外的长期事实源以 `docs/architecture/backend/` 与专题架构文档为准，不再保留迁移中间稿。
 
 ---
 
@@ -385,113 +222,52 @@ flowchart LR
 
 ---
 
-## 5. 项目目录结构
+## 5. 当前代码目录骨架
 
-```
-ctf-platform/
+```text
+ctf/code/backend/
 ├── cmd/
-│   └── server/
-│       └── main.go                  # 程序入口，初始化依赖并启动 HTTP Server
-├── configs/
-│   ├── config.yaml                  # 主配置文件
-│   ├── config.dev.yaml              # 开发环境覆盖配置
-│   └── config.prod.yaml             # 生产环境覆盖配置
+│   ├── api/                         # API 入口
+│   ├── server/                      # HTTPServer 启动入口
+│   ├── import-challenge-packs/      # 题包导入工具
+│   └── seed-demo-challenges/        # 演示数据初始化
+├── configs/                         # 配置文件与密钥目录
+├── data/                            # 题目附件、导入预览等数据目录
 ├── internal/
 │   ├── app/
-│   │   ├── app.go                   # 应用初始化（依赖注入、路由注册、生命周期管理）
-│   │   └── router.go                # 路由总表，按模块分组注册
-│   ├── config/
-│   │   └── config.go                # 配置结构体定义 + Viper 加载逻辑
-│   ├── middleware/
-│   │   ├── auth.go                  # Session 认证中间件
-│   │   ├── rbac.go                  # RBAC 权限校验中间件
-│   │   ├── audit.go                 # 审计日志中间件
-│   │   ├── ratelimit.go             # 限流中间件（令牌桶 / 滑动窗口）
-│   │   ├── cors.go                  # CORS 中间件
-│   │   ├── recovery.go              # Panic 恢复中间件
-│   │   └── requestid.go             # 请求 ID 注入中间件
-│   ├── model/
-│   │   ├── user.go                  # 用户、角色等领域模型
-│   │   ├── challenge.go             # 靶机题目模型
-│   │   ├── practice.go              # 演练实例、提交记录模型
-│   │   ├── contest.go               # 竞赛、队伍模型
-│   │   ├── assessment.go            # 评估任务、技能画像模型
-│   │   ├── container.go             # 容器实例模型
-│   │   └── system.go                # 审计日志、通知、配置模型
-│   ├── dto/
-│   │   ├── request/                 # 按模块组织的请求 DTO
-│   │   └── response/                # 按模块组织的响应 DTO
-│   ├── module/
-│   │   ├── auth/
-│   │   │   ├── handler.go           # 认证相关 HTTP Handler
-│   │   │   ├── service.go           # 认证 Service 接口 + 实现
-│   │   │   └── repository.go        # 用户/角色 Repository
-│   │   ├── challenge/
-│   │   │   ├── handler.go
-│   │   │   ├── service.go
-│   │   │   └── repository.go
-│   │   ├── practice/
-│   │   │   ├── handler.go
-│   │   │   ├── service.go
-│   │   │   └── repository.go
-│   │   ├── contest/
-│   │   │   ├── handler.go
-│   │   │   ├── service.go
-│   │   │   └── repository.go
-│   │   ├── assessment/
-│   │   │   ├── handler.go
-│   │   │   ├── service.go
-│   │   │   └── repository.go
-│   │   ├── runtime/
-│   │   │   ├── api/http/handler.go  # 实例访问与运行时 HTTP API
-│   │   │   ├── application/         # 实例 Query / UseCase 入口
-│   │   │   ├── domain/              # 运行时 ACL 与实例资源规则
-│   │   │   ├── infrastructure/
-│   │   │   │   ├── repository.go    # GORM 持久化实现
-│   │   │   │   ├── proxy_ticket_store.go # 代理票据 Redis 存储
-│   │   │   │   ├── engine.go        # Docker SDK 封装层
-│   │   │   │   ├── cleaner.go       # 运行时清理任务
-│   │   │   │   ├── acl.go           # ACL 下发
-│   │   │   │   └── runtime_metrics.go # 运行指标采集
-│   │   │   └── doc.go               # 根包仅保留命名空间说明
-│   │   └── system/
-│   │       ├── handler.go
-│   │       ├── service.go
-│   │       └── repository.go
-│   └── pkg/
-│       ├── response/
-│       │   └── response.go          # 统一响应封装（Success/Error/Page）
-│       ├── errcode/
-│       │   └── errcode.go           # 错误码定义与错误类型
-│       ├── logger/
-│       │   └── logger.go            # Zap 日志初始化与封装
-│       ├── event/
-│       │   └── bus.go               # 进程内事件总线
-│       ├── crypto/
-│       │   └── flag.go              # Flag 生成与校验工具
-│       └── pagination/
-│           └── pagination.go        # 分页查询工具
-├── migrations/
-│   ├── 000001_init_schema.up.sql    # 初始表结构
-│   └── 000001_init_schema.down.sql  # 回滚脚本
-├── docker/
-│   ├── Dockerfile                   # Go API Server 构建镜像
-│   ├── docker-compose.yml           # 平台自身服务编排
-│   └── challenges/                  # 靶机镜像 Dockerfile 存放目录
-│       ├── web-sql-injection/
-│       │   └── Dockerfile
-│       └── pwn-buffer-overflow/
-│           └── Dockerfile
-├── web/                             # Vue 3 前端项目（独立子目录）
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.ts
-├── scripts/
-│   ├── setup.sh                     # 一键部署脚本
-│   └── seed.sh                      # 初始数据填充脚本
-├── go.mod
-├── go.sum
-└── Makefile                         # 构建、迁移、测试等常用命令
+│   │   ├── router.go                # composition root 的 HTTP 路由装配入口
+│   │   ├── http_server.go           # 后台任务启动/关闭与进程生命周期
+│   │   └── composition/             # 模块组合装配与架构守卫测试
+│   ├── config/                      # 配置加载与结构定义
+│   ├── middleware/                  # RequestID、CORS、Auth、RateLimit 等中间件
+│   ├── model/                       # 跨模块共享的持久化模型
+│   ├── platform/events/             # 进程内事件总线
+│   ├── shared/                      # 映射与轻量共享工具
+│   ├── infrastructure/              # PostgreSQL / Redis 等进程级基础设施
+│   ├── handler/health/              # 健康检查
+│   ├── validation/                  # 请求校验规则
+│   └── module/
+│       ├── auth/
+│       ├── identity/
+│       ├── challenge/
+│       ├── runtime/
+│       ├── practice/
+│       ├── contest/
+│       ├── assessment/
+│       ├── ops/
+│       ├── practice_readmodel/
+│       └── teaching_readmodel/
+│           └── {api,application,domain?,ports,infrastructure,runtime,contracts?}
+├── migrations/                      # 当前生效迁移
+├── pkg/
+│   ├── errcode/
+│   ├── logger/
+│   ├── ratelimit/
+│   ├── response/
+│   └── websocket/
+├── scripts/                         # 检查脚本、导入脚本、部署辅助脚本
+├── storage/                         # 运行时与导出产物存储目录
+└── docs/                            # 后端局部评审与辅助说明
 ```
 
 ---
@@ -511,7 +287,7 @@ ctf-platform/
 | 演练 | 13000-13999 | 13002 实例数上限、13003 Flag 错误、13005 实例过期 |
 | 竞赛 | 14000-14999 | 14001 竞赛未开始、14003 队伍人数已满 |
 | 评估 | 15000-15999 | 15002 报告生成失败 |
-| 容器 | 16000-16999 | 16001 容器启动超时、16004 容器镜像不存在 |
+| 运行时 | 16000-16999 | 16001 容器启动超时、16004 容器镜像不存在 |
 
 #### 错误类型定义
 
@@ -580,7 +356,7 @@ func RequestID() gin.HandlerFunc {
         }
         c.Set("request_id", requestID)
         c.Header("X-Request-ID", requestID)
-        // 注入到 context，供 Service/Repository 层日志使用
+        // 注入到 context，供 application / infrastructure 层日志使用
         ctx := context.WithValue(c.Request.Context(), "request_id", requestID)
         c.Request = c.Request.WithContext(ctx)
         c.Next()
@@ -692,47 +468,21 @@ flowchart LR
 #### 路由分组与中间件挂载
 
 ```go
-func RegisterRoutes(r *gin.Engine, deps *Dependencies) {
-    // 全局中间件
-    r.Use(
-        middleware.Recovery(),
-        middleware.RequestID(),
-        middleware.CORS(deps.Config.CORS),
-        middleware.Logger(deps.Logger),
-        middleware.RateLimiter(deps.Redis, deps.Config.RateLimit),
-    )
+runtimeModule := buildRuntimeModule(root)
+opsModule := buildOpsModule(root, runtimeModule)
 
-    // 公开路由（无需认证）
-    public := r.Group("/api/v1")
-    {
-        public.POST("/auth/register", deps.AuthHandler.Register)
-        public.POST("/auth/login", deps.AuthHandler.Login)
-    }
+identityModule, err := buildIdentityModule(root)
+authModule, err := buildAuthModule(root, opsModule, identityModule)
+challengeModule, err := buildChallengeModule(root, runtimeModule, opsModule)
+assessmentModule := buildAssessmentModule(root, challengeModule)
+teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
+contestModule := buildContestModule(root, challengeModule, runtimeModule)
+practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
+practiceReadmodelModule := buildPracticeReadmodelModule(root)
 
-    // 需认证路由
-    authed := r.Group("/api/v1")
-    authed.Use(middleware.Auth(deps.AuthService, cfg.Auth.SessionCookieName))
-    {
-        // 学生可访问的路由
-        authed.GET("/challenges", deps.ChallengeHandler.List)
-        authed.POST("/practice/instances", deps.PracticeHandler.CreateInstance)
-        authed.POST("/practice/submit", deps.PracticeHandler.SubmitFlag)
-        authed.GET("/contests", deps.ContestHandler.List)
-        // ...
-    }
-
-    // 管理员路由
-    admin := r.Group("/api/v1/admin")
-    admin.Use(middleware.Auth(deps.AuthService), middleware.RBAC("admin"))
-    admin.Use(middleware.Audit(deps.AuditService))
-    {
-        admin.POST("/challenges", deps.ChallengeHandler.Create)
-        admin.PUT("/challenges/:id", deps.ChallengeHandler.Update)
-        admin.DELETE("/challenges/:id", deps.ChallengeHandler.Delete)
-        admin.GET("/containers", deps.ContainerHandler.List)
-        // ...
-    }
-}
+runtimeModule.BuildHandler(root, opsModule)
+// 再把 handler 挂到 /api/v1、/teacher、/authoring、/admin 等路由组
+// 统一复用 identityModule.TokenService 和 identityModule.Users 做认证上下文解析
 ```
 
 #### 限流策略
@@ -742,7 +492,7 @@ func RegisterRoutes(r *gin.Engine, deps *Dependencies) {
 | 全局 API | 令牌桶（按 IP） | 每秒 50 请求，突发 100 |
 | 登录接口 | 滑动窗口（按 IP + 用户名） | 5 分钟内最多 10 次，超限锁定 15 分钟 |
 | Flag 提交 | 滑动窗口（按用户 + 题目） | 60 秒内最多 5 次 |
-| 容器创建 | 固定窗口（按用户） | 每分钟最多 3 次 |
+| 实例创建 | 固定窗口（按用户） | 每分钟最多 3 次 |
 
 限流使用 Redis 实现，key 格式统一为 `ratelimit:{场景}:{标识}`，TTL 与窗口大小一致。
 
@@ -1013,14 +763,17 @@ cors:
 
 ## 8. 关键架构决策记录（ADR）
 
-### ADR-001：单体架构 vs 微服务
+### ADR-001：单体部署下的 Onion Architecture
 
-- 决策：采用模块化单体架构（Modular Monolith）
+- 决策：运行时保持单体部署，代码结构采用按模块分域的 Onion Architecture
 - 理由：
   - 校园级项目，用户规模有限（≤ 2000），单体完全能承载
   - 团队规模小，微服务带来的运维复杂度（服务发现、链路追踪、分布式事务）远超收益
-  - 模块间通过 interface 解耦，未来如需拆分可沿模块边界拆出独立服务
-- 风险：单点故障（单进程挂掉全部不可用），通过 systemd 自动重启 + 健康检查缓解
+  - 采用 `api -> application -> domain`、`application -> ports` 的依赖方向，更容易稳定边界并控制跨模块耦合
+  - 如后续确有拆分需求，可以沿当前模块边界抽离，而不是回到大一统的 handler/service/repository 堆叠
+- 风险：
+  - 单进程仍是运行时单点，通过 systemd 自动重启 + 健康检查缓解
+  - 若 composition root 继续膨胀，会重新把模块边界拉回路由层，因此必须把 wiring 留在 `runtime` 与 `internal/app/composition`
 
 ### ADR-002：平台服务不容器化
 
@@ -1069,6 +822,7 @@ cors:
 | 03 | `03-container-architecture.md` | 容器与网络隔离、资源调度、安全边界落地 |
 | 04 | `04-api-design.md` | REST API 规范、接口清单、认证与 WebSocket 设计 |
 | 05 | `05-key-flows.md` | 关键业务链路（提交流程、计分、实例生命周期等） |
+| 07 | `07-modular-monolith-refactor.md` | 后端 Onion 分层、模块边界、装配规则与读模型口径 |
 | 专题 | `design/instance-sharing.md` | 题目实例共享策略的最终设计 |
 | 06 | `../frontend/01-architecture-overview.md` | 前端架构总览（路由/状态/API 层/WebSocket/部署） |
 

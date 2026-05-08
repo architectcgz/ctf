@@ -115,3 +115,23 @@ Docker 编排规范见：`docs/docker-compose-rules.md`。
 - 已提供统一响应结构、请求 ID 中间件、访问日志、中断优雅退出、健康检查接口
 - 已在 `backend/internal/` 下预留 `auth`、`challenge`、`practice`、`contest`、`assessment`、`system`、`container` 分层目录
 - 前端现有路由、状态管理、API 封装与布局结构保留，并补充项目级说明文件
+
+<!-- BEGIN HARNESS ENGINEERING: readme-harness -->
+## Harness Engineering
+
+本项目按 `deusyu/harness-engineering` 建立顶层 harness 结构：
+
+- `concepts/`：核心概念
+- `thinking/`：独立思考
+- `practice/`：实践记录
+- `feedback/`：反馈闭环
+- `works/`：作品输出
+- `prompts/`：提示词积累
+- `references/`：外部资料
+
+一致性检查：
+
+```bash
+bash scripts/check-consistency.sh
+```
+<!-- END HARNESS ENGINEERING: readme-harness -->
