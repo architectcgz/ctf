@@ -105,6 +105,9 @@ check_contains "references/AGENTS.md" 'ctf-instance-lifecycle-research\.md' "ref
 check_contains "works/AGENTS.md" 'harness-migration-map\.md' "works AGENTS references migration map"
 
 echo "[C8] AGENTS captures file placement rules"
+check_file "docs/文档规范.md"
+check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentation guide"
+check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
 check_contains "AGENTS.md" 'docs/architecture/' "AGENTS references docs/architecture"
 check_contains "AGENTS.md" 'docs/contracts/' "AGENTS references docs/contracts"
 check_contains "AGENTS.md" 'docs/design/' "AGENTS references docs/design"

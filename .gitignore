@@ -11,6 +11,7 @@ __pycache__/
 coverage.out
 logs/
 docs/*
+!docs/文档规范.md
 !docs/reviews/general/
 !docs/reviews/general/*.md
 !docs/architecture/

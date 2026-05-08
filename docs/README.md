@@ -2,16 +2,17 @@
 
 ## 当前设计入口
 
+- `docs/文档规范.md`：文档写作、目录归属、命名和验证规范。
 - `docs/architecture/README.md`：最终架构与设计事实源入口。
 - `docs/design/README.md`：设计文档读取顺序、过期规则和迁移说明。
-- `docs/superpowers/README.md`：superpowers 过程设计与实施计划索引。
 
 ## 读取原则
 
+- 新增或修改文档前，先按 `docs/文档规范.md` 判断文档类型和目录归属。
 - 先读当前索引，再读具体设计文档。
 - 页面设计、设计系统和专题设计统一从 `docs/architecture/` 进入。
 - `docs/reviews/` 是历史评审快照，不是当前设计事实源。
-- `docs/superpowers/plans/` 是实施计划，不覆盖后续代码和架构事实。
+- `practice/` 中的过程资料和历史计划索引不覆盖后续代码和架构事实。
 
 <!-- BEGIN HARNESS ENGINEERING: docs-navigation -->
 ## Harness 入口
