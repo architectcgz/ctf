@@ -71,76 +71,83 @@
       </template>
 
       <div class="notification-panel-body relative flex-1 overflow-y-auto">
-        <div
-          v-if="filteredItems.length === 0"
-          class="notification-empty"
+        <Transition
+          name="notification-list-fade"
+          mode="out-in"
         >
-          <div class="notification-empty__icon">
-            <Bell class="h-8 w-8" />
-          </div>
-          <p class="notification-empty__title">
-            {{ emptyState.title }}
-          </p>
-          <p class="notification-empty__copy">
-            {{ emptyState.copy }}
-          </p>
-        </div>
-
-        <div
-          v-else
-          class="notification-list"
-        >
-          <button
-            v-for="item in filteredItems"
-            :key="item.id"
-            type="button"
-            class="notification-item"
-            :class="{ 'notification-item--unread': item.unread }"
-            @click="goToNotificationDetail(item.id)"
+          <div
+            v-if="filteredItems.length === 0"
+            key="empty"
+            class="notification-empty"
           >
-            <span
-              class="notification-item-icon"
-              :style="typeMeta(item.type).iconWrapStyle"
+            <div class="notification-empty__icon">
+              <Bell class="h-8 w-8" />
+            </div>
+            <p class="notification-empty__title">
+              {{ emptyState.title }}
+            </p>
+            <p class="notification-empty__copy">
+              {{ emptyState.copy }}
+            </p>
+          </div>
+
+          <div
+            v-else
+            key="list"
+            class="notification-list"
+          >
+            <button
+              v-for="item in filteredItems"
+              :key="item.id"
+              type="button"
+              class="notification-item"
+              :class="{ 'notification-item--unread': item.unread }"
+              @click="goToNotificationDetail(item.id)"
             >
-              <component
-                :is="typeMeta(item.type).icon"
-                class="h-3.5 w-3.5"
-                :style="{ color: typeMeta(item.type).accentColor }"
-              />
-            </span>
-
-            <span class="notification-item-main">
-              <span class="notification-item-meta">
-                <span
-                  class="notification-item-type"
+              <span
+                class="notification-item-icon"
+                :style="typeMeta(item.type).iconWrapStyle"
+              >
+                <component
+                  :is="typeMeta(item.type).icon"
+                  class="h-3.5 w-3.5"
                   :style="{ color: typeMeta(item.type).accentColor }"
-                >
-                  {{ typeMeta(item.type).label }}
-                </span>
-                <span class="notification-item-time">
-                  {{ formatDate(item.created_at) }}
-                </span>
-              </span>
-
-              <span class="notification-item-title-row">
-                <span class="notification-item-title">
-                  {{ item.title }}
-                </span>
-                <span
-                  v-if="item.unread"
-                  class="notification-item-unread-dot"
                 />
               </span>
 
-              <span
-                v-if="item.content"
-                class="notification-item-snippet"
-              >
-                {{ item.content }}
+              <span class="notification-item-main">
+                <span class="notification-item-meta">
+                  <span
+                    class="notification-item-type"
+                    :style="{ color: typeMeta(item.type).accentColor }"
+                  >
+                    {{ typeMeta(item.type).label }}
+                  </span>
+                  <span class="notification-item-time">
+                    {{ formatDate(item.created_at) }}
+                  </span>
+                </span>
+
+                <span class="notification-item-title-row">
+                  <span class="notification-item-title">
+                    {{ item.title }}
+                  </span>
+                  <span
+                    v-if="item.unread"
+                    class="notification-item-unread-dot"
+                  />
+                </span>
+
+                <span
+                  v-if="item.content"
+                  class="notification-item-snippet"
+                >
+                  {{ item.content }}
+                </span>
               </span>
-            </span>
-          </button>
-        </div>
+            </button>
+          </div>
+        </Transition>
       </div>
 
       <template #footer>
@@ -287,6 +294,14 @@ const emptyState = computed(() => {
   --modal-template-drawer-close-hover-transform: none;
 }
 
+:deep(.notification-shell .modal-template-drawer__head-row) {
+  justify-content: flex-end;
+}
+
+:deep(.notification-shell .modal-template-drawer__title-block) {
+  flex: none;
+}
+
 .notification-overview {
   display: grid;
   gap: var(--space-0);
@@ -297,12 +312,14 @@ const emptyState = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 .notification-counts {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
+  padding-left: var(--space-1);
 }
 
 .notification-counts__value {
@@ -335,21 +352,24 @@ const emptyState = computed(() => {
   display: inline-flex;
   align-items: center;
   min-height: var(--ui-control-height-sm);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--notification-line-strong);
+  padding: 0 var(--space-4);
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 32%, var(--notification-line-strong));
   border-radius: var(--ui-badge-radius-pill);
-  background: var(--notification-surface-subtle);
-  color: var(--notification-muted);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--notification-surface-subtle));
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--notification-muted));
   font-size: var(--font-size-12);
   font-weight: 700;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 8%, transparent);
   transition: all var(--ui-motion-fast);
 }
 
 .notification-summary__action:hover,
 .notification-summary__action:focus-visible {
-  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--notification-line-strong));
-  background: var(--notification-surface-elevated);
-  color: var(--notification-text);
+  border-color: color-mix(in srgb, var(--color-primary) 64%, var(--notification-line-strong));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--notification-surface-elevated));
+  color: var(--color-primary);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .notification-filter-tabs {
@@ -416,6 +436,23 @@ const emptyState = computed(() => {
   box-shadow:
     0 var(--space-3) var(--space-5) color-mix(in srgb, var(--color-primary) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 24%, transparent);
+}
+
+.notification-list-fade-enter-active,
+.notification-list-fade-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.notification-list-fade-enter-from {
+  opacity: 0;
+  transform: translateY(var(--space-2));
+}
+
+.notification-list-fade-leave-to {
+  opacity: 0;
+  transform: translateY(calc(var(--space-2) * -1));
 }
 
 .notification-panel-body {
