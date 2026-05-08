@@ -178,6 +178,12 @@ describe('ChallengeList', () => {
     expect(combinedSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
     expect(combinedSource).toContain('class="ui-control"')
     expect(combinedSource).toContain('class="ui-control-prefix"')
+    expect(combinedSource).not.toContain(
+      'box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent);'
+    )
+    expect(combinedSource).toContain(
+      'box-shadow: inset 0 1px 0 color-mix(in srgb, var(--journal-border) 34%, transparent);'
+    )
     expect(combinedSource).not.toMatch(/^\.challenge-input,\s*$/m)
     expect(combinedSource).not.toMatch(/^\.challenge-select\s*\{/m)
     expect(combinedSource).not.toMatch(/^\.challenge-input:focus,\s*$/m)

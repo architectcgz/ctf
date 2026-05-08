@@ -311,7 +311,7 @@ function updateDifficultyFilter(event: Event): void {
   min-width: 0;
   border-color: color-mix(in srgb, var(--journal-border) 84%, transparent);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--journal-border) 34%, transparent);
 }
 
 .challenge-directory-filter-label--ghost {

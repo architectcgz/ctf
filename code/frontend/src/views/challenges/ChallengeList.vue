@@ -27,10 +27,26 @@ const challengeSummaryVisuals: Record<ChallengeSummaryKey, { icon: Component; ac
   },
 }
 
+const challengeSummaryWaves: Record<ChallengeSummaryKey, string> = {
+  total:
+    'M10 80 C35 70, 45 88, 65 72 C88 52, 95 20, 115 38 C140 62, 145 14, 165 22 C185 30, 190 8, 210 18',
+  visible: 'M10 78 C35 60, 55 50, 80 54 C105 58, 110 28, 135 34 C165 43, 172 15, 210 22',
+  solved: 'M8 76 C32 56, 52 74, 70 55 C92 30, 112 24, 132 52 C150 79, 172 14, 210 20',
+  unsolved:
+    'M10 80 C35 72, 48 82, 68 68 C92 50, 95 18, 118 26 C142 34, 148 70, 170 58 C192 46, 190 10, 212 18',
+}
+
 function getSummaryVisual(key: string) {
   return (
     challengeSummaryVisuals[(key as ChallengeSummaryKey) || 'visible'] ??
     challengeSummaryVisuals.visible
+  )
+}
+
+function getSummaryWave(key: string) {
+  return (
+    challengeSummaryWaves[(key as ChallengeSummaryKey) || 'visible'] ??
+    challengeSummaryWaves.visible
   )
 }
 
@@ -115,11 +131,18 @@ const {
               </div>
 
               <div class="challenge-summary-wave" aria-hidden="true">
-                <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  viewBox="0 0 220 90"
+                  fill="none"
+                  preserveAspectRatio="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
-                    d="M0 40C30 40 30 20 60 20C90 20 90 40 120 40V60H0V40Z"
-                    fill="currentColor"
-                    fill-opacity="0.08"
+                    :d="getSummaryWave(stat.key)"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
                   />
                 </svg>
               </div>
@@ -285,16 +308,33 @@ const {
   box-shadow: 0 12px 24px color-mix(in srgb, var(--color-shadow-soft) 14%, transparent);
 }
 
+.challenge-page .challenge-summary-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.92;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--challenge-summary-accent) 7%, transparent),
+    color-mix(in srgb, var(--challenge-summary-accent) 2%, transparent)
+  );
+}
+
 .challenge-summary-icon-shell {
   position: relative;
   z-index: 1;
   display: grid;
   flex-shrink: 0;
-  width: calc(var(--space-12) + var(--space-2));
-  height: calc(var(--space-12) + var(--space-2));
+  width: calc(var(--space-12) + var(--space-4));
+  height: calc(var(--space-12) + var(--space-4));
   place-items: center;
-  border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--challenge-summary-accent) 11%, var(--journal-surface));
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--challenge-summary-accent) 18%, var(--journal-surface)),
+    color-mix(in srgb, var(--challenge-summary-accent) 6%, var(--journal-surface))
+  );
   color: var(--challenge-summary-accent);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 35%, transparent),
@@ -326,18 +366,19 @@ const {
 
 .challenge-summary-wave {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 7.5rem;
+  right: -0.25rem;
+  bottom: -0.75rem;
+  width: 8.875rem;
+  height: 4.375rem;
   color: var(--challenge-summary-accent);
-  opacity: 0.7;
+  opacity: 0.34;
   pointer-events: none;
 }
 
 .challenge-summary-wave svg {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 @media (max-width: 960px) {

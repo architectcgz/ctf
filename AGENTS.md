@@ -65,6 +65,7 @@
 ### Frontend Guardrails
 - 实现型 agent（如 `backend-engineer`、`frontend-engineer`、`code-agent`）在提交代码时，凡是涉及锁续租、并发收敛、状态机分支、跨上下文释放资源、兼容性兜底这类不看上下文就容易误判的关键实现点，必须补上简洁注释，说明“为什么这样做”，不能只让读代码的人自行猜测。
 - 避免复用容易受全局样式影响的通用类名，尤其是类似 `.overline` 这类在多个页面重复出现的样式标识；新页面优先使用局部命名，减少样式串扰。
+- 暗色模式兼容不是收尾项。凡是 `input / select / textarea / 搜索框 / 筛选控件` 这类表单容器涉及边框、背景、内高光、placeholder、caret、focus ring、adornment 时，禁止写死 `white`、浅色 `rgba(...)` 或只在 light mode 成立的 `inset` 高光；必须走主题语义变量，并在 dark mode 下逐项检查文字、光标、分隔线、内阴影是否仍然可见且不会产生白线。
 - 教师端页面允许保留必要的教学语义和状态说明，但不应出现产品设计说明、布局介绍或“workspace 理念解释”类文案。
 - 模板组件不得自带会直接渲染到 UI 的脚手架说明文案。
   通用 `modal / drawer / panel` 若需要 `subtitle`、`description` 或 helper 区域，默认只提供结构，不提供演示型说明文字；示例文案只能留在测试、文档或注释里，不能作为运行时默认值进入页面。
