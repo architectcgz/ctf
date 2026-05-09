@@ -335,7 +335,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 <template #cell-status="{ row }">
                   <span
                     class="instance-status-pill"
-                    :class="statusMeta((row as TeacherInstanceItem).status).chipClass"
+                    :class="[
+                      'workspace-directory-status-pill',
+                      statusMeta((row as TeacherInstanceItem).status).chipClass,
+                    ]"
                   >
                     {{ statusMeta((row as TeacherInstanceItem).status).label }}
                   </span>
@@ -543,15 +546,6 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 }
 
 .instance-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.4rem;
-  padding: 0 var(--space-2);
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: var(--font-size-10);
-  font-weight: 700;
   text-transform: uppercase;
 }
 

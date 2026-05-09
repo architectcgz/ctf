@@ -129,10 +129,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <nav class="top-tabs"
-      role="tablist"
-      aria-label="班级详情标签页"
-    >
+    <nav class="top-tabs" role="tablist" aria-label="班级详情标签页">
       <button
         v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
@@ -169,7 +166,9 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <div class="teacher-summary-title">
                   <span>Class Snapshot</span>
                 </div>
-                <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+                <div
+                  class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+                >
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
                       <span>班级人数</span>
@@ -209,11 +208,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               >
                 返回
               </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--secondary"
-                @click="emit('openDashboard')"
-              >
+              <button type="button" class="ui-btn ui-btn--secondary" @click="emit('openDashboard')">
                 概览
               </button>
               <button
@@ -226,23 +221,13 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             </div>
           </header>
 
-          <div
-            v-if="error"
-            class="workspace-alert"
-            role="alert"
-          >
-            <div class="workspace-alert-title">
-              加载失败
-            </div>
+          <div v-if="error" class="workspace-alert" role="alert">
+            <div class="workspace-alert-title">加载失败</div>
             <div class="workspace-alert-copy">
               {{ error }}
             </div>
             <div class="workspace-alert-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="emit('retry')"
-              >
+              <button type="button" class="ui-btn ui-btn--primary" @click="emit('retry')">
                 重试加载
               </button>
             </div>
@@ -261,12 +246,8 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
           <section class="teacher-student-list-section">
             <div class="teacher-section-head">
               <div class="teacher-heading">
-                <div class="workspace-overline">
-                  Class Workspace
-                </div>
-                <h3 class="teacher-section-title">
-                  学生列表
-                </h3>
+                <div class="workspace-overline">Class Workspace</div>
+                <h3 class="teacher-section-title">学生列表</h3>
               </div>
               <button
                 type="button"
@@ -282,18 +263,16 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               <div class="teacher-filter-grid">
                 <label class="teacher-field teacher-field--class-switch">
                   <span class="teacher-field-label">切换班级</span>
-                  <div class="teacher-field-control teacher-filter-control teacher-filter-control--select">
+                  <div
+                    class="teacher-field-control teacher-filter-control teacher-filter-control--select"
+                  >
                     <select
                       :value="selectedClassName"
                       aria-label="选择班级"
                       class="teacher-input teacher-select"
                       @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
                     >
-                      <option
-                        v-for="item in classes"
-                        :key="item.name"
-                        :value="item.name"
-                      >
+                      <option v-for="item in classes" :key="item.name" :value="item.name">
                         {{ item.name }} · {{ item.student_count || 0 }} 人
                       </option>
                     </select>
@@ -309,8 +288,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                       type="text"
                       placeholder="输入学号精确查询"
                       class="teacher-input"
-                      @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-                    >
+                      @input="
+                        emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)
+                      "
+                    />
                   </div>
                 </label>
                 <button
@@ -324,10 +305,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               </div>
             </section>
 
-            <div
-              v-if="loadingStudents"
-              class="teacher-skeleton-list"
-            >
+            <div v-if="loadingStudents" class="teacher-skeleton-list">
               <div
                 v-for="index in 6"
                 :key="index"
@@ -343,10 +321,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               description="该班级下还没有可用学生记录。"
             />
 
-            <section
-              v-else
-              class="teacher-directory teacher-table-shell"
-            >
+            <section v-else class="teacher-directory teacher-table-shell">
               <div class="teacher-directory-head">
                 <span>学号</span>
                 <span>学生名称</span>
@@ -368,31 +343,30 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 </div>
 
                 <div class="teacher-directory-cell">
-                  <h4
-                    class="teacher-directory-row-title"
-                    :title="student.name || '未设置姓名'"
-                  >
+                  <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
                     {{ student.name || '未设置姓名' }}
                   </h4>
                 </div>
 
                 <div class="teacher-directory-cell">
-                  <div
-                    class="teacher-directory-row-points"
-                    :title="student.username"
-                  >
+                  <div class="teacher-directory-row-points" :title="student.username">
                     {{ student.username }}
                   </div>
                 </div>
 
                 <div class="teacher-directory-row-tags">
-                  <span class="teacher-directory-state-chip teacher-directory-state-chip-empty">
+                  <span
+                    class="teacher-directory-state-chip teacher-directory-state-chip-empty"
+                    :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
+                  >
                     {{ student.weak_dimension || '暂无薄弱项' }}
                   </span>
                 </div>
 
                 <div class="teacher-directory-row-metrics">
-                  <span>{{ student.solved_count ?? 0 }} 题 / {{ student.total_score ?? 0 }} 分</span>
+                  <span
+                    >{{ student.solved_count ?? 0 }} 题 / {{ student.total_score ?? 0 }} 分</span
+                  >
                 </div>
 
                 <div class="teacher-directory-row-cta">
@@ -439,7 +413,12 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
 }
 
-.teacher-page { display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; }
+.teacher-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
 .teacher-directory-section {
   margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
@@ -455,12 +434,25 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   padding: 0 var(--space-5);
 }
 
-.teacher-filter-grid { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); }
-.teacher-select { min-height: 1.75rem; border: 0; appearance: none; cursor: pointer; background: transparent; width: 100%; outline: none; }
+.teacher-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+}
+.teacher-select {
+  min-height: 1.75rem;
+  border: 0;
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  outline: none;
+}
 
 .teacher-directory-row {
   display: grid;
-  grid-template-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
+  grid-template-columns:
+    minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(6.5rem, 0.6fr);
   gap: var(--space-4);
   align-items: center;
@@ -490,7 +482,9 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.group:hover .teacher-directory-row-title { color: var(--color-primary); }
+.group:hover .teacher-directory-row-title {
+  color: var(--color-primary);
+}
 
 .teacher-directory-row-points {
   overflow: hidden;
@@ -510,19 +504,43 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   font-weight: 800;
 }
 
-.teacher-directory-state-chip-ready { background: var(--color-primary-soft); color: var(--color-primary); }
-.teacher-directory-state-chip-empty { background: var(--color-bg-elevated); color: var(--color-text-muted); }
+.teacher-directory-state-chip-ready {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.teacher-directory-state-chip-empty {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+}
 
 .teacher-directory-row-cta {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  font-size: var(--font-size-0-82); font-weight: 800; color: var(--color-primary);
-  opacity: 0; transform: translateX(-10px); transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-0-82);
+  font-weight: 800;
+  color: var(--color-primary);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
 }
-.teacher-directory-row:hover .teacher-directory-row-cta { opacity: 1; transform: translateX(0); }
+.teacher-directory-row:hover .teacher-directory-row-cta {
+  opacity: 1;
+  transform: translateX(0);
+}
 
 @media (max-width: 1080px) {
-  .teacher-directory-head { display: none; }
-  .teacher-directory-row { grid-template-columns: 1fr; gap: var(--space-3); padding: var(--space-4) 0; }
-  .teacher-directory-row-cta { opacity: 1; transform: none; }
+  .teacher-directory-head {
+    display: none;
+  }
+  .teacher-directory-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+  }
+  .teacher-directory-row-cta {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>

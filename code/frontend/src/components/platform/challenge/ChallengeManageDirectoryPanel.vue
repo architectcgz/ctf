@@ -404,24 +404,6 @@ function updateStatusFilter(event: Event): void {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-.challenge-table-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.4rem;
-  padding: 0 0.5rem;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.challenge-table-pill--category {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-}
-
 .challenge-table-title {
   overflow: hidden;
   text-overflow: ellipsis;

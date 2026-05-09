@@ -44,7 +44,12 @@ const dashboardTabs: Array<{
   { key: 'insight', label: '学生洞察', buttonId: 'dashboard-tab-insight', panelId: 'insight' },
   { key: 'trend', label: '趋势复盘', buttonId: 'dashboard-tab-trend', panelId: 'trend' },
   { key: 'review', label: '教学复盘', buttonId: 'dashboard-tab-review', panelId: 'review' },
-  { key: 'intervention', label: '介入建议', buttonId: 'dashboard-tab-intervention', panelId: 'intervention' },
+  {
+    key: 'intervention',
+    label: '介入建议',
+    buttonId: 'dashboard-tab-intervention',
+    panelId: 'intervention',
+  },
 ]
 
 const dashboardTabOrder = dashboardTabs.map((tab) => tab.key) as DashboardTab[]
@@ -73,12 +78,10 @@ const {
 </script>
 
 <template>
-  <div class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col">
-    <nav
-      class="workspace-tabbar top-tabs"
-      role="tablist"
-      aria-label="教学概览标签页"
-    >
+  <div
+    class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col"
+  >
+    <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="教学概览标签页">
       <button
         v-for="(tab, index) in dashboardTabs"
         :id="tab.buttonId"
@@ -110,12 +113,8 @@ const {
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Progress Signal
-            </div>
-            <h1 class="hero-title">
-              教学介入台
-            </h1>
+            <div class="workspace-overline">Progress Signal</div>
+            <h1 class="hero-title">教学介入台</h1>
             <p class="hero-summary">
               {{ overviewDescription }}
             </p>
@@ -131,7 +130,9 @@ const {
               </span>
             </div>
 
-            <div class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface">
+            <div
+              class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+            >
               <article
                 v-for="item in overviewMetrics"
                 :key="item.key"
@@ -149,15 +150,10 @@ const {
               </article>
             </div>
 
-            <div
-              v-if="error"
-              class="workspace-alert"
-            >
+            <div v-if="error" class="workspace-alert">
               <div class="workspace-alert-title-row">
                 <AlertTriangle class="workspace-alert-icon h-4 w-4" />
-                <div class="workspace-alert-title">
-                  加载失败
-                </div>
+                <div class="workspace-alert-title">加载失败</div>
               </div>
               <div class="workspace-alert-copy">
                 {{ error }}
@@ -175,9 +171,7 @@ const {
           </div>
 
           <aside class="hero-rail workspace-subpanel">
-            <div class="rail-label">
-              Class Pulse
-            </div>
+            <div class="rail-label">Class Pulse</div>
             <div class="rail-score">
               {{ activeRateText.replace('%', '') }}
               <small v-if="activeRateText !== '--'">% active</small>
@@ -201,21 +195,21 @@ const {
           aria-labelledby="dashboard-tab-portrait"
           :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
         >
-          <section class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section">
+          <section
+            class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section"
+          >
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Skill Portrait
-                </div>
-                <h2 class="list-heading__title">
-                  能力画像与薄弱维度
-                </h2>
+                <div class="workspace-overline">Skill Portrait</div>
+                <h2 class="list-heading__title">能力画像与薄弱维度</h2>
               </div>
             </header>
 
             <div class="teacher-dashboard-panel-body portrait-grid">
               <div class="portrait-summary-block">
-                <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+                <div
+                  class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+                >
                   <article
                     v-for="item in portraitSummaryNotes"
                     :key="item.key"
@@ -234,9 +228,7 @@ const {
                 </div>
 
                 <div class="portrait-guidance">
-                  <div class="portrait-guidance__label">
-                    使用方式
-                  </div>
+                  <div class="portrait-guidance__label">使用方式</div>
                   <div class="portrait-guidance__copy">
                     先看影响学生最多的能力方向，再结合复盘结论安排题单或课堂讲解。
                   </div>
@@ -245,9 +237,7 @@ const {
 
               <div class="portrait-dimension-block">
                 <div class="panel-header-row">
-                  <h3 class="panel-title">
-                    优先补强方向
-                  </h3>
+                  <h3 class="panel-title">优先补强方向</h3>
                   <span class="panel-badge">按学生数排序</span>
                 </div>
 
@@ -264,28 +254,18 @@ const {
                       {{ `${index + 1}`.padStart(2, '0') }}
                     </div>
                     <div class="weak-content">
-                      <div
-                        class="weak-name"
-                        :title="item.dimension"
-                      >
+                      <div class="weak-name" :title="item.dimension">
                         {{ item.dimension }}
                       </div>
-                      <div class="weak-copy">
-                        {{ item.count }} 名学生当前在该方向暴露弱项。
-                      </div>
+                      <div class="weak-copy">{{ item.count }} 名学生当前在该方向暴露弱项。</div>
                       <div class="weak-bar">
                         <span :style="{ width: item.width }" />
                       </div>
                     </div>
-                    <div class="weak-score">
-                      {{ item.count }} 人
-                    </div>
+                    <div class="weak-score">{{ item.count }} 人</div>
                   </article>
                 </div>
-                <div
-                  v-else
-                  class="workspace-directory-empty portrait-empty"
-                >
+                <div v-else class="workspace-directory-empty portrait-empty">
                   暂无可排序的薄弱维度
                 </div>
               </div>
@@ -305,12 +285,8 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Student Insight
-                </div>
-                <h2 class="list-heading__title">
-                  学生洞察
-                </h2>
+                <div class="workspace-overline">Student Insight</div>
+                <h2 class="list-heading__title">学生洞察</h2>
               </div>
             </header>
 
@@ -326,10 +302,7 @@ const {
                     {{ row.status }}
                   </div>
                   <div class="student-insight-row__main">
-                    <h3
-                      class="student-insight-row__title"
-                      :title="row.title"
-                    >
+                    <h3 class="student-insight-row__title" :title="row.title">
                       {{ row.title }}
                     </h3>
                     <p class="student-insight-row__detail">
@@ -340,6 +313,7 @@ const {
                         v-for="chip in row.chips"
                         :key="chip"
                         class="student-insight-chip"
+                        :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
                       >
                         {{ chip }}
                       </span>
@@ -363,21 +337,13 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Trend Review
-                </div>
-                <h2 class="list-heading__title">
-                  趋势复盘
-                </h2>
+                <div class="workspace-overline">Trend Review</div>
+                <h2 class="list-heading__title">趋势复盘</h2>
               </div>
             </header>
 
             <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassTrendPanel
-                :trend="trend"
-                title="班级近 7 天训练趋势"
-                bare
-              />
+              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" bare />
             </div>
           </section>
         </section>
@@ -394,21 +360,13 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Review
-                </div>
-                <h2 class="list-heading__title">
-                  教学复盘结论
-                </h2>
+                <div class="workspace-overline">Review</div>
+                <h2 class="list-heading__title">教学复盘结论</h2>
               </div>
             </header>
 
             <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassReviewPanel
-                :review="review"
-                :class-name="selectedClassName"
-                bare
-              />
+              <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" bare />
             </div>
           </section>
         </section>
@@ -425,21 +383,13 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Intervention
-                </div>
-                <h2 class="list-heading__title">
-                  优先介入学生
-                </h2>
+                <div class="workspace-overline">Intervention</div>
+                <h2 class="list-heading__title">优先介入学生</h2>
               </div>
             </header>
 
             <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherInterventionPanel
-                :students="students"
-                :class-name="selectedClassName"
-                bare
-              />
+              <TeacherInterventionPanel :students="students" :class-name="selectedClassName" bare />
             </div>
           </section>
         </section>
@@ -850,14 +800,7 @@ const {
 }
 
 .student-insight-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.625rem;
-  padding: 0 var(--space-2-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 86%, transparent);
-  border-radius: 999px;
   background: color-mix(in srgb, var(--journal-surface) 78%, transparent);
-  font-size: var(--font-size-12);
   color: var(--journal-muted);
 }
 

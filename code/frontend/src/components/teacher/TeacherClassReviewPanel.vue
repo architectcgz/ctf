@@ -85,6 +85,7 @@ function severityLabel(severity: AdviceSeverity): string {
             v-for="student in item.students"
             :key="student.id"
             class="review-item__student-chip review-item__student-chip--premium"
+            :class="'workspace-directory-status-pill'"
           >
             {{ student.name || student.username }}
           </span>
@@ -226,14 +227,8 @@ function severityLabel(severity: AdviceSeverity): string {
 }
 
 .review-item__student-chip--premium {
-  display: inline-flex;
-  align-items: center;
   border: 1px solid color-mix(in srgb, var(--review-accent) 34%, transparent);
   background: color-mix(in srgb, var(--review-accent) 8%, transparent);
-  padding: var(--space-1) var(--space-3);
-  border-radius: 8px;
-  font-size: var(--font-size-13);
-  font-weight: 600;
   color: color-mix(in srgb, var(--review-accent) 78%, var(--panel-ink));
 }
 

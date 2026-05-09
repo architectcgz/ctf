@@ -44,6 +44,7 @@ defineEmits<{
     <div class="challenge-row-category">
       <span
         class="challenge-chip"
+        :class="'workspace-directory-status-pill'"
         :style="{
           '--challenge-chip-bg': `${getChallengeCategoryColor(challenge.category)}18`,
           '--challenge-chip-color': getChallengeCategoryColor(challenge.category),
@@ -56,6 +57,7 @@ defineEmits<{
     <div class="challenge-row-difficulty">
       <span
         class="challenge-chip"
+        :class="'workspace-directory-status-pill'"
         :style="{
           '--challenge-chip-bg': `${getChallengeDifficultyColor(challenge.difficulty)}18`,
           '--challenge-chip-color': getChallengeDifficultyColor(challenge.difficulty),
@@ -71,11 +73,16 @@ defineEmits<{
           v-for="tag in challenge.tags.slice(0, 2)"
           :key="tag"
           class="challenge-chip challenge-chip-muted"
+          :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
         >
           {{ tag }}
         </span>
       </template>
-      <span v-else class="challenge-chip challenge-chip-muted challenge-chip-muted--placeholder">
+      <span
+        v-else
+        class="challenge-chip challenge-chip-muted challenge-chip-muted--placeholder"
+        :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
+      >
         -
       </span>
     </div>
@@ -83,7 +90,11 @@ defineEmits<{
     <div class="challenge-row-status">
       <span
         class="challenge-state-chip"
-        :class="challenge.is_solved ? 'challenge-state-chip-solved' : 'challenge-state-chip-ready'"
+        :class="
+          challenge.is_solved
+            ? 'workspace-directory-status-pill workspace-directory-status-pill--success challenge-state-chip-solved'
+            : 'workspace-directory-status-pill workspace-directory-status-pill--warning challenge-state-chip-ready'
+        "
       >
         {{ challenge.is_solved ? '已解出' : '待攻克' }}
       </span>
@@ -199,18 +210,16 @@ defineEmits<{
 }
 
 .challenge-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
   max-width: 100%;
-  padding: 0 var(--space-3);
-  border-radius: 999px;
+  border-color: color-mix(
+    in srgb,
+    var(--challenge-chip-color, var(--journal-ink)) 22%,
+    transparent
+  );
   background: var(
     --challenge-chip-bg,
     color-mix(in srgb, var(--journal-surface-subtle) 88%, transparent)
   );
-  font-size: var(--font-size-12);
-  font-weight: 700;
   color: var(--challenge-chip-color, var(--journal-ink));
 }
 
@@ -227,26 +236,6 @@ defineEmits<{
 .challenge-row-status {
   display: flex;
   align-items: center;
-}
-
-.challenge-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 var(--space-3);
-  border-radius: 999px;
-  font-size: var(--font-size-12);
-  font-weight: 700;
-}
-
-.challenge-state-chip-solved {
-  background: color-mix(in srgb, var(--color-success) 14%, transparent);
-  color: var(--color-success);
-}
-
-.challenge-state-chip-ready {
-  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
-  color: var(--color-warning);
 }
 
 .challenge-row-solved,

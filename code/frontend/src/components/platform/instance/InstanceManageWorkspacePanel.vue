@@ -58,7 +58,10 @@ const columns = [
 
 function handleStatusFilterChange(event: Event): void {
   const target = event.target
-  emit('change:status-filter', target instanceof HTMLSelectElement ? target.value as InstanceStatusFilter : '')
+  emit(
+    'change:status-filter',
+    target instanceof HTMLSelectElement ? (target.value as InstanceStatusFilter) : ''
+  )
 }
 </script>
 
@@ -67,12 +70,8 @@ function handleStatusFilterChange(event: Event): void {
     <section class="workspace-directory-section admin-instance-manage-directory">
       <header class="list-heading">
         <div>
-          <div class="workspace-overline">
-            Active Instances
-          </div>
-          <h2 class="list-heading__title">
-            实时实例列表
-          </h2>
+          <div class="workspace-overline">Active Instances</div>
+          <h2 class="list-heading__title">实时实例列表</h2>
         </div>
       </header>
 
@@ -97,33 +96,18 @@ function handleStatusFilterChange(event: Event): void {
               class="admin-input admin-instance-manage-filter-control"
               @change="handleStatusFilterChange"
             >
-              <option value="">
-                全部状态
-              </option>
-              <option value="running">
-                运行中
-              </option>
-              <option value="creating">
-                创建中
-              </option>
-              <option value="expired">
-                已过期
-              </option>
-              <option value="failed">
-                异常
-              </option>
-              <option value="inactive">
-                其他状态
-              </option>
+              <option value="">全部状态</option>
+              <option value="running">运行中</option>
+              <option value="creating">创建中</option>
+              <option value="expired">已过期</option>
+              <option value="failed">异常</option>
+              <option value="inactive">其他状态</option>
             </select>
           </label>
         </template>
       </WorkspaceDirectoryToolbar>
 
-      <div
-        v-if="loading && !hasInstances"
-        class="py-12 flex justify-center"
-      >
+      <div v-if="loading && !hasInstances" class="py-12 flex justify-center">
         <AppLoading>同步实例状态...</AppLoading>
       </div>
 
@@ -159,7 +143,13 @@ function handleStatusFilterChange(event: Event): void {
               <button
                 type="button"
                 class="instance-user-link"
-                @click="emit('open-student', (row as InstanceManageTableRow).student_id, (row as InstanceManageTableRow).class_name)"
+                @click="
+                  emit(
+                    'open-student',
+                    (row as InstanceManageTableRow).student_id,
+                    (row as InstanceManageTableRow).class_name
+                  )
+                "
               >
                 {{ (row as InstanceManageTableRow).user }}
               </button>
@@ -173,7 +163,12 @@ function handleStatusFilterChange(event: Event): void {
           <template #cell-status="{ row }">
             <span
               class="instance-status-pill"
-              :class="(row as InstanceManageTableRow).status === 'running' ? 'instance-status-pill--running' : 'instance-status-pill--inactive'"
+              :class="[
+                'workspace-directory-status-pill',
+                (row as InstanceManageTableRow).status === 'running'
+                  ? 'instance-status-pill--running'
+                  : 'instance-status-pill--inactive',
+              ]"
             >
               {{ (row as InstanceManageTableRow).status_label }}
             </span>
@@ -204,10 +199,7 @@ function handleStatusFilterChange(event: Event): void {
       </template>
     </section>
 
-    <div
-      v-if="error"
-      class="teacher-surface-error"
-    >
+    <div v-if="error" class="teacher-surface-error">
       {{ error }}
     </div>
   </div>
@@ -267,15 +259,6 @@ function handleStatusFilterChange(event: Event): void {
 }
 
 .instance-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.4rem;
-  padding: 0 0.5rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: var(--font-size-10);
-  font-weight: 700;
   text-transform: uppercase;
 }
 

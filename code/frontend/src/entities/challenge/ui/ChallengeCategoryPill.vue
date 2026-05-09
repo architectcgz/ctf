@@ -10,21 +10,16 @@ defineProps<Props>()
 </script>
 
 <template>
-  <span class="challenge-table-pill challenge-table-pill--category">
+  <span
+    class="challenge-table-pill challenge-table-pill--category"
+    :class="['workspace-directory-status-pill', 'workspace-directory-status-pill--primary']"
+  >
     {{ getChallengeCategoryLabel(category) }}
   </span>
 </template>
 
 <style scoped>
 .challenge-table-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.4rem;
-  padding: 0 0.5rem;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }

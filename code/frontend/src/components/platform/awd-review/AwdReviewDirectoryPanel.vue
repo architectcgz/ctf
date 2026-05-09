@@ -113,16 +113,10 @@ function updateStatusFilter(event: Event): void {
   <section class="workspace-directory-section admin-awd-review-directory">
     <header class="list-heading">
       <div>
-        <div class="workspace-overline">
-          Review Directory
-        </div>
-        <h2 class="list-heading__title">
-          赛事目录
-        </h2>
+        <div class="workspace-overline">Review Directory</div>
+        <h2 class="list-heading__title">赛事目录</h2>
       </div>
-      <div class="admin-awd-review-directory__meta">
-        共 {{ total }} 场赛事
-      </div>
+      <div class="admin-awd-review-directory__meta">共 {{ total }} 场赛事</div>
     </header>
 
     <WorkspaceDirectoryToolbar
@@ -156,12 +150,7 @@ function updateStatusFilter(event: Event): void {
       </template>
     </WorkspaceDirectoryToolbar>
 
-    <div
-      v-if="loading"
-      class="workspace-directory-loading"
-    >
-      正在同步 AWD 复盘目录...
-    </div>
+    <div v-if="loading" class="workspace-directory-loading">正在同步 AWD 复盘目录...</div>
 
     <AppEmpty
       v-else-if="error"
@@ -171,11 +160,7 @@ function updateStatusFilter(event: Event): void {
       :description="error"
     >
       <template #action>
-        <button
-          type="button"
-          class="ui-btn ui-btn--primary"
-          @click="emit('retry')"
-        >
+        <button type="button" class="ui-btn ui-btn--primary" @click="emit('retry')">
           重新加载
         </button>
       </template>
@@ -240,11 +225,18 @@ function updateStatusFilter(event: Event): void {
 
         <template #cell-status="{ row }">
           <div class="admin-awd-review-table__status-wrap">
-            <span class="admin-awd-review-table__status-pill">
+            <span
+              class="admin-awd-review-table__status-pill"
+              :class="[
+                'workspace-directory-status-pill',
+                'workspace-directory-status-pill--primary',
+              ]"
+            >
               {{ contestStatusLabel((row as PlatformAwdReviewRow).status) }}
             </span>
             <span
               class="admin-awd-review-table__status-pill admin-awd-review-table__status-pill--muted"
+              :class="['workspace-directory-status-pill', 'workspace-directory-status-pill--muted']"
             >
               {{ (row as PlatformAwdReviewRow).export_ready ? '可导出' : '实时复盘' }}
             </span>
@@ -364,25 +356,6 @@ function updateStatusFilter(event: Event): void {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-}
-
-.admin-awd-review-table__status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-radius: 999px;
-  padding: 0 var(--space-3);
-  font-size: var(--font-size-0-75);
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.admin-awd-review-table__status-pill--muted {
-  border-color: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-muted);
 }
 
 .admin-awd-review-table__action {

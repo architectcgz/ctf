@@ -14,7 +14,10 @@ defineProps<Props>()
 <template>
   <div class="challenge-pill-row">
     <ChallengeCategoryPill :category="category" />
-    <span class="challenge-table-pill challenge-table-pill--neutral">
+    <span
+      class="challenge-table-pill challenge-table-pill--neutral"
+      :class="['workspace-directory-status-pill', 'workspace-directory-status-pill--muted']"
+    >
       <ChallengeDifficultyText :difficulty="difficulty" />
     </span>
   </div>
@@ -28,14 +31,6 @@ defineProps<Props>()
 }
 
 .challenge-table-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.4rem;
-  padding: 0 0.5rem;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }

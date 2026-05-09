@@ -256,7 +256,10 @@ function handleClassChange(event: Event): void {
                 </template>
 
                 <template #cell-weak_dimension="{ row }">
-                  <span class="teacher-directory-chip teacher-directory-chip-muted">
+                  <span
+                    class="teacher-directory-chip teacher-directory-chip-muted"
+                    :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
+                  >
                     {{ (row as StudentDirectoryTableRow).weak_dimension }}
                   </span>
                 </template>
@@ -420,18 +423,6 @@ function handleClassChange(event: Event): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.teacher-directory-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.65rem;
-  padding: 0 var(--space-2-5);
-  border-radius: 0.5rem;
-  background: var(--color-bg-elevated);
-  font-size: var(--font-size-0-75);
-  font-weight: 800;
-  color: var(--color-text-secondary);
 }
 
 .teacher-directory-row-solved,

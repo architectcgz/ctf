@@ -91,9 +91,7 @@ function updateActorUserIdFilter(event: Event): void {
     <header class="list-heading admin-board__head">
       <div>
         <div class="workspace-overline">Operational Stream</div>
-        <h2 class="list-heading__title">
-          操作流水
-        </h2>
+        <h2 class="list-heading__title">操作流水</h2>
       </div>
     </header>
 
@@ -114,11 +112,7 @@ function updateActorUserIdFilter(event: Event): void {
         <div class="audit-filter-grid">
           <label class="audit-filter-field">
             <span class="audit-filter-label">动作</span>
-            <select
-              :value="actionFilter"
-              class="audit-filter-select"
-              @change="updateActionFilter"
-            >
+            <select :value="actionFilter" class="audit-filter-select" @change="updateActionFilter">
               <option value="">全部动作</option>
               <option value="login">登录</option>
               <option value="logout">登出</option>
@@ -138,7 +132,7 @@ function updateActorUserIdFilter(event: Event): void {
               placeholder="资源类型，如 challenge"
               class="audit-filter-select"
               @input="updateResourceTypeFilter"
-            >
+            />
           </label>
 
           <label class="audit-filter-field">
@@ -150,24 +144,15 @@ function updateActorUserIdFilter(event: Event): void {
               placeholder="执行人 ID"
               class="audit-filter-select"
               @input="updateActorUserIdFilter"
-            >
+            />
           </label>
         </div>
       </template>
     </WorkspaceDirectoryToolbar>
 
-    <div
-      v-if="error"
-      class="audit-error-banner"
-    >
+    <div v-if="error" class="audit-error-banner">
       {{ error }}
-      <button
-        type="button"
-        class="ml-3 font-medium underline"
-        @click="emit('retry')"
-      >
-        重试
-      </button>
+      <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
     </div>
 
     <div
@@ -201,18 +186,17 @@ function updateActorUserIdFilter(event: Event): void {
         </template>
 
         <template #cell-action="{ row }">
-          <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
+          <span
+            class="audit-chip"
+            :class="['workspace-directory-status-pill', 'workspace-directory-status-pill--muted']"
+            >{{ (row as AuditLogItem).action }}</span
+          >
         </template>
 
         <template #cell-resource="{ row }">
           <div class="audit-row__resource">
-            <span class="audit-row__resource-type">{{
-              (row as AuditLogItem).resource_type
-            }}</span>
-            <span
-              v-if="(row as AuditLogItem).resource_id"
-              class="audit-row__resource-id"
-            >
+            <span class="audit-row__resource-type">{{ (row as AuditLogItem).resource_type }}</span>
+            <span v-if="(row as AuditLogItem).resource_id" class="audit-row__resource-id">
               #{{ (row as AuditLogItem).resource_id }}
             </span>
           </div>
@@ -231,19 +215,13 @@ function updateActorUserIdFilter(event: Event): void {
         </template>
 
         <template #cell-detail="{ row }">
-          <p
-            class="audit-row__detail"
-            :title="detailPreview((row as AuditLogItem).detail)"
-          >
+          <p class="audit-row__detail" :title="detailPreview((row as AuditLogItem).detail)">
             {{ detailPreview((row as AuditLogItem).detail) }}
           </p>
         </template>
       </WorkspaceDataTable>
 
-      <div
-        v-if="total > 0"
-        class="admin-pagination workspace-directory-pagination"
-      >
+      <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
         <PlatformPaginationControls
           :page="page"
           :total-pages="totalPages"
@@ -329,15 +307,6 @@ function updateActorUserIdFilter(event: Event): void {
 }
 
 .audit-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

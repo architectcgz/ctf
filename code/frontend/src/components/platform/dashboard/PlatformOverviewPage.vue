@@ -42,18 +42,11 @@ const {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell">
     <div class="workspace-grid">
       <main class="content-pane overview-content">
-        <section
-          id="admin-dashboard-overview"
-          class="overview-panel"
-        >
+        <section id="admin-dashboard-overview" class="overview-panel">
           <section class="workspace-hero">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">
-                Operations Workspace
-              </div>
-              <h1 class="hero-title workspace-page-title">
-                系统值守台
-              </h1>
+              <div class="workspace-overline">Operations Workspace</div>
+              <h1 class="hero-title workspace-page-title">系统值守台</h1>
               <p class="hero-summary workspace-page-copy">
                 在这里查看平台状态、异常和当前资源热点。
               </p>
@@ -97,10 +90,7 @@ const {
                   <ShieldCheck class="h-4 w-4" />
                   风险研判
                 </button>
-                <a
-                  class="ui-btn ui-btn--ghost overview-anchor-btn"
-                  href="#admin-dashboard-alerts"
-                >
+                <a class="ui-btn ui-btn--ghost overview-anchor-btn" href="#admin-dashboard-alerts">
                   <AlertTriangle class="h-4 w-4" />
                   当前告警
                 </a>
@@ -161,17 +151,10 @@ const {
             </article>
           </div>
 
-          <div
-            v-if="error"
-            class="workspace-alert"
-            role="alert"
-            aria-live="polite"
-          >
+          <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
             <div class="workspace-alert-title-row">
               <AlertTriangle class="workspace-alert-icon" />
-              <div class="workspace-alert-title">
-                管理端概览加载失败
-              </div>
+              <div class="workspace-alert-title">管理端概览加载失败</div>
             </div>
             <div class="workspace-alert-copy">
               {{ error }}
@@ -180,19 +163,11 @@ const {
               可先重试刷新资源状态，再继续查看当前告警与资源热点；若持续失败，建议优先进入审计日志确认后台任务与容器记录。
             </div>
             <div class="workspace-alert-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="emit('retry')"
-              >
+              <button type="button" class="ui-btn ui-btn--ghost" @click="emit('retry')">
                 <ArrowRight class="h-4 w-4" />
                 重试加载
               </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="emit('openAuditLog')"
-              >
+              <button type="button" class="ui-btn ui-btn--ghost" @click="emit('openAuditLog')">
                 <Clock class="h-4 w-4" />
                 审计日志
               </button>
@@ -206,35 +181,24 @@ const {
         >
           <header class="list-heading">
             <div>
-              <div class="section-kicker">
-                Alert Stack
-              </div>
+              <div class="section-kicker">Alert Stack</div>
               <h2 class="section-title list-heading__title">当前告警</h2>
             </div>
             <div
               class="status-pill"
-              :class="alertCount > 0 ? 'danger' : 'ready'"
+              :class="['workspace-directory-status-pill', alertCount > 0 ? 'danger' : 'ready']"
             >
               {{ alertCount }} 条
             </div>
           </header>
 
-          <div
-            v-if="loading"
-            class="workspace-directory-loading overview-state"
-          >
+          <div v-if="loading" class="workspace-directory-loading overview-state">
             正在同步告警数据...
           </div>
-          <div
-            v-else-if="alertCount === 0"
-            class="workspace-directory-empty overview-state"
-          >
+          <div v-else-if="alertCount === 0" class="workspace-directory-empty overview-state">
             当前没有资源告警。
           </div>
-          <div
-            v-else
-            class="workspace-directory-list overview-list-shell"
-          >
+          <div v-else class="workspace-directory-list overview-list-shell">
             <div class="insight-list">
               <div
                 v-for="alert in dashboard?.alerts"
@@ -244,15 +208,21 @@ const {
                 <div>
                   <strong>{{ alert.message }}</strong>
                   <div class="insight-meta">
-                    <span class="chip danger">{{ alert.type.toUpperCase() }}</span>
-                    <span class="chip">{{ alert.container_id }}</span>
+                    <span class="chip danger" :class="'workspace-directory-status-pill'">{{
+                      alert.type.toUpperCase()
+                    }}</span>
+                    <span
+                      class="chip"
+                      :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
+                      >{{ alert.container_id }}</span
+                    >
                   </div>
                   <div class="item-copy">
                     当前 {{ Math.round(alert.value) }}% / 阈值
                     {{ Math.round(alert.threshold) }}%，建议优先核查该容器最近任务与资源分配情况。
                   </div>
                 </div>
-                <div class="status-pill danger">
+                <div class="status-pill danger" :class="'workspace-directory-status-pill'">
                   {{ Math.round(alert.value) }}%
                 </div>
               </div>
@@ -266,17 +236,12 @@ const {
         >
           <header class="list-heading">
             <div>
-              <div class="section-kicker">
-                Resource Hotspots
-              </div>
+              <div class="section-kicker">Resource Hotspots</div>
               <h2 class="section-title list-heading__title">资源热点</h2>
             </div>
           </header>
 
-          <div
-            v-if="loading"
-            class="workspace-directory-loading overview-state"
-          >
+          <div v-if="loading" class="workspace-directory-loading overview-state">
             正在同步容器资源数据...
           </div>
           <div
@@ -285,10 +250,7 @@ const {
           >
             暂无容器运行数据。
           </div>
-          <div
-            v-else
-            class="workspace-directory-list overview-list-shell"
-          >
+          <div v-else class="workspace-directory-list overview-list-shell">
             <div class="hotspot-list">
               <article
                 v-for="item in sortedContainers"
@@ -300,11 +262,12 @@ const {
                     <strong>{{ item.container_name || item.container_id }}</strong>
                     <span
                       class="chip"
-                      :class="
+                      :class="[
+                        'workspace-directory-status-pill',
                         Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0) >= 90
                           ? 'danger'
-                          : 'warning'
-                      "
+                          : 'warning',
+                      ]"
                     >
                       峰值
                       {{ formatPercent(Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0)) }}
@@ -513,7 +476,8 @@ const {
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-hover-background: var(--color-primary-hover);
-  --ui-btn-primary-hover-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  --ui-btn-primary-hover-shadow: 0 12px 24px
+    color-mix(in srgb, var(--journal-accent) 24%, transparent);
 }
 
 .overview-action-grid > .ui-btn.ui-btn--ghost,
@@ -654,15 +618,6 @@ const {
 
 .chip,
 .status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.5rem;
-  padding: 0 var(--space-2);
-  border-radius: 0.4375rem;
-  border: 1px solid var(--workspace-line-soft);
-  font-size: var(--font-size-11-5);
-  font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--journal-muted);
 }
@@ -689,9 +644,7 @@ const {
 }
 
 .status-pill {
-  min-height: 1.875rem;
   min-width: 4.875rem;
-  border-radius: 0.5rem;
 }
 
 .hotspot-item {

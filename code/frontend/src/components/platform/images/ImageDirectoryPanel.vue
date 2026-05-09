@@ -212,6 +212,7 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
             <div class="image-row__status">
               <span
                 class="admin-status-chip"
+                :class="'workspace-directory-status-pill'"
                 :style="getStatusStyle((row as AdminImageListItem).status)"
               >
                 {{ getStatusLabel((row as AdminImageListItem).status) }}
@@ -263,12 +264,6 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
 
 <style scoped>
 .admin-status-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 0.5rem;
-  padding: var(--space-1) var(--space-2-5);
-  font-size: var(--font-size-0-72);
-  font-weight: 600;
 }
 
 .admin-empty {
