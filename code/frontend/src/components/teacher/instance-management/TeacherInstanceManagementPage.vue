@@ -142,17 +142,15 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 </script>
 
 <template>
-  <div class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+  <div
+    class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col"
+  >
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Teacher Instance Ops
-            </div>
-            <h1 class="teacher-title workspace-page-title">
-              实例管理
-            </h1>
+            <div class="workspace-overline">Teacher Instance Ops</div>
+            <h1 class="teacher-title workspace-page-title">实例管理</h1>
             <p class="teacher-copy workspace-page-copy">
               先筛班级与学员，再快速定位异常或即将到期的训练实例。
             </p>
@@ -173,7 +171,9 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           <div class="teacher-summary-title">
             <span>Instance Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+          <div
+            class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+          >
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 <span>当前可见</span>
@@ -182,9 +182,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               <div class="progress-card-value metric-panel-value">
                 {{ totalCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                符合当前筛选条件的实例数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">符合当前筛选条件的实例数量</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
@@ -194,9 +192,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               <div class="progress-card-value metric-panel-value">
                 {{ runningCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                仍在占用环境资源的实例数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">仍在占用环境资源的实例数量</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
@@ -217,211 +213,198 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           class="workspace-directory-section teacher-directory-section"
           aria-label="实例目录"
         >
-          <header class="list-heading">
-            <div>
-              <div class="journal-note-label">
-                Instance Directory
+          <section class="teacher-directory-shell workspace-directory-list">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">Instance Directory</div>
+                <h3 class="list-heading__title">实例目录</h3>
               </div>
-              <h3 class="list-heading__title">
-                实例目录
-              </h3>
-            </div>
-            <div class="teacher-directory-meta">
-              共 {{ totalCount }} 条记录
-            </div>
-          </header>
+              <div class="teacher-directory-meta">共 {{ totalCount }} 条记录</div>
+            </header>
 
-          <section
-            class="teacher-directory-filters"
-            aria-label="实例过滤"
-          >
-            <div class="teacher-filter-grid">
-              <label class="teacher-field">
-                <span class="teacher-field-label">班级</span>
-                <select
-                  :value="className"
-                  class="teacher-field-control"
-                  :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
-                  @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
-                >
-                  <option
-                    v-if="isAdmin"
-                    value=""
-                  >全部班级</option>
-                  <option
-                    v-for="item in classes"
-                    :key="item.name"
-                    :value="item.name"
+            <section class="teacher-directory-filters" aria-label="实例过滤">
+              <div class="teacher-filter-grid">
+                <label class="teacher-field">
+                  <span class="teacher-field-label">班级</span>
+                  <select
+                    :value="className"
+                    class="teacher-field-control"
+                    :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
+                    @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
                   >
-                    {{ item.name }} · {{ item.student_count || 0 }}
-                  </option>
-                </select>
-              </label>
+                    <option v-if="isAdmin" value="">全部班级</option>
+                    <option v-for="item in classes" :key="item.name" :value="item.name">
+                      {{ item.name }} · {{ item.student_count || 0 }}
+                    </option>
+                  </select>
+                </label>
 
-              <label class="teacher-field">
-                <span class="teacher-field-label">用户关键字</span>
-                <div class="teacher-field-control teacher-filter-control">
-                  <Search class="h-4 w-4 text-text-muted" />
-                  <input
-                    :value="keyword"
-                    type="text"
-                    placeholder="按用户名或学号搜索"
-                    class="teacher-input"
-                    @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-                  >
-                </div>
-              </label>
+                <label class="teacher-field">
+                  <span class="teacher-field-label">用户关键字</span>
+                  <div class="teacher-field-control teacher-filter-control">
+                    <Search class="h-4 w-4 text-text-muted" />
+                    <input
+                      :value="keyword"
+                      type="text"
+                      placeholder="按用户名或学号搜索"
+                      class="teacher-input"
+                      @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
+                    />
+                  </div>
+                </label>
 
-              <label class="teacher-field">
-                <span class="teacher-field-label">按学号查询</span>
-                <div class="teacher-field-control teacher-filter-control">
-                  <Search class="h-4 w-4 text-text-muted" />
-                  <input
-                    :value="studentNo"
-                    type="text"
-                    placeholder="输入学号精确查询"
-                    class="teacher-input"
-                    @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-                  >
-                </div>
-              </label>
+                <label class="teacher-field">
+                  <span class="teacher-field-label">按学号查询</span>
+                  <div class="teacher-field-control teacher-filter-control">
+                    <Search class="h-4 w-4 text-text-muted" />
+                    <input
+                      :value="studentNo"
+                      type="text"
+                      placeholder="输入学号精确查询"
+                      class="teacher-input"
+                      @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
+                    />
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            <div v-if="loadingInstances" class="teacher-skeleton-list workspace-directory-loading">
+              <div
+                v-for="index in 6"
+                :key="index"
+                class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+              />
             </div>
-          </section>
 
-          <div
-            v-if="loadingInstances"
-            class="teacher-skeleton-list workspace-directory-loading"
-          >
-            <div
-              v-for="index in 6"
-              :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+            <AppEmpty
+              v-else-if="instances.length === 0"
+              class="teacher-empty-state workspace-directory-empty"
+              icon="Inbox"
+              title="当前没有匹配到实例"
+              description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
             />
-          </div>
 
-          <AppEmpty
-            v-else-if="instances.length === 0"
-            class="teacher-empty-state workspace-directory-empty"
-            icon="Inbox"
-            title="当前没有匹配到实例"
-            description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
-          />
+            <template v-else>
+              <WorkspaceDataTable
+                class="teacher-instance-list"
+                :columns="instanceTableColumns"
+                :rows="instances"
+                row-key="id"
+                row-class="teacher-directory-row teacher-instance-table-row"
+              >
+                <template #cell-student="{ row }">
+                  <div class="teacher-instance-user-cell">
+                    <span class="teacher-instance-user-meta">
+                      {{
+                        (row as TeacherInstanceItem).student_no ||
+                        `@${(row as TeacherInstanceItem).student_username}`
+                      }}
+                    </span>
+                    <span
+                      class="teacher-instance-primary-text"
+                      :title="
+                        (row as TeacherInstanceItem).student_name ||
+                        (row as TeacherInstanceItem).student_username
+                      "
+                    >
+                      {{
+                        (row as TeacherInstanceItem).student_name ||
+                        (row as TeacherInstanceItem).student_username
+                      }}
+                    </span>
+                    <span
+                      class="teacher-instance-secondary-text"
+                      :title="`@${(row as TeacherInstanceItem).student_username} · ${(row as TeacherInstanceItem).class_name}`"
+                    >
+                      @{{ (row as TeacherInstanceItem).student_username }} ·
+                      {{ (row as TeacherInstanceItem).class_name }}
+                    </span>
+                  </div>
+                </template>
 
-          <template v-else>
-            <WorkspaceDataTable
-              class="teacher-instance-list workspace-directory-list"
-              :columns="instanceTableColumns"
-              :rows="instances"
-              row-key="id"
-              row-class="teacher-directory-row teacher-instance-table-row"
-            >
-              <template #cell-student="{ row }">
-                <div class="teacher-instance-user-cell">
-                  <span class="teacher-instance-user-meta">
-                    {{ (row as TeacherInstanceItem).student_no || `@${(row as TeacherInstanceItem).student_username}` }}
-                  </span>
+                <template #cell-challenge="{ row }">
                   <span
                     class="teacher-instance-primary-text"
-                    :title="(row as TeacherInstanceItem).student_name || (row as TeacherInstanceItem).student_username"
+                    :title="(row as TeacherInstanceItem).challenge_title"
                   >
-                    {{ (row as TeacherInstanceItem).student_name || (row as TeacherInstanceItem).student_username }}
+                    {{ (row as TeacherInstanceItem).challenge_title }}
                   </span>
+                </template>
+
+                <template #cell-status="{ row }">
                   <span
-                    class="teacher-instance-secondary-text"
-                    :title="`@${(row as TeacherInstanceItem).student_username} · ${(row as TeacherInstanceItem).class_name}`"
+                    class="instance-status-pill"
+                    :class="statusMeta((row as TeacherInstanceItem).status).chipClass"
                   >
-                    @{{ (row as TeacherInstanceItem).student_username }} · {{ (row as TeacherInstanceItem).class_name }}
+                    {{ statusMeta((row as TeacherInstanceItem).status).label }}
                   </span>
-                </div>
-              </template>
+                </template>
 
-              <template #cell-challenge="{ row }">
-                <span
-                  class="teacher-instance-primary-text"
-                  :title="(row as TeacherInstanceItem).challenge_title"
-                >
-                  {{ (row as TeacherInstanceItem).challenge_title }}
-                </span>
-              </template>
+                <template #cell-created_at="{ row }">
+                  <span class="teacher-instance-muted-text">
+                    {{ formatDateTime((row as TeacherInstanceItem).created_at) }}
+                  </span>
+                </template>
 
-              <template #cell-status="{ row }">
-                <span
-                  class="instance-status-pill"
-                  :class="statusMeta((row as TeacherInstanceItem).status).chipClass"
-                >
-                  {{ statusMeta((row as TeacherInstanceItem).status).label }}
-                </span>
-              </template>
+                <template #cell-expires_at="{ row }">
+                  <span class="teacher-instance-muted-text">
+                    {{ formatDateTime((row as TeacherInstanceItem).expires_at) }}
+                  </span>
+                </template>
 
-              <template #cell-created_at="{ row }">
-                <span class="teacher-instance-muted-text">
-                  {{ formatDateTime((row as TeacherInstanceItem).created_at) }}
-                </span>
-              </template>
+                <template #cell-extends="{ row }">
+                  <span class="teacher-instance-muted-text">
+                    {{ (row as TeacherInstanceItem).extend_count }} /
+                    {{ (row as TeacherInstanceItem).max_extends }}
+                  </span>
+                </template>
 
-              <template #cell-expires_at="{ row }">
-                <span class="teacher-instance-muted-text">
-                  {{ formatDateTime((row as TeacherInstanceItem).expires_at) }}
-                </span>
-              </template>
+                <template #cell-remaining="{ row }">
+                  <span class="teacher-instance-muted-text">
+                    {{ formatRemainingTime((row as TeacherInstanceItem).remaining_time) }}
+                  </span>
+                </template>
 
-              <template #cell-extends="{ row }">
-                <span class="teacher-instance-muted-text">
-                  {{ (row as TeacherInstanceItem).extend_count }} / {{ (row as TeacherInstanceItem).max_extends }}
-                </span>
-              </template>
-
-              <template #cell-remaining="{ row }">
-                <span class="teacher-instance-muted-text">
-                  {{ formatRemainingTime((row as TeacherInstanceItem).remaining_time) }}
-                </span>
-              </template>
-
-              <template #cell-access_url="{ row }">
-                <span
-                  class="teacher-instance-url-text"
-                  :title="(row as TeacherInstanceItem).access_url || '暂未分配访问地址'"
-                >
-                  {{ (row as TeacherInstanceItem).access_url || '暂未分配访问地址' }}
-                </span>
-              </template>
-
-              <template #cell-actions="{ row }">
-                <div class="teacher-directory-row-cta">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"
-                    :disabled="destroyingId === (row as TeacherInstanceItem).id"
-                    :data-instance-id="(row as TeacherInstanceItem).id"
-                    @click="emit('destroy', (row as TeacherInstanceItem).id)"
+                <template #cell-access_url="{ row }">
+                  <span
+                    class="teacher-instance-url-text"
+                    :title="(row as TeacherInstanceItem).access_url || '暂未分配访问地址'"
                   >
-                    <Trash2 class="h-3 w-3" />
-                    {{ destroyingId === (row as TeacherInstanceItem).id ? '销毁中' : '销毁' }}
-                  </button>
-                </div>
-              </template>
-            </WorkspaceDataTable>
+                    {{ (row as TeacherInstanceItem).access_url || '暂未分配访问地址' }}
+                  </span>
+                </template>
 
-            <WorkspaceDirectoryPagination
-              class="teacher-directory-pagination"
-              :page="page"
-              :total-pages="totalPages"
-              :total="totalCount"
-              :total-label="`共 ${totalCount} 条实例`"
-              @change-page="emit('changePage', $event)"
-            />
-          </template>
+                <template #cell-actions="{ row }">
+                  <div class="teacher-directory-row-cta">
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"
+                      :disabled="destroyingId === (row as TeacherInstanceItem).id"
+                      :data-instance-id="(row as TeacherInstanceItem).id"
+                      @click="emit('destroy', (row as TeacherInstanceItem).id)"
+                    >
+                      <Trash2 class="h-3 w-3" />
+                      {{ destroyingId === (row as TeacherInstanceItem).id ? '销毁中' : '销毁' }}
+                    </button>
+                  </div>
+                </template>
+              </WorkspaceDataTable>
+
+              <WorkspaceDirectoryPagination
+                class="teacher-directory-pagination"
+                :page="page"
+                :total-pages="totalPages"
+                :total="totalCount"
+                :total-label="`共 ${totalCount} 条实例`"
+                @change-page="emit('changePage', $event)"
+              />
+            </template>
+          </section>
         </section>
-        <div
-          v-if="error"
-          class="teacher-surface-error"
-        >
+        <div v-if="error" class="teacher-surface-error">
           {{ error }}
-          <button
-            type="button"
-            class="ml-3 font-medium underline"
-            @click="emit('retry')"
-          >
+          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">
             重试
           </button>
         </div>
@@ -460,6 +443,27 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
+.teacher-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
+}
+
 .list-heading__title {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
@@ -470,7 +474,6 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 .teacher-directory-filters {
   display: grid;
   gap: var(--space-4);
-  padding: var(--workspace-directory-gap-top) 0 var(--space-4);
 }
 
 .teacher-filter-grid {

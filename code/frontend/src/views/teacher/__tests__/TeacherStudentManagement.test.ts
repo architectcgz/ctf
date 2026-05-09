@@ -698,10 +698,12 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toContain('<WorkspaceDirectoryToolbar')
     expect(studentManagementSource).toContain('<WorkspaceDataTable')
     expect(studentManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManagementSource).toContain('class="list-heading teacher-directory-shell__head"')
+    expect(studentManagementSource).toContain('class="list-heading"')
+    expect(studentManagementSource).toContain('class="workspace-overline">Student Directory')
     expect(studentManagementSource).not.toContain(
       'class="workspace-directory-list teacher-student-directory-table"'
     )
+    expect(studentManagementSource).not.toContain('teacher-directory-shell__head')
     expect(studentManagementSource).not.toContain('teacher-controls-title')
     expect(studentManagementSource).toContain('filter-panel-title="学生筛选"')
     expect(studentManagementSource).toMatch(/key:\s*'solved_count'[\s\S]*label:\s*'做题数'/)

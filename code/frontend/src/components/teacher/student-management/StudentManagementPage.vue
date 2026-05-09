@@ -171,9 +171,9 @@ function handleClassChange(event: Event): void {
           aria-label="学生目录"
         >
           <section class="teacher-directory-shell workspace-directory-list">
-            <header class="list-heading teacher-directory-shell__head">
+            <header class="list-heading">
               <div>
-                <div class="journal-note-label">Student Directory</div>
+                <div class="workspace-overline">Student Directory</div>
                 <h3 class="list-heading__title">学生目录</h3>
               </div>
             </header>
@@ -350,11 +350,6 @@ function handleClassChange(event: Event): void {
   gap: var(--space-4);
   box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
     color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
-.teacher-directory-shell__head {
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
 }
 
 .teacher-directory-section :deep(.workspace-directory-pagination-shell) {

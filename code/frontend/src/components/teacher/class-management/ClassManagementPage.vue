@@ -57,7 +57,9 @@ const filteredClassEntries = computed(() => {
 
   return classEntries.value.filter((row) => {
     const matchesKeyword =
-      !keyword || row.code.toLowerCase().includes(keyword) || row.name.toLowerCase().includes(keyword)
+      !keyword ||
+      row.code.toLowerCase().includes(keyword) ||
+      row.name.toLowerCase().includes(keyword)
     const matchesStatus = !statusFilter.value || row.status === statusFilter.value
 
     return matchesKeyword && matchesStatus
@@ -69,7 +71,12 @@ const hasActiveFilters = computed(() => Boolean(filterQuery.value.trim() || stat
 const columns = [
   { key: 'code', label: '班级编号', widthClass: 'w-[16%] min-w-[8rem]' },
   { key: 'name', label: '班级名称', widthClass: 'w-[34%] min-w-[14rem]' },
-  { key: 'student_count', label: '学生数', widthClass: 'w-[14%] min-w-[7rem]', align: 'center' as const },
+  {
+    key: 'student_count',
+    label: '学生数',
+    widthClass: 'w-[14%] min-w-[7rem]',
+    align: 'center' as const,
+  },
   { key: 'status', label: '状态', widthClass: 'w-[14%] min-w-[7rem]', align: 'center' as const },
   { key: 'actions', label: '操作', widthClass: 'w-[16%] min-w-[8rem]', align: 'right' as const },
 ]
@@ -86,19 +93,20 @@ function resetFilters(): void {
 
 function handleStatusFilterChange(event: Event): void {
   const target = event.target
-  statusFilter.value = target instanceof HTMLSelectElement ? target.value as ClassStatusFilter : ''
+  statusFilter.value =
+    target instanceof HTMLSelectElement ? (target.value as ClassStatusFilter) : ''
 }
 </script>
 
 <template>
-  <div class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+  <div
+    class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col"
+  >
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Class Directory
-            </div>
+            <div class="workspace-overline">Class Directory</div>
             <h1 class="teacher-title workspace-page-title">班级管理</h1>
             <p class="teacher-copy workspace-page-copy">
               查看当前可管理班级，并进入对应班级继续查看学生和训练表现。
@@ -128,7 +136,9 @@ function handleStatusFilterChange(event: Event): void {
             <FolderKanban class="h-4 w-4" />
             <span>Directory Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+          <div
+            class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+          >
             <div class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 <span>班级数量</span>
@@ -137,9 +147,7 @@ function handleStatusFilterChange(event: Event): void {
               <div class="progress-card-value metric-panel-value">
                 {{ total }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前可管理班级总数
-              </div>
+              <div class="progress-card-hint metric-panel-helper">当前可管理班级总数</div>
             </div>
             <div class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
@@ -160,158 +168,137 @@ function handleStatusFilterChange(event: Event): void {
           class="workspace-directory-section teacher-directory-section"
           aria-label="班级目录"
         >
-          <header class="list-heading">
-            <div>
-              <div class="workspace-overline">
-                Class Directory
+          <section class="teacher-directory-shell workspace-directory-list">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">Class Directory</div>
+                <h3 class="list-heading__title">班级目录</h3>
               </div>
-              <h3 class="list-heading__title">
-                班级目录
-              </h3>
-            </div>
-          </header>
+            </header>
 
-          <WorkspaceDirectoryToolbar
-            v-model="filterQuery"
-            :total="filteredClassEntries.length"
-            selected-sort-label=""
-            :sort-options="[]"
-            search-placeholder="搜索班级编号或名称"
-            total-suffix="个班级"
-            :show-total="false"
-            filter-panel-title="班级筛选"
-            reset-label="清空筛选"
-            :reset-disabled="!hasActiveFilters"
-            @reset-filters="resetFilters"
-          >
-            <template #filter-panel>
-              <label class="teacher-directory-filter-field">
-                <span class="workspace-overline">班级状态</span>
-                <select
-                  :value="statusFilter"
-                  class="teacher-directory-filter-control"
-                  @change="handleStatusFilterChange"
-                >
-                  <option value="">
-                    全部状态
-                  </option>
-                  <option value="ready">
-                    可查看
-                  </option>
-                  <option value="empty">
-                    待入班
-                  </option>
-                </select>
-              </label>
-            </template>
-          </WorkspaceDirectoryToolbar>
-
-          <div
-            v-if="loading"
-            class="workspace-directory-loading"
-          >
-            <AppLoading>同步班级目录...</AppLoading>
-          </div>
-
-          <AppEmpty
-            v-else-if="classes.length === 0"
-            class="teacher-empty-state workspace-directory-empty"
-            icon="Users"
-            title="暂无班级"
-            description="当前教师账号下还没有可访问的班级。"
-          />
-
-          <div
-            v-else
-            class="teacher-directory"
-          >
-            <AppEmpty
-              v-if="filteredClassEntries.length === 0"
-              class="teacher-empty-state workspace-directory-empty"
-              icon="Search"
-              title="没有匹配班级"
-              description="调整搜索关键词后再试。"
-            />
-
-            <WorkspaceDataTable
-              v-else
-              class="workspace-directory-list teacher-class-directory-table"
-              :columns="columns"
-              :rows="filteredClassEntries"
-              row-key="name"
+            <WorkspaceDirectoryToolbar
+              v-model="filterQuery"
+              :total="filteredClassEntries.length"
+              selected-sort-label=""
+              :sort-options="[]"
+              search-placeholder="搜索班级编号或名称"
+              total-suffix="个班级"
+              :show-total="false"
+              filter-panel-title="班级筛选"
+              reset-label="清空筛选"
+              :reset-disabled="!hasActiveFilters"
+              @reset-filters="resetFilters"
             >
-              <template #cell-code="{ row }">
-                <span class="teacher-directory-cell-class-code">
-                  {{ (row as ClassDirectoryTableRow).code }}
-                </span>
-              </template>
-
-              <template #cell-name="{ row }">
-                <div class="teacher-directory-cell-class-name">
-                  <h4
-                    class="teacher-directory-row-title"
-                    :title="(row as ClassDirectoryTableRow).name"
+              <template #filter-panel>
+                <label class="teacher-directory-filter-field">
+                  <span class="workspace-overline">班级状态</span>
+                  <select
+                    :value="statusFilter"
+                    class="teacher-directory-filter-control"
+                    @change="handleStatusFilterChange"
                   >
-                    {{ (row as ClassDirectoryTableRow).name }}
-                  </h4>
-                </div>
+                    <option value="">全部状态</option>
+                    <option value="ready">可查看</option>
+                    <option value="empty">待入班</option>
+                  </select>
+                </label>
               </template>
+            </WorkspaceDirectoryToolbar>
 
-              <template #cell-student_count="{ row }">
-                <span class="teacher-directory-row-points">
-                  {{ (row as ClassDirectoryTableRow).student_count }}
-                </span>
-              </template>
+            <div v-if="loading" class="workspace-directory-loading">
+              <AppLoading>同步班级目录...</AppLoading>
+            </div>
 
-              <template #cell-status="{ row }">
-                <span
-                  class="teacher-directory-state-chip"
-                  :class="
-                    (row as ClassDirectoryTableRow).status === 'ready'
-                      ? 'teacher-directory-state-chip-ready'
-                      : 'teacher-directory-state-chip-empty'
-                  "
-                >
-                  {{ (row as ClassDirectoryTableRow).status_label }}
-                </span>
-              </template>
-
-              <template #cell-actions="{ row }">
-                <div class="teacher-directory-row-cta">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--primary ui-btn--xs"
-                    :aria-label="`${(row as ClassDirectoryTableRow).name}，${(row as ClassDirectoryTableRow).student_count} 名学生，进入班级`"
-                    @click="emit('openClass', (row as ClassDirectoryTableRow).name)"
-                  >
-                    进入班级
-                    <ArrowRight class="h-4 w-4" />
-                  </button>
-                </div>
-              </template>
-            </WorkspaceDataTable>
-
-            <WorkspaceDirectoryPagination
-              v-if="total > 0 && filteredClassEntries.length > 0"
-              class="teacher-directory-pagination"
-              :page="page"
-              :total-pages="totalPages"
-              :total="total"
-              :total-label="`共 ${total} 个班级`"
-              @change-page="emit('changePage', $event)"
+            <AppEmpty
+              v-else-if="classes.length === 0"
+              class="teacher-empty-state workspace-directory-empty"
+              icon="Users"
+              title="暂无班级"
+              description="当前教师账号下还没有可访问的班级。"
             />
-          </div>
+
+            <div v-else class="teacher-directory">
+              <AppEmpty
+                v-if="filteredClassEntries.length === 0"
+                class="teacher-empty-state workspace-directory-empty"
+                icon="Search"
+                title="没有匹配班级"
+                description="调整搜索关键词后再试。"
+              />
+
+              <WorkspaceDataTable
+                v-else
+                class="teacher-class-directory-table"
+                :columns="columns"
+                :rows="filteredClassEntries"
+                row-key="name"
+              >
+                <template #cell-code="{ row }">
+                  <span class="teacher-directory-cell-class-code">
+                    {{ (row as ClassDirectoryTableRow).code }}
+                  </span>
+                </template>
+
+                <template #cell-name="{ row }">
+                  <div class="teacher-directory-cell-class-name">
+                    <h4
+                      class="teacher-directory-row-title"
+                      :title="(row as ClassDirectoryTableRow).name"
+                    >
+                      {{ (row as ClassDirectoryTableRow).name }}
+                    </h4>
+                  </div>
+                </template>
+
+                <template #cell-student_count="{ row }">
+                  <span class="teacher-directory-row-points">
+                    {{ (row as ClassDirectoryTableRow).student_count }}
+                  </span>
+                </template>
+
+                <template #cell-status="{ row }">
+                  <span
+                    class="teacher-directory-state-chip"
+                    :class="
+                      (row as ClassDirectoryTableRow).status === 'ready'
+                        ? 'teacher-directory-state-chip-ready'
+                        : 'teacher-directory-state-chip-empty'
+                    "
+                  >
+                    {{ (row as ClassDirectoryTableRow).status_label }}
+                  </span>
+                </template>
+
+                <template #cell-actions="{ row }">
+                  <div class="teacher-directory-row-cta">
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--primary ui-btn--xs"
+                      :aria-label="`${(row as ClassDirectoryTableRow).name}，${(row as ClassDirectoryTableRow).student_count} 名学生，进入班级`"
+                      @click="emit('openClass', (row as ClassDirectoryTableRow).name)"
+                    >
+                      进入班级
+                      <ArrowRight class="h-4 w-4" />
+                    </button>
+                  </div>
+                </template>
+              </WorkspaceDataTable>
+
+              <WorkspaceDirectoryPagination
+                v-if="total > 0 && filteredClassEntries.length > 0"
+                class="teacher-directory-pagination"
+                :page="page"
+                :total-pages="totalPages"
+                :total="total"
+                :total-label="`共 ${total} 个班级`"
+                @change-page="emit('changePage', $event)"
+              />
+            </div>
+          </section>
         </section>
-        <div
-          v-if="error"
-          class="teacher-surface-error"
-        >
+        <div v-if="error" class="teacher-surface-error">
           {{ error }}
-          <button
-            type="button"
-            class="ml-3 font-medium underline"
-            @click="emit('retry')"
-          >
+          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">
             重试
           </button>
         </div>
@@ -345,6 +332,27 @@ function handleStatusFilterChange(event: Event): void {
 
 .teacher-directory-section {
   margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
+}
+
+.teacher-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .teacher-directory-section :deep(.workspace-directory-pagination-shell) {
@@ -403,7 +411,9 @@ function handleStatusFilterChange(event: Event): void {
   white-space: nowrap;
 }
 
-.teacher-class-directory-table :deep(.workspace-data-table__row:hover) .teacher-directory-row-title {
+.teacher-class-directory-table
+  :deep(.workspace-data-table__row:hover)
+  .teacher-directory-row-title {
   color: var(--color-primary);
 }
 

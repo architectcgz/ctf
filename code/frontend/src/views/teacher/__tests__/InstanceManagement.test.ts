@@ -105,7 +105,8 @@ describe('InstanceManagement', () => {
     )
     expect(wrapper.findAll('.progress-card.metric-panel-card')).toHaveLength(3)
     expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
-    expect(wrapper.find('.teacher-instance-list.workspace-directory-list').exists()).toBe(true)
+    expect(wrapper.find('.teacher-directory-shell.workspace-directory-list').exists()).toBe(true)
+    expect(wrapper.find('.teacher-instance-list.workspace-directory-list').exists()).toBe(false)
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
     expect(wrapper.findAll('.teacher-instance-primary-text')[0].attributes('title')).toBe('Alice')
@@ -348,8 +349,14 @@ describe('InstanceManagement', () => {
     expect(instanceManagementSource).not.toContain('border-[var(--color-primary)]')
     expect(instanceManagementSource).not.toContain('bg-[var(--color-primary)]')
     expect(instanceManagementSource).not.toContain('text-[var(--color-primary)]')
+    expect(instanceManagementSource).toContain(
+      'class="teacher-directory-shell workspace-directory-list"'
+    )
+    expect(instanceManagementSource).not.toContain(
+      'class="teacher-instance-list workspace-directory-list"'
+    )
     expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="\((row as TeacherInstanceItem)\)\.student_name \|\| \((row as TeacherInstanceItem)\)\.student_username"/s
+      /class="teacher-instance-primary-text"[\s\S]*:title="[\s\S]*\(row as TeacherInstanceItem\)\.student_name \|\|[\s\S]*\(row as TeacherInstanceItem\)\.student_username/s
     )
     expect(instanceManagementSource).toMatch(
       /class="teacher-instance-primary-text"[\s\S]*:title="\((row as TeacherInstanceItem)\)\.challenge_title"/s
