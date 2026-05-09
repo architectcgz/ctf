@@ -285,6 +285,15 @@ describe('ImageManage', () => {
     )
   })
 
+  it('镜像状态摘要应位于头部标题区域右侧', () => {
+    expect(imageManageHeroPanelSource).toMatch(
+      /<div class="image-header__intro">[\s\S]*<div class="image-header__copy">[\s\S]*<div\s+class="image-status-strip"[\s\S]*<div class="image-header__side">/s
+    )
+    expect(imageManageHeroPanelSource).toMatch(
+      /\.image-header__intro\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(18rem,\s*auto\);/s
+    )
+  })
+
   it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
     expect(combinedSource).toMatch(
       /class="image-row__name"[\s\S]*:title="\(row as AdminImageListItem\)\.name"/s

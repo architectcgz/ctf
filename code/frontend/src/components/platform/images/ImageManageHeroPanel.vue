@@ -27,15 +27,38 @@ function handleCreate(): void {
 <template>
   <header class="image-header">
     <div class="image-header__intro">
-      <div class="workspace-overline">
-        Image Registry
+      <div class="image-header__copy">
+        <div class="workspace-overline">
+          Image Registry
+        </div>
+        <h1 class="image-title">
+          镜像管理
+        </h1>
+        <p class="image-copy">
+          集中查看镜像构建状态、描述与创建时间。
+        </p>
       </div>
-      <h1 class="image-title">
-        镜像管理
-      </h1>
-      <p class="image-copy">
-        集中查看镜像构建状态、描述与创建时间。
-      </p>
+
+      <div
+        class="image-status-strip"
+        aria-label="镜像状态摘要"
+      >
+        <div
+          v-if="statusSummary.length > 0"
+          class="image-status-strip__row"
+        >
+          <div
+            v-for="item in statusSummary"
+            :key="item.key"
+            :class="['image-status-pill', `image-status-pill--${item.tone}`]"
+            data-testid="image-status-pill"
+          >
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </div>
+        </div>
+        <div class="image-status-strip__note">{{ refreshHint }}</div>
+      </div>
     </div>
 
     <div class="image-header__side">
@@ -58,26 +81,6 @@ function handleCreate(): void {
         >
           创建镜像
         </button>
-      </div>
-      <div
-        class="image-status-strip"
-        aria-label="镜像状态摘要"
-      >
-        <div
-          v-if="statusSummary.length > 0"
-          class="image-status-strip__row"
-        >
-          <div
-            v-for="item in statusSummary"
-            :key="item.key"
-            :class="['image-status-pill', `image-status-pill--${item.tone}`]"
-            data-testid="image-status-pill"
-          >
-            <span>{{ item.label }}</span>
-            <strong>{{ item.value }}</strong>
-          </div>
-        </div>
-        <div class="image-status-strip__note">{{ refreshHint }}</div>
       </div>
     </div>
   </header>
@@ -132,6 +135,17 @@ function handleCreate(): void {
   max-width: 48rem;
 }
 
+.image-header__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, auto);
+  align-items: start;
+  gap: var(--space-5);
+}
+
+.image-header__copy {
+  min-width: 0;
+}
+
 .image-header__side {
   display: grid;
   gap: var(--space-3);
@@ -148,8 +162,10 @@ function handleCreate(): void {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-3) var(--space-4);
+  justify-self: end;
+  max-width: 34rem;
 }
 
 .image-status-strip__row {
@@ -209,8 +225,14 @@ function handleCreate(): void {
 }
 
 @media (max-width: 720px) {
+  .image-header__intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .image-status-strip {
     align-items: flex-start;
+    justify-content: flex-start;
+    justify-self: stretch;
   }
 
   .image-status-strip__note {

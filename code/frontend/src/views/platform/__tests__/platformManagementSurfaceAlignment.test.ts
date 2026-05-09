@@ -133,7 +133,10 @@ describe('admin management surface alignment', () => {
       /--user-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 58%, transparent\);/
     )
     expect(userGovernanceSource).toMatch(
-      /\.user-panel-actions\s*>\s*\.ui-btn,[\s\S]*\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+      /\.user-panel-actions\s*>\s*\.ui-btn,[\s\S]*\.user-detail-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+    )
+    expect(styleSource).toMatch(
+      /\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*var\(--ui-control-height-md\);[\s\S]*--ui-btn-radius:\s*var\(--ui-control-radius-md\);/s
     )
     expect(userGovernanceSource).toMatch(
       /\.user-panel-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
