@@ -70,6 +70,8 @@
 - 同一 input contract 的 `normalize / default / validate` 在 `application` 和 `repository` 两层重复出现，最后靠双重兜底维持“看起来能工作”。
 - repository 直接接收未收敛的裸字符串排序键、分页键或筛选键，再在仓储层补默认值和白名单，而不是由上游先收口成受限语义。
 - application 虽然已经成为唯一 owner，但内部 contract 仍继续暴露可手工拼装的导出 enum / struct，最后只能靠 repository 的 panic 或 defensive branch 晚发现错误。
+- 测试先发现了 contract / owner / 架构问题，但实现阶段为了让 CI 变绿，反过来修改测试期待值、fixture、mock 或页面文案，让测试去迁就当前错误实现。
+- 分页或汇总语义明明已经切到后端真实总量，页面却继续拿当前页 `list` 现算指标；测试再跟着改成只断当前页数字，等于把错误语义固化。
 - 为了“先放一下”创建新的临时 docs 入口，结果后面没人回收。
 
 ## 7. 当前推荐动作
@@ -77,3 +79,4 @@
 - 新建文档前先看 `AGENTS.md` 里的 `File Placement Rules`。
 - 如果内容要跨多个目录，先决定哪一份是事实源，其他文件只保留索引或 `Superseded by ...`。
 - 如果目录契约变更会影响 agent 导航或发现路径，同步更新 `works/` 索引和 `scripts/check-consistency.sh`。
+- 如果测试一改就绿、但实现理由说不清，先停下来重查 owner、contract 和真实用户语义；不要把“测试通过”当成问题已经解决的证据。

@@ -25,3 +25,4 @@
 - `2026-05-05-touched-structural-debt-must-close.md`：触达结构债必须在流水线中收口。
 - `2026-05-05-review-oversized-frontend-debt.md`：触达超大前端文件时记录结构债。
 - `2026-05-06-feedback-replaces-docs-improvements.md`：feedback 取代 docs/improvements。
+- `2026-05-09-do-not-bend-tests-to-fit-broken-architecture.md`：测试不能迁就坏架构，测试失败时先回到 owner / contract / 架构分析。

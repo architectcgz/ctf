@@ -8,6 +8,8 @@
 - harness 的 review gate 必须把 touched surface 上的跨层重复归一化、双重默认值兜底、repo 接收未收敛裸字符串排序键这类问题视为结构性 blocker，而不是普通建议或事后优化项。
 - 对内部 `filter / sort / pagination` contract，单点 owner 还不够；plan review 还必须说明“收口后的语义如何变成 downstream 不易误用的表示”。默认优先 opaque value object、受控构造器或不可直接手工拼装的字段，而不是保留宽松导出 enum / struct 再指望下游自己别用错。
 - 若 touched surface 仍允许调用方手工构造无效内部状态，并且要靠 repository 的 panic、fallback 或 defensive branch 才能发现，review gate 视为 contract 仍未收口，不得当作已完成的结构性修复。
+- 对测试失败、review finding 或契约漂移，默认先判断是不是 owner / contract / 架构未收口；不得为了“先让测试通过”去放宽断言、修改 fixture / mock 以迁就当前错误实现，除非生产契约本身已经明确变更，并且实现、文档、review 证据同步收口。
+- 若某次修复只能通过“改测试期待值、删覆盖、把全量语义降成当前切片语义”之类方式变绿，而无法同时解释真实用户行为、后端契约和架构 owner 为什么仍然正确，review gate 直接视为 blocker；此时必须回到 plan / architecture / contract 层重开分析，而不是继续补丁式推进。
 
 ## Design Context
 
