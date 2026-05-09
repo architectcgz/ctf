@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 )
 
 type teacherAWDReviewContestCardRow struct {
@@ -46,71 +48,103 @@ func (r *TeacherAWDReviewRepository) dbWithContext(ctx context.Context) *gorm.DB
 	return r.db.WithContext(ctx)
 }
 
-func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Context) ([]assessmentdomain.TeacherAWDReviewContestCard, error) {
-	rows := make([]teacherAWDReviewContestCardRow, 0)
-	err := r.dbWithContext(ctx).Raw(`
-		SELECT
-			c.id,
-			c.title,
-			c.mode,
-			c.status,
-			(
-				SELECT ar.round_number
-				FROM awd_rounds ar
-				WHERE ar.contest_id = c.id AND ar.status = ?
-				ORDER BY ar.round_number DESC
-				LIMIT 1
-			) AS current_round,
-			(
-				SELECT COUNT(*)
-				FROM awd_rounds ar
-				WHERE ar.contest_id = c.id
-			) AS round_count,
-			(
-				SELECT COUNT(*)
-				FROM teams t
-				WHERE t.contest_id = c.id AND t.deleted_at IS NULL
-			) AS team_count,
-			(
-				SELECT MAX(created_at)
-				FROM (
-					SELECT te.created_at AS created_at
-					FROM awd_traffic_events te
-					WHERE te.contest_id = c.id
-					UNION ALL
-					SELECT al.created_at AS created_at
-					FROM awd_attack_logs al
-					JOIN awd_rounds ar ON ar.id = al.round_id
-					WHERE ar.contest_id = c.id
-				) AS evidence_events
-			) AS latest_evidence_at,
-			CASE WHEN c.status = ? THEN 1 ELSE 0 END AS export_ready
-		FROM contests c
-		WHERE c.mode = ? AND c.deleted_at IS NULL
-		ORDER BY c.id DESC
-	`, model.AWDRoundStatusRunning, model.ContestStatusEnded, model.ContestModeAWD).Scan(&rows).Error
-	if err != nil {
-		return nil, fmt.Errorf("list teacher awd review contests: %w", err)
+func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Context, filter assessmentports.TeacherAWDReviewContestFilter) ([]assessmentdomain.TeacherAWDReviewContestCard, int64, assessmentports.TeacherAWDReviewContestSummary, error) {
+	query := r.teacherAWDReviewContestBaseQuery(ctx, filter)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, assessmentports.TeacherAWDReviewContestSummary{}, fmt.Errorf("count teacher awd review contests: %w", err)
 	}
-	items := make([]assessmentdomain.TeacherAWDReviewContestCard, 0, len(rows))
-	for _, row := range rows {
-		latestEvidenceAt, err := r.findLatestEvidenceAt(ctx, row.ID)
+
+	summary, err := r.summarizeTeacherAWDReviewContests(ctx, filter)
+	if err != nil {
+		return nil, 0, assessmentports.TeacherAWDReviewContestSummary{}, err
+	}
+	if total == 0 {
+		return []assessmentdomain.TeacherAWDReviewContestCard{}, 0, summary, nil
+	}
+
+	contestIDs := make([]int64, 0)
+	idQuery := r.teacherAWDReviewContestBaseQuery(ctx, filter).
+		Order("id DESC")
+	if filter.Offset > 0 {
+		idQuery = idQuery.Offset(filter.Offset)
+	}
+	if filter.Limit > 0 {
+		idQuery = idQuery.Limit(filter.Limit)
+	}
+	if err := idQuery.Pluck("id", &contestIDs).Error; err != nil {
+		return nil, 0, assessmentports.TeacherAWDReviewContestSummary{}, fmt.Errorf("list teacher awd review contest ids: %w", err)
+	}
+
+	items := make([]assessmentdomain.TeacherAWDReviewContestCard, 0, len(contestIDs))
+	for _, contestID := range contestIDs {
+		contest, err := r.FindTeacherAWDReviewContest(ctx, contestID)
 		if err != nil {
-			return nil, err
+			return nil, 0, assessmentports.TeacherAWDReviewContestSummary{}, err
+		}
+		if contest == nil {
+			continue
 		}
 		items = append(items, assessmentdomain.TeacherAWDReviewContestCard{
-			ID:               row.ID,
-			Title:            row.Title,
-			Mode:             row.Mode,
-			Status:           row.Status,
-			CurrentRound:     row.CurrentRound,
-			RoundCount:       row.RoundCount,
-			TeamCount:        row.TeamCount,
-			LatestEvidenceAt: latestEvidenceAt,
-			ExportReady:      row.ExportReady,
+			ID:               contest.ID,
+			Title:            contest.Title,
+			Mode:             contest.Mode,
+			Status:           contest.Status,
+			CurrentRound:     contest.CurrentRound,
+			RoundCount:       contest.RoundCount,
+			TeamCount:        contest.TeamCount,
+			LatestEvidenceAt: contest.LatestEvidenceAt,
+			ExportReady:      contest.ExportReady,
 		})
 	}
-	return items, nil
+
+	return items, total, summary, nil
+}
+
+func (r *TeacherAWDReviewRepository) teacherAWDReviewContestBaseQuery(ctx context.Context, filter assessmentports.TeacherAWDReviewContestFilter) *gorm.DB {
+	query := r.dbWithContext(ctx).
+		Model(&model.Contest{}).
+		Where("mode = ? AND deleted_at IS NULL", model.ContestModeAWD)
+
+	status := strings.TrimSpace(filter.Status)
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	keyword := strings.TrimSpace(filter.Keyword)
+	if keyword != "" {
+		query = query.Where("LOWER(title) LIKE ?", "%"+strings.ToLower(keyword)+"%")
+	}
+
+	return query
+}
+
+func (r *TeacherAWDReviewRepository) summarizeTeacherAWDReviewContests(ctx context.Context, filter assessmentports.TeacherAWDReviewContestFilter) (assessmentports.TeacherAWDReviewContestSummary, error) {
+	type statusCountRow struct {
+		Status string
+		Count  int64
+	}
+
+	rows := make([]statusCountRow, 0)
+	if err := r.teacherAWDReviewContestBaseQuery(ctx, filter).
+		Select("status, COUNT(*) AS count").
+		Group("status").
+		Scan(&rows).Error; err != nil {
+		return assessmentports.TeacherAWDReviewContestSummary{}, fmt.Errorf("summarize teacher awd review contests: %w", err)
+	}
+
+	summary := assessmentports.TeacherAWDReviewContestSummary{}
+	for _, row := range rows {
+		if row.Status == model.ContestStatusRunning {
+			summary.RunningCount = row.Count
+		}
+		if row.Status == model.ContestStatusEnded {
+			summary.ExportReadyCount = row.Count
+		}
+	}
+
+	return summary, nil
 }
 
 func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Context, contestID int64) (*assessmentdomain.TeacherAWDReviewContestMeta, error) {

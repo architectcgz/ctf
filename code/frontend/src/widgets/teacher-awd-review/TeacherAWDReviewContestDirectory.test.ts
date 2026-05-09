@@ -24,6 +24,9 @@ function createProps() {
     loading: false,
     error: null as string | null,
     contests: createContests(),
+    total: 21,
+    page: 1,
+    totalPages: 2,
     hasContests: true,
     statusOptions: [
       { value: '', label: '全部状态' },
@@ -68,5 +71,16 @@ describe('TeacherAWDReviewContestDirectory', () => {
     await wrapper.find('button.teacher-directory-row').trigger('click')
 
     expect(wrapper.emitted('openContest')).toEqual([['contest-1']])
+  })
+
+  it('应透传分页切换事件', async () => {
+    const wrapper = mount(TeacherAWDReviewContestDirectory, {
+      props: createProps(),
+    })
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
+
+    expect(wrapper.emitted('changePage')).toEqual([[2]])
   })
 })

@@ -31,28 +31,37 @@ describe('TeacherAWDReviewIndex', () => {
     pushMock.mockReset()
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.listTeacherAWDReviews.mockResolvedValue([
-      {
-        id: 'contest-1',
-        title: '春季 AWD 联训',
-        mode: 'awd',
-        status: 'running',
-        current_round: 2,
-        round_count: 6,
-        team_count: 8,
-        export_ready: false,
+    teacherApiMocks.listTeacherAWDReviews.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-1',
+          title: '春季 AWD 联训',
+          mode: 'awd',
+          status: 'running',
+          current_round: 2,
+          round_count: 6,
+          team_count: 8,
+          export_ready: false,
+        },
+        {
+          id: 'contest-2',
+          title: '期末 AWD 复盘',
+          mode: 'awd',
+          status: 'ended',
+          current_round: 8,
+          round_count: 8,
+          team_count: 10,
+          export_ready: true,
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+      summary: {
+        running_count: 1,
+        export_ready_count: 1,
       },
-      {
-        id: 'contest-2',
-        title: '期末 AWD 复盘',
-        mode: 'awd',
-        status: 'ended',
-        current_round: 8,
-        round_count: 8,
-        team_count: 10,
-        export_ready: true,
-      },
-    ])
+    })
   })
 
   afterEach(() => {
@@ -64,7 +73,14 @@ describe('TeacherAWDReviewIndex', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalled()
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledWith({
+      status: undefined,
+      keyword: undefined,
+      page: 1,
+      page_size: 20,
+    }, {
+      signal: expect.any(AbortSignal),
+    })
     expect(wrapper.text()).toContain('AWD复盘')
     expect(wrapper.text()).toContain('春季 AWD 联训')
     expect(wrapper.text()).toContain('进入复盘')
@@ -107,6 +123,10 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
       status: 'ended',
       keyword: '期末',
+      page: 1,
+      page_size: 20,
+    }, {
+      signal: expect.any(AbortSignal),
     })
     expect(wrapper.text()).not.toContain('应用筛选')
   })

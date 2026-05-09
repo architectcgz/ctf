@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { CalendarRange, Clock3, Trophy } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { useContestListPage } from '@/features/contest-detail'
 
 const {
   loading,
   refresh,
   visibleContests,
+  total,
+  page,
+  totalPages,
+  changePage,
   summaryMetrics,
   loadErrorMessage,
   formatTime,
@@ -102,7 +107,7 @@ const {
               竞赛列表
             </h2>
             <div class="contest-directory-meta">
-              共 {{ visibleContests.length }} 场
+              共 {{ total }} 场
             </div>
           </div>
 
@@ -169,6 +174,19 @@ const {
             </div>
           </button>
         </section>
+
+        <div
+          v-if="total > 0"
+          class="contest-pagination workspace-directory-pagination"
+        >
+          <PagePaginationControls
+            :page="page"
+            :total-pages="totalPages"
+            :total="total"
+            :total-label="`共 ${total} 场`"
+            @change-page="changePage"
+          />
+        </div>
       </div>
     </main>
   </section>

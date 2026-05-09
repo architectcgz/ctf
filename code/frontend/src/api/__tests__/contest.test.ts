@@ -9,6 +9,7 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
+  getContests,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
   restartContestAWDServiceInstance,
@@ -19,6 +20,58 @@ import {
 describe('contest api contract', () => {
   beforeEach(() => {
     requestMock.mockReset()
+  })
+
+  it('获取竞赛列表时应读取 registering_count 汇总字段', async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 7,
+          title: '春季赛',
+          description: '测试竞赛',
+          mode: 'jeopardy',
+          status: 'registration',
+          start_time: '2026-03-10T09:00:00.000Z',
+          end_time: '2026-03-10T12:00:00.000Z',
+          freeze_time: null,
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+      summary: {
+        draft_count: 0,
+        registering_count: 3,
+        running_count: 1,
+        frozen_count: 0,
+        ended_count: 2,
+      },
+    })
+
+    const result = await getContests({ page: 1, page_size: 20, status: 'registering' })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/contests',
+      params: {
+        page: 1,
+        page_size: 20,
+        status: 'registration',
+        statuses: undefined,
+        mode: undefined,
+        sort_key: undefined,
+        sort_order: undefined,
+      },
+      signal: undefined,
+    })
+    expect(result.summary).toEqual({
+      draft_count: 0,
+      registering_count: 3,
+      running_count: 1,
+      frozen_count: 0,
+      ended_count: 2,
+    })
+    expect(result.list[0]?.status).toBe('registering')
   })
 
   it('获取竞赛题目列表时应标准化 awd service 标识', async () => {

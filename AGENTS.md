@@ -3,6 +3,11 @@
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`prompts/`、`references/`、`works/`。
 - 可复用提示词见 `prompts/harness-router.md`；机械化检查使用 `bash scripts/check-consistency.sh`。
+- 对 `API / filter / sort / pagination` 契约改动，harness 的 plan review 必须显式写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层；若 owner 不唯一，不得直接进入实现。
+- 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底就可以接受”。除非其中一层承担明确的 trust-boundary 防御且理由写清，否则应在实现阶段继续收口成单点 owner。
+- harness 的 review gate 必须把 touched surface 上的跨层重复归一化、双重默认值兜底、repo 接收未收敛裸字符串排序键这类问题视为结构性 blocker，而不是普通建议或事后优化项。
+- 对内部 `filter / sort / pagination` contract，单点 owner 还不够；plan review 还必须说明“收口后的语义如何变成 downstream 不易误用的表示”。默认优先 opaque value object、受控构造器或不可直接手工拼装的字段，而不是保留宽松导出 enum / struct 再指望下游自己别用错。
+- 若 touched surface 仍允许调用方手工构造无效内部状态，并且要靠 repository 的 panic、fallback 或 defensive branch 才能发现，review gate 视为 contract 仍未收口，不得当作已完成的结构性修复。
 
 ## Design Context
 

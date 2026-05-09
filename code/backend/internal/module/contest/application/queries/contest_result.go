@@ -8,9 +8,20 @@ import (
 )
 
 type ListContestsInput struct {
-	Status *string
-	Page   int
-	Size   int
+	Statuses  []string
+	Mode      *string
+	SortKey   string
+	SortOrder string
+	Page      int
+	Size      int
+}
+
+type ContestListSummaryResult struct {
+	DraftCount        int64
+	RegistrationCount int64
+	RunningCount      int64
+	FrozenCount       int64
+	EndedCount        int64
 }
 
 type ContestResult struct {

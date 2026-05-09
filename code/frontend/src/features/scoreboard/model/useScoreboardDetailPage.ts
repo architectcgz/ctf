@@ -3,7 +3,9 @@ import { useRoute } from 'vue-router'
 
 import type { ContestScoreboardData, ContestStatus } from '@/api/contracts'
 import { getScoreboard } from '@/api/contest'
+import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { getContestAccentColor, getStatusLabel } from '@/utils/contest'
 
 export function useScoreboardDetailPage() {
@@ -14,10 +16,15 @@ export function useScoreboardDetailPage() {
   const loading = ref(false)
   const refreshing = ref(false)
   const error = ref(false)
+  const page = ref(1)
+  const pageSize = ref(DEFAULT_PAGE_SIZE)
   let requestToken = 0
+  const { createController } = useAbortController()
 
   const contestId = computed(() => String(route.params.contestId ?? ''))
   const rows = computed(() => scoreboard.value?.scoreboard.list ?? [])
+  const total = computed(() => scoreboard.value?.scoreboard.total ?? 0)
+  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
   const contest = computed(() => scoreboard.value?.contest)
   const supportsRealtime = computed(() => {
     const status = contest.value?.status
@@ -76,13 +83,14 @@ export function useScoreboardDetailPage() {
     return '历史竞赛展示最终成绩，用于复盘队伍表现。'
   }
 
-  async function loadScoreboard(silent = false): Promise<void> {
+  async function loadScoreboard(silent = false, nextPage = page.value): Promise<void> {
     const currentContestId = contestId.value
     if (!currentContestId) {
       return
     }
 
     const token = ++requestToken
+    const controller = createController()
     const hadScoreboard = Boolean(scoreboard.value)
     if (silent) {
       refreshing.value = true
@@ -92,11 +100,20 @@ export function useScoreboardDetailPage() {
     error.value = false
 
     try {
-      const payload = await getScoreboard(currentContestId, { page: 1, page_size: 100 })
+      const payload = await getScoreboard(
+        currentContestId,
+        {
+          page: nextPage,
+          page_size: pageSize.value,
+        },
+        { signal: controller.signal }
+      )
       if (token !== requestToken) {
         return
       }
       scoreboard.value = payload
+      page.value = payload.scoreboard.page
+      pageSize.value = payload.scoreboard.page_size
     } catch {
       if (token !== requestToken) {
         return
@@ -115,9 +132,14 @@ export function useScoreboardDetailPage() {
     }
   }
 
+  async function changePage(nextPage: number): Promise<void> {
+    await loadScoreboard(false, Math.max(1, Math.floor(nextPage)))
+  }
+
   watch(
     contestId,
     () => {
+      page.value = 1
       void loadScoreboard()
     },
     { immediate: true }
@@ -125,8 +147,12 @@ export function useScoreboardDetailPage() {
 
   return {
     contest,
+    page,
+    pageSize,
     rows,
     scoreboard,
+    total,
+    totalPages,
     loading,
     refreshing,
     supportsRealtime,
@@ -141,6 +167,7 @@ export function useScoreboardDetailPage() {
     getRowClass,
     getRankPillClass,
     getStatusCopy,
+    changePage,
     loadScoreboard,
   }
 }

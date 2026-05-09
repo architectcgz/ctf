@@ -1,8 +1,8 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ContestListItem, ContestStatus } from '@/api/contracts'
-import { getContests } from '@/api/contest'
+import type { ContestListItem, ContestListSummaryData, ContestStatus } from '@/api/contracts'
+import { getContests, type GetContestsData } from '@/api/contest'
 import { usePagination } from '@/composables/usePagination'
 import {
   getContestAccentColor,
@@ -19,31 +19,55 @@ interface ContestSummaryMetric {
   hint: string
 }
 
+const VISIBLE_CONTEST_STATUSES: ContestStatus[] = ['registering', 'running', 'frozen', 'ended']
+
+function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryData {
+  return {
+    draft_count: 0,
+    registering_count: contests.filter((contest) => contest.status === 'registering').length,
+    running_count: contests.filter((contest) => contest.status === 'running').length,
+    frozen_count: contests.filter((contest) => contest.status === 'frozen').length,
+    ended_count: contests.filter((contest) => contest.status === 'ended').length,
+  }
+}
+
 export function useContestListPage() {
   const router = useRouter()
-  const { list, loading, error, refresh } = usePagination(getContests)
+  const { list, total, page, pageSize, loading, error, response, changePage, refresh: refreshPage } =
+    usePagination<ContestListItem, GetContestsData>(({ page, page_size, signal }) =>
+      getContests(
+        {
+          page,
+          page_size,
+          statuses: VISIBLE_CONTEST_STATUSES,
+        },
+        { signal }
+      )
+    )
+  const contestSummary = computed(() => response.value?.summary ?? buildFallbackSummary(list.value))
+  const visibleTotal = computed(() => Math.max(0, total.value - contestSummary.value.draft_count))
+  const runningCount = computed(() => contestSummary.value.running_count)
+  const registeringCount = computed(() => contestSummary.value.registering_count)
+  const endedCount = computed(() => contestSummary.value.ended_count + contestSummary.value.frozen_count)
 
   const visibleContests = computed(() =>
     list.value.filter((contest) => isStudentVisibleContestStatus(contest.status))
   )
+  const totalPages = computed(() =>
+    Math.max(1, Math.ceil(visibleTotal.value / Math.max(pageSize.value, 1)))
+  )
 
   const summaryMetrics = computed<ContestSummaryMetric[]>(() => {
-    const runningCount = visibleContests.value.filter((contest) => contest.status === 'running').length
-    const registeringCount = visibleContests.value.filter((contest) => contest.status === 'registering').length
-    const endedCount = visibleContests.value.filter((contest) =>
-      ['ended', 'cancelled', 'archived', 'frozen'].includes(contest.status)
-    ).length
-
     return [
       {
         key: 'total',
         label: '竞赛总数',
-        value: visibleContests.value.length,
-        hint: '当前可查看的竞赛数量',
+        value: visibleTotal.value,
+        hint: '当前可查看的竞赛总数',
       },
-      { key: 'running', label: '进行中', value: runningCount, hint: '已经开赛且仍可参与' },
-      { key: 'registering', label: '报名中', value: registeringCount, hint: '近期可以报名的竞赛' },
-      { key: 'ended', label: '已结束', value: endedCount, hint: '可用于复盘或排行回看' },
+      { key: 'running', label: '进行中', value: runningCount.value, hint: '当前仍可直接进入竞赛工作区的赛事' },
+      { key: 'registering', label: '报名中', value: registeringCount.value, hint: '当前仍可报名参与的赛事' },
+      { key: 'ended', label: '已结束', value: endedCount.value, hint: '当前已结束或已封榜、可用于回看的赛事' },
     ]
   })
 
@@ -113,12 +137,21 @@ export function useContestListPage() {
     return { '--contest-row-accent': getContestAccentColor(status) }
   }
 
+  async function refresh(): Promise<void> {
+    await refreshPage()
+  }
+
   onMounted(() => {
     void refresh()
   })
 
   return {
     loading,
+    total: visibleTotal,
+    page,
+    pageSize,
+    totalPages,
+    changePage,
     refresh,
     visibleContests,
     summaryMetrics,

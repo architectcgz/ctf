@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
 import TeacherAWDReviewDirectorySection from './TeacherAWDReviewDirectorySection.vue'
@@ -15,6 +16,9 @@ defineProps<{
   loading: boolean
   error: string | null
   contests: TeacherAWDReviewContestItemData[]
+  total: number
+  page: number
+  totalPages: number
   hasContests: boolean
   statusOptions: readonly ContestStatusOption[]
   statusFilter: '' | TeacherAWDReviewContestItemData['status']
@@ -25,6 +29,7 @@ defineProps<{
 const emit = defineEmits<{
   reload: []
   openContest: [contestId: string]
+  changePage: [page: number]
   updateStatusFilter: [status: '' | TeacherAWDReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
 }>()
@@ -32,7 +37,7 @@ const emit = defineEmits<{
 
 <template>
   <TeacherAWDReviewDirectorySection
-    :total-count="contests.length"
+    :total-count="total"
   >
     <template #filters>
       <TeacherAWDReviewIndexFilters
@@ -61,6 +66,17 @@ const emit = defineEmits<{
           @open-contest="emit('openContest', $event)"
         />
       </section>
+
+      <WorkspaceDirectoryPagination
+        v-if="total > 0"
+        class="teacher-directory-pagination"
+        :page="page"
+        :total-pages="totalPages"
+        :total="total"
+        :disabled="loading"
+        :total-label="`共 ${total} 场赛事`"
+        @change-page="emit('changePage', $event)"
+      />
     </TeacherAWDReviewDirectoryState>
   </TeacherAWDReviewDirectorySection>
 </template>
@@ -69,5 +85,9 @@ const emit = defineEmits<{
 .teacher-directory {
   display: flex;
   flex-direction: column;
+}
+
+.teacher-directory :deep(.workspace-directory-pagination-shell) {
+  margin-top: var(--space-2);
 }
 </style>

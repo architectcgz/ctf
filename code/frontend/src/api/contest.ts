@@ -15,10 +15,12 @@ import type {
   ContestChallengeItem,
   ContestDetailData,
   ContestListItem,
+  ContestMode,
+  ContestPageData,
   ContestMyProgressData,
   ContestScoreboardData,
+  ContestStatus,
   InstanceData,
-  PageResult,
   SubmitFlagData,
   TeamData,
 } from './contracts'
@@ -34,6 +36,22 @@ interface RawContestItem {
   start_time: string
   end_time: string
   freeze_time?: string | null
+}
+
+interface RawContestListSummary {
+  draft_count?: number
+  registering_count?: number
+  running_count?: number
+  frozen_count?: number
+  ended_count?: number
+}
+
+interface RawContestPageResult<T> {
+  list: T[]
+  total: number
+  page: number
+  page_size: number
+  summary?: RawContestListSummary
 }
 
 interface RawTeamMember {
@@ -141,13 +159,46 @@ interface RawContestAWDWorkspaceData extends Omit<
   recent_events: RawContestAWDWorkspaceRecentEventData[]
 }
 
-export type GetContestsData = PageResult<ContestListItem>
+export type GetContestsData = ContestPageData<ContestListItem>
+
+export interface GetContestsParams {
+  page?: number
+  page_size?: number
+  status?: ContestStatus
+  statuses?: ContestStatus[]
+  mode?: ContestMode
+  sort_key?: 'created_at' | 'start_time'
+  sort_order?: 'asc' | 'desc'
+}
 
 function normalizeContestStatus(status: RawContestStatus): ContestListItem['status'] {
   if (status === 'registration') {
     return 'registering'
   }
   return status
+}
+
+function serializeContestStatus(status?: ContestStatus): RawContestStatus | undefined {
+  if (!status) {
+    return undefined
+  }
+  if (status === 'registering') {
+    return 'registration'
+  }
+  return status as RawContestStatus
+}
+
+function serializeContestStatuses(statuses?: ContestStatus[]): string | undefined {
+  if (!statuses?.length) {
+    return undefined
+  }
+  const serialized = statuses
+    .map((status) => serializeContestStatus(status))
+    .filter((status): status is RawContestStatus => Boolean(status))
+  if (serialized.length === 0) {
+    return undefined
+  }
+  return serialized.join(',')
 }
 
 function normalizeContest(item: RawContestItem): ContestDetailData {
@@ -160,6 +211,19 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
     starts_at: item.start_time,
     ends_at: item.end_time,
     scoreboard_frozen: Boolean(item.freeze_time),
+  }
+}
+
+function normalizeContestSummary(summary?: RawContestListSummary): ContestPageData<ContestListItem>['summary'] {
+  if (!summary) {
+    return undefined
+  }
+  return {
+    draft_count: summary.draft_count ?? 0,
+    registering_count: summary.registering_count ?? 0,
+    running_count: summary.running_count ?? 0,
+    frozen_count: summary.frozen_count ?? 0,
+    ended_count: summary.ended_count ?? 0,
   }
 }
 
@@ -264,15 +328,28 @@ function normalizeContestAWDWorkspaceEvent(
   }
 }
 
-export async function getContests(params?: Record<string, unknown>): Promise<GetContestsData> {
-  const response = await request<PageResult<RawContestItem>>({
+export async function getContests(
+  params?: GetContestsParams,
+  options?: { signal?: AbortSignal }
+): Promise<GetContestsData> {
+  const response = await request<RawContestPageResult<RawContestItem>>({
     method: 'GET',
     url: '/contests',
-    params,
+    params: {
+      page: params?.page,
+      page_size: params?.page_size,
+      status: serializeContestStatus(params?.status),
+      statuses: serializeContestStatuses(params?.statuses),
+      mode: params?.mode,
+      sort_key: params?.sort_key,
+      sort_order: params?.sort_order,
+    },
+    signal: options?.signal,
   })
   return {
     ...response,
     list: response.list.map(normalizeContest),
+    summary: normalizeContestSummary(response.summary),
   }
 }
 
@@ -310,12 +387,14 @@ export async function submitContestFlag(
 
 export async function getScoreboard(
   id: string,
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
+  options?: { signal?: AbortSignal }
 ): Promise<ContestScoreboardData> {
   return request<ContestScoreboardData>({
     method: 'GET',
     url: `/contests/${encodeURIComponent(id)}/scoreboard`,
     params,
+    signal: options?.signal,
   })
 }
 

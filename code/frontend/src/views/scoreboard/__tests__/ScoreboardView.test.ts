@@ -74,6 +74,35 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
 
+function createContestSummary(overrides: Partial<Record<string, number>> = {}) {
+  return {
+    draft_count: 0,
+    registering_count: 0,
+    running_count: 0,
+    frozen_count: 0,
+    ended_count: 0,
+    ...overrides,
+  }
+}
+
+function createContestPage(
+  list: Array<Record<string, unknown>>,
+  overrides: Partial<{
+    total: number
+    page: number
+    page_size: number
+    summary: ReturnType<typeof createContestSummary>
+  }> = {}
+) {
+  return {
+    list,
+    total: overrides.total ?? list.length,
+    page: overrides.page ?? 1,
+    page_size: overrides.page_size ?? 20,
+    summary: overrides.summary,
+  }
+}
+
 describe('ScoreboardView', () => {
   beforeEach(() => {
     getContestsMock.mockReset()
@@ -91,16 +120,8 @@ describe('ScoreboardView', () => {
   })
 
   it('按最新竞赛在前的顺序展示排行榜列表', async () => {
-    getContestsMock.mockResolvedValue({
-      list: [
-        {
-          id: 'contest-old',
-          title: '往期竞赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-03-01T00:00:00Z',
-          ends_at: '2026-03-01T12:00:00Z',
-        },
+    getContestsMock.mockResolvedValue(
+      createContestPage([
         {
           id: 'contest-running',
           title: '当前竞赛',
@@ -110,14 +131,6 @@ describe('ScoreboardView', () => {
           ends_at: '2026-03-12T12:00:00Z',
         },
         {
-          id: 'contest-registering',
-          title: '报名中竞赛',
-          mode: 'jeopardy',
-          status: 'registering',
-          starts_at: '2026-03-14T00:00:00Z',
-          ends_at: '2026-03-14T12:00:00Z',
-        },
-        {
           id: 'contest-frozen',
           title: '冻结竞赛',
           mode: 'jeopardy',
@@ -125,11 +138,19 @@ describe('ScoreboardView', () => {
           starts_at: '2026-03-10T00:00:00Z',
           ends_at: '2026-03-10T12:00:00Z',
         },
-      ],
-      total: 4,
-      page: 1,
-      page_size: 100,
-    })
+        {
+          id: 'contest-old',
+          title: '往期竞赛',
+          mode: 'jeopardy',
+          status: 'ended',
+          starts_at: '2026-03-01T00:00:00Z',
+          ends_at: '2026-03-01T12:00:00Z',
+        },
+      ], {
+        total: 3,
+        summary: createContestSummary({ running_count: 1, frozen_count: 1, ended_count: 1 }),
+      })
+    )
 
     const router = await createScoreboardRouter()
 
@@ -160,6 +181,16 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).not.toContain('报名中竞赛')
     expect(wrapper.find('a[href="/scoreboard/contest-running"]').exists()).toBe(true)
     expect(getScoreboardMock).not.toHaveBeenCalled()
+    expect(getContestsMock).toHaveBeenCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['running', 'frozen', 'ended'],
+        sort_key: 'start_time',
+        sort_order: 'desc',
+      },
+      { signal: expect.any(AbortSignal) }
+    )
   })
 
   it('排行详情路由页应仅负责组合，不直接耦合排行榜详情加载流程', () => {
@@ -179,8 +210,8 @@ describe('ScoreboardView', () => {
 
   it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {
     getPracticeRankingMock.mockResolvedValue([])
-    getContestsMock.mockResolvedValue({
-      list: [
+    getContestsMock.mockResolvedValue(
+      createContestPage([
         {
           id: 'contest-history',
           title: '往期竞赛',
@@ -197,11 +228,10 @@ describe('ScoreboardView', () => {
           starts_at: '2026-03-12T00:00:00Z',
           ends_at: '2026-03-12T12:00:00Z',
         },
-      ],
-      total: 2,
-      page: 1,
-      page_size: 100,
-    })
+      ], {
+        summary: createContestSummary({ running_count: 1, ended_count: 1 }),
+      })
+    )
 
     const router = await createScoreboardRouter()
 
@@ -315,10 +345,92 @@ describe('ScoreboardView', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(getScoreboardMock).toHaveBeenCalledWith('contest-history', { page: 1, page_size: 100 })
+    expect(getScoreboardMock).toHaveBeenCalledWith(
+      'contest-history',
+      { page: 1, page_size: 20 },
+      { signal: expect.any(AbortSignal) }
+    )
     expect(wrapper.text()).toContain('往期竞赛')
     expect(wrapper.text()).toContain('History Masters')
     expect(wrapper.findAll('[data-testid="scoreboard-detail-row"]')).toHaveLength(1)
+  })
+
+  it('排行详情翻页后收到 scoreboard.updated 应刷新当前页', async () => {
+    getScoreboardMock.mockImplementation(
+      async (_contestId: string, params?: { page?: number; page_size?: number }) => ({
+        contest: {
+          id: 'contest-running',
+          title: '当前竞赛',
+          status: 'running',
+          started_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+        scoreboard: {
+          list:
+            params?.page === 2
+              ? [
+                  {
+                    rank: 21,
+                    team_id: 'team-21',
+                    team_name: 'Page Two Team',
+                    score: 1200,
+                    solved_count: 3,
+                    last_submission_at: '2026-03-12T10:25:00Z',
+                  },
+                ]
+              : Array.from({ length: 20 }, (_, index) => ({
+                  rank: index + 1,
+                  team_id: `team-${index + 1}`,
+                  team_name: `Page One Team ${index + 1}`,
+                  score: 2400 - index,
+                  solved_count: 8,
+                  last_submission_at: '2026-03-12T10:15:00Z',
+                })),
+          total: 21,
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        },
+        frozen: false,
+      })
+    )
+
+    const router = await createScoreboardRouter('/scoreboard/contest-running')
+    const wrapper = mount(ScoreboardDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const nextButton = wrapper
+      .findAll('.page-pagination-controls__button')
+      .find((button) => button.text().trim() === '下一页')
+    expect(nextButton).toBeTruthy()
+    await nextButton?.trigger('click')
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Page Two Team')
+    expect(getScoreboardMock).toHaveBeenLastCalledWith(
+      'contest-running',
+      { page: 2, page_size: 20 },
+      { signal: expect.any(AbortSignal) }
+    )
+
+    webSocketMocks.getHandlers('contests/contest-running/scoreboard')?.['scoreboard.updated']?.({
+      contest_id: 'contest-running',
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(getScoreboardMock).toHaveBeenLastCalledWith(
+      'contest-running',
+      { page: 2, page_size: 20 },
+      { signal: expect.any(AbortSignal) }
+    )
   })
 
   it('排行详情静默刷新失败时应保留旧数据，只弹一次刷新失败提示', async () => {
@@ -373,8 +485,8 @@ describe('ScoreboardView', () => {
 
   it('列表页不会为竞赛列表建立实时排行榜连接', async () => {
     getPracticeRankingMock.mockResolvedValue([])
-    getContestsMock.mockResolvedValue({
-      list: [
+    getContestsMock.mockResolvedValue(
+      createContestPage([
         {
           id: 'contest-history',
           title: '往期竞赛',
@@ -391,11 +503,10 @@ describe('ScoreboardView', () => {
           starts_at: '2026-03-12T00:00:00Z',
           ends_at: '2026-03-12T12:00:00Z',
         },
-      ],
-      total: 2,
-      page: 1,
-      page_size: 100,
-    })
+      ], {
+        summary: createContestSummary({ running_count: 1, ended_count: 1 }),
+      })
+    )
 
     const router = await createScoreboardRouter()
     mount(ScoreboardView, {
@@ -437,22 +548,44 @@ describe('ScoreboardView', () => {
 
   it('竞赛排行列表分页展示并支持切换下一页', async () => {
     getPracticeRankingMock.mockResolvedValue([])
-    getContestsMock.mockResolvedValue({
-      list: Array.from({ length: 7 }, (_, index) => {
-        const day = String(12 - index).padStart(2, '0')
-        return {
-          id: `contest-${index + 1}`,
-          title: `竞赛 ${index + 1}`,
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: `2026-03-${day}T00:00:00Z`,
-          ends_at: `2026-03-${day}T12:00:00Z`,
-        }
-      }),
-      total: 7,
-      page: 1,
-      page_size: 100,
-    })
+    getContestsMock.mockImplementation(async ({ page }: { page: number }) =>
+      page === 2
+        ? createContestPage(
+            [
+              {
+                id: 'contest-21',
+                title: '竞赛 21',
+                mode: 'jeopardy',
+                status: 'running',
+                starts_at: '2026-03-01T00:00:00Z',
+                ends_at: '2026-03-01T12:00:00Z',
+              },
+            ],
+            {
+              total: 21,
+              page: 2,
+              summary: createContestSummary({ running_count: 21 }),
+            }
+          )
+        : createContestPage(
+            Array.from({ length: 20 }, (_, index) => {
+              const day = String(30 - index).padStart(2, '0')
+              return {
+                id: `contest-${index + 1}`,
+                title: `竞赛 ${index + 1}`,
+                mode: 'jeopardy',
+                status: 'running',
+                starts_at: `2026-03-${day}T00:00:00Z`,
+                ends_at: `2026-03-${day}T12:00:00Z`,
+              }
+            }),
+            {
+              total: 21,
+              page: 1,
+              summary: createContestSummary({ running_count: 21 }),
+            }
+          )
+    )
 
     const router = await createScoreboardRouter()
     const wrapper = mount(ScoreboardView, {
@@ -465,11 +598,11 @@ describe('ScoreboardView', () => {
     await flushPromises()
 
     const firstPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
-    expect(firstPageCards).toHaveLength(6)
-    expect(wrapper.find('.scoreboard-pagination').text()).toContain('共 7 个竞赛')
+    expect(firstPageCards).toHaveLength(20)
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('共 21 个竞赛')
     expect(wrapper.find('.scoreboard-pagination').text()).toContain('1 / 2')
     expect(firstPageCards.some((card) => card.text().includes('竞赛 1'))).toBe(true)
-    expect(firstPageCards.some((card) => card.text().includes('竞赛 7'))).toBe(false)
+    expect(firstPageCards.some((card) => card.text().includes('竞赛 21'))).toBe(false)
 
     const nextButton = wrapper
       .findAll('.page-pagination-controls__button')
@@ -480,14 +613,24 @@ describe('ScoreboardView', () => {
     const secondPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
     expect(secondPageCards).toHaveLength(1)
     expect(wrapper.find('.scoreboard-pagination').text()).toContain('2 / 2')
-    expect(secondPageCards[0].text()).toContain('竞赛 7')
+    expect(secondPageCards[0].text()).toContain('竞赛 21')
     expect(secondPageCards[0].text()).not.toContain('竞赛 1')
+    expect(getContestsMock).toHaveBeenLastCalledWith(
+      {
+        page: 2,
+        page_size: 20,
+        statuses: ['running', 'frozen', 'ended'],
+        sort_key: 'start_time',
+        sort_order: 'desc',
+      },
+      { signal: expect.any(AbortSignal) }
+    )
   })
 
   it('竞赛排行列表只有一页时也应显示分页控件', async () => {
     getPracticeRankingMock.mockResolvedValue([])
-    getContestsMock.mockResolvedValue({
-      list: [
+    getContestsMock.mockResolvedValue(
+      createContestPage([
         {
           id: 'contest-running',
           title: '当前竞赛',
@@ -496,11 +639,10 @@ describe('ScoreboardView', () => {
           starts_at: '2026-03-12T00:00:00Z',
           ends_at: '2026-03-12T12:00:00Z',
         },
-      ],
-      total: 1,
-      page: 1,
-      page_size: 100,
-    })
+      ], {
+        summary: createContestSummary({ running_count: 1 }),
+      })
+    )
 
     const router = await createScoreboardRouter()
     const wrapper = mount(ScoreboardView, {
@@ -547,8 +689,8 @@ describe('ScoreboardView', () => {
         class_name: 'Class A',
       },
     ])
-    getContestsMock.mockResolvedValue({
-      list: [
+    getContestsMock.mockResolvedValue(
+      createContestPage([
         {
           id: 'contest-running',
           title: '当前竞赛',
@@ -557,11 +699,10 @@ describe('ScoreboardView', () => {
           starts_at: '2026-03-12T00:00:00Z',
           ends_at: '2026-03-12T12:00:00Z',
         },
-      ],
-      total: 1,
-      page: 1,
-      page_size: 100,
-    })
+      ], {
+        summary: createContestSummary({ running_count: 1 }),
+      })
+    )
     getScoreboardMock.mockResolvedValue({
       contest: {
         id: 'contest-running',

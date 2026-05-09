@@ -34,10 +34,30 @@ type ContestResp struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
+type ContestListSummaryResp struct {
+	DraftCount       int64 `json:"draft_count"`
+	RegisteringCount int64 `json:"registering_count"`
+	RunningCount     int64 `json:"running_count"`
+	FrozenCount      int64 `json:"frozen_count"`
+	EndedCount       int64 `json:"ended_count"`
+}
+
+type ContestPageResp struct {
+	List     []*ContestResp         `json:"list"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+	Summary  ContestListSummaryResp `json:"summary"`
+}
+
 type ListContestsReq struct {
-	Status *string `form:"status" binding:"omitempty,oneof=draft registration running frozen ended"`
-	Page   int     `form:"page" binding:"omitempty,min=1"`
-	Size   int     `form:"page_size" binding:"omitempty,min=1,max=100"`
+	Status    *string `form:"status" binding:"omitempty,oneof=draft registration running frozen ended"`
+	Statuses  string  `form:"statuses" binding:"omitempty,max=128"`
+	Mode      *string `form:"mode" binding:"omitempty,oneof=jeopardy awd"`
+	SortKey   string  `form:"sort_key" binding:"omitempty,oneof=created_at start_time"`
+	SortOrder string  `form:"sort_order" binding:"omitempty,oneof=asc desc"`
+	Page      int     `form:"page" binding:"omitempty,min=1"`
+	Size      int     `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
 type ScoreboardContestInfo struct {

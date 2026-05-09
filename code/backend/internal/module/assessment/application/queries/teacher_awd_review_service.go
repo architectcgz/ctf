@@ -2,8 +2,10 @@ package queries
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
@@ -12,23 +14,59 @@ import (
 )
 
 type TeacherAWDReviewService struct {
-	repo assessmentports.TeacherAWDReviewRepository
+	repo       assessmentports.TeacherAWDReviewRepository
+	pagination config.PaginationConfig
 }
 
-func NewTeacherAWDReviewService(repo assessmentports.TeacherAWDReviewRepository) *TeacherAWDReviewService {
-	return &TeacherAWDReviewService{repo: repo}
+func NewTeacherAWDReviewService(repo assessmentports.TeacherAWDReviewRepository, pagination config.PaginationConfig) *TeacherAWDReviewService {
+	return &TeacherAWDReviewService{
+		repo:       repo,
+		pagination: pagination,
+	}
 }
 
-func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error) {
+func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID int64, query ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error) {
 	_ = requesterID
+	page := query.Page
+	if page < 1 {
+		page = 1
+	}
 
-	contests, err := s.repo.ListTeacherAWDReviewContests(ctx)
+	size := query.Size
+	defaultPageSize := s.pagination.DefaultPageSize
+	if defaultPageSize < 1 {
+		defaultPageSize = 20
+	}
+	maxPageSize := s.pagination.MaxPageSize
+	if maxPageSize < 1 {
+		maxPageSize = 100
+	}
+	if size < 1 {
+		size = defaultPageSize
+	}
+	if size > maxPageSize {
+		size = maxPageSize
+	}
+
+	contests, total, summary, err := s.repo.ListTeacherAWDReviewContests(ctx, assessmentports.TeacherAWDReviewContestFilter{
+		Status:  strings.TrimSpace(query.Status),
+		Keyword: strings.TrimSpace(query.Keyword),
+		Offset:  (page - 1) * size,
+		Limit:   size,
+	})
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := &dto.TeacherAWDReviewContestListResp{
-		Contests: teacherAWDReviewMapper.ToTeacherAWDReviewContestResps(contests),
+	resp := &dto.TeacherAWDReviewContestPageResp{
+		List:     teacherAWDReviewMapper.ToTeacherAWDReviewContestResps(contests),
+		Total:    total,
+		Page:     page,
+		PageSize: size,
+		Summary: dto.TeacherAWDReviewContestListSummaryResp{
+			RunningCount:     summary.RunningCount,
+			ExportReadyCount: summary.ExportReadyCount,
+		},
 	}
 	return resp, nil
 }

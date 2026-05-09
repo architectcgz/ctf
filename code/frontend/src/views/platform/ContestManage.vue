@@ -8,6 +8,7 @@ import { useContestManagePage } from '@/features/platform-contests'
 const {
   list,
   total,
+  summary,
   page,
   pageSize,
   loading,
@@ -44,6 +45,7 @@ const {
     <ContestOrchestrationPage
       :list="list"
       :total="total"
+      :summary="summary"
       :page="page"
       :page-size="pageSize"
       :loading="loading"

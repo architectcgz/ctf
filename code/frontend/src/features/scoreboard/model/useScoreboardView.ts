@@ -1,8 +1,14 @@
 import { computed, ref } from 'vue'
 
-import { getContests } from '@/api/contest'
+import { getContests, type GetContestsData } from '@/api/contest'
 import { getPracticeRanking } from '@/api/scoreboard'
-import type { ContestListItem, PracticeRankingItemData } from '@/api/contracts'
+import { usePagination } from '@/composables/usePagination'
+import type {
+  ContestListItem,
+  ContestListSummaryData,
+  ContestStatus,
+  PracticeRankingItemData,
+} from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 
 interface ScoreboardSection {
@@ -10,29 +16,67 @@ interface ScoreboardSection {
   frozen: boolean
 }
 
-const DISPLAYABLE_CONTEST_STATUSES = new Set(['running', 'frozen', 'ended'])
+const SCOREBOARD_CONTEST_STATUSES: ContestStatus[] = ['running', 'frozen', 'ended']
 
-function toTimestamp(value: string): number {
-  const parsed = Date.parse(value)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-function sortContestsByLatest(contests: ContestListItem[]): ContestListItem[] {
-  return [...contests].sort(
-    (left, right) => toTimestamp(right.starts_at) - toTimestamp(left.starts_at)
-  )
+function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryData {
+  return {
+    draft_count: 0,
+    registering_count: 0,
+    running_count: contests.filter((contest) => contest.status === 'running').length,
+    frozen_count: contests.filter((contest) => contest.status === 'frozen').length,
+    ended_count: contests.filter((contest) => contest.status === 'ended').length,
+  }
 }
 
 export function useScoreboardView() {
   const toast = useToast()
+  const {
+    list,
+    total,
+    page,
+    pageSize,
+    loading,
+    error,
+    response,
+    changePage,
+    refresh: refreshContestDirectory,
+  } = usePagination<ContestListItem, GetContestsData>(({ page, page_size, signal }) =>
+    getContests(
+      {
+        page,
+        page_size,
+        statuses: SCOREBOARD_CONTEST_STATUSES,
+        sort_key: 'start_time',
+        sort_order: 'desc',
+      },
+      { signal }
+    )
+  )
 
-  const sections = ref<ScoreboardSection[]>([])
-  const loading = ref(false)
-  const selectionHint = ref('按竞赛开始时间倒序展示可查看排行榜，点击竞赛进入完整排行。')
   const rankingRows = ref<PracticeRankingItemData[]>([])
   const rankingLoading = ref(false)
   const rankingError = ref(false)
   const rankingHint = ref('展示全站练习积分排行榜，按积分高低排序。')
+  const sections = computed<ScoreboardSection[]>(() =>
+    list.value.map((contest) => ({
+      contest,
+      frozen: Boolean(contest.scoreboard_frozen) || contest.status === 'frozen',
+    }))
+  )
+  const contestSummary = computed(() => response.value?.summary ?? buildFallbackSummary(list.value))
+  const contestTotalPages = computed(() =>
+    Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1)))
+  )
+  const contestPageStartIndex = computed(() => (page.value - 1) * pageSize.value)
+  const selectionHint = computed(() => {
+    if (error.value) {
+      return '竞赛列表加载失败，请稍后重试。'
+    }
+    if (!sections.value.length) {
+      return '当前没有进行中或已结束的竞赛排行榜。'
+    }
+    return '按竞赛开始时间倒序展示可查看排行榜，点击竞赛进入完整排行。'
+  })
 
   const hasSections = computed(() => sections.value.length > 0)
   const hasRankingRows = computed(() => rankingRows.value.length > 0)
@@ -57,40 +101,23 @@ export function useScoreboardView() {
   }
 
   async function refresh(): Promise<void> {
-    loading.value = true
-    const contestTask = (async () => {
-      try {
-        const payload = await getContests({ page: 1, page_size: 100 })
-        const contests = sortContestsByLatest(
-          payload.list.filter((item) => DISPLAYABLE_CONTEST_STATUSES.has(item.status))
-        )
+    await Promise.all([refreshContestDirectory(), refreshPracticeRanking()])
+  }
 
-        if (!contests.length) {
-          sections.value = []
-          selectionHint.value = '当前没有进行中或已结束的竞赛排行榜。'
-          return
-        }
-
-        selectionHint.value = '按竞赛开始时间倒序展示可查看排行榜，点击竞赛进入完整排行。'
-        sections.value = contests.map((contest) => ({
-          contest,
-          frozen: Boolean(contest.scoreboard_frozen) || contest.status === 'frozen',
-        }))
-      } catch {
-        sections.value = []
-        selectionHint.value = '竞赛列表加载失败，请稍后重试。'
-        toast.error('加载竞赛列表失败')
-      } finally {
-        loading.value = false
-      }
-    })()
-
-    await Promise.all([contestTask, refreshPracticeRanking()])
+  async function changeContestPage(nextPage: number): Promise<void> {
+    await changePage(nextPage)
   }
 
   void refresh()
 
   return {
+    contestPage: page,
+    contestPageSize: pageSize,
+    contestPageStartIndex,
+    contestSummary,
+    contestTotal: total,
+    contestTotalPages,
+    changeContestPage,
     hasSections,
     hasRankingRows,
     loading,

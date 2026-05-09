@@ -34,6 +34,7 @@ import type {
   ContestAnnouncement,
   ContestDetailData,
   ContestMode,
+  ContestPageData,
   ContestScoreboardData,
   ContestStatus,
   PageResult,
@@ -171,6 +172,22 @@ interface RawContestItem {
   status: 'draft' | 'registration' | 'running' | 'frozen' | 'ended'
   created_at: string
   updated_at: string
+}
+
+interface RawContestListSummary {
+  draft_count?: number
+  registering_count?: number
+  running_count?: number
+  frozen_count?: number
+  ended_count?: number
+}
+
+interface RawContestPageResult<T> {
+  list: T[]
+  total: number
+  page: number
+  page_size: number
+  summary?: RawContestListSummary
 }
 
 interface RawContestAnnouncement {
@@ -455,6 +472,10 @@ interface ContestListParams {
   page?: number
   page_size?: number
   status?: AdminContestStatus
+  statuses?: AdminContestStatus[]
+  mode?: AdminContestMode
+  sort_key?: 'created_at' | 'start_time'
+  sort_order?: 'asc' | 'desc'
 }
 
 function normalizeContestStatus(status: RawContestItem['status']): AdminContestStatus {
@@ -474,6 +495,19 @@ function serializeContestStatus(status?: AdminContestStatus): RawContestItem['st
   return status
 }
 
+function serializeContestStatuses(statuses?: AdminContestStatus[]): string | undefined {
+  if (!statuses?.length) {
+    return undefined
+  }
+  const serialized = statuses
+    .map((status) => serializeContestStatus(status))
+    .filter((status): status is RawContestItem['status'] => Boolean(status))
+  if (serialized.length === 0) {
+    return undefined
+  }
+  return serialized.join(',')
+}
+
 function normalizeContest(item: RawContestItem): ContestDetailData {
   return {
     id: String(item.id),
@@ -484,6 +518,19 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
     starts_at: item.start_time,
     ends_at: item.end_time,
     scoreboard_frozen: Boolean(item.freeze_time),
+  }
+}
+
+function normalizeContestSummary(summary?: RawContestListSummary): ContestPageData<ContestDetailData>['summary'] {
+  if (!summary) {
+    return undefined
+  }
+  return {
+    draft_count: summary.draft_count ?? 0,
+    registering_count: summary.registering_count ?? 0,
+    running_count: summary.running_count ?? 0,
+    frozen_count: summary.frozen_count ?? 0,
+    ended_count: summary.ended_count ?? 0,
   }
 }
 
@@ -957,21 +1004,28 @@ export async function exportContestArchive(
 }
 
 export async function getContests(
-  params?: ContestListParams
-): Promise<PageResult<ContestDetailData>> {
-  const response = await request<PageResult<RawContestItem>>({
+  params?: ContestListParams,
+  options?: { signal?: AbortSignal }
+): Promise<ContestPageData<ContestDetailData>> {
+  const response = await request<RawContestPageResult<RawContestItem>>({
     method: 'GET',
     url: '/admin/contests',
     params: {
       page: params?.page,
       page_size: params?.page_size,
       status: serializeContestStatus(params?.status),
+      statuses: serializeContestStatuses(params?.statuses),
+      mode: params?.mode,
+      sort_key: params?.sort_key,
+      sort_order: params?.sort_order,
     },
+    signal: options?.signal,
   })
 
   return {
     ...response,
     list: response.list.map(normalizeContest),
+    summary: normalizeContestSummary(response.summary),
   }
 }
 

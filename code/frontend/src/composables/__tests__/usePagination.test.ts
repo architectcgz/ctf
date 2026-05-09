@@ -105,6 +105,25 @@ describe('usePagination', () => {
     expect(loading.value).toBe(false)
   })
 
+  it('翻页失败时不应该提交新的页码状态', async () => {
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        list: [{ id: 1 }],
+        total: 40,
+        page: 1,
+        page_size: 20,
+      })
+      .mockRejectedValueOnce(new Error('加载失败'))
+
+    const { refresh, changePage, page, list } = usePagination(mockFetch)
+    await refresh()
+    await changePage(2)
+
+    expect(page.value).toBe(1)
+    expect(list.value).toEqual([{ id: 1 }])
+  })
+
   it('应该在响应缺少合法 page_size 时报错', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       list: [],

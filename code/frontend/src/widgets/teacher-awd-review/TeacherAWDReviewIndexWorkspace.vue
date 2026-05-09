@@ -27,6 +27,9 @@ const props = defineProps<{
   loading: boolean
   error: string | null
   contests: TeacherAWDReviewContestItemData[]
+  total: number
+  page: number
+  totalPages: number
   hasContests: boolean
   statusOptions: readonly ContestStatusOption[]
   contestSummary: ContestSummary
@@ -40,6 +43,7 @@ const emit = defineEmits<{
   refresh: []
   reload: []
   openContest: [contestId: string]
+  changePage: [page: number]
   updateStatusFilter: [status: '' | TeacherAWDReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
 }>()
@@ -94,6 +98,9 @@ const summaryItems = computed(() =>
         :loading="loading"
         :error="error"
         :contests="contests"
+        :total="total"
+        :page="page"
+        :total-pages="totalPages"
         :has-contests="hasContests"
         :status-options="statusOptions"
         :status-filter="statusFilter"
@@ -101,6 +108,7 @@ const summaryItems = computed(() =>
         :contest-status-label="contestStatusLabel"
         @reload="emit('reload')"
         @open-contest="emit('openContest', $event)"
+        @change-page="emit('changePage', $event)"
         @update-status-filter="emit('updateStatusFilter', $event)"
         @update-keyword-filter="emit('updateKeywordFilter', $event)"
       />

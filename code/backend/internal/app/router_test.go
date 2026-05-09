@@ -247,7 +247,10 @@ func TestTeacherAWDReviewServiceInvalidRoundUsesRoundMessage(t *testing.T) {
 
 	db := contesttestsupport.SetupAWDTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := assessmentqry.NewTeacherAWDReviewService(
+		assessmentinfra.NewTeacherAWDReviewRepository(db),
+		config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100},
+	)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 901, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 90101, 901, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))

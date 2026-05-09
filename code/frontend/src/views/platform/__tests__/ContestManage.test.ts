@@ -102,6 +102,13 @@ describe('ContestManage', () => {
       total: 1,
       page: 1,
       page_size: 20,
+      summary: {
+        draft_count: 0,
+        registering_count: 5,
+        running_count: 3,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
     contestMocks.updateContest
       .mockRejectedValueOnce(new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 }))
@@ -195,6 +202,13 @@ describe('ContestManage', () => {
       total: 1,
       page: 1,
       page_size: 20,
+      summary: {
+        draft_count: 0,
+        registering_count: 5,
+        running_count: 3,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
     contestMocks.updateContest.mockRejectedValueOnce(
       new ApiError('普通冲突', { status: 409, code: 14099 })
@@ -374,6 +388,13 @@ describe('ContestManage', () => {
       total: 1,
       page: 1,
       page_size: 20,
+      summary: {
+        draft_count: 0,
+        registering_count: 5,
+        running_count: 3,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
 
     const wrapper = mount(ContestManage, {
@@ -392,11 +413,14 @@ describe('ContestManage', () => {
     expect(wrapper.text()).toContain('竞赛目录')
     expect(wrapper.text()).toContain('2026 春季校园 CTF')
     expect(wrapper.text()).toContain('报名中')
+    expect(wrapper.text()).toContain('当前筛选条件下开放报名的赛事')
+    expect(wrapper.text()).toContain('05')
+    expect(wrapper.text()).toContain('03')
     expect(contestMocks.getContests).toHaveBeenCalledWith({
       page: 1,
       page_size: 20,
       status: undefined,
-    })
+    }, expect.objectContaining({ signal: expect.any(AbortSignal) }))
   })
 
   it('竞赛目录页不应渲染说明性文案和重复统计摘要', async () => {
@@ -415,6 +439,13 @@ describe('ContestManage', () => {
       total: 1,
       page: 1,
       page_size: 20,
+      summary: {
+        draft_count: 0,
+        registering_count: 1,
+        running_count: 0,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
 
     const wrapper = mount(ContestManage, {
@@ -500,7 +531,7 @@ describe('ContestManage', () => {
       page: 1,
       page_size: 20,
       status: 'running',
-    })
+    }, expect.objectContaining({ signal: expect.any(AbortSignal) }))
   })
 
   it('应该在赛事目录通过行内编辑按钮跳转到独立编辑页', async () => {

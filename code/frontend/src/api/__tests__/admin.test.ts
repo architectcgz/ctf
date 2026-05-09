@@ -100,6 +100,13 @@ describe('admin contest api contract', () => {
       total: 1,
       page: 2,
       page_size: 5,
+      summary: {
+        draft_count: 0,
+        registering_count: 4,
+        running_count: 1,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
 
     const result = await getContests({ page: 2, page_size: 5, status: 'registering' })
@@ -111,7 +118,12 @@ describe('admin contest api contract', () => {
         page: 2,
         page_size: 5,
         status: 'registration',
+        statuses: undefined,
+        mode: undefined,
+        sort_key: undefined,
+        sort_order: undefined,
       },
+      signal: undefined,
     })
     expect(result).toEqual({
       list: [
@@ -129,6 +141,13 @@ describe('admin contest api contract', () => {
       total: 1,
       page: 2,
       page_size: 5,
+      summary: {
+        draft_count: 0,
+        registering_count: 4,
+        running_count: 1,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
   })
 

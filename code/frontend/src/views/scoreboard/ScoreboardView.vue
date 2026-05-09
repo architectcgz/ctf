@@ -14,6 +14,12 @@ const { panelTabs, activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   useScoreboardRoutePage()
 
 const {
+  contestPage,
+  contestPageSize,
+  contestSummary,
+  contestTotal,
+  contestTotalPages,
+  changeContestPage,
   hasSections,
   hasRankingRows,
   loading,
@@ -31,8 +37,6 @@ const {
   runningCount,
   frozenCount,
   endedCount,
-  contestPage,
-  contestTotalPages,
   contestPageStartIndex,
   paginatedSections,
   emptyTitle,
@@ -42,9 +46,12 @@ const {
   getRowClass,
   getRankPillClass,
   getCardDescription,
-  changeContestPage,
 } = useScoreboardContestDirectoryPage({
   sections,
+  contestSummary,
+  contestPage,
+  contestPageSize,
+  contestTotal,
   selectionHint,
   rankingError,
 })
@@ -241,8 +248,9 @@ const {
               <PagePaginationControls
                 :page="contestPage"
                 :total-pages="contestTotalPages"
-                :total="sections.length"
-                :total-label="`共 ${sections.length} 个竞赛`"
+                :total="contestTotal"
+                :total-label="`共 ${contestTotal} 个竞赛`"
+                :disabled="loading"
                 show-jump
                 @change-page="changeContestPage"
               />

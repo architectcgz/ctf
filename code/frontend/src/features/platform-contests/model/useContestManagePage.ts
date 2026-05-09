@@ -7,6 +7,7 @@ export function useContestManagePage() {
   const {
     list,
     total,
+    summary,
     page,
     pageSize,
     loading,
@@ -78,6 +79,7 @@ export function useContestManagePage() {
   return {
     list,
     total,
+    summary,
     page,
     pageSize,
     loading,

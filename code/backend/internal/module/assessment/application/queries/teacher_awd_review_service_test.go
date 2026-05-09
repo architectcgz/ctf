@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
@@ -15,12 +16,19 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+func newTeacherAWDReviewService(db *gorm.DB) *assessmentqry.TeacherAWDReviewService {
+	return assessmentqry.NewTeacherAWDReviewService(
+		assessmentinfra.NewTeacherAWDReviewRepository(db),
+		config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100},
+	)
+}
+
 func TestTeacherAWDReviewServiceListContestsReturnsOnlyAWDContests(t *testing.T) {
 	t.Parallel()
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 101, now)
 	if err := db.Create(&model.Contest{
@@ -36,12 +44,68 @@ func TestTeacherAWDReviewServiceListContestsReturnsOnlyAWDContests(t *testing.T)
 		t.Fatalf("create jeopardy contest: %v", err)
 	}
 
-	resp, err := service.ListContests(context.Background(), 1)
+	resp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{})
 	if err != nil {
 		t.Fatalf("ListContests() error = %v", err)
 	}
-	if len(resp.Contests) != 1 || resp.Contests[0].Mode != model.ContestModeAWD {
-		t.Fatalf("expected awd-only contest list, got %+v", resp.Contests)
+	if len(resp.List) != 1 || resp.List[0].Mode != model.ContestModeAWD {
+		t.Fatalf("expected awd-only contest list, got %+v", resp.List)
+	}
+}
+
+func TestTeacherAWDReviewServiceListContestsSupportsFiltersAndPagination(t *testing.T) {
+	t.Parallel()
+
+	db := setupTeacherAWDReviewTestDB(t)
+	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
+	service := newTeacherAWDReviewService(db)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 401, now)
+	contesttestsupport.CreateAWDContestFixture(t, db, 402, now)
+	contesttestsupport.CreateAWDContestFixture(t, db, 403, now)
+
+	mustUpdateContest := func(contestID int64, title string, status string) {
+		t.Helper()
+		if err := db.Model(&model.Contest{}).
+			Where("id = ?", contestID).
+			Updates(map[string]any{"title": title, "status": status}).Error; err != nil {
+			t.Fatalf("update contest %d: %v", contestID, err)
+		}
+	}
+
+	mustUpdateContest(401, "春季 AWD 联训", model.ContestStatusRunning)
+	mustUpdateContest(402, "秋季 AWD 复盘", model.ContestStatusEnded)
+	mustUpdateContest(403, "春季 期中 AWD", model.ContestStatusFrozen)
+
+	pageResp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{
+		Keyword: "春季",
+		Page:    1,
+		Size:    1,
+	})
+	if err != nil {
+		t.Fatalf("ListContests() error = %v", err)
+	}
+	if pageResp.Total != 2 || pageResp.Page != 1 || pageResp.PageSize != 1 {
+		t.Fatalf("unexpected pagination payload: %+v", pageResp)
+	}
+	if len(pageResp.List) != 1 || pageResp.List[0].ID != 403 {
+		t.Fatalf("expected first filtered page to contain contest 403, got %+v", pageResp.List)
+	}
+	if pageResp.Summary.RunningCount != 1 || pageResp.Summary.ExportReadyCount != 0 {
+		t.Fatalf("unexpected filtered summary: %+v", pageResp.Summary)
+	}
+
+	statusResp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{
+		Status: model.ContestStatusEnded,
+	})
+	if err != nil {
+		t.Fatalf("ListContests() with status filter error = %v", err)
+	}
+	if statusResp.Total != 1 || len(statusResp.List) != 1 || statusResp.List[0].ID != 402 {
+		t.Fatalf("expected ended contest only, got %+v", statusResp)
+	}
+	if statusResp.Summary.RunningCount != 0 || statusResp.Summary.ExportReadyCount != 1 {
+		t.Fatalf("unexpected ended summary: %+v", statusResp.Summary)
 	}
 }
 
@@ -50,7 +114,7 @@ func TestTeacherAWDReviewServiceListContestsBuildsLatestEvidenceAt(t *testing.T)
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 111, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 11101, 111, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -60,18 +124,18 @@ func TestTeacherAWDReviewServiceListContestsBuildsLatestEvidenceAt(t *testing.T)
 	trafficAt := now.Add(-5 * time.Minute)
 	seedTeacherAWDReviewSignals(t, db, 111, 11101, attackAt, trafficAt)
 
-	resp, err := service.ListContests(context.Background(), 1)
+	resp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{})
 	if err != nil {
 		t.Fatalf("ListContests() error = %v", err)
 	}
-	if len(resp.Contests) != 1 {
-		t.Fatalf("expected 1 contest, got %+v", resp.Contests)
+	if len(resp.List) != 1 {
+		t.Fatalf("expected 1 contest, got %+v", resp.List)
 	}
-	if resp.Contests[0].LatestEvidenceAt == nil {
-		t.Fatalf("expected latest evidence time, got %+v", resp.Contests[0])
+	if resp.List[0].LatestEvidenceAt == nil {
+		t.Fatalf("expected latest evidence time, got %+v", resp.List[0])
 	}
-	if !resp.Contests[0].LatestEvidenceAt.Equal(trafficAt) {
-		t.Fatalf("expected latest evidence %s, got %s", trafficAt, resp.Contests[0].LatestEvidenceAt)
+	if !resp.List[0].LatestEvidenceAt.Equal(trafficAt) {
+		t.Fatalf("expected latest evidence %s, got %s", trafficAt, resp.List[0].LatestEvidenceAt)
 	}
 }
 
@@ -80,7 +144,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveBuildsOverviewAndRounds(t *test
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 201, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 20101, 201, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -106,7 +170,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveSupportsSelectedRound(t *testin
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 301, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 30101, 301, 1, 50, 50, now.Add(-50*time.Minute), now.Add(-30*time.Minute))
@@ -128,7 +192,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveBuildsLatestEvidenceAtFromSigna
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 211, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 21101, 211, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -155,7 +219,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveRejectsTeamIDWithoutRound(t *te
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 320, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 32001, 320, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -172,7 +236,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveRejectsUnknownTeamID(t *testing
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 330, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 33001, 330, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -190,7 +254,7 @@ func TestTeacherAWDReviewServiceGetContestArchiveFiltersSelectedRoundByTeam(t *t
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 340, now)
 	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 34001, 340, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
@@ -251,7 +315,7 @@ func TestTeacherAWDReviewServiceMarksEndedContestAsFinalSnapshot(t *testing.T) {
 
 	db := setupTeacherAWDReviewTestDB(t)
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
-	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+	service := newTeacherAWDReviewService(db)
 
 	if err := db.Create(&model.Contest{
 		ID:        401,

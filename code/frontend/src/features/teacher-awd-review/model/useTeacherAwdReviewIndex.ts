@@ -4,7 +4,9 @@ import { useRouter } from 'vue-router'
 
 import { listTeacherAWDReviews } from '@/api/teacher'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
 export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
@@ -14,10 +16,16 @@ export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
 export function useTeacherAwdReviewIndex() {
   const router = useRouter()
   const authStore = useAuthStore()
+  const { createController, abort } = useAbortController()
 
   const loading = ref(false)
   const error = ref<string | null>(null)
   const contests = ref<TeacherAWDReviewContestItemData[]>([])
+  const total = ref(0)
+  const page = ref(1)
+  const pageSize = ref(DEFAULT_PAGE_SIZE)
+  const runningCount = ref(0)
+  const exportReadyCount = ref(0)
   const filters = ref({
     status: '' as '' | TeacherAWDReviewContestItemData['status'],
     keyword: '',
@@ -31,10 +39,11 @@ export function useTeacherAwdReviewIndex() {
     { value: 'ended', label: '已结束' },
     { value: 'frozen', label: '冻结中' },
   ] as const
+  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
   const contestSummary = computed(() => ({
-    totalCount: contests.value.length,
-    runningCount: contests.value.filter((item) => item.status === 'running').length,
-    exportReadyCount: contests.value.filter((item) => item.export_ready).length,
+    totalCount: total.value,
+    runningCount: runningCount.value,
+    exportReadyCount: exportReadyCount.value,
   }))
   const hasActiveFilters = computed(() =>
     Boolean(filters.value.status || filters.value.keyword.trim())
@@ -48,24 +57,45 @@ export function useTeacherAwdReviewIndex() {
 
   async function loadContests(): Promise<void> {
     const requestId = ++latestRequestId
+    const controller = createController()
     loading.value = true
     error.value = null
 
     try {
-      const nextContests = await listTeacherAWDReviews({
+      const nextPage = await listTeacherAWDReviews({
         status: filters.value.status || undefined,
         keyword: filters.value.keyword.trim() || undefined,
+        page: page.value,
+        page_size: pageSize.value,
+      }, {
+        signal: controller.signal,
       })
       if (requestId !== latestRequestId) {
         return
       }
-      contests.value = nextContests
+      contests.value = nextPage.list
+      total.value = nextPage.total
+      page.value = nextPage.page
+      pageSize.value = nextPage.page_size
+      runningCount.value = nextPage.summary.running_count
+      exportReadyCount.value = nextPage.summary.export_ready_count
     } catch (err) {
       if (requestId !== latestRequestId) {
         return
       }
+      if (
+        err &&
+        typeof err === 'object' &&
+        ('code' in err ? (err as { code?: unknown }).code === 'ERR_CANCELED' : false)
+      ) {
+        error.value = null
+        return
+      }
       console.error('加载 AWD 复盘目录失败:', err)
       contests.value = []
+      total.value = 0
+      runningCount.value = 0
+      exportReadyCount.value = 0
       error.value = '加载 AWD 复盘目录失败，请稍后重试'
     } finally {
       if (requestId === latestRequestId) {
@@ -123,18 +153,32 @@ export function useTeacherAwdReviewIndex() {
   watch(
     () => [filters.value.status, filters.value.keyword],
     () => {
+      page.value = 1
       scheduleContestSearch()
     }
   )
 
+  async function changePage(next: number): Promise<void> {
+    const normalized = Math.max(1, Math.min(totalPages.value, Math.floor(next)))
+    if (normalized === page.value && contests.value.length > 0) {
+      return
+    }
+    page.value = normalized
+    await loadContests()
+  }
+
   onUnmounted(() => {
     scheduleContestSearch.cancel?.()
+    abort()
   })
 
   return {
     loading,
     error,
     contests,
+    total,
+    page,
+    totalPages,
     filters,
     hasContests,
     statusOptions,
@@ -142,6 +186,7 @@ export function useTeacherAwdReviewIndex() {
     hasActiveFilters,
     reviewRows,
     loadContests,
+    changePage,
     resetFilters,
     openDashboard,
     openPlatformOverview,

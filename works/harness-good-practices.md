@@ -67,6 +67,9 @@
 - 把 review 结论当作当前设计事实源。
 - 把仍未决定的方案写进 `contracts` 或 `architecture`。
 - 把待办和 backlog 写进 `feedback/`。
+- 同一 input contract 的 `normalize / default / validate` 在 `application` 和 `repository` 两层重复出现，最后靠双重兜底维持“看起来能工作”。
+- repository 直接接收未收敛的裸字符串排序键、分页键或筛选键，再在仓储层补默认值和白名单，而不是由上游先收口成受限语义。
+- application 虽然已经成为唯一 owner，但内部 contract 仍继续暴露可手工拼装的导出 enum / struct，最后只能靠 repository 的 panic 或 defensive branch 晚发现错误。
 - 为了“先放一下”创建新的临时 docs 入口，结果后面没人回收。
 
 ## 7. 当前推荐动作

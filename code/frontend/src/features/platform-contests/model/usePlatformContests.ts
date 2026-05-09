@@ -61,6 +61,7 @@ export function usePlatformContests() {
   const toast = useToast()
   const {
     pagination,
+    summary,
     statusFilter,
   } = useContestListState()
   const {
@@ -146,6 +147,7 @@ export function usePlatformContests() {
 
   return {
     ...pagination,
+    summary,
     statusFilter,
     dialogOpen,
     mode,

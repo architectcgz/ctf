@@ -140,14 +140,14 @@ func buildReportHandler(deps moduleDeps, profileQueryService assessmentports.Ass
 	reportService.StartBackgroundTasks(deps.input.AppContext)
 	reportService.SetAWDReviewExportBuilder(
 		assessmentcmd.NewAWDReviewExportBuilder(
-			assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo),
+			assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo, deps.input.Config.Pagination),
 		),
 	)
 	return reportService, assessmenthttp.NewReportHandler(reportService)
 }
 
 func buildTeacherAWDReviewHandler(deps moduleDeps, reportService *assessmentcmd.ReportService) *assessmenthttp.TeacherAWDReviewHandler {
-	service := assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo)
+	service := assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo, deps.input.Config.Pagination)
 	return assessmenthttp.NewTeacherAWDReviewHandler(&teacherAWDReviewHandlerService{
 		queryService:  service,
 		reportService: reportService,
@@ -159,8 +159,8 @@ type teacherAWDReviewHandlerService struct {
 	reportService *assessmentcmd.ReportService
 }
 
-func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error) {
-	return s.queryService.ListContests(ctx, requesterID)
+func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64, query assessmentqry.ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error) {
+	return s.queryService.ListContests(ctx, requesterID, query)
 }
 
 func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error) {

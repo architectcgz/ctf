@@ -1,6 +1,7 @@
 import { request } from '../request'
 
 import type {
+  PageResult,
   ReportExportData,
   TeacherAWDReviewArchiveData,
   TeacherAWDReviewAttackItemData,
@@ -100,6 +101,21 @@ interface RawTeacherAWDReviewArchiveResponse extends Omit<
   selected_round?: RawTeacherAWDReviewSelectedRound
 }
 
+interface RawTeacherAWDReviewContestPageResponse
+  extends PageResult<RawTeacherAWDReviewContestItem> {
+  summary?: {
+    running_count?: number
+    export_ready_count?: number
+  }
+}
+
+export interface TeacherAWDReviewContestPageData extends PageResult<TeacherAWDReviewContestItemData> {
+  summary: {
+    running_count: number
+    export_ready_count: number
+  }
+}
+
 function normalizeReportExportData(
   payload: ReportExportData & { report_id: string | number }
 ): ReportExportData {
@@ -195,17 +211,29 @@ function normalizeTeacherAWDSelectedRound(
 export async function listTeacherAWDReviews(params?: {
   status?: TeacherAWDReviewContestItemData['status']
   keyword?: string
-}): Promise<TeacherAWDReviewContestItemData[]> {
-  const payload = await request<{ contests: RawTeacherAWDReviewContestItem[] }>({
+  page?: number
+  page_size?: number
+}, options?: { signal?: AbortSignal }): Promise<TeacherAWDReviewContestPageData> {
+  const payload = await request<RawTeacherAWDReviewContestPageResponse>({
     method: 'GET',
     url: '/teacher/awd/reviews',
     params: {
       status: params?.status,
       keyword: params?.keyword,
+      page: params?.page,
+      page_size: params?.page_size,
     },
+    signal: options?.signal,
   })
 
-  return payload.contests.map(normalizeTeacherAWDReviewContest)
+  return {
+    ...payload,
+    list: payload.list.map(normalizeTeacherAWDReviewContest),
+    summary: {
+      running_count: payload.summary?.running_count ?? 0,
+      export_ready_count: payload.summary?.export_ready_count ?? 0,
+    },
+  }
 }
 
 export async function getTeacherAWDReview(

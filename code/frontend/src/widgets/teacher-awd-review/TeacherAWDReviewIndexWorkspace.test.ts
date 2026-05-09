@@ -24,6 +24,9 @@ function createProps() {
     loading: false,
     error: null as string | null,
     contests: createContests(),
+    total: 21,
+    page: 1,
+    totalPages: 2,
     hasContests: true,
     statusOptions: [
       { value: '', label: '全部状态' },
@@ -55,6 +58,17 @@ describe('TeacherAWDReviewIndexWorkspace', () => {
     expect(wrapper.emitted('openDashboard')).toBeTruthy()
     expect(wrapper.emitted('refresh')).toBeTruthy()
     expect(wrapper.emitted('openContest')).toEqual([['contest-1']])
+  })
+
+  it('应转发分页切换事件', async () => {
+    const wrapper = mount(TeacherAWDReviewIndexWorkspace, {
+      props: createProps(),
+    })
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
+
+    expect(wrapper.emitted('changePage')).toEqual([[2]])
   })
 
   it('应转发筛选输入与错误态重试事件', async () => {

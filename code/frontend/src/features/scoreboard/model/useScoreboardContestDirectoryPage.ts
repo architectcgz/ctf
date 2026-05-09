@@ -1,6 +1,6 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, type Ref } from 'vue'
 
-import type { ContestListItem, ContestStatus } from '@/api/contracts'
+import type { ContestListItem, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import { getContestAccentColor } from '@/utils/contest'
 
 interface ScoreboardSectionItem {
@@ -10,51 +10,29 @@ interface ScoreboardSectionItem {
 
 interface UseScoreboardContestDirectoryPageOptions {
   sections: Ref<ScoreboardSectionItem[]>
+  contestSummary: Ref<ContestListSummaryData>
+  contestPage: Ref<number>
+  contestPageSize: Ref<number>
+  contestTotal: Ref<number>
   selectionHint: Ref<string>
   rankingError: Ref<boolean>
 }
 
-const CONTEST_PAGE_SIZE = 6
-
 export function useScoreboardContestDirectoryPage(options: UseScoreboardContestDirectoryPageOptions) {
-  const contestCount = computed(() => options.sections.value.length)
-  const runningCount = computed(
-    () => options.sections.value.filter((section) => section.contest.status === 'running').length
+  const contestCount = computed(() => options.contestTotal.value)
+  const runningCount = computed(() => options.contestSummary.value.running_count)
+  const frozenCount = computed(() => options.contestSummary.value.frozen_count)
+  const endedCount = computed(() => options.contestSummary.value.ended_count)
+  const contestPageStartIndex = computed(
+    () => (options.contestPage.value - 1) * options.contestPageSize.value
   )
-  const frozenCount = computed(() => options.sections.value.filter((section) => section.frozen).length)
-  const endedCount = computed(
-    () => options.sections.value.filter((section) => section.contest.status === 'ended').length
-  )
-  const contestPage = ref(1)
-  const contestTotalPages = computed(() =>
-    Math.max(1, Math.ceil(options.sections.value.length / CONTEST_PAGE_SIZE))
-  )
-  const contestPageStartIndex = computed(() => (contestPage.value - 1) * CONTEST_PAGE_SIZE)
-  const paginatedSections = computed(() =>
-    options.sections.value.slice(
-      contestPageStartIndex.value,
-      contestPageStartIndex.value + CONTEST_PAGE_SIZE
-    )
-  )
+  const paginatedSections = computed(() => options.sections.value)
   const emptyTitle = computed(() =>
     options.selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
   )
   const pointsEmptyTitle = computed(() =>
     options.rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
   )
-
-  watch(
-    () => options.sections.value,
-    () => {
-      contestPage.value = 1
-    }
-  )
-
-  watch(contestTotalPages, (totalPages) => {
-    if (contestPage.value > totalPages) {
-      contestPage.value = totalPages
-    }
-  })
 
   function formatDateTime(value?: string): string {
     if (!value) return '未记录'
@@ -104,17 +82,11 @@ export function useScoreboardContestDirectoryPage(options: UseScoreboardContestD
     return '历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。'
   }
 
-  function changeContestPage(page: number): void {
-    contestPage.value = page
-  }
-
   return {
     contestCount,
     runningCount,
     frozenCount,
     endedCount,
-    contestPage,
-    contestTotalPages,
     contestPageStartIndex,
     paginatedSections,
     emptyTitle,
@@ -125,6 +97,5 @@ export function useScoreboardContestDirectoryPage(options: UseScoreboardContestD
     getRowClass,
     getRankPillClass,
     getCardDescription,
-    changeContestPage,
   }
 }

@@ -7,12 +7,16 @@ const {
   loading,
   error,
   contests,
+  total,
+  page,
+  totalPages,
   filters,
   hasContests,
   hasActiveFilters,
   reviewRows,
   contestSummary,
   loadContests,
+  changePage,
   resetFilters,
   openPlatformOverview,
   openContest,
@@ -36,7 +40,9 @@ const {
         :loading="loading"
         :error="error"
         :rows="reviewRows"
-        :total="contests.length"
+        :total="total"
+        :page="page"
+        :total-pages="totalPages"
         :has-contests="hasContests"
         :keyword="filters.keyword"
         :status-filter="filters.status"
@@ -46,6 +52,7 @@ const {
         @reset-filters="resetFilters"
         @retry="loadContests"
         @open-contest="openContest"
+        @change-page="changePage"
       />
     </main>
   </section>

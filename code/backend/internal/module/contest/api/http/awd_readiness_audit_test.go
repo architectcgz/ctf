@@ -132,6 +132,7 @@ func (s stubContestService) UpdateContest(ctx context.Context, id int64, req con
 type stubContestQueryService struct {
 	getContestFunc   func(ctx context.Context, id int64) (*contestqry.ContestResult, error)
 	listContestsFunc func(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
+	summaryFunc      func(ctx context.Context, req contestqry.ListContestsInput) (*contestqry.ContestListSummaryResult, error)
 }
 
 func (s stubContestQueryService) GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
@@ -146,6 +147,13 @@ func (s stubContestQueryService) ListContests(ctx context.Context, req contestqr
 		return s.listContestsFunc(ctx, req)
 	}
 	return nil, 0, nil
+}
+
+func (s stubContestQueryService) GetContestListSummary(ctx context.Context, req contestqry.ListContestsInput) (*contestqry.ContestListSummaryResult, error) {
+	if s.summaryFunc != nil {
+		return s.summaryFunc(ctx, req)
+	}
+	return &contestqry.ContestListSummaryResult{}, nil
 }
 
 type stubAWDReadinessQueryService struct {

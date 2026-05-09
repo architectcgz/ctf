@@ -6,11 +6,15 @@ const {
   loading,
   error,
   contests,
+  total,
+  page,
+  totalPages,
   filters,
   hasContests,
   statusOptions,
   contestSummary,
   loadContests,
+  changePage,
   openDashboard,
   openContest,
   contestStatusLabel,
@@ -22,6 +26,9 @@ const {
     :loading="loading"
     :error="error"
     :contests="contests"
+    :total="total"
+    :page="page"
+    :total-pages="totalPages"
     :has-contests="hasContests"
     :status-options="statusOptions"
     :contest-summary="contestSummary"
@@ -32,6 +39,7 @@ const {
     @refresh="loadContests"
     @reload="loadContests"
     @open-contest="openContest"
+    @change-page="changePage"
     @update-status-filter="filters.status = $event"
     @update-keyword-filter="filters.keyword = $event"
   />

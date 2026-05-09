@@ -212,12 +212,35 @@ describe('teacher api contract', () => {
     })
   })
 
-  it('获取教师 AWD 复盘列表时应透传筛选参数', async () => {
+  it('获取教师 AWD 复盘列表时应透传筛选与分页参数，并标准化分页结构', async () => {
     requestMock.mockResolvedValue({
-      contests: [],
+      list: [
+        {
+          id: 7,
+          title: '春季 AWD 联训',
+          mode: 'awd',
+          status: 'running',
+          current_round: 2,
+          round_count: 6,
+          team_count: 8,
+          export_ready: false,
+        },
+      ],
+      total: 1,
+      page: 2,
+      page_size: 20,
+      summary: {
+        running_count: 1,
+        export_ready_count: 0,
+      },
     })
 
-    await listTeacherAWDReviews({ status: 'running', keyword: '春季' })
+    const result = await listTeacherAWDReviews({
+      status: 'running',
+      keyword: '春季',
+      page: 2,
+      page_size: 20,
+    })
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
@@ -225,6 +248,30 @@ describe('teacher api contract', () => {
       params: {
         status: 'running',
         keyword: '春季',
+        page: 2,
+        page_size: 20,
+      },
+      signal: undefined,
+    })
+    expect(result).toEqual({
+      list: [
+        {
+          id: '7',
+          title: '春季 AWD 联训',
+          mode: 'awd',
+          status: 'running',
+          current_round: 2,
+          round_count: 6,
+          team_count: 8,
+          export_ready: false,
+        },
+      ],
+      total: 1,
+      page: 2,
+      page_size: 20,
+      summary: {
+        running_count: 1,
+        export_ready_count: 0,
       },
     })
   })

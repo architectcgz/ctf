@@ -61,11 +61,22 @@ describe('PlatformAWDReviewIndex', () => {
         },
       ]
 
-      return contests.filter((item) => {
+      const filtered = contests.filter((item) => {
         const matchesStatus = !params?.status || item.status === params.status
         const matchesKeyword = !params?.keyword || item.title.includes(params.keyword)
         return matchesStatus && matchesKeyword
       })
+
+      return {
+        list: filtered,
+        total: filtered.length,
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 20,
+        summary: {
+          running_count: filtered.filter((item) => item.status === 'running').length,
+          export_ready_count: filtered.filter((item) => item.export_ready).length,
+        },
+      }
     })
   })
 
@@ -118,6 +129,10 @@ describe('PlatformAWDReviewIndex', () => {
     expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
       status: undefined,
       keyword: '期末',
+      page: 1,
+      page_size: 20,
+    }, {
+      signal: expect.any(AbortSignal),
     })
 
     await wrapper

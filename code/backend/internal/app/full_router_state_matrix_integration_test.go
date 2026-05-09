@@ -657,10 +657,13 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/awd/reviews", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewList dto.TeacherAWDReviewContestListResp
+	var reviewList dto.TeacherAWDReviewContestPageResp
 	decodeFullRouterData(t, resp, &reviewList)
+	if reviewList.Page != 1 || reviewList.PageSize != 20 {
+		t.Fatalf("expected review list default pagination page=1 page_size=20, got %+v", reviewList)
+	}
 	foundContest := false
-	for _, contest := range reviewList.Contests {
+	for _, contest := range reviewList.List {
 		if contest.ID != reviewContest.ID {
 			continue
 		}
@@ -2112,6 +2115,87 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
+}
+
+func TestFullRouter_AdminContestListSupportsModeStatusesSortAndSummary(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	base := time.Date(2026, 5, 1, 9, 0, 0, 0, time.UTC)
+
+	env.awdContest.Status = model.ContestStatusDraft
+	if err := env.db.Save(env.awdContest).Error; err != nil {
+		t.Fatalf("update seeded awd contest: %v", err)
+	}
+
+	contestSpecs := []struct {
+		title     string
+		mode      string
+		status    string
+		startTime time.Time
+	}{
+		{title: "AWD Running", mode: model.ContestModeAWD, status: model.ContestStatusRunning, startTime: base.Add(4 * time.Hour)},
+		{title: "AWD Registration", mode: model.ContestModeAWD, status: model.ContestStatusRegistration, startTime: base.Add(3 * time.Hour)},
+		{title: "AWD Frozen", mode: model.ContestModeAWD, status: model.ContestStatusFrozen, startTime: base.Add(2 * time.Hour)},
+		{title: "AWD Ended", mode: model.ContestModeAWD, status: model.ContestStatusEnded, startTime: base.Add(1 * time.Hour)},
+		{title: "Jeopardy Running", mode: model.ContestModeJeopardy, status: model.ContestStatusRunning, startTime: base.Add(5 * time.Hour)},
+		{title: "AWD Draft", mode: model.ContestModeAWD, status: model.ContestStatusDraft, startTime: base.Add(6 * time.Hour)},
+	}
+
+	for _, spec := range contestSpecs {
+		contest := createFullRouterContest(t, env, spec.title, spec.status)
+		contest.Mode = spec.mode
+		contest.StartTime = spec.startTime
+		contest.EndTime = spec.startTime.Add(2 * time.Hour)
+		if err := env.db.Save(contest).Error; err != nil {
+			t.Fatalf("update contest fixture %s: %v", spec.title, err)
+		}
+	}
+
+	resp := performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/admin/contests?mode=awd&statuses=registration,running,frozen,ended&sort_key=start_time&sort_order=desc&page=1&page_size=2",
+		nil,
+		adminHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	envelope := decodeFullRouterJSON[fullRouterEnvelope](t, resp.Body.Bytes())
+	rawPage := decodeFullRouterJSON[map[string]any](t, envelope.Data)
+	rawSummary, ok := rawPage["summary"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected raw summary object, got %#v", rawPage["summary"])
+	}
+	if _, exists := rawSummary["registration_count"]; exists {
+		t.Fatalf("unexpected legacy summary key registration_count in payload: %#v", rawSummary)
+	}
+	if registeringCount := int(rawSummary["registering_count"].(float64)); registeringCount != 1 {
+		t.Fatalf("expected raw payload registering_count=1, got %#v", rawSummary["registering_count"])
+	}
+
+	var page dto.ContestPageResp
+	decodeFullRouterData(t, resp, &page)
+
+	if page.Total != 4 {
+		t.Fatalf("expected filtered total=4, got %d", page.Total)
+	}
+	if page.Page != 1 || page.PageSize != 2 {
+		t.Fatalf("unexpected pagination payload: page=%d size=%d", page.Page, page.PageSize)
+	}
+	if len(page.List) != 2 {
+		t.Fatalf("expected 2 contests on first page, got %d", len(page.List))
+	}
+	if got := []string{page.List[0].Title, page.List[1].Title}; got[0] != "AWD Running" || got[1] != "AWD Registration" {
+		t.Fatalf("unexpected contest ordering: %v", got)
+	}
+	if page.Summary.RegisteringCount != 1 || page.Summary.RunningCount != 1 || page.Summary.FrozenCount != 1 || page.Summary.EndedCount != 1 {
+		t.Fatalf("unexpected summary counts: %+v", page.Summary)
+	}
+	if page.Summary.DraftCount != 0 {
+		t.Fatalf("expected draft count=0 under filtered statuses, got %d", page.Summary.DraftCount)
+	}
 }
 
 func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {

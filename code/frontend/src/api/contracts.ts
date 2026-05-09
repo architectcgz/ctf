@@ -23,6 +23,18 @@ export interface PageResult<T> {
   page_size: number
 }
 
+export interface ContestListSummaryData {
+  draft_count: number
+  registering_count: number
+  running_count: number
+  frozen_count: number
+  ended_count: number
+}
+
+export interface ContestPageData<T> extends PageResult<T> {
+  summary?: ContestListSummaryData
+}
+
 export interface AuthUser {
   id: ID
   username: string

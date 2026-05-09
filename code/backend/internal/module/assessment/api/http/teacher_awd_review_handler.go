@@ -13,7 +13,7 @@ import (
 )
 
 type teacherAWDReviewService interface {
-	ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error)
+	ListContests(ctx context.Context, requesterID int64, query assessmentqueries.ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error)
 	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqueries.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error)
 	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
 	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
@@ -29,7 +29,19 @@ func NewTeacherAWDReviewHandler(service teacherAWDReviewService) *TeacherAWDRevi
 
 func (h *TeacherAWDReviewHandler) ListReviews(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	resp, err := h.service.ListContests(c.Request.Context(), currentUser.UserID)
+
+	var req dto.TeacherAWDReviewContestQuery
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.ListContests(c.Request.Context(), currentUser.UserID, assessmentqueries.ListTeacherAWDReviewContestsInput{
+		Status:  req.Status,
+		Keyword: req.Keyword,
+		Page:    req.Page,
+		Size:    req.Size,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return

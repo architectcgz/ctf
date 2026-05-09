@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-vue-next'
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
@@ -11,11 +12,15 @@ defineProps<{
   loading: boolean
   loadError: string
   operableContests: ContestDetailData[]
+  page: number
+  total: number
+  totalPages: number
 }>()
 
 const emit = defineEmits<{
   (event: 'retry'): void
   (event: 'back'): void
+  (event: 'change-page', page: number): void
   (event: 'enter-operations', contestId: string): void
 }>()
 
@@ -159,6 +164,18 @@ const contestTableColumns = [
         </div>
       </template>
     </WorkspaceDataTable>
+
+    <div class="workspace-directory-pagination">
+      <PagePaginationControls
+        :page="page"
+        :total-pages="totalPages"
+        :total="total"
+        :total-label="`共 ${total} 场赛事`"
+        :disabled="loading"
+        show-jump
+        @change-page="emit('change-page', $event)"
+      />
+    </div>
   </section>
 </template>
 

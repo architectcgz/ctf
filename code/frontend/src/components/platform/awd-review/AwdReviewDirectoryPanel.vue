@@ -2,6 +2,7 @@
 import type { ContestStatus } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { formatDate } from '@/utils/format'
 
@@ -25,6 +26,8 @@ interface Props {
   error: string | null
   rows: PlatformAwdReviewRow[]
   total: number
+  page: number
+  totalPages: number
   hasContests: boolean
   keyword: string
   statusFilter: AwdReviewStatusFilter
@@ -39,6 +42,7 @@ const emit = defineEmits<{
   'reset-filters': []
   retry: []
   'open-contest': [contestId: string]
+  'change-page': [page: number]
 }>()
 
 const reviewTableColumns = [
@@ -185,78 +189,90 @@ function updateStatusFilter(event: Event): void {
       description="当前筛选条件下没有可进入平台复盘的 AWD 赛事。"
     />
 
-    <WorkspaceDataTable
-      v-else
-      class="workspace-directory-list admin-awd-review-table"
-      :columns="reviewTableColumns"
-      :rows="rows"
-      row-key="id"
-      row-class="admin-awd-review-table__row"
-    >
-      <template #cell-contestCode="{ row }">
-        <span class="admin-awd-review-table__code">
-          {{ (row as PlatformAwdReviewRow).contestCode }}
-        </span>
-      </template>
+    <template v-else>
+      <WorkspaceDataTable
+        class="workspace-directory-list admin-awd-review-table"
+        :columns="reviewTableColumns"
+        :rows="rows"
+        row-key="id"
+        row-class="admin-awd-review-table__row"
+      >
+        <template #cell-contestCode="{ row }">
+          <span class="admin-awd-review-table__code">
+            {{ (row as PlatformAwdReviewRow).contestCode }}
+          </span>
+        </template>
 
-      <template #cell-title="{ row }">
-        <div class="admin-awd-review-table__title-wrap">
-          <span
-            class="admin-awd-review-table__title-text"
-            :title="(row as PlatformAwdReviewRow).title"
+        <template #cell-title="{ row }">
+          <div class="admin-awd-review-table__title-wrap">
+            <span
+              class="admin-awd-review-table__title-text"
+              :title="(row as PlatformAwdReviewRow).title"
+            >
+              {{ (row as PlatformAwdReviewRow).title }}
+            </span>
+            <span class="admin-awd-review-table__hint">
+              最近信号
+              {{ formatEvidenceAt((row as PlatformAwdReviewRow).latest_evidence_at) }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-rounds="{ row }">
+          <div class="admin-awd-review-table__meta-block">
+            <span>
+              {{
+                (row as PlatformAwdReviewRow).current_round
+                  ? `第 ${(row as PlatformAwdReviewRow).current_round} 轮`
+                  : '未开始'
+              }}
+            </span>
+            <span>共 {{ (row as PlatformAwdReviewRow).round_count }} 轮</span>
+          </div>
+        </template>
+
+        <template #cell-teams="{ row }">
+          <div class="admin-awd-review-table__meta-block">
+            <span>{{ (row as PlatformAwdReviewRow).team_count }} 支队伍</span>
+            <span>{{ (row as PlatformAwdReviewRow).mode.toUpperCase() }}</span>
+          </div>
+        </template>
+
+        <template #cell-status="{ row }">
+          <div class="admin-awd-review-table__status-wrap">
+            <span class="admin-awd-review-table__status-pill">
+              {{ contestStatusLabel((row as PlatformAwdReviewRow).status) }}
+            </span>
+            <span
+              class="admin-awd-review-table__status-pill admin-awd-review-table__status-pill--muted"
+            >
+              {{ (row as PlatformAwdReviewRow).export_ready ? '可导出' : '实时复盘' }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-actions="{ row }">
+          <button
+            type="button"
+            class="admin-awd-review-table__action"
+            @click="emit('open-contest', (row as PlatformAwdReviewRow).id)"
           >
-            {{ (row as PlatformAwdReviewRow).title }}
-          </span>
-          <span class="admin-awd-review-table__hint">
-            最近信号
-            {{ formatEvidenceAt((row as PlatformAwdReviewRow).latest_evidence_at) }}
-          </span>
-        </div>
-      </template>
+            进入复盘
+          </button>
+        </template>
+      </WorkspaceDataTable>
 
-      <template #cell-rounds="{ row }">
-        <div class="admin-awd-review-table__meta-block">
-          <span>
-            {{
-              (row as PlatformAwdReviewRow).current_round
-                ? `第 ${(row as PlatformAwdReviewRow).current_round} 轮`
-                : '未开始'
-            }}
-          </span>
-          <span>共 {{ (row as PlatformAwdReviewRow).round_count }} 轮</span>
-        </div>
-      </template>
-
-      <template #cell-teams="{ row }">
-        <div class="admin-awd-review-table__meta-block">
-          <span>{{ (row as PlatformAwdReviewRow).team_count }} 支队伍</span>
-          <span>{{ (row as PlatformAwdReviewRow).mode.toUpperCase() }}</span>
-        </div>
-      </template>
-
-      <template #cell-status="{ row }">
-        <div class="admin-awd-review-table__status-wrap">
-          <span class="admin-awd-review-table__status-pill">
-            {{ contestStatusLabel((row as PlatformAwdReviewRow).status) }}
-          </span>
-          <span
-            class="admin-awd-review-table__status-pill admin-awd-review-table__status-pill--muted"
-          >
-            {{ (row as PlatformAwdReviewRow).export_ready ? '可导出' : '实时复盘' }}
-          </span>
-        </div>
-      </template>
-
-      <template #cell-actions="{ row }">
-        <button
-          type="button"
-          class="admin-awd-review-table__action"
-          @click="emit('open-contest', (row as PlatformAwdReviewRow).id)"
-        >
-          进入复盘
-        </button>
-      </template>
-    </WorkspaceDataTable>
+      <WorkspaceDirectoryPagination
+        v-if="total > 0"
+        class="admin-pagination"
+        :page="page"
+        :total-pages="totalPages"
+        :total="total"
+        :disabled="loading"
+        :total-label="`共 ${total} 场赛事`"
+        @change-page="emit('change-page', $event)"
+      />
+    </template>
   </section>
 </template>
 

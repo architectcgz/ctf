@@ -16,6 +16,7 @@ type contestService interface {
 type contestQueryService interface {
 	GetContest(ctx context.Context, id int64) (*contestqry.ContestResult, error)
 	ListContests(ctx context.Context, req contestqry.ListContestsInput) ([]*contestqry.ContestResult, int64, error)
+	GetContestListSummary(ctx context.Context, req contestqry.ListContestsInput) (*contestqry.ContestListSummaryResult, error)
 }
 
 type scoreboardQueryService interface {

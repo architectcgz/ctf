@@ -2,13 +2,17 @@
 import { ArrowLeft, BarChart2, RefreshCw, Shield } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import { useScoreboardDetailPage } from '@/features/scoreboard'
 
 const {
   contest,
+  page,
   rows,
   scoreboard,
+  total,
+  totalPages,
   loading,
   refreshing,
   supportsRealtime,
@@ -23,6 +27,7 @@ const {
   getRowClass,
   getRankPillClass,
   getStatusCopy,
+  changePage,
   loadScoreboard,
 } = useScoreboardDetailPage()
 </script>
@@ -85,32 +90,32 @@ const {
                 榜单队伍
               </div>
               <div class="scoreboard-summary-value metric-panel-value">
-                {{ rows.length }}
+                {{ total }}
               </div>
               <div class="scoreboard-summary-helper metric-panel-helper">
-                当前进入排行榜的队伍数量
+                当前进入排行榜的队伍总数
               </div>
             </div>
             <div class="scoreboard-summary-item metric-panel-card">
               <div class="scoreboard-summary-label metric-panel-label">
-                最高分
+                本页最高分
               </div>
               <div class="scoreboard-summary-value metric-panel-value">
                 {{ topScore }}
               </div>
               <div class="scoreboard-summary-helper metric-panel-helper">
-                当前榜首队伍分数
+                当前页最高排名队伍分数
               </div>
             </div>
             <div class="scoreboard-summary-item metric-panel-card">
               <div class="scoreboard-summary-label metric-panel-label">
-                总解题
+                本页解题
               </div>
               <div class="scoreboard-summary-value metric-panel-value">
                 {{ solvedCount }}
               </div>
               <div class="scoreboard-summary-helper metric-panel-helper">
-                榜单队伍累计解题数
+                当前页队伍累计解题数
               </div>
             </div>
             <div class="scoreboard-summary-item metric-panel-card">
@@ -162,7 +167,7 @@ const {
               排行详情
             </h2>
             <div class="scoreboard-directory-meta">
-              展示前 {{ rows.length }} 支队伍
+              第 {{ page }} 页，当前展示 {{ rows.length }} / {{ total }} 支队伍
               <span
                 v-if="scoreboard?.frozen"
                 class="scoreboard-frozen-inline"
@@ -204,6 +209,18 @@ const {
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="scoreboard-pagination workspace-directory-pagination">
+            <PagePaginationControls
+              :page="page"
+              :total-pages="totalPages"
+              :total="total"
+              :total-label="`共 ${total} 支队伍`"
+              :disabled="loading || refreshing"
+              show-jump
+              @change-page="changePage"
+            />
           </div>
         </section>
       </div>

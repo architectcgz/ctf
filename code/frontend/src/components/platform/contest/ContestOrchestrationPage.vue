@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'vue-router'
 
 import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
-import type { ContestDetailData, ContestStatus } from '@/api/contracts'
+import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import PlatformContestTable from '@/components/platform/contest/PlatformContestTable.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -27,6 +27,7 @@ type StatusFilter =
 const props = defineProps<{
   list: ContestDetailData[]
   total: number
+  summary: ContestListSummaryData
   page: number
   pageSize: number
   loading: boolean
@@ -60,10 +61,8 @@ const {
   defaultTab: 'overview',
 })
 
-const registeringCount = computed(
-  () => props.list.filter((item) => item.status === 'registering').length
-)
-const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
+const registeringCount = computed(() => props.summary.registering_count)
+const runningCount = computed(() => props.summary.running_count)
 const awdCount = computed(() => props.awdContests.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 
@@ -156,7 +155,7 @@ function openContestWorkbench(contest: ContestDetailData) {
               {{ registeringCount.toString().padStart(2, '0') }}
             </div>
             <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页开放报名的赛事
+              当前筛选条件下开放报名的赛事
             </div>
           </article>
 
@@ -169,7 +168,7 @@ function openContestWorkbench(contest: ContestDetailData) {
               {{ runningCount.toString().padStart(2, '0') }}
             </div>
             <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页正在进行的赛事
+              当前筛选条件下正在进行的赛事
             </div>
           </article>
 
@@ -182,7 +181,7 @@ function openContestWorkbench(contest: ContestDetailData) {
               {{ awdCount.toString().padStart(2, '0') }}
             </div>
             <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              已接入运维链路的赛事
+              当前页已接入运维链路的赛事
             </div>
           </article>
         </div>

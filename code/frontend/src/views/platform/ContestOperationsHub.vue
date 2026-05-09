@@ -4,9 +4,13 @@ import ContestOperationsHubWorkspacePanel from '@/components/platform/contest/Co
 import { useContestOperationsHubPage } from '@/features/platform-contests'
 
 const {
+  changeContestPage,
   loading,
   loadError,
   operableContests,
+  page,
+  total,
+  totalPages,
   runningContestCount,
   frozenContestCount,
   preferredContest,
@@ -23,7 +27,7 @@ const {
     <div class="workspace-grid">
       <main class="content-pane contest-ops-content">
         <ContestOperationsHubHeroPanel
-          :operable-contest-count="operableContests.length"
+          :operable-contest-count="total"
           :running-contest-count="runningContestCount"
           :frozen-contest-count="frozenContestCount"
           :preferred-contest-title="preferredContest ? preferredContest.title : '暂无'"
@@ -34,8 +38,12 @@ const {
           :loading="loading"
           :load-error="loadError"
           :operable-contests="operableContests"
+          :page="page"
+          :total="total"
+          :total-pages="totalPages"
           @retry="void loadContests()"
           @back="void handleBackToContestDirectory()"
+          @change-page="void changeContestPage($event)"
           @enter-operations="void handleEnterOperations($event)"
         />
       </main>

@@ -28,6 +28,13 @@ vi.mock('@/api/contest', () => ({
     total: 1,
     page: 1,
     page_size: 20,
+    summary: {
+      draft_count: 0,
+      registering_count: 0,
+      running_count: 1,
+      frozen_count: 0,
+      ended_count: 0,
+    },
   }),
 }))
 
@@ -44,6 +51,16 @@ describe('ContestList', () => {
     expect(wrapper.text()).toContain('Contests')
     expect(wrapper.text()).toContain('竞赛中心')
     expect(wrapper.find('.contest-row-title').attributes('title')).toBe('2026 春季校园 CTF 挑战赛')
+
+    const { getContests } = await import('@/api/contest')
+    expect(vi.mocked(getContests)).toHaveBeenCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['registering', 'running', 'frozen', 'ended'],
+      },
+      { signal: expect.any(AbortSignal) }
+    )
   })
 
   it('路由页应仅负责组合，不直接耦合竞赛列表查询流程', () => {
@@ -100,6 +117,13 @@ describe('ContestList', () => {
       total: 2,
       page: 1,
       page_size: 20,
+      summary: {
+        draft_count: 1,
+        registering_count: 0,
+        running_count: 1,
+        frozen_count: 0,
+        ended_count: 0,
+      },
     })
 
     const wrapper = mount(ContestList)
