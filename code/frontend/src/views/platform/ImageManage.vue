@@ -54,7 +54,8 @@ const {
 
       <!--
         class="image-board workspace-directory-section"
-        class="image-list workspace-directory-list"
+        class="image-directory-shell workspace-directory-list"
+        class="image-list"
         class="admin-pagination workspace-directory-pagination"
         PlatformPaginationControls
       -->

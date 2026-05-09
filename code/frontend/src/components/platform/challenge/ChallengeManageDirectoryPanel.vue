@@ -1,28 +1,14 @@
 <script setup lang="ts">
-import type {
-  ChallengeCategory,
-  ChallengeDifficulty,
-  ChallengeStatus,
-} from '@/api/contracts'
+import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus } from '@/api/contracts'
 import type { PlatformChallengeListRow } from '@/features/platform-challenges'
-import {
-  ChallengeCategoryPill,
-  ChallengeDifficultyText,
-} from '@/entities/challenge'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
-import {
-  Book,
-  CheckCircle,
-  Eye,
-  FileSearch,
-  MoreHorizontal,
-  Trash2,
-} from 'lucide-vue-next'
+import { Book, CheckCircle, Eye, FileSearch, MoreHorizontal, Trash2 } from 'lucide-vue-next'
 
 type ChallengeManageStatusFilter = Extract<ChallengeStatus, 'draft' | 'published' | 'archived'>
 
@@ -129,247 +115,258 @@ function updateStatusFilter(event: Event): void {
 
 <template>
   <section class="workspace-directory-section challenge-manage-directory">
-    <header class="list-heading">
-      <div>
-        <div class="workspace-overline">Challenge Directory</div>
-        <h2 class="list-heading__title">题目目录</h2>
-      </div>
-    </header>
-
-    <WorkspaceDirectoryToolbar
-      :model-value="keyword"
-      :total="total"
-      :selected-sort-label="selectedSortLabel"
-      :sort-options="sortOptions"
-      search-placeholder="检索题目名称..."
-      :reset-disabled="!hasActiveFilters"
-      @update:model-value="emit('update:keyword', $event)"
-      @select-sort="emit('select-sort', $event)"
-      @reset-filters="emit('reset-filters')"
-    >
-      <template #filter-panel>
-        <div class="challenge-filter-grid">
-          <label class="challenge-filter-field">
-            <span class="challenge-filter-label">题目分类</span>
-            <select
-              :value="categoryFilter"
-              class="challenge-filter-select"
-              @change="updateCategoryFilter"
-            >
-              <option value="">全部分类</option>
-              <option value="web">Web</option>
-              <option value="pwn">Pwn</option>
-              <option value="reverse">逆向</option>
-              <option value="crypto">密码</option>
-              <option value="misc">杂项</option>
-              <option value="forensics">取证</option>
-            </select>
-          </label>
-
-          <label class="challenge-filter-field">
-            <span class="challenge-filter-label">难度等级</span>
-            <select
-              :value="difficultyFilter"
-              class="challenge-filter-select"
-              @change="updateDifficultyFilter"
-            >
-              <option value="">全部难度</option>
-              <option value="beginner">入门</option>
-              <option value="easy">简单</option>
-              <option value="medium">中等</option>
-              <option value="hard">困难</option>
-              <option value="insane">地狱</option>
-            </select>
-          </label>
-
-          <label class="challenge-filter-field">
-            <span class="challenge-filter-label">发布状态</span>
-            <select
-              :value="statusFilter"
-              class="challenge-filter-select"
-              @change="updateStatusFilter"
-            >
-              <option value="">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="published">已发布</option>
-              <option value="archived">已归档</option>
-            </select>
-          </label>
+    <section class="challenge-directory-shell workspace-directory-list">
+      <header class="list-heading">
+        <div>
+          <div class="workspace-overline">Challenge Directory</div>
+          <h2 class="list-heading__title">题目目录</h2>
         </div>
-      </template>
-    </WorkspaceDirectoryToolbar>
+      </header>
 
-    <div
-      v-if="loading"
-      class="workspace-directory-loading"
-    >
-      正在同步题目目录...
-    </div>
+      <WorkspaceDirectoryToolbar
+        :model-value="keyword"
+        :total="total"
+        :selected-sort-label="selectedSortLabel"
+        :sort-options="sortOptions"
+        search-placeholder="检索题目名称..."
+        :reset-disabled="!hasActiveFilters"
+        @update:model-value="emit('update:keyword', $event)"
+        @select-sort="emit('select-sort', $event)"
+        @reset-filters="emit('reset-filters')"
+      >
+        <template #filter-panel>
+          <div class="challenge-filter-grid">
+            <label class="challenge-filter-field">
+              <span class="challenge-filter-label">题目分类</span>
+              <select
+                :value="categoryFilter"
+                class="challenge-filter-select"
+                @change="updateCategoryFilter"
+              >
+                <option value="">全部分类</option>
+                <option value="web">Web</option>
+                <option value="pwn">Pwn</option>
+                <option value="reverse">逆向</option>
+                <option value="crypto">密码</option>
+                <option value="misc">杂项</option>
+                <option value="forensics">取证</option>
+              </select>
+            </label>
 
-    <AppEmpty
-      v-else-if="hasLoadError"
-      class="workspace-directory-empty"
-      icon="AlertTriangle"
-      title="题目目录加载失败"
-      :description="loadErrorMessage"
-    >
-      <template #action>
-        <button
-          type="button"
-          class="ui-btn ui-btn--secondary"
-          @click="emit('retry')"
-        >
-          重新加载
-        </button>
-      </template>
-    </AppEmpty>
+            <label class="challenge-filter-field">
+              <span class="challenge-filter-label">难度等级</span>
+              <select
+                :value="difficultyFilter"
+                class="challenge-filter-select"
+                @change="updateDifficultyFilter"
+              >
+                <option value="">全部难度</option>
+                <option value="beginner">入门</option>
+                <option value="easy">简单</option>
+                <option value="medium">中等</option>
+                <option value="hard">困难</option>
+                <option value="insane">地狱</option>
+              </select>
+            </label>
 
-    <AppEmpty
-      v-else-if="rows.length === 0"
-      class="workspace-directory-empty"
-      icon="BookOpen"
-      :title="manageEmptyTitle"
-      :description="manageEmptyMessage"
-    />
+            <label class="challenge-filter-field">
+              <span class="challenge-filter-label">发布状态</span>
+              <select
+                :value="statusFilter"
+                class="challenge-filter-select"
+                @change="updateStatusFilter"
+              >
+                <option value="">全部状态</option>
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+                <option value="archived">已归档</option>
+              </select>
+            </label>
+          </div>
+        </template>
+      </WorkspaceDirectoryToolbar>
 
-    <WorkspaceDataTable
-      v-else
-      class="challenge-list workspace-directory-list"
-      :columns="challengeTableColumns"
-      :rows="rows"
-      row-key="id"
-      row-class="challenge-table-row group"
-    >
-      <template #cell-title="{ row }">
-        <div
-          class="challenge-table-title"
-          :title="(row as PlatformChallengeListRow).title"
-        >
-          {{ (row as PlatformChallengeListRow).title }}
-        </div>
-      </template>
+      <div v-if="loading" class="workspace-directory-loading">正在同步题目目录...</div>
 
-      <template #cell-category="{ row }">
-        <ChallengeCategoryPill :category="(row as PlatformChallengeListRow).category" />
-      </template>
-
-      <template #cell-difficulty="{ row }">
-        <ChallengeDifficultyText :difficulty="(row as PlatformChallengeListRow).difficulty" />
-      </template>
-
-      <template #cell-points="{ row }">
-        <span class="challenge-table-points">{{ (row as PlatformChallengeListRow).points }}</span>
-      </template>
-
-      <template #cell-status="{ row }">
-        <div class="challenge-table-status">
-          <div
-            class="challenge-table-status__dot"
-            :class="
-              (row as PlatformChallengeListRow).status === 'published'
-                ? 'challenge-table-status__dot--published'
-                : 'challenge-table-status__dot--idle'
-            "
-          />
-          <span class="challenge-table-status__label">
-            {{
-              (row as PlatformChallengeListRow).status === 'published'
-                ? '已发布'
-                : (row as PlatformChallengeListRow).status === 'archived'
-                  ? '已归档'
-                  : '草稿'
-            }}
-          </span>
-        </div>
-      </template>
-
-      <template #cell-actions="{ row }">
-        <div class="challenge-table-actions">
-          <button
-            type="button"
-            class="challenge-row-action"
-            @click="emit('open-detail', (row as PlatformChallengeListRow).id)"
-          >
-            <Eye class="h-3 w-3" />
-            查看
+      <AppEmpty
+        v-else-if="hasLoadError"
+        class="workspace-directory-empty"
+        icon="AlertTriangle"
+        title="题目目录加载失败"
+        :description="loadErrorMessage"
+      >
+        <template #action>
+          <button type="button" class="ui-btn ui-btn--secondary" @click="emit('retry')">
+            重新加载
           </button>
+        </template>
+      </AppEmpty>
 
-          <CActionMenu
-            :open="openActionMenuId === (row as PlatformChallengeListRow).id"
-            title="Management"
-            menu-label="题目更多操作"
-            @update:open="
-              emit('update-action-menu-open', {
-                challengeId: (row as PlatformChallengeListRow).id,
-                open: $event,
-              })
-            "
-          >
-            <template #trigger="{ open, toggle, setTriggerRef }">
-              <button
-                :ref="setTriggerRef"
-                type="button"
-                class="c-action-menu__trigger c-action-menu__trigger--icon"
-                :aria-expanded="open ? 'true' : 'false'"
-                aria-haspopup="menu"
-                aria-label="题目更多操作"
-                @click.stop="toggle"
-              >
-                <MoreHorizontal class="h-3.5 w-3.5" />
-              </button>
-            </template>
+      <AppEmpty
+        v-else-if="rows.length === 0"
+        class="workspace-directory-empty"
+        icon="BookOpen"
+        :title="manageEmptyTitle"
+        :description="manageEmptyMessage"
+      />
 
-            <template #default>
-              <button
-                type="button"
-                class="c-action-menu__item"
-                @click="emit('open-topology', (row as PlatformChallengeListRow).id)"
-              >
-                <FileSearch class="h-3 w-3" />
-                编排拓扑
-              </button>
-              <button
-                type="button"
-                class="c-action-menu__item"
-                @click="emit('open-writeup', (row as PlatformChallengeListRow).id)"
-              >
-                <Book class="h-3 w-3" />
-                题解与提示
-              </button>
-              <button
-                v-if="(row as PlatformChallengeListRow).status !== 'published'"
-                type="button"
-                class="c-action-menu__item c-action-menu__item--success"
-                @click="emit('submit-publish-check', row as PlatformChallengeListRow)"
-              >
-                <CheckCircle class="h-3 w-3" />
-                提交发布检查
-              </button>
-              <button
-                type="button"
-                class="c-action-menu__item c-action-menu__item--danger"
-                @click="emit('remove-challenge', (row as PlatformChallengeListRow).id)"
-              >
-                <Trash2 class="h-3 w-3" />
-                永久删除
-              </button>
-            </template>
-          </CActionMenu>
-        </div>
-      </template>
-    </WorkspaceDataTable>
+      <WorkspaceDataTable
+        v-else
+        class="challenge-list"
+        :columns="challengeTableColumns"
+        :rows="rows"
+        row-key="id"
+        row-class="challenge-table-row group"
+      >
+        <template #cell-title="{ row }">
+          <div class="challenge-table-title" :title="(row as PlatformChallengeListRow).title">
+            {{ (row as PlatformChallengeListRow).title }}
+          </div>
+        </template>
 
-    <WorkspaceDirectoryPagination
-      :page="page"
-      :total-pages="totalPages"
-      :total="total"
-      :total-label="`共 ${total} 道题目`"
-      @change-page="emit('change-page', $event)"
-    />
+        <template #cell-category="{ row }">
+          <ChallengeCategoryPill :category="(row as PlatformChallengeListRow).category" />
+        </template>
+
+        <template #cell-difficulty="{ row }">
+          <ChallengeDifficultyText :difficulty="(row as PlatformChallengeListRow).difficulty" />
+        </template>
+
+        <template #cell-points="{ row }">
+          <span class="challenge-table-points">{{ (row as PlatformChallengeListRow).points }}</span>
+        </template>
+
+        <template #cell-status="{ row }">
+          <div class="challenge-table-status">
+            <div
+              class="challenge-table-status__dot"
+              :class="
+                (row as PlatformChallengeListRow).status === 'published'
+                  ? 'challenge-table-status__dot--published'
+                  : 'challenge-table-status__dot--idle'
+              "
+            />
+            <span class="challenge-table-status__label">
+              {{
+                (row as PlatformChallengeListRow).status === 'published'
+                  ? '已发布'
+                  : (row as PlatformChallengeListRow).status === 'archived'
+                    ? '已归档'
+                    : '草稿'
+              }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-actions="{ row }">
+          <div class="challenge-table-actions">
+            <button
+              type="button"
+              class="challenge-row-action"
+              @click="emit('open-detail', (row as PlatformChallengeListRow).id)"
+            >
+              <Eye class="h-3 w-3" />
+              查看
+            </button>
+
+            <CActionMenu
+              :open="openActionMenuId === (row as PlatformChallengeListRow).id"
+              title="Management"
+              menu-label="题目更多操作"
+              @update:open="
+                emit('update-action-menu-open', {
+                  challengeId: (row as PlatformChallengeListRow).id,
+                  open: $event,
+                })
+              "
+            >
+              <template #trigger="{ open, toggle, setTriggerRef }">
+                <button
+                  :ref="setTriggerRef"
+                  type="button"
+                  class="c-action-menu__trigger c-action-menu__trigger--icon"
+                  :aria-expanded="open ? 'true' : 'false'"
+                  aria-haspopup="menu"
+                  aria-label="题目更多操作"
+                  @click.stop="toggle"
+                >
+                  <MoreHorizontal class="h-3.5 w-3.5" />
+                </button>
+              </template>
+
+              <template #default>
+                <button
+                  type="button"
+                  class="c-action-menu__item"
+                  @click="emit('open-topology', (row as PlatformChallengeListRow).id)"
+                >
+                  <FileSearch class="h-3 w-3" />
+                  编排拓扑
+                </button>
+                <button
+                  type="button"
+                  class="c-action-menu__item"
+                  @click="emit('open-writeup', (row as PlatformChallengeListRow).id)"
+                >
+                  <Book class="h-3 w-3" />
+                  题解与提示
+                </button>
+                <button
+                  v-if="(row as PlatformChallengeListRow).status !== 'published'"
+                  type="button"
+                  class="c-action-menu__item c-action-menu__item--success"
+                  @click="emit('submit-publish-check', row as PlatformChallengeListRow)"
+                >
+                  <CheckCircle class="h-3 w-3" />
+                  提交发布检查
+                </button>
+                <button
+                  type="button"
+                  class="c-action-menu__item c-action-menu__item--danger"
+                  @click="emit('remove-challenge', (row as PlatformChallengeListRow).id)"
+                >
+                  <Trash2 class="h-3 w-3" />
+                  永久删除
+                </button>
+              </template>
+            </CActionMenu>
+          </div>
+        </template>
+      </WorkspaceDataTable>
+
+      <WorkspaceDirectoryPagination
+        :page="page"
+        :total-pages="totalPages"
+        :total="total"
+        :total-label="`共 ${total} 道题目`"
+        @change-page="emit('change-page', $event)"
+      />
+    </section>
   </section>
 </template>
 
 <style scoped>
+.challenge-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
+}
+
 .challenge-filter-grid {
   display: grid;
   gap: var(--space-4);
@@ -405,10 +402,6 @@ function updateStatusFilter(event: Event): void {
 .challenge-filter-select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-
-.challenge-list {
-  --workspace-directory-shell-border: var(--color-border-default);
 }
 
 .challenge-table-pill {

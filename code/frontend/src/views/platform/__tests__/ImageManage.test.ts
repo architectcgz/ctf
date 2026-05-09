@@ -293,7 +293,7 @@ describe('ImageManage', () => {
       /class="image-row__tag"[\s\S]*:title="\(row as AdminImageListItem\)\.tag"/s
     )
     expect(combinedSource).toMatch(
-      /class="image-row__description"[\s\S]*:title="\(row as AdminImageListItem\)\.last_error \|\| \(row as AdminImageListItem\)\.digest \|\| \(row as AdminImageListItem\)\.description \|\| '未生成摘要'"/s
+      /class="image-row__description"[\s\S]*:title="[\s\S]*\(row as AdminImageListItem\)\.last_error \|\|[\s\S]*\(row as AdminImageListItem\)\.digest \|\|[\s\S]*\(row as AdminImageListItem\)\.description \|\|[\s\S]*'未生成摘要'/s
     )
     expect(combinedSource).toMatch(
       /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s

@@ -27,6 +27,7 @@ import contestEditTopbarPanelSource from '@/components/platform/contest/ContestE
 import contestWorkbenchStageTabsSource from '@/components/platform/contest/ContestWorkbenchStageTabs.vue?raw'
 import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
+import imageDirectoryPanelSource from '@/components/platform/images/ImageDirectoryPanel.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import studentManageSource from '../StudentManage.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
@@ -76,7 +77,11 @@ const cheatDetectionCombinedSource = [
   cheatDetectionReviewPanelsSource,
   cheatDetectionSummaryPanelSource,
 ].join('\n')
-const imageManageCombinedSource = [imageManageSource, imageManageHeroPanelSource].join('\n')
+const imageManageCombinedSource = [
+  imageManageSource,
+  imageDirectoryPanelSource,
+  imageManageHeroPanelSource,
+].join('\n')
 const instanceManageCombinedSource = [
   instanceManageSource,
   instanceManageHeroPanelSource,
@@ -449,9 +454,14 @@ describe('admin management surface alignment', () => {
       'class="admin-pagination workspace-directory-pagination"'
     )
 
-    expect(imageManageSource).toContain('class="image-board workspace-directory-section"')
-    expect(imageManageSource).toContain('class="image-list workspace-directory-list"')
-    expect(imageManageSource).toContain('class="admin-pagination workspace-directory-pagination"')
+    expect(imageManageCombinedSource).toContain('class="image-board workspace-directory-section"')
+    expect(imageManageCombinedSource).toContain(
+      'class="image-directory-shell workspace-directory-list"'
+    )
+    expect(imageManageCombinedSource).not.toContain('class="image-list workspace-directory-list"')
+    expect(imageManageCombinedSource).toContain(
+      'class="admin-pagination workspace-directory-pagination"'
+    )
 
     expect(auditLogCombinedSource).toContain('class="admin-board workspace-directory-section"')
     expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
@@ -460,7 +470,12 @@ describe('admin management surface alignment', () => {
     expect(challengeManageCombinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
-    expect(challengeManageCombinedSource).toContain('class="challenge-list workspace-directory-list"')
+    expect(challengeManageCombinedSource).toContain(
+      'class="challenge-directory-shell workspace-directory-list"'
+    )
+    expect(challengeManageCombinedSource).not.toContain(
+      'class="challenge-list workspace-directory-list"'
+    )
     expect(challengeManageCombinedSource).toContain('class="workspace-directory-loading"')
     expect(challengeManageCombinedSource).toContain('class="workspace-directory-empty"')
     expect(challengeManageCombinedSource).toContain('<WorkspaceDirectoryPagination')

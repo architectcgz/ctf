@@ -103,164 +103,161 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
 
 <template>
   <section class="image-board workspace-directory-section">
-    <header class="list-heading image-board__head">
-      <div>
-        <div class="workspace-overline">
-          Images
+    <section class="image-directory-shell workspace-directory-list">
+      <header class="list-heading image-board__head">
+        <div>
+          <div class="workspace-overline">Images</div>
+          <h2 class="list-heading__title image-section-title">镜像列表</h2>
         </div>
-        <h2 class="list-heading__title image-section-title">
-          镜像列表
-        </h2>
-      </div>
-    </header>
+      </header>
 
-    <WorkspaceDirectoryToolbar
-      :model-value="keyword"
-      :total="filteredTotal"
-      :selected-sort-label="selectedSortLabel"
-      :sort-options="sortOptions"
-      search-placeholder="检索镜像名称、标签或说明..."
-      total-suffix="个镜像"
-      :reset-disabled="!hasActiveFilters"
-      @update:model-value="emit('update:keyword', $event)"
-      @select-sort="emit('select-sort', $event)"
-      @reset-filters="emit('reset-filters')"
-    >
-      <template #filter-panel>
-        <div class="image-filter-grid">
-          <label class="image-filter-field">
-            <span class="image-filter-label">构建状态</span>
-            <select
-              :value="statusFilter"
-              class="image-filter-select"
-              @change="updateStatusFilter"
-            >
-              <option value="">全部状态</option>
-              <option value="available">可用</option>
-              <option value="building">构建中</option>
-              <option value="pushed">已推送</option>
-              <option value="verifying">校验中</option>
-              <option value="pending">等待中</option>
-              <option value="failed">失败</option>
-            </select>
-          </label>
-        </div>
-      </template>
-    </WorkspaceDirectoryToolbar>
-
-    <div
-      v-if="loading"
-      class="workspace-directory-loading flex items-center justify-center py-12"
-    >
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-      />
-    </div>
-
-    <template v-else>
-      <div
-        v-if="list.length === 0"
-        class="admin-empty workspace-directory-empty"
+      <WorkspaceDirectoryToolbar
+        :model-value="keyword"
+        :total="filteredTotal"
+        :selected-sort-label="selectedSortLabel"
+        :sort-options="sortOptions"
+        search-placeholder="检索镜像名称、标签或说明..."
+        total-suffix="个镜像"
+        :reset-disabled="!hasActiveFilters"
+        @update:model-value="emit('update:keyword', $event)"
+        @select-sort="emit('select-sort', $event)"
+        @reset-filters="emit('reset-filters')"
       >
-        当前还没有镜像。
-      </div>
-
-      <div
-        v-else-if="rows.length === 0"
-        class="admin-empty workspace-directory-empty"
-      >
-        当前筛选条件下没有匹配镜像。
-      </div>
-
-      <WorkspaceDataTable
-        v-else
-        class="image-list workspace-directory-list"
-        :columns="imageTableColumns"
-        :rows="rows"
-        row-key="id"
-        row-class="image-row"
-      >
-        <template #cell-name="{ row }">
-          <span
-            class="image-row__name"
-            :title="(row as AdminImageListItem).name"
-          >
-            {{ (row as AdminImageListItem).name }}
-          </span>
-        </template>
-
-        <template #cell-tag="{ row }">
-          <span
-            class="image-row__tag"
-            :title="(row as AdminImageListItem).tag"
-          >
-            {{ (row as AdminImageListItem).tag }}
-          </span>
-        </template>
-
-        <template #cell-source_type="{ row }">
-          <span class="image-row__source">
-            {{ getImageSourceLabel((row as AdminImageListItem).source_type) }}
-          </span>
-        </template>
-
-        <template #cell-digest="{ row }">
-          <p
-            class="image-row__description"
-            :title="(row as AdminImageListItem).last_error || (row as AdminImageListItem).digest || (row as AdminImageListItem).description || '未生成摘要'"
-          >
-            {{ (row as AdminImageListItem).last_error || (row as AdminImageListItem).digest || (row as AdminImageListItem).description || '未生成摘要' }}
-          </p>
-        </template>
-
-        <template #cell-status="{ row }">
-          <div class="image-row__status">
-            <span
-              class="admin-status-chip"
-              :style="getStatusStyle((row as AdminImageListItem).status)"
-            >
-              {{ getStatusLabel((row as AdminImageListItem).status) }}
-            </span>
+        <template #filter-panel>
+          <div class="image-filter-grid">
+            <label class="image-filter-field">
+              <span class="image-filter-label">构建状态</span>
+              <select
+                :value="statusFilter"
+                class="image-filter-select"
+                @change="updateStatusFilter"
+              >
+                <option value="">全部状态</option>
+                <option value="available">可用</option>
+                <option value="building">构建中</option>
+                <option value="pushed">已推送</option>
+                <option value="verifying">校验中</option>
+                <option value="pending">等待中</option>
+                <option value="failed">失败</option>
+              </select>
+            </label>
           </div>
         </template>
-
-        <template #cell-verified_at="{ row }">
-          <span class="image-row__time">
-            {{ (row as AdminImageListItem).verified_at ? formatDateTime((row as AdminImageListItem).verified_at as string) : '未验证' }}
-          </span>
-        </template>
-
-        <template #cell-actions="{ row }">
-          <div class="image-row__actions">
-            <button
-              class="ui-btn ui-btn--sm ui-btn--primary"
-              @click="emit('open-detail', row as AdminImageListItem)"
-            >
-              详情
-            </button>
-            <button
-              class="ui-btn ui-btn--sm ui-btn--danger"
-              @click="emit('delete-image', (row as AdminImageListItem).id)"
-            >
-              删除
-            </button>
-          </div>
-        </template>
-      </WorkspaceDataTable>
+      </WorkspaceDirectoryToolbar>
 
       <div
-        v-if="total > 0"
-        class="admin-pagination workspace-directory-pagination"
+        v-if="loading"
+        class="workspace-directory-loading flex items-center justify-center py-12"
       >
-        <PlatformPaginationControls
-          :page="page"
-          :total-pages="totalPages"
-          :total="total"
-          :total-label="`共 ${total} 条`"
-          @change-page="emit('change-page', $event)"
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         />
       </div>
-    </template>
+
+      <template v-else>
+        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+          当前还没有镜像。
+        </div>
+
+        <div v-else-if="rows.length === 0" class="admin-empty workspace-directory-empty">
+          当前筛选条件下没有匹配镜像。
+        </div>
+
+        <WorkspaceDataTable
+          v-else
+          class="image-list"
+          :columns="imageTableColumns"
+          :rows="rows"
+          row-key="id"
+          row-class="image-row"
+        >
+          <template #cell-name="{ row }">
+            <span class="image-row__name" :title="(row as AdminImageListItem).name">
+              {{ (row as AdminImageListItem).name }}
+            </span>
+          </template>
+
+          <template #cell-tag="{ row }">
+            <span class="image-row__tag" :title="(row as AdminImageListItem).tag">
+              {{ (row as AdminImageListItem).tag }}
+            </span>
+          </template>
+
+          <template #cell-source_type="{ row }">
+            <span class="image-row__source">
+              {{ getImageSourceLabel((row as AdminImageListItem).source_type) }}
+            </span>
+          </template>
+
+          <template #cell-digest="{ row }">
+            <p
+              class="image-row__description"
+              :title="
+                (row as AdminImageListItem).last_error ||
+                (row as AdminImageListItem).digest ||
+                (row as AdminImageListItem).description ||
+                '未生成摘要'
+              "
+            >
+              {{
+                (row as AdminImageListItem).last_error ||
+                (row as AdminImageListItem).digest ||
+                (row as AdminImageListItem).description ||
+                '未生成摘要'
+              }}
+            </p>
+          </template>
+
+          <template #cell-status="{ row }">
+            <div class="image-row__status">
+              <span
+                class="admin-status-chip"
+                :style="getStatusStyle((row as AdminImageListItem).status)"
+              >
+                {{ getStatusLabel((row as AdminImageListItem).status) }}
+              </span>
+            </div>
+          </template>
+
+          <template #cell-verified_at="{ row }">
+            <span class="image-row__time">
+              {{
+                (row as AdminImageListItem).verified_at
+                  ? formatDateTime((row as AdminImageListItem).verified_at as string)
+                  : '未验证'
+              }}
+            </span>
+          </template>
+
+          <template #cell-actions="{ row }">
+            <div class="image-row__actions">
+              <button
+                class="ui-btn ui-btn--sm ui-btn--primary"
+                @click="emit('open-detail', row as AdminImageListItem)"
+              >
+                详情
+              </button>
+              <button
+                class="ui-btn ui-btn--sm ui-btn--danger"
+                @click="emit('delete-image', (row as AdminImageListItem).id)"
+              >
+                删除
+              </button>
+            </div>
+          </template>
+        </WorkspaceDataTable>
+
+        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
+          <PlatformPaginationControls
+            :page="page"
+            :total-pages="totalPages"
+            :total="total"
+            :total-label="`共 ${total} 条`"
+            @change-page="emit('change-page', $event)"
+          />
+        </div>
+      </template>
+    </section>
   </section>
 </template>
 
@@ -284,6 +281,27 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
   display: grid;
   gap: var(--space-4);
   padding-top: var(--space-1);
+}
+
+.image-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .image-board__head {
@@ -336,13 +354,6 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
   background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
   font-size: var(--font-size-0-875);
   color: var(--journal-ink);
-}
-
-.image-list {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 1.35rem;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 0.25rem 0.9rem 0.4rem;
 }
 
 .image-list :deep(.workspace-data-table__head-cell) {
