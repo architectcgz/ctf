@@ -13,5 +13,9 @@ describe('ChallengeImportManage panel extraction', () => {
     expect(challengeImportHeroPanelSource).toContain('返回题目目录')
     expect(challengeImportHeroPanelSource).toContain('题目包规范')
     expect(challengeImportHeroPanelSource).toContain('下载示例题目包')
+    expect(challengeImportHeroPanelSource).toContain(
+      'class="header-actions challenge-import-hero-actions"'
+    )
+    expect(challengeImportHeroPanelSource).not.toContain('challenge-import-action')
   })
 })

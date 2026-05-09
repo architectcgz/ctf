@@ -105,7 +105,7 @@ function handleInspect(importId: string): void {
           </div>
           <button
             type="button"
-            class="ui-btn ui-btn--primary challenge-queue-action"
+            class="ui-btn ui-btn--primary"
             @click="handleInspect(item.id)"
           >
             继续查看预览
@@ -193,22 +193,4 @@ function handleInspect(importId: string): void {
   color: var(--challenge-page-muted);
 }
 
-.challenge-queue-action {
-  --ui-btn-height: 2.5rem;
-  --ui-btn-padding: 0 1.25rem;
-  --ui-btn-radius: 12px;
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 700;
-  --ui-btn-hover-transform: translateY(-1px);
-  --ui-btn-primary-border: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
-  --ui-btn-primary-background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
-  --ui-btn-primary-hover-background: color-mix(
-    in srgb,
-    var(--workspace-brand-ink) 92%,
-    var(--challenge-page-text)
-  );
-  --ui-btn-primary-hover-border: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
-  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
-}
 </style>

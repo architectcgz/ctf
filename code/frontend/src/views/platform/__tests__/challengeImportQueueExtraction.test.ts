@@ -12,9 +12,8 @@ describe('ChallengeImportManage queue extraction', () => {
     expect(challengeImportQueuePanelSource).toContain('Import Review')
     expect(challengeImportQueuePanelSource).toContain('待确认导入')
     expect(challengeImportQueuePanelSource).toContain('继续查看预览')
-    expect(challengeImportQueuePanelSource).toContain(
-      'class="ui-btn ui-btn--primary challenge-queue-action"'
-    )
+    expect(challengeImportQueuePanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeImportQueuePanelSource).not.toContain('challenge-queue-action')
   })
 
   it('待确认导入面板应把分类与难度标签继续下沉到 challenge entity ui', () => {

@@ -64,7 +64,7 @@ function handleFileChange(event: Event) {
           </span>
         </div>
         <button
-          class="ui-btn ui-btn--primary challenge-import-action challenge-import-action--primary import-entry__upload-action"
+          class="ui-btn ui-btn--primary import-entry__upload-action"
           type="button"
           :disabled="uploading"
           @click="openPicker"
@@ -191,28 +191,6 @@ function handleFileChange(event: Event) {
   color: var(--journal-accent);
   font-size: var(--font-size-0-78);
   font-weight: 700;
-}
-
-.challenge-import-action {
-  --ui-btn-height: 2.5rem;
-  --ui-btn-padding: 0 var(--space-5);
-  --ui-btn-radius: var(--ui-control-radius-md);
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 700;
-  --ui-btn-hover-transform: translateY(-1px);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
-}
-
-.challenge-import-action--primary {
-  --ui-btn-primary-border: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
-  --ui-btn-primary-background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
-  --ui-btn-primary-hover-background: color-mix(
-    in srgb,
-    var(--workspace-brand-ink) 92%,
-    var(--challenge-page-text)
-  );
-  --ui-btn-primary-hover-border: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
-  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
 }
 
 .import-entry__upload-action {

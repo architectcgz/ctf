@@ -70,9 +70,17 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportHeroPanelSource).toContain('题目包规范')
     expect(challengeImportHeroPanelSource).toContain('下载示例题目包')
     expect(challengePackageImportEntrySource).toContain(
-      'class="ui-btn ui-btn--primary challenge-import-action challenge-import-action--primary import-entry__upload-action"'
+      'class="ui-btn ui-btn--primary import-entry__upload-action"'
     )
     expect(challengePackageImportEntrySource).toContain('导入题目包')
+    expect(challengeImportHeroPanelSource).toContain(
+      'class="header-actions challenge-import-hero-actions"'
+    )
+    expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
+    expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--primary"')
+    expect(challengeImportHeroPanelSource).not.toContain('challenge-import-action')
+    expect(challengePackageImportEntrySource).not.toContain('challenge-import-action')
+    expect(challengeImportQueuePanelSource).not.toContain('challenge-queue-action')
     expect(challengePackageImportEntrySource).not.toContain('class="import-entry__dropzone"')
 
     const wrapper = mount(ChallengeImportManage)

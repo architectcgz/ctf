@@ -47,6 +47,14 @@
 - 单题设计如果已经落地到题包，不再额外复制一份到 `features/`；需要说明时只保留题包入口或迁移索引。
 - 原中间稿不要继续冒充事实源，应该在原位置写明 `Superseded by ...`。
 
+## 4.1 好做法：共享 UI 原语要收口到单一视觉 owner
+
+- 当页面已经接入共享 UI 原语，例如 `header-btn`、`ui-btn`、`ui-badge` 或 `workspace-directory-status-pill`，页面组件默认只能增加布局类，不能继续覆盖共享原语的颜色、边框、hover、focus、尺寸变量。
+- 如果确实存在可复用视觉差异，应在共享样式层新增明确 variant，例如 `header-btn--danger` 或 `ui-btn--compact`，而不是在单个页面里写 `.xxx-button { --header-btn-* }`。
+- header 操作区统一使用 `header-actions` + `header-btn`，表格行操作、弹窗 footer、空态按钮继续使用 `ui-btn`；不要因为“都是按钮”把不同交互位置混成一个原语。
+- 统一样式任务的完成标准不是“class 名已经换掉”，而是旧局部视觉入口也已经删除，并有静态测试防止重新出现。
+- 测试应该断言共享原语边界，例如“不允许 feature 组件覆盖 `--header-btn-*`”，不要继续断言页面私有变量存在。
+
 ## 5. 好做法：旧入口停用后不要偷偷复活
 
 当前仓库已经把一部分旧入口迁出：
@@ -72,6 +80,8 @@
 - application 虽然已经成为唯一 owner，但内部 contract 仍继续暴露可手工拼装的导出 enum / struct，最后只能靠 repository 的 panic 或 defensive branch 晚发现错误。
 - 测试先发现了 contract / owner / 架构问题，但实现阶段为了让 CI 变绿，反过来修改测试期待值、fixture、mock 或页面文案，让测试去迁就当前错误实现。
 - 分页或汇总语义明明已经切到后端真实总量，页面却继续拿当前页 `list` 现算指标；测试再跟着改成只断当前页数字，等于把错误语义固化。
+- 共享 UI 原语已经接入后，页面仍保留 `challenge-manage-import-button`、`challenge-import-action` 这类私有 class，并通过 `--header-btn-*`、`--ui-btn-*` 覆盖视觉变量；这会形成“看起来复用了共享组件，实际视觉仍然分叉”的假统一。
+- 为了修一个按钮不一致，只删除当前按钮覆盖，却不扫描同类原语的其它局部覆盖，也不补静态防线；这会让同一问题在下一个页面继续出现。
 - 为了“先放一下”创建新的临时 docs 入口，结果后面没人回收。
 
 ## 7. 当前推荐动作

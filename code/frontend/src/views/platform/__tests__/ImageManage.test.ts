@@ -193,10 +193,11 @@ describe('ImageManage', () => {
     expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
   })
 
-  it('立即刷新按钮应使用与目录筛选控件一致的外边框语义', () => {
-    expect(imageManageHeroPanelSource).toMatch(
-      /\.image-header__actions\s*>\s*\[data-testid='image-refresh-button'\]\s*\{[\s\S]*--header-btn-border:\s*var\(--image-toolbar-control-border\);[\s\S]*--header-btn-background:\s*var\(--image-toolbar-control-background\);[\s\S]*box-shadow:\s*var\(--image-toolbar-control-shadow\);/s
-    )
+  it('立即刷新按钮不应通过页面私有变量覆盖共享 header-btn 视觉', () => {
+    expect(imageManageHeroPanelSource).toContain('data-testid="image-refresh-button"')
+    expect(imageManageHeroPanelSource).not.toContain('--header-btn-border:')
+    expect(imageManageHeroPanelSource).not.toContain('--header-btn-background:')
+    expect(imageManageHeroPanelSource).not.toContain('--header-btn-color:')
   })
 
   it('应该把镜像名称、标签、来源和摘要拆成独立列', async () => {
