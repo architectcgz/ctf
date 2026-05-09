@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, BarChart2, RefreshCw, Shield } from 'lucide-vue-next'
+import { ArrowLeft, BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
@@ -85,47 +85,51 @@ const {
             <span>排行概况</span>
           </div>
           <div class="scoreboard-summary-grid metric-panel-grid">
-            <div class="scoreboard-summary-item metric-panel-card">
-              <div class="scoreboard-summary-label metric-panel-label">
-                榜单队伍
+            <div class="scoreboard-summary-item progress-card metric-panel-card">
+              <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                <span>榜单队伍</span>
+                <Users class="h-4 w-4" />
               </div>
-              <div class="scoreboard-summary-value metric-panel-value">
+              <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                 {{ total }}
               </div>
-              <div class="scoreboard-summary-helper metric-panel-helper">
+              <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                 当前进入排行榜的队伍总数
               </div>
             </div>
-            <div class="scoreboard-summary-item metric-panel-card">
-              <div class="scoreboard-summary-label metric-panel-label">
-                本页最高分
+            <div class="scoreboard-summary-item progress-card metric-panel-card">
+              <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                <span>本页最高分</span>
+                <Trophy class="h-4 w-4" />
               </div>
-              <div class="scoreboard-summary-value metric-panel-value">
+              <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                 {{ topScore }}
               </div>
-              <div class="scoreboard-summary-helper metric-panel-helper">
+              <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                 当前页最高排名队伍分数
               </div>
             </div>
-            <div class="scoreboard-summary-item metric-panel-card">
-              <div class="scoreboard-summary-label metric-panel-label">
-                本页解题
+            <div class="scoreboard-summary-item progress-card metric-panel-card">
+              <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                <span>本页解题</span>
+                <CheckCircle class="h-4 w-4" />
               </div>
-              <div class="scoreboard-summary-value metric-panel-value">
+              <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                 {{ solvedCount }}
               </div>
-              <div class="scoreboard-summary-helper metric-panel-helper">
+              <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                 当前页队伍累计解题数
               </div>
             </div>
-            <div class="scoreboard-summary-item metric-panel-card">
-              <div class="scoreboard-summary-label metric-panel-label">
-                榜单状态
+            <div class="scoreboard-summary-item progress-card metric-panel-card">
+              <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                <span>榜单状态</span>
+                <Shield class="h-4 w-4" />
               </div>
-              <div class="scoreboard-summary-value metric-panel-value">
+              <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                 {{ scoreboard?.frozen ? '封榜' : getStatusLabel(contest?.status ?? 'ended') }}
               </div>
-              <div class="scoreboard-summary-helper metric-panel-helper">
+              <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                 {{ formatContestWindow(contest) }}
               </div>
             </div>

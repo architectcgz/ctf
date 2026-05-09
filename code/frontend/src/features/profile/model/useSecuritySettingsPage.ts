@@ -1,5 +1,7 @@
 import { reactive, ref } from 'vue'
 
+import { Activity, Clock3, ShieldCheck, UsersRound } from 'lucide-vue-next'
+
 import { changePassword } from '@/api/auth'
 import { useToast } from '@/composables/useToast'
 
@@ -27,10 +29,29 @@ export function useSecuritySettingsPage() {
       label: '密码策略',
       value: '已启用',
       helper: '最少 8 位并建议使用字母与数字混合',
+      icon: ShieldCheck,
     },
-    { key: 'rotation', label: '建议轮换', value: '90 天', helper: '定期更新，降低长期暴露风险' },
-    { key: 'session', label: '安全通道', value: '在线', helper: '密码修改请求通过受保护会话提交' },
-    { key: 'scope', label: '同步范围', value: '全账号', helper: '更新后其他设备需重新登录验证' },
+    {
+      key: 'rotation',
+      label: '建议轮换',
+      value: '90 天',
+      helper: '定期更新，降低长期暴露风险',
+      icon: Clock3,
+    },
+    {
+      key: 'session',
+      label: '安全通道',
+      value: '在线',
+      helper: '密码修改请求通过受保护会话提交',
+      icon: Activity,
+    },
+    {
+      key: 'scope',
+      label: '同步范围',
+      value: '全账号',
+      helper: '更新后其他设备需重新登录验证',
+      icon: UsersRound,
+    },
   ]
 
   const passwordTips = [

@@ -1703,7 +1703,7 @@ describe('ContestDetail', () => {
 
   it('竞赛概览数值区域应接入共享 metric panel surface', () => {
     expect(contestOverviewPanelSource).toContain(
-      'class="contest-score-rail metric-panel-card metric-panel-workspace-surface"'
+      'class="contest-score-rail progress-card metric-panel-card metric-panel-workspace-surface"'
     )
     expect(contestOverviewPanelSource).toContain(
       'class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
@@ -1711,6 +1711,16 @@ describe('ContestDetail', () => {
     expect(contestOverviewPanelSource).toContain(
       'class="contest-stat progress-card metric-panel-card"'
     )
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-score-rail__label progress-card-label metric-panel-label"'
+    )
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-stat__label progress-card-label metric-panel-label"'
+    )
+    expect(contestOverviewPanelSource).toContain('<UsersRound class="h-4 w-4" />')
+    expect(contestOverviewPanelSource).toContain('<Target class="h-4 w-4" />')
+    expect(contestOverviewPanelSource).toContain('<CheckCircle2 class="h-4 w-4" />')
+    expect(contestOverviewPanelSource).toContain('<Trophy class="h-4 w-4" />')
     expect(contestOverviewPanelSource).not.toContain('--metric-panel-grid-gap: 0.85rem;')
     expect(contestOverviewPanelSource).not.toContain('gap: 1.25rem;')
   })

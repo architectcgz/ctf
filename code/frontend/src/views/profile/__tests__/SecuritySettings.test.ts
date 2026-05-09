@@ -56,6 +56,21 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).toContain('useSecuritySettingsPage')
     expect(securitySettingsSource).not.toContain("from '@/api/auth'")
     expect(securitySettingsSource).not.toContain('validatePasswordForm')
+    expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
+    expect(securitySettingsSource).toContain(
+      'class="security-summary-item progress-card metric-panel-card"'
+    )
+    expect(securitySettingsSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(securitySettingsSource).toContain(
+      'class="security-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(securitySettingsSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(securitySettingsSource).toContain('<component :is="stat.icon" class="h-4 w-4" />')
+    expect(securitySettingsSource).not.toContain('class="security-summary-icon"')
   })
 
   it('密码修改进行中重复提交表单时只应提交一次', async () => {

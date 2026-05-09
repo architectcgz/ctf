@@ -131,6 +131,19 @@ describe('UserProfile', () => {
     expect(userProfileSource).toContain('useUserProfilePage')
     expect(userProfileSource).not.toContain("from '@/api/auth'")
     expect(userProfileSource).not.toContain("from '@/api/assessment'")
+    expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
+    expect(userProfileSource).toContain('class="profile-summary-item progress-card metric-panel-card"')
+    expect(userProfileSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(userProfileSource).toContain(
+      'class="profile-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(userProfileSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(userProfileSource).toContain('<component')
+    expect(userProfileSource).not.toContain('class="profile-summary-icon"')
   })
 
   it('管理员不应该展示个人报告区块', async () => {

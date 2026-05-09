@@ -525,10 +525,30 @@ describe('ScoreboardView', () => {
 
   it('排行榜页概况卡片应使用统一 metric-panel 样式类', () => {
     expect(scoreboardSource).toContain('class="scoreboard-summary-grid metric-panel-grid"')
-    expect(scoreboardSource).toContain('class="scoreboard-summary-item metric-panel-card"')
-    expect(scoreboardSource).toContain('class="scoreboard-summary-label metric-panel-label"')
-    expect(scoreboardSource).toContain('class="scoreboard-summary-value metric-panel-value"')
-    expect(scoreboardSource).toContain('class="scoreboard-summary-helper metric-panel-helper"')
+    expect(scoreboardSource).toContain('class="scoreboard-summary-item progress-card metric-panel-card"')
+    expect(scoreboardSource).toContain(
+      'class="scoreboard-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(scoreboardSource).toContain(
+      'class="scoreboard-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(scoreboardSource).toContain(
+      'class="scoreboard-summary-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(scoreboardSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(scoreboardSource).toContain('<Clock3 class="h-4 w-4" />')
+    expect(scoreboardSource).toContain('<Shield class="h-4 w-4" />')
+    expect(scoreboardSource).toContain('<Flag class="h-4 w-4" />')
+    expect(scoreboardDetailSource).toContain(
+      'class="scoreboard-summary-item progress-card metric-panel-card"'
+    )
+    expect(scoreboardDetailSource).toContain(
+      'class="scoreboard-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(scoreboardDetailSource).toContain('<Users class="h-4 w-4" />')
+    expect(scoreboardDetailSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(scoreboardDetailSource).toContain('<CheckCircle class="h-4 w-4" />')
+    expect(scoreboardDetailSource).toContain('<Shield class="h-4 w-4" />')
   })
 
   it('tabs 应直接位于页面顶部，points 页签不应重复渲染局部页头', () => {

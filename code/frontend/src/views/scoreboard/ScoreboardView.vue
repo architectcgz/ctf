@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
+import { ArrowRight, BarChart2, Clock3, Flag, Shield, Trophy, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
@@ -106,47 +106,51 @@ const {
               <span>当前排行概况</span>
             </div>
             <div class="scoreboard-summary-grid metric-panel-grid">
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">
-                  展示竞赛
+              <div class="scoreboard-summary-item progress-card metric-panel-card">
+                <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                  <span>展示竞赛</span>
+                  <Trophy class="h-4 w-4" />
                 </div>
-                <div class="scoreboard-summary-value metric-panel-value">
+                <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                   {{ contestCount }}
                 </div>
-                <div class="scoreboard-summary-helper metric-panel-helper">
+                <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                   当前可查看排行的竞赛总数
                 </div>
               </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">
-                  进行中
+              <div class="scoreboard-summary-item progress-card metric-panel-card">
+                <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                  <span>进行中</span>
+                  <Clock3 class="h-4 w-4" />
                 </div>
-                <div class="scoreboard-summary-value metric-panel-value">
+                <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                   {{ runningCount }}
                 </div>
-                <div class="scoreboard-summary-helper metric-panel-helper">
+                <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                   支持进入后实时刷新的竞赛数量
                 </div>
               </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">
-                  冻结竞赛
+              <div class="scoreboard-summary-item progress-card metric-panel-card">
+                <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                  <span>冻结竞赛</span>
+                  <Shield class="h-4 w-4" />
                 </div>
-                <div class="scoreboard-summary-value metric-panel-value">
+                <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                   {{ frozenCount }}
                 </div>
-                <div class="scoreboard-summary-helper metric-panel-helper">
+                <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                   当前处于封榜阶段的竞赛数量
                 </div>
               </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">
-                  已结束
+              <div class="scoreboard-summary-item progress-card metric-panel-card">
+                <div class="scoreboard-summary-label progress-card-label metric-panel-label">
+                  <span>已结束</span>
+                  <Flag class="h-4 w-4" />
                 </div>
-                <div class="scoreboard-summary-value metric-panel-value">
+                <div class="scoreboard-summary-value progress-card-value metric-panel-value">
                   {{ endedCount }}
                 </div>
-                <div class="scoreboard-summary-helper metric-panel-helper">
+                <div class="scoreboard-summary-helper progress-card-hint metric-panel-helper">
                   可查看最终成绩的历史竞赛
                 </div>
               </div>

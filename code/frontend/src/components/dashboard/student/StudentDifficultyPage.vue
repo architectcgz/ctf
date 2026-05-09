@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Flame } from 'lucide-vue-next'
+import { BarChart2, Flame, Target } from 'lucide-vue-next'
 
 import { difficultyLabel } from '@/utils/challenge'
 
@@ -61,6 +61,7 @@ const summaryCards = computed(() => [
     key: 'focus',
     label: '当前完成率',
     value: primaryDifficulty.value ? `${primaryDifficulty.value.rate}%` : '待建立',
+    icon: Target,
     helper: primaryDifficulty.value
       ? `${difficultyLabel(primaryDifficulty.value.difficulty)} 还有 ${primaryDifficulty.value.remaining} 道题待补，先把这一档推稳。`
       : '先做出第一批难度分布，这里就会告诉你下一步该推哪一档。',
@@ -71,6 +72,7 @@ const summaryCards = computed(() => [
     value: hasDifficultyStats.value
       ? `${solvedDifficultyCount.value} / ${orderedStats.value.length} 档`
       : '待建立',
+    icon: BarChart2,
     helper: hasDifficultyStats.value
       ? '看已经摸到的难度层级有多少，判断训练是不是还停在熟悉区间。'
       : '还没有难度数据时，先从题库里做几道题把强度分布跑出来。',
@@ -81,6 +83,7 @@ const summaryCards = computed(() => [
     value: primaryDifficulty.value
       ? `先补 ${difficultyLabel(primaryDifficulty.value.difficulty)}`
       : '先形成样本',
+    icon: Flame,
     helper: primaryDifficulty.value
       ? '先补完成率更低的一档，再继续往上提强度，训练节奏会更稳。'
       : '先把训练样本积累起来，再决定应该从哪一档开始往上推。',
@@ -167,7 +170,8 @@ function openPrimaryDifficulty(): void {
             class="difficulty-summary-card progress-card metric-panel-card"
           >
             <div class="journal-note-label progress-card-label metric-panel-label">
-              {{ card.label }}
+              <span>{{ card.label }}</span>
+              <component :is="card.icon" class="h-4 w-4" />
             </div>
             <div class="journal-note-value progress-card-value metric-panel-value">
               {{ card.value }}

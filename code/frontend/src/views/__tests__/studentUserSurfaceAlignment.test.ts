@@ -77,6 +77,7 @@ describe('student and user surface alignment', () => {
     expect(studentTimelineSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
+    expect(studentTimelineSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
     expect(studentTimelineSource).not.toContain('teacher-surface-section')
     expect(studentTimelineSource).toMatch(
       /\.timeline-metric-grid\.metric-panel-default-surface\s*\{[\s\S]*--metric-panel-background:\s*radial-gradient\(/s
@@ -132,8 +133,12 @@ describe('student and user surface alignment', () => {
       'class="recommendation-summary-card progress-card metric-panel-card"'
     )
     expect(studentRecommendationSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(studentRecommendationSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
+    expect(studentRecommendationSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
     expect(studentRecommendationSource).not.toContain('Top Queue')
     expect(studentRecommendationSource).not.toContain('Full List')
     expect(studentRecommendationSource).not.toContain('推荐摘要')
@@ -150,8 +155,12 @@ describe('student and user surface alignment', () => {
       'class="category-summary-card progress-card metric-panel-card"'
     )
     expect(studentCategoryProgressSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(studentCategoryProgressSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
+    expect(studentCategoryProgressSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
     expect(studentCategoryProgressSource).toContain(
       ':data-test="`category-action-${item.category}`"'
     )
@@ -170,8 +179,12 @@ describe('student and user surface alignment', () => {
       'class="difficulty-summary-card progress-card metric-panel-card"'
     )
     expect(studentDifficultySource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(studentDifficultySource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
+    expect(studentDifficultySource).toContain('<component :is="card.icon" class="h-4 w-4" />')
     expect(studentDifficultySource).toContain(':data-test="`difficulty-action-${item.difficulty}`"')
     expect(studentDifficultySource).not.toContain('difficulty-insight-list')
     expect(studentDifficultySource).not.toContain('难度层级总览')
@@ -188,6 +201,12 @@ describe('student and user surface alignment', () => {
     expect(instanceListSource).toContain('journal-shell-user')
     expect(instanceListSource).not.toContain('border-[var(--journal-border)]')
     expect(instanceListSource).not.toContain('border-[var(--journal-border)]/80')
+    expect(instanceListSource).toContain(
+      'class="instance-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(instanceListSource).toContain('<Activity class="h-4 w-4" />')
+    expect(instanceListSource).toContain('<Clock3 class="h-4 w-4" />')
+    expect(instanceListSource).toContain('<Server class="h-4 w-4" />')
 
     expect(notificationListSource).toContain('journal-shell-user')
     expect(notificationListSource).not.toContain('rgba(148, 163, 184, 0.58)')

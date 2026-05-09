@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { BarChart2, Target, Trophy } from 'lucide-vue-next'
 
 import { rankCategoryActionItems } from './utils'
 
@@ -46,6 +47,7 @@ const summaryCards = computed(() => [
     key: 'focus',
     label: '当前待补题量',
     value: primaryCategory.value ? `${primaryCategory.value.remaining} 道` : '待生成',
+    icon: Target,
     helper: primaryCategory.value
       ? `${primaryCategory.value.category} 还有 ${primaryCategory.value.remaining} 道题待补，先从这里补回训练短板。`
       : '先完成几道题，这里会自动形成下一步最值得先补的分类。',
@@ -54,6 +56,7 @@ const summaryCards = computed(() => [
     key: 'coverage',
     label: '整体覆盖率',
     value: `${props.completionRate}%`,
+    icon: BarChart2,
     helper:
       rankedCategories.value.length > 0
         ? '按当前分类题量加权后的总体进度，方便判断覆盖面是否在稳定扩大。'
@@ -63,6 +66,7 @@ const summaryCards = computed(() => [
     key: 'ranking',
     label: '当前排序依据',
     value: rankedCategories.value.length > 0 ? `${rankedCategories.value.length} 类` : '待生成',
+    icon: Trophy,
     helper:
       rankedCategories.value.length > 0
         ? '先按完成率找短板，再用题量打破并列，避免样本太小的分类抢到最前面。'
@@ -150,7 +154,8 @@ function openPrimaryCategory(): void {
             class="category-summary-card progress-card metric-panel-card"
           >
             <div class="journal-note-label progress-card-label metric-panel-label">
-              {{ card.label }}
+              <span>{{ card.label }}</span>
+              <component :is="card.icon" class="h-4 w-4" />
             </div>
             <div class="journal-note-value progress-card-value metric-panel-value">
               {{ card.value }}

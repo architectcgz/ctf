@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
+
 import ContestAnnouncementsPanel from '@/components/contests/ContestAnnouncementsPanel.vue'
 import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
@@ -56,14 +58,15 @@ defineProps<Props>()
         </div>
       </div>
 
-      <aside class="contest-score-rail metric-panel-card metric-panel-workspace-surface">
-        <div class="contest-score-rail__label metric-panel-label">
-          总分
+      <aside class="contest-score-rail progress-card metric-panel-card metric-panel-workspace-surface">
+        <div class="contest-score-rail__label progress-card-label metric-panel-label">
+          <span>总分</span>
+          <Trophy class="h-4 w-4" />
         </div>
-        <div class="contest-score-rail__value metric-panel-value">
+        <div class="contest-score-rail__value progress-card-value metric-panel-value">
           {{ totalPoints }} <small>分</small>
         </div>
-        <div class="contest-score-rail__note metric-panel-helper">
+        <div class="contest-score-rail__note progress-card-hint metric-panel-helper">
           {{ challengeCount }} 题 · {{ solvedCount }} 已解 · {{ memberCount }} 人
         </div>
       </aside>
@@ -73,46 +76,50 @@ defineProps<Props>()
 
     <section class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="contest-stat progress-card metric-panel-card">
-        <div class="contest-stat__label metric-panel-label">
-          队伍成员
+        <div class="contest-stat__label progress-card-label metric-panel-label">
+          <span>队伍成员</span>
+          <UsersRound class="h-4 w-4" />
         </div>
-        <div class="contest-stat__value metric-panel-value">
+        <div class="contest-stat__value progress-card-value metric-panel-value">
           {{ memberCount }}
         </div>
-        <div class="contest-stat__hint metric-panel-helper">
+        <div class="contest-stat__hint progress-card-hint metric-panel-helper">
           当前队伍人数
         </div>
       </article>
       <article class="contest-stat progress-card metric-panel-card">
-        <div class="contest-stat__label metric-panel-label">
-          题目数量
+        <div class="contest-stat__label progress-card-label metric-panel-label">
+          <span>题目数量</span>
+          <Target class="h-4 w-4" />
         </div>
-        <div class="contest-stat__value metric-panel-value">
+        <div class="contest-stat__value progress-card-value metric-panel-value">
           {{ challengeCount }}
         </div>
-        <div class="contest-stat__hint metric-panel-helper">
+        <div class="contest-stat__hint progress-card-hint metric-panel-helper">
           本场竞赛题目总数
         </div>
       </article>
       <article class="contest-stat progress-card metric-panel-card">
-        <div class="contest-stat__label metric-panel-label">
-          已解题目
+        <div class="contest-stat__label progress-card-label metric-panel-label">
+          <span>已解题目</span>
+          <CheckCircle2 class="h-4 w-4" />
         </div>
-        <div class="contest-stat__value metric-panel-value">
+        <div class="contest-stat__value progress-card-value metric-panel-value">
           {{ solvedCount }}
         </div>
-        <div class="contest-stat__hint metric-panel-helper">
+        <div class="contest-stat__hint progress-card-hint metric-panel-helper">
           当前账号已完成数量
         </div>
       </article>
       <article class="contest-stat progress-card metric-panel-card">
-        <div class="contest-stat__label metric-panel-label">
-          积分总览
+        <div class="contest-stat__label progress-card-label metric-panel-label">
+          <span>积分总览</span>
+          <Trophy class="h-4 w-4" />
         </div>
-        <div class="contest-stat__value metric-panel-value">
+        <div class="contest-stat__value progress-card-value metric-panel-value">
           {{ totalPoints }}
         </div>
-        <div class="contest-stat__hint metric-panel-helper">
+        <div class="contest-stat__hint progress-card-hint metric-panel-helper">
           全部题目可获得积分
         </div>
       </article>

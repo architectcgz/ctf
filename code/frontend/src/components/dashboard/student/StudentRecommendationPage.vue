@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowRight, ShieldAlert } from 'lucide-vue-next'
+import { ArrowRight, Clock3, Flame, ShieldAlert, Target } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
@@ -32,6 +32,7 @@ const summaryCards = computed(() => [
     key: 'focus',
     label: '当前补强方向',
     value: headline.value,
+    icon: Target,
     helper:
       visibleWeakDimensions.value.length > 0
         ? `先补 ${visibleWeakDimensions.value.join(' / ')}，把短板重新拉回稳定区间。`
@@ -41,6 +42,7 @@ const summaryCards = computed(() => [
     key: 'difficulty',
     label: '当前目标难度',
     value: targetDifficulty.value,
+    icon: Flame,
     helper:
       props.recommendations.length > 0
         ? '先从当前推荐队列开头进入，稳定抬高一档训练强度。'
@@ -50,6 +52,7 @@ const summaryCards = computed(() => [
     key: 'queue',
     label: '当前行动队列',
     value: `${props.recommendations.length} 道`,
+    icon: Clock3,
     helper:
       props.recommendations.length > 0
         ? '先做完这一组，再回来刷新下一批建议。'
@@ -100,7 +103,8 @@ const summaryCards = computed(() => [
             class="recommendation-summary-card progress-card metric-panel-card"
           >
             <div class="journal-note-label progress-card-label metric-panel-label">
-              {{ card.label }}
+              <span>{{ card.label }}</span>
+              <component :is="card.icon" class="h-4 w-4" />
             </div>
             <div class="journal-note-value progress-card-value metric-panel-value">
               {{ card.value }}

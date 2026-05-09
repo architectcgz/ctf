@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CalendarRange, Clock3, Trophy } from 'lucide-vue-next'
+import type { Component } from 'vue'
+import { CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { useContestListPage } from '@/features/contest-detail'
@@ -22,6 +23,19 @@ const {
   getModeLabel,
   getContestActionLabel,
 } = useContestListPage()
+
+function summaryMetricIcon(key: string): Component {
+  switch (key) {
+    case 'running':
+      return Clock3
+    case 'registering':
+      return CalendarRange
+    case 'ended':
+      return Flag
+    default:
+      return Trophy
+  }
+}
 </script>
 
 <template>
@@ -49,15 +63,16 @@ const {
             <div
               v-for="stat in summaryMetrics"
               :key="stat.key"
-              class="contest-summary-item metric-panel-card"
+              class="contest-summary-item progress-card metric-panel-card"
             >
-              <div class="contest-summary-label metric-panel-label">
-                {{ stat.label }}
+              <div class="contest-summary-label progress-card-label metric-panel-label">
+                <span>{{ stat.label }}</span>
+                <component :is="summaryMetricIcon(stat.key)" class="h-4 w-4" />
               </div>
-              <div class="contest-summary-value metric-panel-value">
+              <div class="contest-summary-value progress-card-value metric-panel-value">
                 {{ stat.value }}
               </div>
-              <div class="contest-summary-helper metric-panel-helper">
+              <div class="contest-summary-helper progress-card-hint metric-panel-helper">
                 {{ stat.hint }}
               </div>
             </div>

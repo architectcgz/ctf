@@ -82,10 +82,19 @@ describe('ContestList', () => {
     expect(contestListSource).not.toContain('<div class="journal-eyebrow">Contests</div>')
     expect(contestListSource).not.toContain('journal-eyebrow-text')
     expect(contestListSource).toContain('class="contest-summary-grid metric-panel-grid"')
-    expect(contestListSource).toContain('class="contest-summary-item metric-panel-card"')
-    expect(contestListSource).toContain('class="contest-summary-label metric-panel-label"')
-    expect(contestListSource).toContain('class="contest-summary-value metric-panel-value"')
-    expect(contestListSource).toContain('class="contest-summary-helper metric-panel-helper"')
+    expect(contestListSource).toContain('class="contest-summary-item progress-card metric-panel-card"')
+    expect(contestListSource).toContain(
+      'class="contest-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(contestListSource).toContain(
+      'class="contest-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(contestListSource).toContain(
+      'class="contest-summary-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(contestListSource).toContain(
+      '<component :is="summaryMetricIcon(stat.key)" class="h-4 w-4" />'
+    )
   })
 
   it('竞赛列表错误态操作按钮应接入共享 ui-btn 原语', () => {

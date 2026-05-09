@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { Activity, FileText, Server, Target } from 'lucide-vue-next'
 
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { TimelineEvent } from '@/api/contracts'
@@ -49,24 +50,28 @@ const timelineMetrics = computed(() => [
     key: 'solve',
     label: '成功解题',
     value: solveCount.value,
+    icon: Activity,
     helper: '累计命中 Flag 的训练次数',
   },
   {
     key: 'submit',
     label: '提交次数',
     value: submitCount.value,
+    icon: Target,
     helper: '最近训练周期内的提交总量',
   },
   {
     key: 'instance',
     label: '实例操作',
     value: instanceCount.value,
+    icon: Server,
     helper: '启动、访问和续期等实例相关动作',
   },
   {
     key: 'total',
     label: '总记录',
     value: totalTimelineCount.value,
+    icon: FileText,
     helper: '当前时间线中收录的训练事件数量',
   },
 ])
@@ -126,7 +131,8 @@ function changeTimelinePage(page: number): void {
             class="timeline-metric-card progress-card metric-panel-card"
           >
             <div class="journal-note-label progress-card-label metric-panel-label">
-              {{ metric.label }}
+              <span>{{ metric.label }}</span>
+              <component :is="metric.icon" class="h-4 w-4" />
             </div>
             <div class="journal-note-value progress-card-value metric-panel-value">
               {{ metric.value }}

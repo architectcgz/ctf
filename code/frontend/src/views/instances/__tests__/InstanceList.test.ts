@@ -126,10 +126,19 @@ describe('InstanceList', () => {
     expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
     expect(instanceListSource).not.toContain('journal-eyebrow-text')
     expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
-    expect(instanceListSource).toContain('class="instance-summary-item metric-panel-card"')
-    expect(instanceListSource).toContain('class="instance-summary-label metric-panel-label"')
-    expect(instanceListSource).toContain('class="instance-summary-value metric-panel-value"')
-    expect(instanceListSource).toContain('class="instance-summary-helper metric-panel-helper"')
+    expect(instanceListSource).toContain('class="instance-summary-item progress-card metric-panel-card"')
+    expect(instanceListSource).toContain(
+      'class="instance-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(instanceListSource).toContain(
+      'class="instance-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(instanceListSource).toContain(
+      'class="instance-summary-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(instanceListSource).toContain('<Activity class="h-4 w-4" />')
+    expect(instanceListSource).toContain('<Clock3 class="h-4 w-4" />')
+    expect(instanceListSource).toContain('<Server class="h-4 w-4" />')
     expect(journalNotesSource).toContain(
       'font-size: var(--metric-panel-label-size, var(--font-size-11));'
     )

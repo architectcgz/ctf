@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Activity, Clock3, Server } from 'lucide-vue-next'
 
 import {
   EXTEND_DURATION_SECONDS,
@@ -54,30 +55,39 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
         <section class="instance-summary">
           <div class="instance-summary-title">当前运行概况</div>
           <div class="instance-summary-grid metric-panel-grid">
-            <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">运行中</div>
-              <div class="instance-summary-value metric-panel-value">
+            <div class="instance-summary-item progress-card metric-panel-card">
+              <div class="instance-summary-label progress-card-label metric-panel-label">
+                <span>运行中</span>
+                <Activity class="h-4 w-4" />
+              </div>
+              <div class="instance-summary-value progress-card-value metric-panel-value">
                 {{ runningCount }}
               </div>
-              <div class="instance-summary-helper metric-panel-helper">
+              <div class="instance-summary-helper progress-card-hint metric-panel-helper">
                 当前仍在运行、可直接访问的实例数量
               </div>
             </div>
-            <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">等待创建</div>
-              <div class="instance-summary-value metric-panel-value">
+            <div class="instance-summary-item progress-card metric-panel-card">
+              <div class="instance-summary-label progress-card-label metric-panel-label">
+                <span>等待创建</span>
+                <Clock3 class="h-4 w-4" />
+              </div>
+              <div class="instance-summary-value progress-card-value metric-panel-value">
                 {{ waitingCount }}
               </div>
-              <div class="instance-summary-helper metric-panel-helper">
+              <div class="instance-summary-helper progress-card-hint metric-panel-helper">
                 已经提交创建请求、正在排队或启动中的实例数量
               </div>
             </div>
-            <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">实例上限</div>
-              <div class="instance-summary-value metric-panel-value">
+            <div class="instance-summary-item progress-card metric-panel-card">
+              <div class="instance-summary-label progress-card-label metric-panel-label">
+                <span>实例上限</span>
+                <Server class="h-4 w-4" />
+              </div>
+              <div class="instance-summary-value progress-card-value metric-panel-value">
                 {{ maxInstances }}
               </div>
-              <div class="instance-summary-helper metric-panel-helper">
+              <div class="instance-summary-helper progress-card-hint metric-panel-helper">
                 当前账号最多可同时保留的实例数量
               </div>
             </div>

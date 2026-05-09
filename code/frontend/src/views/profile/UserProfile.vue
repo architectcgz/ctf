@@ -81,7 +81,7 @@ const {
         </PageHeader>
 
         <section
-          class="profile-summary"
+          class="profile-summary metric-panel-default-surface"
           aria-label="账号概况"
         >
           <div class="profile-summary-title">
@@ -92,27 +92,23 @@ const {
             <article
               v-for="item in profileSummaryItems"
               :key="item.key"
-              class="profile-summary-item metric-panel-card"
+              class="profile-summary-item progress-card metric-panel-card"
             >
-              <div class="profile-summary-icon">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>{{ item.label }}</span>
                 <component
                   :is="item.icon"
                   class="h-4 w-4"
                 />
               </div>
-              <div>
-                <div class="journal-note-label metric-panel-label">
-                  {{ item.label }}
-                </div>
-                <div
-                  class="profile-summary-value metric-panel-value"
-                  :class="{ 'tech-font': item.techFont }"
-                >
-                  {{ item.value }}
-                </div>
-                <div class="journal-note-helper metric-panel-helper">
-                  {{ item.helper }}
-                </div>
+              <div
+                class="profile-summary-value progress-card-value metric-panel-value"
+                :class="{ 'tech-font': item.techFont }"
+              >
+                {{ item.value }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                {{ item.helper }}
               </div>
             </article>
           </div>
