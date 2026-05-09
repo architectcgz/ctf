@@ -4,12 +4,38 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 FAILURES: list[str] = []
+ARCHITECTURE_DOC_ROOT = ROOT / "docs/architecture"
+
+ARCHITECTURE_EVIDENCE_RE = re.compile(
+    r"("
+    r"code/(backend|frontend)/|"
+    r"docs/(architecture|contracts|operations|requirements)/|"
+    r"scripts/|"
+    r"challenges/|"
+    r"\b(GET|POST|PUT|PATCH|DELETE)\s+/|"
+    r"API[:：]|"
+    r"测试[:：]|"
+    r"依据[:：]|"
+    r"Guardrail|"
+    r"migration|"
+    r"router|"
+    r"composable|"
+    r"store|"
+    r"handler|"
+    r"service|"
+    r"repository"
+    r")",
+    re.IGNORECASE,
+)
+VAGUE_ARCHITECTURE_PHRASES = ["统一处理", "自动同步", "平台负责", "系统管理"]
+PLANNING_WORD_RE = re.compile(r"(待落地|TODO|后续计划|计划支持)")
 
 
 def fail(message: str) -> None:
@@ -18,6 +44,50 @@ def fail(message: str) -> None:
 
 def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
+
+
+def line_number(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def markdown_section(text: str, heading: str) -> str | None:
+    pattern = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.MULTILINE)
+    match = pattern.search(text)
+    if match is None:
+        return None
+    next_heading = re.search(r"^##\s+", text[match.end() :], flags=re.MULTILINE)
+    end = len(text) if next_heading is None else match.end() + next_heading.start()
+    return text[match.end() : end]
+
+
+def paragraphs_with_offsets(text: str) -> list[tuple[int, str]]:
+    paragraphs: list[tuple[int, str]] = []
+    start = 0
+    for part in re.split(r"\n\s*\n", text):
+        stripped = part.strip()
+        if stripped:
+            offset = text.find(part, start)
+            paragraphs.append((offset, stripped))
+            start = offset + len(part)
+    return paragraphs
+
+
+def git_changed_architecture_docs() -> set[Path]:
+    paths: set[Path] = set()
+    commands = [
+        ["git", "diff", "--name-only", "--cached", "--", "docs/architecture"],
+        ["git", "diff", "--name-only", "--", "docs/architecture"],
+    ]
+    for command in commands:
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False)
+        if result.returncode != 0:
+            continue
+        for raw in result.stdout.splitlines():
+            if raw.endswith(".md"):
+                path = ROOT / raw
+                if path.exists():
+                    paths.add(path)
+    return paths
 
 
 def resolve_ref(source: Path, token: str) -> Path | None:
@@ -80,6 +150,56 @@ def check_architecture_status() -> None:
             fail(f"{path.relative_to(ROOT)}: active architecture doc must not be Draft/初稿")
 
 
+def check_current_design_quality(path: Path, strict: bool) -> None:
+    text = path.read_text(encoding="utf-8")
+    rel = path.relative_to(ROOT)
+    current_design = markdown_section(text, "当前设计")
+    is_index_doc = path.name == "README.md" or "索引" in path.name
+
+    if strict and not is_index_doc and "pages" not in path.relative_to(ARCHITECTURE_DOC_ROOT).parts and current_design is None:
+        fail(f"{rel}: changed architecture doc must include `## 当前设计` or stay out of docs/architecture")
+        return
+    if current_design is None:
+        return
+
+    if "负责" not in current_design or "不负责" not in current_design:
+        fail(f"{rel}: `## 当前设计` must define component boundaries with 负责 / 不负责")
+    if not ARCHITECTURE_EVIDENCE_RE.search(current_design):
+        fail(f"{rel}: `## 当前设计` must cite code paths, API, contract docs, tests, or guardrails")
+
+    for offset, paragraph in paragraphs_with_offsets(current_design):
+        for phrase in VAGUE_ARCHITECTURE_PHRASES:
+            if phrase in paragraph and not ARCHITECTURE_EVIDENCE_RE.search(paragraph):
+                fail(
+                    f"{rel}:{line_number(text, text.find(current_design) + offset)}: "
+                    f"`{phrase}` needs nearby code/API/data/test evidence"
+                )
+        if "支持" in paragraph:
+            has_required_detail = all(word in paragraph for word in ["入口", "数据结构", "状态", "测试"])
+            if not has_required_detail and not ARCHITECTURE_EVIDENCE_RE.search(paragraph):
+                fail(
+                    f"{rel}:{line_number(text, text.find(current_design) + offset)}: "
+                    "`支持` claim needs entry, data structure, state change, and test evidence"
+                )
+        if PLANNING_WORD_RE.search(paragraph) and "待确认" not in paragraph and "已知限制" not in paragraph:
+            fail(
+                f"{rel}:{line_number(text, text.find(current_design) + offset)}: "
+                "Current architecture facts must not describe plans as implemented facts; use 待确认 or 已知限制"
+            )
+
+
+def check_architecture_doc_quality() -> None:
+    changed_docs = git_changed_architecture_docs()
+    current_design_docs = {
+        path
+        for path in ARCHITECTURE_DOC_ROOT.rglob("*.md")
+        if "## 当前设计" in path.read_text(encoding="utf-8")
+    }
+
+    for path in sorted(changed_docs | current_design_docs):
+        check_current_design_quality(path, strict=path in changed_docs)
+
+
 def check_diagrams() -> None:
     allowed = re.compile(r"\b(flowchart|sequenceDiagram|stateDiagram-v2|classDiagram|C4Context|C4Container|C4Component)\b")
     sensitive = re.compile(r"(password|passwd|secret|token|cookie|private[_-]?key|DATABASE_URL=|redis://|postgres://)", re.IGNORECASE)
@@ -119,6 +239,7 @@ def main() -> int:
     )
 
     check_architecture_status()
+    check_architecture_doc_quality()
     check_diagrams()
 
     if FAILURES:
