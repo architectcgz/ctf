@@ -339,7 +339,6 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-row-title {
-  font-family: var(--font-family-mono);
   font-size: var(--font-size-15);
   overflow: hidden;
   text-overflow: ellipsis;

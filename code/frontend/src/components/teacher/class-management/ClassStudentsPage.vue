@@ -477,7 +477,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 .teacher-directory-row:hover,
 .teacher-directory-row:focus-visible {
   background: var(--color-primary-soft);
-  box-shadow: inset 3px 0 0 var(--color-primary);
   outline: none;
 }
 

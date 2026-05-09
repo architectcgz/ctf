@@ -133,8 +133,6 @@ defineEmits<{
     var(--challenge-row-accent, var(--journal-accent)) 5%,
     transparent
   );
-  box-shadow: inset 2px 0 0
-    color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 58%, transparent);
 }
 
 .challenge-row:focus-visible {

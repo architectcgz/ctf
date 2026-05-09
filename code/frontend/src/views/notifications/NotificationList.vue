@@ -333,10 +333,6 @@ const {
   cursor: pointer;
 }
 
-.notification-row-unread {
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 56%, transparent);
-}
-
 .notification-chip {
   border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);

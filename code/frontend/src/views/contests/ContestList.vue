@@ -260,7 +260,6 @@ function summaryMetricIcon(key: string): Component {
 
 .contest-row-title {
   margin-top: var(--space-2-5);
-  font-family: var(--font-family-mono);
   font-size: var(--font-size-15);
   overflow: hidden;
   text-overflow: ellipsis;
