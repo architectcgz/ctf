@@ -63,7 +63,13 @@ describe('TeacherStudentManagement', () => {
           recent_event_count: 0,
           class_name: 'Class A',
         },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1, class_name: 'Class A' },
+        {
+          id: 'stu-2',
+          username: 'bob',
+          recent_event_count: 2,
+          solved_count: 1,
+          class_name: 'Class A',
+        },
       ]
       const filtered = all.filter((item) => {
         const keywordMatched =
@@ -83,13 +89,12 @@ describe('TeacherStudentManagement', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   afterEach(() => {
@@ -116,6 +121,7 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
       true
     )
+    expect(wrapper.find('.teacher-directory-shell.workspace-directory-list').exists()).toBe(true)
     expect(wrapper.find('.list-heading').exists()).toBe(true)
     expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
     expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
@@ -227,13 +233,12 @@ describe('TeacherStudentManagement', () => {
 
   it('管理员从学生管理返回班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -257,13 +262,12 @@ describe('TeacherStudentManagement', () => {
 
   it('管理员从学生管理进入学员分析时应停留在后台路由', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -574,13 +578,12 @@ describe('TeacherStudentManagement', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Missing Class',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Missing Class',
+    })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -598,7 +601,9 @@ describe('TeacherStudentManagement', () => {
     await flushPromises()
 
     await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
-    expect((wrapper.find('.teacher-directory-filter-control').element as HTMLSelectElement).value).toBe('')
+    expect(
+      (wrapper.find('.teacher-directory-filter-control').element as HTMLSelectElement).value
+    ).toBe('')
     expect(teacherApiMocks.getStudentsDirectory).toHaveBeenNthCalledWith(1, {
       class_name: undefined,
       keyword: undefined,
@@ -681,14 +686,26 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
+    expect(studentManagementSource).toContain(
+      'class="teacher-directory-shell workspace-directory-list"'
+    )
+    expect(studentManagementSource).toContain(
+      '--workspace-directory-shell-padding: var(--space-5);'
+    )
+    expect(studentManagementSource).toContain(
+      '--workspace-directory-shell-radius: var(--radius-2xl);'
+    )
     expect(studentManagementSource).toContain('<WorkspaceDirectoryToolbar')
     expect(studentManagementSource).toContain('<WorkspaceDataTable')
     expect(studentManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManagementSource).toContain('class="list-heading"')
+    expect(studentManagementSource).toContain('class="list-heading teacher-directory-shell__head"')
+    expect(studentManagementSource).not.toContain(
+      'class="workspace-directory-list teacher-student-directory-table"'
+    )
     expect(studentManagementSource).not.toContain('teacher-controls-title')
     expect(studentManagementSource).toContain('filter-panel-title="学生筛选"')
-    expect(studentManagementSource).toContain("key: 'solved_count', label: '做题数'")
-    expect(studentManagementSource).toContain("key: 'total_score', label: '得分数'")
+    expect(studentManagementSource).toMatch(/key:\s*'solved_count'[\s\S]*label:\s*'做题数'/)
+    expect(studentManagementSource).toMatch(/key:\s*'total_score'[\s\S]*label:\s*'得分数'/)
     expect(studentManagementSource).toContain('class="teacher-directory-row-solved"')
     expect(studentManagementSource).toContain('class="teacher-directory-row-score"')
     expect(studentManagementSource).not.toContain("label: '数据'")

@@ -17,7 +17,7 @@ const teacherSurfaceSource = readFileSync(
 )
 
 const teacherDirectoryPattern =
-  /WorkspaceDataTable[\s\S]*workspace-directory-list[\s\S]*teacher-directory-cell-name[\s\S]*teacher-directory-row-cta/s
+  /teacher-directory-shell[\s\S]*workspace-directory-list[\s\S]*WorkspaceDataTable[\s\S]*teacher-directory-cell-name[\s\S]*teacher-directory-row-cta/s
 const teacherClassDirectoryPattern =
   /WorkspaceDataTable[\s\S]*workspace-directory-list[\s\S]*teacher-directory-cell-class-name[\s\S]*teacher-directory-state-chip/s
 const teacherInstanceDataTablePattern =
