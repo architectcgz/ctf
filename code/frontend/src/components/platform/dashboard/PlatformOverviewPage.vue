@@ -73,10 +73,10 @@ const {
                 <span class="hero-meta-badge__hint">{{ railCopy }}</span>
               </div>
 
-              <div class="overview-action-grid">
+              <div class="header-actions overview-action-grid">
                 <button
                   type="button"
-                  class="ui-btn ui-btn--primary overview-action-main"
+                  class="header-btn header-btn--primary overview-action-main"
                   @click="emit('openAuditLog')"
                 >
                   <Clock class="h-4 w-4" />
@@ -84,18 +84,18 @@ const {
                 </button>
                 <button
                   type="button"
-                  class="ui-btn ui-btn--ghost"
+                  class="header-btn header-btn--ghost"
                   @click="emit('openCheatDetection')"
                 >
                   <ShieldCheck class="h-4 w-4" />
                   风险研判
                 </button>
-                <a class="ui-btn ui-btn--ghost overview-anchor-btn" href="#admin-dashboard-alerts">
+                <a class="header-btn header-btn--ghost overview-anchor-btn" href="#admin-dashboard-alerts">
                   <AlertTriangle class="h-4 w-4" />
                   当前告警
                 </a>
                 <a
-                  class="ui-btn ui-btn--ghost overview-anchor-btn"
+                  class="header-btn header-btn--ghost overview-anchor-btn"
                   href="#admin-dashboard-hotspots"
                 >
                   <Server class="h-4 w-4" />
@@ -455,8 +455,6 @@ const {
   gap: var(--space-2);
 }
 
-.overview-hero-actions > .ui-btn,
-.overview-action-grid > .ui-btn,
 .workspace-alert-actions > .ui-btn {
   --ui-btn-height: 2.5rem;
   --ui-btn-padding: var(--space-2) var(--space-3);
@@ -472,15 +470,6 @@ const {
   grid-column: 1 / -1;
 }
 
-.overview-action-grid > .ui-btn.ui-btn--primary {
-  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: var(--color-primary-hover);
-  --ui-btn-primary-hover-shadow: 0 12px 24px
-    color-mix(in srgb, var(--journal-accent) 24%, transparent);
-}
-
-.overview-action-grid > .ui-btn.ui-btn--ghost,
 .workspace-alert-actions > .ui-btn.ui-btn--ghost {
   --ui-btn-border: var(--journal-border);
   --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);

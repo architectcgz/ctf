@@ -63,20 +63,20 @@ function handleCreate(): void {
 
     <div class="image-header__side">
       <div
-        class="image-header__actions"
+        class="header-actions image-header__actions"
         role="group"
         aria-label="镜像列表操作"
       >
         <button
           :disabled="loading"
-          class="ui-btn ui-btn--ghost"
+          class="header-btn header-btn--ghost"
           data-testid="image-refresh-button"
           @click="handleRefresh"
         >
           立即刷新
         </button>
         <button
-          class="ui-btn ui-btn--primary"
+          class="header-btn header-btn--primary"
           @click="handleCreate"
         >
           创建镜像
@@ -87,20 +87,6 @@ function handleCreate(): void {
 </template>
 
 <style scoped>
-.image-header__actions > .ui-btn {
-  --ui-btn-height: 2.45rem;
-  --ui-btn-radius: 0.75rem;
-  --ui-btn-padding: var(--space-2) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-  --ui-btn-font-weight: 600;
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
-  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  --ui-btn-ghost-color: var(--journal-ink);
-  --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-}
-
 .image-header {
   --image-toolbar-control-border: var(--color-border-default);
   --image-toolbar-control-border-strong: color-mix(in srgb, var(--color-border-default) 80%, var(--color-text-primary));
@@ -115,12 +101,10 @@ function handleCreate(): void {
 }
 
 .image-header__actions > [data-testid='image-refresh-button'] {
-  --ui-btn-border: var(--image-toolbar-control-border);
-  --ui-btn-background: var(--image-toolbar-control-background);
-  --ui-btn-color: var(--color-text-primary);
-  --ui-btn-hover-border: var(--image-toolbar-control-border-strong);
-  --ui-btn-hover-background: var(--image-toolbar-control-background);
-  --ui-btn-hover-color: var(--color-primary);
+  --header-btn-border: var(--image-toolbar-control-border);
+  --header-btn-background: var(--image-toolbar-control-background);
+  --header-btn-color: var(--color-text-primary);
+  --header-btn-hover-color: var(--color-primary);
   box-shadow: var(--image-toolbar-control-shadow);
 }
 
@@ -150,12 +134,6 @@ function handleCreate(): void {
   display: grid;
   gap: var(--space-3);
   justify-items: start;
-}
-
-.image-header__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
 }
 
 .image-status-strip {

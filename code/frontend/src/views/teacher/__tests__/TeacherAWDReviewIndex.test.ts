@@ -136,7 +136,7 @@ describe('TeacherAWDReviewIndex', () => {
 
     await flushPromises()
 
-    const overviewButton = wrapper.get('button.teacher-btn--ghost')
+    const overviewButton = wrapper.get('button.header-btn--ghost')
 
     expect(overviewButton.text()).toContain('教学概览')
 

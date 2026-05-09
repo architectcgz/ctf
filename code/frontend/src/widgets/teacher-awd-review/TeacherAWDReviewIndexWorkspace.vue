@@ -69,14 +69,14 @@ const summaryItems = computed(() =>
         <template #actions>
           <button
             type="button"
-            class="teacher-btn teacher-btn--ghost"
+            class="header-btn header-btn--ghost"
             @click="emit('openDashboard')"
           >
             {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction }}
           </button>
           <button
             type="button"
-            class="teacher-btn teacher-btn--primary"
+            class="header-btn header-btn--primary"
             @click="emit('refresh')"
           >
             <RefreshCcw class="h-4 w-4" />

@@ -72,7 +72,7 @@ const emit = defineEmits<{
           </div>
           <button
             type="button"
-            class="teacher-btn teacher-btn--ghost teacher-btn--compact"
+            class="header-btn header-btn--ghost header-btn--compact"
             @click="emit('setRound', round.round_number)"
           >
             下钻分析

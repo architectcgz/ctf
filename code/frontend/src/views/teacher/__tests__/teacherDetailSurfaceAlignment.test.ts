@@ -19,6 +19,7 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const teacherPanelShellSource = readFileSync(
   `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`,
   'utf-8'
@@ -36,14 +37,15 @@ const studentInsightCompositeSource = [
 
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
-    expect(teacherSurfaceSource).toMatch(
-      /\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s
+    expect(styleSource).toMatch(
+      /\.header-btn\s*\{[\s\S]*border:\s*1px solid[\s\S]*--header-control-border/s
     )
+    expect(teacherSurfaceSource).toContain('--header-control-border: var(--teacher-control-border);')
 
     expect(classStudentsSource).toContain('--teacher-card-border:')
     expect(classStudentsSource).toContain('--teacher-control-border:')
     expect(classStudentsSource).toContain('--teacher-divider:')
-    expect(classStudentsSource).not.toContain('.teacher-btn {')
+    expect(classStudentsSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(classStudentsSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )

@@ -123,7 +123,7 @@ describe('Admin ChallengeDetail', () => {
     expect(useBackofficeBreadcrumbDetail().breadcrumbDetailTitle.value).toBeNull()
   })
 
-  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
     expect(challengeDetailSource).toContain('usePlatformChallengeDetailRoutePage')
     expect(challengeDetailSource).not.toContain('useRouteQueryTabs')
     expect(challengeDetailSource).not.toContain('useRoute')
@@ -132,8 +132,9 @@ describe('Admin ChallengeDetail', () => {
       "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
-    expect(adminChallengeTopbarPanelSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(adminChallengeTopbarPanelSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(adminChallengeTopbarPanelSource).toContain('class="header-actions topbar-actions"')
+    expect(adminChallengeTopbarPanelSource).toContain('class="header-btn header-btn--primary"')
+    expect(adminChallengeTopbarPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
   })

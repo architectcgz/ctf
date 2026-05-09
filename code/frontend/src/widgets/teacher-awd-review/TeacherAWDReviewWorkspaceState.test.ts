@@ -13,7 +13,7 @@ describe('TeacherAWDReviewWorkspaceState', () => {
       },
     })
 
-    await wrapper.get('button.teacher-btn--primary').trigger('click')
+    await wrapper.get('button.header-btn--primary').trigger('click')
 
     expect(wrapper.emitted('loadReview')).toBeTruthy()
   })

@@ -24,6 +24,7 @@
   );
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --header-control-border: var(--teacher-control-border);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   font-family: var(--teacher-management-font, var(--font-family-sans));
 }
@@ -191,12 +192,6 @@
   max-width: 42.5rem;
 }
 
-.teacher-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
 .teacher-summary,
 .teacher-management-shell .report-summary {
   display: grid;
@@ -352,47 +347,4 @@
 .teacher-management-shell .teacher-summary,
 .teacher-management-shell .report-summary {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.teacher-btn:hover,
-.teacher-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--primary:hover,
-.teacher-btn--primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }

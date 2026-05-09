@@ -4,23 +4,19 @@ import adminDashboardSource from '@/components/platform/dashboard/PlatformOvervi
 
 describe('admin dashboard surface alignment', () => {
   it('softens the hero primary action border and focus ring to match the dark surface system', () => {
-    expect(adminDashboardSource).toMatch(
-      /\.overview-action-grid\s*>\s*\.ui-btn,\s*\.workspace-alert-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.5rem;[\s\S]*--ui-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 16%, transparent\);/s
+    expect(adminDashboardSource).toContain('class="header-actions overview-action-grid"')
+    expect(adminDashboardSource).toContain(
+      'class="header-btn header-btn--primary overview-action-main"'
     )
+    expect(adminDashboardSource).toContain('class="header-btn header-btn--ghost"')
     expect(adminDashboardSource).toMatch(
-      /\.overview-action-grid\s*>\s*\.ui-btn\.ui-btn--primary\s*\{[\s\S]*--ui-btn-primary-hover-shadow:\s*0 12px 24px color-mix\(in srgb,\s*var\(--journal-accent\) 24%, transparent\);/s
-    )
-    expect(adminDashboardSource).toMatch(
-      /\.overview-action-grid\s*>\s*\.ui-btn\.ui-btn--primary\s*\{[\s\S]*--ui-btn-primary-border:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 46%, var\(--journal-border\)\);/s
-    )
-    expect(adminDashboardSource).toMatch(
-      /\.overview-action-grid\s*>\s*\.ui-btn\.ui-btn--ghost,\s*\.workspace-alert-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--journal-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
+      /\.workspace-alert-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--journal-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
     )
   })
 
   it('frames the overview hero action rail as a compact operational panel', () => {
     expect(adminDashboardSource).toContain('class="overview-hero-actions"')
-    expect(adminDashboardSource).toContain('class="overview-action-grid"')
+    expect(adminDashboardSource).toContain('class="header-actions overview-action-grid"')
     expect(adminDashboardSource).toMatch(
       /\.overview-hero-actions\s*\{[\s\S]*border:\s*1px solid var\(--workspace-line-soft\);[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:/s
     )

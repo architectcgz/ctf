@@ -28,10 +28,10 @@ function handleBack(): void {
       </h1>
     </div>
 
-    <div class="contest-ops-hero__actions">
+    <div class="header-actions contest-ops-hero__actions">
       <button
         type="button"
-        class="ui-btn ui-btn--ghost"
+        class="header-btn header-btn--ghost"
         @click="handleBack"
       >
         返回竞赛目录
@@ -107,19 +107,7 @@ function handleBack(): void {
 }
 
 .contest-ops-hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-3);
   padding-top: var(--space-1);
-}
-
-.contest-ops-hero__actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-radius: 1rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-  --ui-btn-font-weight: 600;
 }
 
 .contest-ops-summary {

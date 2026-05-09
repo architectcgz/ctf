@@ -108,17 +108,17 @@ function handleClassChange(event: Event): void {
             <p class="teacher-copy workspace-page-copy">按班级筛选、搜索并进入学员分析。</p>
           </div>
 
-          <div class="teacher-actions">
+          <div class="header-actions">
             <button
               type="button"
-              class="ui-btn ui-btn--secondary"
+              class="header-btn header-btn--ghost"
               @click="emit('openClassManagement')"
             >
               班级管理
             </button>
             <button
               type="button"
-              class="ui-btn ui-btn--secondary"
+              class="header-btn header-btn--ghost"
               @click="emit('openReportExport')"
             >
               导出班级报告

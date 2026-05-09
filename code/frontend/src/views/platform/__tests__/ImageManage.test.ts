@@ -174,9 +174,10 @@ describe('ImageManage', () => {
     expect(imageDetailModalSource).toContain('class="image-detail__grid"')
   })
 
-  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
+  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(imageManageHeroPanelSource).toContain('class="header-actions image-header__actions"')
+    expect(imageManageHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
+    expect(imageManageHeroPanelSource).toContain('class="header-btn header-btn--primary"')
     expect(imageDirectoryPanelSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
     expect(combinedSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
@@ -194,7 +195,7 @@ describe('ImageManage', () => {
 
   it('立即刷新按钮应使用与目录筛选控件一致的外边框语义', () => {
     expect(imageManageHeroPanelSource).toMatch(
-      /\.image-header__actions\s*>\s*\[data-testid='image-refresh-button'\]\s*\{[\s\S]*--ui-btn-border:\s*var\(--image-toolbar-control-border\);[\s\S]*--ui-btn-background:\s*var\(--image-toolbar-control-background\);[\s\S]*box-shadow:\s*var\(--image-toolbar-control-shadow\);/s
+      /\.image-header__actions\s*>\s*\[data-testid='image-refresh-button'\]\s*\{[\s\S]*--header-btn-border:\s*var\(--image-toolbar-control-border\);[\s\S]*--header-btn-background:\s*var\(--image-toolbar-control-background\);[\s\S]*box-shadow:\s*var\(--image-toolbar-control-shadow\);/s
     )
   })
 

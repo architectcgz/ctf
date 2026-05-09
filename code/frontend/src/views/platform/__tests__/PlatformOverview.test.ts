@@ -97,12 +97,14 @@ describe('PlatformOverview', () => {
     expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-hotspots')
   })
 
-  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
     expect(adminDashboardPageSource).toContain(
-      'class="ui-btn ui-btn--primary overview-action-main"'
+      'class="header-btn header-btn--primary overview-action-main"'
     )
-    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost overview-anchor-btn"')
+    expect(adminDashboardPageSource).toContain('class="header-btn header-btn--ghost"')
+    expect(adminDashboardPageSource).toContain(
+      'class="header-btn header-btn--ghost overview-anchor-btn"'
+    )
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
   })
@@ -126,7 +128,7 @@ describe('PlatformOverview', () => {
       'class="journal-note progress-card metric-panel-card"'
     )
     expect(adminDashboardPageSource).toContain('class="overview-hero-actions"')
-    expect(adminDashboardPageSource).toContain('class="overview-action-grid"')
+    expect(adminDashboardPageSource).toContain('class="header-actions overview-action-grid"')
   })
 
   it('总览面板应将系统脉搏收进 hero 右侧操作轨道，而不是单独的 rail 区块', () => {

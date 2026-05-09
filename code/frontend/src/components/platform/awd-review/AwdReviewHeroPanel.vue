@@ -27,17 +27,17 @@ const emit = defineEmits<{
       </p>
     </div>
 
-    <div class="admin-awd-review-shell__hero-actions">
+    <div class="header-actions admin-awd-review-shell__hero-actions">
       <button
         type="button"
-        class="ui-btn ui-btn--ghost"
+        class="header-btn header-btn--ghost"
         @click="emit('back')"
       >
         返回平台概览
       </button>
       <button
         type="button"
-        class="ui-btn ui-btn--primary"
+        class="header-btn header-btn--primary"
         @click="emit('refresh')"
       >
         <RefreshCcw class="h-4 w-4" />
@@ -103,25 +103,6 @@ const emit = defineEmits<{
 
 .admin-awd-review-shell__hero-main {
   max-width: 48rem;
-}
-
-.admin-awd-review-shell__hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.admin-awd-review-shell__hero-actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-radius: 1rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-}
-
-.admin-awd-review-shell__hero-actions > .ui-btn.ui-btn--ghost {
-  --ui-btn-border: var(--admin-control-border);
-  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  --ui-btn-color: var(--journal-ink);
 }
 
 .admin-awd-review-shell__summary {

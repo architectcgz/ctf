@@ -36,10 +36,10 @@ function handleSync(): void {
       </div>
 
       <div class="awd-library-hero-actions">
-        <div class="quick-actions">
+        <div class="header-actions quick-actions">
           <button
             type="button"
-            class="ui-btn ui-btn--primary"
+            class="header-btn header-btn--primary"
             :disabled="loading"
             @click="handleSync"
           >

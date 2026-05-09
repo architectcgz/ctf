@@ -275,11 +275,11 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
           </div>
 
           <div class="awd-library-hero-actions">
-            <div class="quick-actions">
+            <div class="header-actions quick-actions">
               <button
                 v-if="mode === 'library'"
                 type="button"
-                class="ui-btn ui-btn--ghost"
+                class="header-btn header-btn--ghost"
                 @click="emit('refresh')"
               >
                 <RefreshCw class="h-4 w-4" />
@@ -289,7 +289,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                 v-if="mode === 'library'"
                 id="awd-challenge-open-import"
                 type="button"
-                class="ui-btn ui-btn--primary"
+                class="header-btn header-btn--primary"
                 @click="emit('openImportPage')"
               >
                 <Upload class="h-4 w-4" />
@@ -298,7 +298,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
               <button
                 v-if="mode === 'import'"
                 type="button"
-                class="ui-btn ui-btn--ghost"
+                class="header-btn header-btn--ghost"
                 @click="emit('refreshImportQueue')"
               >
                 <RefreshCw class="h-4 w-4" />
@@ -711,7 +711,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
 }
 
 .quick-actions {
-  display: flex;
   gap: var(--space-3);
 }
 

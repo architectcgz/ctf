@@ -34,7 +34,7 @@ const emit = defineEmits<{
     <template #action>
       <button
         type="button"
-        class="teacher-btn teacher-btn--primary"
+        class="header-btn header-btn--primary"
         @click="emit('reload')"
       >
         重新加载

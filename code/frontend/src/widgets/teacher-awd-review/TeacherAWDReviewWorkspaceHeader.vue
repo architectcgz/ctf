@@ -33,7 +33,7 @@ withDefaults(
       </p>
     </div>
 
-    <div class="teacher-actions">
+    <div class="header-actions">
       <slot name="actions" />
     </div>
   </header>

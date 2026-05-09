@@ -162,16 +162,16 @@ describe('ChallengeManage', () => {
   it('题目导入入口按钮应使用题目管理页自己的主题变量样式', () => {
     expect(challengeManageHeroPanelSource).toContain('class="challenge-manage-hero-actions"')
     expect(challengeManageHeroPanelSource).toContain(
-      'class="ui-btn ui-btn--primary challenge-manage-import-button"'
+      'class="header-btn header-btn--primary challenge-manage-import-button"'
     )
     expect(challengeManageHeroPanelSource).toContain('导入题目')
     expect(challengeManageHeroPanelSource).not.toContain('awd-library-hero-actions')
     expect(challengeManageHeroPanelSource).not.toContain('导入资源包')
     expect(challengeManageHeroPanelSource).toMatch(
-      /\.challenge-manage-import-button\s*\{[\s\S]*--ui-btn-border:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 34%, var\(--journal-border\)\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 12%, var\(--journal-surface\)\);[\s\S]*--ui-btn-color:\s*var\(--journal-accent-strong\);/s
+      /\.challenge-manage-import-button\s*\{[\s\S]*--header-btn-border:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 34%, var\(--journal-border\)\);[\s\S]*--header-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 12%, var\(--journal-surface\)\);[\s\S]*--header-btn-color:\s*var\(--journal-accent-strong\);/s
     )
     expect(challengeManageHeroPanelSource).toMatch(
-      /\.challenge-manage-import-button\s*\{[\s\S]*--ui-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 28%, transparent\);/s
+      /\.challenge-manage-import-button\s*\{[\s\S]*--header-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 28%, transparent\);/s
     )
   })
 

@@ -176,34 +176,34 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           </div>
 
           <div
-            class="teacher-actions"
+            class="header-actions"
             role="group"
             aria-label="学员分析快捷操作"
           >
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="emit('openClassStudents')"
             >
               返回学生列表
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="emit('openReportExport')"
             >
               导出班级报告
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="emit('openReviewArchive')"
             >
               完整复盘页
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="header-btn header-btn--primary"
               @click="emit('exportReviewArchive')"
             >
               导出复盘归档
@@ -337,6 +337,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   --journal-eyebrow-color: var(--journal-accent-strong);
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --header-control-border: var(--teacher-control-border);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
   --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
@@ -727,11 +728,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
     grid-template-columns: 1fr;
   }
 
-  .teacher-actions {
+  .header-actions {
     width: 100%;
   }
 
-  .teacher-btn {
+  .header-btn {
     flex: 1 1 100%;
   }
 }

@@ -406,6 +406,7 @@ const {
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --teacher-card-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  --header-control-border: var(--teacher-control-border);
   --teacher-divider: color-mix(in srgb, var(--color-border-default) 86%, transparent);
   --workspace-line-soft: var(--color-border-subtle);
   --workspace-panel: var(--color-bg-surface);
@@ -413,10 +414,6 @@ const {
   --workspace-brand-ink: var(--journal-accent-strong);
   --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
-}
-
-.teacher-btn {
-  border: 1px solid var(--teacher-control-border);
 }
 
 .teacher-badge-card {

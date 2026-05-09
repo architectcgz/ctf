@@ -24,7 +24,7 @@ const emit = defineEmits<{
 <template>
   <button
     type="button"
-    class="teacher-btn teacher-btn--ghost"
+    class="header-btn header-btn--ghost"
     @click="emit('openIndex')"
   >
     <ArrowLeft class="h-4 w-4" />
@@ -33,7 +33,7 @@ const emit = defineEmits<{
   <button
     data-testid="awd-review-export-archive"
     type="button"
-    class="teacher-btn teacher-btn--ghost"
+    class="header-btn header-btn--ghost"
     :disabled="loading || !hasReview || exporting === 'archive'"
     @click="emit('exportArchive')"
   >
@@ -43,7 +43,7 @@ const emit = defineEmits<{
   <button
     data-testid="awd-review-export-report"
     type="button"
-    class="teacher-btn teacher-btn--primary"
+    class="header-btn header-btn--primary"
     :disabled="loading || !hasReview || exporting === 'report' || !canExportReport"
     @click="emit('exportReport')"
   >

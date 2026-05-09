@@ -15,9 +15,11 @@ const contestOperationsHubCombinedSource = [
 
 describe('contest ui primitive adoption', () => {
   it('contest workspace pages should consume shared ui button and control primitives', () => {
-    expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestOperationsHubHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
-    expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-hero__actions"')
+    expect(contestOperationsHubCombinedSource).toContain(
+      'class="header-actions contest-ops-hero__actions"'
+    )
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-actions"')
     expect(contestOperationsHubHeroPanelSource).toContain(
       '--metric-panel-columns: repeat(4, minmax(0, 1fr));'

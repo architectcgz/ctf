@@ -219,10 +219,10 @@ function handleImportChange(event: Event): void {
             <h1 class="workspace-page-title">用户治理台</h1>
           </div>
 
-          <div class="user-panel-actions">
+          <div class="header-actions user-panel-actions">
             <button
               type="button"
-              class="ui-btn ui-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="emit('refresh')"
             >
               <RefreshCw class="h-4 w-4" />
@@ -231,7 +231,7 @@ function handleImportChange(event: Event): void {
             <button
               id="user-open-import"
               type="button"
-              class="ui-btn ui-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="switchPanel('import')"
             >
               <FileUp class="h-4 w-4" />
@@ -240,7 +240,7 @@ function handleImportChange(event: Event): void {
             <button
               id="user-open-create"
               type="button"
-              class="ui-btn ui-btn--primary"
+              class="header-btn header-btn--primary"
               @click="emit('openCreateDialog')"
             >
               <UserPlus class="h-4 w-4" />
@@ -590,18 +590,18 @@ function handleImportChange(event: Event): void {
               </p>
             </div>
 
-            <div class="user-panel-actions">
+            <div class="header-actions user-panel-actions">
               <button
                 id="user-return-overview"
                 type="button"
-                class="ui-btn ui-btn--ghost"
+                class="header-btn header-btn--ghost"
                 @click="switchPanel('overview')"
               >
                 返回工作台
               </button>
               <button
                 type="button"
-                class="ui-btn ui-btn--primary"
+                class="header-btn header-btn--primary"
                 @click="triggerImport"
               >
                 <FileUp class="h-4 w-4" />
@@ -699,14 +699,6 @@ function handleImportChange(event: Event): void {
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.user-panel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-}
-
 .user-overview-grid {
   --admin-summary-grid-gap: var(--space-3-5);
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
@@ -721,7 +713,6 @@ function handleImportChange(event: Event): void {
   color: var(--journal-muted);
 }
 
-.user-panel-actions > .ui-btn,
 .user-row__actions > .ui-btn,
 .user-detail-actions > .ui-btn {
   --ui-btn-height: 2.75rem;
@@ -737,20 +728,6 @@ function handleImportChange(event: Event): void {
   --ui-btn-padding: var(--space-1-5) var(--space-3);
   --ui-btn-radius: 0.8rem;
   --ui-btn-font-size: var(--font-size-0-8125);
-}
-
-.user-panel-actions > .ui-btn.ui-btn--primary {
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: var(--color-primary-hover);
-}
-
-.user-panel-actions > .ui-btn.ui-btn--ghost {
-  --ui-btn-border: var(--admin-control-border);
-  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  --ui-btn-color: var(--journal-ink);
-  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  --ui-btn-hover-color: var(--journal-accent);
 }
 
 .user-row__actions > .ui-btn.ui-btn--secondary {

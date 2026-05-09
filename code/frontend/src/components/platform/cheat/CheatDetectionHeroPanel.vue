@@ -37,7 +37,7 @@ function handleRefresh(): void {
       </p>
     </div>
 
-    <div class="cheat-hero-actions">
+    <div class="header-actions cheat-hero-actions">
       <div
         v-if="generatedAtLabel"
         class="hero-meta-badge"
@@ -47,7 +47,7 @@ function handleRefresh(): void {
       </div>
       <button
         type="button"
-        class="ui-btn ui-btn--ghost"
+        class="header-btn header-btn--ghost"
         @click="handleOpenAudit"
       >
         <SearchCheck class="h-4 w-4" />
@@ -55,7 +55,7 @@ function handleRefresh(): void {
       </button>
       <button
         type="button"
-        class="ui-btn ui-btn--primary"
+        class="header-btn header-btn--primary"
         @click="handleRefresh"
       >
         <RefreshCw
@@ -99,36 +99,8 @@ function handleRefresh(): void {
 }
 
 .cheat-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: flex-end;
-  gap: var(--space-3);
   padding-bottom: 0.5rem;
-}
-
-.cheat-hero-actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-radius: 1rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-  --ui-btn-font-weight: 600;
-  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.cheat-hero-actions > .ui-btn.ui-btn--primary {
-  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: var(--color-primary-hover);
-}
-
-.cheat-hero-actions > .ui-btn.ui-btn--ghost {
-  --ui-btn-border: var(--journal-border);
-  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  --ui-btn-color: var(--journal-ink);
-  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  --ui-btn-hover-color: var(--journal-accent);
 }
 
 .hero-meta-badge {

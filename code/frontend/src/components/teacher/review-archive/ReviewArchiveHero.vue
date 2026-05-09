@@ -36,24 +36,24 @@ const statItems = [
             将学生训练摘要、攻防证据、Writeup 与评阅记录收束为一份可讲解、可导出的课堂复盘视图。
           </p>
         </div>
-        <div class="archive-hero__actions">
+        <div class="header-actions archive-hero__actions">
           <button
             type="button"
-            class="ui-btn ui-btn--secondary"
+            class="header-btn header-btn--ghost"
             @click="emit('back')"
           >
             返回学生列表
           </button>
           <button
             type="button"
-            class="ui-btn ui-btn--secondary"
+            class="header-btn header-btn--ghost"
             @click="emit('openAnalysis')"
           >
             返回学员分析
           </button>
           <button
             type="button"
-            class="ui-btn ui-btn--primary"
+            class="header-btn header-btn--primary"
             :disabled="exporting"
             @click="emit('exportArchive')"
           >

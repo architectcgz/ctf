@@ -39,7 +39,8 @@ describe('Teacher student review archive workspace extraction', () => {
     )
     expect(reviewArchiveSummarySectionSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
 
-    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveHeroSource).toContain('class="header-actions archive-hero__actions"')
+    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--ghost"')
+    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--primary"')
   })
 })

@@ -222,8 +222,9 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
     expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
-    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveHeroSource).toContain('class="header-actions archive-hero__actions"')
+    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--ghost"')
+    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--primary"')
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
   })
 

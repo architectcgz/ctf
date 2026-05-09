@@ -156,10 +156,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             </p>
           </div>
 
-          <div class="teacher-actions">
+          <div class="header-actions">
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="header-btn header-btn--primary"
               @click="emit('openDashboard')"
             >
               返回教学概览

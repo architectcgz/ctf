@@ -15,18 +15,20 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
 describe('teacher base surface alignment', () => {
   it('teacher base pages should soften control, card, and divider borders', () => {
-    expect(teacherSurfaceSource).toMatch(
-      /\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s
+    expect(styleSource).toMatch(
+      /\.header-btn\s*\{[\s\S]*border:\s*1px solid[\s\S]*--header-control-border/s
     )
+    expect(teacherSurfaceSource).toContain('--header-control-border: var(--teacher-control-border);')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell {')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-hero')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-summary')
 
     expect(classManagementSource).toContain('teacher-management-shell')
-    expect(classManagementSource).not.toContain('.teacher-btn {')
+    expect(classManagementSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(classManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(classManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(classManagementSource).toMatch(
@@ -37,7 +39,7 @@ describe('teacher base surface alignment', () => {
     )
 
     expect(studentManagementSource).toContain('teacher-management-shell')
-    expect(studentManagementSource).not.toContain('.teacher-btn {')
+    expect(studentManagementSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(studentManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(studentManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(studentManagementSource).toMatch(
@@ -47,9 +49,7 @@ describe('teacher base surface alignment', () => {
     expect(dashboardSource).toContain('--teacher-card-border:')
     expect(dashboardSource).toContain('--teacher-control-border:')
     expect(dashboardSource).toContain('--teacher-divider:')
-    expect(dashboardSource).toMatch(
-      /\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s
-    )
+    expect(dashboardSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(dashboardSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -58,7 +58,7 @@ describe('teacher base surface alignment', () => {
     )
 
     expect(instanceManagementSource).toContain('teacher-management-shell')
-    expect(instanceManagementSource).not.toContain('.teacher-btn {')
+    expect(instanceManagementSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(instanceManagementSource).toContain(
       '--teacher-management-hero-border: var(--teacher-card-border);'
     )
@@ -168,12 +168,12 @@ describe('teacher base surface alignment', () => {
   it('awd review pages should soften page header, cards, and divider borders through shared teacher shells', () => {
     expect(awdReviewSurfaceShellSource).toContain('teacher-management-shell')
     expect(awdReviewSurfaceShellSource).toContain('workspace-shell')
-    expect(awdReviewIndexWorkspaceSource).not.toContain('.teacher-btn {')
+    expect(awdReviewIndexWorkspaceSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewIndexWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(awdReviewIndexWorkspaceSource).not.toContain('rounded-[30px]')
 
-    expect(awdReviewWorkspaceSource).not.toContain('.teacher-btn {')
+    expect(awdReviewWorkspaceSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewWorkspaceSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(awdReviewWorkspaceSource).not.toContain('rounded-[30px]')

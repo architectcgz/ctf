@@ -98,7 +98,7 @@ describe('PlatformInstanceManagement', () => {
     )
     expect(instanceManageHeroPanelSource).toContain('返回概览')
     expect(instanceManageHeroPanelSource).toContain('刷新列表')
-    expect(instanceManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(instanceManageHeroPanelSource).toContain('class="header-btn header-btn--primary"')
     expect(instanceManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )

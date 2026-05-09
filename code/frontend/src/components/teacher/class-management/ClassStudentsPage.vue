@@ -200,20 +200,24 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               </section>
             </div>
 
-            <div class="teacher-actions">
+            <div class="header-actions">
               <button
                 type="button"
-                class="ui-btn ui-btn--secondary"
+                class="header-btn header-btn--ghost"
                 @click="emit('openClassManagement')"
               >
                 返回
               </button>
-              <button type="button" class="ui-btn ui-btn--secondary" @click="emit('openDashboard')">
+              <button
+                type="button"
+                class="header-btn header-btn--ghost"
+                @click="emit('openDashboard')"
+              >
                 概览
               </button>
               <button
                 type="button"
-                class="ui-btn ui-btn--primary"
+                class="header-btn header-btn--primary"
                 @click="emit('openReportExport')"
               >
                 导出班级报告
@@ -410,6 +414,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --header-control-border: var(--teacher-control-border);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
 }
 

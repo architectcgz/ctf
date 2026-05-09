@@ -372,9 +372,10 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
   })
 
-  it('用户治理页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--primary"')
+  it('用户治理页头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(userGovernanceSource).toContain('class="header-actions user-panel-actions"')
+    expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
+    expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
     expect(userGovernanceSource).toContain('class="ui-btn ui-btn--secondary user-action-btn"')
     expect(userGovernanceSource).toContain('class="ui-btn ui-btn--danger user-action-btn"')
     expect(userGovernanceSource).not.toContain('admin-btn admin-btn-ghost')

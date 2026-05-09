@@ -113,17 +113,17 @@ function handleStatusFilterChange(event: Event): void {
             </p>
           </div>
 
-          <div class="teacher-actions">
+          <div class="header-actions">
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="header-btn header-btn--primary"
               @click="emit('openDashboard')"
             >
               教学概览
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="header-btn header-btn--ghost"
               @click="emit('openReportExport')"
             >
               导出班级报告

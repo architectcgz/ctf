@@ -38,10 +38,10 @@ function handleImport(): void {
         </p>
       </div>
       <div class="challenge-manage-hero-actions">
-        <div class="challenge-manage-actions">
+        <div class="header-actions challenge-manage-actions">
           <button
             type="button"
-            class="ui-btn ui-btn--primary challenge-manage-import-button"
+            class="header-btn header-btn--primary challenge-manage-import-button"
             @click="handleImport"
           >
             <Plus class="h-4 w-4" />
@@ -162,17 +162,17 @@ function handleImport(): void {
 }
 
 .challenge-manage-import-button {
-  --ui-btn-border: color-mix(in srgb, var(--journal-accent) 34%, var(--journal-border));
-  --ui-btn-background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  --ui-btn-color: var(--journal-accent-strong);
-  --ui-btn-hover-background: color-mix(
+  --header-btn-border: color-mix(in srgb, var(--journal-accent) 34%, var(--journal-border));
+  --header-btn-background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  --header-btn-color: var(--journal-accent-strong);
+  --header-btn-hover-background: color-mix(
     in srgb,
     var(--journal-accent) 18%,
     var(--journal-surface)
   );
-  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent-strong) 46%, var(--journal-border));
-  --ui-btn-hover-color: var(--journal-accent-strong);
-  --ui-btn-hover-shadow: 0 0.75rem 1.5rem color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --header-btn-hover-border: color-mix(in srgb, var(--journal-accent-strong) 46%, var(--journal-border));
+  --header-btn-hover-color: var(--journal-accent-strong);
+  --header-btn-hover-shadow: 0 0.75rem 1.5rem color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --header-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 28%, transparent);
 }
 </style>
