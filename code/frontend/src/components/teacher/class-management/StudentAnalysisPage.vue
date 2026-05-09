@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AlertTriangle, CheckCircle, Trophy } from 'lucide-vue-next'
 import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -238,36 +239,39 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           v-if="activeTab === 'overview'"
           class="summary-strip metric-panel-grid"
         >
-          <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">
-              已做题目数
+          <article class="summary-card progress-card metric-panel-card">
+            <div class="summary-card__label progress-card-label metric-panel-label">
+              <span>已做题目数</span>
+              <CheckCircle class="h-4 w-4" />
             </div>
-            <div class="summary-card__value metric-panel-value">
+            <div class="summary-card__value progress-card-value metric-panel-value">
               {{ progress?.solved_challenges ?? 0 }}
             </div>
-            <div class="summary-card__hint metric-panel-helper">
+            <div class="summary-card__hint progress-card-hint metric-panel-helper">
               已成功完成的题目数量
             </div>
           </article>
-          <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">
-              完成率
+          <article class="summary-card progress-card metric-panel-card">
+            <div class="summary-card__label progress-card-label metric-panel-label">
+              <span>完成率</span>
+              <Trophy class="h-4 w-4" />
             </div>
-            <div class="summary-card__value metric-panel-value">
+            <div class="summary-card__value progress-card-value metric-panel-value">
               {{ solvedRate }}%
             </div>
-            <div class="summary-card__hint metric-panel-helper">
+            <div class="summary-card__hint progress-card-hint metric-panel-helper">
               基于当前学员训练数据计算
             </div>
           </article>
-          <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">
-              薄弱维度
+          <article class="summary-card progress-card metric-panel-card">
+            <div class="summary-card__label progress-card-label metric-panel-label">
+              <span>薄弱维度</span>
+              <AlertTriangle class="h-4 w-4" />
             </div>
-            <div class="summary-card__value metric-panel-value">
+            <div class="summary-card__value progress-card-value metric-panel-value">
               {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
             </div>
-            <div class="summary-card__hint metric-panel-helper">
+            <div class="summary-card__hint progress-card-hint metric-panel-helper">
               基于能力画像提炼的风险点
             </div>
           </article>

@@ -165,7 +165,8 @@ const observations = computed(() =>
         class="insight-kpi-card progress-card metric-panel-card"
       >
         <div class="insight-kpi-label progress-card-label metric-panel-label">
-          {{ item.label }}
+          <span>{{ item.label }}</span>
+          <component :is="item.icon" class="h-4 w-4" />
         </div>
         <div class="insight-kpi-value progress-card-value metric-panel-value">
           {{ item.value }}

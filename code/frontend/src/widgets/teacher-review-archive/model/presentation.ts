@@ -1,3 +1,6 @@
+import type { Component } from 'vue'
+import { CheckCircle, Clock3, Trophy } from 'lucide-vue-next'
+
 export const REVIEW_ARCHIVE_STATE_COPY = {
   errorTitle: '复盘归档加载失败',
   reload: '重新加载',
@@ -27,6 +30,7 @@ export interface ReviewArchiveSummaryCardSchema {
   value: string | number
   hint: string
   valueClass?: string
+  icon: Component
 }
 
 interface ReviewArchiveSkillDimensionItem {
@@ -53,6 +57,7 @@ export function buildReviewArchiveSummaryCards(
       label: REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateLabel,
       value: `${input.solvedRate}%`,
       hint: `${REVIEW_ARCHIVE_SUMMARY_COPY.solvedRateHintPrefix} ${input.totalSolved} / ${input.totalChallenges}`,
+      icon: Trophy,
     },
     {
       key: 'correct_submission',
@@ -60,6 +65,7 @@ export function buildReviewArchiveSummaryCards(
       label: REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionLabel,
       value: input.correctSubmissionCount,
       hint: REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionHint,
+      icon: CheckCircle,
     },
     {
       key: 'latest_activity',
@@ -68,6 +74,7 @@ export function buildReviewArchiveSummaryCards(
       value: input.formattedLastActivity,
       hint: REVIEW_ARCHIVE_SUMMARY_COPY.latestActivityHint,
       valueClass: 'summary-card__value--time',
+      icon: Clock3,
     },
   ]
 }

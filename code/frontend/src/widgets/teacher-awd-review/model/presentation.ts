@@ -1,3 +1,13 @@
+import type { Component } from 'vue'
+import {
+  Activity,
+  FileText,
+  FolderKanban,
+  ScanEye,
+  Users,
+  Waypoints,
+} from 'lucide-vue-next'
+
 export interface TeacherAwdReviewSummaryStats {
   roundCount: number
   teamCount: number
@@ -11,6 +21,7 @@ export interface TeacherAwdReviewSummaryItem {
   value: string | number
   hint: string
   valueClass?: string
+  icon: Component
 }
 
 export interface TeacherAwdReviewIndexSummaryStats {
@@ -44,22 +55,26 @@ export function buildTeacherAwdReviewSummaryItems(
       label: '轮次范围',
       value: summaryStats.roundCount,
       hint: '当前视图覆盖的轮次数量',
+      icon: Waypoints,
     },
     {
       label: '参与队伍',
       value: summaryStats.teamCount,
       hint: '当前视图包含的队伍数量',
+      icon: Users,
     },
     {
       label: '服务 / 攻击 / 流量',
       value: `${summaryStats.serviceCount} / ${summaryStats.attackCount} / ${summaryStats.trafficCount}`,
       hint: '证据总量与服务运行信号',
+      icon: Activity,
     },
     {
       label: '导出状态',
       value: polling ? '后台处理中...' : '链路就绪',
       hint: '归档与教师报告导出链路状态',
       valueClass: 'awd-review-status-text',
+      icon: FileText,
     },
   ]
 }
@@ -72,16 +87,19 @@ export function buildTeacherAwdReviewIndexSummaryItems(
       label: '赛事数量',
       value: summaryStats.totalCount,
       hint: '当前可进入 AWD 复盘的赛事总数',
+      icon: FolderKanban,
     },
     {
       label: '进行中',
       value: summaryStats.runningCount,
       hint: '仍在持续产出实时攻防信号的赛事',
+      icon: ScanEye,
     },
     {
       label: '可导出教师报告',
       value: summaryStats.exportReadyCount,
       hint: '已结束并允许生成教师复盘报告的赛事',
+      icon: Waypoints,
     },
   ]
 }

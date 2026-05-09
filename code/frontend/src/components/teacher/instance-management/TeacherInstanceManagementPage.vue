@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search, Trash2 } from 'lucide-vue-next'
+import { Activity, Clock3, Eye, Search, Trash2 } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -176,7 +176,8 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                当前可见
+                <span>当前可见</span>
+                <Eye class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ totalCount }}
@@ -187,7 +188,8 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                运行中
+                <span>运行中</span>
+                <Activity class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ runningCount }}
@@ -198,7 +200,8 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                即将到期
+                <span>即将到期</span>
+                <Clock3 class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ expiringSoonCount }}

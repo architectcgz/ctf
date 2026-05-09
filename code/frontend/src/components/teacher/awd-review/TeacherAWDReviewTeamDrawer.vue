@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Clock3, Trophy, Users } from 'lucide-vue-next'
 import type {
   TeacherAWDReviewAttackItemData,
   TeacherAWDReviewServiceItemData,
@@ -41,36 +42,39 @@ function formatServiceRef(serviceId?: string): string {
         class="awd-review-drawer__summary metric-panel-default-surface"
       >
         <div class="awd-review-drawer__metrics metric-panel-grid metric-panel-default-surface">
-          <article class="metric-panel-card">
-            <div class="metric-panel-label">
-              总分
+          <article class="progress-card metric-panel-card">
+            <div class="progress-card-label metric-panel-label">
+              <span>总分</span>
+              <Trophy class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="progress-card-value metric-panel-value">
               {{ team.total_score }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="progress-card-hint metric-panel-helper">
               队伍当前累计分数
             </div>
           </article>
-          <article class="metric-panel-card">
-            <div class="metric-panel-label">
-              成员数
+          <article class="progress-card metric-panel-card">
+            <div class="progress-card-label metric-panel-label">
+              <span>成员数</span>
+              <Users class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="progress-card-value metric-panel-value">
               {{ team.member_count }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="progress-card-hint metric-panel-helper">
               当前队伍成员数量
             </div>
           </article>
-          <article class="metric-panel-card">
-            <div class="metric-panel-label">
-              最近命中
+          <article class="progress-card metric-panel-card">
+            <div class="progress-card-label metric-panel-label">
+              <span>最近命中</span>
+              <Clock3 class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value awd-review-drawer__time">
+            <div class="progress-card-value metric-panel-value awd-review-drawer__time">
               {{ team.last_solve_at ? formatDate(team.last_solve_at) : '--' }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="progress-card-hint metric-panel-helper">
               最近一次有效命中时间
             </div>
           </article>

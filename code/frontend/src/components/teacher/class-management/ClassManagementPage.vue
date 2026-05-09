@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowRight, FolderKanban } from 'lucide-vue-next'
+import { ArrowRight, FolderKanban, Users } from 'lucide-vue-next'
 
 import type { TeacherClassItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -131,7 +131,8 @@ function handleStatusFilterChange(event: Event): void {
           <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <div class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                班级数量
+                <span>班级数量</span>
+                <FolderKanban class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ total }}
@@ -142,7 +143,8 @@ function handleStatusFilterChange(event: Event): void {
             </div>
             <div class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                当前页学生数
+                <span>当前页学生数</span>
+                <Users class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ currentPageStudentCount }}

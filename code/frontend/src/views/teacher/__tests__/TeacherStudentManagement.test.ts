@@ -208,6 +208,12 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
+    expect(studentManagementSource).toContain('<span>可访问班级</span>')
+    expect(studentManagementSource).toContain('<FolderKanban class="h-4 w-4" />')
+    expect(studentManagementSource).toContain('<span>当前班级学生</span>')
+    expect(studentManagementSource).toContain('<Users class="h-4 w-4" />')
+    expect(studentManagementSource).toContain('<span>搜索结果</span>')
+    expect(studentManagementSource).toContain('<Search class="h-4 w-4" />')
   })
 
   it('页面应通过 feature model 获取学生目录状态，不再直接耦合 teacher api', () => {

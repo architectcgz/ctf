@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, ChevronLeft, Search } from 'lucide-vue-next'
+import { Activity, ArrowRight, ChevronLeft, Search, Target, Users } from 'lucide-vue-next'
 import { computed, type Component } from 'vue'
 
 import type {
@@ -172,7 +172,8 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
-                      班级人数
+                      <span>班级人数</span>
+                      <Users class="h-4 w-4" />
                     </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
@@ -180,7 +181,8 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                   </div>
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
-                      平均解题
+                      <span>平均解题</span>
+                      <Target class="h-4 w-4" />
                     </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ averageSolvedText }}
@@ -188,7 +190,8 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                   </div>
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
-                      近 7 天活跃率
+                      <span>近 7 天活跃率</span>
+                      <Activity class="h-4 w-4" />
                     </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ activeRateText }}

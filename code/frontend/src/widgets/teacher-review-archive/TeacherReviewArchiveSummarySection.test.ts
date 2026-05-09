@@ -55,6 +55,7 @@ describe('TeacherReviewArchiveSummarySection', () => {
     expect(wrapper.text()).toContain('有效提交')
     expect(wrapper.text()).toContain('4')
     expect(wrapper.text()).toContain('2026')
+    expect(wrapper.findAll('.summary-card .lucide')).toHaveLength(3)
   })
 
   it('应按得分从高到低排序能力维度', () => {

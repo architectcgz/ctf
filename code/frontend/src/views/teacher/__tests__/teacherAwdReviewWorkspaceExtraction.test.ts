@@ -34,5 +34,8 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="teacher-topbar workspace-tab-heading"')
     expect(awdReviewSummaryPanelSource).toContain('class="progress-card metric-panel-card"')
+    expect(awdReviewSummaryPanelSource).toContain(
+      '<component :is="item.icon" v-if="item.icon" class="h-4 w-4" />'
+    )
   })
 })

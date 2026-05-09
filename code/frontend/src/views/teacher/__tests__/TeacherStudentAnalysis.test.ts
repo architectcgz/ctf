@@ -430,6 +430,12 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
     )
+    expect(studentAnalysisPageSource).toContain('<span>已做题目数</span>')
+    expect(studentAnalysisPageSource).toContain('<CheckCircle class="h-4 w-4" />')
+    expect(studentAnalysisPageSource).toContain('<span>完成率</span>')
+    expect(studentAnalysisPageSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(studentAnalysisPageSource).toContain('<span>薄弱维度</span>')
+    expect(studentAnalysisPageSource).toContain('<AlertTriangle class="h-4 w-4" />')
   })
 
   it('学员详情面板应通过 section 组件装配复盘区，而不是直接依赖 review workspace widget', () => {

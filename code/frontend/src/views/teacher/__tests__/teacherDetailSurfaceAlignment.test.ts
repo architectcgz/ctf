@@ -9,7 +9,11 @@ import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsP
 import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
+import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'
+import studentInsightManualReviewSource from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
+import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -19,6 +23,16 @@ const teacherPanelShellSource = readFileSync(
   `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`,
   'utf-8'
 )
+const reviewArchiveCombinedSource = [
+  reviewArchiveSource,
+  reviewArchiveWorkspaceSource,
+  reviewArchiveSummarySectionSource,
+].join('\n')
+const studentInsightCompositeSource = [
+  studentInsightPanelSource,
+  studentInsightWriteupsSource,
+  studentInsightManualReviewSource,
+].join('\n')
 
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
@@ -49,36 +63,36 @@ describe('teacher detail surface alignment', () => {
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0 0 var\(--space-5\);[\s\S]*?padding:\s*var\(--space-1\) 0 0;/s
     )
     expect(studentAnalysisSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
-    expect(studentAnalysisSource).toContain('class="summary-card metric-panel-card"')
+    expect(studentAnalysisSource).toContain('class="summary-card progress-card metric-panel-card"')
     expect(studentAnalysisSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
     )
 
-    expect(reviewArchiveSource).toContain('--teacher-card-border:')
-    expect(reviewArchiveSource).toContain('--teacher-divider:')
-    expect(reviewArchiveSource).toContain('--journal-accent: var(--color-primary);')
-    expect(reviewArchiveSource).toContain(
+    expect(reviewArchiveCombinedSource).toContain('--teacher-card-border:')
+    expect(reviewArchiveCombinedSource).toContain('--teacher-divider:')
+    expect(reviewArchiveCombinedSource).toContain('--journal-accent: var(--color-primary);')
+    expect(reviewArchiveCombinedSource).toContain(
       '--journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));'
     )
-    expect(reviewArchiveSource).toMatch(
+    expect(reviewArchiveCombinedSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
-    expect(reviewArchiveSource).toMatch(
+    expect(reviewArchiveCombinedSource).toMatch(
       /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
     )
-    expect(reviewArchiveSource).toContain('metric-panel-card')
-    expect(reviewArchiveSource).toContain('--metric-panel-border: var(--teacher-card-border);')
-    expect(reviewArchiveSource).toContain('class="summary-grid metric-panel-grid metric-panel-default-surface"')
-    expect(reviewArchiveSource).toContain(
-      'class="summary-card summary-card--primary metric-panel-card"'
+    expect(reviewArchiveCombinedSource).toContain('metric-panel-card')
+    expect(reviewArchiveCombinedSource).toContain('--metric-panel-border: var(--teacher-card-border);')
+    expect(reviewArchiveCombinedSource).toContain('class="summary-grid metric-panel-grid metric-panel-default-surface"')
+    expect(reviewArchiveCombinedSource).toContain(
+      'class="summary-card progress-card metric-panel-card"'
     )
-    expect(reviewArchiveSource).toContain('class="summary-card__label metric-panel-label"')
-    expect(reviewArchiveSource).toContain('class="summary-card__value metric-panel-value"')
-    expect(reviewArchiveSource).toContain('class="summary-card__hint metric-panel-helper"')
-    expect(reviewArchiveSource).not.toContain('--journal-accent: #2563eb;')
-    expect(reviewArchiveSource).not.toContain('--journal-accent-strong: #1d4ed8;')
-    expect(reviewArchiveSource).not.toContain(
+    expect(reviewArchiveCombinedSource).toContain('class="summary-card__label progress-card-label metric-panel-label"')
+    expect(reviewArchiveCombinedSource).toContain('class="summary-card__value progress-card-value metric-panel-value"')
+    expect(reviewArchiveCombinedSource).toContain('class="summary-card__hint progress-card-hint metric-panel-helper"')
+    expect(reviewArchiveCombinedSource).not.toContain('--journal-accent: #2563eb;')
+    expect(reviewArchiveCombinedSource).not.toContain('--journal-accent-strong: #1d4ed8;')
+    expect(reviewArchiveCombinedSource).not.toContain(
       'color-mix(in srgb, #f59e0b 14%, var(--journal-surface))'
     )
   })
@@ -103,34 +117,34 @@ describe('teacher detail surface alignment', () => {
       /\.insight-overview-layout\s*:deep\(\.section-card\)\s*\{[\s\S]*?border-top:\s*0;/s
     )
     expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
-    expect(studentInsightPanelSource).toMatch(
+    expect(studentInsightCompositeSource).toMatch(
       /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-label progress-card-label metric-panel-label"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-value progress-card-value metric-panel-value"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-hint progress-card-hint metric-panel-helper"'
     )
-    expect(studentInsightPanelSource).toContain(
-      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"'
+    expect(studentInsightCompositeSource).toContain(
+      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card progress-card metric-panel-card"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightManualReviewSource).toContain(
       'class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightManualReviewSource).toContain(
       'class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
     expect(studentInsightPanelSource).not.toContain('challenge-btn-outline')

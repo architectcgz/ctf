@@ -1,3 +1,6 @@
+import type { Component } from 'vue'
+import { Activity, CheckCircle, MousePointerClick, Waypoints } from 'lucide-vue-next'
+
 import type {
   TeacherAttackEventData,
   TeacherAttackSessionData,
@@ -15,6 +18,7 @@ export interface ReviewWorkspaceSummaryItem {
   label: string
   value: number
   hint: string
+  icon: Component
 }
 
 export interface ReviewWorkspaceFilterOption {
@@ -43,24 +47,28 @@ export function buildTeacherStudentReviewSummaryItems(input: {
       label: '会话数',
       value: input.sessionSummary?.total_sessions ?? 0,
       hint: '已聚合的攻击或解题过程',
+      icon: Waypoints,
     },
     {
       key: 'event_count',
       label: '事件数',
       value: input.sessionSummary?.event_count ?? 0,
       hint: '纳入会话的关键动作',
+      icon: Activity,
     },
     {
       key: 'success_count',
       label: '成功会话',
       value: input.sessionSummary?.success_count ?? 0,
       hint: '命中提交或 AWD 攻击成功',
+      icon: CheckCircle,
     },
     {
       key: 'proxy_request_count',
       label: '实操请求',
       value: input.evidenceSummary?.proxy_request_count ?? 0,
       hint: '经平台代理记录的请求',
+      icon: MousePointerClick,
     },
   ]
 }

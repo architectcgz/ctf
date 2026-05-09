@@ -51,19 +51,20 @@ const summaryCards = computed(() =>
         <article
           v-for="card in summaryCards"
           :key="card.key"
-          class="summary-card metric-panel-card"
+          class="summary-card progress-card metric-panel-card"
           :class="`summary-card--${card.tone}`"
         >
-          <div class="summary-card__label metric-panel-label">
-            {{ card.label }}
+          <div class="summary-card__label progress-card-label metric-panel-label">
+            <span>{{ card.label }}</span>
+            <component :is="card.icon" class="h-4 w-4" />
           </div>
           <div
-            class="summary-card__value metric-panel-value"
+            class="summary-card__value progress-card-value metric-panel-value"
             :class="card.valueClass"
           >
             {{ card.value }}
           </div>
-          <div class="summary-card__hint metric-panel-helper">
+          <div class="summary-card__hint progress-card-hint metric-panel-helper">
             {{ card.hint }}
           </div>
         </article>

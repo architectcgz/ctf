@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowRight } from 'lucide-vue-next'
+import { ArrowRight, FileText, FolderKanban, Star } from 'lucide-vue-next'
 
 import type { TeacherSubmissionWriteupItemData } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
@@ -73,7 +73,10 @@ function moderateWriteup(
     <template v-else>
       <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
         <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">已发布题解</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>已发布题解</span>
+            <FileText class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ publishedWriteupSubmissions.length }}
           </div>
@@ -82,7 +85,10 @@ function moderateWriteup(
           </div>
         </article>
         <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">对应题目</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>对应题目</span>
+            <FolderKanban class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ publishedChallengeCount }}
           </div>
@@ -91,7 +97,10 @@ function moderateWriteup(
           </div>
         </article>
         <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">推荐中</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>推荐中</span>
+            <Star class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ publishedRecommendedWriteupCount }}
           </div>

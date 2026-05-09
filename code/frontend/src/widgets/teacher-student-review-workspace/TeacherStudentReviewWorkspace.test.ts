@@ -97,6 +97,7 @@ describe('TeacherStudentReviewWorkspace', () => {
     expect(wrapper.text()).toContain('训练')
     expect(wrapper.text()).toContain('POST')
     expect(wrapper.text()).toContain('/login')
+    expect(wrapper.findAll('.metric-panel-label svg')).toHaveLength(4)
   })
 
   it('应在筛选变更时发出查询更新事件', async () => {

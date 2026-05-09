@@ -31,6 +31,13 @@ describe('Teacher student review archive workspace extraction', () => {
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
     expect(reviewArchiveSummarySectionSource).toContain('class="review-archive-summary-grid"')
     expect(reviewArchiveSummarySectionSource).toContain('class="skill-bars"')
+    expect(reviewArchiveSummarySectionSource).toContain(
+      'class="summary-card progress-card metric-panel-card"'
+    )
+    expect(reviewArchiveSummarySectionSource).toContain(
+      'class="summary-card__label progress-card-label metric-panel-label"'
+    )
+    expect(reviewArchiveSummarySectionSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
 
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')

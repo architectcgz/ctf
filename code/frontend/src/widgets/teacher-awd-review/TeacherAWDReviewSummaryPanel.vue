@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+
 interface SummaryItem {
   label: string
   value: string | number
   hint: string
   valueClass?: string
+  icon?: Component
 }
 
 withDefaults(
@@ -36,7 +39,8 @@ withDefaults(
         class="progress-card metric-panel-card"
       >
         <div class="progress-card-label metric-panel-label">
-          {{ item.label }}
+          <span>{{ item.label }}</span>
+          <component :is="item.icon" v-if="item.icon" class="h-4 w-4" />
         </div>
         <div
           class="progress-card-value metric-panel-value"

@@ -289,6 +289,12 @@ describe('InstanceManagement', () => {
     expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
+    expect(instanceManagementSource).toContain('<span>当前可见</span>')
+    expect(instanceManagementSource).toContain('<Eye class="h-4 w-4" />')
+    expect(instanceManagementSource).toContain('<span>运行中</span>')
+    expect(instanceManagementSource).toContain('<Activity class="h-4 w-4" />')
+    expect(instanceManagementSource).toContain('<span>即将到期</span>')
+    expect(instanceManagementSource).toContain('<Clock3 class="h-4 w-4" />')
     expect(instanceManagementSource).not.toContain('teacher-controls-title')
     expect(instanceManagementSource).not.toContain('teacher-controls-copy')
     expect(instanceManagementSource).toContain(

@@ -259,6 +259,12 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toMatch(
       /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
+    expect(classStudentsPageSource).toContain('<span>班级人数</span>')
+    expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')
+    expect(classStudentsPageSource).toContain('<span>平均解题</span>')
+    expect(classStudentsPageSource).toContain('<Target class="h-4 w-4" />')
+    expect(classStudentsPageSource).toContain('<span>近 7 天活跃率</span>')
+    expect(classStudentsPageSource).toContain('<Activity class="h-4 w-4" />')
   })
 
   it('应该保留已解码的班级名并使用原值请求学生列表', async () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ArrowRight } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle, ClipboardList, Clock3 } from 'lucide-vue-next'
 
 import type {
   TeacherManualReviewSubmissionDetailData,
@@ -81,7 +81,10 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
         class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
       >
         <article class="insight-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">待处理</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>待处理</span>
+            <ClipboardList class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ manualReviewSubmissions.length }}
           </div>
@@ -90,7 +93,10 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </div>
         </article>
         <article class="insight-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">待审核</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>待审核</span>
+            <Clock3 class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ pendingManualReviewCount }}
           </div>
@@ -99,7 +105,10 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </div>
         </article>
         <article class="insight-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">已通过</div>
+          <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <span>已通过</span>
+            <CheckCircle class="h-4 w-4" />
+          </div>
           <div class="insight-kpi-value progress-card-value metric-panel-value">
             {{ approvedManualReviewCount }}
           </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowRight } from 'lucide-vue-next'
+import { ArrowRight, FolderKanban, Search, Users } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -128,7 +128,8 @@ function handleClassChange(event: Event): void {
           <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                可访问班级
+                <span>可访问班级</span>
+                <FolderKanban class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ classes.length }}
@@ -139,7 +140,8 @@ function handleClassChange(event: Event): void {
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                当前班级学生
+                <span>当前班级学生</span>
+                <Users class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ totalStudents }}
@@ -150,7 +152,8 @@ function handleClassChange(event: Event): void {
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
-                搜索结果
+                <span>搜索结果</span>
+                <Search class="h-4 w-4" />
               </div>
               <div class="progress-card-value metric-panel-value">
                 {{ filteredStudents.length }}
