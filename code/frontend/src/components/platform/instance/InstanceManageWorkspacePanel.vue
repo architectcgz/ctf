@@ -174,7 +174,7 @@ function handleStatusFilterChange(event: Event): void {
             </span>
           </template>
           <template #cell-actions="{ row }">
-            <div class="flex justify-end gap-2">
+            <div class="workspace-directory-row-actions">
               <button
                 type="button"
                 class="ui-btn ui-btn--danger ui-btn--xs"

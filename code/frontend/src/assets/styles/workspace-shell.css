@@ -217,6 +217,13 @@
   --ui-btn-font-size: var(--font-size-12);
 }
 
+.ui-btn--xs {
+  --ui-btn-height: 1.9rem;
+  --ui-btn-padding: 0 var(--space-3);
+  --ui-btn-radius: var(--radius-lg);
+  --ui-btn-font-size: var(--font-size-12);
+}
+
 .ui-btn--lg {
   --ui-btn-height: var(--ui-control-height-lg);
   --ui-btn-padding: 0.9rem 1.4rem;

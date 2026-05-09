@@ -244,13 +244,15 @@ function updateStatusFilter(event: Event): void {
         </template>
 
         <template #cell-actions="{ row }">
-          <button
-            type="button"
-            class="admin-awd-review-table__action"
-            @click="emit('open-contest', (row as PlatformAwdReviewRow).id)"
-          >
-            进入复盘
-          </button>
+          <div class="workspace-directory-row-actions admin-awd-review-table__actions">
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary ui-btn--xs admin-awd-review-table__action"
+              @click="emit('open-contest', (row as PlatformAwdReviewRow).id)"
+            >
+              进入复盘
+            </button>
+          </div>
         </template>
       </WorkspaceDataTable>
 
@@ -356,28 +358,6 @@ function updateStatusFilter(event: Event): void {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-}
-
-.admin-awd-review-table__action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--journal-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--journal-surface));
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  color: var(--color-primary);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.admin-awd-review-table__action:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--journal-border));
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
 }
 
 .workspace-directory-empty .ui-btn {

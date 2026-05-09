@@ -106,7 +106,7 @@ defineEmits<{
 
     <div class="challenge-row-cta">
       <span
-        class="challenge-row-cta-pill"
+        class="workspace-directory-row-btn challenge-row-cta-pill"
         :class="
           challenge.is_solved ? 'challenge-row-cta-pill--solved' : 'challenge-row-cta-pill--ready'
         "
@@ -251,12 +251,7 @@ defineEmits<{
 }
 
 .challenge-row-cta-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: var(--space-2);
-  min-height: var(--ui-control-height-sm);
-  padding: 0 var(--space-3);
   border: 1px solid color-mix(in srgb, var(--challenge-row-accent) 24%, transparent);
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--challenge-row-accent) 8%, transparent);

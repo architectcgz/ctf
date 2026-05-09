@@ -277,7 +277,7 @@ function handleClassChange(event: Event): void {
                 </template>
 
                 <template #cell-actions="{ row }">
-                  <div class="teacher-directory-row-cta">
+                  <div class="workspace-directory-row-actions teacher-directory-row-cta">
                     <button
                       type="button"
                       class="ui-btn ui-btn--primary ui-btn--xs"
@@ -434,10 +434,7 @@ function handleClassChange(event: Event): void {
 }
 
 .teacher-directory-row-cta {
-  display: inline-flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 @media (max-width: 1080px) {

@@ -369,7 +369,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                   >
                 </div>
 
-                <div class="teacher-directory-row-cta">
+                <div class="workspace-directory-row-btn teacher-directory-row-cta">
                   <span>分析</span>
                   <ArrowRight class="h-4 w-4" />
                 </div>
@@ -514,11 +514,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 }
 
 .teacher-directory-row-cta {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-2);
-  font-size: var(--font-size-0-82);
-  font-weight: 800;
   color: var(--color-primary);
   opacity: 0;
   transform: translateX(-10px);

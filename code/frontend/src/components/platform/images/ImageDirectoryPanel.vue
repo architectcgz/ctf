@@ -231,14 +231,16 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
           </template>
 
           <template #cell-actions="{ row }">
-            <div class="image-row__actions">
+            <div class="workspace-directory-row-actions image-row__actions">
               <button
+                type="button"
                 class="ui-btn ui-btn--sm ui-btn--primary"
                 @click="emit('open-detail', row as AdminImageListItem)"
               >
                 详情
               </button>
               <button
+                type="button"
                 class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="emit('delete-image', (row as AdminImageListItem).id)"
               >

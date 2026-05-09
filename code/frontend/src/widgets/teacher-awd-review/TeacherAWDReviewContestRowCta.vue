@@ -12,7 +12,7 @@ withDefaults(
 </script>
 
 <template>
-  <div class="teacher-directory-row-cta">
+  <div class="teacher-directory-row-cta" :class="'workspace-directory-row-btn'">
     <span>{{ label }}</span>
     <ArrowRight class="h-4 w-4" />
   </div>
@@ -20,11 +20,7 @@ withDefaults(
 
 <style scoped>
 .teacher-directory-row-cta {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-1-5);
   color: var(--journal-accent-strong);
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
 }
 </style>

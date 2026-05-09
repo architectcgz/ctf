@@ -379,7 +379,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 </template>
 
                 <template #cell-actions="{ row }">
-                  <div class="teacher-directory-row-cta">
+                  <div class="workspace-directory-row-actions teacher-directory-row-cta">
                     <button
                       type="button"
                       class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"
@@ -571,11 +571,6 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
   border-color: color-mix(in srgb, var(--color-border-default) 92%, transparent);
   color: var(--color-text-secondary);
-}
-
-.teacher-directory-row-cta {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .teacher-instance-danger-action {

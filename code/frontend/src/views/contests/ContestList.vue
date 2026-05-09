@@ -173,7 +173,7 @@ function summaryMetricIcon(key: string): Component {
               </div>
             </div>
 
-            <div class="contest-row-cta">
+            <div class="workspace-directory-row-btn contest-row-cta">
               <span>{{ getContestActionLabel(contest.status) }}</span>
             </div>
           </button>
@@ -302,11 +302,7 @@ function summaryMetricIcon(key: string): Component {
 }
 
 .contest-row-cta {
-  display: inline-flex;
-  align-items: center;
   justify-content: flex-start;
-  font-size: var(--font-size-13);
-  font-weight: 700;
   color: var(--contest-row-accent, var(--journal-accent));
 }
 
