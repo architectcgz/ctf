@@ -4,7 +4,6 @@ import (
 	"context"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
@@ -123,10 +122,6 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
-	}
-	currentUser := authctx.MustCurrentUser(c)
-	if currentUser.Role == model.RoleTeacher {
-		query.CreatedBy = &currentUser.UserID
 	}
 
 	result, err := h.queries.ListChallenges(c.Request.Context(), &query)

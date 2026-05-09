@@ -221,7 +221,7 @@ func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 	}
 }
 
-func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
+func TestFullRouter_TeacherCanBrowseAllChallengesButOnlyManageOwnChallenges(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := sessionHeaders(loginForSession(t, env.router, env.admin.Username, env.adminPwd))
@@ -268,8 +268,8 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 	if !foundTeacherOwned {
 		t.Fatalf("teacher should see own challenge %d in list, got %+v", teacherChallenge.ID, listResult.List)
 	}
-	if foundAdminOwned {
-		t.Fatalf("teacher should not see admin challenge %d in list, got %+v", adminChallenge.ID, listResult.List)
+	if !foundAdminOwned {
+		t.Fatalf("teacher should see admin challenge %d in list, got %+v", adminChallenge.ID, listResult.List)
 	}
 
 	for _, tc := range []struct {
