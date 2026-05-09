@@ -16,6 +16,8 @@ MIGRATE_TAGS="${MIGRATE_TAGS:-postgres}"
 MIGRATE_GOPROXY="${MIGRATE_GOPROXY:-https://goproxy.cn,direct}"
 CTF_BACKEND_LOG="${CTF_BACKEND_LOG:-/tmp/ctf-backend.log}"
 CTF_BACKEND_LOG_TAIL_LINES="${CTF_BACKEND_LOG_TAIL_LINES:-80}"
+CTF_BACKEND_SIGINT_GRACE_TICKS="${CTF_BACKEND_SIGINT_GRACE_TICKS:-120}"
+CTF_BACKEND_SIGTERM_GRACE_TICKS="${CTF_BACKEND_SIGTERM_GRACE_TICKS:-30}"
 REGISTRY_ENV_FILE_PATH=""
 FOREGROUND_BACKEND_PID=""
 FOREGROUND_STOP_REQUESTED=false
@@ -270,6 +272,30 @@ collect_descendant_pids() {
   done < <(list_child_pids "${parent_pid}")
 }
 
+collect_leaf_pids() {
+  local parent_pid="$1"
+  local child_pid
+  local child_pids=()
+
+  while IFS= read -r child_pid; do
+    child_pid="$(trim_whitespace "${child_pid}")"
+    if [[ -n "${child_pid}" ]]; then
+      child_pids+=("${child_pid}")
+    fi
+  done < <(list_child_pids "${parent_pid}")
+
+  if (( ${#child_pids[@]} == 0 )); then
+    if process_exists "${parent_pid}"; then
+      printf '%s\n' "${parent_pid}"
+    fi
+    return 0
+  fi
+
+  for child_pid in "${child_pids[@]}"; do
+    collect_leaf_pids "${child_pid}"
+  done
+}
+
 process_exists() {
   local pid="$1"
   [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null
@@ -322,7 +348,9 @@ signal_pid_list() {
 stop_backend_tree() {
   local root_pid="$1"
   local delay
+  local leaf_pid
   local tracked_pid
+  local leaf_pids=()
   local tracked_pids=()
 
   if [[ -z "${root_pid}" ]]; then
@@ -340,8 +368,31 @@ stop_backend_tree() {
     return 0
   fi
 
+  while IFS= read -r leaf_pid; do
+    leaf_pid="$(trim_whitespace "${leaf_pid}")"
+    if [[ -n "${leaf_pid}" ]]; then
+      leaf_pids+=("${leaf_pid}")
+    fi
+  done < <(collect_leaf_pids "${root_pid}")
+
+  if (( ${#leaf_pids[@]} == 0 )); then
+    leaf_pids=("${tracked_pids[@]}")
+  fi
+
+  # 先让真正承载业务的叶子进程自行优雅退出，避免在 hot-reload 场景里和 air 的清理逻辑互相抢杀。
+  signal_pid_list INT "${leaf_pids[@]}"
+  for delay in $(seq 1 "${CTF_BACKEND_SIGINT_GRACE_TICKS}"); do
+    if ! pid_list_alive "${tracked_pids[@]}"; then
+      return 0
+    fi
+    if ! pid_list_alive "${leaf_pids[@]}"; then
+      break
+    fi
+    sleep 0.1
+  done
+
   signal_pid_list INT "${tracked_pids[@]}"
-  for delay in $(seq 1 20); do
+  for delay in $(seq 1 "${CTF_BACKEND_SIGTERM_GRACE_TICKS}"); do
     if ! pid_list_alive "${tracked_pids[@]}"; then
       return 0
     fi
@@ -349,7 +400,7 @@ stop_backend_tree() {
   done
 
   signal_pid_list TERM "${tracked_pids[@]}"
-  for delay in $(seq 1 30); do
+  for delay in $(seq 1 "${CTF_BACKEND_SIGTERM_GRACE_TICKS}"); do
     if ! pid_list_alive "${tracked_pids[@]}"; then
       return 0
     fi
