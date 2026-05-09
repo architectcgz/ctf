@@ -427,10 +427,14 @@ describe('workspace page header styles', () => {
     }
   })
 
-  it('典型工作区页头应复用 PageHeader 组件，而不是继续手写同构头部', () => {
+  it('典型工作区页头应优先复用共享头部模式；profile 与 security 允许切换到平铺 topbar', () => {
     expect(challengeImportPreviewWorkspaceBundleSource).toContain('<PageHeader')
-    expect(userProfileSource).toContain('<PageHeader')
-    expect(securitySettingsSource).toContain('<PageHeader')
+    expect(userProfileSource).not.toContain('<PageHeader')
+    expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="profile-topbar-meta"')
+    expect(securitySettingsSource).not.toContain('<PageHeader')
+    expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="security-topbar-meta"')
     expect(writeupEditorSource).toContain('<PageHeader')
     expect(writeupViewSource).toContain('<PageHeader')
   })

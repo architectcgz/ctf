@@ -142,15 +142,19 @@ describe('journal user directory shared styles', () => {
 
   it('profile 与 security 页顶部也应接入共享 topbar 与 summary 骨架', () => {
     expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="profile-topbar-meta"')
     expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
     expect(userProfileSource).toContain('class="profile-summary-title"')
     expect(userProfileSource).toContain('class="profile-summary-grid metric-panel-grid"')
-    expect(userProfileSource).toContain('<PageHeader')
+    expect(userProfileSource).toContain('class="workspace-overline">Profile</div>')
+    expect(userProfileSource).not.toContain('<PageHeader')
 
     expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="security-topbar-meta"')
     expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
     expect(securitySettingsSource).toContain('class="security-summary-title"')
     expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
-    expect(securitySettingsSource).toContain('<PageHeader')
+    expect(securitySettingsSource).toContain('class="workspace-overline">Security</div>')
+    expect(securitySettingsSource).not.toContain('<PageHeader')
   })
 })

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useSecuritySettingsPage } from '@/features/profile'
 
 const {
@@ -21,19 +20,37 @@ const {
   >
     <main class="content-pane">
       <div class="security-page flex flex-1 flex-col">
-        <PageHeader
-          class="security-topbar"
-          title="安全设置"
-          description="更新账号密码并检查当前安全策略。"
-          eyebrow="Security"
-        >
-          <div class="security-topbar-actions">
-            <div class="security-pill">
-              <span class="status-dot status-dot-active" />
-              密码策略已启用
+        <header class="security-topbar">
+          <div class="security-heading">
+            <div class="workspace-overline">Security</div>
+            <h1 class="workspace-page-title security-title">
+              安全设置
+            </h1>
+            <p class="workspace-page-copy security-subtitle">
+              更新账号密码并检查当前安全策略。
+            </p>
+          </div>
+
+          <div class="security-topbar-meta">
+            <div
+              class="security-head-stats"
+              aria-label="安全状态"
+            >
+              <div class="security-head-stat">
+                <span class="security-head-stat__label">密码策略</span>
+                <strong class="security-head-stat__value">
+                  {{ securityStats[0]?.value ?? '已启用' }}
+                </strong>
+              </div>
+              <div class="security-head-stat">
+                <span class="security-head-stat__label">同步范围</span>
+                <strong class="security-head-stat__value">
+                  {{ securityStats[3]?.value ?? '全账号' }}
+                </strong>
+              </div>
             </div>
           </div>
-        </PageHeader>
+        </header>
 
         <section
           class="security-summary metric-panel-default-surface"
@@ -283,12 +300,44 @@ const {
   min-height: 100%;
 }
 
-.security-topbar-actions {
+.security-subtitle {
+  max-width: 720px;
+}
+
+.security-topbar-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.75rem;
+}
+
+.security-head-stats {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+.security-head-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+}
+
+.security-head-stat__label {
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.security-head-stat__value {
+  font-size: var(--font-size-16);
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .security-divider {
@@ -329,19 +378,6 @@ const {
 .journal-field-error {
   font-size: var(--font-size-0-75);
   color: var(--color-danger);
-}
-
-.security-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.48rem 0.9rem;
-  font-size: var(--font-size-0-80);
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
 }
 
 .security-side-lead {
@@ -435,13 +471,20 @@ const {
   }
 }
 
+@media (max-width: 1180px) {
+  .security-topbar-meta {
+    width: 100%;
+    justify-items: start;
+  }
+
+  .security-head-stats {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 720px) {
   .content-pane {
     padding-inline: 1rem;
-  }
-
-  .security-topbar-actions {
-    justify-content: flex-start;
   }
 }
 </style>

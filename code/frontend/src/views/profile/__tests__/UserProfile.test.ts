@@ -131,6 +131,9 @@ describe('UserProfile', () => {
     expect(userProfileSource).toContain('useUserProfilePage')
     expect(userProfileSource).not.toContain("from '@/api/auth'")
     expect(userProfileSource).not.toContain("from '@/api/assessment'")
+    expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="profile-topbar-meta"')
+    expect(userProfileSource).not.toContain('<PageHeader')
     expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
     expect(userProfileSource).toContain('class="profile-summary-item progress-card metric-panel-card"')
     expect(userProfileSource).toContain(

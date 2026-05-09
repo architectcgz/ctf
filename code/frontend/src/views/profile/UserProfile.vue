@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Activity, FileDown, Loader2, RefreshCw, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useUserProfilePage } from '@/features/profile'
 import { formatDate } from '@/utils/format'
 
@@ -58,27 +57,51 @@ const {
         v-else
         class="profile-page flex flex-1 flex-col"
       >
-        <PageHeader
-          class="profile-topbar"
-          title="个人资料"
-          :description="pageCopy"
-          eyebrow="Profile"
-        >
-          <div class="profile-topbar-actions">
-            <div class="profile-pill">
-              <span class="status-dot status-dot-ready" />
-              账号状态正常
-            </div>
-            <button
-              type="button"
-              class="journal-btn"
-              @click="loadProfile"
-            >
-              <RefreshCw class="h-4 w-4" />
-              刷新
-            </button>
+        <header class="profile-topbar">
+          <div class="profile-heading">
+            <div class="workspace-overline">Profile</div>
+            <h1 class="workspace-page-title profile-title">
+              个人资料
+            </h1>
+            <p class="workspace-page-copy profile-subtitle">
+              {{ pageCopy }}
+            </p>
           </div>
-        </PageHeader>
+
+          <div class="profile-topbar-meta">
+            <div
+              class="profile-head-stats"
+              aria-label="账号状态"
+            >
+              <div class="profile-head-stat">
+                <span class="profile-head-stat__label">账号状态</span>
+                <strong class="profile-head-stat__value">
+                  <span class="status-dot status-dot-ready" />
+                  正常
+                </strong>
+              </div>
+              <div class="profile-head-stat">
+                <span class="profile-head-stat__label">
+                  {{ canManagePersonalReport ? '报告状态' : '账号类型' }}
+                </span>
+                <strong class="profile-head-stat__value">
+                  {{ canManagePersonalReport ? reportTaskMeta.label : '管理账号' }}
+                </strong>
+              </div>
+            </div>
+
+            <div class="profile-actions">
+              <button
+                type="button"
+                class="journal-btn"
+                @click="loadProfile"
+              >
+                <RefreshCw class="h-4 w-4" />
+                刷新
+              </button>
+            </div>
+          </div>
+        </header>
 
         <section
           class="profile-summary metric-panel-default-surface"
@@ -367,25 +390,54 @@ const {
   min-height: 100%;
 }
 
-.profile-topbar-actions {
+.profile-subtitle {
+  max-width: 720px;
+}
+
+.profile-topbar-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.75rem;
+}
+
+.profile-head-stats {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
 }
 
-.profile-pill {
+.profile-head-stat {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-success) 22%, transparent);
-  background: color-mix(in srgb, var(--color-success) 8%, transparent);
-  padding: 0.55rem 0.95rem;
-  font-size: var(--font-size-0-875);
-  font-weight: 500;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+}
+
+.profile-head-stat__label {
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.profile-head-stat__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--font-size-16);
+  font-weight: 700;
   color: var(--journal-ink);
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .profile-layout {
@@ -641,13 +693,21 @@ const {
   }
 }
 
+@media (max-width: 1180px) {
+  .profile-topbar-meta {
+    width: 100%;
+    justify-items: start;
+  }
+
+  .profile-head-stats,
+  .profile-actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 720px) {
   .content-pane {
     padding-inline: 1rem;
-  }
-
-  .profile-topbar-actions {
-    justify-content: flex-start;
   }
 
   .profile-field-list,
