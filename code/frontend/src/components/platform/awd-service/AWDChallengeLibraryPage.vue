@@ -367,13 +367,14 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
             </div>
 
             <section class="workspace-directory-section">
-              <section class="awd-challenge-directory-shell workspace-directory-list">
+              <section
+                class="awd-challenge-directory-shell workspace-directory-list workspace-directory-list--catalog"
+              >
                 <header class="list-heading">
                   <div>
                     <div class="workspace-overline">AWD Challenge Directory</div>
                     <h2 class="list-heading__title">AWD 题目目录</h2>
                   </div>
-                  <span class="awd-challenge-directory-count">共 {{ total }} 个题目</span>
                 </header>
 
                 <WorkspaceDirectoryToolbar
@@ -447,25 +448,28 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   >
                     <template #cell-name="{ row }">
                       <div class="awd-challenge-table__name">
-                        <div class="awd-challenge-table__title">
+                        <div class="workspace-directory-row-title awd-challenge-table__title">
                           {{ (row as AdminAwdChallengeData).name }}
                         </div>
-                        <div class="awd-challenge-table__slug">
+                        <div class="workspace-directory-row-subtitle awd-challenge-table__slug">
                           {{ (row as AdminAwdChallengeData).slug }}
                         </div>
                       </div>
                     </template>
 
                     <template #cell-service_type="{ row }">
-                      <span class="awd-challenge-table__mono">{{
+                      <span class="workspace-directory-mono awd-challenge-table__mono">{{
                         getServiceTypeLabel((row as AdminAwdChallengeData).service_type)
                       }}</span>
                     </template>
 
                     <template #cell-deployment_mode="{ row }">
-                      <span class="awd-challenge-table__compact-text">{{
-                        getDeploymentModeLabel((row as AdminAwdChallengeData).deployment_mode)
-                      }}</span>
+                      <span
+                        class="workspace-directory-compact-text awd-challenge-table__compact-text"
+                        >{{
+                          getDeploymentModeLabel((row as AdminAwdChallengeData).deployment_mode)
+                        }}</span
+                      >
                     </template>
 
                     <template #cell-difficulty="{ row }">
@@ -478,7 +482,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
 
                     <template #cell-readiness_status="{ row }">
                       <span
-                        class="awd-status-pill"
+                        class="awd-status-pill workspace-directory-status-pill"
                         :class="getReadinessClass((row as AdminAwdChallengeData).readiness_status)"
                       >
                         {{ getReadinessLabel((row as AdminAwdChallengeData).readiness_status) }}
@@ -487,7 +491,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
 
                     <template #cell-status="{ row }">
                       <span
-                        class="awd-status-pill"
+                        class="awd-status-pill workspace-directory-status-pill"
                         :class="getStatusClass((row as AdminAwdChallengeData).status)"
                       >
                         {{ getStatusLabel((row as AdminAwdChallengeData).status) }}
@@ -495,17 +499,17 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                     </template>
 
                     <template #cell-actions="{ row }">
-                      <div class="awd-challenge-table__actions">
+                      <div class="workspace-directory-row-actions awd-challenge-table__actions">
                         <button
                           type="button"
-                          class="awd-row-btn"
+                          class="workspace-directory-row-btn"
                           @click="emit('openEditDialog', row as AdminAwdChallengeData)"
                         >
                           编辑
                         </button>
                         <button
                           type="button"
-                          class="awd-row-btn awd-row-btn--danger"
+                          class="workspace-directory-row-btn workspace-directory-row-btn--danger"
                           @click="emit('deleteChallenge', row as AdminAwdChallengeData)"
                         >
                           删除
@@ -724,33 +728,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
-.awd-challenge-directory-shell {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
-  display: grid;
-  gap: var(--space-4);
-  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
-    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
-.awd-challenge-directory-count {
-  color: var(--journal-muted);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-}
-
 .awd-challenge-import__uploads {
   display: grid;
   gap: var(--space-3);
@@ -897,21 +874,8 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   flex-direction: column;
   gap: 0.25rem;
 }
-.awd-challenge-table__title {
-  font-size: var(--font-size-15);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
 .awd-challenge-table__slug {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-12);
-  color: var(--color-text-muted);
-}
-.awd-challenge-table__mono {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--color-text-primary);
 }
 .awd-challenge-table__difficulty {
   font-size: var(--font-size-13);
@@ -919,78 +883,11 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   color: var(--color-text-muted);
 }
 .awd-challenge-table__compact-text {
-  font-size: var(--font-size-13);
   color: var(--color-text-primary);
 }
 
 .awd-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.85rem;
-  min-width: 4.8rem;
-  padding: 0 var(--space-3);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  font-size: var(--font-size-12);
-  font-weight: 800;
-}
-.awd-status-pill--success {
-  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
-  background: color-mix(in srgb, var(--color-success) 8%, transparent);
-  color: var(--color-success);
-}
-.awd-status-pill--primary {
-  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  color: var(--color-primary);
-}
-.awd-status-pill--warning {
-  border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
-  color: var(--color-warning);
-}
-.awd-status-pill--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  color: var(--color-danger);
-}
-.awd-status-pill--muted {
-  border-color: var(--color-border-default);
-  background: var(--color-bg-elevated);
-  color: var(--color-text-muted);
-}
-
-.awd-challenge-table__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-.awd-row-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.9rem;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border-default);
-  border-radius: 9px;
-  background: var(--color-bg-surface);
-  font-size: var(--font-size-12);
-  font-weight: 800;
-  color: var(--color-text-secondary);
-  transition: all 0.2s ease;
-}
-.awd-row-btn:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-}
-.awd-row-btn--danger:hover {
-  border-color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface));
-  color: var(--color-danger);
+  --workspace-directory-pill-min-width: 4.8rem;
 }
 
 @media (max-width: 1024px) {

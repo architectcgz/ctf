@@ -48,9 +48,7 @@ function summaryMetricIcon(key: string): Component {
           <div class="contest-heading">
             <div class="workspace-overline">Contests</div>
             <h1 class="contest-title workspace-page-title">竞赛中心</h1>
-            <p class="contest-subtitle">
-              查看当前可参加和已结束的竞赛，直接进入竞赛工作区。
-            </p>
+            <p class="contest-subtitle">查看当前可参加和已结束的竞赛，直接进入竞赛工作区。</p>
           </div>
         </header>
 
@@ -79,10 +77,7 @@ function summaryMetricIcon(key: string): Component {
           </div>
         </section>
 
-        <div
-          v-if="loading"
-          class="contest-loading"
-        >
+        <div v-if="loading" class="contest-loading">
           <div class="contest-loading-spinner" />
         </div>
 
@@ -94,13 +89,7 @@ function summaryMetricIcon(key: string): Component {
           :description="loadErrorMessage"
         >
           <template #action>
-            <button
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              @click="refresh"
-            >
-              重试
-            </button>
+            <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">重试</button>
           </template>
         </AppEmpty>
 
@@ -114,19 +103,15 @@ function summaryMetricIcon(key: string): Component {
 
         <section
           v-else
-          class="contest-directory workspace-directory-list"
+          class="contest-directory workspace-directory-list workspace-directory-list--catalog"
           aria-label="竞赛目录"
         >
           <div class="contest-directory-top">
-            <h2 class="contest-directory-title">
-              竞赛列表
-            </h2>
-            <div class="contest-directory-meta">
-              共 {{ total }} 场
-            </div>
+            <h2 class="contest-directory-title">竞赛列表</h2>
+            <div class="contest-directory-meta">共 {{ total }} 场</div>
           </div>
 
-          <div class="contest-directory-head">
+          <div class="workspace-directory-grid-head contest-directory-head">
             <span>竞赛</span>
             <span>时间</span>
             <span>状态</span>
@@ -138,30 +123,34 @@ function summaryMetricIcon(key: string): Component {
             v-for="contest in visibleContests"
             :key="contest.id"
             type="button"
-            class="contest-row"
+            class="workspace-directory-grid-row contest-row"
             :style="contestAccentStyle(contest.status)"
             :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
             @click="openContest(contest)"
           >
-            <div class="contest-row-main">
+            <div class="workspace-directory-cell contest-row-main">
               <div class="contest-row-status-strip">
                 <span
-                  class="contest-chip"
+                  class="workspace-directory-status-pill contest-chip"
                   :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }"
                 >
                   {{ getStatusLabel(contest.status) }}
                 </span>
-                <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
+                <span
+                  class="workspace-directory-status-pill workspace-directory-status-pill--muted contest-chip contest-chip-muted"
+                  >{{ getModeLabel(contest.mode) }}</span
+                >
               </div>
               <h3
                 class="contest-row-title"
+                :class="['workspace-directory-row-title', 'workspace-directory-row-title--mono']"
                 :title="contest.title"
               >
                 {{ contest.title }}
               </h3>
             </div>
 
-            <div class="contest-row-time">
+            <div class="workspace-directory-compact-text contest-row-time">
               <div class="contest-row-time-item">
                 <CalendarRange class="h-3.5 w-3.5" />
                 <span>{{ formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at) }}</span>
@@ -170,14 +159,14 @@ function summaryMetricIcon(key: string): Component {
 
             <div class="contest-row-state">
               <span
-                class="contest-state-chip"
+                class="workspace-directory-status-pill contest-state-chip"
                 :style="{ '--contest-state-color': 'var(--contest-row-accent)' }"
               >
                 {{ getStatusLabel(contest.status) }}
               </span>
             </div>
 
-            <div class="contest-row-timeline">
+            <div class="workspace-directory-compact-text contest-row-timeline">
               <div class="contest-row-time-item contest-row-time-item-strong">
                 <Clock3 class="h-3.5 w-3.5" />
                 <span>{{ getTimelineHint(contest) }}</span>
@@ -189,10 +178,7 @@ function summaryMetricIcon(key: string): Component {
             </div>
           </button>
 
-          <div
-            v-if="total > 0"
-            class="contest-pagination workspace-directory-pagination"
-          >
+          <div v-if="total > 0" class="contest-pagination workspace-directory-pagination">
             <PagePaginationControls
               :page="page"
               :total-pages="totalPages"
@@ -248,22 +234,8 @@ function summaryMetricIcon(key: string): Component {
 }
 
 .contest-directory {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
+  --workspace-directory-grid-columns: minmax(0, 1.4fr) minmax(13.75rem, 1fr) 7.5rem 11.25rem 7.5rem;
   margin-top: 24px;
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .contest-pagination {
@@ -271,42 +243,9 @@ function summaryMetricIcon(key: string): Component {
   padding-top: var(--space-4);
 }
 
-.contest-directory-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr) 120px 180px 120px;
-  gap: 16px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
 .contest-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr) 120px 180px 120px;
-  gap: 16px;
-  align-items: center;
-  width: 100%;
-  padding: 18px 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
+  --workspace-directory-row-accent: var(--contest-row-accent, var(--journal-accent));
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
-}
-
-.contest-row:hover,
-.contest-row:focus-visible {
-  background: color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 5%, transparent);
-  box-shadow: inset 2px 0 0
-    color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 64%, transparent);
-  outline: none;
 }
 
 .contest-row-main {
@@ -316,43 +255,34 @@ function summaryMetricIcon(key: string): Component {
 .contest-row-status-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .contest-row-title {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-18);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--journal-ink);
+  font-size: var(--font-size-15);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.contest-chip,
-.contest-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: var(--font-size-12);
-  font-weight: 600;
-}
-
 .contest-chip {
+  border-color: color-mix(
+    in srgb,
+    var(--contest-chip-color, var(--journal-accent)) 22%,
+    transparent
+  );
   background: color-mix(in srgb, var(--contest-chip-color, var(--journal-accent)) 12%, transparent);
   color: var(--contest-chip-color, var(--journal-accent));
 }
 
-.contest-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
 .contest-state-chip {
+  border-color: color-mix(
+    in srgb,
+    var(--contest-state-color, var(--journal-accent)) 22%,
+    transparent
+  );
   background: color-mix(
     in srgb,
     var(--contest-state-color, var(--journal-accent)) 12%,
@@ -361,17 +291,10 @@ function summaryMetricIcon(key: string): Component {
   color: var(--contest-state-color, var(--journal-accent));
 }
 
-.contest-row-time,
-.contest-row-timeline {
-  font-size: var(--font-size-13);
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
 .contest-row-time-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
 }
 
 .contest-row-time-item-strong {

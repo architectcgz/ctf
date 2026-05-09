@@ -31,17 +31,16 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
   <button
     type="button"
     class="teacher-directory-row"
+    :class="'workspace-directory-grid-row'"
     @click="emit('openContest', contest.id)"
   >
-    <div :class="rowClassByKey.code">
-      AWD-{{ contest.id }}
-    </div>
+    <div :class="rowClassByKey.code">AWD-{{ contest.id }}</div>
 
     <div :class="rowClassByKey.name">
-      <h4 class="teacher-directory-row-title">
+      <h4 class="teacher-directory-row-title" :class="'workspace-directory-row-title'">
         {{ contest.title }}
       </h4>
-      <p class="teacher-directory-row-copy">
+      <p class="workspace-directory-row-subtitle teacher-directory-row-copy">
         最近信号
         {{ contest.latest_evidence_at ? formatDate(contest.latest_evidence_at) : '暂无' }}
       </p>
@@ -76,27 +75,8 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
 
 <style scoped>
 .teacher-directory-row {
-  display: grid;
   grid-template-columns: var(--awd-review-directory-columns);
-  gap: var(--space-4);
-  align-items: center;
-  width: 100%;
-  padding: var(--space-4-5) 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
-}
-
-.teacher-directory-row:hover,
-.teacher-directory-row:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
-  outline: none;
 }
 
 .teacher-directory-cell {
@@ -115,23 +95,7 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
   color: var(--journal-muted);
 }
 
-.teacher-directory-row-title {
-  margin: 0;
-  min-width: 0;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-1-02);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--journal-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .teacher-directory-row-copy {
-  margin: 0;
-  font-size: var(--font-size-0-84);
-  line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
 }
 

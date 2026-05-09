@@ -45,9 +45,7 @@ const {
           <div class="notification-heading">
             <div class="workspace-overline">Notifications</div>
             <h1 class="notification-title workspace-page-title">通知中心</h1>
-            <p class="notification-subtitle">
-              系统、竞赛和训练相关通知会在这里按时间顺序汇总。
-            </p>
+            <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
           </div>
 
           <div class="notification-topbar-meta">
@@ -60,18 +58,10 @@ const {
               >
                 发布通知
               </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--secondary"
-                @click="markCurrentPageRead"
-              >
+              <button type="button" class="ui-btn ui-btn--secondary" @click="markCurrentPageRead">
                 本页已读
               </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--secondary"
-                @click="handleRefresh"
-              >
+              <button type="button" class="ui-btn ui-btn--secondary" @click="handleRefresh">
                 <RefreshCw class="h-4 w-4" />
                 刷新
               </button>
@@ -83,10 +73,7 @@ const {
           {{ probeMessage }}
         </p>
 
-        <div
-          v-if="loading"
-          class="notification-loading"
-        >
+        <div v-if="loading" class="notification-loading">
           <div class="notification-loading-spinner" />
         </div>
 
@@ -98,11 +85,7 @@ const {
           :description="loadErrorMessage"
         >
           <template #action>
-            <button
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              @click="handleRefresh"
-            >
+            <button type="button" class="ui-btn ui-btn--secondary" @click="handleRefresh">
               重新加载
             </button>
           </template>
@@ -110,7 +93,7 @@ const {
 
         <section
           v-else
-          class="notification-directory-shell workspace-directory-list"
+          class="notification-directory-shell workspace-directory-list workspace-directory-list--catalog"
           aria-label="通知目录"
         >
           <section class="notification-filter-section" aria-label="消息分类">
@@ -121,15 +104,8 @@ const {
               :category-options="categoryOptions"
               @select-category="selectCategory"
             />
-            <div
-              class="notification-head-stats"
-              aria-label="消息概况"
-            >
-              <div
-                v-for="stat in headStats"
-                :key="stat.key"
-                class="notification-head-stat"
-              >
+            <div class="notification-head-stats" aria-label="消息概况">
+              <div v-for="stat in headStats" :key="stat.key" class="notification-head-stat">
                 <span class="notification-head-stat__label">{{ stat.label }}</span>
                 <strong class="notification-head-stat__value">{{ stat.value }}</strong>
               </div>
@@ -144,18 +120,12 @@ const {
             description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
           />
 
-          <section
-            v-else
-            class="notification-directory"
-            aria-label="通知目录"
-          >
+          <section v-else class="notification-directory" aria-label="通知目录">
             <div class="notification-directory-top">
-              <h2 class="notification-directory-title">
-                {{ selectedCategoryLabel }}消息
-              </h2>
+              <h2 class="notification-directory-title">{{ selectedCategoryLabel }}消息</h2>
             </div>
 
-            <div class="notification-directory-head">
+            <div class="workspace-directory-grid-head notification-directory-head">
               <span>类型</span>
               <span>标题与内容</span>
               <span>时间</span>
@@ -166,34 +136,45 @@ const {
               v-for="item in list"
               :key="item.id"
               type="button"
-              class="notification-row"
+              class="workspace-directory-grid-row notification-row"
               :class="{ 'notification-row-unread': item.unread }"
               @click="openNotificationDetail(item)"
             >
               <div class="notification-row-type">
-                <span class="notification-chip">{{ typeLabel(item.type) }}</span>
+                <span class="workspace-directory-status-pill notification-chip">{{
+                  typeLabel(item.type)
+                }}</span>
               </div>
-              <div class="notification-row-main">
+              <div class="workspace-directory-cell notification-row-main">
                 <div
                   class="notification-row-title"
+                  :class="'workspace-directory-row-title'"
                   :title="item.title"
                 >
                   {{ item.title }}
                 </div>
                 <div
                   class="notification-row-copy"
+                  :class="[
+                    'workspace-directory-row-subtitle',
+                    'workspace-directory-row-subtitle--clamp',
+                  ]"
                   :title="item.content"
                 >
                   {{ item.content }}
                 </div>
               </div>
-              <div class="notification-row-time">
+              <div class="workspace-directory-compact-text notification-row-time">
                 {{ formatDate(item.created_at) }}
               </div>
               <div class="notification-row-state">
                 <span
-                  class="notification-state-chip"
-                  :class="{ 'notification-state-chip-unread': item.unread }"
+                  class="workspace-directory-status-pill notification-state-chip"
+                  :class="{
+                    'workspace-directory-status-pill--primary notification-state-chip-unread':
+                      item.unread,
+                    'workspace-directory-status-pill--muted': !item.unread,
+                  }"
                 >
                   {{ item.unread ? '未读' : '已读' }}
                 </span>
@@ -344,50 +325,11 @@ const {
 }
 
 .notification-directory-shell {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
-  display: grid;
-  gap: var(--space-4);
+  --workspace-directory-grid-columns: 8.75rem minmax(0, 1fr) 11.25rem 7.5rem;
   margin-top: var(--space-5);
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
-.notification-directory-head {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr) 180px 120px;
-  gap: 16px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
 }
 
 .notification-row {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr) 180px 120px;
-  gap: 16px;
-  align-items: center;
-  width: 100%;
-  padding: 18px 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
   cursor: pointer;
 }
 
@@ -395,24 +337,8 @@ const {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 56%, transparent);
 }
 
-.notification-row:hover,
-.notification-row:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  outline: none;
-}
-
-.notification-chip,
-.notification-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: var(--font-size-12);
-  font-weight: 600;
-}
-
 .notification-chip {
+  border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
 }
@@ -422,39 +348,15 @@ const {
 }
 
 .notification-row-title {
-  font-size: var(--font-size-15);
-  font-weight: 700;
-  color: var(--journal-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .notification-row-copy {
-  margin-top: 6px;
   display: -webkit-box;
-  font-size: var(--font-size-13);
-  line-height: 1.6;
-  color: var(--journal-muted);
   -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.notification-row-time {
-  font-size: var(--font-size-13);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.notification-state-chip {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.notification-state-chip-unread {
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
 }
 
 .notification-pagination {

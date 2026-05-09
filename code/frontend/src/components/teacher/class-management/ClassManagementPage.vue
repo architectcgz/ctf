@@ -168,7 +168,9 @@ function handleStatusFilterChange(event: Event): void {
           class="workspace-directory-section teacher-directory-section"
           aria-label="班级目录"
         >
-          <section class="teacher-directory-shell workspace-directory-list">
+          <section
+            class="teacher-directory-shell workspace-directory-list workspace-directory-list--catalog"
+          >
             <header class="list-heading">
               <div>
                 <div class="workspace-overline">Class Directory</div>
@@ -243,6 +245,7 @@ function handleStatusFilterChange(event: Event): void {
                   <div class="teacher-directory-cell-class-name">
                     <h4
                       class="teacher-directory-row-title"
+                      :class="'workspace-directory-row-title'"
                       :title="(row as ClassDirectoryTableRow).name"
                     >
                       {{ (row as ClassDirectoryTableRow).name }}
@@ -251,18 +254,18 @@ function handleStatusFilterChange(event: Event): void {
                 </template>
 
                 <template #cell-student_count="{ row }">
-                  <span class="teacher-directory-row-points">
+                  <span class="workspace-directory-mono teacher-directory-row-points">
                     {{ (row as ClassDirectoryTableRow).student_count }}
                   </span>
                 </template>
 
                 <template #cell-status="{ row }">
                   <span
-                    class="teacher-directory-state-chip"
+                    class="workspace-directory-status-pill teacher-directory-state-chip"
                     :class="
                       (row as ClassDirectoryTableRow).status === 'ready'
-                        ? 'teacher-directory-state-chip-ready'
-                        : 'teacher-directory-state-chip-empty'
+                        ? 'workspace-directory-status-pill--primary teacher-directory-state-chip-ready'
+                        : 'workspace-directory-status-pill--muted teacher-directory-state-chip-empty'
                     "
                   >
                     {{ (row as ClassDirectoryTableRow).status_label }}
@@ -270,7 +273,7 @@ function handleStatusFilterChange(event: Event): void {
                 </template>
 
                 <template #cell-actions="{ row }">
-                  <div class="teacher-directory-row-cta">
+                  <div class="workspace-directory-row-actions teacher-directory-row-cta">
                     <button
                       type="button"
                       class="ui-btn ui-btn--primary ui-btn--xs"
@@ -334,27 +337,6 @@ function handleStatusFilterChange(event: Event): void {
   margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
-.teacher-directory-shell {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
-  display: grid;
-  gap: var(--space-4);
-  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
-    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
 .teacher-directory-section :deep(.workspace-directory-pagination-shell) {
   margin-top: var(--space-2);
 }
@@ -392,7 +374,7 @@ function handleStatusFilterChange(event: Event): void {
 }
 
 .teacher-directory-cell-class-code {
-  font-size: var(--font-size-0-76);
+  font-size: var(--font-size-12);
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
@@ -402,8 +384,8 @@ function handleStatusFilterChange(event: Event): void {
   margin: 0;
   min-width: 0;
   font-family: var(--font-family-sans);
-  font-size: var(--font-size-1-08);
-  font-weight: 800;
+  font-size: var(--font-size-15);
+  font-weight: 700;
   line-height: 1.35;
   color: var(--color-text-primary);
   overflow: hidden;
@@ -417,43 +399,10 @@ function handleStatusFilterChange(event: Event): void {
   color: var(--color-primary);
 }
 
-.teacher-directory-row-points {
-  font-size: var(--font-size-1-00);
-  font-weight: 900;
-  color: var(--color-text-primary);
-}
-
 .teacher-directory-cell-class-code,
 .teacher-directory-cell-class-name {
   width: 100%;
   min-width: 0;
-}
-
-.teacher-directory-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  padding: 0 var(--space-3);
-  border-radius: 0.5rem;
-  font-size: var(--font-size-0-75);
-  font-weight: 800;
-}
-
-.teacher-directory-state-chip-ready {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-}
-
-.teacher-directory-state-chip-empty {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-muted);
-}
-
-.teacher-directory-row-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 @media (max-width: 960px) {

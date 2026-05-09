@@ -3,7 +3,7 @@ import { AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA } from './model/directory'
 </script>
 
 <template>
-  <div class="teacher-directory-head">
+  <div class="teacher-directory-head" :class="'workspace-directory-grid-head'">
     <span
       v-for="column in AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA"
       :key="column.key"
@@ -16,16 +16,7 @@ import { AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA } from './model/directory'
 
 <style scoped>
 .teacher-directory-head {
-  display: grid;
   grid-template-columns: var(--awd-review-directory-columns);
-  gap: var(--space-4);
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px dashed var(--teacher-divider);
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-76);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 @media (max-width: 1080px) {

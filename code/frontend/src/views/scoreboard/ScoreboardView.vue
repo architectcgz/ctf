@@ -62,11 +62,7 @@ const {
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
     <div class="scoreboard-page">
-      <nav
-        class="workspace-tabbar top-tabs"
-        role="tablist"
-        aria-label="排行榜视图切换"
-      >
+      <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="排行榜视图切换">
         <button
           v-for="(tab, index) in panelTabs"
           :id="tab.tabId"
@@ -96,9 +92,7 @@ const {
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">
-            Contest Scoreboard
-          </div>
+          <div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>
 
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
@@ -157,10 +151,7 @@ const {
             </div>
           </section>
 
-          <div
-            v-if="loading && !hasSections"
-            class="scoreboard-loading"
-          >
+          <div v-if="loading && !hasSections" class="scoreboard-loading">
             <div class="scoreboard-loading-spinner" />
           </div>
 
@@ -172,11 +163,7 @@ const {
             :description="selectionHint"
           >
             <template #action>
-              <button
-                type="button"
-                class="ui-btn ui-btn--secondary"
-                @click="refresh"
-              >
+              <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
                 重新加载
               </button>
             </template>
@@ -184,16 +171,12 @@ const {
 
           <section
             v-else
-            class="scoreboard-directory workspace-directory-list"
+            class="scoreboard-directory workspace-directory-list workspace-directory-list--catalog"
             aria-label="排行榜列表"
           >
             <div class="scoreboard-directory-top">
-              <h2 class="scoreboard-directory-title">
-                竞赛排行列表
-              </h2>
-              <div class="scoreboard-directory-meta">
-                按竞赛开始时间倒序展示排行榜
-              </div>
+              <h2 class="scoreboard-directory-title">竞赛排行列表</h2>
+              <div class="scoreboard-directory-meta">按竞赛开始时间倒序展示排行榜</div>
             </div>
 
             <div class="scoreboard-sections">
@@ -208,33 +191,35 @@ const {
                 <div class="scoreboard-card-header">
                   <div class="scoreboard-card-main">
                     <div class="scoreboard-card-chips">
-                      <span class="sb-index">{{
+                      <span class="workspace-directory-status-pill sb-index">{{
                         String(contestPageStartIndex + index + 1).padStart(2, '0')
                       }}</span>
-                      <span class="sb-status-chip">{{
+                      <span class="workspace-directory-status-pill sb-status-chip">{{
                         getStatusLabel(section.contest.status)
                       }}</span>
-                      <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
+                      <span
+                        class="workspace-directory-status-pill workspace-directory-status-pill--muted sb-mode-chip"
+                        >{{ getModeLabel(section.contest.mode) }}</span
+                      >
                       <span
                         v-if="section.frozen"
-                        class="sb-frozen-chip"
+                        class="workspace-directory-status-pill sb-frozen-chip"
                       >
                         <Shield class="h-3 w-3" /> 已冻结
                       </span>
                     </div>
-                    <h3 class="scoreboard-card-title">
+                    <h3
+                      class="workspace-directory-row-title workspace-directory-row-title--mono scoreboard-card-title"
+                    >
                       {{ section.contest.title }}
                     </h3>
-                    <p class="scoreboard-card-time">
+                    <p class="workspace-directory-row-subtitle scoreboard-card-time">
                       {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
                     </p>
-                    <p class="scoreboard-card-description">
-                      {{
-                        getCardDescription(
-                          section.contest.status,
-                          section.frozen
-                        )
-                      }}
+                    <p
+                      class="workspace-directory-row-subtitle workspace-directory-row-subtitle--clamp scoreboard-card-description"
+                    >
+                      {{ getCardDescription(section.contest.status, section.frozen) }}
                     </p>
                   </div>
                   <div class="scoreboard-card-meta">
@@ -246,9 +231,7 @@ const {
               </router-link>
             </div>
 
-            <div
-              class="scoreboard-pagination workspace-directory-pagination"
-            >
+            <div class="scoreboard-pagination workspace-directory-pagination">
               <PagePaginationControls
                 :page="contestPage"
                 :total-pages="contestTotalPages"
@@ -271,14 +254,9 @@ const {
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">
-            Points Scoreboard
-          </div>
+          <div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>
 
-          <div
-            v-if="rankingLoading"
-            class="scoreboard-loading"
-          >
+          <div v-if="rankingLoading" class="scoreboard-loading">
             <div class="scoreboard-loading-spinner" />
           </div>
 
@@ -302,7 +280,7 @@ const {
 
           <div
             v-else
-            class="scoreboard-table-shell workspace-directory-list overflow-x-auto"
+            class="scoreboard-table-shell workspace-directory-list workspace-directory-list--catalog overflow-x-auto"
           >
             <table class="sb-table">
               <thead>
@@ -315,13 +293,13 @@ const {
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="item in rankingRows"
-                  :key="item.user_id"
-                  :class="getRowClass(item.rank)"
-                >
+                <tr v-for="item in rankingRows" :key="item.user_id" :class="getRowClass(item.rank)">
                   <td class="sb-cell--rank">
-                    <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
+                    <span
+                      class="workspace-directory-status-pill"
+                      :class="getRankPillClass(item.rank)"
+                      >{{ item.rank }}</span
+                    >
                   </td>
                   <td>{{ item.username }}</td>
                   <td class="sb-cell--mono">
@@ -400,22 +378,7 @@ const {
 }
 
 .scoreboard-directory {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
   margin-top: 24px;
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .scoreboard-sections {
@@ -461,26 +424,16 @@ const {
 
 .scoreboard-card-title {
   margin-top: 10px;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-18);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--journal-ink);
 }
 
 .scoreboard-card-time,
 .scoreboard-card-meta {
   margin-top: 6px;
-  font-size: var(--font-size-13);
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .scoreboard-card-description {
   margin-top: 8px;
   max-width: 700px;
-  font-size: var(--font-size-13);
-  line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
 
@@ -491,54 +444,29 @@ const {
 }
 
 .scoreboard-table-shell {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
   margin-top: var(--space-4);
   overflow-x: auto;
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
-.sb-index,
-.sb-status-chip,
-.sb-mode-chip,
-.sb-frozen-chip,
-.sb-rank-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: var(--font-size-12);
-  font-weight: 600;
 }
 
 .sb-index {
+  border-color: color-mix(
+    in srgb,
+    var(--scoreboard-accent, var(--journal-accent)) 22%,
+    transparent
+  );
   background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 12%, transparent);
   color: var(--scoreboard-accent, var(--journal-accent));
 }
 
 .sb-status-chip,
 .sb-frozen-chip {
+  border-color: color-mix(
+    in srgb,
+    var(--scoreboard-accent, var(--journal-accent)) 22%,
+    transparent
+  );
   background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 10%, transparent);
   color: var(--scoreboard-accent, var(--journal-accent));
-}
-
-.sb-mode-chip,
-.sb-rank-pill {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
 }
 
 .sb-table {

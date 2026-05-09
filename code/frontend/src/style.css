@@ -149,7 +149,10 @@ option {
 .workspace-directory-loading {
   padding: var(--workspace-directory-loading-padding, 1.4rem 1.2rem);
   font-size: var(--workspace-directory-loading-font-size, 0.95rem);
-  color: var(--workspace-directory-loading-color, var(--journal-muted, var(--color-text-secondary)));
+  color: var(
+    --workspace-directory-loading-color,
+    var(--journal-muted, var(--color-text-secondary))
+  );
 }
 
 .workspace-directory-list {
@@ -186,6 +189,211 @@ option {
 
 .workspace-directory-list .workspace-data-table__body tr:last-child {
   border-bottom-color: transparent;
+}
+
+.workspace-directory-list--catalog {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 84%,
+    transparent
+  );
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 98%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 74%,
+        var(--color-bg-base)
+      )
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
+}
+
+.workspace-directory-grid-head,
+.workspace-directory-grid-row {
+  display: grid;
+  grid-template-columns: var(--workspace-directory-grid-columns);
+  gap: var(--space-4);
+}
+
+.workspace-directory-grid-head {
+  padding: 0 0 var(--space-3);
+  border-bottom: 1px solid var(--workspace-directory-head-divider);
+  color: var(--journal-muted, var(--color-text-muted));
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-directory-grid-row {
+  align-items: center;
+  width: 100%;
+  padding: var(--space-4-5) 0;
+  border: 0;
+  border-bottom: 1px solid var(--workspace-directory-row-divider);
+  background: transparent;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.workspace-directory-grid-row:hover,
+.workspace-directory-grid-row:focus-visible {
+  background: color-mix(
+    in srgb,
+    var(--workspace-directory-row-accent, var(--journal-accent, var(--color-primary))) 5%,
+    transparent
+  );
+  outline: none;
+}
+
+.workspace-directory-cell {
+  min-width: 0;
+}
+
+.workspace-directory-row-title {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--journal-ink, var(--color-text-primary));
+  font-size: var(--font-size-15);
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-directory-row-title--mono {
+  font-family: var(--font-family-mono);
+}
+
+.workspace-directory-row-subtitle {
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  color: var(--journal-muted, var(--color-text-muted));
+  font-size: var(--font-size-13);
+  line-height: 1.6;
+}
+
+.workspace-directory-row-subtitle--clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.workspace-directory-mono {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.workspace-directory-compact-text {
+  font-size: var(--font-size-13);
+  line-height: 1.6;
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
+.workspace-directory-chip,
+.workspace-directory-status-pill,
+.awd-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.85rem;
+  min-width: var(--workspace-directory-pill-min-width, auto);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.workspace-directory-chip,
+.workspace-directory-status-pill--primary,
+.awd-status-pill--primary {
+  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+
+.workspace-directory-status-pill--success,
+.awd-status-pill--success {
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  color: var(--color-success);
+}
+
+.workspace-directory-status-pill--warning,
+.awd-status-pill--warning {
+  border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  color: var(--color-warning);
+}
+
+.workspace-directory-status-pill--danger,
+.awd-status-pill--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  color: var(--color-danger);
+}
+
+.workspace-directory-chip--muted,
+.workspace-directory-status-pill--muted,
+.awd-status-pill--muted {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+}
+
+.workspace-directory-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.workspace-directory-row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.9rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.workspace-directory-row-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  transform: translateY(-0.0625rem);
+}
+
+.workspace-directory-row-btn--danger:hover {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface));
+  color: var(--color-danger);
 }
 
 .workspace-directory-section > .workspace-directory-pagination {
@@ -384,7 +592,7 @@ option {
   border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
   border-radius: 1.5rem;
   /* 关键：使用双重描边（外白内黑影），创造极致的区分度 */
-  box-shadow: 
+  box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 90%, white),
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 25px 50px -12px var(--color-shadow-soft);

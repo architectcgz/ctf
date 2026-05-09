@@ -105,13 +105,17 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
           </router-link>
         </div>
 
-        <section v-else class="instance-directory workspace-directory-list" aria-label="实例目录">
+        <section
+          v-else
+          class="instance-directory workspace-directory-list workspace-directory-list--catalog"
+          aria-label="实例目录"
+        >
           <div class="instance-directory-top">
             <h2 class="instance-directory-title">实例列表</h2>
             <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
           </div>
 
-          <div class="instance-directory-head">
+          <div class="workspace-directory-grid-head instance-directory-head">
             <span>题目</span>
             <span>访问</span>
             <span>状态</span>
@@ -119,23 +123,35 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
             <span>操作</span>
           </div>
 
-          <article v-for="instance in instances" :key="instance.id" class="instance-row">
-            <div class="instance-row-main">
-              <h2 class="instance-row-title" :title="instance.challenge_title">
+          <article
+            v-for="instance in instances"
+            :key="instance.id"
+            class="workspace-directory-grid-row instance-row"
+          >
+            <div class="workspace-directory-cell instance-row-main">
+              <h2
+                class="instance-row-title"
+                :class="['workspace-directory-row-title', 'workspace-directory-row-title--mono']"
+                :title="instance.challenge_title"
+              >
                 {{ instance.challenge_title }}
               </h2>
               <div class="instance-row-tags">
-                <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
-                <span class="instance-chip instance-chip-difficulty">{{
-                  instance.difficulty
-                }}</span>
+                <span
+                  class="workspace-directory-status-pill instance-chip instance-chip-category"
+                  >{{ instance.category }}</span
+                >
+                <span
+                  class="workspace-directory-status-pill instance-chip instance-chip-difficulty"
+                  >{{ instance.difficulty }}</span
+                >
               </div>
             </div>
 
-            <div class="instance-row-access">
+            <div class="workspace-directory-compact-text instance-row-access">
               <template v-if="instance.status === 'running'">
                 <div
-                  class="instance-row-mono instance-row-access-value"
+                  class="workspace-directory-mono instance-row-mono instance-row-access-value"
                   :title="formatInstanceAccessDisplay(instance)"
                 >
                   {{ formatInstanceAccessDisplay(instance) }}
@@ -164,7 +180,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
             </div>
 
             <div class="instance-row-status">
-              <span class="instance-state-chip">
+              <span class="workspace-directory-status-pill instance-state-chip">
                 <span :class="getInstanceStatusClass(instance.status)">●</span>
                 <span>{{ getInstanceStatusLabel(instance.status) }}</span>
               </span>
@@ -173,7 +189,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
             <div class="instance-row-remaining">
               <span
                 v-if="instance.status === 'running'"
-                class="instance-row-mono"
+                class="workspace-directory-mono instance-row-mono"
                 :class="
                   instance.remaining < WARNING_THRESHOLD_SECONDS ? 'instance-row-mono-warning' : ''
                 "
@@ -191,7 +207,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
               </span>
             </div>
 
-            <div class="instance-row-actions">
+            <div class="workspace-directory-row-actions instance-row-actions">
               <button
                 v-if="instance.status === 'running' && isInstanceManualActionAllowed(instance)"
                 :disabled="instance.remaining_extends <= 0"
@@ -317,47 +333,14 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-directory {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
+  --workspace-directory-grid-columns: minmax(0, 1.25fr) minmax(13.75rem, 1.2fr) 8.75rem 10rem
+    13.75rem;
   margin-top: 24px;
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
-}
-
-.instance-directory-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 1.2fr) 140px 160px 220px;
-  gap: 16px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.instance-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 1.2fr) 140px 160px 220px;
-  gap: 16px;
-  align-items: center;
-  padding: 18px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .instance-row-title {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-18);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--journal-ink);
+  font-size: var(--font-size-15);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -366,26 +349,18 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 .instance-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.instance-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: var(--font-size-12);
-  font-weight: 600;
+  gap: var(--space-2);
+  margin-top: var(--space-2-5);
 }
 
 .instance-chip-category {
+  border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
 }
 
 .instance-chip-difficulty {
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
   background: color-mix(in srgb, var(--color-success) 10%, transparent);
   color: var(--color-success);
 }
@@ -393,14 +368,6 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 .instance-row-access,
 .instance-row-remaining {
   min-width: 0;
-  font-size: var(--font-size-13);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.instance-row-mono {
-  font-family: var(--font-family-mono);
-  color: var(--journal-ink);
 }
 
 .instance-row-access-value {
@@ -429,15 +396,9 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-state-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 8px;
+  gap: var(--space-2);
+  border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: var(--font-size-12);
-  font-weight: 600;
   color: var(--journal-accent);
 }
 
@@ -458,9 +419,8 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-row-actions {
-  display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: flex-start;
 }
 
 .instance-warning-overlay {

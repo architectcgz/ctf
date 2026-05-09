@@ -3,7 +3,6 @@ export const viewLineLimit = 500
 export const oversizedViewAllowlist = new Set([
   'views/challenges/ChallengeDetail.vue',
   'views/contests/ContestDetail.vue',
-  'views/instances/InstanceList.vue',
   'views/platform/ContestAwdConfig.vue',
   'views/profile/SkillProfile.vue',
   'views/profile/UserProfile.vue',

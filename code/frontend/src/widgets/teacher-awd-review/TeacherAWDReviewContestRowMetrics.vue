@@ -6,7 +6,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="teacher-directory-row-metrics">
+  <div class="teacher-directory-row-metrics" :class="'workspace-directory-compact-text'">
     <span>{{ primary }}</span>
     <span>{{ secondary }}</span>
   </div>
@@ -16,7 +16,5 @@ defineProps<{
 .teacher-directory-row-metrics {
   display: grid;
   gap: var(--space-1);
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
 }
 </style>
