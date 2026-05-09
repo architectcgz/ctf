@@ -35,11 +35,11 @@ const emit = defineEmits<{
           Challenge Profile
         </div>
         <h1 class="workspace-page-title">
-          题目管理
+          题目详情
         </h1>
       </div>
       <p class="workspace-page-copy">
-        聚合《{{ challenge.title }}》的基础信息、附件与判题模式配置，便于和拓扑、题解工作区来回切换。
+        管理《{{ challenge.title }}》的基础信息、附件与判题配置。
       </p>
     </header>
 

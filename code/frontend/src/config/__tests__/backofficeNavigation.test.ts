@@ -74,7 +74,7 @@ describe('backofficeNavigation', () => {
     const items = getVisibleBackofficeSecondaryItems('/platform/challenges/11/writeup', 'admin')
 
     expect(items.map((item) => item.label)).toEqual([
-      '题目管理',
+      'Jeopardy题库',
       'AWD题库',
       '镜像管理',
     ])

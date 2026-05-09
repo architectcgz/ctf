@@ -31,10 +31,10 @@ function handleImport(): void {
           Challenge Workspace
         </div>
         <h1 class="workspace-page-title">
-          题目资源管理中心
+          Jeopardy题库
         </h1>
         <p class="workspace-page-copy">
-          集中查看题目目录、发布状态与题库变更。
+          集中管理 Jeopardy 题目目录、发布状态与题库变更。
         </p>
       </div>
       <div class="challenge-manage-hero-actions">
@@ -64,7 +64,7 @@ function handleImport(): void {
             {{ total.toString().padStart(2, '0') }}
           </div>
           <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            题目资源总计
+            Jeopardy题目总计
           </div>
         </div>
       </article>

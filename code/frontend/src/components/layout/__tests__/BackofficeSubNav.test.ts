@@ -80,7 +80,7 @@ describe('BackofficeSubNav', () => {
 
     const activeButton = wrapper.find('.backoffice-subnav__item--active')
     expect(activeButton.exists()).toBe(true)
-    expect(activeButton.text()).toContain('题目管理')
+    expect(activeButton.text()).toContain('Jeopardy题库')
   })
 
   it('uses shared theme tokens instead of hardcoded light navigation colors', () => {

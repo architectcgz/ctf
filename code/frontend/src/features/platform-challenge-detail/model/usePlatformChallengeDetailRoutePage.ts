@@ -8,7 +8,7 @@ type ChallengePanelKey = 'detail' | 'writeup'
 const panelTabs = [
   {
     key: 'detail' as const,
-    label: '题目管理',
+    label: '题目详情',
     tabId: 'admin-challenge-tab-detail',
     panelId: 'admin-challenge-panel-detail',
   },

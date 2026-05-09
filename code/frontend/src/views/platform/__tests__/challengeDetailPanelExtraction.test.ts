@@ -34,7 +34,7 @@ describe('Admin ChallengeDetail panel extraction', () => {
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
     expect(adminChallengeTopbarPanelSource).toContain('<span class="workspace-overline">Challenge Profile</span>')
     expect(adminChallengeTopbarPanelSource).toContain('拓扑编排')
-    expect(adminChallengeTopbarPanelSource).toContain('返回题库')
+    expect(adminChallengeTopbarPanelSource).toContain('返回 Jeopardy题库')
   })
 
   it('题目详情概览应复用 challenge entity 的分类与难度文本单元', () => {

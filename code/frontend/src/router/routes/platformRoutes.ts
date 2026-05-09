@@ -156,7 +156,7 @@ export const platformRoutes: RouteRecordRaw[] = [
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
-    title: '题目管理',
+    title: 'Jeopardy题库',
     icon: 'Settings',
     contentLayout: 'bleed',
   },

@@ -38,7 +38,7 @@ function handleOpenChallengeList(): void {
         type="button"
         @click="handleOpenChallengeList"
       >
-        返回题库
+        返回 Jeopardy题库
       </button>
     </div>
   </header>

@@ -43,7 +43,7 @@ export function usePlatformChallengeDetailPage() {
   let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
   const challengeId = computed(() => String(route.params.id || ''))
-  const workspaceLabel = computed(() => challenge.value?.title || '题目管理')
+  const workspaceLabel = computed(() => challenge.value?.title || '题目详情')
   const flagConfigSummary = computed(() => summarizeChallengeFlagConfig(challenge.value?.flag_config))
   const isSharedInstanceChallenge = computed(() => challenge.value?.instance_sharing === 'shared')
   const flagDraftSummary = computed(() =>

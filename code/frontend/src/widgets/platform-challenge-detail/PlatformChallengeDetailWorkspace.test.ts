@@ -6,13 +6,13 @@ import type { AdminChallengeListItem } from '@/api/contracts'
 
 function createProps() {
   return {
-    workspaceLabel: '题目管理',
+    workspaceLabel: '题目详情',
     hasChallengeId: true,
     loading: false,
     panelTabs: [
       {
         key: 'detail' as const,
-        label: '题目管理',
+        label: '题目详情',
         tabId: 'admin-challenge-tab-detail',
         panelId: 'admin-challenge-panel-detail',
       },
@@ -66,7 +66,7 @@ describe('PlatformChallengeDetailWorkspace', () => {
       },
     })
 
-    expect(wrapper.get('[data-testid="topbar"]').text()).toContain('题目管理-true')
+    expect(wrapper.get('[data-testid="topbar"]').text()).toContain('题目详情-true')
 
     await wrapper.get('[data-testid="topbar"]').trigger('click')
     expect(wrapper.emitted('openTopology')).toBeTruthy()

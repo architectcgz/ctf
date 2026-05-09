@@ -132,7 +132,7 @@ const backofficeModules: BackofficeModule[] = [
     secondaryItems: [
       {
         routeName: 'ChallengeManage',
-        label: '题目管理',
+        label: 'Jeopardy题库',
         path: '/platform/challenges',
         roles: ['teacher', 'admin'],
         isMatch: (path) =>

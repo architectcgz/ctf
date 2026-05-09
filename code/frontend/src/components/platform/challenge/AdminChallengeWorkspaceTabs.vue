@@ -48,7 +48,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   <nav
     class="top-tabs"
     role="tablist"
-    aria-label="题目管理视图切换"
+    aria-label="题目详情视图切换"
   >
     <button
       v-for="(tab, index) in panelTabs"

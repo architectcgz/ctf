@@ -135,7 +135,7 @@ function createTestRouter() {
       {
         path: '/platform/challenges',
         component: { template: '<div>challenges</div>' },
-        meta: { title: '题目管理' },
+        meta: { title: 'Jeopardy题库' },
       },
       {
         path: '/platform/contests',
@@ -378,14 +378,14 @@ describe('TopNav', () => {
     wrapper.unmount()
   })
 
-  it('题目详情页面包屑应追加当前题目编号而不是只停留在题目管理', async () => {
+  it('题目详情页面包屑应追加当前题目编号而不是只停留在 Jeopardy 题库入口', async () => {
     const { wrapper } = await mountBackofficeTopNav('/platform/challenges/3')
     const breadcrumbButtons = wrapper.findAll('.topnav-breadcrumb button')
 
     expect(breadcrumbButtons.map((button) => button.text())).toEqual([
       'Workspace',
       '题库与资源',
-      '题目管理',
+      'Jeopardy题库',
       '题目 #3',
     ])
     expect(breadcrumbButtons[2].attributes('aria-current')).toBeUndefined()
@@ -408,7 +408,7 @@ describe('TopNav', () => {
     expect(breadcrumbButtons.map((button) => button.text())).toEqual([
       'Workspace',
       '题库与资源',
-      '题目管理',
+      'Jeopardy题库',
       '双节点演练',
     ])
 
@@ -422,7 +422,7 @@ describe('TopNav', () => {
     expect(breadcrumbButtons.map((button) => button.text())).toEqual([
       'Workspace',
       '题库与资源',
-      '题目管理',
+      'Jeopardy题库',
       '题目 #3',
     ])
 
@@ -436,7 +436,7 @@ describe('TopNav', () => {
     expect(breadcrumbButtons.map((button) => button.text())).toEqual([
       'Workspace',
       '题库与资源',
-      '题目管理',
+      'Jeopardy题库',
       '导入 #import-1',
     ])
 

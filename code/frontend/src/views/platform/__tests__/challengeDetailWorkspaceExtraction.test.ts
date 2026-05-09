@@ -9,7 +9,7 @@ import platformChallengeFlagNoticeStackSource from '@/features/platform-challeng
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 
 describe('Admin ChallengeDetail workspace extraction', () => {
-  it('应将题目管理页的 tab rail 与 workspace 壳层抽到独立 platform challenge 组件', () => {
+  it('应将题目详情页的 tab rail 与 workspace 壳层抽到独立 platform challenge 组件', () => {
     expect(challengeDetailSource).toContain(
       "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )
@@ -21,7 +21,7 @@ describe('Admin ChallengeDetail workspace extraction', () => {
       "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
-    expect(adminChallengeWorkspaceTabsSource).toContain('aria-label="题目管理视图切换"')
+    expect(adminChallengeWorkspaceTabsSource).toContain('aria-label="题目详情视图切换"')
     expect(adminChallengeWorkspaceTabsSource).toContain('admin-challenge-panel-writeup')
     expect(adminChallengeWorkspaceTabsSource).toContain('ChallengeWriteupManagePanel')
     expect(adminChallengeWorkspaceTabsSource).toMatch(
@@ -33,11 +33,11 @@ describe('Admin ChallengeDetail workspace extraction', () => {
 
   it('应将题目详情加载与 Flag 配置流程下沉到 feature model', () => {
     expect(challengeDetailSource).toContain(
-      "import { usePlatformChallengeDetailPage } from '@/features/platform-challenge-detail'"
+      "import { usePlatformChallengeDetailRoutePage } from '@/features/platform-challenge-detail'"
     )
     expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/model/')
     expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/ui/')
-    expect(challengeDetailSource).toContain('} = usePlatformChallengeDetailPage()')
+    expect(challengeDetailSource).toContain('} = usePlatformChallengeDetailRoutePage()')
     expect(challengeDetailSource).not.toContain("from '@/api/admin/authoring'")
     expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
     expect(challengeDetailSource).not.toContain('async function saveFlagConfig()')

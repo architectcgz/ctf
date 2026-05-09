@@ -259,9 +259,8 @@ describe('workspace page header styles', () => {
       },
       {
         source: challengeManageWorkspaceSource,
-        include: /<h1 class="workspace-page-title">\s*(?:题目管理|题目资源管理中心)\s*<\/h1>/,
-        exclude:
-          /<h1 class="workspace-tab-heading__title">(?:题目管理|题目资源管理中心)<\/h1>/,
+        include: /<h1 class="workspace-page-title">\s*Jeopardy题库\s*<\/h1>/,
+        exclude: /<h1 class="workspace-tab-heading__title">\s*Jeopardy题库\s*<\/h1>/,
       },
       {
         source: challengeImportManageWorkspaceSource,
@@ -276,7 +275,7 @@ describe('workspace page header styles', () => {
       {
         source: adminChallengeDetailWorkspaceSource,
         include: '<span class="workspace-overline">Challenge Profile</span>',
-        exclude: '<h1 class="workspace-tab-heading__title">题目管理</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">题目详情</h1>',
       },
       {
         source: writeupManageSource,

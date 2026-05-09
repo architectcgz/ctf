@@ -79,7 +79,7 @@ describe('Admin ChallengeDetail', () => {
     })
   })
 
-  it('应该默认显示题目管理 tab，并保留独立的拓扑编排入口', async () => {
+  it('应该默认显示题目详情 tab，并保留独立的拓扑编排入口', async () => {
     const wrapper = mount(ChallengeDetail, {
       global: {
         stubs: {
@@ -91,9 +91,10 @@ describe('Admin ChallengeDetail', () => {
       },
     })
 
+    expect(wrapper.find('.class-chip').text()).toBe('题目详情')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('题目管理')
+    expect(wrapper.text()).toContain('题目详情')
     expect(wrapper.text()).toContain('题解管理')
     expect(wrapper.find('#admin-challenge-tab-detail').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#admin-challenge-panel-detail').attributes('aria-hidden')).toBe('false')

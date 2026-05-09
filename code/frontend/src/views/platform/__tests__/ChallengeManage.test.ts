@@ -128,10 +128,14 @@ describe('ChallengeManage', () => {
       /<div class="workspace-overline">\s*Challenge Workspace\s*<\/div>/
     )
     expect(challengeManageHeroPanelSource).toMatch(
-      /<p class="workspace-page-copy">\s*集中查看题目目录、发布状态与题库变更。\s*<\/p>/
+      /<h1 class="workspace-page-title">\s*Jeopardy题库\s*<\/h1>/
+    )
+    expect(challengeManageHeroPanelSource).toMatch(
+      /<p class="workspace-page-copy">\s*集中管理 Jeopardy 题目目录、发布状态与题库变更。\s*<\/p>/
     )
     expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
     expect(challengeManageHeroPanelSource).toContain('Plus,')
+    expect(challengeManageHeroPanelSource).toContain('Jeopardy题目总计')
     expect(combinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
@@ -147,7 +151,7 @@ describe('ChallengeManage', () => {
     const wrapper = mount(ChallengeManage)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('题目资源管理中心')
+    expect(wrapper.text()).toContain('Jeopardy题库')
     expect(wrapper.text()).toContain('导入题目')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).not.toContain('导入资源包')
