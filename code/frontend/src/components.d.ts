@@ -145,6 +145,7 @@ declare module 'vue' {
     MetricCard: typeof import('./components/common/MetricCard.vue')['default']
     MinimalFloatingModal: typeof import('./components/common/modal-templates/MinimalFloatingModal.vue')['default']
     ModalTemplateShell: typeof import('./components/common/modal-templates/ModalTemplateShell.vue')['default']
+    NotificationCategoryFilter: typeof import('./components/notifications/NotificationCategoryFilter.vue')['default']
     NotificationDrawer: typeof import('./components/layout/NotificationDrawer.vue')['default']
     OverlayPortal: typeof import('./components/common/modal-templates/OverlayPortal.vue')['default']
     PageHeader: typeof import('./components/common/PageHeader.vue')['default']
