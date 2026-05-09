@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { NotificationItem } from '@/api/contracts'
+import type { NotificationItem, NotificationType } from '@/api/contracts'
 import { getNotifications, markAsRead } from '@/api/notification'
 import { usePagination } from '@/composables/usePagination'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
@@ -17,10 +17,14 @@ export function useNotificationListPage() {
   const { track } = useProbeEasterEggs()
   const publishDrawerOpen = ref(false)
   const probeMessage = ref('')
+  const selectedCategory = ref<NotificationType | 'all'>('all')
   let probeMessageTimer: number | null = null
 
   async function fetchNotifications(params: { page: number; page_size: number }) {
-    const data = await getNotifications(params)
+    const data = await getNotifications({
+      ...params,
+      ...(selectedCategory.value === 'all' ? {} : { type: selectedCategory.value }),
+    })
     if (params.page === 1) {
       notificationStore.setNotifications(data.list)
     }
@@ -44,6 +48,26 @@ export function useNotificationListPage() {
     if (type === 'challenge') return '训练'
     if (type === 'team') return '团队'
     return '系统'
+  }
+
+  const categoryOptions: Array<{ key: NotificationType | 'all'; label: string }> = [
+    { key: 'all', label: '全部' },
+    { key: 'system', label: '系统' },
+    { key: 'contest', label: '竞赛' },
+    { key: 'challenge', label: '训练' },
+    { key: 'team', label: '团队' },
+  ]
+
+  const selectedCategoryLabel = computed(
+    () =>
+      categoryOptions.find((option) => option.key === selectedCategory.value)?.label ??
+      categoryOptions[0].label
+  )
+
+  async function selectCategory(next: NotificationType | 'all'): Promise<void> {
+    if (selectedCategory.value === next) return
+    selectedCategory.value = next
+    await changePage(1)
   }
 
   function openNotificationDetail(item: NotificationItem): void {
@@ -134,8 +158,12 @@ export function useNotificationListPage() {
     hasLoadError,
     loadErrorMessage,
     headStats,
+    categoryOptions,
+    selectedCategory,
+    selectedCategoryLabel,
     canPublishNotification,
     typeLabel,
+    selectCategory,
     openNotificationDetail,
     markCurrentPageRead,
     openPublishDrawer,

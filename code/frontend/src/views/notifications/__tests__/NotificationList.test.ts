@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationList from '../NotificationList.vue'
 import notificationListSource from '../NotificationList.vue?raw'
+import notificationCategoryFilterSource from '@/components/notifications/NotificationCategoryFilter.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
 
@@ -181,6 +182,7 @@ describe('NotificationList', () => {
     expect(notificationListSource).not.toContain('<div class="journal-eyebrow">Notifications</div>')
     expect(notificationListSource).not.toContain('journal-eyebrow-text')
     expect(notificationListSource).toContain('class="notification-topbar-meta"')
+    expect(notificationListSource).toContain('class="notification-title-line"')
     expect(notificationListSource).toContain('class="notification-head-stats"')
     expect(notificationListSource).toContain('class="notification-head-stat"')
     expect(notificationListSource).toContain('v-for="stat in headStats"')
@@ -189,6 +191,28 @@ describe('NotificationList', () => {
     expect(notificationListSource).not.toContain('本页消息')
     expect(notificationListSource).not.toContain('已读消息')
     expect(notificationListSource).not.toContain('总消息数')
+  })
+
+  it('通知分类筛选应复用目录工具栏并透传 type 查询参数', async () => {
+    const { wrapper } = await mountPage()
+
+    expect(notificationListSource).toContain('NotificationCategoryFilter')
+    expect(notificationCategoryFilterSource).toContain('WorkspaceDirectoryToolbar')
+    expect(notificationListSource).not.toContain('notification-category-bar')
+    expect(wrapper.text()).toContain('全部消息')
+
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    await wrapper.get('.notification-filter-control').setValue('contest')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('竞赛消息')
+    expect(notificationApiMocks.getNotifications).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        type: 'contest',
+      })
+    )
+    expect(notificationListSource).not.toContain('class="notification-directory-meta"')
   })
 
   it('通知页操作按钮应接入共享 ui-btn 原语', () => {

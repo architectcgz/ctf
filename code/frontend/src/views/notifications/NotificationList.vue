@@ -2,6 +2,7 @@
 import { RefreshCw } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminNotificationPublishDrawer from '@/components/notifications/AdminNotificationPublishDrawer.vue'
+import NotificationCategoryFilter from '@/components/notifications/NotificationCategoryFilter.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { useNotificationListPage } from '@/features/notifications'
 import { formatDate } from '@/utils/format'
@@ -19,8 +20,12 @@ const {
   hasLoadError,
   loadErrorMessage,
   headStats,
+  categoryOptions,
+  selectedCategory,
+  selectedCategoryLabel,
   canPublishNotification,
   typeLabel,
+  selectCategory,
   openNotificationDetail,
   markCurrentPageRead,
   openPublishDrawer,
@@ -39,29 +44,30 @@ const {
         <header class="notification-topbar">
           <div class="notification-heading">
             <div class="workspace-overline">Notifications</div>
-            <h1 class="notification-title workspace-page-title">
-              通知中心
-            </h1>
+            <div class="notification-title-line">
+              <h1 class="notification-title workspace-page-title">
+                通知中心
+              </h1>
+              <div
+                class="notification-head-stats"
+                aria-label="消息概况"
+              >
+                <div
+                  v-for="stat in headStats"
+                  :key="stat.key"
+                  class="notification-head-stat"
+                >
+                  <span class="notification-head-stat__label">{{ stat.label }}</span>
+                  <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+                </div>
+              </div>
+            </div>
             <p class="notification-subtitle">
               系统、竞赛和训练相关通知会在这里按时间顺序汇总。
             </p>
           </div>
 
           <div class="notification-topbar-meta">
-            <div
-              class="notification-head-stats"
-              aria-label="消息概况"
-            >
-              <div
-                v-for="stat in headStats"
-                :key="stat.key"
-                class="notification-head-stat"
-              >
-                <span class="notification-head-stat__label">{{ stat.label }}</span>
-                <strong class="notification-head-stat__value">{{ stat.value }}</strong>
-              </div>
-            </div>
-
             <div class="notification-actions">
               <button
                 v-if="canPublishNotification"
@@ -96,6 +102,20 @@ const {
         >
           {{ probeMessage }}
         </p>
+
+        <section
+          v-if="!loading && !hasLoadError"
+          class="notification-filter-section"
+          aria-label="消息分类"
+        >
+          <NotificationCategoryFilter
+            :total="total"
+            :selected-category="selectedCategory"
+            :selected-category-label="selectedCategoryLabel"
+            :category-options="categoryOptions"
+            @select-category="selectCategory"
+          />
+        </section>
 
         <div
           v-if="loading"
@@ -137,11 +157,8 @@ const {
           >
             <div class="notification-directory-top">
               <h2 class="notification-directory-title">
-                消息列表
+                {{ selectedCategoryLabel }}消息
               </h2>
-              <div class="notification-directory-meta">
-                共 {{ total }} 条
-              </div>
             </div>
 
             <div class="notification-directory-head">
@@ -240,6 +257,13 @@ const {
   max-width: 720px;
 }
 
+.notification-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3) var(--space-4);
+}
+
 .notification-probe-note {
   margin-top: 12px;
   font-size: var(--font-size-13);
@@ -257,7 +281,7 @@ const {
 .notification-head-stats {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
 }
 
@@ -316,8 +340,12 @@ const {
   border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.notification-filter-section {
+  margin-top: var(--space-5);
+}
+
 .notification-directory {
-  margin-top: 24px;
+  margin-top: var(--space-4);
 }
 
 .notification-directory-head {
