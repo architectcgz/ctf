@@ -57,7 +57,14 @@ func Run() {
 		}
 	}()
 
-	waitForShutdown(log, server)
+	signalCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	if err := shutdownGracefully(signalCtx, stop, server, 10*time.Second); err != nil {
+		log.Error("http_server_shutdown_failed", zap.Error(err))
+	} else {
+		log.Info("http_server_stopped")
+	}
 	closeResources(log, db, cache)
 }
 
@@ -77,21 +84,31 @@ func mustOpenRedis(ctx context.Context, cfg *config.Config, log *zap.Logger) *re
 	return client
 }
 
-func waitForShutdown(log *zap.Logger, server *app.HTTPServer) {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	defer signal.Stop(stop)
-	<-stop
+type shutdownServer interface {
+	Shutdown(ctx context.Context) error
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		log.Error("http_server_shutdown_failed", zap.Error(err))
-		return
+func shutdownGracefully(waitCtx context.Context, stop func(), server shutdownServer, timeout time.Duration) error {
+	if waitCtx == nil {
+		return errors.New("shutdown wait context is required")
+	}
+	if server == nil {
+		return errors.New("shutdown server is required")
 	}
 
-	log.Info("http_server_stopped")
+	<-waitCtx.Done()
+	if stop != nil {
+		stop()
+	}
+
+	shutdownCtx := context.Background()
+	cancel := func() {}
+	if timeout > 0 {
+		shutdownCtx, cancel = context.WithTimeout(context.Background(), timeout)
+	}
+	defer cancel()
+
+	return server.Shutdown(shutdownCtx)
 }
 
 func closeResources(log *zap.Logger, db *gorm.DB, cache *redislib.Client) {

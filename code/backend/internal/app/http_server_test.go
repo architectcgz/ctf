@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -88,6 +89,57 @@ func TestHTTPServerStartsAndStopsRegisteredBackgroundJobs(t *testing.T) {
 	case <-stopped:
 	default:
 		t.Fatal("expected background job to be stopped")
+	}
+}
+
+func TestHTTPServerShutdownStartsHTTPDrainBeforeStoppingBackgroundJobs(t *testing.T) {
+	t.Parallel()
+
+	httpShutdownStarted := make(chan struct{})
+	httpShutdownRelease := make(chan struct{})
+	server := &HTTPServer{
+		backgroundJobs: []composition.BackgroundJob{
+			composition.NewBackgroundJob(
+				"test_background_job",
+				nil,
+				func(context.Context) error {
+					select {
+					case <-httpShutdownStarted:
+						return nil
+					default:
+						return errors.New("http shutdown has not started")
+					}
+				},
+			),
+		},
+		onHTTPShutdownStarted: func() {
+			close(httpShutdownStarted)
+		},
+		shutdownHTTPServer: func(context.Context) error {
+			<-httpShutdownRelease
+			return nil
+		},
+		logger: zap.NewNop(),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- server.Shutdown(ctx)
+	}()
+
+	select {
+	case <-httpShutdownStarted:
+	case <-ctx.Done():
+		t.Fatal("expected http shutdown to start before timeout")
+	}
+
+	close(httpShutdownRelease)
+
+	if err := <-done; err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
 	}
 }
 

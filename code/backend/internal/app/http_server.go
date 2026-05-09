@@ -24,12 +24,14 @@ type lifecycleComponent struct {
 }
 
 type HTTPServer struct {
-	server         *http.Server
-	backgroundJobs []composition.BackgroundJob
-	closers        []lifecycleComponent
-	appCtx         context.Context
-	cancelApp      context.CancelFunc
-	logger         *zap.Logger
+	server                *http.Server
+	backgroundJobs        []composition.BackgroundJob
+	closers               []lifecycleComponent
+	appCtx                context.Context
+	cancelApp             context.CancelFunc
+	shutdownHTTPServer    func(context.Context) error
+	onHTTPShutdownStarted func()
+	logger                *zap.Logger
 }
 
 func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*HTTPServer, error) {
@@ -50,11 +52,12 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 			WriteTimeout: cfg.HTTP.WriteTimeout,
 			IdleTimeout:  cfg.HTTP.IdleTimeout,
 		},
-		backgroundJobs: root.BackgroundJobs(),
-		closers:        routerRuntime.closers,
-		appCtx:         root.Context(),
-		cancelApp:      root.Cancel,
-		logger:         log,
+		backgroundJobs:     root.BackgroundJobs(),
+		closers:            routerRuntime.closers,
+		appCtx:             root.Context(),
+		cancelApp:          root.Cancel,
+		shutdownHTTPServer: nil,
+		logger:             log,
 	}
 	if err := server.startBackgroundJobs(); err != nil {
 		return nil, err
@@ -68,13 +71,18 @@ func (s *HTTPServer) Start() error {
 
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	var shutdownErrs []error
-
-	if s.cancelApp != nil {
-		s.cancelApp()
-	}
+	httpShutdownDone := s.startHTTPShutdown(ctx)
 
 	if err := s.stopBackgroundJobs(ctx); err != nil {
 		shutdownErrs = append(shutdownErrs, err)
+	}
+
+	if err := <-httpShutdownDone; err != nil {
+		shutdownErrs = append(shutdownErrs, err)
+	}
+
+	if s.cancelApp != nil {
+		s.cancelApp()
 	}
 
 	for _, component := range s.closers {
@@ -87,10 +95,42 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 		}
 	}
 
-	if err := s.server.Shutdown(ctx); err != nil {
-		shutdownErrs = append(shutdownErrs, err)
-	}
 	return errors.Join(shutdownErrs...)
+}
+
+func (s *HTTPServer) startHTTPShutdown(ctx context.Context) <-chan error {
+	done := make(chan error, 1)
+	started := make(chan struct{})
+	go func() {
+		done <- s.shutdownHTTP(ctx, started)
+	}()
+	<-started
+	return done
+}
+
+func (s *HTTPServer) shutdownHTTP(ctx context.Context, started chan<- struct{}) error {
+	if s == nil {
+		if started != nil {
+			close(started)
+		}
+		return nil
+	}
+	if s.server != nil {
+		s.server.SetKeepAlivesEnabled(false)
+	}
+	if s.onHTTPShutdownStarted != nil {
+		s.onHTTPShutdownStarted()
+	}
+	if started != nil {
+		close(started)
+	}
+	if s.shutdownHTTPServer != nil {
+		return s.shutdownHTTPServer(ctx)
+	}
+	if s.server == nil {
+		return nil
+	}
+	return s.server.Shutdown(ctx)
 }
 
 func (s *HTTPServer) startBackgroundJobs() error {
