@@ -159,20 +159,17 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).not.toContain('待确认导入')
   })
 
-  it('题目导入入口按钮应使用题目管理页自己的主题变量样式', () => {
+  it('题目导入入口按钮应继承共享 header 主按钮样式', () => {
     expect(challengeManageHeroPanelSource).toContain('class="challenge-manage-hero-actions"')
     expect(challengeManageHeroPanelSource).toContain(
-      'class="header-btn header-btn--primary challenge-manage-import-button"'
+      'class="header-btn header-btn--primary"'
     )
     expect(challengeManageHeroPanelSource).toContain('导入题目')
     expect(challengeManageHeroPanelSource).not.toContain('awd-library-hero-actions')
     expect(challengeManageHeroPanelSource).not.toContain('导入资源包')
-    expect(challengeManageHeroPanelSource).toMatch(
-      /\.challenge-manage-import-button\s*\{[\s\S]*--header-btn-border:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 34%, var\(--journal-border\)\);[\s\S]*--header-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 12%, var\(--journal-surface\)\);[\s\S]*--header-btn-color:\s*var\(--journal-accent-strong\);/s
-    )
-    expect(challengeManageHeroPanelSource).toMatch(
-      /\.challenge-manage-import-button\s*\{[\s\S]*--header-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 28%, transparent\);/s
-    )
+    expect(challengeManageHeroPanelSource).not.toContain('challenge-manage-import-button')
+    expect(challengeManageHeroPanelSource).not.toContain('--header-btn-border:')
+    expect(challengeManageHeroPanelSource).not.toContain('--header-btn-background:')
   })
 
   it('页面壳层应继续复用 journal surface token，而题目更多菜单则应改用共享 action menu primitive', () => {
