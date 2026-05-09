@@ -44,24 +44,9 @@ const {
         <header class="notification-topbar">
           <div class="notification-heading">
             <div class="workspace-overline">Notifications</div>
-            <div class="notification-title-line">
-              <h1 class="notification-title workspace-page-title">
-                通知中心
-              </h1>
-              <div
-                class="notification-head-stats"
-                aria-label="消息概况"
-              >
-                <div
-                  v-for="stat in headStats"
-                  :key="stat.key"
-                  class="notification-head-stat"
-                >
-                  <span class="notification-head-stat__label">{{ stat.label }}</span>
-                  <strong class="notification-head-stat__value">{{ stat.value }}</strong>
-                </div>
-              </div>
-            </div>
+            <h1 class="notification-title workspace-page-title">
+              通知中心
+            </h1>
             <p class="notification-subtitle">
               系统、竞赛和训练相关通知会在这里按时间顺序汇总。
             </p>
@@ -115,6 +100,19 @@ const {
             :category-options="categoryOptions"
             @select-category="selectCategory"
           />
+          <div
+            class="notification-head-stats"
+            aria-label="消息概况"
+          >
+            <div
+              v-for="stat in headStats"
+              :key="stat.key"
+              class="notification-head-stat"
+            >
+              <span class="notification-head-stat__label">{{ stat.label }}</span>
+              <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+            </div>
+          </div>
         </section>
 
         <div
@@ -257,13 +255,6 @@ const {
   max-width: 720px;
 }
 
-.notification-title-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--space-3) var(--space-4);
-}
-
 .notification-probe-note {
   margin-top: 12px;
   font-size: var(--font-size-13);
@@ -341,7 +332,16 @@ const {
 }
 
 .notification-filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
   margin-top: var(--space-5);
+}
+
+.notification-filter-section :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .notification-directory {

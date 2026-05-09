@@ -172,7 +172,7 @@ describe('NotificationList', () => {
     )
   })
 
-  it('通知页头部应将消息数与未读数收进同一行，并把操作按钮放到下一行', () => {
+  it('通知页应将消息数与未读数放到分类筛选同行，并把操作按钮留在页头', () => {
     expect(notificationListSource).toMatch(
       /<div class="workspace-overline">\s*Notifications\s*<\/div>/
     )
@@ -182,7 +182,10 @@ describe('NotificationList', () => {
     expect(notificationListSource).not.toContain('<div class="journal-eyebrow">Notifications</div>')
     expect(notificationListSource).not.toContain('journal-eyebrow-text')
     expect(notificationListSource).toContain('class="notification-topbar-meta"')
-    expect(notificationListSource).toContain('class="notification-title-line"')
+    expect(notificationListSource).not.toContain('class="notification-title-line"')
+    expect(notificationListSource).toMatch(
+      /class="notification-filter-section"[\s\S]*<NotificationCategoryFilter[\s\S]*class="notification-head-stats"/
+    )
     expect(notificationListSource).toContain('class="notification-head-stats"')
     expect(notificationListSource).toContain('class="notification-head-stat"')
     expect(notificationListSource).toContain('v-for="stat in headStats"')
