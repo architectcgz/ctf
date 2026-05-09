@@ -39,7 +39,7 @@ function handleCategoryChange(event: Event): void {
         <span class="notification-filter-label">分类</span>
         <select
           :value="selectedCategory"
-          class="notification-filter-control"
+          class="workspace-directory-filter-control notification-filter-control"
           @change="handleCategoryChange"
         >
           <option
@@ -69,21 +69,4 @@ function handleCategoryChange(event: Event): void {
   color: var(--color-text-muted);
 }
 
-.notification-filter-control {
-  width: 100%;
-  min-height: var(--ui-control-height-md);
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--ui-control-radius-md);
-  background: var(--color-bg-surface);
-  font-size: var(--font-size-14);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  outline: none;
-}
-
-.notification-filter-control:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
-}
 </style>

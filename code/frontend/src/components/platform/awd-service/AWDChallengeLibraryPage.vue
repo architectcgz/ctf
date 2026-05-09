@@ -396,7 +396,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                         <span class="awd-challenge-library__filter-label">服务类型</span>
                         <select
                           :value="serviceTypeFilter"
-                          class="awd-filter-control"
+                          class="workspace-directory-filter-control awd-filter-control"
                           @change="handleServiceTypeFilterChange"
                         >
                           <option value="">全部类型</option>
@@ -410,7 +410,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                         <span class="awd-challenge-library__filter-label">发布状态</span>
                         <select
                           :value="statusFilter"
-                          class="awd-filter-control"
+                          class="workspace-directory-filter-control awd-filter-control"
                           @change="handleStatusFilterChange"
                         >
                           <option value="">全部状态</option>
@@ -851,24 +851,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
-.awd-filter-control {
-  width: 100%;
-  min-height: 2.85rem;
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-14);
-  font-weight: 600;
-  border-radius: 0.9rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  outline: none;
-  transition: all 180ms ease;
-}
-.awd-filter-control:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
-}
-
 .awd-challenge-table__name {
   display: flex;
   flex-direction: column;

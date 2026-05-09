@@ -197,7 +197,7 @@ function handleClassChange(event: Event): void {
                   <span class="workspace-overline">班级</span>
                   <select
                     :value="selectedClassName"
-                    class="teacher-directory-filter-control"
+                    class="workspace-directory-filter-control teacher-directory-filter-control"
                     :disabled="loadingClasses"
                     @change="handleClassChange"
                   >
@@ -369,16 +369,6 @@ function handleClassChange(event: Event): void {
 .teacher-directory-filter-field {
   display: grid;
   gap: var(--space-2);
-}
-
-.teacher-directory-filter-control {
-  min-height: 2.5rem;
-  width: 100%;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  padding: 0 var(--space-3);
 }
 
 .teacher-directory {

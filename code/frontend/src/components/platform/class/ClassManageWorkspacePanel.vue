@@ -100,7 +100,7 @@ function handleStatusFilterChange(event: Event): void {
             <span class="workspace-overline">班级状态</span>
             <select
               :value="statusFilter"
-              class="admin-input admin-class-manage-filter-control"
+              class="admin-input workspace-directory-filter-control admin-class-manage-filter-control"
               @change="handleStatusFilterChange"
             >
               <option value="">
@@ -192,8 +192,4 @@ function handleStatusFilterChange(event: Event): void {
   gap: var(--space-2);
 }
 
-.admin-class-manage-filter-control {
-  min-height: 2.5rem;
-  width: 100%;
-}
 </style>

@@ -297,7 +297,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <button
                   v-if="studentNoQuery"
                   type="button"
-                  class="teacher-filter-reset teacher-filter-clear"
+                  class="ui-btn ui-btn--secondary teacher-filter-reset teacher-filter-clear"
                   @click="emit('updateStudentNoQuery', '')"
                 >
                   清空学号
@@ -494,14 +494,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 .teacher-filter-reset {
   align-self: end;
-  min-height: var(--ui-control-height-md);
-  padding: 0 var(--space-4);
-  border: 1px solid var(--teacher-control-border);
-  border-radius: var(--ui-control-radius-md);
-  background: transparent;
-  color: var(--color-primary);
-  font-size: var(--font-size-12);
-  font-weight: 800;
 }
 
 .teacher-directory-state-chip-ready {

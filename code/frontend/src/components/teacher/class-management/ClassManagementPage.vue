@@ -196,7 +196,7 @@ function handleStatusFilterChange(event: Event): void {
                   <span class="workspace-overline">班级状态</span>
                   <select
                     :value="statusFilter"
-                    class="teacher-directory-filter-control"
+                    class="workspace-directory-filter-control teacher-directory-filter-control"
                     @change="handleStatusFilterChange"
                   >
                     <option value="">全部状态</option>
@@ -344,16 +344,6 @@ function handleStatusFilterChange(event: Event): void {
 .teacher-directory-filter-field {
   display: grid;
   gap: var(--space-2);
-}
-
-.teacher-directory-filter-control {
-  min-height: 2.5rem;
-  width: 100%;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  padding: 0 var(--space-3);
 }
 
 .list-heading__title {

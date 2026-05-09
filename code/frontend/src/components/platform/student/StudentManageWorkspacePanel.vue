@@ -69,7 +69,7 @@ const columns = [
             <span class="workspace-overline">班级范围</span>
             <select
               :value="classFilter"
-              class="admin-input workspace-student-filter-control"
+              class="admin-input workspace-directory-filter-control workspace-student-filter-control"
               @change="emit('change:class-filter', ($event.target as HTMLSelectElement).value)"
             >
               <option value="">

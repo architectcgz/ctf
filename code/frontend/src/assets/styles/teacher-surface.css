@@ -262,11 +262,11 @@
 
 .teacher-management-shell .teacher-field-control {
   width: 100%;
-  min-height: 2.9rem;
+  min-height: var(--ui-control-height-md);
   border: 1px solid var(--teacher-control-border);
-  border-radius: 1rem;
+  border-radius: var(--ui-control-radius-md);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.72rem 0.95rem;
+  padding: 0 var(--space-4);
   color: var(--journal-ink);
   transition:
     border-color 0.18s ease,
@@ -283,7 +283,7 @@
 .teacher-management-shell .teacher-filter-control {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .teacher-management-shell .teacher-input {

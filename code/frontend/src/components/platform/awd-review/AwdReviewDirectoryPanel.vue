@@ -137,7 +137,7 @@ function updateStatusFilter(event: Event): void {
             <span class="admin-awd-review-filter-field__label">赛事状态</span>
             <select
               :value="statusFilter"
-              class="admin-awd-review-filter-field__control"
+              class="workspace-directory-filter-control admin-awd-review-filter-field__control"
               @change="updateStatusFilter"
             >
               <option value="">全部状态</option>
@@ -294,25 +294,6 @@ function updateStatusFilter(event: Event): void {
   color: var(--journal-muted);
 }
 
-.admin-awd-review-filter-field__control {
-  min-height: 2.75rem;
-  border: 1px solid var(--admin-control-border);
-  border-radius: 0.95rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.admin-awd-review-filter-field__control:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
 .admin-awd-review-table {
   --workspace-directory-shell-border: var(--awd-review-directory-border);
   --workspace-directory-head-divider: var(--awd-review-directory-border);
@@ -360,10 +341,4 @@ function updateStatusFilter(event: Event): void {
   gap: var(--space-2);
 }
 
-.workspace-directory-empty .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-radius: 1rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-}
 </style>

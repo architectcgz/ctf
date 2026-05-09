@@ -334,8 +334,7 @@ onUnmounted(() => {
 }
 
 .workspace-directory-toolbar__filter-toggle,
-.workspace-directory-toolbar__sort-button,
-.workspace-directory-toolbar__count-pill {
+.workspace-directory-toolbar__sort-button {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -352,6 +351,22 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+.workspace-directory-toolbar__count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--ui-control-height-md);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--workspace-toolbar-control-border);
+  border-radius: var(--ui-control-radius-md);
+  background: var(--workspace-toolbar-control-background);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  color: var(--workspace-toolbar-control-text);
+  box-shadow: var(--workspace-toolbar-control-shadow);
+  transition: border-color 0.2s ease;
+}
+
 .workspace-directory-toolbar__filter-toggle--active {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
@@ -359,9 +374,18 @@ onUnmounted(() => {
 }
 
 .workspace-directory-toolbar__sort-button:hover,
-.workspace-directory-toolbar__filter-toggle:hover {
+.workspace-directory-toolbar__filter-toggle:hover,
+.workspace-directory-toolbar__sort-button:focus-visible,
+.workspace-directory-toolbar__filter-toggle:focus-visible {
   border-color: var(--workspace-toolbar-control-border-strong);
   color: var(--color-primary);
+}
+
+.workspace-directory-toolbar__sort-button:focus-visible,
+.workspace-directory-toolbar__filter-toggle:focus-visible,
+.workspace-directory-toolbar__filter-reset:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 36%, transparent);
+  outline-offset: 2px;
 }
 
 .workspace-directory-toolbar__count-pill:hover {
@@ -426,11 +450,14 @@ onUnmounted(() => {
 }
 
 .workspace-directory-toolbar__filter-reset {
+  min-height: var(--ui-control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--ui-control-radius-sm);
   font-size: var(--font-size-11);
   font-weight: 800;
   color: var(--color-primary);
   background: transparent;
-  border: none;
   cursor: pointer;
 }
 

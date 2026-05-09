@@ -125,12 +125,15 @@ function getCellValue(row: unknown, key: string): unknown {
   font-size: var(--font-size-11);
   font-weight: 800;
   letter-spacing: 0.05em;
+  line-height: 1.3;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--workspace-table-faint);
 }
 
 .workspace-data-table__body-cell {
   padding: 0.95rem 0.5rem;
+  line-height: 1.45;
 }
 
 .workspace-data-table__row {

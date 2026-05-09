@@ -149,7 +149,7 @@ function submitJumpPage(): void {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
+  gap: var(--space-3) var(--space-4);
   color: var(--page-pagination-ink);
 }
 
@@ -162,7 +162,7 @@ function submitJumpPage(): void {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.65rem;
+  gap: var(--space-2);
 }
 
 .page-pagination-controls__status {
@@ -175,20 +175,20 @@ function submitJumpPage(): void {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .page-pagination-controls__jump-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   color: var(--page-pagination-ink);
 }
 
 .page-pagination-controls__input,
 .page-pagination-controls__button {
-  min-height: 34px;
-  border-radius: 10px;
+  min-height: var(--ui-control-height-sm);
+  border-radius: var(--ui-control-radius-sm);
   border: 1px solid var(--page-pagination-border);
   transition:
     border-color 0.2s ease,
@@ -200,17 +200,21 @@ function submitJumpPage(): void {
 
 .page-pagination-controls__input {
   width: 4.5rem;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   background: var(--page-pagination-surface);
   color: var(--journal-ink, var(--color-text-primary));
+  font-size: var(--font-size-12);
+  font-weight: 700;
 }
 
 .page-pagination-controls__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.95rem;
+  padding: 0 var(--space-3);
   background: transparent;
+  font-size: var(--font-size-12);
+  font-weight: 800;
   color: var(--journal-ink, var(--color-text-primary));
 }
 

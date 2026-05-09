@@ -112,7 +112,11 @@ function updateActorUserIdFilter(event: Event): void {
         <div class="audit-filter-grid">
           <label class="audit-filter-field">
             <span class="audit-filter-label">动作</span>
-            <select :value="actionFilter" class="audit-filter-select" @change="updateActionFilter">
+            <select
+              :value="actionFilter"
+              class="workspace-directory-filter-control audit-filter-select"
+              @change="updateActionFilter"
+            >
               <option value="">全部动作</option>
               <option value="login">登录</option>
               <option value="logout">登出</option>
@@ -130,7 +134,7 @@ function updateActorUserIdFilter(event: Event): void {
               :value="resourceTypeFilter"
               type="text"
               placeholder="资源类型，如 challenge"
-              class="audit-filter-select"
+              class="workspace-directory-filter-control audit-filter-select"
               @input="updateResourceTypeFilter"
             />
           </label>
@@ -142,7 +146,7 @@ function updateActorUserIdFilter(event: Event): void {
               type="number"
               min="1"
               placeholder="执行人 ID"
-              class="audit-filter-select"
+              class="workspace-directory-filter-control audit-filter-select"
               @input="updateActorUserIdFilter"
             />
           </label>
@@ -265,24 +269,6 @@ function updateActorUserIdFilter(event: Event): void {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-}
-
-.audit-filter-select {
-  width: 100%;
-  min-height: 2.75rem;
-  border-radius: 0.95rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-0-875);
-  color: var(--color-text-primary);
-  outline: none;
-  transition: all 150ms ease;
-}
-
-.audit-filter-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .audit-error-banner {

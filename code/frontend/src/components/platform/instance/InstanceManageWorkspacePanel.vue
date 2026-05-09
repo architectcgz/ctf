@@ -93,7 +93,7 @@ function handleStatusFilterChange(event: Event): void {
             <span class="workspace-overline">实例状态</span>
             <select
               :value="statusFilter"
-              class="admin-input admin-instance-manage-filter-control"
+              class="admin-input workspace-directory-filter-control admin-instance-manage-filter-control"
               @change="handleStatusFilterChange"
             >
               <option value="">全部状态</option>
@@ -216,11 +216,6 @@ function handleStatusFilterChange(event: Event): void {
 .admin-instance-manage-filter-field {
   display: grid;
   gap: var(--space-2);
-}
-
-.admin-instance-manage-filter-control {
-  min-height: 2.5rem;
-  width: 100%;
 }
 
 .instance-user-cell {

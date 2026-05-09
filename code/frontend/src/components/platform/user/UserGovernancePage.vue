@@ -337,7 +337,7 @@ function handleImportChange(event: Event): void {
                   <span class="user-filter-label">角色</span>
                   <select
                     :value="roleFilter"
-                    class="admin-input user-filter-control"
+                    class="admin-input workspace-directory-filter-control user-filter-control"
                     @change="
                       emit(
                         'updateRoleFilter',
@@ -356,7 +356,7 @@ function handleImportChange(event: Event): void {
                   <span class="user-filter-label">状态</span>
                   <select
                     :value="statusFilter"
-                    class="admin-input user-filter-control"
+                    class="admin-input workspace-directory-filter-control user-filter-control"
                     @change="
                       emit(
                         'updateStatusFilter',
@@ -723,8 +723,7 @@ function handleImportChange(event: Event): void {
 
 .user-panel-actions > .ui-btn,
 .user-row__actions > .ui-btn,
-.user-detail-actions > .ui-btn,
-.workspace-directory-empty .ui-btn {
+.user-detail-actions > .ui-btn {
   --ui-btn-height: 2.75rem;
   --ui-btn-radius: 1rem;
   --ui-btn-padding: var(--space-2-5) var(--space-4);
@@ -740,8 +739,7 @@ function handleImportChange(event: Event): void {
   --ui-btn-font-size: var(--font-size-0-8125);
 }
 
-.user-panel-actions > .ui-btn.ui-btn--primary,
-.workspace-directory-empty .ui-btn.ui-btn--primary {
+.user-panel-actions > .ui-btn.ui-btn--primary {
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-hover-background: var(--color-primary-hover);
 }

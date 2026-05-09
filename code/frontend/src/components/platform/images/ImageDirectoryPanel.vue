@@ -129,7 +129,7 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
               <span class="image-filter-label">构建状态</span>
               <select
                 :value="statusFilter"
-                class="image-filter-select"
+                class="workspace-directory-filter-control image-filter-select"
                 @change="updateStatusFilter"
               >
                 <option value="">全部状态</option>
@@ -340,17 +340,6 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-muted);
-}
-
-.image-filter-select {
-  width: 100%;
-  min-height: 2.5rem;
-  padding: 0 var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
 }
 
 .image-list :deep(.workspace-data-table__head-cell) {

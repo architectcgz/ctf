@@ -140,7 +140,7 @@ function updateStatusFilter(event: Event): void {
               <span class="challenge-filter-label">题目分类</span>
               <select
                 :value="categoryFilter"
-                class="challenge-filter-select"
+                class="workspace-directory-filter-control challenge-filter-select"
                 @change="updateCategoryFilter"
               >
                 <option value="">全部分类</option>
@@ -157,7 +157,7 @@ function updateStatusFilter(event: Event): void {
               <span class="challenge-filter-label">难度等级</span>
               <select
                 :value="difficultyFilter"
-                class="challenge-filter-select"
+                class="workspace-directory-filter-control challenge-filter-select"
                 @change="updateDifficultyFilter"
               >
                 <option value="">全部难度</option>
@@ -173,7 +173,7 @@ function updateStatusFilter(event: Event): void {
               <span class="challenge-filter-label">发布状态</span>
               <select
                 :value="statusFilter"
-                class="challenge-filter-select"
+                class="workspace-directory-filter-control challenge-filter-select"
                 @change="updateStatusFilter"
               >
                 <option value="">全部状态</option>
@@ -383,25 +383,6 @@ function updateStatusFilter(event: Event): void {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-muted);
-}
-
-.challenge-filter-select {
-  width: 100%;
-  min-height: 2.75rem;
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 500;
-  border: 1px solid var(--color-border-default);
-  border-radius: 0.95rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  outline: none;
-  transition: all 150ms ease;
-}
-
-.challenge-filter-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .challenge-table-title {
