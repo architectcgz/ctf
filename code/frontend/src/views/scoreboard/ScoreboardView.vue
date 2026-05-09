@@ -184,7 +184,7 @@ const {
 
           <section
             v-else
-            class="scoreboard-directory"
+            class="scoreboard-directory workspace-directory-list"
             aria-label="排行榜列表"
           >
             <div class="scoreboard-directory-top">
@@ -302,7 +302,7 @@ const {
 
           <div
             v-else
-            class="scoreboard-table-shell overflow-x-auto"
+            class="scoreboard-table-shell workspace-directory-list overflow-x-auto"
           >
             <table class="sb-table">
               <thead>
@@ -400,7 +400,22 @@ const {
 }
 
 .scoreboard-directory {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
   margin-top: 24px;
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .scoreboard-sections {
@@ -476,7 +491,23 @@ const {
 }
 
 .scoreboard-table-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  margin-top: var(--space-4);
   overflow-x: auto;
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .sb-index,

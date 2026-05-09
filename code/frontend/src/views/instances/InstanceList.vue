@@ -105,7 +105,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
           </router-link>
         </div>
 
-        <section v-else class="instance-directory" aria-label="实例目录">
+        <section v-else class="instance-directory workspace-directory-list" aria-label="实例目录">
           <div class="instance-directory-top">
             <h2 class="instance-directory-title">实例列表</h2>
             <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
@@ -317,7 +317,22 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-directory {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
   margin-top: 24px;
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .instance-directory-head {

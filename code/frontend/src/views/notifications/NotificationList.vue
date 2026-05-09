@@ -44,9 +44,7 @@ const {
         <header class="notification-topbar">
           <div class="notification-heading">
             <div class="workspace-overline">Notifications</div>
-            <h1 class="notification-title workspace-page-title">
-              通知中心
-            </h1>
+            <h1 class="notification-title workspace-page-title">通知中心</h1>
             <p class="notification-subtitle">
               系统、竞赛和训练相关通知会在这里按时间顺序汇总。
             </p>
@@ -81,39 +79,9 @@ const {
           </div>
         </header>
 
-        <p
-          v-if="probeMessage"
-          class="notification-probe-note"
-        >
+        <p v-if="probeMessage" class="notification-probe-note">
           {{ probeMessage }}
         </p>
-
-        <section
-          v-if="!loading && !hasLoadError"
-          class="notification-filter-section"
-          aria-label="消息分类"
-        >
-          <NotificationCategoryFilter
-            :total="total"
-            :selected-category="selectedCategory"
-            :selected-category-label="selectedCategoryLabel"
-            :category-options="categoryOptions"
-            @select-category="selectCategory"
-          />
-          <div
-            class="notification-head-stats"
-            aria-label="消息概况"
-          >
-            <div
-              v-for="stat in headStats"
-              :key="stat.key"
-              class="notification-head-stat"
-            >
-              <span class="notification-head-stat__label">{{ stat.label }}</span>
-              <strong class="notification-head-stat__value">{{ stat.value }}</strong>
-            </div>
-          </div>
-        </section>
 
         <div
           v-if="loading"
@@ -140,16 +108,44 @@ const {
           </template>
         </AppEmpty>
 
-        <AppEmpty
-          v-else-if="list.length === 0"
-          class="notification-empty-state"
-          icon="Inbox"
-          title="暂无通知"
-          description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
-        />
+        <section
+          v-else
+          class="notification-directory-shell workspace-directory-list"
+          aria-label="通知目录"
+        >
+          <section class="notification-filter-section" aria-label="消息分类">
+            <NotificationCategoryFilter
+              :total="total"
+              :selected-category="selectedCategory"
+              :selected-category-label="selectedCategoryLabel"
+              :category-options="categoryOptions"
+              @select-category="selectCategory"
+            />
+            <div
+              class="notification-head-stats"
+              aria-label="消息概况"
+            >
+              <div
+                v-for="stat in headStats"
+                :key="stat.key"
+                class="notification-head-stat"
+              >
+                <span class="notification-head-stat__label">{{ stat.label }}</span>
+                <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+              </div>
+            </div>
+          </section>
 
-        <template v-else>
+          <AppEmpty
+            v-if="list.length === 0"
+            class="notification-empty-state"
+            icon="Inbox"
+            title="暂无通知"
+            description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
+          />
+
           <section
+            v-else
             class="notification-directory"
             aria-label="通知目录"
           >
@@ -206,7 +202,7 @@ const {
           </section>
 
           <div
-            v-if="total > 0"
+            v-if="list.length > 0 && total > 0"
             class="notification-pagination workspace-directory-pagination"
           >
             <PagePaginationControls
@@ -217,7 +213,7 @@ const {
               @change-page="changePage"
             />
           </div>
-        </template>
+        </section>
       </div>
     </main>
 
@@ -337,7 +333,6 @@ const {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-top: var(--space-5);
 }
 
 .notification-filter-section :deep(.workspace-directory-toolbar) {
@@ -346,6 +341,27 @@ const {
 
 .notification-directory {
   margin-top: var(--space-4);
+}
+
+.notification-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
+    );
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .notification-directory-head {
