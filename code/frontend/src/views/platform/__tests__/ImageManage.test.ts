@@ -192,6 +192,12 @@ describe('ImageManage', () => {
     expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
   })
 
+  it('立即刷新按钮应使用与目录筛选控件一致的外边框语义', () => {
+    expect(imageManageHeroPanelSource).toMatch(
+      /\.image-header__actions\s*>\s*\[data-testid='image-refresh-button'\]\s*\{[\s\S]*--ui-btn-border:\s*var\(--image-toolbar-control-border\);[\s\S]*--ui-btn-background:\s*var\(--image-toolbar-control-background\);[\s\S]*box-shadow:\s*var\(--image-toolbar-control-shadow\);/s
+    )
+  })
+
   it('应该把镜像名称、标签、来源和摘要拆成独立列', async () => {
     const wrapper = mountPage()
 

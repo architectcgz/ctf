@@ -99,6 +99,29 @@ function handleCreate(): void {
 }
 
 .image-header {
+  --image-toolbar-control-border: var(--color-border-default);
+  --image-toolbar-control-border-strong: color-mix(in srgb, var(--color-border-default) 80%, var(--color-text-primary));
+  --image-toolbar-control-background: var(--color-bg-surface);
+  --image-toolbar-control-shadow: var(--color-shadow-soft);
+}
+
+:global([data-theme='dark']) .image-header {
+  --image-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  --image-toolbar-control-border-strong: color-mix(in srgb, var(--color-primary) 32%, var(--color-border-default));
+  --image-toolbar-control-background: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+}
+
+.image-header__actions > [data-testid='image-refresh-button'] {
+  --ui-btn-border: var(--image-toolbar-control-border);
+  --ui-btn-background: var(--image-toolbar-control-background);
+  --ui-btn-color: var(--color-text-primary);
+  --ui-btn-hover-border: var(--image-toolbar-control-border-strong);
+  --ui-btn-hover-background: var(--image-toolbar-control-background);
+  --ui-btn-hover-color: var(--color-primary);
+  box-shadow: var(--image-toolbar-control-shadow);
+}
+
+.image-header {
   display: grid;
   gap: var(--space-6);
   padding-bottom: var(--space-6);
