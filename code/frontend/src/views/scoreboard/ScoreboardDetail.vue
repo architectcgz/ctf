@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide-vue-next'
+import { BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
@@ -39,14 +39,6 @@ const {
   >
     <main class="content-pane">
       <div class="scoreboard-detail-page">
-        <router-link
-          class="scoreboard-back-link"
-          :to="{ name: 'Scoreboard' }"
-        >
-          <ArrowLeft class="h-4 w-4" />
-          返回排行列表
-        </router-link>
-
         <header class="scoreboard-detail-hero">
           <div>
             <div class="workspace-overline scoreboard-panel-overline">
@@ -136,96 +128,106 @@ const {
           </div>
         </section>
 
-        <div
-          v-if="loading && !scoreboard"
-          class="scoreboard-loading"
-        >
-          <div class="scoreboard-loading-spinner" />
-        </div>
-
-        <AppEmpty
-          v-else-if="!rows.length"
-          class="scoreboard-empty-state"
-          icon="Trophy"
-          :title="emptyTitle"
-          :description="emptyDescription"
-        >
-          <template #action>
-            <button
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              @click="loadScoreboard(true)"
-            >
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
         <section
-          v-else
-          class="scoreboard-directory"
+          class="student-directory-section workspace-directory-section scoreboard-detail-directory-section"
           aria-label="排行详情"
         >
-          <div class="scoreboard-directory-top">
-            <h2 class="scoreboard-directory-title">
-              排行详情
-            </h2>
-            <div class="scoreboard-directory-meta">
-              第 {{ page }} 页，当前展示 {{ rows.length }} / {{ total }} 支队伍
-              <span
-                v-if="scoreboard?.frozen"
-                class="scoreboard-frozen-inline"
-              >
-                <Shield class="h-3 w-3" /> 已冻结
-              </span>
-            </div>
-          </div>
-
-          <div class="scoreboard-table-shell overflow-x-auto">
-            <table class="sb-table">
-              <thead>
-                <tr>
-                  <th>排名</th>
-                  <th>队伍</th>
-                  <th>得分</th>
-                  <th>解题数</th>
-                  <th>最近得分</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="item in rows"
-                  :key="item.team_id"
-                  data-testid="scoreboard-detail-row"
-                  :class="getRowClass(item.rank)"
+          <section
+            class="student-directory-shell scoreboard-detail-directory workspace-directory-list"
+          >
+            <header class="student-directory-shell__head student-directory-list-heading list-heading">
+              <div class="student-directory-shell__heading student-directory-list-heading__body">
+                <div
+                  class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
                 >
-                  <td>
-                    <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
-                  </td>
-                  <td>{{ item.team_name }}</td>
-                  <td>
-                    {{ item.score }}
-                  </td>
-                  <td>{{ item.solved_count }}</td>
-                  <td class="sb-cell--muted">
-                    {{ formatDateTime(item.last_submission_at) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  Scoreboard Detail
+                </div>
+                <h2 class="student-directory-shell__title student-directory-list-heading__title">
+                  排行详情
+                </h2>
+              </div>
+              <div class="student-directory-shell__meta scoreboard-detail-directory__meta">
+                第 {{ page }} 页，当前展示 {{ rows.length }} / {{ total }} 支队伍
+                <span
+                  v-if="scoreboard?.frozen"
+                  class="scoreboard-frozen-inline"
+                >
+                  <Shield class="h-3 w-3" /> 已冻结
+                </span>
+              </div>
+            </header>
 
-          <div class="scoreboard-pagination workspace-directory-pagination">
-            <PagePaginationControls
-              :page="page"
-              :total-pages="totalPages"
-              :total="total"
-              :total-label="`共 ${total} 支队伍`"
-              :disabled="loading || refreshing"
-              show-jump
-              @change-page="changePage"
-            />
-          </div>
+            <div
+              v-if="loading && !scoreboard"
+              class="scoreboard-loading student-directory-state workspace-directory-loading"
+            >
+              <div class="student-directory-spinner" />
+            </div>
+
+            <AppEmpty
+              v-else-if="!rows.length"
+              class="scoreboard-empty-state student-directory-state workspace-directory-empty"
+              icon="Trophy"
+              :title="emptyTitle"
+              :description="emptyDescription"
+            >
+              <template #action>
+                <button
+                  type="button"
+                  class="ui-btn ui-btn--secondary"
+                  @click="loadScoreboard(true)"
+                >
+                  重新加载
+                </button>
+              </template>
+            </AppEmpty>
+
+            <template v-else>
+              <div class="workspace-directory-grid-head scoreboard-detail-directory-head">
+                <span>排名</span>
+                <span>队伍</span>
+                <span>得分</span>
+                <span>解题数</span>
+                <span>最近得分</span>
+              </div>
+
+              <div
+                v-for="item in rows"
+                :key="item.team_id"
+                data-testid="scoreboard-detail-row"
+                class="workspace-directory-grid-row scoreboard-detail-row"
+                :class="getRowClass(item.rank)"
+              >
+                <div class="scoreboard-detail-rank">
+                  <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
+                </div>
+                <div class="workspace-directory-row-title scoreboard-detail-team">
+                  {{ item.team_name }}
+                </div>
+                <div class="workspace-directory-compact-text scoreboard-detail-score">
+                  {{ item.score }}
+                </div>
+                <div class="workspace-directory-compact-text">
+                  {{ item.solved_count }}
+                </div>
+                <div class="workspace-directory-compact-text sb-cell--muted">
+                  {{ formatDateTime(item.last_submission_at) }}
+                </div>
+              </div>
+
+              <div class="scoreboard-pagination workspace-directory-pagination">
+                <PagePaginationControls
+                  :page="page"
+                  :total-pages="totalPages"
+                  :total="total"
+                  :total-label="`共 ${total} 支队伍`"
+                  :disabled="loading || refreshing"
+                  show-jump
+                  @change-page="changePage"
+                />
+              </div>
+            </template>
+          </section>
         </section>
       </div>
     </main>
@@ -244,33 +246,12 @@ const {
   flex-direction: column;
 }
 
-.scoreboard-back-link {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  padding: 0 var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--journal-muted);
-}
-
-.scoreboard-back-link:hover,
-.scoreboard-back-link:focus-visible {
-  color: var(--journal-accent);
-  border-color: color-mix(in srgb, var(--journal-accent) 36%, var(--journal-border));
-}
-
 .scoreboard-detail-hero {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-top: var(--space-5);
   padding-bottom: var(--space-5);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
@@ -309,40 +290,33 @@ const {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-16) 0;
-}
-
-.scoreboard-loading-spinner {
-  width: 2rem;
-  height: 2rem;
-  border: 0.25rem solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-top-color: var(--journal-accent);
-  border-radius: 999px;
-  animation: scoreboardSpin 900ms linear infinite;
 }
 
 :deep(.scoreboard-empty-state) {
-  margin-top: var(--space-6);
-  border-top-style: solid;
-  border-bottom-style: solid;
-  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  margin-top: 0;
 }
 
-.scoreboard-directory {
+.scoreboard-detail-directory-section {
   margin-top: var(--space-6);
+}
+
+.scoreboard-detail-directory {
+  --workspace-directory-grid-columns: 5.5rem minmax(0, 1.2fr) 7.5rem 7.5rem minmax(13rem, 1fr);
+}
+
+.scoreboard-detail-directory__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .scoreboard-frozen-inline {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  margin-left: var(--space-2);
   color: var(--scoreboard-accent, var(--journal-accent));
-}
-
-.scoreboard-table-shell {
-  overflow-x: auto;
 }
 
 .sb-rank-pill {
@@ -357,54 +331,46 @@ const {
   color: var(--journal-muted);
 }
 
-.sb-table {
-  width: 100%;
-  border-collapse: collapse;
+.scoreboard-detail-rank,
+.scoreboard-detail-team,
+.scoreboard-detail-score {
+  min-width: 0;
 }
 
-.sb-table th {
-  padding: 0 0 var(--space-3);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-align: left;
-  color: var(--journal-muted);
-}
-
-.sb-row td {
-  padding: var(--space-4) 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  font-size: var(--font-size-14);
-  color: var(--journal-ink);
-}
-
-.sb-row--top1 td,
+.scoreboard-detail-row.sb-row--top1,
 .sb-rank-pill--top1 {
   color: color-mix(in srgb, var(--color-warning) 84%, var(--journal-ink));
 }
 
-.sb-row--top2 td,
+.scoreboard-detail-row.sb-row--top2,
 .sb-rank-pill--top2 {
   color: color-mix(in srgb, var(--color-text-secondary) 80%, var(--journal-ink));
 }
 
-.sb-row--top3 td,
+.scoreboard-detail-row.sb-row--top3,
 .sb-rank-pill--top3 {
   color: color-mix(in srgb, var(--color-danger) 42%, var(--color-warning));
+}
+
+.scoreboard-detail-row .scoreboard-detail-team {
+  color: inherit;
+}
+
+.scoreboard-detail-row:not(.sb-row--top1, .sb-row--top2, .sb-row--top3) .scoreboard-detail-team {
+  color: var(--journal-ink);
 }
 
 .sb-cell--muted {
   color: var(--journal-muted);
 }
 
-@keyframes scoreboardSpin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 1180px) {
+  .scoreboard-detail-directory-head {
+    display: none;
   }
 
-  to {
-    transform: rotate(360deg);
+  .scoreboard-detail-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>

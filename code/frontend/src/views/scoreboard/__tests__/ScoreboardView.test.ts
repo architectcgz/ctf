@@ -208,6 +208,31 @@ describe('ScoreboardView', () => {
     expect(scoreboardDetailSource).not.toContain('watch(')
   })
 
+  it('排行详情页应移除返回排行列表按钮，并复用学生通用列表样式', () => {
+    expect(scoreboardDetailSource).not.toContain('返回排行列表')
+    expect(scoreboardDetailSource).not.toContain('scoreboard-back-link')
+    expect(scoreboardDetailSource).not.toContain('ArrowLeft')
+    expect(scoreboardDetailSource).toContain(
+      'class="student-directory-section workspace-directory-section scoreboard-detail-directory-section"'
+    )
+    expect(scoreboardDetailSource).toContain(
+      'class="student-directory-shell scoreboard-detail-directory workspace-directory-list"'
+    )
+    expect(scoreboardDetailSource).toContain(
+      'class="student-directory-shell__head student-directory-list-heading list-heading"'
+    )
+    expect(scoreboardDetailSource).toContain(
+      'class="workspace-directory-grid-head scoreboard-detail-directory-head"'
+    )
+    expect(scoreboardDetailSource).toContain(
+      'class="workspace-directory-grid-row scoreboard-detail-row"'
+    )
+    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-top')
+    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-title')
+    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-meta')
+    expect(scoreboardDetailSource).not.toContain('<table class="sb-table">')
+  })
+
   it('竞赛排行列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue(
