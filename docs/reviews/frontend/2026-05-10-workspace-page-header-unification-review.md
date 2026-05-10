@@ -7,7 +7,7 @@
 ## 检查点
 
 - 共享样式包含双列布局、下方分隔线、窄屏单列降级和可调变量。
-- `/challenges` 与平台资源类页面使用 `<header class="workspace-page-header">`。
+- `/challenges`、学生目录页、教师管理页与平台资源类页面使用 `<header class="workspace-page-header">`。
 - 页面局部只保留标题宽度、说明宽度、右侧操作区等差异样式。
 - 测试新增结构约束，避免后续资源页重新引入 `<section class="workspace-hero">`。
 

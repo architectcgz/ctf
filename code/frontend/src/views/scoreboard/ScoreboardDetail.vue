@@ -39,7 +39,7 @@ const {
   >
     <main class="content-pane">
       <div class="scoreboard-detail-page">
-        <header class="scoreboard-detail-hero">
+        <header class="workspace-page-header scoreboard-detail-hero">
           <div>
             <div class="workspace-overline scoreboard-panel-overline">
               Contest Scoreboard
@@ -247,13 +247,7 @@ const {
 }
 
 .scoreboard-detail-hero {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
   gap: var(--space-4);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .scoreboard-panel-overline {

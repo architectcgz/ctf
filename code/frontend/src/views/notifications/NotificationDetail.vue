@@ -61,7 +61,7 @@ const {
           v-else
           class="notification-detail-page"
         >
-          <header class="notification-detail-header">
+          <header class="workspace-page-header notification-detail-header">
             <div class="notification-detail-header-main">
               <button
                 type="button"
@@ -236,8 +236,7 @@ const {
 }
 
 .notification-detail-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 16rem;
+  --workspace-page-header-columns: minmax(0, 1fr) 16rem;
   gap: 1.5rem;
 }
 

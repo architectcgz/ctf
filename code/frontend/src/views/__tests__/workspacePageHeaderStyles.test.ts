@@ -427,14 +427,24 @@ describe('workspace page header styles', () => {
     }
   })
 
-  it('典型工作区页头应优先复用共享头部模式；profile 与 security 允许切换到平铺 topbar', () => {
+  it('典型工作区页头应优先复用共享 workspace-page-header 结构', () => {
     expect(challengeImportPreviewWorkspaceBundleSource).toContain('<PageHeader')
     expect(userProfileSource).not.toContain('<PageHeader')
-    expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
     expect(userProfileSource).toContain('class="profile-topbar-meta"')
     expect(securitySettingsSource).not.toContain('<PageHeader')
-    expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsSource).toContain('class="security-topbar-meta"')
+    expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
+    expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
+    expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
+    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
+    expect(contestOrchestrationSource).toContain(
+      '<header class="workspace-page-header contest-overview-head">'
+    )
+    expect(challengeImportHeroSource).toContain(
+      '<header class="workspace-page-header challenge-import-heading">'
+    )
     expect(writeupEditorSource).toContain('<PageHeader')
     expect(writeupViewSource).toContain('<PageHeader')
   })

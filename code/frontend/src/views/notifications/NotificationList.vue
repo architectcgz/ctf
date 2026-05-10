@@ -41,7 +41,7 @@ const {
   >
     <main class="content-pane">
       <div class="notification-page">
-        <header class="notification-topbar">
+        <header class="workspace-page-header notification-topbar">
           <div class="notification-heading">
             <div class="workspace-overline">Notifications</div>
             <h1 class="notification-title workspace-page-title">通知中心</h1>

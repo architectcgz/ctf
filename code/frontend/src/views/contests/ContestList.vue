@@ -56,7 +56,7 @@ function onModeFilterChange(event: Event): void {
   >
     <main class="content-pane">
       <div class="contest-page">
-        <header class="contest-topbar">
+        <header class="workspace-page-header contest-topbar">
           <div class="contest-heading">
             <div class="workspace-overline">Contests</div>
             <h1 class="contest-title workspace-page-title">竞赛中心</h1>

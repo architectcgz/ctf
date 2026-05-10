@@ -103,7 +103,7 @@ function openContestWorkbench(contest: ContestDetailData) {
         class="contest-panel contest-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="list-heading contest-overview-head">
+        <header class="workspace-page-header contest-overview-head">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
               Contest Workspace
@@ -382,10 +382,7 @@ function openContestWorkbench(contest: ContestDetailData) {
 }
 
 .contest-overview-head {
-  display: grid;
   gap: var(--space-4);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .contest-panel-actions {

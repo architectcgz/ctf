@@ -15,7 +15,7 @@ withDefaults(
 
 <template>
   <header
-    class="teacher-topbar workspace-tab-heading"
+    class="workspace-page-header teacher-topbar"
     :class="headerClass"
   >
     <div class="teacher-heading workspace-tab-heading__main">

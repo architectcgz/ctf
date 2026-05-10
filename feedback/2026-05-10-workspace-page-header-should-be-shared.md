@@ -10,10 +10,10 @@
 
 ## 解决方案
 
-- 首屏标题、说明、右侧操作区统一使用 `workspace-page-header`。
+- 首屏标题、说明、右侧操作区统一使用 `workspace-page-header`，学生、教师和管理员页面都遵守同一结构。
 - 共享样式集中在 `workspace-shell.css`，包含双列布局、下方分隔线、响应式降级和可调 CSS 变量。
 - 页面只保留标题宽度、说明宽度、action rail 等真正局部的差异。
-- 测试需要同时约束共享样式存在，以及资源页不再新增 `<section class="workspace-hero">` 和 `.workspace-hero { ... }` 局部布局块。
+- 测试需要同时约束共享样式存在，以及资源页不再新增 `<section class="workspace-hero">`、`.workspace-hero { ... }`、只靠局部 `*-topbar` / `*-head` 维护布局和分隔线。
 
 ## 收获
 

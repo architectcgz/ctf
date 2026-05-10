@@ -142,7 +142,7 @@
 
 .workspace-shell .workspace-page-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: var(--workspace-page-header-columns, minmax(0, 1fr) auto);
   align-items: end;
   gap: var(--workspace-page-header-gap, var(--space-7));
   padding-bottom: var(--workspace-page-header-padding-bottom, var(--space-6));

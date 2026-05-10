@@ -1,22 +1,4 @@
 :is(
-  .challenge-topbar,
-  .contest-topbar,
-  .profile-topbar,
-  .security-topbar,
-  .notification-topbar,
-  .scoreboard-topbar,
-  .instance-topbar
-) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-:is(
   .challenge-heading,
   .contest-heading,
   .profile-heading,

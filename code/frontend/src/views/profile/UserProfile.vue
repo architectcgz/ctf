@@ -57,7 +57,7 @@ const {
         v-else
         class="profile-page flex flex-1 flex-col"
       >
-        <header class="profile-topbar">
+        <header class="workspace-page-header profile-topbar">
           <div class="profile-heading">
             <div class="workspace-overline">Profile</div>
             <h1 class="workspace-page-title profile-title">

@@ -211,7 +211,7 @@ function handleImportChange(event: Event): void {
         class="user-panel user-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="workspace-tab-heading user-overview-head">
+        <header class="workspace-page-header user-overview-head">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
               User Workspace
@@ -692,11 +692,6 @@ function handleImportChange(event: Event): void {
 .user-overview-head,
 .user-import-head {
   gap: var(--space-3);
-}
-
-.user-overview-head {
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .user-overview-grid {

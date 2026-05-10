@@ -165,8 +165,9 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
     )
-    expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-overview-head">')
+    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
     expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
+    expect(userGovernanceSource).not.toContain('<header class="workspace-tab-heading user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-import-head">')
     expect(userGovernanceSource).not.toMatch(/^\.list-heading\s*\{/m)
@@ -779,10 +780,14 @@ describe('admin management surface alignment', () => {
   })
 
   it('workspace summary headers should divide actions from metric cards', () => {
-    expect(userGovernanceSource).toMatch(
+    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
+    expect(userGovernanceSource).not.toMatch(
       /\.user-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
-    expect(contestOrchestrationSource).toMatch(
+    expect(contestOrchestrationSource).toContain(
+      '<header class="workspace-page-header contest-overview-head">'
+    )
+    expect(contestOrchestrationSource).not.toMatch(
       /\.contest-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
     for (const source of [

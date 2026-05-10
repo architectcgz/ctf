@@ -42,7 +42,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
   >
     <main class="content-pane">
       <div class="instance-page">
-        <header class="instance-topbar">
+        <header class="workspace-page-header instance-topbar">
           <div class="instance-heading">
             <div class="workspace-overline">Instances</div>
             <h1 class="instance-title workspace-page-title">我的实例</h1>

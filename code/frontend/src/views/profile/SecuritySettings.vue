@@ -20,7 +20,7 @@ const {
   >
     <main class="content-pane">
       <div class="security-page flex flex-1 flex-col">
-        <header class="security-topbar">
+        <header class="workspace-page-header security-topbar">
           <div class="security-heading">
             <div class="workspace-overline">Security</div>
             <h1 class="workspace-page-title security-title">

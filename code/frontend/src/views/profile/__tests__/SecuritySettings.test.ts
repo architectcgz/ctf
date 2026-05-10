@@ -56,7 +56,7 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).toContain('useSecuritySettingsPage')
     expect(securitySettingsSource).not.toContain("from '@/api/auth'")
     expect(securitySettingsSource).not.toContain('validatePasswordForm')
-    expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsSource).toContain('class="security-topbar-meta"')
     expect(securitySettingsSource).not.toContain('<PageHeader')
     expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')

@@ -16,7 +16,7 @@ function handleOpenGuide(): void {
 </script>
 
 <template>
-  <div class="workspace-tab-heading challenge-import-heading">
+  <header class="workspace-page-header challenge-import-heading">
     <div class="workspace-tab-heading__main">
       <div class="workspace-overline">
         Challenge Import
@@ -54,7 +54,7 @@ function handleOpenGuide(): void {
         下载示例题目包
       </a>
     </div>
-  </div>
+  </header>
 </template>
 
 <style scoped>

@@ -5,7 +5,7 @@ import contestOrchestrationSource from '@/components/platform/contest/ContestOrc
 describe('contest ui primitive adoption phase 22', () => {
   it('contest orchestration page should use shared list heading layout for overview hero header', () => {
     expect(contestOrchestrationSource).toContain(
-      '<header class="list-heading contest-overview-head">'
+      '<header class="workspace-page-header contest-overview-head">'
     )
     expect(contestOrchestrationSource).not.toContain('<header class="contest-overview-head">')
   })

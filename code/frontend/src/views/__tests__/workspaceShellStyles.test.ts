@@ -8,23 +8,37 @@ import studentDifficultySource from '@/components/dashboard/student/StudentDiffi
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
+import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
 import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
 import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
+import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
+import contestOrchestrationPageSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
+import contestListSource from '@/views/contests/ContestList.vue?raw'
+import instanceListSource from '@/views/instances/InstanceList.vue?raw'
+import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
+import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import challengeImportManageSource from '@/views/platform/ChallengeImportManage.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
+import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
 
@@ -57,7 +71,7 @@ describe('workspace shell shared styles', () => {
 
   it('首屏页面头部应使用共享 workspace-page-header 分隔线结构', () => {
     expect(workspaceShellStylesSource).toMatch(
-      /\.workspace-shell \.workspace-page-header\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;[\s\S]*padding-bottom:\s*var\(--workspace-page-header-padding-bottom,\s*var\(--space-6\)\);[\s\S]*border-bottom:\s*1px solid/s
+      /\.workspace-shell \.workspace-page-header\s*\{[\s\S]*grid-template-columns:\s*var\(--workspace-page-header-columns,\s*minmax\(0,\s*1fr\)\s+auto\);[\s\S]*padding-bottom:\s*var\(--workspace-page-header-padding-bottom,\s*var\(--space-6\)\);[\s\S]*border-bottom:\s*1px solid/s
     )
     expect(workspaceShellStylesSource).toMatch(
       /@media \(max-width:\s*960px\)\s*\{[\s\S]*\.workspace-shell \.workspace-page-header\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s
@@ -69,12 +83,26 @@ describe('workspace shell shared styles', () => {
       awdChallengeLibraryPageSource,
       awdReviewHeroPanelSource,
       auditLogHeroPanelSource,
+      challengeImportHeroPanelSource,
       challengeManageHeroPanelSource,
       cheatDetectionHeroPanelSource,
       classManageHeroPanelSource,
+      classManagementPageSource,
+      contestListSource,
+      contestOrchestrationPageSource,
       imageManageHeroPanelSource,
       instanceManageHeroPanelSource,
+      instanceListSource,
+      notificationDetailSource,
+      notificationListSource,
+      scoreboardDetailSource,
+      securitySettingsSource,
+      studentManagementPageSource,
       studentManageHeroPanelSource,
+      teacherAwdReviewWorkspaceHeaderSource,
+      teacherInstanceManagementPageSource,
+      userGovernanceSource,
+      userProfileSource,
     ]) {
       expect(source).toContain('workspace-page-header')
       expect(source).not.toContain('<section class="workspace-hero">')

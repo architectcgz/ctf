@@ -101,7 +101,7 @@ function handleClassChange(event: Event): void {
   >
     <main class="content-pane">
       <div class="teacher-page">
-        <header class="teacher-topbar">
+        <header class="workspace-page-header teacher-topbar">
           <div class="teacher-heading workspace-tab-heading__main">
             <div class="workspace-overline">Student Directory</div>
             <h1 class="teacher-title workspace-page-title">学生管理</h1>

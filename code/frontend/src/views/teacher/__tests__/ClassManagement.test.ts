@@ -280,7 +280,7 @@ describe('ClassManagement', () => {
   })
 
   it('班级管理概览头部应接入通用 workspace 页头模板', () => {
-    expect(classManagementSource).toContain('<header class="teacher-topbar">')
+    expect(classManagementSource).toContain('<header class="workspace-page-header teacher-topbar">')
     expect(classManagementSource).toContain(
       '<div class="teacher-heading workspace-tab-heading__main">'
     )

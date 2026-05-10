@@ -24,13 +24,13 @@ function extractScopedStyle(source: string): string {
 
 describe('journal user directory shared styles', () => {
   it('应该在共享样式文件中声明学生侧目录页复用的骨架与按钮规则', () => {
-    expect(journalUserDirectorySource).toContain('.challenge-topbar')
-    expect(journalUserDirectorySource).toContain('.contest-topbar')
-    expect(journalUserDirectorySource).toContain('.profile-topbar')
-    expect(journalUserDirectorySource).toContain('.security-topbar')
-    expect(journalUserDirectorySource).toContain('.notification-topbar')
-    expect(journalUserDirectorySource).toContain('.scoreboard-topbar')
-    expect(journalUserDirectorySource).toContain('.instance-topbar')
+    expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
+    expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
+    expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
+    expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
+    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
+    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
+    expect(journalUserDirectorySource).not.toMatch(/\.challenge-topbar[\s\S]*border-bottom:/)
     expect(journalUserDirectorySource).toContain('.challenge-btn')
     expect(journalUserDirectorySource).toContain('.contest-btn')
     expect(journalUserDirectorySource).toContain('.notification-btn')
@@ -143,7 +143,7 @@ describe('journal user directory shared styles', () => {
   })
 
   it('profile 与 security 页顶部也应接入共享 topbar 与 summary 骨架', () => {
-    expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
     expect(userProfileSource).toContain('class="profile-topbar-meta"')
     expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
     expect(userProfileSource).toContain('class="profile-summary-title"')
@@ -151,7 +151,7 @@ describe('journal user directory shared styles', () => {
     expect(userProfileSource).toContain('class="workspace-overline">Profile</div>')
     expect(userProfileSource).not.toContain('<PageHeader')
 
-    expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsSource).toContain('class="security-topbar-meta"')
     expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
     expect(securitySettingsSource).toContain('class="security-summary-title"')
@@ -219,13 +219,17 @@ describe('journal user directory shared styles', () => {
       challengeDirectoryPanelSource,
       contestListSource,
       notificationListSource,
-      scoreboardSource,
     ]) {
       expect(source).toContain(expectedHeaderClass)
       expect(source).toContain(expectedHeadingClass)
       expect(source).toContain(expectedEyebrowClass)
       expect(source).toContain(expectedTitleClass)
     }
+
+    expect(scoreboardSource).toContain(expectedHeaderClass)
+    expect(scoreboardSource).toContain(expectedHeadingClass)
+    expect(scoreboardSource).toContain(expectedTitleClass)
+    expect(scoreboardSource).not.toContain(expectedEyebrowClass)
 
     expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__head')
     expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__heading')
