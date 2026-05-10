@@ -2,7 +2,7 @@
 
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`prompts/`、`references/`、`works/`。
-- 可复用提示词见 `prompts/harness-router.md`；机械化检查使用 `bash scripts/check-consistency.sh`。
+- 可复用提示词见 `harness/prompts/harness-router.md`；机械化检查使用 `bash scripts/check-consistency.sh`。
 - 对 `API / filter / sort / pagination` 契约改动，harness 的 plan review 必须显式写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层；若 owner 不唯一，不得直接进入实现。
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底就可以接受”。除非其中一层承担明确的 trust-boundary 防御且理由写清，否则应在实现阶段继续收口成单点 owner。
 - harness 的 review gate 必须把 touched surface 上的跨层重复归一化、双重默认值兜底、repo 接收未收敛裸字符串排序键这类问题视为结构性 blocker，而不是普通建议或事后优化项。
@@ -102,6 +102,16 @@
   - `useXxxActions`
   - `useXxxMetrics`
   - `useXxxPreview`
+- reuse-first harness 是前端实现前置约束，不是建议项。
+  当任务新增或修改 `page / component / hook / service / store / api / form / table / modal / layout / schema` 时，编码前必须先执行：
+  1. `Classify`：判断本次改动属于页面、组件、接口、状态、样式、表单还是业务逻辑。
+  2. `Search`：至少在 `code/frontend/src/views`、`code/frontend/src/components`、`code/frontend/src/features`、`code/frontend/src/widgets`、`code/frontend/src/composables`、`code/frontend/src/api`、`code/frontend/src/stores` 中搜索相似实现；涉及 backend service/schema 时额外搜索 `code/backend/internal`。
+  3. `Decide`：在 `.harness/reuse-decision.md` 中写清 `reuse_existing / extend_existing / refactor_existing / create_new_with_reason`。
+  4. `Implement`：只有前三步完成后才允许写代码。
+- 新增页面前必须先阅读 `harness/policies/project-patterns.yaml`。若命中已有 pattern，优先复用其中的 `examples` 和 `must_reuse` 模块。
+- 不允许在已有实现可以复用、扩展或先抽取的情况下继续创建并行页面、表格、表单、API wrapper、hook 或 store。
+- 本地 workflow 是 reuse-first harness 的权威入口。
+  `scripts/check-reuse-first.sh` 和 `.githooks/pre-commit` 会把缺少复用决策、未引用相似页面 / hook / API wrapper 的变更视为失败；GitHub workflow 不是这条规则成立的前提。
 - 优雅实现优先于表面复用：
   - 不为减少几行代码而抽象
   - 不把简单展示逻辑强行搬进 composable

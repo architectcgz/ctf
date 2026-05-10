@@ -1,0 +1,34 @@
+{
+  "list_page": {
+    "description": "Standard list page with filter, table, pagination, and batch actions.",
+    "examples": [
+      "src/pages/customer/CustomerListPage.tsx",
+      "src/pages/product/ProductListPage.tsx"
+    ],
+    "must_reuse": [
+      "src/components/DataTable.tsx",
+      "src/hooks/useListQuery.ts",
+      "src/components/SearchForm.tsx"
+    ]
+  },
+  "detail_page": {
+    "description": "Standard detail page with tabs and edit drawer.",
+    "examples": [
+      "src/pages/customer/CustomerDetailPage.tsx"
+    ],
+    "must_reuse": [
+      "src/components/DetailLayout.tsx",
+      "src/components/EditDrawer.tsx"
+    ]
+  },
+  "form_page": {
+    "description": "Standard create/edit form page.",
+    "examples": [
+      "src/pages/order/OrderFormPage.tsx"
+    ],
+    "must_reuse": [
+      "src/components/FormShell.tsx",
+      "src/hooks/useSubmitMutation.ts"
+    ]
+  }
+}

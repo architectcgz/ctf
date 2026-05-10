@@ -31,3 +31,6 @@
 - `2026-05-10-workspace-grid-only-for-real-layout.md`：`workspace-grid` 只用于真实多列或区域布局，普通单列页面直接使用 `content-pane`。
 - `2026-05-10-workspace-page-header-should-be-shared.md`：工作区首屏标题区默认使用共享 `workspace-page-header`，不要继续新增页面局部 `workspace-hero` 布局和分隔线。
 - `2026-05-10-awd-topology-local-readiness.md`：AWD topology 题本地验题默认使用 `healthcheck + service_healthy + up --wait`，不要把容器 running 误当成服务 ready。
+- `2026-05-10-student-button-dark-mode-token-bridge.md`：学生侧按钮的 primary / secondary / outline 语义必须落到共享按钮变体，并在 light / dark 下保留可见边框。
+- `2026-05-10-error-pages-use-ui-btn.md`：错误页、空状态和恢复动作按钮默认使用通用 `ui-btn`，页面不再私有实现按钮 hover / dark mode。
+- `2026-05-10-reuse-first-harness.md`：受保护页面、组件、hook、API wrapper 改动前，先做复用检索、写复用决策，再允许提交。

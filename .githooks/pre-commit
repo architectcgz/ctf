@@ -7,6 +7,9 @@ cd "$(git rev-parse --show-toplevel)"
 if [[ -x scripts/check-consistency.sh ]]; then
   bash scripts/check-consistency.sh
 fi
+if [[ -x scripts/check-reuse-first.sh ]]; then
+  bash scripts/check-reuse-first.sh --staged
+fi
 if [[ -x scripts/check-architecture.sh ]]; then
   bash scripts/check-architecture.sh --quick
 fi

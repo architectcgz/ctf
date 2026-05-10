@@ -1,0 +1,53 @@
+{
+  "protected_creation": [
+    "page",
+    "component",
+    "hook",
+    "service",
+    "store",
+    "api",
+    "form",
+    "table",
+    "modal",
+    "layout",
+    "schema"
+  ],
+  "must_search_before_create": [
+    "code/frontend/src/views",
+    "code/frontend/src/components",
+    "code/frontend/src/features",
+    "code/frontend/src/widgets",
+    "code/frontend/src/composables",
+    "code/frontend/src/api",
+    "code/frontend/src/stores",
+    "code/backend/internal"
+  ],
+  "blocked_patterns": [
+    "create a new page from scratch",
+    "implement a new component without checking existing ones",
+    "duplicate fetch logic",
+    "duplicate form validation",
+    "duplicate table/list/detail page patterns"
+  ],
+  "required_decision": [
+    "reuse_existing",
+    "extend_existing",
+    "refactor_existing",
+    "create_new_with_reason"
+  ],
+  "page_feature_keywords": [
+    "filter",
+    "search",
+    "table",
+    "pagination",
+    "columns",
+    "modal",
+    "drawer",
+    "form",
+    "submit",
+    "query",
+    "mutation",
+    "detail",
+    "list"
+  ]
+}

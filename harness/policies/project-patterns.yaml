@@ -1,0 +1,68 @@
+{
+  "list_page": {
+    "description": "Standard backoffice list page with workspace header, filter/search toolbar, directory shell, data table or directory grid, and pagination.",
+    "examples": [
+      "code/frontend/src/components/teacher/student-management/StudentManagementPage.vue",
+      "code/frontend/src/views/notifications/NotificationList.vue",
+      "code/frontend/src/components/teacher/class-management/ClassManagementPage.vue"
+    ],
+    "must_reuse": [
+      "code/frontend/src/components/common/WorkspaceDirectoryToolbar.vue",
+      "code/frontend/src/components/common/WorkspaceDataTable.vue",
+      "code/frontend/src/components/common/WorkspaceDirectoryPagination.vue",
+      "code/frontend/src/components/common/PagePaginationControls.vue",
+      "code/frontend/src/components/common/AppEmpty.vue",
+      "code/frontend/src/components/common/AppLoading.vue"
+    ]
+  },
+  "detail_page": {
+    "description": "Standard detail page with route-level data loader, header actions, and structured content panels.",
+    "examples": [
+      "code/frontend/src/views/challenges/ChallengeDetail.vue",
+      "code/frontend/src/views/platform/ChallengeDetail.vue",
+      "code/frontend/src/views/notifications/NotificationDetail.vue"
+    ],
+    "must_reuse": [
+      "code/frontend/src/components/common/PageHeader.vue",
+      "code/frontend/src/components/common/AppEmpty.vue",
+      "code/frontend/src/composables/useAbortController.ts"
+    ]
+  },
+  "form_or_drawer": {
+    "description": "Standard create/edit flow built as modal or drawer with shared destructive confirm and overlay behavior.",
+    "examples": [
+      "code/frontend/src/components/notifications/AdminNotificationPublishDrawer.vue",
+      "code/frontend/src/components/platform/audit/AuditActorDetailModal.vue",
+      "code/frontend/src/components/common/DeleteConfirmModal.vue"
+    ],
+    "must_reuse": [
+      "code/frontend/src/components/common/AppDestructiveConfirm.vue",
+      "code/frontend/src/components/common/modal-templates/useOverlayBehavior.ts"
+    ]
+  },
+  "route_page_hook": {
+    "description": "Route-level page logic lives in features/*/model or composables/use*.ts and owns async loading, query sync, filters, pagination, and submission flow.",
+    "examples": [
+      "code/frontend/src/features/student-directory/model/useStudentListQuery.ts",
+      "code/frontend/src/features/platform-contests/model/useContestManagePage.ts",
+      "code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts"
+    ],
+    "must_reuse": [
+      "code/frontend/src/composables/usePagination.ts",
+      "code/frontend/src/composables/useAbortController.ts",
+      "code/frontend/src/composables/useRouteQueryTabs.ts"
+    ]
+  },
+  "api_wrapper": {
+    "description": "HTTP wrappers stay under src/api, call request.ts, and keep normalize/contract mapping next to endpoint groups.",
+    "examples": [
+      "code/frontend/src/api/admin/users.ts",
+      "code/frontend/src/api/teacher/students.ts",
+      "code/frontend/src/api/notification.ts"
+    ],
+    "must_reuse": [
+      "code/frontend/src/api/request.ts",
+      "code/frontend/src/api/contracts.ts"
+    ]
+  }
+}

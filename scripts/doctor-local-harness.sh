@@ -27,14 +27,19 @@ check ".githooks/pre-commit is executable" test -x ".githooks/pre-commit"
 
 echo "[doctor] harness scripts"
 check "scripts/check-consistency.sh is executable" test -x "scripts/check-consistency.sh"
+check "scripts/check-reuse-first.sh is executable" test -x "scripts/check-reuse-first.sh"
 check "scripts/check-architecture.sh is executable" test -x "scripts/check-architecture.sh"
 check "scripts/doctor-local-harness.sh is executable" test -x "scripts/doctor-local-harness.sh"
 
 echo "[doctor] local tools"
 check "git is available" command -v git
+check "python3 is available" command -v python3
 check "go is available" command -v go
 check "node is available" command -v node
 check "npm is available" command -v npm
+
+echo "[doctor] reuse-first assets"
+check ".harness/reuse-decision.md exists" test -f ".harness/reuse-decision.md"
 
 if [[ -d "code/frontend/node_modules" ]]; then
   echo "  $(green PASS) — code/frontend/node_modules exists"
