@@ -5,6 +5,7 @@ import { getPracticeRanking } from '@/api/scoreboard'
 import { usePagination } from '@/composables/usePagination'
 import type {
   ContestListItem,
+  ContestMode,
   ContestListSummaryData,
   ContestStatus,
   PracticeRankingItemData,
@@ -17,6 +18,8 @@ interface ScoreboardSection {
 }
 
 const SCOREBOARD_CONTEST_STATUSES: ContestStatus[] = ['running', 'frozen', 'ended']
+type ScoreboardStatusFilter = '' | 'running' | 'frozen' | 'ended'
+type ScoreboardModeFilter = '' | Extract<ContestMode, 'jeopardy' | 'awd'>
 
 function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryData {
   return {
@@ -30,6 +33,11 @@ function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryDa
 
 export function useScoreboardView() {
   const toast = useToast()
+  const contestStatusFilter = ref<ScoreboardStatusFilter>('')
+  const contestModeFilter = ref<ScoreboardModeFilter>('')
+  const activeContestStatuses = computed<ContestStatus[]>(() =>
+    contestStatusFilter.value ? [contestStatusFilter.value] : SCOREBOARD_CONTEST_STATUSES
+  )
   const {
     list,
     total,
@@ -45,7 +53,8 @@ export function useScoreboardView() {
       {
         page,
         page_size,
-        statuses: SCOREBOARD_CONTEST_STATUSES,
+        statuses: activeContestStatuses.value,
+        ...(contestModeFilter.value ? { mode: contestModeFilter.value } : {}),
         sort_key: 'start_time',
         sort_order: 'desc',
       },
@@ -108,6 +117,26 @@ export function useScoreboardView() {
     await changePage(nextPage)
   }
 
+  async function applyContestFilters(): Promise<void> {
+    await changePage(1)
+  }
+
+  async function updateContestStatusFilter(value: ScoreboardStatusFilter): Promise<void> {
+    contestStatusFilter.value = value
+    await applyContestFilters()
+  }
+
+  async function updateContestModeFilter(value: ScoreboardModeFilter): Promise<void> {
+    contestModeFilter.value = value
+    await applyContestFilters()
+  }
+
+  async function resetContestFilters(): Promise<void> {
+    contestStatusFilter.value = ''
+    contestModeFilter.value = ''
+    await applyContestFilters()
+  }
+
   void refresh()
 
   return {
@@ -118,6 +147,11 @@ export function useScoreboardView() {
     contestTotal: total,
     contestTotalPages,
     changeContestPage,
+    contestStatusFilter,
+    contestModeFilter,
+    updateContestStatusFilter,
+    updateContestModeFilter,
+    resetContestFilters,
     hasSections,
     hasRankingRows,
     loading,

@@ -1,7 +1,12 @@
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ContestListItem, ContestListSummaryData, ContestStatus } from '@/api/contracts'
+import type {
+  ContestListItem,
+  ContestListSummaryData,
+  ContestMode,
+  ContestStatus,
+} from '@/api/contracts'
 import { getContests, type GetContestsData } from '@/api/contest'
 import { usePagination } from '@/composables/usePagination'
 import {
@@ -20,6 +25,8 @@ interface ContestSummaryMetric {
 }
 
 const VISIBLE_CONTEST_STATUSES: ContestStatus[] = ['registering', 'running', 'frozen', 'ended']
+type ContestStatusFilter = '' | 'registering' | 'running' | 'frozen' | 'ended'
+type ContestModeFilter = '' | Extract<ContestMode, 'jeopardy' | 'awd'>
 
 function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryData {
   return {
@@ -33,13 +40,19 @@ function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryDa
 
 export function useContestListPage() {
   const router = useRouter()
+  const statusFilter = ref<ContestStatusFilter>('')
+  const modeFilter = ref<ContestModeFilter>('')
+  const activeStatuses = computed<ContestStatus[]>(() =>
+    statusFilter.value ? [statusFilter.value] : VISIBLE_CONTEST_STATUSES
+  )
   const { list, total, page, pageSize, loading, error, response, changePage, refresh: refreshPage } =
     usePagination<ContestListItem, GetContestsData>(({ page, page_size, signal }) =>
       getContests(
         {
           page,
           page_size,
-          statuses: VISIBLE_CONTEST_STATUSES,
+          statuses: activeStatuses.value,
+          ...(modeFilter.value ? { mode: modeFilter.value } : {}),
         },
         { signal }
       )
@@ -141,6 +154,26 @@ export function useContestListPage() {
     await refreshPage()
   }
 
+  async function applyFilters(): Promise<void> {
+    await changePage(1)
+  }
+
+  async function updateStatusFilter(value: ContestStatusFilter): Promise<void> {
+    statusFilter.value = value
+    await applyFilters()
+  }
+
+  async function updateModeFilter(value: ContestModeFilter): Promise<void> {
+    modeFilter.value = value
+    await applyFilters()
+  }
+
+  async function resetFilters(): Promise<void> {
+    statusFilter.value = ''
+    modeFilter.value = ''
+    await applyFilters()
+  }
+
   onMounted(() => {
     void refresh()
   })
@@ -153,6 +186,11 @@ export function useContestListPage() {
     totalPages,
     changePage,
     refresh,
+    statusFilter,
+    modeFilter,
+    updateStatusFilter,
+    updateModeFilter,
+    resetFilters,
     visibleContests,
     summaryMetrics,
     loadErrorMessage,

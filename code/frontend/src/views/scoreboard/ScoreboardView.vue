@@ -20,6 +20,11 @@ const {
   contestTotal,
   contestTotalPages,
   changeContestPage,
+  contestStatusFilter,
+  contestModeFilter,
+  updateContestStatusFilter,
+  updateContestModeFilter,
+  resetContestFilters,
   hasSections,
   hasRankingRows,
   loading,
@@ -54,6 +59,18 @@ const {
   selectionHint,
   rankingError,
 })
+
+function onContestStatusFilterChange(event: Event): void {
+  void updateContestStatusFilter(
+    (event.target as HTMLSelectElement).value as typeof contestStatusFilter.value
+  )
+}
+
+function onContestModeFilterChange(event: Event): void {
+  void updateContestModeFilter(
+    (event.target as HTMLSelectElement).value as typeof contestModeFilter.value
+  )
+}
 </script>
 
 <template>
@@ -164,6 +181,62 @@ const {
                 </div>
                 <div class="student-directory-shell__meta">按竞赛开始时间倒序展示排行榜</div>
               </header>
+
+              <section class="student-directory-filters scoreboard-directory-filters" aria-label="竞赛排行筛选">
+                <div class="student-directory-filter-grid scoreboard-directory-filter-grid">
+                  <label class="student-directory-filter-field" for="scoreboard-status-filter">
+                    <span class="student-directory-filter-label">状态</span>
+                    <div class="ui-control-wrap student-directory-filter-control">
+                      <select
+                        id="scoreboard-status-filter"
+                        :value="contestStatusFilter"
+                        class="ui-control"
+                        @change="onContestStatusFilterChange"
+                      >
+                        <option value="">全部状态</option>
+                        <option value="running">进行中</option>
+                        <option value="frozen">已冻结</option>
+                        <option value="ended">已结束</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <label class="student-directory-filter-field" for="scoreboard-mode-filter">
+                    <span class="student-directory-filter-label">模式</span>
+                    <div class="ui-control-wrap student-directory-filter-control">
+                      <select
+                        id="scoreboard-mode-filter"
+                        :value="contestModeFilter"
+                        class="ui-control"
+                        @change="onContestModeFilterChange"
+                      >
+                        <option value="">全部模式</option>
+                        <option value="jeopardy">Jeopardy</option>
+                        <option value="awd">AWD</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <div class="student-directory-filter-actions">
+                    <span
+                      class="student-directory-filter-label student-directory-filter-label--ghost"
+                      aria-hidden="true"
+                    >
+                      操作
+                    </span>
+                    <div class="student-directory-filter-action-row">
+                      <button
+                        type="button"
+                        class="ui-btn ui-btn--ghost"
+                        :disabled="!contestStatusFilter && !contestModeFilter"
+                        @click="resetContestFilters"
+                      >
+                        清空筛选
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               <div
                 v-if="loading && !hasSections"

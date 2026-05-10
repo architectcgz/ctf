@@ -184,7 +184,7 @@ describe('NotificationList', () => {
     expect(notificationListSource).toContain('class="notification-topbar-meta"')
     expect(notificationListSource).not.toContain('class="notification-title-line"')
     expect(notificationListSource).toMatch(
-      /class="notification-filter-section"[\s\S]*<NotificationCategoryFilter[\s\S]*class="notification-head-stats"/
+      /class="student-directory-filters notification-filter-section"[\s\S]*<NotificationCategoryFilter[\s\S]*class="notification-head-stats"/
     )
     expect(notificationListSource).toContain('class="notification-head-stats"')
     expect(notificationListSource).toContain('class="notification-head-stat"')
@@ -200,6 +200,7 @@ describe('NotificationList', () => {
     const { wrapper } = await mountPage()
 
     expect(notificationListSource).toContain('NotificationCategoryFilter')
+    expect(notificationListSource).toContain('student-directory-filters notification-filter-section')
     expect(notificationCategoryFilterSource).toContain('student-directory-filters')
     expect(notificationCategoryFilterSource).toContain('student-directory-filter-control')
     expect(notificationListSource).not.toContain('notification-category-bar')

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
@@ -180,6 +181,22 @@ describe('journal user directory shared styles', () => {
     expect(contestListSource).toContain('class="workspace-directory-grid-row contest-row"')
     expect(scoreboardSource).toContain(
       'class="workspace-directory-grid-row scoreboard-card scoreboard-card-link"'
+    )
+  })
+
+  it('学生侧筛选区与列表项之间应使用通用间距规则', () => {
+    expect(appStyleSource).toMatch(
+      /\.student-directory-filters[\s\S]*\+\s*:where\([\s\S]*\.workspace-directory-grid-head[\s\S]*\.notification-directory[\s\S]*\)\s*\{[^}]*margin-top:\s*var\(--space-4\);/s
+    )
+    expect(challengeDirectoryPanelSource).toContain(
+      'class="student-directory-filters challenge-directory-filters"'
+    )
+    expect(notificationListSource).toContain(
+      'class="student-directory-filters notification-filter-section"'
+    )
+    expect(contestListSource).toContain('class="student-directory-filters contest-directory-filters"')
+    expect(scoreboardSource).toContain(
+      'class="student-directory-filters scoreboard-directory-filters"'
     )
   })
 })

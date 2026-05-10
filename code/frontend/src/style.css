@@ -514,6 +514,16 @@ option {
   margin-top: var(--space-4);
 }
 
+.student-directory-filters
+  + :where(
+    .student-directory-state,
+    .workspace-directory-grid-head,
+    .challenge-directory,
+    .notification-directory
+  ) {
+  margin-top: var(--space-4);
+}
+
 .student-directory-shell__head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

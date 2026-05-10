@@ -15,6 +15,11 @@ const {
   changePage,
   summaryMetrics,
   loadErrorMessage,
+  statusFilter,
+  modeFilter,
+  updateStatusFilter,
+  updateModeFilter,
+  resetFilters,
   formatTime,
   openContest,
   contestAccentStyle,
@@ -34,6 +39,14 @@ function summaryMetricIcon(key: string): Component {
     default:
       return Trophy
   }
+}
+
+function onStatusFilterChange(event: Event): void {
+  void updateStatusFilter((event.target as HTMLSelectElement).value as typeof statusFilter.value)
+}
+
+function onModeFilterChange(event: Event): void {
+  void updateModeFilter((event.target as HTMLSelectElement).value as typeof modeFilter.value)
 }
 </script>
 
@@ -90,6 +103,63 @@ function summaryMetricIcon(key: string): Component {
               </div>
               <div class="student-directory-shell__meta">共 {{ total }} 场</div>
             </header>
+
+            <section class="student-directory-filters contest-directory-filters" aria-label="竞赛筛选">
+              <div class="student-directory-filter-grid contest-directory-filter-grid">
+                <label class="student-directory-filter-field" for="contest-status-filter">
+                  <span class="student-directory-filter-label">状态</span>
+                  <div class="ui-control-wrap student-directory-filter-control">
+                    <select
+                      id="contest-status-filter"
+                      :value="statusFilter"
+                      class="ui-control"
+                      @change="onStatusFilterChange"
+                    >
+                      <option value="">全部状态</option>
+                      <option value="registering">报名中</option>
+                      <option value="running">进行中</option>
+                      <option value="frozen">已冻结</option>
+                      <option value="ended">已结束</option>
+                    </select>
+                  </div>
+                </label>
+
+                <label class="student-directory-filter-field" for="contest-mode-filter">
+                  <span class="student-directory-filter-label">模式</span>
+                  <div class="ui-control-wrap student-directory-filter-control">
+                    <select
+                      id="contest-mode-filter"
+                      :value="modeFilter"
+                      class="ui-control"
+                      @change="onModeFilterChange"
+                    >
+                      <option value="">全部模式</option>
+                      <option value="jeopardy">Jeopardy</option>
+                      <option value="awd">AWD</option>
+                    </select>
+                  </div>
+                </label>
+
+                <div class="student-directory-filter-actions">
+                  <span
+                    class="student-directory-filter-label student-directory-filter-label--ghost"
+                    aria-hidden="true"
+                  >
+                    操作
+                  </span>
+                  <div class="student-directory-filter-action-row">
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--ghost"
+                      :disabled="!statusFilter && !modeFilter"
+                      @click="resetFilters"
+                    >
+                      清空筛选
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <div
               v-if="loading"

@@ -208,6 +208,70 @@ describe('ScoreboardView', () => {
     expect(scoreboardDetailSource).not.toContain('watch(')
   })
 
+  it('竞赛排行列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue(
+      createContestPage(
+        [
+          {
+            id: 'contest-awd',
+            title: 'AWD 排行',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+        ],
+        { summary: createContestSummary({ running_count: 1 }) }
+      )
+    )
+
+    const router = await createScoreboardRouter()
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(scoreboardSource).toContain(
+      'class="student-directory-filters scoreboard-directory-filters"'
+    )
+    expect(wrapper.find('#scoreboard-status-filter').exists()).toBe(true)
+    expect(wrapper.find('#scoreboard-mode-filter').exists()).toBe(true)
+
+    await wrapper.get('#scoreboard-status-filter').setValue('running')
+    await flushPromises()
+
+    expect(getContestsMock).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['running'],
+        sort_key: 'start_time',
+        sort_order: 'desc',
+      },
+      { signal: expect.any(AbortSignal) }
+    )
+
+    await wrapper.get('#scoreboard-mode-filter').setValue('awd')
+    await flushPromises()
+
+    expect(getContestsMock).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['running'],
+        mode: 'awd',
+        sort_key: 'start_time',
+        sort_order: 'desc',
+      },
+      { signal: expect.any(AbortSignal) }
+    )
+  })
+
   it('排行榜路由页应仅做组合，不直接持有路由查询tab编排逻辑', () => {
     expect(scoreboardSource).toContain('useScoreboardRoutePage')
     expect(scoreboardSource).toContain('useScoreboardContestDirectoryPage')

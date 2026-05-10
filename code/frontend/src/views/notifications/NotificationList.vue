@@ -111,7 +111,11 @@ const {
               </template>
             </AppEmpty>
 
-            <section v-else class="notification-filter-section" aria-label="消息分类">
+            <section
+              v-else
+              class="student-directory-filters notification-filter-section"
+              aria-label="消息分类"
+            >
               <NotificationCategoryFilter
                 :total="total"
                 :selected-category="selectedCategory"

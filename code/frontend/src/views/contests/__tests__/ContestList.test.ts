@@ -114,6 +114,43 @@ describe('ContestList', () => {
     expect(contestListSource).toContain('<ArrowRight class="h-4 w-4" />')
   })
 
+  it('竞赛列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
+    const { getContests } = await import('@/api/contest')
+    vi.mocked(getContests).mockClear()
+
+    const wrapper = mount(ContestList)
+    await flushPromises()
+
+    expect(contestListSource).toContain('class="student-directory-filters contest-directory-filters"')
+    expect(wrapper.find('#contest-status-filter').exists()).toBe(true)
+    expect(wrapper.find('#contest-mode-filter').exists()).toBe(true)
+
+    await wrapper.get('#contest-status-filter').setValue('running')
+    await flushPromises()
+
+    expect(vi.mocked(getContests)).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['running'],
+      },
+      { signal: expect.any(AbortSignal) }
+    )
+
+    await wrapper.get('#contest-mode-filter').setValue('awd')
+    await flushPromises()
+
+    expect(vi.mocked(getContests)).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        statuses: ['running'],
+        mode: 'awd',
+      },
+      { signal: expect.any(AbortSignal) }
+    )
+  })
+
   it('不应该向学生暴露草稿竞赛，也不应把草稿错误渲染为已结束', async () => {
     const { getContests } = await import('@/api/contest')
     vi.mocked(getContests).mockResolvedValueOnce({
