@@ -468,6 +468,10 @@ option {
   margin-top: var(--space-6);
 }
 
+.student-directory-section > .student-directory-shell {
+  margin-top: 0;
+}
+
 .student-directory-shell {
   --workspace-directory-shell-padding: var(--space-5);
   --workspace-directory-shell-radius: var(--radius-2xl);

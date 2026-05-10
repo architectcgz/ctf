@@ -14,6 +14,7 @@ const journalUserDirectorySource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-directory.css`,
   'utf-8'
 )
+const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -156,5 +157,18 @@ describe('journal user directory shared styles', () => {
     expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
     expect(securitySettingsSource).toContain('class="workspace-overline">Security</div>')
     expect(securitySettingsSource).not.toContain('<PageHeader')
+  })
+
+  it('学生侧列表外框不应叠加 workspace-directory-list 的默认上间距', () => {
+    expect(appStyleSource).toContain('.student-directory-section > .student-directory-shell')
+    expect(appStyleSource).toMatch(
+      /\.student-directory-section\s*>\s*\.student-directory-shell\s*\{[^}]*margin-top:\s*0;/s
+    )
+    expect(contestListSource).toContain(
+      'class="student-directory-shell contest-directory workspace-directory-list"'
+    )
+    expect(scoreboardSource).toContain(
+      'class="student-directory-shell scoreboard-directory workspace-directory-list"'
+    )
   })
 })
