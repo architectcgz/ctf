@@ -238,17 +238,17 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).not.toContain('journal-eyebrow-text')
   })
 
-  it('应该把能力画像内容区的 soft eyebrow 收敛为局部 section kicker', () => {
+  it('带顶部 tab 的能力画像内容区不应在 tab 面板内重复渲染 section kicker', () => {
     expect(skillProfileSource).toMatch(
       /<div class="skill-section-kicker">\s*Teacher View\s*<\/div>/s
     )
-    expect(skillProfileSource).toMatch(
+    expect(skillProfileSource).not.toMatch(
       /<div class="skill-section-kicker">\s*Radar Analysis\s*<\/div>/s
     )
-    expect(skillProfileSource).toMatch(
+    expect(skillProfileSource).not.toMatch(
       /<div class="skill-section-kicker">\s*Weak Points\s*<\/div>/s
     )
-    expect(skillProfileSource).toMatch(
+    expect(skillProfileSource).not.toMatch(
       /<div class="skill-section-kicker">\s*Recommendations\s*<\/div>/s
     )
     expect(skillProfileSource).not.toContain(

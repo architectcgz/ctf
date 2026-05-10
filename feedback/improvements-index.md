@@ -15,6 +15,7 @@
 - `feedback/2026-05-08-specialized-drawer-should-not-inherit-modal-template.md` ← 业务专用抽屉不应继承通用弹窗视觉模板
 - `feedback/2026-05-08-agent-rules-should-not-accumulate-in-agents.md` ← Agent 规则不应持续堆进 AGENTS
 - `feedback/2026-05-08-project-tasks-default-to-harness.md` ← 项目任务默认进入 Harness
+- `feedback/2026-05-10-top-tab-panels-should-not-repeat-eyebrow.md` ← 带顶部 tab 的页面不应在 tab 面板内重复渲染 eyebrow
 
 ## 后续规则
 

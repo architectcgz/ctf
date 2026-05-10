@@ -173,7 +173,6 @@ const skillRadarHeightClass = 'skill-radar-height'
                     </div>
                   </div>
 
-                  <div class="skill-section-kicker">Radar Analysis</div>
                   <h3 class="workspace-tab-heading__title">能力维度分析</h3>
 
                   <div class="skill-dimension-wrap mt-5">
@@ -231,7 +230,6 @@ const skillRadarHeightClass = 'skill-radar-height'
               :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
             >
               <div class="skill-weak-wrap">
-                <div class="skill-section-kicker">Weak Points</div>
                 <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
                   <Flame class="skill-weak-title__icon h-5 w-5" />
                   薄弱项提示
@@ -264,7 +262,6 @@ const skillRadarHeightClass = 'skill-radar-height'
               aria-labelledby="skill-profile-tab-recommendations"
               :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
             >
-              <div class="skill-section-kicker">Recommendations</div>
               <h3 class="workspace-tab-heading__title">推荐靶场</h3>
               <p class="skill-section-copy mt-2 text-sm leading-6">优先从当前最匹配的题目开始。</p>
 

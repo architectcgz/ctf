@@ -660,8 +660,13 @@ describe('ScoreboardView', () => {
   it('tabs 应直接位于页面顶部，points 页签不应重复渲染局部页头', () => {
     expect(scoreboardSource).not.toContain('<header class="scoreboard-topbar">')
     expect(scoreboardSource).not.toContain('<h2 class="scoreboard-directory-title">积分排行榜</h2>')
-    expect(scoreboardSource).toContain('Contest Scoreboard')
-    expect(scoreboardSource).toContain('Points Scoreboard')
+    expect(scoreboardSource).not.toContain('Contest Scoreboard')
+    expect(scoreboardSource).not.toContain('Points Scoreboard')
+    expect(scoreboardSource).not.toContain('Contest Scoreboard Directory')
+    expect(scoreboardSource).not.toContain('Points Scoreboard Directory')
+    expect(scoreboardSource).not.toContain(
+      'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
+    )
   })
 
   it('排行榜顶部页签应接入统一 workspace tab 样式', () => {

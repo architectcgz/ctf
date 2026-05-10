@@ -250,7 +250,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
           <section class="teacher-student-list-section">
             <div class="teacher-section-head">
               <div class="teacher-heading">
-                <div class="workspace-overline">Class Workspace</div>
                 <h3 class="teacher-section-title">学生列表</h3>
               </div>
               <button

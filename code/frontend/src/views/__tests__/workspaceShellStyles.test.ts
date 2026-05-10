@@ -7,6 +7,8 @@ import classStudentsPageSource from '@/components/teacher/class-management/Class
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
+import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
 const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
@@ -65,6 +67,38 @@ describe('workspace shell shared styles', () => {
     ]) {
       expect(source).not.toContain('@keyframes tabPanelIn')
       expect(source).not.toContain('animation: tabPanelIn 180ms ease both;')
+    }
+  })
+
+  it('带顶部 tab 的页面不应在 tab 面板内重复渲染 eyebrow', () => {
+    expect(scoreboardSource).not.toContain('Contest Scoreboard')
+    expect(scoreboardSource).not.toContain('Contest Scoreboard Directory')
+    expect(scoreboardSource).not.toContain('Points Scoreboard Directory')
+    expect(scoreboardSource).not.toContain(
+      'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
+    )
+
+    expect(skillProfileSource).not.toContain(
+      '<div class="skill-section-kicker">Radar Analysis</div>'
+    )
+    expect(skillProfileSource).not.toContain('<div class="skill-section-kicker">Weak Points</div>')
+    expect(skillProfileSource).not.toContain(
+      '<div class="skill-section-kicker">Recommendations</div>'
+    )
+
+    expect(classStudentsPageSource).not.toContain(
+      '<div class="workspace-overline">Class Workspace</div>'
+    )
+
+    for (const label of [
+      'Progress Signal',
+      'Skill Portrait',
+      'Student Insight',
+      'Trend Review',
+      'Review',
+      'Intervention',
+    ]) {
+      expect(teacherDashboardPageSource).not.toContain(`>${label}<`)
     }
   })
 })

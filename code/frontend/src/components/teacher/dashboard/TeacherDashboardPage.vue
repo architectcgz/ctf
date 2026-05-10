@@ -113,7 +113,6 @@ const {
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Progress Signal</div>
             <h1 class="hero-title">教学介入台</h1>
             <p class="hero-summary">
               {{ overviewDescription }}
@@ -200,7 +199,6 @@ const {
           >
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Skill Portrait</div>
                 <h2 class="list-heading__title">能力画像与薄弱维度</h2>
               </div>
             </header>
@@ -285,7 +283,6 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Student Insight</div>
                 <h2 class="list-heading__title">学生洞察</h2>
               </div>
             </header>
@@ -337,7 +334,6 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Trend Review</div>
                 <h2 class="list-heading__title">趋势复盘</h2>
               </div>
             </header>
@@ -360,7 +356,6 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Review</div>
                 <h2 class="list-heading__title">教学复盘结论</h2>
               </div>
             </header>
@@ -383,7 +378,6 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Intervention</div>
                 <h2 class="list-heading__title">优先介入学生</h2>
               </div>
             </header>

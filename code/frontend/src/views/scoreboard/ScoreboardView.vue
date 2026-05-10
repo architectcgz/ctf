@@ -108,8 +108,6 @@ function onContestModeFilterChange(event: Event): void {
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>
-
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
               <BarChart2 class="h-4 w-4" />
@@ -174,11 +172,6 @@ function onContestModeFilterChange(event: Event): void {
             <section class="student-directory-shell scoreboard-directory workspace-directory-list">
               <header class="student-directory-shell__head student-directory-list-heading list-heading">
                 <div class="student-directory-shell__heading student-directory-list-heading__body">
-                  <div
-                    class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
-                  >
-                    Contest Scoreboard Directory
-                  </div>
                   <h2 class="student-directory-shell__title student-directory-list-heading__title">
                     竞赛排行列表
                   </h2>
@@ -343,8 +336,6 @@ function onContestModeFilterChange(event: Event): void {
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>
-
           <section
             class="student-directory-section workspace-directory-section"
             aria-label="积分排行榜"
@@ -354,11 +345,6 @@ function onContestModeFilterChange(event: Event): void {
             >
               <header class="student-directory-shell__head student-directory-list-heading list-heading">
                 <div class="student-directory-shell__heading student-directory-list-heading__body">
-                  <div
-                    class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
-                  >
-                    Points Scoreboard Directory
-                  </div>
                   <h2 class="student-directory-shell__title student-directory-list-heading__title">
                     积分排行列表
                   </h2>

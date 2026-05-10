@@ -420,7 +420,7 @@ describe('TeacherDashboard', () => {
   })
 
   it('教师概览的小标题应隔离 overline 样式以避免继承装饰横线', () => {
-    expect(teacherDashboardPageSource).toContain('workspace-overline')
+    expect(teacherDashboardPageSource).not.toContain('workspace-overline')
     expect(teacherDashboardPageSource).not.toContain('class="overline"')
   })
 
