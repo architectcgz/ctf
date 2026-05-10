@@ -199,11 +199,11 @@ const {
                   data-testid="scoreboard-detail-row"
                   :class="getRowClass(item.rank)"
                 >
-                  <td class="sb-cell--rank">
+                  <td>
                     <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
                   </td>
                   <td>{{ item.team_name }}</td>
-                  <td class="sb-cell--mono">
+                  <td>
                     {{ item.score }}
                   </td>
                   <td>{{ item.solved_count }}</td>
@@ -392,11 +392,6 @@ const {
 .sb-row--top3 td,
 .sb-rank-pill--top3 {
   color: color-mix(in srgb, var(--color-danger) 42%, var(--color-warning));
-}
-
-.sb-cell--rank,
-.sb-cell--mono {
-  font-family: var(--font-family-mono);
 }
 
 .sb-cell--muted {

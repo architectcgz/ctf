@@ -559,7 +559,6 @@ const {
 }
 
 .team-summary__invite {
-  font-family: var(--font-family-mono);
   font-size: var(--font-size-0-78);
   color: var(--color-text-secondary);
 }

@@ -278,10 +278,6 @@ option {
   white-space: nowrap;
 }
 
-.workspace-directory-row-title--mono {
-  font-family: var(--font-family-mono);
-}
-
 .workspace-directory-row-subtitle {
   margin: var(--space-1) 0 0;
   overflow: hidden;

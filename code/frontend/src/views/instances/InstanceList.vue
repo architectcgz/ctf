@@ -130,8 +130,7 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
           >
             <div class="workspace-directory-cell instance-row-main">
               <h2
-                class="instance-row-title"
-                :class="['workspace-directory-row-title', 'workspace-directory-row-title--mono']"
+                class="instance-row-title workspace-directory-row-title"
                 :title="instance.challenge_title"
               >
                 {{ instance.challenge_title }}

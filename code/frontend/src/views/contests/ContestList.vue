@@ -142,8 +142,7 @@ function summaryMetricIcon(key: string): Component {
                 >
               </div>
               <h3
-                class="contest-row-title"
-                :class="['workspace-directory-row-title', 'workspace-directory-row-title--mono']"
+                class="contest-row-title workspace-directory-row-title"
                 :title="contest.title"
               >
                 {{ contest.title }}

@@ -208,9 +208,7 @@ const {
                         <Shield class="h-3 w-3" /> 已冻结
                       </span>
                     </div>
-                    <h3
-                      class="workspace-directory-row-title workspace-directory-row-title--mono scoreboard-card-title"
-                    >
+                    <h3 class="workspace-directory-row-title scoreboard-card-title">
                       {{ section.contest.title }}
                     </h3>
                     <p class="workspace-directory-row-subtitle scoreboard-card-time">
@@ -294,7 +292,7 @@ const {
               </thead>
               <tbody>
                 <tr v-for="item in rankingRows" :key="item.user_id" :class="getRowClass(item.rank)">
-                  <td class="sb-cell--rank">
+                  <td>
                     <span
                       class="workspace-directory-status-pill"
                       :class="getRankPillClass(item.rank)"
@@ -302,7 +300,7 @@ const {
                     >
                   </td>
                   <td>{{ item.username }}</td>
-                  <td class="sb-cell--mono">
+                  <td>
                     {{ item.total_score }}
                   </td>
                   <td>{{ item.solved_count }}</td>
@@ -504,11 +502,6 @@ const {
 .sb-row--top3 td,
 .sb-rank-pill--top3 {
   color: color-mix(in srgb, var(--color-danger) 42%, var(--color-warning));
-}
-
-.sb-cell--rank,
-.sb-cell--mono {
-  font-family: var(--font-family-mono);
 }
 
 .sb-cell--muted {

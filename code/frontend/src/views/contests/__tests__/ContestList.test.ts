@@ -70,7 +70,9 @@ describe('ContestList', () => {
   })
 
   it('应该为竞赛列表长标题保留省略样式和完整悬浮提示', () => {
-    expect(contestListSource).toMatch(/class="contest-row-title"[\s\S]*:title="contest\.title"/s)
+    expect(contestListSource).toMatch(
+      /class="[^"]*\bcontest-row-title\b[^"]*"[\s\S]*:title="contest\.title"/s
+    )
     expect(contestListSource).toMatch(
       /\.contest-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
