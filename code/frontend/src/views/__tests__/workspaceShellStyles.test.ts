@@ -11,8 +11,12 @@ import studentTimelineSource from '@/components/dashboard/student/StudentTimelin
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
+import challengeImportManageSource from '@/views/platform/ChallengeImportManage.vue?raw'
+import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
+import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
@@ -65,9 +69,25 @@ describe('workspace shell shared styles', () => {
 
   it('非 top-tabs 工作区页面应使用共享 content 起始间距', () => {
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .content-pane:first-child')
+    expect(workspaceShellStylesSource).toContain(
+      '.workspace-shell > .workspace-grid:first-child > .content-pane:first-child'
+    )
     expect(workspaceShellStylesSource).toContain('--workspace-content-start-padding-top')
     expect(challengeListSource).toContain('<main class="content-pane">')
     expect(challengeListSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
+
+    for (const source of [
+      challengeManageSource,
+      challengeImportManageSource,
+      awdChallengeLibraryPageSource,
+    ]) {
+      expect(source).toContain('<div class="workspace-grid">')
+      expect(source).toContain('content-pane')
+      expect(source).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
+    }
+
+    expect(imageManageSource).toContain('<main class="content-pane">')
+    expect(imageManageSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
   })
 
   it('工作区页面不应继续在局部重复声明 tab 面板切换动画', () => {

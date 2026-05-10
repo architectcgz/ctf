@@ -36,6 +36,9 @@ describe('spacing system tokens', () => {
     expect(workspaceShellSource).toContain('var(--space-workspace-content-padding)')
     expect(workspaceShellSource).toContain('var(--space-workspace-content-start-padding-top)')
     expect(workspaceShellSource).toContain('.workspace-shell > .content-pane:first-child')
+    expect(workspaceShellSource).toContain(
+      '.workspace-shell > .workspace-grid:first-child > .content-pane:first-child'
+    )
     expect(workspaceShellSource).not.toContain('padding: 22px 28px 0;')
     expect(workspaceShellSource).not.toContain('gap: 28px;')
     expect(workspaceShellSource).not.toContain('padding: 28px;')

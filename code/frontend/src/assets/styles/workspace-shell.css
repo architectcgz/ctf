@@ -152,6 +152,13 @@
   );
 }
 
+.workspace-shell > .workspace-grid:first-child > .content-pane:first-child {
+  padding-top: var(
+    --workspace-content-start-padding-top,
+    var(--space-workspace-content-start-padding-top)
+  );
+}
+
 .workspace-shell .tab-panel {
   display: none;
 }
