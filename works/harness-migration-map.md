@@ -7,7 +7,7 @@
 ## 已迁移内容
 
 - historical improvements -> `feedback/`
-- CTF UI theme skill -> `prompts/ctf-ui-theme-system-skill.md`
+- CTF UI theme skill -> `harness/prompts/ctf-ui-theme-system-skill.md`
 - superpowers README and plans -> `practice/superpowers-plan-index.md`
 - planning archive -> `practice/planning-archive-index.md`
 - instance lifecycle research refs -> `references/ctf-instance-lifecycle-research.md`

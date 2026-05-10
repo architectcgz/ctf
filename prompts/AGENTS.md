@@ -1,16 +1,19 @@
-# prompts/ — 提示词积累
+# prompts/ — 目录导航
 
-学习和实践中验证有效的提示词，按场景或工作流沉淀。只收录亲测有效的，不收录未验证的。
+顶层 `prompts/` 目录在本仓库中只保留导航职责，不再作为 harness prompt 的事实源。
 
-## 文件形态
+## 当前约定
 
-- 单条 Prompt：用途、提示词正文、效果评价。
-- Prompt 工作流：目标、步骤、链路、适用范围。
+- harness 相关 prompt 统一迁到 `harness/prompts/`
+- 顶层 `prompts/` 只保留本文件，避免 `prompts/` 与 `harness/prompts/` 双入口并存
 
-## 已迁移积累
+## 已迁移入口
 
-- `ctf-harness-initialization.md`：严格参考 harness 初始化提示词。
-- `ctf-ui-theme-system-skill.md`：CTF UI theme skill 的 harness 入口。
-- `harness-router.md`：默认进入 harness、简单任务除外的路由提示词。
-- `experience-extraction-closeout.md`：任务完成前主动判断是否有可提炼经验，并向用户报告。
-- `architecture-diagram-generation.md`：根据当前事实源生成架构图的输入包模板。
+- `harness/prompts/ctf-harness-initialization.md`
+- `harness/prompts/ctf-ui-theme-system-skill.md`
+- `harness/prompts/harness-router.md`
+- `harness/prompts/experience-extraction-closeout.md`
+- `harness/prompts/architecture-diagram-generation.md`
+- `harness/prompts/coding-agent-system-prompt.md`
+
+详细说明见 `harness/prompts/AGENTS.md`。

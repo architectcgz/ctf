@@ -107,6 +107,7 @@ def resolve_ref(source: Path, token: str) -> Path | None:
         "concepts",
         "docs",
         "feedback",
+        "harness",
         "practice",
         "prompts",
         "references",

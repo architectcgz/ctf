@@ -16,4 +16,4 @@ description: CTF 前端视觉系统规范（项目内副本），用于页面视
 - 先保证信息层级和可读性，再做视觉装饰。
 
 ## 说明
-- 详细版规范可参考仓库根目录的 `prompts/ctf-ui-theme-system-skill.md`（已迁入 harness 的入口）。
+- 详细版规范可参考仓库根目录的 `harness/prompts/ctf-ui-theme-system-skill.md`（已迁入 harness 的唯一入口）。
