@@ -494,11 +494,24 @@ option {
         var(--journal-surface-subtle, var(--color-bg-elevated)) 74%,
         var(--color-bg-base)
       )
-    );
+  );
   display: grid;
-  gap: var(--space-4);
+  gap: 0;
   box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
     color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
+}
+
+.student-directory-shell__head
+  + :where(
+    .student-directory-filters,
+    .student-directory-state,
+    .workspace-directory-grid-head,
+    .challenge-directory,
+    .notification-filter-section,
+    .notification-directory,
+    .scoreboard-table-scroll
+  ) {
+  margin-top: var(--space-4);
 }
 
 .student-directory-shell__head {

@@ -171,4 +171,15 @@ describe('journal user directory shared styles', () => {
       'class="student-directory-shell scoreboard-directory workspace-directory-list"'
     )
   })
+
+  it('学生侧列表 item 不应被 student-directory-shell 的 grid gap 额外撑开', () => {
+    expect(appStyleSource).toMatch(/\.student-directory-shell\s*\{[^}]*gap:\s*0;/s)
+    expect(appStyleSource).toMatch(
+      /\.student-directory-shell__head[\s\S]*\+\s*:where\([\s\S]*\.workspace-directory-grid-head[\s\S]*\)\s*\{[^}]*margin-top:\s*var\(--space-4\);/s
+    )
+    expect(contestListSource).toContain('class="workspace-directory-grid-row contest-row"')
+    expect(scoreboardSource).toContain(
+      'class="workspace-directory-grid-row scoreboard-card scoreboard-card-link"'
+    )
+  })
 })
