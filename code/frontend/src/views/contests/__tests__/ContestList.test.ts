@@ -112,6 +112,8 @@ describe('ContestList', () => {
     expect(contestListSource).not.toContain('formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at)')
     expect(contestListSource).toContain('class="workspace-directory-row-btn contest-row-cta"')
     expect(contestListSource).toContain('<ArrowRight class="h-4 w-4" />')
+    expect(contestListSource).toContain('minmax(10.5rem, 0.85fr) max-content')
+    expect(contestListSource).toMatch(/\.contest-row-cta\s*\{[^}]*justify-self:\s*end;/s)
   })
 
   it('竞赛列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {

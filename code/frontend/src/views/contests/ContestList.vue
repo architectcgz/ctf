@@ -299,7 +299,7 @@ function onModeFilterChange(event: Event): void {
 
 .contest-directory {
   --workspace-directory-grid-columns: minmax(0, 1.15fr) 7rem 7rem minmax(10.5rem, 0.85fr)
-    minmax(10.5rem, 0.85fr) 8rem;
+    minmax(10.5rem, 0.85fr) max-content;
 }
 
 .contest-pagination {
@@ -368,7 +368,7 @@ function onModeFilterChange(event: Event): void {
 }
 
 .contest-row-cta {
-  justify-content: flex-start;
+  justify-self: end;
   color: var(--contest-row-accent, var(--journal-accent));
 }
 
