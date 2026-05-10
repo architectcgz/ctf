@@ -1,0 +1,139 @@
+name: ctf
+
+services:
+  render-web:
+    image: 127.0.0.1:5000/awd/awd-preview-render-farm:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-preview-render-farm
+    ports:
+      - "18133:8080"
+    environment:
+      ROLE: render-web
+      APP_PORT: "8080"
+      FLAG: "flag{awd_preview_render_farm_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      RENDER_BASE_URL: "http://render-worker:9091"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - render-data:/workspace/data
+      - render-flag:/shared
+    depends_on:
+      render-worker:
+        condition: service_healthy
+    networks:
+      - public
+      - render
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  render-worker:
+    image: 127.0.0.1:5000/awd/awd-preview-render-farm:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-preview-render-farm
+    environment:
+      ROLE: render-worker
+      APP_PORT: "9091"
+      FLAG: "flag{awd_preview_render_farm_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      ASSET_BASE_URL: "http://asset-cache:9092"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - render-data:/workspace/data
+      - render-flag:/shared
+    depends_on:
+      asset-cache:
+        condition: service_healthy
+    networks:
+      - render
+      - cache
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9091/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  asset-cache:
+    image: 127.0.0.1:5000/awd/awd-preview-render-farm:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-preview-render-farm
+    environment:
+      ROLE: asset-cache
+      APP_PORT: "9092"
+      FLAG: "flag{awd_preview_render_farm_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - render-data:/workspace/data
+      - render-flag:/shared
+    networks:
+      - cache
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9092/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+volumes:
+  render-data:
+  render-flag:
+
+networks:
+  public:
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  render:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  cache:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance

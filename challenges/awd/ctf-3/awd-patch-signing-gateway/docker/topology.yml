@@ -1,0 +1,67 @@
+api_version: v1
+kind: topology
+entry_node_key: patch-gateway
+networks:
+  - key: public
+    name: Public ingress
+  - key: sign
+    name: Sign plane
+    internal: true
+  - key: vault
+    name: Vault plane
+    internal: true
+nodes:
+  - key: patch-gateway
+    name: Patch Gateway
+    tier: edge
+    image:
+      ref: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    service_port: 8080
+    inject_flag: true
+    network_keys: [public, sign]
+    env:
+      ROLE: patch-gateway
+      APP_PORT: "8080"
+      FLAG_PATH: /shared/flag
+      SIGNER_BASE_URL: http://signer-core:9091
+  - key: signer-core
+    name: Signer Core
+    tier: app
+    image:
+      ref: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    service_port: 9091
+    inject_flag: true
+    network_keys: [sign, vault]
+    env:
+      ROLE: signer-core
+      APP_PORT: "9091"
+      FLAG_PATH: /shared/flag
+      KEY_BASE_URL: http://key-vault:9092
+  - key: key-vault
+    name: Key Vault
+    tier: data
+    image:
+      ref: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    service_port: 9092
+    inject_flag: true
+    network_keys: [vault]
+    env:
+      ROLE: key-vault
+      APP_PORT: "9092"
+      FLAG_PATH: /shared/flag
+links:
+  - from_node_key: patch-gateway
+    to_node_key: signer-core
+  - from_node_key: signer-core
+    to_node_key: key-vault
+policies:
+  - source_node_key: patch-gateway
+    target_node_key: signer-core
+    action: allow
+    protocol: tcp
+    ports: [9091]
+  - source_node_key: signer-core
+    target_node_key: key-vault
+    action: allow
+    protocol: tcp
+    ports: [9092]

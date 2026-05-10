@@ -30,3 +30,4 @@
 - `2026-05-10-top-tab-panels-should-not-repeat-eyebrow.md`：带顶部 tab 的页面，tab 面板内默认不再重复渲染分区 eyebrow。
 - `2026-05-10-workspace-grid-only-for-real-layout.md`：`workspace-grid` 只用于真实多列或区域布局，普通单列页面直接使用 `content-pane`。
 - `2026-05-10-workspace-page-header-should-be-shared.md`：工作区首屏标题区默认使用共享 `workspace-page-header`，不要继续新增页面局部 `workspace-hero` 布局和分隔线。
+- `2026-05-10-awd-topology-local-readiness.md`：AWD topology 题本地验题默认使用 `healthcheck + service_healthy + up --wait`，不要把容器 running 误当成服务 ready。

@@ -1,0 +1,139 @@
+name: ctf
+
+services:
+  patch-gateway:
+    image: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-patch-signing-gateway
+    ports:
+      - "18135:8080"
+    environment:
+      ROLE: patch-gateway
+      APP_PORT: "8080"
+      FLAG: "flag{awd_patch_signing_gateway_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      SIGNER_BASE_URL: "http://signer-core:9091"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - patch-data:/workspace/data
+      - patch-flag:/shared
+    depends_on:
+      signer-core:
+        condition: service_healthy
+    networks:
+      - public
+      - sign
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  signer-core:
+    image: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-patch-signing-gateway
+    environment:
+      ROLE: signer-core
+      APP_PORT: "9091"
+      FLAG: "flag{awd_patch_signing_gateway_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      KEY_BASE_URL: "http://key-vault:9092"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - patch-data:/workspace/data
+      - patch-flag:/shared
+    depends_on:
+      key-vault:
+        condition: service_healthy
+    networks:
+      - sign
+      - vault
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9091/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  key-vault:
+    image: 127.0.0.1:5000/awd/awd-patch-signing-gateway:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-patch-signing-gateway
+    environment:
+      ROLE: key-vault
+      APP_PORT: "9092"
+      FLAG: "flag{awd_patch_signing_gateway_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - patch-data:/workspace/data
+      - patch-flag:/shared
+    networks:
+      - vault
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9092/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+volumes:
+  patch-data:
+  patch-flag:
+
+networks:
+  public:
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  sign:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  vault:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance

@@ -1,0 +1,68 @@
+api_version: v1
+kind: topology
+entry_node_key: fleet-web
+networks:
+  - key: public
+    name: Public ingress
+  - key: control
+    name: Control plane
+    internal: true
+  - key: vault
+    name: Vault plane
+    internal: true
+nodes:
+  - key: fleet-web
+    name: Fleet Web
+    tier: edge
+    image:
+      ref: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    service_port: 8080
+    inject_flag: true
+    network_keys: [public, control]
+    env:
+      ROLE: fleet-web
+      APP_PORT: "8080"
+      FLAG_PATH: /shared/flag
+      AGENT_BASE_URL: http://fleet-agent:9091
+  - key: fleet-agent
+    name: Fleet Agent
+    tier: app
+    image:
+      ref: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    service_port: 9091
+    inject_flag: true
+    network_keys: [control, vault]
+    env:
+      ROLE: fleet-agent
+      APP_PORT: "9091"
+      FLAG_PATH: /shared/flag
+      DEFAULT_FLEET_KEY: fleet-support-2026
+      VAULT_BASE_URL: http://config-vault:9092
+  - key: config-vault
+    name: Config Vault
+    tier: data
+    image:
+      ref: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    service_port: 9092
+    inject_flag: true
+    network_keys: [vault]
+    env:
+      ROLE: config-vault
+      APP_PORT: "9092"
+      FLAG_PATH: /shared/flag
+links:
+  - from_node_key: fleet-web
+    to_node_key: fleet-agent
+  - from_node_key: fleet-agent
+    to_node_key: config-vault
+policies:
+  - source_node_key: fleet-web
+    target_node_key: fleet-agent
+    action: allow
+    protocol: tcp
+    ports: [9091]
+  - source_node_key: fleet-agent
+    target_node_key: config-vault
+    action: allow
+    protocol: tcp
+    ports: [9092]

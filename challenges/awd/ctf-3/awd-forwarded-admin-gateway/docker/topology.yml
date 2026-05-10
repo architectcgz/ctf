@@ -1,0 +1,67 @@
+api_version: v1
+kind: topology
+entry_node_key: edge-gateway
+networks:
+  - key: public
+    name: Public ingress
+  - key: transit
+    name: Gateway transit
+    internal: true
+  - key: audit
+    name: Audit plane
+    internal: true
+nodes:
+  - key: edge-gateway
+    name: Edge Gateway
+    tier: edge
+    image:
+      ref: 127.0.0.1:5000/awd/awd-forwarded-admin-gateway:20260510
+    service_port: 8080
+    inject_flag: true
+    network_keys: [public, transit]
+    env:
+      ROLE: edge-gateway
+      APP_PORT: "8080"
+      FLAG_PATH: /shared/flag
+      ADMIN_BASE_URL: http://admin-app:9091
+  - key: admin-app
+    name: Admin App
+    tier: app
+    image:
+      ref: 127.0.0.1:5000/awd/awd-forwarded-admin-gateway:20260510
+    service_port: 9091
+    inject_flag: true
+    network_keys: [transit, audit]
+    env:
+      ROLE: admin-app
+      APP_PORT: "9091"
+      FLAG_PATH: /shared/flag
+      AUDIT_BASE_URL: http://audit-db:9092
+  - key: audit-db
+    name: Audit DB
+    tier: data
+    image:
+      ref: 127.0.0.1:5000/awd/awd-forwarded-admin-gateway:20260510
+    service_port: 9092
+    inject_flag: true
+    network_keys: [audit]
+    env:
+      ROLE: audit-db
+      APP_PORT: "9092"
+      FLAG_PATH: /shared/flag
+links:
+  - from_node_key: edge-gateway
+    to_node_key: admin-app
+  - from_node_key: admin-app
+    to_node_key: audit-db
+policies:
+  - source_node_key: edge-gateway
+    target_node_key: admin-app
+    action: allow
+    protocol: tcp
+    ports: [9091]
+  - source_node_key: admin-app
+    target_node_key: audit-db
+    action: allow
+    protocol: tcp
+    ports: [9092]

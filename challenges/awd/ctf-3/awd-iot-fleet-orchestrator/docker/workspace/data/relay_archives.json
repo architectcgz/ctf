@@ -1,0 +1,7 @@
+{
+  "demo": {
+    "target": "https://hooks.academy.example/demo",
+    "last_event": "user.sync",
+    "note": "demo feed for teacher preview"
+  }
+}

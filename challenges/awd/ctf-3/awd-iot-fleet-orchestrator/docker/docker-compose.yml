@@ -1,0 +1,140 @@
+name: ctf
+
+services:
+  fleet-web:
+    image: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-iot-fleet-orchestrator
+    ports:
+      - "18134:8080"
+    environment:
+      ROLE: fleet-web
+      APP_PORT: "8080"
+      FLAG: "flag{awd_iot_fleet_orchestrator_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      AGENT_BASE_URL: "http://fleet-agent:9091"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - fleet-data:/workspace/data
+      - fleet-flag:/shared
+    depends_on:
+      fleet-agent:
+        condition: service_healthy
+    networks:
+      - public
+      - control
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  fleet-agent:
+    image: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-iot-fleet-orchestrator
+    environment:
+      ROLE: fleet-agent
+      APP_PORT: "9091"
+      FLAG: "flag{awd_iot_fleet_orchestrator_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      DEFAULT_FLEET_KEY: "fleet-support-2026"
+      VAULT_BASE_URL: "http://config-vault:9092"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - fleet-data:/workspace/data
+      - fleet-flag:/shared
+    depends_on:
+      config-vault:
+        condition: service_healthy
+    networks:
+      - control
+      - vault
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9091/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  config-vault:
+    image: 127.0.0.1:5000/awd/awd-iot-fleet-orchestrator:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-iot-fleet-orchestrator
+    environment:
+      ROLE: config-vault
+      APP_PORT: "9092"
+      FLAG: "flag{awd_iot_fleet_orchestrator_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - fleet-data:/workspace/data
+      - fleet-flag:/shared
+    networks:
+      - vault
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9092/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+volumes:
+  fleet-data:
+  fleet-flag:
+
+networks:
+  public:
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  control:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  vault:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance

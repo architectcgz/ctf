@@ -1,0 +1,116 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-forwarded-admin-gateway
+  title: Forwarded Admin Gateway
+  category: web
+  difficulty: medium
+  points: 150
+  tags:
+    - mode:awd
+    - stack:web
+    - stack:flask
+    - topic:forwarded-header
+    - topic:topology
+    - topic:proxy-trust
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 管理面不在公网，但公网网关会把哪些头部原样带给内部服务，值得先看清楚。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/awd/awd-forwarded-admin-gateway:20260510
+
+extensions:
+  topology:
+    enabled: true
+    source: docker/topology.yml
+  awd:
+    service_type: multi_container
+    deployment_mode: topology
+    version: v2026.05
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: "{{CHECKER_TOKEN}}"
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /health
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: flag
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      checker_token_env: CHECKER_TOKEN
+      topology_source: docker/topology.yml
+      topology_entry_node_key: edge-gateway
+      defense_workspace:
+        entry_mode: ssh
+        seed_root: docker/workspace
+        workspace_roots:
+          - docker/workspace/src
+          - docker/workspace/data
+        writable_roots:
+          - docker/workspace/src
+        readonly_roots:
+          - docker/workspace/data
+        runtime_mounts:
+          - source: docker/workspace/src
+            target: /workspace/src
+            mode: rw
+          - source: docker/workspace/data
+            target: /workspace/data
+            mode: rw
+      defense_scope:
+        protected_paths:
+          - docker/runtime/app.py
+          - docker/runtime/ctf_runtime.py
+          - docker/runtime/requirements.txt
+          - docker/check/check.py
+          - docker/topology.yml
+          - challenge.yml
+        service_contracts:
+          - /health 必须返回 200
+          - /api/flag 必须保留 X-AWD-Checker-Token 校验
+          - /api/flag 必须支持 PUT 写入与 GET 读取本轮动态 Flag
+          - edge-gateway 必须继续提供 /reports/demo 与 /proxy
+          - admin-app 需要保留内部导出链路
+          - audit-db 需要保留内部租户查询能力

@@ -1,0 +1,139 @@
+name: ctf
+
+services:
+  relay-web:
+    image: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-webhook-relay-hub
+    ports:
+      - "18131:8080"
+    environment:
+      ROLE: relay-web
+      APP_PORT: "8080"
+      FLAG: "flag{awd_webhook_relay_hub_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      RELAY_WORKER_URL: "http://relay-worker:9091"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - relay-data:/workspace/data
+      - relay-flag:/shared
+    depends_on:
+      relay-worker:
+        condition: service_healthy
+    networks:
+      - public
+      - core
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  relay-worker:
+    image: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-webhook-relay-hub
+    environment:
+      ROLE: relay-worker
+      APP_PORT: "9091"
+      FLAG: "flag{awd_webhook_relay_hub_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+      RELAY_STORE_URL: "http://relay-store:9092"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - relay-data:/workspace/data
+      - relay-flag:/shared
+    depends_on:
+      relay-store:
+        condition: service_healthy
+    networks:
+      - core
+      - ops
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9091/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  relay-store:
+    image: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+      ctf.source: challenge-library
+      ctf.challenge.slug: awd-webhook-relay-hub
+    environment:
+      ROLE: relay-store
+      APP_PORT: "9092"
+      FLAG: "flag{awd_webhook_relay_hub_demo}"
+      FLAG_PATH: /shared/flag
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./runtime/app.py:/app/app.py:ro
+      - ./runtime/ctf_runtime.py:/app/ctf_runtime.py:ro
+      - ./workspace/src:/workspace/src:rw
+      - relay-data:/workspace/data
+      - relay-flag:/shared
+    networks:
+      - ops
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9092/health", timeout=2)
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+volumes:
+  relay-data:
+  relay-flag:
+
+networks:
+  public:
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  core:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance
+  ops:
+    internal: true
+    labels:
+      managed-by: ctf-platform
+      ctf-component: challenge-instance

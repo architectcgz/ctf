@@ -1,0 +1,10 @@
+{
+  "stable": {
+    "build": "2026.05.1",
+    "notes": "lts release"
+  },
+  "beta": {
+    "build": "2026.05.2-beta",
+    "notes": "preview release"
+  }
+}

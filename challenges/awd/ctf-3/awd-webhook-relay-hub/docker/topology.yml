@@ -1,0 +1,67 @@
+api_version: v1
+kind: topology
+entry_node_key: relay-web
+networks:
+  - key: public
+    name: Public ingress
+  - key: core
+    name: Relay core
+    internal: true
+  - key: ops
+    name: Archive ops
+    internal: true
+nodes:
+  - key: relay-web
+    name: Relay Web
+    tier: edge
+    image:
+      ref: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    service_port: 8080
+    inject_flag: true
+    network_keys: [public, core]
+    env:
+      ROLE: relay-web
+      APP_PORT: "8080"
+      FLAG_PATH: /shared/flag
+      RELAY_WORKER_URL: http://relay-worker:9091
+  - key: relay-worker
+    name: Replay Worker
+    tier: app
+    image:
+      ref: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    service_port: 9091
+    inject_flag: true
+    network_keys: [core, ops]
+    env:
+      ROLE: relay-worker
+      APP_PORT: "9091"
+      FLAG_PATH: /shared/flag
+      RELAY_STORE_URL: http://relay-store:9092
+  - key: relay-store
+    name: Archive Store
+    tier: data
+    image:
+      ref: 127.0.0.1:5000/awd/awd-webhook-relay-hub:20260510
+    service_port: 9092
+    inject_flag: true
+    network_keys: [ops]
+    env:
+      ROLE: relay-store
+      APP_PORT: "9092"
+      FLAG_PATH: /shared/flag
+links:
+  - from_node_key: relay-web
+    to_node_key: relay-worker
+  - from_node_key: relay-worker
+    to_node_key: relay-store
+policies:
+  - source_node_key: relay-web
+    target_node_key: relay-worker
+    action: allow
+    protocol: tcp
+    ports: [9091]
+  - source_node_key: relay-worker
+    target_node_key: relay-store
+    action: allow
+    protocol: tcp
+    ports: [9092]

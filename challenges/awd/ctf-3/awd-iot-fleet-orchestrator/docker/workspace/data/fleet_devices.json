@@ -1,0 +1,7 @@
+{
+  "demo-sensor": {
+    "site": "lab-a",
+    "status": "online",
+    "device_key": "sensor-demo-local"
+  }
+}

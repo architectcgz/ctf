@@ -1,0 +1,10 @@
+{
+  "receipt": {
+    "title": "Receipt Template",
+    "theme": "classic"
+  },
+  "label": {
+    "title": "Shipping Label",
+    "theme": "mono"
+  }
+}

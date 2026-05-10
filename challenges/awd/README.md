@@ -19,6 +19,14 @@ AWD 题目包必须在 `challenge.yml` 的 `extensions.awd.checker` 中声明平
 - `ctf-2/awd-webhook-inspector/`：Webhook 文档预览器，核心漏洞为 SSRF 与粗糙本地地址黑名单。
 - `ctf-2/awd-passkey-sync-gateway/`：Passkey 同步网关，核心漏洞为调试导出命令里的固定支持密钥。
 
+当前 `ctf-3/` 期次题目：
+
+- `ctf-3/awd-webhook-relay-hub/`：三容器 webhook relay，核心漏洞为公网预览器可打内部 replay，再横向取 archive 中的 Flag。
+- `ctf-3/awd-forwarded-admin-gateway/`：公网 gateway + 内部 admin + audit，核心漏洞为伪造 `X-Forwarded-*` 头穿透内部导出链路。
+- `ctf-3/awd-preview-render-farm/`：预览站点 + renderer + asset cache，核心漏洞为素材路径直拼导致命中内部 debug asset。
+- `ctf-3/awd-iot-fleet-orchestrator/`：公网控制台 + fleet agent + config vault，核心漏洞为默认支持 key 可调用内部高权限设备操作。
+- `ctf-3/awd-patch-signing-gateway/`：公网 patch gateway + signer + key vault，核心漏洞为客户端可伪造内部 signer 角色头获取高权限 bundle。
+
 每期比赛单独建立子目录，例如 `ctf-1/`、`ctf-2/`。只把可导入、可运行的完整题目包放入期次目录；顶层 Markdown 可保留为设计说明或候选题草案。
 
 ## 目录结构
@@ -86,6 +94,17 @@ docker compose up --build
 ```
 
 启动后访问 `http://127.0.0.1:18081/`。其他题目端口见各自 `docker/docker-compose.yml`。
+
+对 `ctf-3/` 这类多容器 topology 题，本地验题不要只用 `up -d`。推荐直接等待服务健康：
+
+```bash
+cd challenges/awd/ctf-3/awd-webhook-relay-hub/docker
+docker compose up -d --build --wait --wait-timeout 60
+python3 check/check.py http://127.0.0.1:18131
+docker compose down -v
+```
+
+原因是 `up -d` 只能保证容器进入 `running`，不能保证内部依赖已经 ready；如果 checker 覆盖真实攻击链，公网入口过早可用时会打到尚未就绪的内部节点。
 
 ## Checkbot 示例
 
