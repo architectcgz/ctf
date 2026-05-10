@@ -94,139 +94,158 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
           </div>
         </section>
 
-        <div v-if="loading" class="instance-loading">
-          <div class="instance-loading-spinner" />
-        </div>
-
-        <div v-else-if="instances.length === 0" class="instance-empty">
-          <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
-          <router-link to="/challenges" class="instance-empty-link">
-            前往靶场列表创建实例
-          </router-link>
-        </div>
-
         <section
-          v-else
-          class="instance-directory workspace-directory-list workspace-directory-list--catalog"
+          class="student-directory-section workspace-directory-section"
           aria-label="实例目录"
         >
-          <div class="instance-directory-top">
-            <h2 class="instance-directory-title">实例列表</h2>
-            <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
-          </div>
-
-          <div class="workspace-directory-grid-head instance-directory-head">
-            <span>题目</span>
-            <span>访问</span>
-            <span>状态</span>
-            <span>剩余时间</span>
-            <span>操作</span>
-          </div>
-
-          <article
-            v-for="instance in instances"
-            :key="instance.id"
-            class="workspace-directory-grid-row instance-row"
-          >
-            <div class="workspace-directory-cell instance-row-main">
-              <h2
-                class="instance-row-title workspace-directory-row-title"
-                :title="instance.challenge_title"
-              >
-                {{ instance.challenge_title }}
-              </h2>
-              <div class="instance-row-tags">
-                <span
-                  class="workspace-directory-status-pill instance-chip instance-chip-category"
-                  >{{ instance.category }}</span
-                >
-                <span
-                  class="workspace-directory-status-pill instance-chip instance-chip-difficulty"
-                  >{{ instance.difficulty }}</span
-                >
+          <section class="student-directory-shell instance-directory workspace-directory-list">
+            <header class="student-directory-shell__head">
+              <div class="student-directory-shell__heading">
+                <div class="journal-note-label student-directory-shell__eyebrow">
+                  Instance Directory
+                </div>
+                <h2 class="student-directory-shell__title">实例列表</h2>
               </div>
+              <div class="student-directory-shell__meta">共 {{ instances.length }} 个实例</div>
+            </header>
+
+            <div
+              v-if="loading"
+              class="instance-loading student-directory-state workspace-directory-loading"
+            >
+              <div class="student-directory-spinner" />
             </div>
 
-            <div class="workspace-directory-compact-text instance-row-access">
-              <template v-if="instance.status === 'running'">
-                <div
-                  class="workspace-directory-mono instance-row-mono instance-row-access-value"
-                  :title="formatInstanceAccessDisplay(instance)"
-                >
-                  {{ formatInstanceAccessDisplay(instance) }}
-                </div>
-                <div class="instance-row-inline-actions">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--link instance-link-btn"
-                    @click="copyAddress(formatInstanceAccessDisplay(instance))"
+            <div v-else-if="instances.length === 0" class="instance-empty student-directory-state">
+              <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
+              <router-link to="/challenges" class="instance-empty-link">
+                前往靶场列表创建实例
+              </router-link>
+            </div>
+
+            <template v-else>
+              <div class="workspace-directory-grid-head instance-directory-head">
+                <span>题目</span>
+                <span>分类</span>
+                <span>难度</span>
+                <span>访问</span>
+                <span>状态</span>
+                <span>剩余时间</span>
+                <span>操作</span>
+              </div>
+
+              <article
+                v-for="instance in instances"
+                :key="instance.id"
+                class="workspace-directory-grid-row instance-row"
+              >
+                <div class="workspace-directory-cell instance-row-main">
+                  <h2
+                    class="instance-row-title workspace-directory-row-title"
+                    :title="instance.challenge_title"
                   >
-                    复制
+                    {{ instance.challenge_title }}
+                  </h2>
+                </div>
+
+                <div class="instance-row-category">
+                  <span
+                    class="workspace-directory-status-pill instance-chip instance-chip-category"
+                    >{{ instance.category }}</span
+                  >
+                </div>
+
+                <div class="instance-row-difficulty">
+                  <span
+                    class="workspace-directory-status-pill instance-chip instance-chip-difficulty"
+                    >{{ instance.difficulty }}</span
+                  >
+                </div>
+
+                <div class="workspace-directory-compact-text instance-row-access">
+                  <template v-if="instance.status === 'running'">
+                    <div
+                      class="workspace-directory-mono instance-row-mono instance-row-access-value"
+                      :title="formatInstanceAccessDisplay(instance)"
+                    >
+                      {{ formatInstanceAccessDisplay(instance) }}
+                    </div>
+                    <div class="instance-row-inline-actions">
+                      <button
+                        type="button"
+                        class="ui-btn ui-btn--link instance-link-btn"
+                        @click="copyAddress(formatInstanceAccessDisplay(instance))"
+                      >
+                        复制
+                      </button>
+                      <button
+                        v-if="canOpenInstanceInBrowser(instance)"
+                        type="button"
+                        class="ui-btn ui-btn--link instance-link-btn"
+                        @click="openTarget(instance.id)"
+                      >
+                        打开目标
+                      </button>
+                    </div>
+                  </template>
+                  <div v-else class="instance-row-note">
+                    {{ getInstanceWaitingHint(instance) }}
+                  </div>
+                </div>
+
+                <div class="instance-row-status">
+                  <span class="workspace-directory-status-pill instance-state-chip">
+                    <span :class="getInstanceStatusClass(instance.status)">●</span>
+                    <span>{{ getInstanceStatusLabel(instance.status) }}</span>
+                  </span>
+                </div>
+
+                <div class="instance-row-remaining">
+                  <span
+                    v-if="instance.status === 'running'"
+                    class="workspace-directory-mono instance-row-mono"
+                    :class="
+                      instance.remaining < WARNING_THRESHOLD_SECONDS
+                        ? 'instance-row-mono-warning'
+                        : ''
+                    "
+                  >
+                    {{ formatRemainingTime(instance.remaining) }}
+                  </span>
+                  <span v-else class="instance-row-note">
+                    {{
+                      instance.status === 'failed'
+                        ? '启动失败'
+                        : instance.status === 'crashed'
+                          ? '运行异常'
+                          : '等待创建'
+                    }}
+                  </span>
+                </div>
+
+                <div class="workspace-directory-row-actions instance-row-actions">
+                  <button
+                    v-if="instance.status === 'running' && isInstanceManualActionAllowed(instance)"
+                    :disabled="instance.remaining_extends <= 0"
+                    class="ui-btn ui-btn--sm ui-btn--primary"
+                    @click="extendTime(instance.id)"
+                  >
+                    延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
                   </button>
                   <button
-                    v-if="canOpenInstanceInBrowser(instance)"
-                    type="button"
-                    class="ui-btn ui-btn--link instance-link-btn"
-                    @click="openTarget(instance.id)"
+                    v-if="isInstanceManualActionAllowed(instance)"
+                    class="ui-btn ui-btn--sm ui-btn--danger"
+                    @click="destroyInstance(instance.id)"
                   >
-                    打开目标
+                    销毁
                   </button>
+                  <span v-if="!isInstanceManualActionAllowed(instance)" class="instance-row-note">
+                    系统托管
+                  </span>
                 </div>
-              </template>
-              <div v-else class="instance-row-note">
-                {{ getInstanceWaitingHint(instance) }}
-              </div>
-            </div>
-
-            <div class="instance-row-status">
-              <span class="workspace-directory-status-pill instance-state-chip">
-                <span :class="getInstanceStatusClass(instance.status)">●</span>
-                <span>{{ getInstanceStatusLabel(instance.status) }}</span>
-              </span>
-            </div>
-
-            <div class="instance-row-remaining">
-              <span
-                v-if="instance.status === 'running'"
-                class="workspace-directory-mono instance-row-mono"
-                :class="
-                  instance.remaining < WARNING_THRESHOLD_SECONDS ? 'instance-row-mono-warning' : ''
-                "
-              >
-                {{ formatRemainingTime(instance.remaining) }}
-              </span>
-              <span v-else class="instance-row-note">
-                {{
-                  instance.status === 'failed'
-                    ? '启动失败'
-                    : instance.status === 'crashed'
-                      ? '运行异常'
-                      : '等待创建'
-                }}
-              </span>
-            </div>
-
-            <div class="workspace-directory-row-actions instance-row-actions">
-              <button
-                v-if="instance.status === 'running' && isInstanceManualActionAllowed(instance)"
-                :disabled="instance.remaining_extends <= 0"
-                class="ui-btn ui-btn--sm ui-btn--primary"
-                @click="extendTime(instance.id)"
-              >
-                延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
-              </button>
-              <button
-                v-if="isInstanceManualActionAllowed(instance)"
-                class="ui-btn ui-btn--sm ui-btn--danger"
-                @click="destroyInstance(instance.id)"
-              >
-                销毁
-              </button>
-              <span v-if="!isInstanceManualActionAllowed(instance)" class="instance-row-note">
-                系统托管
-              </span>
-            </div>
-          </article>
+              </article>
+            </template>
+          </section>
         </section>
       </div>
     </main>
@@ -298,23 +317,13 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
-}
-
-.instance-loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-top-color: var(--journal-accent);
-  border-radius: 999px;
-  animation: instanceSpin 900ms linear infinite;
 }
 
 .instance-empty {
-  margin-top: 24px;
-  padding: 32px 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: var(--space-8) var(--space-4);
   text-align: center;
 }
 
@@ -332,9 +341,8 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
 }
 
 .instance-directory {
-  --workspace-directory-grid-columns: minmax(0, 1.25fr) minmax(13.75rem, 1.2fr) 8.75rem 10rem
-    13.75rem;
-  margin-top: 24px;
+  --workspace-directory-grid-columns: minmax(0, 1.2fr) 7rem 7rem minmax(13.75rem, 1.2fr) 8.75rem
+    10rem 13.75rem;
 }
 
 .instance-row-title {
@@ -344,17 +352,15 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
   white-space: nowrap;
 }
 
-.instance-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-2-5);
-}
-
 .instance-chip-category {
   border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
+}
+
+.instance-row-category,
+.instance-row-difficulty {
+  min-width: 0;
 }
 
 .instance-chip-difficulty {
@@ -469,16 +475,6 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-6);
-}
-
-@keyframes instanceSpin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @media (max-width: 1180px) {

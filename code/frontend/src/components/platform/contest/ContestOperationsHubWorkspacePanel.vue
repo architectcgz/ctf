@@ -35,11 +35,12 @@ function formatDateTime(value: string): string {
 }
 
 const contestTableColumns = [
-  { key: 'title', label: '赛事名称', widthClass: 'w-[30%] min-w-[15rem]' },
-  { key: 'status', label: '状态', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
-  { key: 'mode', label: '模式', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
-  { key: 'starts_at', label: '开始时间', widthClass: 'w-[18%] min-w-[11rem]' },
-  { key: 'ends_at', label: '结束时间', widthClass: 'w-[18%] min-w-[11rem]' },
+  { key: 'title', label: '赛事名称', widthClass: 'w-[22%] min-w-[14rem]' },
+  { key: 'description', label: '描述', widthClass: 'w-[18%] min-w-[12rem]' },
+  { key: 'status', label: '状态', widthClass: 'w-[10%] min-w-[7rem]', align: 'center' as const },
+  { key: 'mode', label: '模式', widthClass: 'w-[10%] min-w-[7rem]', align: 'center' as const },
+  { key: 'starts_at', label: '开始时间', widthClass: 'w-[15%] min-w-[11rem]' },
+  { key: 'ends_at', label: '结束时间', widthClass: 'w-[15%] min-w-[11rem]' },
   { key: 'actions', label: '操作', widthClass: 'w-[10rem]', align: 'right' as const },
 ]
 </script>
@@ -110,19 +111,20 @@ const contestTableColumns = [
       row-key="id"
     >
       <template #cell-title="{ row }">
-        <div class="contest-ops-table__contest">
-          <div
-            class="contest-ops-table__title"
-            :title="String((row as ContestDetailData).title)"
-          >
-            {{ (row as ContestDetailData).title }}
-          </div>
-          <div
-            class="contest-ops-table__description"
-            :title="(row as ContestDetailData).description || '当前未填写赛事描述。'"
-          >
-            {{ (row as ContestDetailData).description || '当前未填写赛事描述。' }}
-          </div>
+        <div
+          class="contest-ops-table__title"
+          :title="String((row as ContestDetailData).title)"
+        >
+          {{ (row as ContestDetailData).title }}
+        </div>
+      </template>
+
+      <template #cell-description="{ row }">
+        <div
+          class="contest-ops-table__description"
+          :title="(row as ContestDetailData).description || '当前未填写赛事描述。'"
+        >
+          {{ (row as ContestDetailData).description || '当前未填写赛事描述。' }}
         </div>
       </template>
 
@@ -201,12 +203,6 @@ const contestTableColumns = [
 
 .contest-ops-table :deep(.workspace-data-table__cell + .workspace-data-table__cell) {
   border-left: 1px solid var(--workspace-table-line);
-}
-
-.contest-ops-table__contest {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
 }
 
 .contest-ops-table__title {

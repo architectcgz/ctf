@@ -105,7 +105,7 @@ describe('InstanceList', () => {
 
   it('应该为实例列表长标题和访问地址保留省略样式与完整提示', () => {
     expect(instanceListSource).toMatch(
-      /class="instance-row-title"[\s\S]*:title="instance\.challenge_title"/s
+      /class="[^"]*\binstance-row-title\b[^"]*"[\s\S]*:title="instance\.challenge_title"/s
     )
     expect(instanceListSource).toMatch(/instance-row-access-value[\s\S]*:title="/s)
     expect(instanceListSource).toMatch(
@@ -126,7 +126,9 @@ describe('InstanceList', () => {
     expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
     expect(instanceListSource).not.toContain('journal-eyebrow-text')
     expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
-    expect(instanceListSource).toContain('class="instance-summary-item progress-card metric-panel-card"')
+    expect(instanceListSource).toContain(
+      'class="instance-summary-item progress-card metric-panel-card"'
+    )
     expect(instanceListSource).toContain(
       'class="instance-summary-label progress-card-label metric-panel-label"'
     )

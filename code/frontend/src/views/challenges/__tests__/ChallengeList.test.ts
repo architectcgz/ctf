@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import { readFileSync } from 'node:fs'
 
 import ChallengeList from '../ChallengeList.vue'
 import challengeListSource from '../ChallengeList.vue?raw'
@@ -13,6 +14,7 @@ vi.mock('@/api/challenge', () => ({
 }))
 
 const mockedGetChallenges = vi.mocked(getChallenges)
+const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
 function createDeferred<T>() {
   let resolve!: (value: T) => void
@@ -181,7 +183,7 @@ describe('ChallengeList', () => {
     expect(combinedSource).not.toContain(
       'box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent);'
     )
-    expect(combinedSource).toContain(
+    expect(appStyleSource).toContain(
       'box-shadow: inset 0 1px 0 color-mix(in srgb, var(--journal-border) 34%, transparent);'
     )
     expect(combinedSource).not.toMatch(/^\.challenge-input,\s*$/m)
@@ -443,7 +445,7 @@ describe('ChallengeList', () => {
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
     expect(combinedSource).toContain(
-      'class="workspace-directory-section challenge-directory-section"'
+      'class="student-directory-section workspace-directory-section challenge-directory-section"'
     )
     expect(combinedSource).toContain('list-heading')
     expect(combinedSource).not.toContain('challenge-directory-meta')

@@ -43,10 +43,7 @@ function handleOpenAudit(query: Record<string, string>): void {
       description="说明最近统计窗口内还没有明显的提交样本超过安全阈值。"
     />
 
-    <div
-      v-else
-      class="cheat-directory-list"
-    >
+    <div v-else class="cheat-directory-list">
       <button
         v-for="suspect in riskData.suspects"
         :key="suspect.user_id"
@@ -56,8 +53,8 @@ function handleOpenAudit(query: Record<string, string>): void {
       >
         <div class="cheat-directory-row-main">
           <div class="cheat-directory-row-title">{{ suspect.username }}</div>
-          <div class="cheat-directory-row-copy">{{ suspect.reason }}</div>
         </div>
+        <div class="cheat-directory-row-copy">{{ suspect.reason }}</div>
         <div class="cheat-directory-row-meta">
           <span class="cheat-badge cheat-badge--warning">{{ suspect.submit_count }} 次提交</span>
           <span class="cheat-meta-text">最近出现 {{ formatDateTime(suspect.last_seen_at) }}</span>
@@ -86,10 +83,7 @@ function handleOpenAudit(query: Record<string, string>): void {
       description="最近 24 小时内未监测到不同账号从同一公网地址密集登录。"
     />
 
-    <div
-      v-else
-      class="cheat-directory-list"
-    >
+    <div v-else class="cheat-directory-list">
       <button
         v-for="group in riskData.shared_ips"
         :key="group.ip"
@@ -98,9 +92,11 @@ function handleOpenAudit(query: Record<string, string>): void {
         @click="handleOpenAudit({ action: 'login' })"
       >
         <div class="cheat-directory-row-main">
-          <div class="cheat-directory-row-title cheat-directory-row-title--mono">{{ group.ip }}</div>
-          <div class="cheat-directory-row-copy">涉及账号：{{ group.usernames.join('、') }}</div>
+          <div class="cheat-directory-row-title cheat-directory-row-title--mono">
+            {{ group.ip }}
+          </div>
         </div>
+        <div class="cheat-directory-row-copy">涉及账号：{{ group.usernames.join('、') }}</div>
         <div class="cheat-directory-row-meta">
           <span class="cheat-badge">{{ group.user_count }} 个账号</span>
           <span class="cheat-meta-text">多见于短时集中登录行为</span>
@@ -131,8 +127,8 @@ function handleOpenAudit(query: Record<string, string>): void {
       >
         <div class="cheat-directory-row-main">
           <div class="cheat-directory-row-title">{{ action.title }}</div>
-          <div class="cheat-directory-row-copy">{{ action.description }}</div>
         </div>
+        <div class="cheat-directory-row-copy">{{ action.description }}</div>
         <div class="cheat-directory-row-meta">
           <span class="cheat-badge cheat-badge--muted">{{ action.actionLabel }}</span>
           <span class="cheat-link-hint">
@@ -161,7 +157,7 @@ function handleOpenAudit(query: Record<string, string>): void {
 .cheat-directory-row,
 .quick-action-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(10rem, 0.85fr) minmax(16rem, 1.15fr) auto;
   align-items: center;
   gap: var(--space-4);
   width: 100%;
@@ -186,8 +182,6 @@ function handleOpenAudit(query: Record<string, string>): void {
 }
 
 .cheat-directory-row-main {
-  display: grid;
-  gap: var(--space-1-5);
   min-width: 0;
 }
 

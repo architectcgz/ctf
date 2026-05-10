@@ -26,3 +26,4 @@
 - `2026-05-05-review-oversized-frontend-debt.md`：触达超大前端文件时记录结构债。
 - `2026-05-06-feedback-replaces-docs-improvements.md`：feedback 取代 docs/improvements。
 - `2026-05-09-do-not-bend-tests-to-fit-broken-architecture.md`：测试不能迁就坏架构，测试失败时先回到 owner / contract / 架构分析。
+- `2026-05-10-list-primary-title-column-should-stay-clean.md`：所有角色的列表主标题列默认只放主体标题，标签、状态、时间、描述等辅助信息优先拆到独立列。

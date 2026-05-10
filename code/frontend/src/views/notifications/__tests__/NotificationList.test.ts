@@ -196,15 +196,15 @@ describe('NotificationList', () => {
     expect(notificationListSource).not.toContain('总消息数')
   })
 
-  it('通知分类筛选应复用目录工具栏并透传 type 查询参数', async () => {
+  it('通知分类筛选应复用学生目录筛选样式并透传 type 查询参数', async () => {
     const { wrapper } = await mountPage()
 
     expect(notificationListSource).toContain('NotificationCategoryFilter')
-    expect(notificationCategoryFilterSource).toContain('WorkspaceDirectoryToolbar')
+    expect(notificationCategoryFilterSource).toContain('student-directory-filters')
+    expect(notificationCategoryFilterSource).toContain('student-directory-filter-control')
     expect(notificationListSource).not.toContain('notification-category-bar')
     expect(wrapper.text()).toContain('全部消息')
 
-    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
     await wrapper.get('.notification-filter-control').setValue('contest')
     await flushPromises()
 
@@ -227,9 +227,7 @@ describe('NotificationList', () => {
   it('短时间内连续刷新后应显示试探型提示且仍执行真实刷新', async () => {
     const { wrapper } = await mountPage()
 
-    const refreshButton = wrapper
-      .findAll('button')
-      .find((node) => node.text().includes('刷新'))
+    const refreshButton = wrapper.findAll('button').find((node) => node.text().includes('刷新'))
 
     expect(refreshButton).toBeTruthy()
     expect(wrapper.text()).not.toContain('新消息不会因为执念刷新得更快。')

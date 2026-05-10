@@ -25,11 +25,12 @@ const emit = defineEmits<{
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const openActionMenuId = ref<string | null>(null)
 const contestTableColumns = [
-  { key: 'title', label: '竞赛', widthClass: 'w-[30%] min-w-[17rem]' },
-  { key: 'mode', label: '模式', widthClass: 'w-[12%] min-w-[7rem]' },
-  { key: 'status', label: '状态', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
-  { key: 'starts_at', label: '开始时间', widthClass: 'w-[16%] min-w-[10rem]' },
-  { key: 'ends_at', label: '结束时间', widthClass: 'w-[16%] min-w-[10rem]' },
+  { key: 'title', label: '竞赛', widthClass: 'w-[22%] min-w-[14rem]' },
+  { key: 'description', label: '描述', widthClass: 'w-[18%] min-w-[12rem]' },
+  { key: 'mode', label: '模式', widthClass: 'w-[10%] min-w-[7rem]' },
+  { key: 'status', label: '状态', widthClass: 'w-[10%] min-w-[7rem]', align: 'center' as const },
+  { key: 'starts_at', label: '开始时间', widthClass: 'w-[13%] min-w-[10rem]' },
+  { key: 'ends_at', label: '结束时间', widthClass: 'w-[13%] min-w-[10rem]' },
   { key: 'actions', label: '操作', widthClass: 'w-[14rem]', align: 'right' as const },
 ]
 
@@ -92,20 +93,21 @@ function handleAnnounce(contest: ContestDetailData): void {
       row-key="id"
     >
       <template #cell-title="{ row }">
-        <div class="contest-table__identity">
-          <h3
-            class="contest-table__title"
-            :title="(row as ContestDetailData).title"
-          >
-            {{ (row as ContestDetailData).title }}
-          </h3>
-          <p
-            class="contest-table__description"
-            :title="(row as ContestDetailData).description || '当前未填写竞赛描述。'"
-          >
-            {{ (row as ContestDetailData).description || '当前未填写竞赛描述。' }}
-          </p>
-        </div>
+        <h3
+          class="contest-table__title"
+          :title="(row as ContestDetailData).title"
+        >
+          {{ (row as ContestDetailData).title }}
+        </h3>
+      </template>
+
+      <template #cell-description="{ row }">
+        <p
+          class="contest-table__description"
+          :title="(row as ContestDetailData).description || '当前未填写竞赛描述。'"
+        >
+          {{ (row as ContestDetailData).description || '当前未填写竞赛描述。' }}
+        </p>
       </template>
 
       <template #cell-mode="{ row }">
@@ -217,12 +219,6 @@ function handleAnnounce(contest: ContestDetailData): void {
 
 .contest-directory :deep(.workspace-data-table__cell + .workspace-data-table__cell) {
   border-left: 1px solid var(--workspace-table-line);
-}
-
-.contest-table__identity {
-  display: grid;
-  gap: var(--space-1-5);
-  min-width: 0;
 }
 
 .contest-table__title {

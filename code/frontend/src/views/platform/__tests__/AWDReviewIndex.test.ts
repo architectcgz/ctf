@@ -85,9 +85,7 @@ describe('PlatformAWDReviewIndex', () => {
   })
 
   it('应使用平台工作台目录壳层而不是教师目录模板', async () => {
-    expect(combinedSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
     expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
     expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
@@ -98,9 +96,7 @@ describe('PlatformAWDReviewIndex', () => {
     expect(combinedSource).toContain(
       'class="workspace-directory-section admin-awd-review-directory"'
     )
-    expect(combinedSource).toContain(
-      'class="workspace-directory-list admin-awd-review-table"'
-    )
+    expect(combinedSource).toContain('class="workspace-directory-list admin-awd-review-table"')
     expect(combinedSource).not.toContain('teacher-management-shell')
     expect(combinedSource).not.toContain('teacher-directory-row')
 
@@ -126,14 +122,17 @@ describe('PlatformAWDReviewIndex', () => {
     await flushPromises()
 
     expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
-      status: undefined,
-      keyword: '期末',
-      page: 1,
-      page_size: 20,
-    }, {
-      signal: expect.any(AbortSignal),
-    })
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith(
+      {
+        status: undefined,
+        keyword: '期末',
+        page: 1,
+        page_size: 20,
+      },
+      {
+        signal: expect.any(AbortSignal),
+      }
+    )
 
     await wrapper
       .findAll('button')
@@ -150,7 +149,7 @@ describe('PlatformAWDReviewIndex', () => {
     const wrapper = mount(PlatformAWDReviewIndex)
     await flushPromises()
 
-    const overviewButton = wrapper.get('button.ui-btn--ghost')
+    const overviewButton = wrapper.get('button.header-btn--ghost')
     expect(overviewButton.text()).toContain('返回平台概览')
 
     await overviewButton.trigger('click')

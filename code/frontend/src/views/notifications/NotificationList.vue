@@ -73,127 +73,143 @@ const {
           {{ probeMessage }}
         </p>
 
-        <div v-if="loading" class="notification-loading">
-          <div class="notification-loading-spinner" />
-        </div>
-
-        <AppEmpty
-          v-else-if="hasLoadError"
-          class="notification-empty-state"
-          icon="AlertTriangle"
-          title="通知加载失败"
-          :description="loadErrorMessage"
-        >
-          <template #action>
-            <button type="button" class="ui-btn ui-btn--secondary" @click="handleRefresh">
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
         <section
-          v-else
-          class="notification-directory-shell workspace-directory-list workspace-directory-list--catalog"
+          class="student-directory-section workspace-directory-section"
           aria-label="通知目录"
         >
-          <section class="notification-filter-section" aria-label="消息分类">
-            <NotificationCategoryFilter
-              :total="total"
-              :selected-category="selectedCategory"
-              :selected-category-label="selectedCategoryLabel"
-              :category-options="categoryOptions"
-              @select-category="selectCategory"
-            />
-            <div class="notification-head-stats" aria-label="消息概况">
-              <div v-for="stat in headStats" :key="stat.key" class="notification-head-stat">
-                <span class="notification-head-stat__label">{{ stat.label }}</span>
-                <strong class="notification-head-stat__value">{{ stat.value }}</strong>
-              </div>
-            </div>
-          </section>
-
-          <AppEmpty
-            v-if="list.length === 0"
-            class="notification-empty-state"
-            icon="Inbox"
-            title="暂无通知"
-            description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
-          />
-
-          <section v-else class="notification-directory" aria-label="通知目录">
-            <div class="notification-directory-top">
-              <h2 class="notification-directory-title">{{ selectedCategoryLabel }}消息</h2>
-            </div>
-
-            <div class="workspace-directory-grid-head notification-directory-head">
-              <span>类型</span>
-              <span>标题与内容</span>
-              <span>时间</span>
-              <span>状态</span>
-            </div>
-
-            <button
-              v-for="item in list"
-              :key="item.id"
-              type="button"
-              class="workspace-directory-grid-row notification-row"
-              :class="{ 'notification-row-unread': item.unread }"
-              @click="openNotificationDetail(item)"
-            >
-              <div class="notification-row-type">
-                <span class="workspace-directory-status-pill notification-chip">{{
-                  typeLabel(item.type)
-                }}</span>
-              </div>
-              <div class="workspace-directory-cell notification-row-main">
-                <div
-                  class="notification-row-title"
-                  :class="'workspace-directory-row-title'"
-                  :title="item.title"
-                >
-                  {{ item.title }}
-                </div>
-                <div
-                  class="notification-row-copy"
-                  :class="[
-                    'workspace-directory-row-subtitle',
-                    'workspace-directory-row-subtitle--clamp',
-                  ]"
-                  :title="item.content"
-                >
-                  {{ item.content }}
-                </div>
-              </div>
-              <div class="workspace-directory-compact-text notification-row-time">
-                {{ formatDate(item.created_at) }}
-              </div>
-              <div class="notification-row-state">
-                <span
-                  class="workspace-directory-status-pill notification-state-chip"
-                  :class="{
-                    'workspace-directory-status-pill--primary notification-state-chip-unread':
-                      item.unread,
-                    'workspace-directory-status-pill--muted': !item.unread,
-                  }"
-                >
-                  {{ item.unread ? '未读' : '已读' }}
-                </span>
-              </div>
-            </button>
-          </section>
-
-          <div
-            v-if="list.length > 0 && total > 0"
-            class="notification-pagination workspace-directory-pagination"
+          <section
+            class="student-directory-shell notification-directory-shell workspace-directory-list"
           >
-            <PagePaginationControls
-              :page="page"
-              :total-pages="totalPages"
-              :total="total"
-              :total-label="`共 ${total} 条`"
-              @change-page="changePage"
+            <header class="student-directory-shell__head">
+              <div class="student-directory-shell__heading">
+                <div class="journal-note-label student-directory-shell__eyebrow">
+                  Notification Directory
+                </div>
+                <h2 class="student-directory-shell__title">{{ selectedCategoryLabel }}消息</h2>
+              </div>
+              <div class="student-directory-shell__meta">共 {{ total }} 条</div>
+            </header>
+
+            <div
+              v-if="loading"
+              class="notification-loading student-directory-state workspace-directory-loading"
+            >
+              <div class="student-directory-spinner" />
+            </div>
+
+            <AppEmpty
+              v-else-if="hasLoadError"
+              class="notification-empty-state student-directory-state workspace-directory-empty"
+              icon="AlertTriangle"
+              title="通知加载失败"
+              :description="loadErrorMessage"
+            >
+              <template #action>
+                <button type="button" class="ui-btn ui-btn--secondary" @click="handleRefresh">
+                  重新加载
+                </button>
+              </template>
+            </AppEmpty>
+
+            <section v-else class="notification-filter-section" aria-label="消息分类">
+              <NotificationCategoryFilter
+                :total="total"
+                :selected-category="selectedCategory"
+                :selected-category-label="selectedCategoryLabel"
+                :category-options="categoryOptions"
+                @select-category="selectCategory"
+              />
+              <div class="notification-head-stats" aria-label="消息概况">
+                <div v-for="stat in headStats" :key="stat.key" class="notification-head-stat">
+                  <span class="notification-head-stat__label">{{ stat.label }}</span>
+                  <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+                </div>
+              </div>
+            </section>
+
+            <AppEmpty
+              v-if="!loading && !hasLoadError && list.length === 0"
+              class="notification-empty-state student-directory-state workspace-directory-empty"
+              icon="Inbox"
+              title="暂无通知"
+              description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
             />
-          </div>
+
+            <section
+              v-else-if="!loading && !hasLoadError"
+              class="notification-directory"
+              aria-label="通知目录"
+            >
+              <div class="workspace-directory-grid-head notification-directory-head">
+                <span>类型</span>
+                <span>标题与内容</span>
+                <span>时间</span>
+                <span>状态</span>
+              </div>
+
+              <button
+                v-for="item in list"
+                :key="item.id"
+                type="button"
+                class="workspace-directory-grid-row notification-row"
+                :class="{ 'notification-row-unread': item.unread }"
+                @click="openNotificationDetail(item)"
+              >
+                <div class="notification-row-type">
+                  <span class="workspace-directory-status-pill notification-chip">{{
+                    typeLabel(item.type)
+                  }}</span>
+                </div>
+                <div class="workspace-directory-cell notification-row-main">
+                  <div
+                    class="notification-row-title"
+                    :class="'workspace-directory-row-title'"
+                    :title="item.title"
+                  >
+                    {{ item.title }}
+                  </div>
+                  <div
+                    class="notification-row-copy"
+                    :class="[
+                      'workspace-directory-row-subtitle',
+                      'workspace-directory-row-subtitle--clamp',
+                    ]"
+                    :title="item.content"
+                  >
+                    {{ item.content }}
+                  </div>
+                </div>
+                <div class="workspace-directory-compact-text notification-row-time">
+                  {{ formatDate(item.created_at) }}
+                </div>
+                <div class="notification-row-state">
+                  <span
+                    class="workspace-directory-status-pill notification-state-chip"
+                    :class="{
+                      'workspace-directory-status-pill--primary notification-state-chip-unread':
+                        item.unread,
+                      'workspace-directory-status-pill--muted': !item.unread,
+                    }"
+                  >
+                    {{ item.unread ? '未读' : '已读' }}
+                  </span>
+                </div>
+              </button>
+            </section>
+
+            <div
+              v-if="list.length > 0 && total > 0"
+              class="notification-pagination workspace-directory-pagination"
+            >
+              <PagePaginationControls
+                :page="page"
+                :total-pages="totalPages"
+                :total="total"
+                :total-label="`共 ${total} 条`"
+                @change-page="changePage"
+              />
+            </div>
+          </section>
         </section>
       </div>
     </main>
@@ -250,17 +266,17 @@ const {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .notification-head-stat {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 0 14px;
+  gap: var(--space-3);
+  min-height: var(--ui-control-height-md);
+  padding: 0 var(--space-4);
   border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 14px;
+  border-radius: var(--ui-control-radius-md);
   background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
 }
 
@@ -271,7 +287,6 @@ const {
 }
 
 .notification-head-stat__value {
-  font-family: var(--font-family-mono);
   font-size: var(--font-size-16);
   font-weight: 700;
   color: var(--journal-ink);
@@ -288,24 +303,10 @@ const {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
-}
-
-.notification-loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-top-color: var(--journal-accent);
-  border-radius: 999px;
-  animation: notificationSpin 900ms linear infinite;
 }
 
 :deep(.notification-empty-state) {
-  margin-top: 24px;
-  border-top-style: solid;
-  border-bottom-style: solid;
-  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  margin-top: 0;
 }
 
 .notification-filter-section {
@@ -316,17 +317,8 @@ const {
   gap: var(--space-3);
 }
 
-.notification-filter-section :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
-.notification-directory {
-  margin-top: var(--space-4);
-}
-
 .notification-directory-shell {
   --workspace-directory-grid-columns: 8.75rem minmax(0, 1fr) 11.25rem 7.5rem;
-  margin-top: var(--space-5);
 }
 
 .notification-row {
@@ -356,19 +348,7 @@ const {
 }
 
 .notification-pagination {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-@keyframes notificationSpin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  margin-top: var(--workspace-directory-gap-pagination);
 }
 
 @media (max-width: 1180px) {

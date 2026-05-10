@@ -76,8 +76,14 @@ const awdChallengeTableColumns = [
   {
     key: 'name',
     label: '题目名称',
-    widthClass: 'w-[28%] min-w-[16rem]',
+    widthClass: 'w-[22%] min-w-[14rem]',
     cellClass: 'awd-challenge-table__name-cell',
+  },
+  {
+    key: 'slug',
+    label: '标识',
+    widthClass: 'w-[12%] min-w-[8rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
   },
   {
     key: 'service_type',
@@ -451,10 +457,13 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                         <div class="workspace-directory-row-title awd-challenge-table__title">
                           {{ (row as AdminAwdChallengeData).name }}
                         </div>
-                        <div class="workspace-directory-row-subtitle awd-challenge-table__slug">
-                          {{ (row as AdminAwdChallengeData).slug }}
-                        </div>
                       </div>
+                    </template>
+
+                    <template #cell-slug="{ row }">
+                      <span class="workspace-directory-row-subtitle awd-challenge-table__slug">
+                        {{ (row as AdminAwdChallengeData).slug }}
+                      </span>
                     </template>
 
                     <template #cell-service_type="{ row }">

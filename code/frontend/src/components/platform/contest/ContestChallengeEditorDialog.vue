@@ -116,32 +116,37 @@ const awdChallengeTableColumns = [
   {
     key: 'name',
     label: '名称',
-    widthClass: 'w-[30%] min-w-[14rem]',
+    widthClass: 'w-[22%] min-w-[13rem]',
     cellClass: 'contest-awd-challenge-table__name-cell',
+  },
+  {
+    key: 'slug',
+    label: '标识',
+    widthClass: 'w-[12%] min-w-[8rem]',
   },
   {
     key: 'category',
     label: '分类',
     align: 'center' as const,
-    widthClass: 'w-[12%] min-w-[6rem]',
+    widthClass: 'w-[10%] min-w-[6rem]',
   },
   {
     key: 'difficulty',
     label: '难度',
     align: 'center' as const,
-    widthClass: 'w-[12%] min-w-[6rem]',
+    widthClass: 'w-[10%] min-w-[6rem]',
   },
   {
     key: 'service_type',
     label: '服务类型',
     align: 'center' as const,
-    widthClass: 'w-[16%] min-w-[8rem]',
+    widthClass: 'w-[14%] min-w-[8rem]',
   },
   {
     key: 'deployment_mode',
     label: '部署方式',
     align: 'center' as const,
-    widthClass: 'w-[16%] min-w-[8rem]',
+    widthClass: 'w-[14%] min-w-[8rem]',
   },
   {
     key: 'readiness_status',
@@ -510,20 +515,20 @@ function submit() {
             row-class="contest-awd-challenge-table-row"
           >
             <template #cell-name="{ row }">
-              <div class="contest-awd-challenge-table__name">
-                <button
-                  :id="`contest-awd-challenge-name-${(row as AdminAwdChallengeData).id}`"
-                  type="button"
-                  class="contest-awd-challenge-table__name-button"
-                  :aria-pressed="isAwdChallengeSelected((row as AdminAwdChallengeData).id)"
-                  @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
-                >
-                  {{ (row as AdminAwdChallengeData).name }}
-                </button>
-                <span class="contest-awd-challenge-table__slug">
-                  {{ (row as AdminAwdChallengeData).slug }}
-                </span>
-              </div>
+              <button
+                :id="`contest-awd-challenge-name-${(row as AdminAwdChallengeData).id}`"
+                type="button"
+                class="contest-awd-challenge-table__name-button"
+                :aria-pressed="isAwdChallengeSelected((row as AdminAwdChallengeData).id)"
+                @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
+              >
+                {{ (row as AdminAwdChallengeData).name }}
+              </button>
+            </template>
+            <template #cell-slug="{ row }">
+              <span class="contest-awd-challenge-table__slug">
+                {{ (row as AdminAwdChallengeData).slug }}
+              </span>
             </template>
             <template #cell-service_type="{ row }">
               <span class="contest-awd-challenge-table__mono">
@@ -782,11 +787,6 @@ function submit() {
   border: 1px solid var(--color-border-default);
   border-radius: var(--ui-control-radius);
   background: color-mix(in srgb, var(--color-danger-soft) 24%, var(--color-bg-surface));
-}
-
-.contest-awd-challenge-table__name {
-  display: grid;
-  gap: var(--space-1);
 }
 
 .contest-awd-challenge-table__name-button {

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import type { NotificationType } from '@/api/contracts'
 
 defineProps<{
@@ -21,52 +20,51 @@ function handleCategoryChange(event: Event): void {
 </script>
 
 <template>
-  <WorkspaceDirectoryToolbar
-    model-value=""
-    :total="total"
-    selected-sort-label=""
-    :sort-options="[]"
-    :show-search="false"
-    :show-total="false"
-    :filter-button-label="`分类：${selectedCategoryLabel}`"
-    filter-panel-title="消息分类"
-    reset-label="查看全部"
-    :reset-disabled="selectedCategory === 'all'"
-    @reset-filters="emit('selectCategory', 'all')"
-  >
-    <template #filter-panel>
-      <label class="notification-filter-field">
-        <span class="notification-filter-label">分类</span>
-        <select
-          :value="selectedCategory"
-          class="workspace-directory-filter-control notification-filter-control"
-          @change="handleCategoryChange"
-        >
-          <option
-            v-for="option in categoryOptions"
-            :key="option.key"
-            :value="option.key"
+  <section class="student-directory-filters notification-category-filter" aria-label="消息分类筛选">
+    <div class="student-directory-filter-grid notification-category-filter__grid">
+      <label class="student-directory-filter-field notification-filter-field">
+        <span class="student-directory-filter-label notification-filter-label">分类</span>
+        <span class="ui-control-wrap student-directory-filter-control">
+          <select
+            :value="selectedCategory"
+            class="ui-control notification-filter-control"
+            @change="handleCategoryChange"
           >
-            {{ option.label }}
-          </option>
-        </select>
+            <option v-for="option in categoryOptions" :key="option.key" :value="option.key">
+              {{ option.label }}
+            </option>
+          </select>
+        </span>
       </label>
-    </template>
-  </WorkspaceDirectoryToolbar>
+
+      <div class="student-directory-filter-actions notification-filter-actions">
+        <span
+          class="student-directory-filter-label student-directory-filter-label--ghost"
+          aria-hidden="true"
+        >
+          操作
+        </span>
+        <div class="student-directory-filter-action-row">
+          <button
+            type="button"
+            class="ui-btn ui-btn--ghost"
+            :disabled="selectedCategory === 'all'"
+            @click="emit('selectCategory', 'all')"
+          >
+            查看全部
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-.notification-filter-field {
-  display: grid;
-  gap: var(--space-2);
+.notification-category-filter__grid {
+  grid-template-columns: minmax(12rem, 16rem) auto;
 }
 
-.notification-filter-label {
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+.notification-filter-actions {
+  justify-items: start;
 }
-
 </style>

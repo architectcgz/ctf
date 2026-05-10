@@ -55,8 +55,14 @@ const reviewTableColumns = [
   {
     key: 'title',
     label: '赛事',
-    widthClass: 'w-[33%] min-w-[16rem]',
+    widthClass: 'w-[25%] min-w-[14rem]',
     cellClass: 'admin-awd-review-table__title',
+  },
+  {
+    key: 'latestEvidence',
+    label: '最近信号',
+    widthClass: 'w-[13%] min-w-[7rem]',
+    cellClass: 'admin-awd-review-table__meta',
   },
   {
     key: 'rounds',
@@ -196,11 +202,13 @@ function updateStatusFilter(event: Event): void {
             >
               {{ (row as PlatformAwdReviewRow).title }}
             </span>
-            <span class="admin-awd-review-table__hint">
-              最近信号
-              {{ formatEvidenceAt((row as PlatformAwdReviewRow).latest_evidence_at) }}
-            </span>
           </div>
+        </template>
+
+        <template #cell-latestEvidence="{ row }">
+          <span class="admin-awd-review-table__hint">
+            {{ formatEvidenceAt((row as PlatformAwdReviewRow).latest_evidence_at) }}
+          </span>
         </template>
 
         <template #cell-rounds="{ row }">
@@ -340,5 +348,4 @@ function updateStatusFilter(event: Event): void {
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-
 </style>

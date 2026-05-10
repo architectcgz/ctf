@@ -15,7 +15,10 @@ function createScoreboardRouter(initialPath = '/scoreboard') {
       { path: '/scoreboard/:contestId', name: 'ScoreboardDetail', component: ScoreboardDetail },
     ],
   })
-  return router.push(initialPath).then(() => router.isReady()).then(() => router)
+  return router
+    .push(initialPath)
+    .then(() => router.isReady())
+    .then(() => router)
 }
 
 const { getContestsMock, getScoreboardMock, getPracticeRankingMock } = vi.hoisted(() => ({
@@ -121,35 +124,38 @@ describe('ScoreboardView', () => {
 
   it('按最新竞赛在前的顺序展示排行榜列表', async () => {
     getContestsMock.mockResolvedValue(
-      createContestPage([
+      createContestPage(
+        [
+          {
+            id: 'contest-running',
+            title: '当前竞赛',
+            mode: 'jeopardy',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+          {
+            id: 'contest-frozen',
+            title: '冻结竞赛',
+            mode: 'jeopardy',
+            status: 'frozen',
+            starts_at: '2026-03-10T00:00:00Z',
+            ends_at: '2026-03-10T12:00:00Z',
+          },
+          {
+            id: 'contest-old',
+            title: '往期竞赛',
+            mode: 'jeopardy',
+            status: 'ended',
+            starts_at: '2026-03-01T00:00:00Z',
+            ends_at: '2026-03-01T12:00:00Z',
+          },
+        ],
         {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-        {
-          id: 'contest-frozen',
-          title: '冻结竞赛',
-          mode: 'jeopardy',
-          status: 'frozen',
-          starts_at: '2026-03-10T00:00:00Z',
-          ends_at: '2026-03-10T12:00:00Z',
-        },
-        {
-          id: 'contest-old',
-          title: '往期竞赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-03-01T00:00:00Z',
-          ends_at: '2026-03-01T12:00:00Z',
-        },
-      ], {
-        total: 3,
-        summary: createContestSummary({ running_count: 1, frozen_count: 1, ended_count: 1 }),
-      })
+          total: 3,
+          summary: createContestSummary({ running_count: 1, frozen_count: 1, ended_count: 1 }),
+        }
+      )
     )
 
     const router = await createScoreboardRouter()
@@ -173,9 +179,12 @@ describe('ScoreboardView', () => {
     expect(cards[0].text()).toContain('当前竞赛')
     expect(cards[1].text()).toContain('冻结竞赛')
     expect(cards[2].text()).toContain('往期竞赛')
-    expect(wrapper.text()).toContain('进行中竞赛进入详情后支持实时刷新，提交后榜单会自动更新。')
-    expect(wrapper.text()).toContain('封榜阶段先展示竞赛入口，进入后查看冻结前排名。')
-    expect(wrapper.text()).toContain('历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。')
+    expect(cards[0].text()).toContain('进行中')
+    expect(cards[1].text()).toContain('已冻结')
+    expect(cards[2].text()).toContain('已结束')
+    expect(wrapper.text()).not.toContain('进行中竞赛进入详情后支持实时刷新，提交后榜单会自动更新。')
+    expect(wrapper.text()).not.toContain('封榜阶段先展示竞赛入口，进入后查看冻结前排名。')
+    expect(wrapper.text()).not.toContain('历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。')
     expect(wrapper.text()).toContain('当前可查看排行的竞赛总数')
     expect(wrapper.text()).toContain('支持进入后实时刷新的竞赛数量')
     expect(wrapper.text()).not.toContain('报名中竞赛')
@@ -211,26 +220,29 @@ describe('ScoreboardView', () => {
   it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue(
-      createContestPage([
+      createContestPage(
+        [
+          {
+            id: 'contest-history',
+            title: '往期竞赛',
+            mode: 'jeopardy',
+            status: 'ended',
+            starts_at: '2026-03-01T00:00:00Z',
+            ends_at: '2026-03-01T12:00:00Z',
+          },
+          {
+            id: 'contest-running',
+            title: '当前竞赛',
+            mode: 'jeopardy',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+        ],
         {
-          id: 'contest-history',
-          title: '往期竞赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-03-01T00:00:00Z',
-          ends_at: '2026-03-01T12:00:00Z',
-        },
-        {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-      ], {
-        summary: createContestSummary({ running_count: 1, ended_count: 1 }),
-      })
+          summary: createContestSummary({ running_count: 1, ended_count: 1 }),
+        }
+      )
     )
 
     const router = await createScoreboardRouter()
@@ -246,7 +258,7 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('当前竞赛')
     expect(wrapper.text()).toContain('往期竞赛')
-    expect(wrapper.text()).toContain('点击进入排行详情')
+    expect(wrapper.text()).toContain('进入详情')
     expect(wrapper.text()).not.toContain('Current Champions')
     expect(wrapper.text()).not.toContain('History Masters')
     expect(wrapper.text()).not.toContain('查看完整排行榜')
@@ -486,26 +498,29 @@ describe('ScoreboardView', () => {
   it('列表页不会为竞赛列表建立实时排行榜连接', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue(
-      createContestPage([
+      createContestPage(
+        [
+          {
+            id: 'contest-history',
+            title: '往期竞赛',
+            mode: 'jeopardy',
+            status: 'ended',
+            starts_at: '2026-03-01T00:00:00Z',
+            ends_at: '2026-03-01T12:00:00Z',
+          },
+          {
+            id: 'contest-running',
+            title: '当前竞赛',
+            mode: 'jeopardy',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+        ],
         {
-          id: 'contest-history',
-          title: '往期竞赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-03-01T00:00:00Z',
-          ends_at: '2026-03-01T12:00:00Z',
-        },
-        {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-      ], {
-        summary: createContestSummary({ running_count: 1, ended_count: 1 }),
-      })
+          summary: createContestSummary({ running_count: 1, ended_count: 1 }),
+        }
+      )
     )
 
     const router = await createScoreboardRouter()
@@ -525,7 +540,9 @@ describe('ScoreboardView', () => {
 
   it('排行榜页概况卡片应使用统一 metric-panel 样式类', () => {
     expect(scoreboardSource).toContain('class="scoreboard-summary-grid metric-panel-grid"')
-    expect(scoreboardSource).toContain('class="scoreboard-summary-item progress-card metric-panel-card"')
+    expect(scoreboardSource).toContain(
+      'class="scoreboard-summary-item progress-card metric-panel-card"'
+    )
     expect(scoreboardSource).toContain(
       'class="scoreboard-summary-label progress-card-label metric-panel-label"'
     )
@@ -650,18 +667,21 @@ describe('ScoreboardView', () => {
   it('竞赛排行列表只有一页时也应显示分页控件', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue(
-      createContestPage([
+      createContestPage(
+        [
+          {
+            id: 'contest-running',
+            title: '当前竞赛',
+            mode: 'jeopardy',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+        ],
         {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-      ], {
-        summary: createContestSummary({ running_count: 1 }),
-      })
+          summary: createContestSummary({ running_count: 1 }),
+        }
+      )
     )
 
     const router = await createScoreboardRouter()
@@ -710,18 +730,21 @@ describe('ScoreboardView', () => {
       },
     ])
     getContestsMock.mockResolvedValue(
-      createContestPage([
+      createContestPage(
+        [
+          {
+            id: 'contest-running',
+            title: '当前竞赛',
+            mode: 'jeopardy',
+            status: 'running',
+            starts_at: '2026-03-12T00:00:00Z',
+            ends_at: '2026-03-12T12:00:00Z',
+          },
+        ],
         {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-      ], {
-        summary: createContestSummary({ running_count: 1 }),
-      })
+          summary: createContestSummary({ running_count: 1 }),
+        }
+      )
     )
     getScoreboardMock.mockResolvedValue({
       contest: {

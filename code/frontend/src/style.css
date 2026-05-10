@@ -98,7 +98,8 @@ option {
   border: 0;
 }
 
-.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
+.workspace-directory-section
+  > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
   margin-top: var(--workspace-directory-gap-top);
 }
 
@@ -461,6 +462,193 @@ option {
   --ui-btn-padding: 0 var(--space-4);
   --ui-btn-font-size: var(--font-size-13);
   --ui-btn-font-weight: 700;
+}
+
+.student-directory-section {
+  margin-top: var(--space-6);
+}
+
+.student-directory-shell {
+  --workspace-directory-shell-padding: var(--space-5);
+  --workspace-directory-shell-radius: var(--radius-2xl);
+  --workspace-directory-shell-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 84%,
+    transparent
+  );
+  --workspace-directory-shell-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 98%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 74%,
+        var(--color-bg-base)
+      )
+    );
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
+    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
+}
+
+.student-directory-shell__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: end;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+}
+
+.student-directory-shell__heading {
+  min-width: 0;
+}
+
+.student-directory-shell__eyebrow {
+  color: color-mix(in srgb, var(--color-primary) 72%, var(--journal-muted));
+}
+
+.student-directory-shell__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--workspace-directory-title-size, clamp(1.2rem, 1rem + 0.5vw, 1.45rem));
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.student-directory-shell__meta {
+  align-self: end;
+  color: var(--journal-muted, var(--color-text-muted));
+  font-size: var(--font-size-13);
+  line-height: 1.6;
+}
+
+.student-directory-filters {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.student-directory-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns:
+    minmax(12rem, 14rem)
+    minmax(12rem, 14rem)
+    minmax(16rem, 1fr)
+    auto;
+  align-items: end;
+}
+
+.student-directory-filter-field,
+.student-directory-filter-search,
+.student-directory-filter-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.student-directory-filter-search__label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.student-directory-filter-label {
+  color: var(--journal-muted, var(--color-text-muted));
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+}
+
+.student-directory-filter-control {
+  min-width: 0;
+  border-color: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--journal-border) 34%, transparent);
+}
+
+.student-directory-filter-label--ghost {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.student-directory-filter-actions {
+  justify-items: end;
+}
+
+.student-directory-filter-action-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2-5);
+}
+
+.student-directory-state {
+  min-height: calc(var(--space-12) * 2);
+  margin-top: 0;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--journal-surface) 86%, transparent);
+}
+
+.student-directory-spinner {
+  width: var(--space-8);
+  height: var(--space-8);
+  border: var(--space-1) solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top-color: var(--journal-accent, var(--color-primary));
+  border-radius: 999px;
+  animation: studentDirectorySpin 900ms linear infinite;
+}
+
+@keyframes studentDirectorySpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 960px) {
+  .student-directory-shell__head {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .student-directory-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-directory-filter-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .student-directory-filter-action-row > * {
+    flex: 1 1 0;
+  }
+
+  .student-directory-filter-actions {
+    justify-items: stretch;
+  }
+
+  .student-directory-filter-search__control,
+  .student-directory-filter-field {
+    min-width: 0;
+  }
+
+  .student-directory-filter-actions,
+  .student-directory-filter-search,
+  .student-directory-filter-field {
+    width: 100%;
+  }
+
+  .student-directory-filter-label--ghost {
+    display: none;
+  }
 }
 
 .header-actions {
