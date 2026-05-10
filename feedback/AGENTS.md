@@ -28,3 +28,4 @@
 - `2026-05-09-do-not-bend-tests-to-fit-broken-architecture.md`：测试不能迁就坏架构，测试失败时先回到 owner / contract / 架构分析。
 - `2026-05-10-list-primary-title-column-should-stay-clean.md`：所有角色的列表主标题列默认只放主体标题，标签、状态、时间、描述等辅助信息优先拆到独立列。
 - `2026-05-10-top-tab-panels-should-not-repeat-eyebrow.md`：带顶部 tab 的页面，tab 面板内默认不再重复渲染分区 eyebrow。
+- `2026-05-10-workspace-grid-only-for-real-layout.md`：`workspace-grid` 只用于真实多列或区域布局，普通单列页面直接使用 `content-pane`。

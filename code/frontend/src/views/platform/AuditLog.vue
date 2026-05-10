@@ -33,8 +33,7 @@ const {
 
 <template>
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero">
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <div class="audit-log-body">
           <AuditLogHeroPanel
             :current-count="list.length"
@@ -72,8 +71,7 @@ const {
             @change-page="void changePage($event)"
           />
         </div>
-      </main>
-    </div>
+    </main>
 
     <AuditActorDetailModal
       :open="!!activeActorLog"

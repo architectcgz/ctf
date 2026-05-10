@@ -160,8 +160,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
       </button>
     </nav>
 
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <header
           v-if="activeTab === 'overview'"
           class="teacher-topbar"
@@ -319,8 +318,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
           />
         </section>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -353,10 +351,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
     color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
-}
-
-.workspace-grid {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .content-pane {
@@ -689,10 +683,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 @media (max-width: 1279px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
-  }
-
   .context-rail {
     padding: 0 var(--space-workspace-content-padding, var(--space-7))
       var(--space-workspace-content-padding, var(--space-7));

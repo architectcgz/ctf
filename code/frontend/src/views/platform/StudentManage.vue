@@ -28,8 +28,7 @@ const {
 
 <template>
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell">
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <StudentManageHeroPanel
           :total="total"
           :active-students="activeStudents"
@@ -55,8 +54,7 @@ const {
           @change-page="handlePageChange"
           @open-student="openStudent"
         />
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

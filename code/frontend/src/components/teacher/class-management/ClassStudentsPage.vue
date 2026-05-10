@@ -149,8 +149,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
       </button>
     </nav>
 
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <section
           v-show="activeTab === 'overview'"
           id="class-overview"
@@ -397,8 +396,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             />
           </div>
         </section>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

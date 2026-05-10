@@ -40,8 +40,8 @@ describe('workspace shell shared styles', () => {
     expect(workspaceShellStylesSource).toMatch(/--workspace-shell-radius:\s*0;/)
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .workspace-topbar')
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .top-tabs')
-    expect(workspaceShellStylesSource).toContain('.workspace-shell > .workspace-grid')
     expect(workspaceShellStylesSource).toContain('.workspace-shell .content-pane')
+    expect(workspaceShellStylesSource).not.toContain('.workspace-shell > .workspace-grid')
     expect(workspaceShellStylesSource).toContain('.workspace-shell .tab-panel.active')
     expect(workspaceShellStylesSource).toContain('@keyframes workspaceTabPanelIn')
   })
@@ -69,9 +69,6 @@ describe('workspace shell shared styles', () => {
 
   it('非 top-tabs 工作区页面应使用共享 content 起始间距', () => {
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .content-pane:first-child')
-    expect(workspaceShellStylesSource).toContain(
-      '.workspace-shell > .workspace-grid:first-child > .content-pane:first-child'
-    )
     expect(workspaceShellStylesSource).toContain('--workspace-content-start-padding-top')
     expect(challengeListSource).toContain('<main class="content-pane">')
     expect(challengeListSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
@@ -81,8 +78,8 @@ describe('workspace shell shared styles', () => {
       challengeImportManageSource,
       awdChallengeLibraryPageSource,
     ]) {
-      expect(source).toContain('<div class="workspace-grid">')
       expect(source).toContain('content-pane')
+      expect(source).not.toContain('<div class="workspace-grid">')
       expect(source).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
     }
 

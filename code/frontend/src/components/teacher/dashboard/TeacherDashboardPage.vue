@@ -101,8 +101,7 @@ const {
       </button>
     </nav>
 
-    <div class="workspace-grid">
-      <main class="content-pane teacher-dashboard-content">
+    <main class="content-pane teacher-dashboard-content">
         <section
           v-show="activeTab === 'overview'"
           id="overview"
@@ -387,8 +386,7 @@ const {
             </div>
           </section>
         </section>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

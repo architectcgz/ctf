@@ -18,8 +18,7 @@ const { loading, contest, inspectorRuntimeContent } = useContestOperationsPage()
       <AppLoading>正在建立指挥链路...</AppLoading>
     </div>
 
-    <div class="workspace-grid">
-      <main class="content-pane contest-ops-content">
+    <main class="content-pane contest-ops-content">
         <section
           v-if="contest"
           class="workspace-directory-section contest-ops-workspace"
@@ -53,8 +52,7 @@ const { loading, contest, inspectorRuntimeContent } = useContestOperationsPage()
             </template>
           </AWDOperationsPanel>
         </section>
-      </main>
-    </div>
+    </main>
   </section>
 </template>
 

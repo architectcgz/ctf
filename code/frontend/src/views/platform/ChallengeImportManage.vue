@@ -22,8 +22,7 @@ const {
 
 <template>
   <div class="workspace-shell challenge-import-shell journal-shell journal-shell-admin journal-notes-card">
-    <div class="workspace-grid">
-      <main class="content-pane challenge-import-content">
+    <main class="content-pane challenge-import-content">
         <section class="challenge-import-panel">
           <ChallengeImportHeroPanel
             @back="void backToChallenges()"
@@ -72,8 +71,7 @@ const {
             @inspect="inspectImportTask"
           />
         </section>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

@@ -931,9 +931,7 @@ option {
 }
 
 .top-tabs + .content-pane,
-.workspace-tabbar.top-tabs + .content-pane,
-.top-tabs + .workspace-grid > .content-pane,
-.workspace-tabbar.top-tabs + .workspace-grid > .content-pane {
+.workspace-tabbar.top-tabs + .content-pane {
   padding-top: var(--workspace-tab-panel-gap-top-tight);
 }
 

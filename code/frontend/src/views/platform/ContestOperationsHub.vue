@@ -24,8 +24,7 @@ const {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <div class="workspace-grid">
-      <main class="content-pane contest-ops-content">
+    <main class="content-pane contest-ops-content">
         <ContestOperationsHubHeroPanel
           :operable-contest-count="total"
           :running-contest-count="runningContestCount"
@@ -46,8 +45,7 @@ const {
           @change-page="void changeContestPage($event)"
           @enter-operations="void handleEnterOperations($event)"
         />
-      </main>
-    </div>
+    </main>
   </section>
 </template>
 

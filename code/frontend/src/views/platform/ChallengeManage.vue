@@ -40,8 +40,7 @@ const {
 
 <template>
   <section class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card journal-hero">
-    <div class="workspace-grid">
-      <main class="content-pane challenge-manage-content">
+    <main class="content-pane challenge-manage-content">
         <div class="challenge-manage-panel">
           <ChallengeManageHeroPanel
             :total="total"
@@ -85,8 +84,7 @@ const {
             @remove-challenge="removeChallenge"
           />
         </div>
-      </main>
-    </div>
+    </main>
   </section>
 </template>
 

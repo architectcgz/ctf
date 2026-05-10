@@ -44,8 +44,7 @@ const {
       </button>
     </nav>
 
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <div
           v-if="error"
           class="workspace-alert"
@@ -88,8 +87,7 @@ const {
             v-bind="resolveDashboardPanelBindings(tab.key)"
           />
         </template>
-      </main>
-    </div>
+    </main>
   </section>
 </template>
 

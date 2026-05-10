@@ -58,9 +58,8 @@ const {
   <section
     class="contest-projector-shell workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
   >
-    <div class="workspace-grid">
-      <main class="content-pane contest-projector-content">
-        <section ref="projectorStageRef" class="projector-stage workspace-directory-section">
+    <main class="content-pane contest-projector-content">
+      <section ref="projectorStageRef" class="projector-stage workspace-directory-section">
           <ContestProjectorToolbar
             :contests="projectorContests"
             :rounds="rounds"
@@ -154,26 +153,27 @@ const {
 
           </section>
         </section>
-      </main>
+    </main>
 
-      <ContestProjectorFocusOverlay :active-panel="focusedPanel" @close="closeFocusPanel">
-        <ContestProjectorAttackMap
-          v-if="focusedPanel === 'attack-map'"
-          :rows="serviceMatrixRows"
-          :edges="attackEdges"
-          :scoreboard-rows="scoreboardRows"
-          :first-blood="firstBlood"
-          :latest-attack-events="latestAttackEvents"
-          expanded
-          board-only
-        />
-      </ContestProjectorFocusOverlay>
-    </div>
+    <ContestProjectorFocusOverlay :active-panel="focusedPanel" @close="closeFocusPanel">
+      <ContestProjectorAttackMap
+        v-if="focusedPanel === 'attack-map'"
+        :rows="serviceMatrixRows"
+        :edges="attackEdges"
+        :scoreboard-rows="scoreboardRows"
+        :first-blood="firstBlood"
+        :latest-attack-events="latestAttackEvents"
+        expanded
+        board-only
+      />
+    </ContestProjectorFocusOverlay>
   </section>
 </template>
 
 <style scoped>
 .contest-projector-shell {
+  position: relative;
+  min-height: 0;
   --workspace-shell-bg: var(--journal-surface);
   --workspace-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
 }
@@ -188,11 +188,6 @@ const {
 
 .contest-projector-content {
   padding: 0;
-}
-
-.workspace-grid {
-  position: relative;
-  min-height: 0;
 }
 
 .projector-stage {

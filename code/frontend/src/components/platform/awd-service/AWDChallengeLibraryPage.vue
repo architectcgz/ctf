@@ -263,8 +263,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   <div
     class="workspace-shell journal-shell journal-shell-admin journal-hero awd-challenge-library-shell"
   >
-    <div class="workspace-grid">
-      <main class="content-pane awd-challenge-library-content">
+    <main class="content-pane awd-challenge-library-content">
         <section class="workspace-hero">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">AWD Service Authoring</div>
@@ -675,8 +674,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
             </section>
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

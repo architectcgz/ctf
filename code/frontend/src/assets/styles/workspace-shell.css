@@ -135,24 +135,12 @@
   outline: none;
 }
 
-.workspace-shell > .workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
 .workspace-shell .content-pane {
   min-width: 0;
   padding: var(--workspace-content-padding, var(--space-workspace-content-padding));
 }
 
 .workspace-shell > .content-pane:first-child {
-  padding-top: var(
-    --workspace-content-start-padding-top,
-    var(--space-workspace-content-start-padding-top)
-  );
-}
-
-.workspace-shell > .workspace-grid:first-child > .content-pane:first-child {
   padding-top: var(
     --workspace-content-start-padding-top,
     var(--space-workspace-content-start-padding-top)

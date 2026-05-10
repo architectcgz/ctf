@@ -37,8 +37,7 @@ function handleOpenAudit(query: Record<string, string>): void {
 
 <template>
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero cheat-shell">
-    <div class="workspace-grid">
-      <main class="content-pane">
+    <main class="content-pane">
         <CheatDetectionHeroPanel
           :generated-at-label="riskData ? formatDateTime(riskData.generated_at) : null"
           :loading="loading"
@@ -91,8 +90,7 @@ function handleOpenAudit(query: Record<string, string>): void {
           <ShieldQuestion class="h-12 w-12" />
           <p>当前没有任何风险检出</p>
         </div>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 

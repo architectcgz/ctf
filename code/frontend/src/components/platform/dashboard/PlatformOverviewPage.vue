@@ -40,8 +40,7 @@ const {
 
 <template>
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell">
-    <div class="workspace-grid">
-      <main class="content-pane overview-content">
+    <main class="content-pane overview-content">
         <section id="admin-dashboard-overview" class="overview-panel">
           <section class="workspace-hero">
             <div class="workspace-tab-heading__main">
@@ -314,8 +313,7 @@ const {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 
