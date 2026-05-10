@@ -419,6 +419,7 @@ const {
   --page-top-tab-color: var(--color-text-secondary);
   --page-top-tab-active-color: var(--color-text-primary);
   --page-top-tab-active-border: color-mix(in srgb, var(--contest-accent) 72%, transparent);
+  --workspace-panel-padding-top: 0;
   --journal-shell-hero-radial-strength: 10%;
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-top-strength: 97%;
@@ -460,14 +461,6 @@ const {
   font-size: var(--font-size-0-88);
   color: var(--color-text-secondary);
 }
-
-.workspace-panel {
-  padding-top: 1.35rem;
-}
-
-
-
-
 
 .contest-chip {
   display: inline-flex;

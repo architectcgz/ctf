@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
@@ -7,6 +9,8 @@ import contestDetailSource from '../ContestDetail.vue?raw'
 import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
 import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 
 const contestApiMocks = vi.hoisted(() => ({
   getContestDetail: vi.fn(),
@@ -1739,6 +1743,15 @@ describe('ContestDetail', () => {
     expect(combinedSource).not.toContain('<div class="contest-overline">Schedule</div>')
     expect(combinedSource).not.toContain('<div class="contest-overline">Announcements</div>')
     expect(combinedSource).not.toContain('<div class="contest-overline">Team</div>')
+  })
+
+  it('竞赛详情 tab panel 不应在 content pane 内继续叠加顶部间距', () => {
+    expect(pageTabsSource).toContain(
+      'padding-top: var(--workspace-panel-padding-top, 0);'
+    )
+    expect(contestDetailSource).toContain('--workspace-panel-padding-top: 0;')
+    expect(contestDetailSource).not.toMatch(/\.workspace-panel\s*\{\s*padding-top:\s*0;\s*\}/)
+    expect(contestDetailSource).not.toContain('padding-top: 1.35rem;')
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {

@@ -133,6 +133,10 @@
   min-width: 0;
 }
 
+.workspace-panel {
+  padding-top: var(--workspace-panel-padding-top, 0);
+}
+
 .workspace-tab-heading {
   display: flex;
   flex-wrap: wrap;
