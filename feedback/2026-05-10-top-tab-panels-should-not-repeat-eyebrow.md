@@ -18,7 +18,9 @@
 - 保留标题本身，例如 `竞赛排行列表`、`积分排行列表`。
 - 保留真正的数据字段 label、指标卡 label、表单 label；这些不是分区 eyebrow。
 - 新增/修改 top-tabs 页面时，先检查 tab 文案是否已经表达当前分区，避免在 tab 内容第一层继续放 `workspace-overline`、`journal-note-label`、`student-directory-list-heading__eyebrow` 或等价局部 kicker。
+- 如果父级页面通过动态组件渲染 tab panel，不能只扫描父级 `.vue`；必须把注册表中的子面板组件一起纳入检查，学生 dashboard 这类页面的重复 eyebrow 往往藏在子面板首屏。
 - 用静态测试约束已知页面，防止 `/scoreboard`、能力画像、教师班级学生页、教师仪表盘再次出现重复 eyebrow。
+- 静态测试应覆盖已知动态子面板，防止只约束父级页面后再次漏掉 `/student/dashboard`。
 
 ## 收获
 

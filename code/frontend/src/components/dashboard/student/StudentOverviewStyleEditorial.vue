@@ -116,9 +116,6 @@ const operationsSummary = computed(() => [
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div>
-        <div class="workspace-overline">
-          Training Journal
-        </div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
           {{ displayName }} 的训练总览
         </h1>

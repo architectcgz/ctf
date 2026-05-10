@@ -106,9 +106,6 @@ function openPrimaryCategory(): void {
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="category-header">
-        <div class="workspace-overline">
-          Action Ranking
-        </div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           {{ headlineTitle }}
         </h1>

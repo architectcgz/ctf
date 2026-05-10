@@ -154,9 +154,6 @@ function changeTimelinePage(page: number): void {
         aria-hidden="true"
       />
       <section class="timeline-section">
-        <div class="workspace-overline">
-          Timeline Log
-        </div>
         <h3 class="journal-soft-section-title text-xl font-semibold">
           训练记录
         </h3>

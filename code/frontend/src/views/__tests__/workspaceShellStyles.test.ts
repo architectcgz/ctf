@@ -3,6 +3,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
+import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
@@ -89,6 +94,16 @@ describe('workspace shell shared styles', () => {
     expect(classStudentsPageSource).not.toContain(
       '<div class="workspace-overline">Class Workspace</div>'
     )
+
+    for (const [source, label] of [
+      [studentOverviewSource, 'Training Journal'],
+      [studentRecommendationSource, 'Action Queue'],
+      [studentCategoryProgressSource, 'Action Ranking'],
+      [studentDifficultySource, 'Intensity Workspace'],
+      [studentTimelineSource, 'Timeline Log'],
+    ] as const) {
+      expect(source).not.toContain(label)
+    }
 
     for (const label of [
       'Progress Signal',

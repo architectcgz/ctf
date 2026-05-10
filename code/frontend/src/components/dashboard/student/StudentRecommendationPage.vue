@@ -72,7 +72,6 @@ const summaryCards = computed(() => [
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="recommendation-header">
-        <div class="workspace-overline">Action Queue</div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           现在先练这几道
         </h1>
