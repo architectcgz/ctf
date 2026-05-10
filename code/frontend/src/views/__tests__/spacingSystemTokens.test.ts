@@ -24,6 +24,7 @@ describe('spacing system tokens', () => {
     expect(themeSource).toContain('--space-5-5: 1.375rem;')
     expect(themeSource).toContain('--space-workspace-side-padding: var(--space-7);')
     expect(themeSource).toContain('--space-workspace-content-padding: var(--space-7);')
+    expect(themeSource).toContain('--space-workspace-content-start-padding-top: var(--space-4);')
     expect(themeSource).toContain('--space-divider-gap: var(--space-4);')
   })
 
@@ -33,6 +34,8 @@ describe('spacing system tokens', () => {
     expect(workspaceShellSource).toContain('var(--space-workspace-side-padding)')
     expect(workspaceShellSource).toContain('var(--space-workspace-tabs-gap)')
     expect(workspaceShellSource).toContain('var(--space-workspace-content-padding)')
+    expect(workspaceShellSource).toContain('var(--space-workspace-content-start-padding-top)')
+    expect(workspaceShellSource).toContain('.workspace-shell > .content-pane:first-child')
     expect(workspaceShellSource).not.toContain('padding: 22px 28px 0;')
     expect(workspaceShellSource).not.toContain('gap: 28px;')
     expect(workspaceShellSource).not.toContain('padding: 28px;')

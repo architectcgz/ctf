@@ -12,6 +12,7 @@ import classStudentsPageSource from '@/components/teacher/class-management/Class
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
+import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
@@ -60,6 +61,13 @@ describe('workspace shell shared styles', () => {
       expectNoLocalProperty(source, '.content-pane', 'padding:\\s*28px')
       expectNoLocalProperty(source, '.content-pane', 'border-radius:\\s*0')
     }
+  })
+
+  it('非 top-tabs 工作区页面应使用共享 content 起始间距', () => {
+    expect(workspaceShellStylesSource).toContain('.workspace-shell > .content-pane:first-child')
+    expect(workspaceShellStylesSource).toContain('--workspace-content-start-padding-top')
+    expect(challengeListSource).toContain('<main class="content-pane">')
+    expect(challengeListSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
   })
 
   it('工作区页面不应继续在局部重复声明 tab 面板切换动画', () => {

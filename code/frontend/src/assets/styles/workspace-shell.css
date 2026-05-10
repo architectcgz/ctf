@@ -145,6 +145,13 @@
   padding: var(--workspace-content-padding, var(--space-workspace-content-padding));
 }
 
+.workspace-shell > .content-pane:first-child {
+  padding-top: var(
+    --workspace-content-start-padding-top,
+    var(--space-workspace-content-start-padding-top)
+  );
+}
+
 .workspace-shell .tab-panel {
   display: none;
 }
