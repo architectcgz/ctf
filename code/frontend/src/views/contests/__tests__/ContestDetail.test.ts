@@ -1732,7 +1732,7 @@ describe('ContestDetail', () => {
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
     expect(combinedSource).toMatch(
-      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? '攻防战场' : '题目' \}\}\s*<\/div>/
+      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battlefield' : 'Challenges' \}\}\s*<\/div>/
     )
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
     expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')
