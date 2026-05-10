@@ -120,10 +120,12 @@ describe('ChallengeList', () => {
   })
 
   it('页头标题与说明应接入共享工作区排版类', () => {
+    expect(challengeListSource).toContain('<header class="workspace-page-header challenge-topbar">')
     expect(challengeListSource).toMatch(/<div class="workspace-overline">\s*Challenges\s*<\/div>/)
     expect(challengeListSource).toMatch(
       /<h1 class="workspace-page-title challenge-title">\s*靶场训练\s*<\/h1>/
     )
+    expect(challengeListSource).not.toMatch(/\.challenge-page \.challenge-topbar\s*\{[\s\S]*display:\s*grid;/)
     expect(challengeListSource).not.toContain('<div class="journal-eyebrow">Challenges</div>')
     expect(challengeListSource).not.toContain('journal-eyebrow-text')
     expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')

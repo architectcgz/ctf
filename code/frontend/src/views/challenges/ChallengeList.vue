@@ -82,7 +82,7 @@ const {
   >
     <main class="content-pane">
       <div class="challenge-page">
-        <header class="challenge-topbar">
+        <header class="workspace-page-header challenge-topbar">
           <div class="challenge-heading">
             <div class="workspace-overline">Challenges</div>
             <h1 class="workspace-page-title challenge-title">靶场训练</h1>
@@ -206,17 +206,11 @@ const {
 }
 
 .challenge-page {
+  --workspace-page-header-gap: var(--space-5);
   display: flex;
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-}
-
-.challenge-page .challenge-topbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-5);
-  align-items: end;
 }
 
 .challenge-page .challenge-heading {
@@ -382,11 +376,6 @@ const {
 }
 
 @media (max-width: 960px) {
-  .challenge-page .challenge-topbar {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: flex-start;
-  }
-
   .challenge-hero-rail {
     width: 100%;
     justify-items: stretch;

@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <header class="admin-awd-review-shell__hero">
+  <header class="workspace-page-header admin-awd-review-shell__hero">
     <div class="admin-awd-review-shell__hero-main">
       <div class="workspace-overline">
         Review Workspace
@@ -91,16 +91,6 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.admin-awd-review-shell__hero {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
 .admin-awd-review-shell__hero-main {
   max-width: 48rem;
 }

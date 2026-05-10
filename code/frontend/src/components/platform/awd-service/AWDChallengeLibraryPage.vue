@@ -264,7 +264,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
     class="workspace-shell journal-shell journal-shell-admin journal-hero awd-challenge-library-shell"
   >
     <main class="content-pane awd-challenge-library-content">
-        <section class="workspace-hero">
+        <header class="workspace-page-header">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">AWD Service Authoring</div>
             <h1 class="hero-title">
@@ -311,7 +311,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
               </button>
             </div>
           </div>
-        </section>
+        </header>
 
         <div>
           <div v-if="mode === 'library'" class="awd-library-pane">
@@ -687,14 +687,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
 .hero-title {
   margin: 0.5rem 0 0;
   font-size: var(--workspace-page-title-font-size);
@@ -885,9 +877,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   .awd-challenge-table__actions {
     flex-direction: column;
     align-items: stretch;
-  }
-  .workspace-hero {
-    grid-template-columns: 1fr;
   }
 }
 

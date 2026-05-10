@@ -186,9 +186,8 @@ describe('ImageManage', () => {
   })
 
   it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
-    expect(imageManageHeroPanelSource).toMatch(
-      /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s
-    )
+    expect(imageManageHeroPanelSource).toContain('<header class="workspace-page-header image-header">')
+    expect(imageManageHeroPanelSource).not.toMatch(/\.image-header\s*\{[\s\S]*border-bottom:/s)
     expect(imageManageSource).not.toContain('<div class="journal-divider image-divider" />')
     expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
   })

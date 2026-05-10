@@ -18,7 +18,7 @@ function handleBack(): void {
 </script>
 
 <template>
-  <header class="list-heading contest-ops-hero workspace-directory-section">
+  <header class="workspace-page-header contest-ops-hero">
     <div class="contest-ops-hero__main">
       <div class="workspace-overline">
         Event Operations
@@ -96,8 +96,6 @@ function handleBack(): void {
 <style scoped>
 .contest-ops-hero {
   align-items: flex-start;
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 76%, transparent));
 }
 
 .contest-ops-hero__main {

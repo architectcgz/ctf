@@ -265,7 +265,7 @@ describe('ContestOperationsHub', () => {
 
   it('uses shared directory heading and metric primitives for the ops index shell', () => {
     expect(contestOperationsHubHeroPanelSource).toContain(
-      '<header class="list-heading contest-ops-hero workspace-directory-section">'
+      '<header class="workspace-page-header contest-ops-hero">'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'

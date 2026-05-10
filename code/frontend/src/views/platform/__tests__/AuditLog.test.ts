@@ -200,9 +200,8 @@ describe('AuditLog', () => {
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(auditLogHeroPanelSource).toMatch(/\.audit-log-hero-panel\s*\{[\s\S]*gap:\s*0;/s)
-    expect(auditLogHeroPanelSource).toMatch(
-      /\.workspace-hero\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
-    )
+    expect(auditLogHeroPanelSource).toContain('<header class="workspace-page-header">')
+    expect(auditLogHeroPanelSource).not.toMatch(/\.workspace-hero\s*\{/s)
     expect(auditLogHeroPanelSource).toContain(
       'class="journal-note progress-card metric-panel-card"'
     )

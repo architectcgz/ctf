@@ -25,7 +25,7 @@ function handleCreate(): void {
 </script>
 
 <template>
-  <header class="image-header">
+  <header class="workspace-page-header image-header">
     <div class="image-header__intro">
       <div class="image-header__copy">
         <div class="workspace-overline">
@@ -87,13 +87,6 @@ function handleCreate(): void {
 </template>
 
 <style scoped>
-.image-header {
-  display: grid;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .image-copy {
   max-width: 48rem;
 }

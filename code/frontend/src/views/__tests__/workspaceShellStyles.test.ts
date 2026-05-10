@@ -12,13 +12,21 @@ import classStudentsPageSource from '@/components/teacher/class-management/Class
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
+import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
+import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
+import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
+import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
+import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import challengeImportManageSource from '@/views/platform/ChallengeImportManage.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
+import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
 
 const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
@@ -41,9 +49,37 @@ describe('workspace shell shared styles', () => {
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .workspace-topbar')
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .top-tabs')
     expect(workspaceShellStylesSource).toContain('.workspace-shell .content-pane')
+    expect(workspaceShellStylesSource).toContain('.workspace-shell .workspace-page-header')
     expect(workspaceShellStylesSource).not.toContain('.workspace-shell > .workspace-grid')
     expect(workspaceShellStylesSource).toContain('.workspace-shell .tab-panel.active')
     expect(workspaceShellStylesSource).toContain('@keyframes workspaceTabPanelIn')
+  })
+
+  it('首屏页面头部应使用共享 workspace-page-header 分隔线结构', () => {
+    expect(workspaceShellStylesSource).toMatch(
+      /\.workspace-shell \.workspace-page-header\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;[\s\S]*padding-bottom:\s*var\(--workspace-page-header-padding-bottom,\s*var\(--space-6\)\);[\s\S]*border-bottom:\s*1px solid/s
+    )
+    expect(workspaceShellStylesSource).toMatch(
+      /@media \(max-width:\s*960px\)\s*\{[\s\S]*\.workspace-shell \.workspace-page-header\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s
+    )
+    expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
+
+    for (const source of [
+      adminDashboardSource,
+      awdChallengeLibraryPageSource,
+      awdReviewHeroPanelSource,
+      auditLogHeroPanelSource,
+      challengeManageHeroPanelSource,
+      cheatDetectionHeroPanelSource,
+      classManageHeroPanelSource,
+      imageManageHeroPanelSource,
+      instanceManageHeroPanelSource,
+      studentManageHeroPanelSource,
+    ]) {
+      expect(source).toContain('workspace-page-header')
+      expect(source).not.toContain('<section class="workspace-hero">')
+      expect(source).not.toMatch(/\.workspace-hero\s*\{/)
+    }
   })
 
   it('工作区页面不应继续在局部重复声明骨架壳层样式', () => {

@@ -25,7 +25,7 @@ function handleImport(): void {
 
 <template>
   <div class="challenge-manage-hero-panel">
-    <section class="workspace-hero">
+    <header class="workspace-page-header">
       <div class="workspace-tab-heading__main">
         <div class="workspace-overline">
           Challenge Workspace
@@ -49,7 +49,7 @@ function handleImport(): void {
           </button>
         </div>
       </div>
-    </section>
+    </header>
 
     <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="journal-note progress-card metric-panel-card">
@@ -140,14 +140,6 @@ function handleImport(): void {
 .challenge-metric-value-wrap .metric-panel-value,
 .challenge-metric-value-wrap .metric-panel-helper {
   margin-top: 0;
-}
-
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .challenge-manage-hero-actions {

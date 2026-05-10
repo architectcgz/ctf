@@ -24,7 +24,7 @@ function handleSync(): void {
 
 <template>
   <div class="audit-log-hero-panel">
-    <section class="workspace-hero">
+    <header class="workspace-page-header">
       <div class="workspace-tab-heading__main">
         <div class="workspace-overline">Audit Log</div>
         <h1 class="hero-title">
@@ -48,7 +48,7 @@ function handleSync(): void {
           </button>
         </div>
       </div>
-    </section>
+    </header>
 
     <div class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="journal-note progress-card metric-panel-card">
@@ -97,14 +97,6 @@ function handleSync(): void {
 .audit-log-hero-panel {
   display: grid;
   gap: 0;
-}
-
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft, var(--color-border-subtle));
 }
 
 .hero-title {

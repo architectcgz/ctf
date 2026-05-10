@@ -140,6 +140,22 @@
   padding: var(--workspace-content-padding, var(--space-workspace-content-padding));
 }
 
+.workspace-shell .workspace-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--workspace-page-header-gap, var(--space-7));
+  padding-bottom: var(--workspace-page-header-padding-bottom, var(--space-6));
+  border-bottom: 1px solid
+    var(
+      --workspace-page-header-border,
+      var(
+        --workspace-line-soft,
+        color-mix(in srgb, var(--color-text-primary) 10%, transparent)
+      )
+    );
+}
+
 .workspace-shell > .content-pane:first-child {
   padding-top: var(
     --workspace-content-start-padding-top,
@@ -154,6 +170,13 @@
 .workspace-shell .tab-panel.active {
   display: block;
   animation: workspaceTabPanelIn 180ms ease both;
+}
+
+@media (max-width: 960px) {
+  .workspace-shell .workspace-page-header {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+  }
 }
 
 @keyframes workspaceTabPanelIn {

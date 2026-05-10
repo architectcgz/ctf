@@ -42,7 +42,7 @@ const {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell">
     <main class="content-pane overview-content">
         <section id="admin-dashboard-overview" class="overview-panel">
-          <section class="workspace-hero">
+          <header class="workspace-page-header">
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Operations Workspace</div>
               <h1 class="hero-title workspace-page-title">系统值守台</h1>
@@ -102,7 +102,7 @@ const {
                 </a>
               </div>
             </div>
-          </section>
+          </header>
 
           <div
             v-if="loading && !dashboard"
@@ -351,14 +351,6 @@ const {
 .overview-panel {
   display: grid;
   gap: 0;
-}
-
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .hero-title {
@@ -689,7 +681,6 @@ const {
 }
 
 @media (max-width: 1180px) {
-  .workspace-hero,
   .hotspot-item {
     grid-template-columns: 1fr;
   }

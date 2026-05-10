@@ -391,7 +391,8 @@ describe('admin management surface alignment', () => {
   })
 
   it('cheat detection sections should use list-heading for directory headers', () => {
-    expect(cheatDetectionHeroPanelSource).toContain('<section class="workspace-hero">')
+    expect(cheatDetectionHeroPanelSource).toContain('<header class="workspace-page-header">')
+    expect(cheatDetectionHeroPanelSource).not.toContain('<section class="workspace-hero">')
     expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
     expect(cheatDetectionCombinedSource).toMatch(
       /\.cheat-workbench\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
@@ -438,8 +439,8 @@ describe('admin management surface alignment', () => {
     expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__row')
     expect(styleSource).toContain('@media (max-width: 768px) {')
     expect(styleSource).toContain('.list-heading {')
-    expect(styleSource).toContain(
-      '.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list)'
+    expect(styleSource).toMatch(
+      /\.workspace-directory-section\s*>\s*:where\(\.workspace-directory-loading,\s*\.workspace-directory-empty,\s*\.workspace-directory-list\)/
     )
     expect(styleSource).toContain('.workspace-directory-section > .workspace-directory-pagination')
     expect(workspaceDataTableSource).not.toMatch(
@@ -651,6 +652,9 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
     expect(styleSource).toContain('--workspace-hero-summary-gap: var(--space-5);')
     expect(journalNotesSource).toContain(
+      '.workspace-page-header + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
+    )
+    expect(journalNotesSource).toContain(
       '.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
     )
     expect(journalNotesSource).toContain(
@@ -781,18 +785,16 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
-    expect(awdReviewHeroPanelSource).toMatch(
-      /\.admin-awd-review-shell__hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
-    expect(classManageHeroPanelSource).toMatch(
-      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
-    expect(studentManageHeroPanelSource).toMatch(
-      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
-    expect(instanceManageHeroPanelSource).toMatch(
-      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
+    for (const source of [
+      awdReviewHeroPanelSource,
+      classManageHeroPanelSource,
+      studentManageHeroPanelSource,
+      instanceManageHeroPanelSource,
+    ]) {
+      expect(source).toContain('workspace-page-header')
+      expect(source).not.toMatch(/\.workspace-hero\s*\{/)
+      expect(source).not.toMatch(/padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s)
+    }
     expect(adminChallengeProfilePanelSource).toMatch(
       /\.challenge-detail-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-4\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
     )

@@ -95,7 +95,8 @@ describe('cheat detection surface alignment', () => {
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
     expect(cheatDetectionCombinedSource).toContain('class="workspace-shell')
-    expect(cheatDetectionHeroPanelSource).toContain('<section class="workspace-hero">')
+    expect(cheatDetectionHeroPanelSource).toContain('<header class="workspace-page-header">')
+    expect(cheatDetectionHeroPanelSource).not.toContain('<section class="workspace-hero">')
     expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
     expect(cheatDetectionCombinedSource).toContain(
       'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'

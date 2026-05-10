@@ -17,7 +17,7 @@ function handleRefresh(): void {
 </script>
 
 <template>
-  <section class="workspace-hero">
+  <header class="workspace-page-header">
     <div class="workspace-tab-heading__main">
       <div class="workspace-overline">
         Student Workspace
@@ -42,7 +42,7 @@ function handleRefresh(): void {
         </button>
       </div>
     </div>
-  </section>
+  </header>
 
   <div
     class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
@@ -89,14 +89,6 @@ function handleRefresh(): void {
 </template>
 
 <style scoped>
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
 .hero-title {
   margin: 0.5rem 0 0;
   font-size: var(--workspace-page-title-font-size);
