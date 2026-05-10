@@ -94,12 +94,16 @@ function onModeFilterChange(event: Event): void {
           aria-label="竞赛目录"
         >
           <section class="student-directory-shell contest-directory workspace-directory-list">
-            <header class="student-directory-shell__head">
-              <div class="student-directory-shell__heading">
-                <div class="journal-note-label student-directory-shell__eyebrow">
+            <header class="student-directory-shell__head student-directory-list-heading list-heading">
+              <div class="student-directory-shell__heading student-directory-list-heading__body">
+                <div
+                  class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
+                >
                   Contest Directory
                 </div>
-                <h2 class="student-directory-shell__title">竞赛列表</h2>
+                <h2 class="student-directory-shell__title student-directory-list-heading__title">
+                  竞赛列表
+                </h2>
               </div>
               <div class="student-directory-shell__meta">共 {{ total }} 场</div>
             </header>

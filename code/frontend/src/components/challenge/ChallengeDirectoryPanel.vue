@@ -61,14 +61,16 @@ function updateDifficultyFilter(event: Event): void {
     aria-label="题目目录"
   >
     <section class="student-directory-shell challenge-directory-shell workspace-directory-list">
-      <header class="student-directory-shell__head challenge-directory-shell__head list-heading">
-        <div class="student-directory-shell__heading challenge-directory-shell__heading">
+      <header class="student-directory-shell__head student-directory-list-heading list-heading">
+        <div class="student-directory-shell__heading student-directory-list-heading__body">
           <div
-            class="journal-note-label student-directory-shell__eyebrow challenge-directory-shell__eyebrow"
+            class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
           >
             Challenge Directory
           </div>
-          <h2 class="student-directory-shell__title challenge-directory-shell__title">题目列表</h2>
+          <h2 class="student-directory-shell__title student-directory-list-heading__title">
+            题目列表
+          </h2>
         </div>
       </header>
 
@@ -249,10 +251,6 @@ function updateDifficultyFilter(event: Event): void {
 </template>
 
 <style scoped>
-.challenge-directory-shell__eyebrow {
-  color: color-mix(in srgb, var(--color-primary) 72%, var(--journal-muted));
-}
-
 .challenge-loading {
   display: flex;
   align-items: center;

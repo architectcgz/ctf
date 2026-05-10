@@ -172,12 +172,16 @@ function onContestModeFilterChange(event: Event): void {
             aria-label="排行榜列表"
           >
             <section class="student-directory-shell scoreboard-directory workspace-directory-list">
-              <header class="student-directory-shell__head">
-                <div class="student-directory-shell__heading">
-                  <div class="journal-note-label student-directory-shell__eyebrow">
+              <header class="student-directory-shell__head student-directory-list-heading list-heading">
+                <div class="student-directory-shell__heading student-directory-list-heading__body">
+                  <div
+                    class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
+                  >
                     Contest Scoreboard Directory
                   </div>
-                  <h2 class="student-directory-shell__title">竞赛排行列表</h2>
+                  <h2 class="student-directory-shell__title student-directory-list-heading__title">
+                    竞赛排行列表
+                  </h2>
                 </div>
                 <div class="student-directory-shell__meta">按竞赛开始时间倒序展示排行榜</div>
               </header>
@@ -348,12 +352,16 @@ function onContestModeFilterChange(event: Event): void {
             <section
               class="student-directory-shell scoreboard-table-shell workspace-directory-list"
             >
-              <header class="student-directory-shell__head">
-                <div class="student-directory-shell__heading">
-                  <div class="journal-note-label student-directory-shell__eyebrow">
+              <header class="student-directory-shell__head student-directory-list-heading list-heading">
+                <div class="student-directory-shell__heading student-directory-list-heading__body">
+                  <div
+                    class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
+                  >
                     Points Scoreboard Directory
                   </div>
-                  <h2 class="student-directory-shell__title">积分排行列表</h2>
+                  <h2 class="student-directory-shell__title student-directory-list-heading__title">
+                    积分排行列表
+                  </h2>
                 </div>
               </header>
 

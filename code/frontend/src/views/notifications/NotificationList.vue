@@ -80,12 +80,16 @@ const {
           <section
             class="student-directory-shell notification-directory-shell workspace-directory-list"
           >
-            <header class="student-directory-shell__head">
-              <div class="student-directory-shell__heading">
-                <div class="journal-note-label student-directory-shell__eyebrow">
+            <header class="student-directory-shell__head student-directory-list-heading list-heading">
+              <div class="student-directory-shell__heading student-directory-list-heading__body">
+                <div
+                  class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"
+                >
                   Notification Directory
                 </div>
-                <h2 class="student-directory-shell__title">{{ selectedCategoryLabel }}消息</h2>
+                <h2 class="student-directory-shell__title student-directory-list-heading__title">
+                  {{ selectedCategoryLabel }}消息
+                </h2>
               </div>
               <div class="student-directory-shell__meta">共 {{ total }} 条</div>
             </header>

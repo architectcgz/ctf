@@ -541,6 +541,10 @@ option {
   color: color-mix(in srgb, var(--color-primary) 72%, var(--journal-muted));
 }
 
+.student-directory-list-heading__eyebrow {
+  color: color-mix(in srgb, var(--color-primary) 72%, var(--journal-muted));
+}
+
 .student-directory-shell__title {
   margin: var(--space-1) 0 0;
   font-size: var(--workspace-directory-title-size, clamp(1.2rem, 1rem + 0.5vw, 1.45rem));

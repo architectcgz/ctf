@@ -199,4 +199,40 @@ describe('journal user directory shared styles', () => {
       'class="student-directory-filters scoreboard-directory-filters"'
     )
   })
+
+  it('学生侧列表标题区应复用 challenge 目录的通用 header 结构', () => {
+    const expectedHeaderClass =
+      'class="student-directory-shell__head student-directory-list-heading list-heading"'
+    const expectedHeadingClass =
+      'class="student-directory-shell__heading student-directory-list-heading__body"'
+    const expectedEyebrowClass =
+      'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
+    const expectedTitleClass =
+      'class="student-directory-shell__title student-directory-list-heading__title"'
+
+    expect(appStyleSource).toContain('.student-directory-list-heading__eyebrow')
+    expect(appStyleSource).toMatch(
+      /\.student-directory-list-heading__eyebrow\s*\{[^}]*color:\s*color-mix\(in srgb, var\(--color-primary\) 72%, var\(--journal-muted\)\);/s
+    )
+
+    for (const source of [
+      challengeDirectoryPanelSource,
+      contestListSource,
+      notificationListSource,
+      scoreboardSource,
+    ]) {
+      expect(source).toContain(expectedHeaderClass)
+      expect(source).toContain(expectedHeadingClass)
+      expect(source).toContain(expectedEyebrowClass)
+      expect(source).toContain(expectedTitleClass)
+    }
+
+    expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__head')
+    expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__heading')
+    expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__eyebrow')
+    expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__title')
+    expect(extractScopedStyle(challengeDirectoryPanelSource)).not.toContain(
+      '.student-directory-list-heading__eyebrow'
+    )
+  })
 })
