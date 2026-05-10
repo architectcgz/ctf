@@ -210,9 +210,9 @@ describe('journal user directory shared styles', () => {
     const expectedTitleClass =
       'class="student-directory-shell__title student-directory-list-heading__title"'
 
-    expect(appStyleSource).toContain('.student-directory-list-heading__eyebrow')
+    expect(appStyleSource).toContain('.journal-shell .student-directory-list-heading__eyebrow')
     expect(appStyleSource).toMatch(
-      /\.student-directory-list-heading__eyebrow\s*\{[^}]*color:\s*color-mix\(in srgb, var\(--color-primary\) 72%, var\(--journal-muted\)\);/s
+      /\.journal-shell\s+\.student-directory-list-heading__eyebrow\s*\{[^}]*--journal-note-label-color:\s*color-mix\(in srgb, var\(--color-primary\) 72%, var\(--journal-muted\)\);[^}]*color:\s*var\(--journal-note-label-color\);/s
     )
 
     for (const source of [
