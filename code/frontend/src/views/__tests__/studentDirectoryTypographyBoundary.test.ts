@@ -14,10 +14,35 @@ import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import appStyleSource from '@/style.css?raw'
 
+const vueComponentSources = import.meta.glob<string>('/src/**/*.vue', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
 function extractTemplateSlot(source: string, slotName: string): string {
   const match = source.match(new RegExp(`#${slotName}[^>]*>([\\s\\S]*?)<\\/template>`))
   return match?.[1] ?? ''
 }
+
+function extractTemplateSlots(source: string, slotName: string): string[] {
+  return [...source.matchAll(new RegExp(`#${slotName}[^>]*>([\\s\\S]*?)<\\/template>`, 'g'))].map(
+    (match) => match[1]
+  )
+}
+
+const auxiliaryTitleColumnPatterns = [
+  {
+    label: '辅助字段',
+    pattern:
+      /\.(?:description|slug|status|mode|category|difficulty|tag|tags|score|points|rank|time|date|starts_at|ends_at|created_at|updated_at|latest|latest_evidence_at|reason|summary|subtitle)\b/,
+  },
+  {
+    label: '辅助样式',
+    pattern:
+      /class="[^"]*(?:subtitle|description|slug|status|badge|chip|tag|tags|pill|meta|hint|time|date|reason|summary)[^"]*"/,
+  },
+]
 
 describe('student directory typography boundary', () => {
   it('学生侧普通目录标题不应使用局部等宽字体变体', () => {
@@ -69,5 +94,19 @@ describe('student directory typography boundary', () => {
     expect(cheatDetectionPanelsSource).toContain(
       '</div>\n        <div class="cheat-directory-row-copy"'
     )
+  })
+
+  it('新增 WorkspaceDataTable 标题列默认不应混入辅助信息', () => {
+    const violations = Object.entries(vueComponentSources).flatMap(([path, source]) =>
+      ['cell-title', 'cell-name'].flatMap((slotName) =>
+        extractTemplateSlots(source, slotName).flatMap((slotSource, index) =>
+          auxiliaryTitleColumnPatterns
+            .filter(({ pattern }) => pattern.test(slotSource))
+            .map(({ label }) => `${path} #${slotName}[${index}] 包含${label}`)
+        )
+      )
+    )
+
+    expect(violations).toEqual([])
   })
 })
