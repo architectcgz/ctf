@@ -104,6 +104,16 @@ describe('ContestList', () => {
     expect(contestListSource).not.toContain('class="contest-btn"')
   })
 
+  it('竞赛列表应拆分开始时间、结束时间和通用操作按钮图标', () => {
+    expect(contestListSource).toContain('<span>开始时间</span>')
+    expect(contestListSource).toContain('<span>结束时间</span>')
+    expect(contestListSource).toContain('class="workspace-directory-compact-text contest-row-start-time"')
+    expect(contestListSource).toContain('class="workspace-directory-compact-text contest-row-end-time"')
+    expect(contestListSource).not.toContain('formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at)')
+    expect(contestListSource).toContain('class="workspace-directory-row-btn contest-row-cta"')
+    expect(contestListSource).toContain('<ArrowRight class="h-4 w-4" />')
+  })
+
   it('不应该向学生暴露草稿竞赛，也不应把草稿错误渲染为已结束', async () => {
     const { getContests } = await import('@/api/contest')
     vi.mocked(getContests).mockResolvedValueOnce({

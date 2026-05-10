@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
+import { ArrowRight, CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { useContestListPage } from '@/features/contest-detail'
@@ -16,7 +16,6 @@ const {
   summaryMetrics,
   loadErrorMessage,
   formatTime,
-  getTimelineHint,
   openContest,
   contestAccentStyle,
   getStatusLabel,
@@ -126,7 +125,8 @@ function summaryMetricIcon(key: string): Component {
                 <span>竞赛</span>
                 <span>状态</span>
                 <span>模式</span>
-                <span>时间</span>
+                <span>开始时间</span>
+                <span>结束时间</span>
                 <span>操作</span>
               </div>
 
@@ -164,21 +164,23 @@ function summaryMetricIcon(key: string): Component {
                   >
                 </div>
 
-                <div class="workspace-directory-compact-text contest-row-timeline">
+                <div class="workspace-directory-compact-text contest-row-start-time">
                   <div class="contest-row-time-item contest-row-time-item-strong">
                     <CalendarRange class="h-3.5 w-3.5" />
-                    <span
-                      >{{ formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at) }}</span
-                    >
+                    <span>{{ formatTime(contest.starts_at) }}</span>
                   </div>
+                </div>
+
+                <div class="workspace-directory-compact-text contest-row-end-time">
                   <div class="contest-row-time-item">
                     <Clock3 class="h-3.5 w-3.5" />
-                    <span>{{ getTimelineHint(contest) }}</span>
+                    <span>{{ formatTime(contest.ends_at) }}</span>
                   </div>
                 </div>
 
                 <div class="workspace-directory-row-btn contest-row-cta">
                   <span>{{ getContestActionLabel(contest.status) }}</span>
+                  <ArrowRight class="h-4 w-4" />
                 </div>
               </button>
 
@@ -226,7 +228,8 @@ function summaryMetricIcon(key: string): Component {
 }
 
 .contest-directory {
-  --workspace-directory-grid-columns: minmax(0, 1.25fr) 7.5rem 7.5rem minmax(15rem, 1.1fr) 7.5rem;
+  --workspace-directory-grid-columns: minmax(0, 1.15fr) 7rem 7rem minmax(10.5rem, 0.85fr)
+    minmax(10.5rem, 0.85fr) 8rem;
 }
 
 .contest-pagination {
@@ -275,6 +278,11 @@ function summaryMetricIcon(key: string): Component {
 }
 
 .contest-row-mode {
+  min-width: 0;
+}
+
+.contest-row-start-time,
+.contest-row-end-time {
   min-width: 0;
 }
 
