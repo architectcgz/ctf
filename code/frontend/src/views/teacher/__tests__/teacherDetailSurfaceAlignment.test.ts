@@ -58,15 +58,41 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="top-tabs"')
+    expect(studentAnalysisSource).toContain(
+      'class="teacher-title workspace-page-title student-analysis-title"'
+    )
+    expect(studentAnalysisSource).not.toContain(
+      '查看当前学员的学习进度、推荐任务、题解与审核信息。'
+    )
+    expect(studentAnalysisSource).toMatch(
+      /\.student-analysis-title\s*\{[\s\S]*--workspace-page-title-margin-top:\s*0;[\s\S]*max-width:\s*min\(100%,\s*38rem\);/s
+    )
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
+    )
+    expect(studentAnalysisSource).toMatch(
+      /\.content-pane\s*\{[\s\S]*padding-top:\s*var\(--workspace-tabs-panel-gap,\s*var\(--workspace-tab-panel-gap-top-tight\)\);/s
     )
     expect(studentAnalysisSource).toMatch(
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0 0 var\(--space-5\);[\s\S]*?padding:\s*var\(--space-1\) 0 0;/s
     )
     expect(studentAnalysisSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
-    expect(studentAnalysisSource).toContain('class="summary-card progress-card metric-panel-card"')
-    expect(studentAnalysisSource).toContain('--metric-panel-border: var(--teacher-card-border);')
+    expect(studentAnalysisSource).toContain(
+      'class="summary-card summary-card--solved progress-card metric-panel-card"'
+    )
+    expect(studentAnalysisSource).toContain(
+      'class="summary-card summary-card--completion progress-card metric-panel-card"'
+    )
+    expect(studentAnalysisSource).toContain(
+      'class="summary-card summary-card--weakness progress-card metric-panel-card"'
+    )
+    expect(studentAnalysisSource).toContain('--metric-panel-border:')
+    expect(studentAnalysisSource).toContain('var(--teacher-card-border)')
+    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--workspace-brand);')
+    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--color-primary);')
+    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--color-success);')
+    expect(studentAnalysisSource).not.toContain('--summary-card-accent: var(--color-warning);')
+    expect(studentAnalysisSource).toContain('--metric-panel-value-color:')
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
     )

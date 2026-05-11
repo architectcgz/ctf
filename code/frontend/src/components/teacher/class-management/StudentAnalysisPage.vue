@@ -166,12 +166,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           class="teacher-topbar"
         >
           <div class="teacher-heading workspace-tab-heading__main">
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-page-title student-analysis-title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
-            <p class="teacher-copy">
-              查看当前学员的学习进度、推荐任务、题解与审核信息。
-            </p>
           </div>
 
           <div
@@ -238,7 +235,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           v-if="activeTab === 'overview'"
           class="summary-strip metric-panel-grid"
         >
-          <article class="summary-card progress-card metric-panel-card">
+          <article class="summary-card summary-card--solved progress-card metric-panel-card">
             <div class="summary-card__label progress-card-label metric-panel-label">
               <span>已做题目数</span>
               <CheckCircle class="h-4 w-4" />
@@ -250,7 +247,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               已成功完成的题目数量
             </div>
           </article>
-          <article class="summary-card progress-card metric-panel-card">
+          <article class="summary-card summary-card--completion progress-card metric-panel-card">
             <div class="summary-card__label progress-card-label metric-panel-label">
               <span>完成率</span>
               <Trophy class="h-4 w-4" />
@@ -262,7 +259,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               基于当前学员训练数据计算
             </div>
           </article>
-          <article class="summary-card progress-card metric-panel-card">
+          <article class="summary-card summary-card--weakness progress-card metric-panel-card">
             <div class="summary-card__label progress-card-label metric-panel-label">
               <span>薄弱维度</span>
               <AlertTriangle class="h-4 w-4" />
@@ -356,6 +353,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .content-pane {
   display: grid;
   gap: var(--space-section-gap-compact, var(--space-4));
+  padding-top: var(--workspace-tabs-panel-gap, var(--workspace-tab-panel-gap-top-tight));
+}
+
+.student-analysis-title {
+  --workspace-page-title-margin-top: 0;
+  max-width: min(100%, 38rem);
 }
 
 .context-rail {
@@ -400,10 +403,39 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .summary-card {
+  --summary-card-accent: var(--workspace-brand);
   min-width: 0;
-  --metric-panel-border: var(--teacher-card-border);
-  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-border: color-mix(in srgb, var(--summary-card-accent) 18%, var(--teacher-card-border));
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--summary-card-accent) 15%, transparent),
+      transparent 48%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--workspace-panel) 94%, var(--summary-card-accent)),
+      color-mix(in srgb, var(--workspace-panel) 90%, var(--color-bg-base))
+    );
   --metric-panel-shadow: var(--workspace-shadow-panel);
+  --metric-panel-label-color: color-mix(in srgb, var(--summary-card-accent) 58%, var(--journal-muted));
+  --metric-panel-value-color: color-mix(in srgb, var(--summary-card-accent) 76%, var(--journal-ink));
+}
+
+.summary-card--solved {
+  --summary-card-accent: var(--color-primary);
+}
+
+.summary-card--completion {
+  --summary-card-accent: var(--color-success);
+}
+
+.summary-card--weakness {
+  --summary-card-accent: var(--workspace-brand);
+}
+
+.summary-card .summary-card__label :is(svg, .lucide) {
+  color: color-mix(in srgb, var(--summary-card-accent) 82%, var(--journal-ink));
 }
 
 .rail-stack {
