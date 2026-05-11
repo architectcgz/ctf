@@ -6,18 +6,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type containerFileRuntime interface {
-	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
-}
-
 // ContainerFileService 收口容器文件写入能力。
 type ContainerFileService struct {
-	runtime containerFileRuntime
+	runtime ContainerFileWriter
 	logger  *zap.Logger
 }
 
 // NewContainerFileService 创建容器文件写入服务。
-func NewContainerFileService(runtime containerFileRuntime, logger *zap.Logger) *ContainerFileService {
+func NewContainerFileService(runtime ContainerFileWriter, logger *zap.Logger) *ContainerFileService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

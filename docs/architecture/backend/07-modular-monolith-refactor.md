@@ -53,7 +53,7 @@
 - 进程级装配规则：`code/backend/internal/app/architecture_rules_test.go`
 - composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`
 - 路由与运行时装配：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
-- compat mirror 当前限制：`code/backend/internal/app/architecture_rules_test.go` 明确禁止 `runtime -> instance application` 的 concrete cross-module import，因此 `runtime/application/*` 只能通过 `instance/contracts` 做 wrapper，不能直接 import `instance/application/*`
+- `code/backend/internal/app/architecture_rules_test.go` 仍明确禁止 `runtime -> instance application` 的 concrete cross-module import；因此如果未来再出现 compat 需求，必须重新选择合法落点，不能直接把实例 owner 逻辑补回 `runtime/application/*`
 
 ## 历史迁移
 
@@ -234,8 +234,9 @@ flowchart LR
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
 - `runtime/runtime/adapters.go` 已开始直接依赖 `internal/module/instance/contracts`，而不是继续在 runtime 模块里声明一组本地临时 instance owner 接口
-- `runtime/application/{commands,queries}` 里的 instance / proxy ticket / maintenance compat service 已压成基于 `internal/module/instance/contracts` 的委托 wrapper，不再保留第二份实例业务实现
-- `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application/*` 当前只剩 compat import path 和最小 wrapper 测试
+- `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
+- `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service
+- `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module.Engine` 也改成由这些 capability port 组合出来的运行时视图
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 

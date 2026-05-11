@@ -2,15 +2,12 @@ package runtime
 
 import (
 	"context"
-	"io"
-	"time"
 
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -23,31 +20,13 @@ import (
 )
 
 type Engine interface {
-	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error)
-	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
-	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
-	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
-	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
-	StartContainer(ctx context.Context, containerID string) error
-	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
-	RemoveContainer(ctx context.Context, containerID string, force bool) error
-	RemoveNetwork(ctx context.Context, networkID string) error
-	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
-	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
-	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
-	ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error)
-	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
-	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
-	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
-	RemoveImage(ctx context.Context, imageRef string) error
-	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
-	ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error)
-	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
-}
-
-type ContainerInteractiveExecutor interface {
-	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
+	runtimeports.ContainerProvisioningRuntime
+	runtimeports.ContainerCleanupRuntime
+	runtimeports.ContainerFileRuntime
+	runtimeports.ContainerImageRuntime
+	runtimeports.ManagedContainerInventory
+	runtimeports.ManagedContainerStatsReader
+	runtimeports.ContainerInteractiveExecutor
 }
 
 type BackgroundJob struct {
@@ -112,12 +91,7 @@ type runtimeModuleDeps struct {
 	containerPublicHost   string
 }
 
-type runtimeDefenseWorkbenchRuntime interface {
-	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
-	ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error)
-	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
-	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
-}
+type runtimeDefenseWorkbenchRuntime = runtimeports.ContainerFileRuntime
 
 func Build(deps Deps) *Module {
 	internalDeps := buildRuntimeModuleDeps(deps)

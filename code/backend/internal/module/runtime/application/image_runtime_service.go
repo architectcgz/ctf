@@ -5,18 +5,13 @@ import (
 	"strings"
 )
 
-type imageRuntime interface {
-	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
-	RemoveImage(ctx context.Context, imageRef string) error
-}
-
 // ImageRuntimeService 收口镜像检查与删除等运行时能力。
 type ImageRuntimeService struct {
-	runtime imageRuntime
+	runtime ContainerImageRuntime
 }
 
 // NewImageRuntimeService 创建镜像运行时服务。
-func NewImageRuntimeService(runtime imageRuntime) *ImageRuntimeService {
+func NewImageRuntimeService(runtime ContainerImageRuntime) *ImageRuntimeService {
 	if isNilApplicationDependency(runtime) {
 		runtime = nil
 	}

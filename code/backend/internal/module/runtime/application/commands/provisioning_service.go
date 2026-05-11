@@ -27,19 +27,6 @@ type provisioningRepository interface {
 	ReleasePort(ctx context.Context, port int) error
 }
 
-type provisioningEngine interface {
-	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error)
-	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
-	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
-	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
-	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
-	StartContainer(ctx context.Context, containerID string) error
-	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
-	RemoveContainer(ctx context.Context, containerID string, force bool) error
-	RemoveNetwork(ctx context.Context, networkID string) error
-	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
-}
-
 type createdTopologyNetwork struct {
 	key      string
 	name     string
@@ -51,13 +38,13 @@ type createdTopologyNetwork struct {
 // ProvisioningService 收口运行时资源创建编排，包括单容器与拓扑实例创建。
 type ProvisioningService struct {
 	repo   provisioningRepository
-	engine provisioningEngine
+	engine runtimeports.ContainerProvisioningRuntime
 	config *config.ContainerConfig
 	logger *zap.Logger
 }
 
 // NewProvisioningService 创建运行时资源编排服务。
-func NewProvisioningService(repo provisioningRepository, engine provisioningEngine, cfg *config.ContainerConfig, logger *zap.Logger) *ProvisioningService {
+func NewProvisioningService(repo provisioningRepository, engine runtimeports.ContainerProvisioningRuntime, cfg *config.ContainerConfig, logger *zap.Logger) *ProvisioningService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

@@ -10,14 +10,8 @@ import (
 
 	"ctf-platform/internal/model"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
-
-type runtimeCleanupEngine interface {
-	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
-	RemoveContainer(ctx context.Context, containerID string, force bool) error
-	RemoveNetwork(ctx context.Context, networkID string) error
-	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
-}
 
 type runtimeCleanupRepository interface {
 	ReleasePort(ctx context.Context, port int) error
@@ -25,13 +19,13 @@ type runtimeCleanupRepository interface {
 
 // RuntimeCleanupService 收口实例运行时资源清理能力。
 type RuntimeCleanupService struct {
-	engine runtimeCleanupEngine
+	engine runtimeports.ContainerCleanupRuntime
 	repo   runtimeCleanupRepository
 	logger *zap.Logger
 }
 
 // NewRuntimeCleanupService 创建运行时资源清理服务。
-func NewRuntimeCleanupService(engine runtimeCleanupEngine, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
+func NewRuntimeCleanupService(engine runtimeports.ContainerCleanupRuntime, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

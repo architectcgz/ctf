@@ -10,7 +10,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -144,48 +143,6 @@ func (*typedNilMaintenanceEngine) InspectManagedContainer(context.Context, strin
 
 func (*typedNilMaintenanceEngine) StartContainer(context.Context, string) error {
 	return nil
-}
-
-type compatMaintenanceServiceStub struct {
-	cleanExpiredCalled          bool
-	reconcileLostRuntimesCalled bool
-	cleanupOrphansCalled        bool
-}
-
-func (s *compatMaintenanceServiceStub) CleanExpiredInstances(context.Context) error {
-	s.cleanExpiredCalled = true
-	return nil
-}
-
-func (s *compatMaintenanceServiceStub) ReconcileLostActiveRuntimes(context.Context) error {
-	s.reconcileLostRuntimesCalled = true
-	return nil
-}
-
-func (s *compatMaintenanceServiceStub) CleanupOrphans(context.Context) error {
-	s.cleanupOrphansCalled = true
-	return nil
-}
-
-func TestRuntimeCompatMaintenanceServiceDelegatesToInstanceContract(t *testing.T) {
-	t.Parallel()
-
-	stub := &compatMaintenanceServiceStub{}
-	var delegate instancecontracts.MaintenanceService = stub
-	service := NewRuntimeMaintenanceService(delegate)
-
-	if err := service.CleanExpiredInstances(context.Background()); err != nil {
-		t.Fatalf("CleanExpiredInstances() error = %v", err)
-	}
-	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
-		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
-	}
-	if err := service.CleanupOrphans(context.Background()); err != nil {
-		t.Fatalf("CleanupOrphans() error = %v", err)
-	}
-	if !stub.cleanExpiredCalled || !stub.reconcileLostRuntimesCalled || !stub.cleanupOrphansCalled {
-		t.Fatalf("expected compat delegate calls, got %+v", stub)
-	}
 }
 
 func TestRuntimeMaintenanceServiceCleanupOrphansSkipsActiveAndGracePeriod(t *testing.T) {

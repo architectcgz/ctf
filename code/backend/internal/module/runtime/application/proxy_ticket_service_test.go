@@ -8,8 +8,6 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -311,68 +309,5 @@ func TestProxyTicketServiceIssueTicketPropagatesContextToInstanceReader(t *testi
 	}
 	if !readerCalled {
 		t.Fatal("expected instance reader to be called")
-	}
-}
-
-type compatProxyTicketServiceStub struct {
-	expiresAt time.Time
-}
-
-func (s *compatProxyTicketServiceStub) IssueTicket(_ context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error) {
-	return "ticket-instance", s.expiresAt, nil
-}
-
-func (s *compatProxyTicketServiceStub) IssueAWDTargetTicket(_ context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error) {
-	return "ticket-attack", s.expiresAt, nil
-}
-
-func (s *compatProxyTicketServiceStub) IssueAWDDefenseSSHTicket(_ context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error) {
-	return "ticket-defense", s.expiresAt, nil
-}
-
-func (s *compatProxyTicketServiceStub) ResolveTicket(_ context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
-	return &runtimeports.ProxyTicketClaims{
-		UserID:     7,
-		Username:   ticket,
-		Role:       model.RoleStudent,
-		InstanceID: 42,
-		ShareScope: model.InstanceSharingPerUser,
-	}, nil
-}
-
-func (s *compatProxyTicketServiceStub) ResolveAWDTargetAccessURL(_ context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
-	return "http://compat-target", nil
-}
-
-func TestRuntimeCompatProxyTicketServiceDelegatesToInstanceContract(t *testing.T) {
-	t.Parallel()
-
-	stub := &compatProxyTicketServiceStub{expiresAt: time.Now().UTC()}
-	var delegate instancecontracts.ProxyTicketService = stub
-	service := runtimeqry.NewProxyTicketService(delegate, 900)
-
-	ticket, expiresAt, err := service.IssueTicket(context.Background(), authctx.CurrentUser{Username: "alice"}, 11)
-	if err != nil {
-		t.Fatalf("IssueTicket() error = %v", err)
-	}
-	if ticket != "ticket-instance" || !expiresAt.Equal(stub.expiresAt) {
-		t.Fatalf("unexpected issue result: ticket=%q expiresAt=%s", ticket, expiresAt)
-	}
-	claims, err := service.ResolveTicket(context.Background(), "compat")
-	if err != nil {
-		t.Fatalf("ResolveTicket() error = %v", err)
-	}
-	if claims == nil || claims.InstanceID != 42 || claims.Username != "compat" {
-		t.Fatalf("unexpected claims: %+v", claims)
-	}
-	url, err := service.ResolveAWDTargetAccessURL(context.Background(), claims, 1, 2, 3)
-	if err != nil {
-		t.Fatalf("ResolveAWDTargetAccessURL() error = %v", err)
-	}
-	if url != "http://compat-target" {
-		t.Fatalf("unexpected target url: %q", url)
-	}
-	if service.MaxAge() != 900 {
-		t.Fatalf("MaxAge() = %d, want 900", service.MaxAge())
 	}
 }

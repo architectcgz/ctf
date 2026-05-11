@@ -2,17 +2,13 @@ package application
 
 import "context"
 
-type managedContainerStatsReader interface {
-	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)
-}
-
 // ContainerStatsService 收口受管容器运行指标查询能力。
 type ContainerStatsService struct {
-	reader managedContainerStatsReader
+	reader ManagedContainerStatsReader
 }
 
 // NewContainerStatsService 创建受管容器指标查询服务。
-func NewContainerStatsService(reader managedContainerStatsReader) *ContainerStatsService {
+func NewContainerStatsService(reader ManagedContainerStatsReader) *ContainerStatsService {
 	return &ContainerStatsService{reader: reader}
 }
 
