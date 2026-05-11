@@ -5,6 +5,8 @@ defineOptions({
   inheritAttrs: false,
 })
 
+// Internal structural base for modal templates. Concrete surface visuals such as
+// background, border, radius, and shadow belong to the template or slot root.
 const props = withDefaults(
   defineProps<{
     open: boolean

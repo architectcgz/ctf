@@ -175,17 +175,28 @@ function handleShellOpenChange(next: boolean): void {
   --modal-shell-blur: var(--space-3);
 }
 
-.delete-confirm-modal__panel {
+:deep(.delete-confirm-modal__panel) {
   width: min(var(--delete-confirm-modal-width, 27.5rem), 100%);
   max-height: calc(100vh - (var(--space-4) * 2));
   max-height: calc(100dvh - (var(--space-4) * 2));
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 18%, var(--color-border-default));
+  overflow: visible;
+}
+
+.delete-confirm-modal {
+  --delete-confirm-modal-outer-border: color-mix(
+    in srgb,
+    var(--color-danger) 42%,
+    var(--color-border-default)
+  );
+  width: min(var(--delete-confirm-modal-width, 27.5rem), 100%);
+  max-height: inherit;
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, var(--color-border-default));
   border-radius: var(--ui-dialog-radius-wide);
   background:
     radial-gradient(
       circle at 50% 0,
-      color-mix(in srgb, var(--color-danger) 12%, transparent),
+      color-mix(in srgb, var(--color-danger) 14%, transparent),
       transparent 40%
     ),
     linear-gradient(
@@ -194,17 +205,13 @@ function handleShellOpenChange(next: boolean): void {
       color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
     );
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 92%, white),
+    0 0 0 var(--space-0-5) var(--delete-confirm-modal-outer-border),
+    0 0 0 var(--space-1) color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
     var(--ui-dialog-shadow);
-}
-
-.delete-confirm-modal {
   position: relative;
   display: flex;
-  max-height: inherit;
   flex-direction: column;
   gap: var(--space-4);
-  overflow-y: auto;
   padding: var(--space-8) var(--space-7) var(--space-7);
   text-align: center;
 }
@@ -285,7 +292,7 @@ function handleShellOpenChange(next: boolean): void {
   border-radius: 999px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--color-danger) 84%, white),
+    color-mix(in srgb, var(--color-danger) 84%, var(--color-bg-surface)),
     color-mix(in srgb, var(--color-danger) 94%, var(--color-text-primary))
   );
   color: var(--ui-dialog-surface);
@@ -311,9 +318,14 @@ function handleShellOpenChange(next: boolean): void {
 
 .delete-confirm-modal__warning {
   margin: calc(var(--space-1) * -1) 0 0;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 18%, var(--color-border-default));
+  border-radius: var(--ui-control-radius-md);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface));
+  padding: var(--space-2-5) var(--space-3);
   font-size: var(--font-size-14);
+  font-weight: 650;
   line-height: 1.7;
-  color: var(--color-text-muted);
+  color: color-mix(in srgb, var(--color-danger) 72%, var(--color-text-primary));
 }
 
 .delete-confirm-modal__actions {
@@ -362,7 +374,7 @@ function handleShellOpenChange(next: boolean): void {
   border: 1px solid color-mix(in srgb, var(--color-danger) 28%, transparent);
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--color-danger) 88%, white),
+    color-mix(in srgb, var(--color-danger) 88%, var(--color-bg-surface)),
     color-mix(in srgb, var(--color-danger) 96%, var(--color-text-primary))
   );
   color: var(--ui-dialog-surface);

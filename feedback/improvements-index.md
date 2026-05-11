@@ -16,6 +16,7 @@
 - `feedback/2026-05-08-agent-rules-should-not-accumulate-in-agents.md` ← Agent 规则不应持续堆进 AGENTS
 - `feedback/2026-05-08-project-tasks-default-to-harness.md` ← 项目任务默认进入 Harness
 - `feedback/2026-05-10-top-tab-panels-should-not-repeat-eyebrow.md` ← 带顶部 tab 的页面不应在 tab 面板内重复渲染 eyebrow
+- `feedback/2026-05-11-shared-modal-visible-border-owned-by-slot-root.md` ← 共享弹窗可见边框应由 slot 内容根承接，`:deep` 只用于结构层命中
 
 ## 后续规则
 

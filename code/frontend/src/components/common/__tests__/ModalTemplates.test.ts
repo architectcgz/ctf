@@ -357,6 +357,11 @@ describe('modal templates', () => {
     expect(shellSource).not.toContain('window.addEventListener')
     expect(shellSource).not.toContain('document.body.style.overflow')
     expect(shellSource).not.toContain('background: rgba(15, 23, 42, 0.4);')
+    expect(shellSource).toContain('Internal structural base for modal templates')
+    expect(shellSource).not.toContain('border:')
+    expect(shellSource).not.toContain('border-radius')
+    expect(shellSource).not.toContain('box-shadow')
+    expect(shellSource).not.toContain('overflow:')
 
     expect(classicSource).toContain('.modal-template-panel--classic')
     expect(classicSource).toContain('Resource Editor')
