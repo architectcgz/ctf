@@ -2,182 +2,43 @@ package commands
 
 import (
 	"context"
-	"strings"
-	"time"
+	"fmt"
 
-	"go.uber.org/zap"
-
-	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
+// InstanceService 保留 runtime compat import path，并把实例命令委托给 instance owner。
 type InstanceService struct {
-	repo    instanceCommandRepository
-	cleaner runtimeports.RuntimeCleaner
-	config  *config.ContainerConfig
-	logger  *zap.Logger
+	service instancecontracts.InstanceCommandService
 }
 
-type instanceCommandRepository interface {
-	runtimeports.InstanceLookupRepository
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.InstanceExtendRepository
-	runtimeports.InstanceStatusRepository
-}
-
-func NewInstanceService(repo instanceCommandRepository, cleaner runtimeports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
-	if logger == nil {
-		logger = zap.NewNop()
-	}
-	if cfg == nil {
-		cfg = &config.ContainerConfig{}
-	}
-	return &InstanceService{
-		repo:    repo,
-		cleaner: cleaner,
-		config:  cfg,
-		logger:  logger,
-	}
+func NewInstanceService(service instancecontracts.InstanceCommandService) *InstanceService {
+	return &InstanceService{service: service}
 }
 
 func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
-	ctx = normalizeContext(ctx)
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+	if s == nil || s.service == nil {
+		return errRuntimeCompatInstanceServiceUnavailable()
 	}
-	if instance == nil {
-		return errcode.ErrForbidden
-	}
-	if instance.ShareScope == model.InstanceSharingShared {
-		return errcode.ErrForbidden
-	}
-	if isAWDTeamServiceInstance(instance) {
-		return errcode.ErrForbidden
-	}
-
-	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
-
-	return s.destroyManagedInstance(ctx, instance)
+	return s.service.DestroyInstance(ctx, instanceID, userID)
 }
 
 func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	ctx = normalizeContext(ctx)
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+	if s == nil || s.service == nil {
+		return nil, errRuntimeCompatInstanceServiceUnavailable()
 	}
-	if instance == nil {
-		return nil, errcode.ErrForbidden
-	}
-	if instance.ShareScope == model.InstanceSharingShared {
-		return nil, errcode.ErrForbidden
-	}
-	if isAWDTeamServiceInstance(instance) {
-		return nil, errcode.ErrForbidden
-	}
-	if instance.Status != model.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
-		return nil, errcode.ErrInstanceExpired
-	}
-
-	if err := s.repo.AtomicExtendByID(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
-		return nil, err
-	}
-
-	updatedInstance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if updatedInstance == nil {
-		return nil, errcode.ErrForbidden
-	}
-
-	s.logger.Info("延时实例",
-		zap.Int64("instance_id", instanceID),
-		zap.Int("extend_count", instance.ExtendCount+1),
-		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
-
-	return toInstanceResp(updatedInstance), nil
+	return s.service.ExtendInstance(ctx, instanceID, userID)
 }
 
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
-	ctx = normalizeContext(ctx)
-
-	instance, err := s.repo.FindByID(ctx, instanceID)
-	if err != nil {
-		return errcode.ErrInstanceNotFound
+	if s == nil || s.service == nil {
+		return errRuntimeCompatInstanceServiceUnavailable()
 	}
-
-	if requesterRole != model.RoleAdmin {
-		requester, err := s.repo.FindUserByID(ctx, requesterID)
-		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-		if requester == nil {
-			return errcode.ErrUnauthorized
-		}
-
-		owner, err := s.repo.FindUserByID(ctx, instance.UserID)
-		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-		if owner == nil || strings.TrimSpace(owner.ClassName) == "" || owner.ClassName != requester.ClassName {
-			return errcode.ErrForbidden
-		}
-	}
-
-	s.logger.Info("教师销毁实例",
-		zap.Int64("instance_id", instanceID),
-		zap.Int64("requester_id", requesterID),
-		zap.String("requester_role", requesterRole))
-
-	return s.destroyManagedInstance(ctx, instance)
+	return s.service.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
 }
 
-func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *model.Instance) error {
-	if s.cleaner != nil {
-		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-	}
-	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	return nil
-}
-
-func isAWDTeamServiceInstance(instance *model.Instance) bool {
-	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
-}
-
-func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
-	if inst == nil {
-		return nil
-	}
-	return &dto.InstanceResp{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		ShareScope:       inst.ShareScope,
-		AccessURL:        inst.AccessURL,
-		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
-	}
-}
-
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
+func errRuntimeCompatInstanceServiceUnavailable() error {
+	return errcode.ErrInternal.WithCause(fmt.Errorf("runtime instance compat service is not configured"))
 }

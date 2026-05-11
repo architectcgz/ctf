@@ -14,6 +14,9 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -124,7 +127,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -215,7 +218,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -302,7 +305,7 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -341,7 +344,7 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -380,7 +383,7 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -420,7 +423,7 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -463,7 +466,7 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	_, err := service.GetAccessURL(context.Background(), 1006, 2)
 	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
@@ -485,7 +488,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -573,7 +576,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -622,7 +625,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 		UpdatedAt:   now,
 	})
 
-	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -646,7 +649,7 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
-	service := runtimecmd.NewInstanceService(
+	service := instancecmd.NewInstanceService(
 		runtimeinfrarepo.NewRepository(db),
 		noopRuntimeCleaner{},
 		&config.ContainerConfig{MaxExtends: 2, ExtendDuration: 30 * time.Minute},
@@ -771,7 +774,7 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			return nil
 		},
 	}
-	service := runtimecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.DestroyTeacherInstance(ctx, 201, 1001, model.RoleTeacher); err != nil {
@@ -799,7 +802,7 @@ func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *
 			return nil
 		},
 	}
-	service := runtimecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
 
 	if err := service.DestroyTeacherInstance(nil, 201, 1001, model.RoleAdmin); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
@@ -817,9 +820,127 @@ func TestInstanceQueryServiceDoesNotCreateBackgroundContext(t *testing.T) {
 			return []runtimeports.UserVisibleInstanceRow{}, nil
 		},
 	}
-	service := runtimeqry.NewInstanceService(repo)
+	service := instanceqry.NewInstanceService(repo)
 
 	if _, err := service.GetUserInstances(nil, 2); err != nil {
 		t.Fatalf("GetUserInstances() error = %v", err)
+	}
+}
+
+type compatInstanceCommandServiceStub struct {
+	destroyInstanceCalls       [][2]int64
+	extendInstanceCalls        [][2]int64
+	destroyTeacherInstanceCall struct {
+		instanceID    int64
+		requesterID   int64
+		requesterRole string
+	}
+}
+
+func (s *compatInstanceCommandServiceStub) DestroyInstance(_ context.Context, instanceID, userID int64) error {
+	s.destroyInstanceCalls = append(s.destroyInstanceCalls, [2]int64{instanceID, userID})
+	return nil
+}
+
+func (s *compatInstanceCommandServiceStub) ExtendInstance(_ context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	s.extendInstanceCalls = append(s.extendInstanceCalls, [2]int64{instanceID, userID})
+	return &dto.InstanceResp{ID: instanceID}, nil
+}
+
+func (s *compatInstanceCommandServiceStub) DestroyTeacherInstance(_ context.Context, instanceID, requesterID int64, requesterRole string) error {
+	s.destroyTeacherInstanceCall = struct {
+		instanceID    int64
+		requesterID   int64
+		requesterRole string
+	}{
+		instanceID:    instanceID,
+		requesterID:   requesterID,
+		requesterRole: requesterRole,
+	}
+	return nil
+}
+
+type compatInstanceQueryServiceStub struct {
+	accessURL string
+	instances []*dto.InstanceInfo
+	teachers  []dto.TeacherInstanceItem
+}
+
+func (s *compatInstanceQueryServiceStub) GetAccessURL(_ context.Context, instanceID, userID int64) (string, error) {
+	return fmt.Sprintf("%s/%d/%d", s.accessURL, instanceID, userID), nil
+}
+
+func (s *compatInstanceQueryServiceStub) GetUserInstances(_ context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	if len(s.instances) == 0 {
+		return []*dto.InstanceInfo{{ID: userID}}, nil
+	}
+	return s.instances, nil
+}
+
+func (s *compatInstanceQueryServiceStub) ListTeacherInstances(_ context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+	if len(s.teachers) == 0 {
+		return []dto.TeacherInstanceItem{{ID: requesterID, StudentName: requesterRole}}, nil
+	}
+	return s.teachers, nil
+}
+
+func TestRuntimeCompatInstanceServiceDelegatesToInstanceCommandContract(t *testing.T) {
+	t.Parallel()
+
+	stub := &compatInstanceCommandServiceStub{}
+	var delegate instancecontracts.InstanceCommandService = stub
+	service := runtimecmd.NewInstanceService(delegate)
+
+	if err := service.DestroyInstance(context.Background(), 11, 22); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
+	}
+	resp, err := service.ExtendInstance(context.Background(), 33, 44)
+	if err != nil {
+		t.Fatalf("ExtendInstance() error = %v", err)
+	}
+	if err := service.DestroyTeacherInstance(context.Background(), 55, 66, model.RoleTeacher); err != nil {
+		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+	if len(stub.destroyInstanceCalls) != 1 || stub.destroyInstanceCalls[0] != [2]int64{11, 22} {
+		t.Fatalf("unexpected destroy instance calls: %+v", stub.destroyInstanceCalls)
+	}
+	if len(stub.extendInstanceCalls) != 1 || stub.extendInstanceCalls[0] != [2]int64{33, 44} {
+		t.Fatalf("unexpected extend instance calls: %+v", stub.extendInstanceCalls)
+	}
+	if resp == nil || resp.ID != 33 {
+		t.Fatalf("unexpected extend response: %+v", resp)
+	}
+	if stub.destroyTeacherInstanceCall.instanceID != 55 || stub.destroyTeacherInstanceCall.requesterID != 66 || stub.destroyTeacherInstanceCall.requesterRole != model.RoleTeacher {
+		t.Fatalf("unexpected destroy teacher call: %+v", stub.destroyTeacherInstanceCall)
+	}
+}
+
+func TestRuntimeCompatInstanceServiceDelegatesToInstanceQueryContract(t *testing.T) {
+	t.Parallel()
+
+	stub := &compatInstanceQueryServiceStub{accessURL: "http://compat"}
+	var delegate instancecontracts.InstanceQueryService = stub
+	service := runtimeqry.NewInstanceService(delegate)
+
+	url, err := service.GetAccessURL(context.Background(), 7, 8)
+	if err != nil {
+		t.Fatalf("GetAccessURL() error = %v", err)
+	}
+	if url != "http://compat/7/8" {
+		t.Fatalf("unexpected access url: %q", url)
+	}
+	instances, err := service.GetUserInstances(context.Background(), 9)
+	if err != nil {
+		t.Fatalf("GetUserInstances() error = %v", err)
+	}
+	if len(instances) != 1 || instances[0].ID != 9 {
+		t.Fatalf("unexpected instances: %+v", instances)
+	}
+	teachers, err := service.ListTeacherInstances(context.Background(), 10, model.RoleTeacher, nil)
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() error = %v", err)
+	}
+	if len(teachers) != 1 || teachers[0].ID != 10 || teachers[0].StudentName != model.RoleTeacher {
+		t.Fatalf("unexpected teacher items: %+v", teachers)
 	}
 }

@@ -3,11 +3,14 @@ package commands
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -143,25 +146,45 @@ func (*typedNilMaintenanceEngine) StartContainer(context.Context, string) error 
 	return nil
 }
 
-func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
+type compatMaintenanceServiceStub struct {
+	cleanExpiredCalled          bool
+	reconcileLostRuntimesCalled bool
+	cleanupOrphansCalled        bool
+}
+
+func (s *compatMaintenanceServiceStub) CleanExpiredInstances(context.Context) error {
+	s.cleanExpiredCalled = true
+	return nil
+}
+
+func (s *compatMaintenanceServiceStub) ReconcileLostActiveRuntimes(context.Context) error {
+	s.reconcileLostRuntimesCalled = true
+	return nil
+}
+
+func (s *compatMaintenanceServiceStub) CleanupOrphans(context.Context) error {
+	s.cleanupOrphansCalled = true
+	return nil
+}
+
+func TestRuntimeCompatMaintenanceServiceDelegatesToInstanceContract(t *testing.T) {
 	t.Parallel()
 
-	now := time.Now()
-	managedContainers := []runtimeports.ManagedContainer{
-		{ID: "active", Name: "ctf-instance-active", CreatedAt: now.Add(-10 * time.Minute)},
-		{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: now.Add(-2 * time.Minute)},
-		{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: now.Add(-12 * time.Minute)},
-	}
-	activeContainerIDs := map[string]struct{}{
-		"active": {},
-	}
+	stub := &compatMaintenanceServiceStub{}
+	var delegate instancecontracts.MaintenanceService = stub
+	service := NewRuntimeMaintenanceService(delegate)
 
-	orphanContainers := selectOrphanContainers(managedContainers, activeContainerIDs, 5*time.Minute)
-	if len(orphanContainers) != 1 {
-		t.Fatalf("expected 1 orphan container, got %d (%v)", len(orphanContainers), orphanContainers)
+	if err := service.CleanExpiredInstances(context.Background()); err != nil {
+		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
-	if orphanContainers[0].ID != "orphan" {
-		t.Fatalf("unexpected orphan container: %+v", orphanContainers[0])
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if err := service.CleanupOrphans(context.Background()); err != nil {
+		t.Fatalf("CleanupOrphans() error = %v", err)
+	}
+	if !stub.cleanExpiredCalled || !stub.reconcileLostRuntimesCalled || !stub.cleanupOrphansCalled {
+		t.Fatalf("expected compat delegate calls, got %+v", stub)
 	}
 }
 
@@ -179,7 +202,7 @@ func TestRuntimeMaintenanceServiceCleanupOrphansSkipsActiveAndGracePeriod(t *tes
 		},
 	}
 	cleaner := &maintenanceTestCleaner{}
-	service := NewRuntimeMaintenanceService(repo, engine, cleaner, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, cleaner, &config.ContainerConfig{
 		OrphanGracePeriod: 5 * time.Minute,
 	}, nil)
 
@@ -198,9 +221,10 @@ func TestNewRuntimeMaintenanceServiceTreatsTypedNilEngineAsNil(t *testing.T) {
 	t.Parallel()
 
 	var typedNil *typedNilMaintenanceEngine
-	service := NewRuntimeMaintenanceService(&maintenanceTestRepository{}, typedNil, nil, &config.ContainerConfig{}, nil)
-	if service.engine != nil {
-		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", service.engine)
+	service := instancecmd.NewInstanceMaintenanceService(&maintenanceTestRepository{}, typedNil, nil, &config.ContainerConfig{}, nil)
+	engineField := reflect.ValueOf(service).Elem().FieldByName("engine")
+	if !engineField.IsNil() {
+		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", engineField)
 	}
 }
 
@@ -230,7 +254,7 @@ func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToReposi
 			return nil
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{}, nil)
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.CleanExpiredInstances(ctx); err != nil {
@@ -259,7 +283,7 @@ func TestRuntimeMaintenanceServiceCleanupOrphansPropagatesContextToRepository(t 
 			{ID: "active", Name: "ctf-instance-active", CreatedAt: time.Now().Add(-10 * time.Minute)},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, engine, &maintenanceTestCleaner{}, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, &maintenanceTestCleaner{}, &config.ContainerConfig{
 		OrphanGracePeriod: 5 * time.Minute,
 	}, nil)
 
@@ -288,7 +312,7 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 			"missing-container": {ID: "missing-container", Exists: false},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, nil, &config.ContainerConfig{
 		CreateTimeout: 30 * time.Second,
 	}, nil)
 
@@ -336,7 +360,7 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 			"sidecar": {ID: "sidecar", Exists: true, Running: false, Status: "exited"},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, nil, &config.ContainerConfig{
 		CreateTimeout: 30 * time.Second,
 	}, nil)
 
@@ -374,7 +398,7 @@ func TestRuntimeMaintenanceServiceSkipsFreshCreatingInstanceWithoutContainer(t *
 			},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{}, nil, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, &maintenanceTestEngine{}, nil, &config.ContainerConfig{
 		CreateTimeout: 30 * time.Second,
 	}, nil)
 
@@ -400,7 +424,7 @@ func TestRuntimeMaintenanceServiceSkipsInstanceWhenDockerInspectFails(t *testing
 			},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{
+	service := instancecmd.NewInstanceMaintenanceService(repo, &maintenanceTestEngine{
 		inspectErr: fmt.Errorf("docker unavailable"),
 	}, nil, &config.ContainerConfig{
 		CreateTimeout: 30 * time.Second,
@@ -435,7 +459,7 @@ func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *te
 			},
 		},
 	}
-	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{
+	service := instancecmd.NewInstanceMaintenanceService(repo, &maintenanceTestEngine{
 		inspectErrs: map[string]error{
 			"inspect-fails": fmt.Errorf("docker inspect failed"),
 		},

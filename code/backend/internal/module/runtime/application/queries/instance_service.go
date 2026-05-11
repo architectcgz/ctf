@@ -2,176 +2,43 @@ package queries
 
 import (
 	"context"
-	"strings"
-	"time"
+	"fmt"
 
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
+// InstanceService 保留 runtime compat import path，并把实例查询委托给 instance owner。
 type InstanceService struct {
-	repo instanceQueryRepository
+	service instancecontracts.InstanceQueryService
 }
 
-type instanceQueryRepository interface {
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.UserVisibleInstanceRepository
-	runtimeports.TeacherInstanceQueryRepository
-}
-
-func NewInstanceService(repo instanceQueryRepository) *InstanceService {
-	return &InstanceService{repo: repo}
+func NewInstanceService(service instancecontracts.InstanceQueryService) *InstanceService {
+	return &InstanceService{service: service}
 }
 
 func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
-	ctx = normalizeContext(ctx)
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return "", errcode.ErrInternal.WithCause(err)
+	if s == nil || s.service == nil {
+		return "", errRuntimeCompatInstanceQueryServiceUnavailable()
 	}
-	if instance == nil {
-		return "", errcode.ErrForbidden
-	}
-	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
-		return "", errcode.ErrInstanceExpired
-	}
-
-	return instance.AccessURL, nil
+	return s.service.GetAccessURL(ctx, instanceID, userID)
 }
 
 func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	ctx = normalizeContext(ctx)
-
-	instances, err := s.repo.ListVisibleByUser(ctx, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+	if s == nil || s.service == nil {
+		return nil, errRuntimeCompatInstanceQueryServiceUnavailable()
 	}
-
-	now := time.Now()
-	result := make([]*dto.InstanceInfo, len(instances))
-	for idx, inst := range instances {
-		result[idx] = toInstanceInfo(inst, now)
-	}
-	return result, nil
+	return s.service.GetUserInstances(ctx, userID)
 }
 
 func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
-	ctx = normalizeContext(ctx)
-
-	filter := runtimeports.TeacherInstanceFilter{}
-	if query != nil {
-		filter.ClassName = strings.TrimSpace(query.ClassName)
-		filter.Keyword = strings.TrimSpace(query.Keyword)
-		filter.StudentNo = strings.TrimSpace(query.StudentNo)
+	if s == nil || s.service == nil {
+		return nil, errRuntimeCompatInstanceQueryServiceUnavailable()
 	}
-
-	if requesterRole != model.RoleAdmin {
-		requester, err := s.repo.FindUserByID(ctx, requesterID)
-		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
-		}
-		if requester == nil {
-			return nil, errcode.ErrUnauthorized
-		}
-
-		className := strings.TrimSpace(requester.ClassName)
-		if className == "" {
-			return []dto.TeacherInstanceItem{}, nil
-		}
-		if filter.ClassName != "" && filter.ClassName != className {
-			return nil, errcode.ErrForbidden
-		}
-		filter.ClassName = className
-	}
-
-	items, err := s.repo.ListTeacherInstances(ctx, filter)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	now := time.Now()
-	result := make([]dto.TeacherInstanceItem, len(items))
-	for idx, item := range items {
-		result[idx] = toTeacherInstanceItem(item, now)
-	}
-
-	return result, nil
+	return s.service.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 
-func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
-	accessURL := inst.AccessURL
-	if inst.ContestMode == model.ContestModeAWD {
-		accessURL = ""
-	}
-	return &dto.InstanceInfo{
-		ID:               inst.ID,
-		ContestMode:      inst.ContestMode,
-		ChallengeID:      inst.ChallengeID,
-		ChallengeTitle:   inst.ChallengeTitle,
-		Category:         inst.Category,
-		Difficulty:       inst.Difficulty,
-		FlagType:         inst.FlagType,
-		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
-		ShareScope:       inst.ShareScope,
-		AccessURL:        accessURL,
-		Access:           dto.BuildInstanceAccessInfo(accessURL),
-		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    remainingTime(inst.ExpiresAt, now),
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
-	}
-}
-
-func toTeacherInstanceItem(item runtimeports.TeacherInstanceRow, now time.Time) dto.TeacherInstanceItem {
-	return dto.TeacherInstanceItem{
-		ID:              item.ID,
-		StudentID:       item.StudentID,
-		StudentName:     item.StudentName,
-		StudentUsername: item.StudentUsername,
-		StudentNo:       item.StudentNo,
-		ClassName:       item.ClassName,
-		ChallengeID:     item.ChallengeID,
-		ChallengeTitle:  item.ChallengeTitle,
-		Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
-		AccessURL:       item.AccessURL,
-		Access:          dto.BuildInstanceAccessInfo(item.AccessURL),
-		ExpiresAt:       item.ExpiresAt,
-		RemainingTime:   remainingTime(item.ExpiresAt, now),
-		ExtendCount:     item.ExtendCount,
-		MaxExtends:      item.MaxExtends,
-		CreatedAt:       item.CreatedAt,
-	}
-}
-
-func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
-	if status == model.InstanceStatusRunning && !expiresAt.After(now) {
-		return model.InstanceStatusExpired
-	}
-	return status
-}
-
-func remainingTime(expiresAt, now time.Time) int64 {
-	remaining := int64(expiresAt.Sub(now).Seconds())
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
-}
-
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
-}
-
-func normalizeContext(ctx context.Context) context.Context {
-	return ctx
+func errRuntimeCompatInstanceQueryServiceUnavailable() error {
+	return errcode.ErrInternal.WithCause(fmt.Errorf("runtime instance query compat service is not configured"))
 }
