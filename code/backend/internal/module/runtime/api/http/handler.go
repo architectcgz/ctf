@@ -46,10 +46,6 @@ type runtimeService interface {
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
-	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
-	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error)
-	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
-	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -226,22 +222,6 @@ func (h *Handler) AccessAWDDefenseSSH(c *gin.Context) {
 	}
 
 	response.Success(c, resp)
-}
-
-func (h *Handler) ReadAWDDefenseFile(c *gin.Context) {
-	response.FromError(c, errcode.ErrForbidden)
-}
-
-func (h *Handler) ListAWDDefenseDirectory(c *gin.Context) {
-	response.FromError(c, errcode.ErrForbidden)
-}
-
-func (h *Handler) SaveAWDDefenseFile(c *gin.Context) {
-	response.FromError(c, errcode.ErrForbidden)
-}
-
-func (h *Handler) RunAWDDefenseCommand(c *gin.Context) {
-	response.FromError(c, errcode.ErrForbidden)
 }
 
 func (h *Handler) ProxyAWDTarget(c *gin.Context) {

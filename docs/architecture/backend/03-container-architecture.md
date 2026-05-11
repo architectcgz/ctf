@@ -25,8 +25,8 @@
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
-- `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_adapter_compat.go,awd_defense_ssh_gateway.go}`
-  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路
+- `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go}`
+  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 入口
   - 不负责：让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
 
 ## 接口或数据影响

@@ -7,9 +7,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -18,7 +16,6 @@ type runtimeHTTPServiceAdapter struct {
 	commandService       instancecontracts.InstanceCommandService
 	queryService         instancecontracts.InstanceQueryService
 	proxyTickets         instancecontracts.ProxyTicketService
-	defenseWorkbench     instancecontracts.AWDDefenseWorkbenchService
 	proxyBodyPreviewSize int
 	proxyTicketMaxAge    int
 	defenseSSHEnabled    bool
@@ -30,7 +27,6 @@ func newRuntimeHTTPServiceAdapter(
 	commandService instancecontracts.InstanceCommandService,
 	queryService instancecontracts.InstanceQueryService,
 	proxyTickets instancecontracts.ProxyTicketService,
-	defenseWorkbench instancecontracts.AWDDefenseWorkbenchService,
 	proxyBodyPreviewSize int,
 	proxyTicketMaxAge int,
 	defenseSSHEnabled bool,
@@ -41,7 +37,6 @@ func newRuntimeHTTPServiceAdapter(
 		commandService:       commandService,
 		queryService:         queryService,
 		proxyTickets:         proxyTickets,
-		defenseWorkbench:     defenseWorkbench,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 		proxyTicketMaxAge:    proxyTicketMaxAge,
 		defenseSSHEnabled:    defenseSSHEnabled,
@@ -133,34 +128,6 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 	}, nil
 }
 
-func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
-	if a == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPInstanceServiceUnavailable()
-	}
-	return a.defenseWorkbench.ReadAWDDefenseFile(ctx, user, contestID, serviceID, filePath)
-}
-
-func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
-	if a == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPInstanceServiceUnavailable()
-	}
-	return a.defenseWorkbench.ListAWDDefenseDirectory(ctx, user, contestID, serviceID, dirPath)
-}
-
-func (a *runtimeHTTPServiceAdapter) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
-	if a == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPInstanceServiceUnavailable()
-	}
-	return a.defenseWorkbench.SaveAWDDefenseFile(ctx, user, contestID, serviceID, req)
-}
-
-func (a *runtimeHTTPServiceAdapter) RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
-	if a == nil || a.defenseWorkbench == nil {
-		return nil, errRuntimeHTTPInstanceServiceUnavailable()
-	}
-	return a.defenseWorkbench.RunAWDDefenseCommand(ctx, user, contestID, serviceID, req)
-}
-
 func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
 }
@@ -195,62 +162,4 @@ func (a *runtimeHTTPServiceAdapter) ProxyBodyPreviewSize() int {
 
 func errRuntimeHTTPInstanceServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("instance application service is not configured"))
-}
-
-func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {
-	if req == nil {
-		return nil
-	}
-	networks := make([]runtimeports.TopologyCreateNetwork, 0, len(req.Networks))
-	for _, network := range req.Networks {
-		networks = append(networks, runtimeports.TopologyCreateNetwork{
-			Key:      network.Key,
-			Name:     network.Name,
-			Internal: network.Internal,
-			Shared:   network.Shared,
-		})
-	}
-	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
-	for _, node := range req.Nodes {
-		nodes = append(nodes, runtimeports.TopologyCreateNode{
-			Key:             node.Key,
-			Image:           node.Image,
-			Env:             cloneStringMap(node.Env),
-			ServicePort:     node.ServicePort,
-			ServiceProtocol: node.ServiceProtocol,
-			IsEntryPoint:    node.IsEntryPoint,
-			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
-			NetworkAliases:  append([]string(nil), node.NetworkAliases...),
-			Resources:       cloneResourceLimits(node.Resources),
-		})
-	}
-	return &runtimeports.TopologyCreateRequest{
-		Networks:                   networks,
-		Nodes:                      nodes,
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		ReservedHostPort:           req.ReservedHostPort,
-		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
-	}
-}
-
-func cloneStringMap(input map[string]string) map[string]string {
-	if len(input) == 0 {
-		return nil
-	}
-	output := make(map[string]string, len(input))
-	for key, value := range input {
-		output[key] = value
-	}
-	return output
-}
-
-func cloneResourceLimits(input *model.ResourceLimits) *model.ResourceLimits {
-	if input == nil {
-		return nil
-	}
-	return &model.ResourceLimits{
-		CPUQuota:  input.CPUQuota,
-		Memory:    input.Memory,
-		PidsLimit: input.PidsLimit,
-	}
 }

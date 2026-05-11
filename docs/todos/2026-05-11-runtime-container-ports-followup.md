@@ -9,15 +9,15 @@
 
 ## 当前待办
 
-- [ ] P0：先处理 `internal/app/composition/runtime_adapter_compat.go` 中 AWD defense workbench 的容器文件 / 命令访问
+- [x] P0：先处理 `internal/app/composition/runtime_adapter_compat.go` 中 AWD defense workbench 的容器文件 / 命令访问
   - 在 `instance` owner 侧定义明确 contract
   - 把 scope、可编辑路径、敏感路径、backup、命令超时这些判断迁到 owner 应用服务
   - composition 只保留 wiring，底层容器文件 / 命令能力通过 container runtime port 注入
-- [ ] P1：继续把 Docker / ACL / 文件操作往 container runtime ports 收口
+- [x] P1：继续把 Docker / ACL / 文件操作往 container runtime ports 收口
   - 清掉 `internal/module/runtime/*` 里仍混住的“实例业务 + 容器适配”残留
-- [ ] P1：继续缩小 `runtime` 物理模块职责
+- [x] P1：继续缩小 `runtime` 物理模块职责
   - 保持 `runtime` 只承接 container-facing capability，不再回流 repo / config / engine 级构造逻辑
-- [ ] P1：决定 `runtime_adapter_compat.go` 是继续保留还是删除
+- [x] P1：决定 `runtime_adapter_compat.go` 是继续保留还是删除
   - 如果 compat path 继续保留，只允许保持薄 wrapper
   - 如果仓库内生产调用已经迁空，下一刀就是删除 compat 文件本体
 - [ ] P2：补一轮新的 architecture guardrail
@@ -25,6 +25,6 @@
 
 ## 本轮完成标准
 
-- 第一个切片完成后，`runtime_adapter_compat.go` 不再承载 AWD defense workbench 的核心业务判断
-- `instance` owner 对这组能力的 contract、实现和测试能独立表达
-- 后续三项都能基于这个落点继续推进，而不是再回到 composition 补临时逻辑
+- `runtime_adapter_compat.go` 已删除，仍然需要的 runtime HTTP facade 现在位于 `internal/app/composition/runtime_http_service_adapter.go`
+- `instance` owner 对 AWD defense workbench 的 contract、实现和测试已能独立表达，但当前生产路由只保留 AWD defense SSH，不再注入浏览器 workbench facade
+- 下一轮仅剩新的 architecture guardrail，用来防止 compat 逻辑、宽 engine 依赖和 owner 混住再次回流

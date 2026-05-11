@@ -8,7 +8,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
-	instanceapp "ctf-platform/internal/module/instance/application"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -65,14 +64,6 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		repo,
 		cfg.Container.ProxyTicketTTL,
 	)
-	defenseWorkbenchService := instanceapp.NewAWDDefenseWorkbenchService(
-		repo,
-		newInstanceAWDDefenseWorkbenchRuntime(module.FileRuntime),
-		instanceapp.AWDDefenseWorkbenchConfig{
-			ReadOnlyEnabled: cfg.Container.DefenseWorkbenchReadOnlyEnabled,
-			Root:            cfg.Container.DefenseWorkbenchRoot,
-		},
-	)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		repo,
 		newInstanceMaintenanceRuntime(module.ManagedContainerInventory, module.ProvisioningRuntime),
@@ -117,7 +108,6 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			commandService,
 			queryService,
 			proxyTicketService,
-			defenseWorkbenchService,
 			cfg.Container.ProxyBodyPreviewSize,
 			int(cfg.Container.ProxyTicketTTL.Seconds()),
 			cfg.Container.DefenseSSHEnabled && module.InteractiveExecutor != nil,
@@ -142,17 +132,6 @@ func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {
 		Secure:   cfg.Auth.SessionCookieSecure,
 		SameSite: cfg.Auth.CookieSameSite(),
 	}, m.proxyTrafficRecorder)
-}
-
-type instanceAWDDefenseWorkbenchRuntimeAdapter struct {
-	runtime runtimeports.ContainerFileRuntime
-}
-
-func newInstanceAWDDefenseWorkbenchRuntime(runtime runtimeports.ContainerFileRuntime) *instanceAWDDefenseWorkbenchRuntimeAdapter {
-	if runtime == nil {
-		return nil
-	}
-	return &instanceAWDDefenseWorkbenchRuntimeAdapter{runtime: runtime}
 }
 
 type instanceMaintenanceRuntimeAdapter struct {
@@ -189,44 +168,4 @@ func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, 
 		return nil
 	}
 	return a.provisioning.StartContainer(ctx, containerID)
-}
-
-func (a *instanceAWDDefenseWorkbenchRuntimeAdapter) ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error) {
-	if a == nil || a.runtime == nil {
-		return nil, nil
-	}
-	return a.runtime.ReadFileFromContainer(ctx, containerID, filePath, limit)
-}
-
-func (a *instanceAWDDefenseWorkbenchRuntimeAdapter) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]instanceports.ContainerDirectoryEntry, error) {
-	if a == nil || a.runtime == nil {
-		return nil, nil
-	}
-	entries, err := a.runtime.ListDirectoryFromContainer(ctx, containerID, dirPath, limit)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]instanceports.ContainerDirectoryEntry, 0, len(entries))
-	for _, entry := range entries {
-		result = append(result, instanceports.ContainerDirectoryEntry{
-			Name: entry.Name,
-			Type: entry.Type,
-			Size: entry.Size,
-		})
-	}
-	return result, nil
-}
-
-func (a *instanceAWDDefenseWorkbenchRuntimeAdapter) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
-	if a == nil || a.runtime == nil {
-		return nil
-	}
-	return a.runtime.WriteFileToContainer(ctx, containerID, filePath, content)
-}
-
-func (a *instanceAWDDefenseWorkbenchRuntimeAdapter) ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error) {
-	if a == nil || a.runtime == nil {
-		return nil, nil
-	}
-	return a.runtime.ExecContainerCommand(ctx, containerID, command, stdin, limit)
 }

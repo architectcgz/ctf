@@ -4,7 +4,7 @@
 >
 > 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0），应与本文保持一致。
 >
-> 最后更新：2026-04-18
+> 最后更新：2026-05-11
 
 ---
 
@@ -23,6 +23,11 @@
 - WebSocket：`ctf/docs/architecture/backend/04-api-design.md` §6
 
 不在上述前端模块中的后端接口（例如更多后台管理/教师接口）不在本契约详列；需要时应新增条目后再实现。
+
+补充约束：
+
+- 当前 AWD 学生侧前端契约只包含 defense SSH 访问，不包含浏览器文件工作台。
+- 因此不存在 `/api/v1/contests/:id/awd/services/:sid/defense/files`、`/defense/directories`、`/defense/commands` 的前端可用 HTTP 契约条目。
 
 ---
 

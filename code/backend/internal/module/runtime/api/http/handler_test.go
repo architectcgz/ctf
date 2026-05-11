@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -52,22 +51,6 @@ func (stubRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.Cur
 }
 
 func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
-	return nil, nil
-}
-
-func (stubRuntimeService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error) {
-	return nil, nil
-}
-
-func (stubRuntimeService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error) {
-	return nil, nil
-}
-
-func (stubRuntimeService) SaveAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
-	return nil, nil
-}
-
-func (stubRuntimeService) RunAWDDefenseCommand(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
 	return nil, nil
 }
 
@@ -122,50 +105,6 @@ func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Contex
 	return s.resp, nil
 }
 
-type stubAWDDefenseWorkbenchRuntimeService struct {
-	stubRuntimeService
-	fileResp      *dto.AWDDefenseFileResp
-	directoryResp *dto.AWDDefenseDirectoryResp
-	saveResp      *dto.AWDDefenseFileSaveResp
-	commandResp   *dto.AWDDefenseCommandResp
-	readFn        func(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error)
-	listFn        func(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error)
-}
-
-func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
-	if s.readFn != nil {
-		return s.readFn(ctx, user, contestID, serviceID, filePath)
-	}
-	if contestID != 5 || serviceID != 12 || filePath != "app.py" {
-		return nil, errors.New("unexpected read args")
-	}
-	return s.fileResp, nil
-}
-
-func (s stubAWDDefenseWorkbenchRuntimeService) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
-	if s.listFn != nil {
-		return s.listFn(ctx, user, contestID, serviceID, dirPath)
-	}
-	if contestID != 5 || serviceID != 12 || dirPath != "." {
-		return nil, errors.New("unexpected list args")
-	}
-	return s.directoryResp, nil
-}
-
-func (s stubAWDDefenseWorkbenchRuntimeService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
-	if contestID != 5 || serviceID != 12 || req.Path != "app.py" || req.Content != "print('fixed')" || !req.Backup {
-		return nil, errors.New("unexpected save args")
-	}
-	return s.saveResp, nil
-}
-
-func (s stubAWDDefenseWorkbenchRuntimeService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
-	if contestID != 5 || serviceID != 12 || req.Command != "ls" {
-		return nil, errors.New("unexpected command args")
-	}
-	return s.commandResp, nil
-}
-
 func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -212,50 +151,6 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 	if strings.Contains(resp.Body.String(), `"ssh_profile":`) {
 		t.Fatalf("expected response to omit ssh profile, got %s", resp.Body.String())
-	}
-}
-
-func TestAWDDefenseWorkbenchHandlersAreDisabled(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	handler := NewHandler(
-		stubAWDDefenseWorkbenchRuntimeService{},
-		nil,
-		CookieConfig{},
-		nil,
-	)
-
-	router := gin.New()
-	router.Use(func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
-		c.Set("id", int64(5))
-		c.Set("sid", int64(12))
-	})
-	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/directories", handler.ListAWDDefenseDirectory)
-	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.ReadAWDDefenseFile)
-	router.PUT("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.SaveAWDDefenseFile)
-	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/commands", handler.RunAWDDefenseCommand)
-
-	cases := []struct {
-		method string
-		target string
-		body   io.Reader
-	}{
-		{method: http.MethodGet, target: "/api/v1/contests/5/awd/services/12/defense/files?path=app.py"},
-		{method: http.MethodGet, target: "/api/v1/contests/5/awd/services/12/defense/directories?path=."},
-		{method: http.MethodPut, target: "/api/v1/contests/5/awd/services/12/defense/files", body: strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`)},
-		{method: http.MethodPost, target: "/api/v1/contests/5/awd/services/12/defense/commands", body: strings.NewReader(`{"command":"ls"}`)},
-	}
-	for _, item := range cases {
-		req := httptest.NewRequest(item.method, item.target, item.body)
-		if item.body != nil {
-			req.Header.Set("Content-Type", "application/json")
-		}
-		rec := httptest.NewRecorder()
-		router.ServeHTTP(rec, req)
-		if rec.Code != http.StatusForbidden {
-			t.Fatalf("%s %s expected 403, got %d body=%s", item.method, item.target, rec.Code, rec.Body.String())
-		}
 	}
 }
 

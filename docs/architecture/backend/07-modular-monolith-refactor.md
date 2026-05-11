@@ -324,8 +324,9 @@ flowchart LR
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
 - `runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口
 - `composition.BuildContainerRuntimeModule(...)` 仍可在边缘用本地 `buildRuntimeEngine(...)` helper 绑定底层实现，但 `InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
-- 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_adapter_compat.go`；`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
+- 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_http_service_adapter.go`；`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
+- `composition/runtime_adapter_compat.go` 也已删除；当前活跃的 runtime HTTP facade 只保留在 `composition/runtime_http_service_adapter.go`，并且只覆盖仍在路由表里的实例访问、proxy 和 AWD defense SSH 入口
 - `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service
 - `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；这些 service 和 app 层 wiring 现在都围绕显式 capability port 组合，不再把 `runtime/runtime.Module.Engine` 当成公共结构面
 

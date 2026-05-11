@@ -30,7 +30,7 @@
 - 题包必须声明 `extensions.awd.runtime_config.defense_workspace`，且 `defense_workspace.entry_mode` 当前只支持 `ssh`。
 - 旧的 `defense_scope.editable_paths` 已被后端明确拒绝，不再作为学生防守边界。
 - SSH 登录目标是独立 `defense workspace` 容器，网关登录后工作目录固定为 `/workspace`，不是比赛服务容器根目录。
-- 后端仍保留过往浏览器文件工作台的适配器和 DTO，但当前学生 HTTP 路由没有暴露 `defense/files`、`defense/directories`、`defense/commands`。
+- 后端仍保留过往浏览器文件工作台的 DTO 和 owner service 残留，但当前学生 HTTP 路由没有暴露 `defense/files`、`defense/directories`、`defense/commands`，runtime HTTP facade 也不再继续声明这组接口。
 
 ## 3. 模块边界与职责
 
@@ -148,7 +148,7 @@
 - `code/backend/internal/module/contest/application/queries/awd_workspace_query.go`
 - `code/backend/internal/module/contest/application/queries/awd_workspace_result.go`
 - `code/backend/internal/module/runtime/infrastructure/awd_target_proxy_repository.go`
-- `code/backend/internal/app/composition/runtime_adapter_compat.go`
+- `code/backend/internal/app/composition/runtime_http_service_adapter.go`
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
 - `code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue`
 - `code/frontend/src/features/contest-awd-workspace/model/useAwdWorkspaceAccessActions.ts`

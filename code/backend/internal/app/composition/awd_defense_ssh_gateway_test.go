@@ -19,6 +19,22 @@ type stubAWDDefenseSSHGatewayProxyTickets struct {
 	err    error
 }
 
+type stubRuntimeHTTPProxyTicketReader struct {
+	scope *runtimeports.AWDDefenseSSHScope
+}
+
+func (s stubRuntimeHTTPProxyTicketReader) FindByID(context.Context, int64) (*model.Instance, error) {
+	return nil, nil
+}
+
+func (s stubRuntimeHTTPProxyTicketReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*runtimeports.AWDTargetProxyScope, error) {
+	return nil, nil
+}
+
+func (s stubRuntimeHTTPProxyTicketReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*runtimeports.AWDDefenseSSHScope, error) {
+	return s.scope, nil
+}
+
 func (s stubAWDDefenseSSHGatewayProxyTickets) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (string, time.Time, error) {
 	return "", time.Time{}, nil
 }
