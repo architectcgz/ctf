@@ -238,6 +238,11 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
   })
 
+  it('班级学生薄弱项应复用题目分类胶囊色，并先归一化后判断分类值', () => {
+    expect(classStudentsPageSource).toContain('ChallengeCategoryPill')
+    expect(classStudentsPageSource).toContain('toChallengeCategory(student.weak_dimension)')
+  })
+
   it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)

@@ -5,6 +5,7 @@ import { Edit } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 
 const props = withDefaults(
@@ -66,6 +67,10 @@ const summaryItems = computed(() => [
     hint: '已落入赛事级服务关联表的题目数',
   },
 ])
+
+function challengeCategory(value?: string | null) {
+  return toChallengeCategory(value)
+}
 
 function formatValidationDateTime(value?: string): string {
   if (!value) {
@@ -281,7 +286,12 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
                     {{ getChallengeTitle(item) }}
                   </RouterLink>
                   <div class="challenge-subtitle">
-                    {{ item.category }} · RANK {{ item.order }}
+                    <ChallengeCategoryPill
+                      v-if="challengeCategory(item.category)"
+                      :category="challengeCategory(item.category)!"
+                    />
+                    <span v-else>{{ item.category || '通用' }}</span>
+                    <span>RANK {{ item.order }}</span>
                   </div>
                 </div>
               </td>
@@ -466,6 +476,10 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
 }
 
 .challenge-subtitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   margin-top: var(--space-1);
   font-size: var(--font-size-13);
   color: var(--color-text-muted);

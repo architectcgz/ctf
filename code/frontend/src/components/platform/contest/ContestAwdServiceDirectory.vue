@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AdminContestAWDServiceData, AWDCheckerType } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 defineProps<{
   loading: boolean
@@ -13,6 +14,10 @@ defineProps<{
 const emit = defineEmits<{
   select: [service: AdminContestAWDServiceData]
 }>()
+
+function serviceCategory(value?: string | null) {
+  return toChallengeCategory(value)
+}
 </script>
 
 <template>
@@ -46,7 +51,11 @@ const emit = defineEmits<{
         <span class="awd-service-row__index">#{{ service.order }}</span>
         <span class="awd-service-row__main">
           <strong :title="service.display_name">{{ service.display_name }}</strong>
-          <small>{{ service.category || '通用' }}</small>
+          <ChallengeCategoryPill
+            v-if="serviceCategory(service.category)"
+            :category="serviceCategory(service.category)!"
+          />
+          <small v-else>{{ service.category || '通用' }}</small>
         </span>
         <span class="awd-service-row__meta">
           <span class="awd-service-row__checker">{{ getCheckerTypeLabel(service.checker_type) }}</span>

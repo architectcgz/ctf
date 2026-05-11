@@ -231,6 +231,12 @@ describe('TeacherStudentManagement', () => {
     expect(teacherStudentManagementSource).not.toContain('const directoryParams = computed')
   })
 
+  it('薄弱项列应复用题目分类胶囊色，并先归一化后判断分类值', () => {
+    expect(studentManagementSource).toContain('ChallengeCategoryPill')
+    expect(studentManagementSource).toContain('toChallengeCategory(row.weak_dimension)')
+    expect(studentManagementSource).toContain('<template #cell-weak_dimension')
+  })
+
   it('管理员从学生管理返回班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
     authStore.setAuth({

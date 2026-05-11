@@ -7,6 +7,7 @@ import type {
   TeacherClassReviewItemData,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 
 const props = defineProps<{
   review: TeacherClassReviewData | null
@@ -101,9 +102,11 @@ function severityLabel(severity: AdviceSeverity): string {
               <div class="review-item__recommendation-title">
                 {{ item.recommendation.title }}
               </div>
-              <div class="review-item__recommendation-meta">
-                {{ item.recommendation.category }} · {{ item.recommendation.difficulty }}
-              </div>
+              <ChallengeCategoryDifficultyPills
+                class="review-item__recommendation-meta"
+                :category="item.recommendation.category"
+                :difficulty="item.recommendation.difficulty"
+              />
             </div>
             <div class="review-item__recommendation-reason">
               {{ item.recommendation.summary }}

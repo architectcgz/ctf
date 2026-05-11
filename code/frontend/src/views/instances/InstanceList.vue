@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { Activity, Clock3, Server } from 'lucide-vue-next'
 
+import type { ChallengeDifficulty } from '@/api/contracts'
+import { ChallengeCategoryPill, ChallengeDifficultyText, getChallengeDifficultyColor } from '@/entities/challenge'
 import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
@@ -34,6 +36,15 @@ const {
 
 const warningCloseButton = ref<HTMLButtonElement | null>(null)
 useInstanceWarningFocus({ showWarning, warningCloseButton })
+
+function difficultyPillStyle(difficulty: ChallengeDifficulty): Record<string, string> {
+  const color = getChallengeDifficultyColor(difficulty)
+  return {
+    '--instance-difficulty-pill-color': color,
+    '--instance-difficulty-pill-bg': `color-mix(in srgb, ${color} 10%, transparent)`,
+    '--instance-difficulty-pill-border': `color-mix(in srgb, ${color} 22%, transparent)`,
+  }
+}
 </script>
 
 <template>
@@ -149,17 +160,16 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
                 </div>
 
                 <div class="instance-row-category">
-                  <span
-                    class="workspace-directory-status-pill instance-chip instance-chip-category"
-                    >{{ instance.category }}</span
-                  >
+                  <ChallengeCategoryPill :category="instance.category" />
                 </div>
 
                 <div class="instance-row-difficulty">
                   <span
                     class="workspace-directory-status-pill instance-chip instance-chip-difficulty"
-                    >{{ instance.difficulty }}</span
+                    :style="difficultyPillStyle(instance.difficulty)"
                   >
+                    <ChallengeDifficultyText :difficulty="instance.difficulty" />
+                  </span>
                 </div>
 
                 <div class="workspace-directory-compact-text instance-row-access">
@@ -352,21 +362,14 @@ useInstanceWarningFocus({ showWarning, warningCloseButton })
   white-space: nowrap;
 }
 
-.instance-chip-category {
-  border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-}
-
 .instance-row-category,
 .instance-row-difficulty {
   min-width: 0;
 }
 
 .instance-chip-difficulty {
-  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
+  border-color: var(--instance-difficulty-pill-border);
+  background: var(--instance-difficulty-pill-bg);
 }
 
 .instance-row-access,

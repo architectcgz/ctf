@@ -5,6 +5,31 @@ import type {
   InstanceSharing,
 } from '@/api/contracts'
 
+const challengeCategories = ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'] as const
+const challengeDifficulties = ['beginner', 'easy', 'medium', 'hard', 'insane'] as const
+
+export function toChallengeCategory(value?: string | null): ChallengeCategory | null {
+  const normalized = value?.trim().toLowerCase()
+  return challengeCategories.includes(normalized as ChallengeCategory)
+    ? (normalized as ChallengeCategory)
+    : null
+}
+
+export function toChallengeDifficulty(value?: string | null): ChallengeDifficulty | null {
+  const normalized = value?.trim().toLowerCase()
+  return challengeDifficulties.includes(normalized as ChallengeDifficulty)
+    ? (normalized as ChallengeDifficulty)
+    : null
+}
+
+export function isChallengeCategory(value?: string | null): value is ChallengeCategory {
+  return value === toChallengeCategory(value)
+}
+
+export function isChallengeDifficulty(value?: string | null): value is ChallengeDifficulty {
+  return value === toChallengeDifficulty(value)
+}
+
 export function getChallengeCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
     web: 'Web',

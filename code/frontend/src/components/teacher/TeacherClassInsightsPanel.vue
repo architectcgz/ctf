@@ -4,6 +4,7 @@ import { GraduationCap, FileChartColumnIncreasing } from 'lucide-vue-next'
 
 import type { TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 const props = defineProps<{
   students: TeacherStudentItem[]
@@ -42,6 +43,10 @@ const weakDimensionStats = computed(() => {
     }))
     .sort((left, right) => right.count - left.count)
 })
+
+function weakDimensionCategory(value?: string | null) {
+  return toChallengeCategory(value)
+}
 </script>
 
 <template>
@@ -108,7 +113,14 @@ const weakDimensionStats = computed(() => {
               </div>
               <div class="top-student-item__meta">
                 @{{ student.username }}
-                <span v-if="student.weak_dimension"> · 薄弱项 {{ student.weak_dimension }}</span>
+                <span v-if="student.weak_dimension" class="top-student-item__weak">
+                  <span>薄弱项</span>
+                  <ChallengeCategoryPill
+                    v-if="weakDimensionCategory(student.weak_dimension)"
+                    :category="weakDimensionCategory(student.weak_dimension)!"
+                  />
+                  <span v-else>{{ student.weak_dimension }}</span>
+                </span>
               </div>
             </div>
             <div class="top-student-item__stats top-student-item__stats--premium">
@@ -159,7 +171,11 @@ const weakDimensionStats = computed(() => {
             class="dimension-item dimension-item--premium"
           >
             <div class="dimension-item__head">
-              <span class="dimension-item__name">{{ item.dimension }}</span>
+              <ChallengeCategoryPill
+                v-if="weakDimensionCategory(item.dimension)"
+                :category="weakDimensionCategory(item.dimension)!"
+              />
+              <span v-else class="dimension-item__name">{{ item.dimension }}</span>
               <span class="dimension-item__count">{{ item.count }} <small>人</small></span>
             </div>
             <div class="dimension-item__bar dimension-item__bar--premium">
@@ -274,9 +290,19 @@ const weakDimensionStats = computed(() => {
 }
 
 .top-student-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   margin-top: var(--space-1);
   font-size: var(--font-size-13);
   color: var(--panel-muted);
+}
+
+.top-student-item__weak {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
 }
 
 .top-student-item__stats--premium {

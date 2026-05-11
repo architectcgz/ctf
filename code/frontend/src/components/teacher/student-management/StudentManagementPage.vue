@@ -8,6 +8,7 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 // PagePaginationControls is provided through WorkspaceDirectoryPagination.
 interface StudentDirectoryTableRow {
@@ -92,6 +93,10 @@ function resetFilters(): void {
 function handleClassChange(event: Event): void {
   const target = event.target
   emit('selectClass', target instanceof HTMLSelectElement ? target.value : '')
+}
+
+function studentWeakCategory(row: StudentDirectoryTableRow) {
+  return toChallengeCategory(row.weak_dimension)
 }
 </script>
 
@@ -256,7 +261,12 @@ function handleClassChange(event: Event): void {
                 </template>
 
                 <template #cell-weak_dimension="{ row }">
+                  <ChallengeCategoryPill
+                    v-if="studentWeakCategory(row as StudentDirectoryTableRow)"
+                    :category="studentWeakCategory(row as StudentDirectoryTableRow)!"
+                  />
                   <span
+                    v-else
                     class="teacher-directory-chip teacher-directory-chip-muted"
                     :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
                   >

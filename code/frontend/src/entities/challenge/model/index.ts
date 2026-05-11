@@ -6,4 +6,8 @@ export {
   getChallengeDifficultyLabel,
   getChallengeInstanceSharingLabel,
   getChallengeStatusLabel,
+  isChallengeCategory,
+  isChallengeDifficulty,
+  toChallengeCategory,
+  toChallengeDifficulty,
 } from './presentation'

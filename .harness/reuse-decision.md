@@ -5,38 +5,68 @@ Durable reuse knowledge belongs in `harness/reuse/index.yaml`; append-only summa
 
 ## Change type
 - page
+- component
 - styling-token
 
 ## Existing code searched
-- code/frontend/src/assets/styles/theme.css
-- code/frontend/src/assets/styles/workspace-shell.css
 - code/frontend/src/entities/challenge/model/presentation.ts
+- code/frontend/src/entities/challenge/ui/ChallengeCategoryPill.vue
+- code/frontend/src/entities/challenge/ui/ChallengeDifficultyText.vue
+- code/frontend/src/entities/challenge/ui/ChallengeCategoryDifficultyPills.vue
+- code/frontend/src/components/teacher/student-management/StudentManagementPage.vue
+- code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
+- code/frontend/src/views/instances/InstanceList.vue
+- code/frontend/src/components/teacher/TeacherClassReviewPanel.vue
+- code/frontend/src/components/teacher/StudentInsightPanel.vue
+- code/frontend/src/components/contests/ContestChallengeWorkspacePanel.vue
+- code/frontend/src/components/platform/writeup/ChallengeWriteupEditorPage.vue
+- code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue
+- code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue
+
+## Similar implementations found
 - code/frontend/src/entities/challenge/ui/ChallengeDirectoryRow.vue
 - code/frontend/src/entities/challenge/ui/ChallengeMetaStrip.vue
 - code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue
-- code/frontend/src/views/challenges/ChallengeList.vue
-- code/frontend/src/views/__tests__/studentUserSurfaceAlignment.test.ts
-
-## Similar implementations found
-- code/frontend/src/assets/styles/workspace-shell.css
-- code/frontend/src/entities/challenge/model/presentation.ts
 - code/frontend/src/views/challenges/ChallengeList.vue
 
 ## Decision
 - refactor_existing
 
 ## Reason
-- 本次不是新增难度展示组件，而是在已有 `difficulty-chip` 和 challenge entity 的基础上，把题目难度胶囊色收口为 `--challenge-difficulty-pill-*`。
-- `--color-diff-*` 继续作为基础色保留；面向题目难度胶囊的导出变量使用更明确的 `challenge-difficulty-pill` 语义，避免继续暴露 `--challenge-diff-*` 这种缩写命名。
-- 推荐页难度胶囊继续复用现有 `difficultyClass()` 和共享 `.difficulty-chip` 样式，不新增本地页面样式。
-- 回归测试沿用学生仪表盘和题目列表现有测试文件扩充。
+- 本次不是新增另一套分类/难度胶囊组件，而是继续扩展 challenge entity 现有 `ChallengeCategoryPill`、`ChallengeDifficultyText`、`ChallengeCategoryDifficultyPills` 和 presentation helper。
+- `/academy/students` 的薄弱项列语义上对应题目分类弱项；识别到 `web/pwn/reverse/crypto/misc/forensics` 时应复用题目分类胶囊色，不识别时保留 muted fallback。
+- 全站已经有 `--challenge-category-pill-*` 和 `--challenge-difficulty-pill-*`，本次只补齐漏用点，避免页面局部再用 `journal-accent`、`color-success` 或裸文本表达题目分类/难度。
+- 回归测试沿用现有页面/抽取测试，补充 source-level 断言锁定共享组件和关键页面的复用关系。
 
 ## Files to modify
-- code/frontend/src/assets/styles/theme.css
-- code/frontend/src/assets/styles/workspace-shell.css
 - code/frontend/src/entities/challenge/model/presentation.ts
+- code/frontend/src/entities/challenge/model/index.ts
+- code/frontend/src/entities/challenge/index.ts
+- code/frontend/src/entities/challenge/ui/ChallengeCategoryPill.vue
+- code/frontend/src/entities/challenge/ui/ChallengeDifficultyText.vue
+- code/frontend/src/entities/challenge/ui/ChallengeCategoryDifficultyPills.vue
+- code/frontend/src/components/teacher/student-management/StudentManagementPage.vue
+- code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
+- code/frontend/src/views/instances/InstanceList.vue
+- code/frontend/src/components/teacher/TeacherClassReviewPanel.vue
+- code/frontend/src/components/teacher/StudentInsightPanel.vue
+- code/frontend/src/components/contests/ContestChallengeWorkspacePanel.vue
+- code/frontend/src/components/platform/writeup/ChallengeWriteupEditorPage.vue
+- code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue
+- code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue
+- code/frontend/src/components/platform/contest/ContestAwdServiceDirectory.vue
+- code/frontend/src/components/teacher/TeacherClassInsightsPanel.vue
+- code/frontend/src/components/teacher/TeacherInterventionPanel.vue
+- code/frontend/src/components/dashboard/student/StudentCategoryProgressPage.vue
+- code/frontend/src/components/dashboard/student/StudentDifficultyPage.vue
+- code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue
+- code/frontend/src/views/profile/SkillProfile.vue
+- code/frontend/src/views/platform/ThemePreview.vue
+- code/frontend/src/views/UILab.vue
 - code/frontend/src/views/__tests__/studentUserSurfaceAlignment.test.ts
-- code/frontend/src/views/challenges/ChallengeList.vue
+- code/frontend/src/views/teacher/__tests__/TeacherStudentManagement.test.ts
+- code/frontend/src/views/teacher/__tests__/TeacherClassStudents.test.ts
 
 ## After implementation
-- No new durable reuse entry was added. The rule has been recorded in the active CTF frontend theme skill; project code now uses challenge entity presentation helpers and shared difficulty chip styles as the owner for challenge difficulty pill colors.
+- Implemented by extending the existing challenge entity presentation helpers and shared pill components.
+- Verified with targeted Vitest coverage and `vue-tsc --noEmit`.

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 import { useChallengeWriteupEditorPage } from '@/features/challenge-writeup-editor'
 
 const props = withDefaults(
@@ -295,7 +296,9 @@ const {
             </div>
             <div>
               <dt>分类</dt>
-              <dd>{{ challenge.category }}</dd>
+              <dd>
+                <ChallengeCategoryPill :category="challenge.category" />
+              </dd>
             </div>
             <div>
               <dt>状态</dt>
@@ -303,7 +306,9 @@ const {
             </div>
             <div>
               <dt>难度</dt>
-              <dd>{{ challenge.difficulty }}</dd>
+              <dd>
+                <ChallengeDifficultyText :difficulty="challenge.difficulty" />
+              </dd>
             </div>
             <div>
               <dt>分值</dt>

@@ -3,9 +3,13 @@ import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import {
+  ChallengeCategoryDifficultyPills,
+  ChallengeCategoryPill,
+  toChallengeCategory,
+} from '@/entities/challenge'
 import { useSkillProfilePage } from '@/features/skill-profile'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 
 const {
   isTeacher,
@@ -23,6 +27,10 @@ const {
   goToChallenge,
   goToChallenges,
 } = useSkillProfilePage()
+
+function weakDimensionCategory(value: string) {
+  return toChallengeCategory(value)
+}
 
 type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
 
@@ -238,7 +246,11 @@ const skillRadarHeightClass = 'skill-radar-height'
                   <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
                     <div class="journal-note-label">建议加强</div>
                     <div class="skill-weak-dimension mt-2 text-sm font-semibold">
-                      {{ dim }}
+                      <ChallengeCategoryPill
+                        v-if="weakDimensionCategory(dim)"
+                        :category="weakDimensionCategory(dim)!"
+                      />
+                      <span v-else>{{ dim }}</span>
                     </div>
                   </div>
                 </div>
@@ -294,12 +306,10 @@ const skillRadarHeightClass = 'skill-radar-height'
                         <span class="skill-recommend-title text-sm font-semibold">{{
                           item.title
                         }}</span>
-                        <span
-                          class="skill-difficulty-pill shrink-0 rounded-full px-2 py-0.5 font-semibold"
-                          :class="difficultyClass(item.difficulty)"
-                        >
-                          {{ difficultyLabel(item.difficulty) }}
-                        </span>
+                        <ChallengeCategoryDifficultyPills
+                          :category="item.category"
+                          :difficulty="item.difficulty"
+                        />
                       </div>
                       <p class="skill-recommend-reason mt-1 text-xs leading-5">
                         {{ item.summary }}
@@ -588,10 +598,6 @@ const skillRadarHeightClass = 'skill-radar-height'
 .skill-recommend-reason,
 .skill-recommend-evidence {
   color: var(--journal-muted);
-}
-
-.skill-difficulty-pill {
-  font-size: 0.6875rem;
 }
 
 .skill-weak-title__icon {
