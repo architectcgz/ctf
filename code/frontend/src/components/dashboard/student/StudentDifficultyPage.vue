@@ -137,25 +137,13 @@ function openPrimaryDifficulty(): void {
           }}
         </p>
 
-        <div
-          class="mt-5 flex flex-wrap gap-3"
-          role="group"
-          aria-label="难度进度快捷操作"
-        >
-          <button
-            class="journal-btn-primary"
-            @click="openPrimaryDifficulty"
-          >
+        <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="难度进度快捷操作">
+          <button class="journal-btn-primary" @click="openPrimaryDifficulty">
             {{
               primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
             }}
           </button>
-          <button
-            class="journal-btn-outline"
-            @click="emit('openChallenges')"
-          >
-            浏览全部题目
-          </button>
+          <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
         </div>
 
         <div
@@ -185,32 +173,24 @@ function openPrimaryDifficulty(): void {
         :class="{ 'difficulty-board--embedded': embedded }"
       >
         <section class="difficulty-section">
-          <div
-            v-if="hasDifficultyStats"
-            class="difficulty-toolbar"
-          >
+          <div v-if="hasDifficultyStats" class="difficulty-toolbar">
             <p class="difficulty-toolbar__copy">
               难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
             </p>
           </div>
 
-          <div
-            v-if="!hasDifficultyStats"
-            class="journal-soft-empty-state mt-5"
-          >
+          <div v-if="!hasDifficultyStats" class="journal-soft-empty-state mt-5">
             当前还没有难度统计数据，先完成几道题再回来查看。
           </div>
 
-          <div
-            v-else
-            class="difficulty-action-list mt-5"
-          >
+          <div v-else class="difficulty-action-list mt-5">
             <article
               v-for="(item, index) in orderedStats"
               :key="item.difficulty"
               class="difficulty-action-item"
               :class="{
-                'difficulty-action-item--primary': primaryDifficulty?.difficulty === item.difficulty,
+                'difficulty-action-item--primary':
+                  primaryDifficulty?.difficulty === item.difficulty,
               }"
               :data-test="`difficulty-action-${item.difficulty}`"
               :aria-current="primaryDifficulty?.difficulty === item.difficulty ? 'step' : undefined"
@@ -225,7 +205,9 @@ function openPrimaryDifficulty(): void {
                       difficultyLabel(item.difficulty)
                     }}</span>
                     <span class="difficulty-action-item__rate">{{ item.rate }}%</span>
-                    <span class="difficulty-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                    <span class="difficulty-action-item__count"
+                      >{{ item.solved }}/{{ item.total }}</span
+                    >
                   </div>
                   <p class="difficulty-action-item__copy">
                     {{ difficultyActionCopy(item) }}
@@ -239,10 +221,10 @@ function openPrimaryDifficulty(): void {
                 </div>
                 <button
                   type="button"
-                  class="journal-btn-primary difficulty-action-item__cta"
+                  class="difficulty-action-item__cta"
                   :class="{
-                    'difficulty-action-item__cta--secondary':
-                      primaryDifficulty?.difficulty !== item.difficulty,
+                    'journal-btn-primary': primaryDifficulty?.difficulty === item.difficulty,
+                    'journal-btn-secondary': primaryDifficulty?.difficulty !== item.difficulty,
                   }"
                   @click="emit('openDifficultyChallenges', item.difficulty)"
                 >
@@ -253,10 +235,7 @@ function openPrimaryDifficulty(): void {
           </div>
         </section>
 
-        <section
-          v-if="hasDifficultyStats"
-          class="difficulty-section difficulty-section--compact"
-        >
+        <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
           <div class="difficulty-note">
             <Flame class="difficulty-note__icon h-4 w-4" />
             <p class="difficulty-note__copy">
@@ -413,12 +392,6 @@ function openPrimaryDifficulty(): void {
 .difficulty-action-item__cta {
   flex-shrink: 0;
   min-width: 6rem;
-}
-
-.difficulty-action-item__cta--secondary {
-  border-color: var(--journal-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
-  color: var(--journal-ink);
 }
 
 .difficulty-note {

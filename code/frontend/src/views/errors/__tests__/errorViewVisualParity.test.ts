@@ -11,6 +11,13 @@ describe('error view visual parity', () => {
     expect(shellSource).not.toMatch(/\.error-status-title\s*{[^}]*font-size:/s)
     expect(shellSource).not.toMatch(/\.error-status-title\s*{[^}]*line-height:/s)
     expect(shellSource).not.toMatch(/\.error-status-title\s*{[^}]*letter-spacing:/s)
+    expect(shellSource).toContain('class="ui-btn ui-btn--primary error-status-action"')
+    expect(shellSource).toContain('class="ui-btn ui-btn--secondary error-status-action"')
+    expect(shellSource).not.toContain('error-status-action-primary')
+    expect(shellSource).not.toContain('error-status-action-secondary')
+    expect(shellSource).toMatch(
+      /:global\(\[data-theme='dark'\]\) \.error-status-view\s*\{[\s\S]*--ui-btn-primary-hover-border:\s*color-mix\(/s
+    )
     expect(forbiddenSource).toContain('<ErrorStatusShell')
     expect(notFoundSource).toContain('<ErrorStatusShell')
   })

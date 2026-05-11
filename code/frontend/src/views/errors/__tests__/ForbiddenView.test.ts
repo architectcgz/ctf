@@ -29,17 +29,16 @@ describe('ForbiddenView', () => {
     expect(wrapper.find('aside').exists()).toBe(false)
     expect(links[0]?.props('to')).toBe('/login')
     expect(links).toHaveLength(1)
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
   })
 
   it('管理员登录时应引导回管理工作台', () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'root',
-        role: 'admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'root',
+      role: 'admin',
+    })
 
     const wrapper = mount(ForbiddenView, {
       global: {
@@ -56,6 +55,6 @@ describe('ForbiddenView', () => {
     expect(wrapper.text()).toContain('返回管理工作台')
     expect(links[0]?.props('to')).toBe('/platform/overview')
     expect(links).toHaveLength(1)
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
   })
 })

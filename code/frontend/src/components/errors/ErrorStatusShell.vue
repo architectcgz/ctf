@@ -152,18 +152,9 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
 </script>
 
 <template>
-  <section
-    class="error-status-view"
-    :style="accentVars"
-  >
-    <div
-      class="error-status-kicker"
-      @click="handleProbeClick"
-    >
-      <component
-        :is="icon"
-        class="h-4 w-4"
-      />
+  <section class="error-status-view" :style="accentVars">
+    <div class="error-status-kicker" @click="handleProbeClick">
+      <component :is="icon" class="h-4 w-4" />
       <span>{{ kicker }}</span>
     </div>
 
@@ -175,10 +166,7 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
         <p class="error-status-text workspace-page-copy">
           {{ description }}
         </p>
-        <p
-          v-if="probeMessage"
-          class="error-status-probe"
-        >
+        <p v-if="probeMessage" class="error-status-probe">
           {{ probeMessage }}
         </p>
 
@@ -186,47 +174,35 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
           <button
             v-if="primaryAction"
             type="button"
-            class="error-status-action error-status-action-primary"
+            class="ui-btn ui-btn--primary error-status-action"
             @click="executeAction(primaryAction)"
           >
-            <component
-              :is="primaryIcon"
-              class="h-4 w-4"
-            />
+            <component :is="primaryIcon" class="h-4 w-4" />
             {{ resolvedPrimaryLabel }}
           </button>
           <RouterLink
             v-else
             :to="resolvedPrimaryTo"
-            class="error-status-action error-status-action-primary"
+            class="ui-btn ui-btn--primary error-status-action"
           >
-            <component
-              :is="primaryIcon"
-              class="h-4 w-4"
-            />
+            <component :is="primaryIcon" class="h-4 w-4" />
             {{ resolvedPrimaryLabel }}
           </RouterLink>
           <button
             v-if="secondaryAction"
             type="button"
-            class="error-status-action error-status-action-secondary"
+            class="ui-btn ui-btn--secondary error-status-action"
             @click="executeAction(secondaryAction)"
           >
-            <component
-              :is="secondaryIcon"
-              class="h-4 w-4"
-            />
+            <component :is="secondaryIcon" class="h-4 w-4" />
             {{ resolvedSecondaryLabel }}
           </button>
           <RouterLink
             v-else-if="showSecondaryAction"
             :to="resolvedSecondaryTo"
-            class="error-status-action error-status-action-secondary"
+            class="ui-btn ui-btn--secondary error-status-action"
           >
-            <component
-              :is="secondaryIcon"
-              class="h-4 w-4"
-            />
+            <component :is="secondaryIcon" class="h-4 w-4" />
             {{ resolvedSecondaryLabel }}
           </RouterLink>
         </div>
@@ -237,6 +213,23 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
 
 <style scoped>
 .error-status-view {
+  --ui-btn-height: 2.35rem;
+  --ui-btn-radius: 10px;
+  --ui-btn-padding: 0.58rem 0.9rem;
+  --ui-btn-font-size: var(--font-size-0-86);
+  --ui-btn-gap: 0.45rem;
+  --ui-btn-primary-border: color-mix(in srgb, var(--error-accent) 34%, var(--color-border-default));
+  --ui-btn-primary-hover-border: color-mix(
+    in srgb,
+    var(--error-accent) 28%,
+    var(--color-border-default)
+  );
+  --ui-btn-primary-hover-shadow: none;
+  --ui-btn-secondary-hover-border: color-mix(
+    in srgb,
+    var(--error-accent) 24%,
+    var(--color-border-default)
+  );
   min-height: calc(100vh - 11rem);
   display: flex;
   flex-direction: column;
@@ -296,41 +289,7 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
 }
 
 .error-status-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  padding: 0.58rem 0.9rem;
-  font-size: var(--font-size-0-86);
-  font-weight: 600;
-  transition: all 180ms ease;
-}
-
-.error-status-action-primary {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-primary) 94%, var(--color-bg-surface)),
-    color-mix(in srgb, var(--color-primary-hover) 78%, var(--color-bg-surface))
-  );
-  color: var(--color-text-primary);
-}
-
-.error-status-action-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-}
-
-.error-status-action-secondary {
-  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 78%, transparent);
-  color: var(--color-text-primary);
-}
-
-.error-status-action-secondary:hover {
-  border-color: color-mix(in srgb, var(--error-accent) 28%, var(--color-primary) 22%, transparent);
+  text-decoration: none;
 }
 
 @media (max-width: 767px) {
@@ -341,7 +300,16 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
   }
 }
 
-:global([data-theme='light']) .error-status-action-secondary {
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-elevated));
+:global([data-theme='dark']) .error-status-view {
+  --ui-btn-primary-hover-border: color-mix(
+    in srgb,
+    var(--error-accent) 20%,
+    var(--color-border-default)
+  );
+  --ui-btn-secondary-hover-border: color-mix(
+    in srgb,
+    var(--error-accent) 18%,
+    var(--color-border-default)
+  );
 }
 </style>

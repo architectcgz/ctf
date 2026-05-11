@@ -196,7 +196,11 @@ const summaryCards = computed(() => [
   --journal-soft-button-height: 34px;
   --journal-soft-button-padding: var(--space-1-5) var(--space-4);
   --journal-soft-button-size: 0.8rem;
-  --journal-soft-button-primary-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  --journal-soft-button-primary-border: color-mix(
+    in srgb,
+    var(--journal-accent) 42%,
+    var(--journal-control-border)
+  );
 }
 
 .recommendation-header {

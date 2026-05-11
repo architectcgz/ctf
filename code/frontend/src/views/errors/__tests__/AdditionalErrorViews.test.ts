@@ -62,7 +62,7 @@ describe('additional error views', () => {
     expect(wrapper.text()).not.toContain('通知中心')
     expect(links[0]?.props('to')).toBe('/login')
     expect(links).toHaveLength(1)
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
   })
 
   it('renders server-side failure pages with back-first and workspace recovery actions', () => {
@@ -94,8 +94,8 @@ describe('additional error views', () => {
       expect(wrapper.text()).not.toContain('通知中心')
       expect(links).toHaveLength(1)
       expect(links[0]?.props('to')).toBe('/student/dashboard')
-      expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
-      expect(wrapper.get('a.error-status-action-secondary').text()).toContain('返回学习工作台')
+      expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
+      expect(wrapper.get('a.ui-btn--secondary').text()).toContain('返回学习工作台')
     }
   })
 
@@ -114,7 +114,7 @@ describe('additional error views', () => {
       },
     })
 
-    await wrapper.get('button.error-status-action-primary').trigger('click')
+    await wrapper.get('button.ui-btn--primary').trigger('click')
 
     expect(backSpy).toHaveBeenCalled()
     expect(redirectTo).not.toHaveBeenCalled()

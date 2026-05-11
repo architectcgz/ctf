@@ -29,17 +29,16 @@ describe('NotFoundView', () => {
     expect(wrapper.text()).not.toContain('通知中心')
     expect(links[0]?.props('to')).toBe('/login')
     expect(links).toHaveLength(1)
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
   })
 
   it('管理员登录时应引导回管理工作台', () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'root',
-        role: 'admin',
-      })
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'root',
+      role: 'admin',
+    })
 
     const wrapper = mount(NotFoundView, {
       global: {
@@ -56,7 +55,7 @@ describe('NotFoundView', () => {
     expect(wrapper.text()).not.toContain('通知中心')
     expect(links[0]?.props('to')).toBe('/platform/overview')
     expect(links).toHaveLength(1)
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
   })
 
   it('连续点击状态区域后应显示路径试探附注', async () => {
@@ -77,7 +76,7 @@ describe('NotFoundView', () => {
     await kicker.trigger('click')
 
     expect(wrapper.text()).toContain('路径枚举记录已写入：热情可嘉，命中率一般。')
-    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.get('button.ui-btn--primary').text()).toContain('返回上一页')
     expect(wrapper.findAllComponents(RouterLinkStub)[0]?.props('to')).toBe('/login')
   })
 })

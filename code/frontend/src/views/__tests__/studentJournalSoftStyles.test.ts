@@ -73,6 +73,15 @@ describe('student journal soft shared styles', () => {
     }
   })
 
+  it('student difficulty 行动按钮应选择共享 secondary 变体，禁止页面私有按钮配色', () => {
+    expect(studentDifficultySource).toContain("'journal-btn-primary'")
+    expect(studentDifficultySource).toContain("'journal-btn-secondary'")
+    expect(studentDifficultySource).not.toContain('difficulty-action-item__cta--secondary')
+    expect(studentDifficultySource).not.toContain('--journal-soft-button-primary-border')
+    expect(studentDifficultySource).not.toContain('--journal-soft-button-primary-background')
+    expect(studentDifficultySource).not.toMatch(/\.difficulty-action-item__cta--secondary\s*\{/)
+  })
+
   it('student overview 页面应把雷达图高度和紧凑空态收敛为语义类', () => {
     expect(studentOverviewEditorialSource).toContain('student-overview-radar-height')
     expect(studentOverviewEditorialSource).toContain('journal-soft-empty-state--compact')

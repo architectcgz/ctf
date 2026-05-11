@@ -80,6 +80,7 @@
 }
 
 .journal-soft-surface .journal-btn-primary,
+.journal-soft-surface .journal-btn-secondary,
 .journal-soft-surface .journal-btn-outline {
   display: inline-flex;
   align-items: center;
@@ -100,6 +101,7 @@
 }
 
 .journal-soft-surface .journal-btn-primary:hover,
+.journal-soft-surface .journal-btn-secondary:hover,
 .journal-soft-surface .journal-btn-outline:hover {
   transform: var(--journal-soft-button-hover-transform, none);
 }
@@ -108,7 +110,7 @@
   border: 1px solid
     var(
       --journal-soft-button-primary-border,
-      color-mix(in srgb, var(--journal-accent) 50%, transparent)
+      color-mix(in srgb, var(--journal-accent) 50%, var(--journal-control-border))
     );
   background: var(
     --journal-soft-button-primary-background,
@@ -122,7 +124,7 @@
     --journal-soft-button-primary-hover-border,
     var(
       --journal-soft-button-primary-border,
-      color-mix(in srgb, var(--journal-accent) 66%, transparent)
+      color-mix(in srgb, var(--journal-accent) 66%, var(--journal-control-border))
     )
   );
   background: var(
@@ -135,6 +137,27 @@
   );
 }
 
+.journal-soft-surface .journal-btn-secondary {
+  border: 1px solid var(--journal-soft-button-secondary-border, var(--journal-control-border));
+  background: var(
+    --journal-soft-button-secondary-background,
+    color-mix(in srgb, var(--journal-surface) 96%, transparent)
+  );
+  color: var(--journal-soft-button-secondary-color, var(--journal-ink));
+}
+
+.journal-soft-surface .journal-btn-secondary:hover {
+  border-color: var(
+    --journal-soft-button-secondary-hover-border,
+    color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border))
+  );
+  background: var(
+    --journal-soft-button-secondary-hover-background,
+    var(--journal-soft-button-secondary-background, var(--journal-surface))
+  );
+  color: var(--journal-soft-button-secondary-hover-color, var(--journal-accent-strong));
+}
+
 .journal-soft-surface .journal-btn-outline {
   border: 1px solid var(--journal-control-border);
   background: var(--journal-soft-button-outline-background, var(--journal-surface));
@@ -142,7 +165,10 @@
 }
 
 .journal-soft-surface .journal-btn-outline:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
+  border-color: var(
+    --journal-soft-button-outline-hover-border,
+    color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border))
+  );
   background: var(
     --journal-soft-button-outline-hover-background,
     var(--journal-soft-button-outline-background, var(--journal-surface))
@@ -151,6 +177,7 @@
 }
 
 .journal-soft-surface .journal-btn-primary:focus-visible,
+.journal-soft-surface .journal-btn-secondary:focus-visible,
 .journal-soft-surface .journal-btn-outline:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
   outline-offset: 2px;
@@ -201,6 +228,21 @@
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --journal-soft-button-primary-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 42%,
+    var(--journal-control-border)
+  );
+  --journal-soft-button-secondary-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 28%,
+    var(--journal-control-border)
+  );
+  --journal-soft-button-outline-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 28%,
+    var(--journal-control-border)
+  );
 }
 
 [data-theme='dark'] .journal-soft-surface .journal-note {
