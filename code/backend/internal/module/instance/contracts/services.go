@@ -35,6 +35,14 @@ type ProxyTicketService interface {
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 }
 
+// AWDDefenseWorkbenchService 定义实例 owner 对外暴露的 AWD defense workbench 能力。
+type AWDDefenseWorkbenchService interface {
+	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
+	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error)
+	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
+	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
+}
+
 // MaintenanceService 定义实例 owner 对外暴露的后台维护能力。
 type MaintenanceService interface {
 	CleanExpiredInstances(ctx context.Context) error
