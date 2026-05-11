@@ -7,6 +7,7 @@ import {
   Menu, Bell, User, Users, Settings, LogOut, ChevronRight,
   Terminal, Shield, Globe, Cpu, Activity
 } from 'lucide-vue-next'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 
 const currentLayout = ref('layout2') // 默认展示方案2 (对标 a.html 优化版)
 
@@ -19,10 +20,10 @@ const stats = [
 ]
 
 const challenges = [
-  { id: 1, uuid: 'WEB-SSR-01', title: '内部笔记下载器：服务端请求伪造漏洞', category: 'Web', difficulty: '简单', points: 100, status: '已发布' },
-  { id: 2, uuid: 'PWN-HEAP-05', title: '堆溢出利用：Tcache Poisoning 核心原理', category: 'Pwn', difficulty: '困难', points: 850, status: '已发布' },
-  { id: 3, uuid: 'MISC-TRAF-09', title: '流量审计：异常协议识别与数据隐写提取', category: 'Misc', difficulty: '中等', points: 300, status: '草稿' },
-]
+  { id: 1, uuid: 'WEB-SSR-01', title: '内部笔记下载器：服务端请求伪造漏洞', category: 'web', difficulty: 'easy', points: 100, status: '已发布' },
+  { id: 2, uuid: 'PWN-HEAP-05', title: '堆溢出利用：Tcache Poisoning 核心原理', category: 'pwn', difficulty: 'hard', points: 850, status: '已发布' },
+  { id: 3, uuid: 'MISC-TRAF-09', title: '流量审计：异常协议识别与数据隐写提取', category: 'misc', difficulty: 'medium', points: 300, status: '草稿' },
+] as const
 
 const sidebarCollapsed = ref(false)
 const activeMenu = ref('题目管理')
@@ -313,16 +314,10 @@ const activeMenu = ref('题目管理')
                         </div>
                       </td>
                       <td class="px-6 py-6 text-center">
-                        <span class="text-[10px] font-black uppercase px-3 py-1 bg-white text-indigo-600 rounded-lg border border-indigo-100 shadow-sm">{{ c.category }}</span>
+                        <ChallengeCategoryPill :category="c.category" />
                       </td>
                       <td class="px-6 py-6 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                          <span
-                            class="w-1.5 h-1.5 rounded-full"
-                            :class="c.difficulty === '困难' ? 'bg-rose-500' : 'bg-emerald-500'"
-                          />
-                          <span class="text-[11px] font-bold text-slate-600">{{ c.difficulty }}</span>
-                        </div>
+                        <ChallengeDifficultyText :difficulty="c.difficulty" />
                       </td>
                       <td class="px-6 py-6 text-center font-black text-slate-900 font-mono text-xl italic tracking-tighter">
                         {{ c.points }}
@@ -404,7 +399,7 @@ const activeMenu = ref('题目管理')
                         </div>
                       </div>
                       <div class="flex items-center gap-8">
-                        <span class="px-4 py-1 border border-current rounded-full text-[10px] font-black tracking-widest">{{ c.category }}</span>
+                        <ChallengeCategoryPill :category="c.category" />
                         <ChevronRight class="w-6 h-6 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
                       </div>
                     </div>

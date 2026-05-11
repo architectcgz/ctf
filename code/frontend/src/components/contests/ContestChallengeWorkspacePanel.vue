@@ -3,6 +3,7 @@ import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import type { ContestChallengeItem, SubmitFlagData } from '@/api/contracts'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 
 interface Props {
   challenges: ContestChallengeItem[]
@@ -33,22 +34,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   ]
 }
 
-function selectedChallengeMeta(): string {
-  if (!props.selectedChallenge) return ''
-  return `${props.selectedChallenge.category} · ${props.selectedChallenge.points} 分`
-}
-
-function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string {
-  const labels: Record<ContestChallengeItem['difficulty'], string> = {
-    beginner: '入门',
-    easy: '简单',
-    medium: '中等',
-    hard: '困难',
-    insane: '极难',
-  }
-
-  return labels[difficulty]
-}
 </script>
 
 <template>
@@ -96,7 +81,7 @@ function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string
           </span>
         </div>
         <div class="contest-challenge__meta">
-          <span class="contest-challenge__meta-item">{{ challenge.category }}</span>
+          <ChallengeCategoryPill :category="challenge.category" />
           <span class="contest-challenge__meta-item">{{ challenge.points }} 分</span>
           <span class="contest-challenge__solve-count">{{ challenge.solved_count }} 人解出</span>
         </div>
@@ -115,7 +100,8 @@ function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string
             </h3>
           </div>
           <div class="challenge-focus__meta">
-            {{ selectedChallengeMeta() }}
+            <ChallengeCategoryPill :category="selectedChallenge.category" />
+            <span>{{ selectedChallenge.points }} 分</span>
           </div>
         </div>
 
@@ -126,7 +112,9 @@ function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string
               aria-hidden="true"
             />
             <span>难度</span>
-            <strong>{{ difficultyLabel(selectedChallenge.difficulty) }}</strong>
+            <strong>
+              <ChallengeDifficultyText :difficulty="selectedChallenge.difficulty" />
+            </strong>
           </div>
           <div class="challenge-focus__summary-item">
             <Trophy
@@ -348,6 +336,10 @@ function difficultyLabel(difficulty: ContestChallengeItem['difficulty']): string
 }
 
 .challenge-focus__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--font-size-0-82);
   color: var(--color-text-secondary);
 }

@@ -6,6 +6,10 @@ export {
   getChallengeDifficultyLabel,
   getChallengeInstanceSharingLabel,
   getChallengeStatusLabel,
+  isChallengeCategory,
+  isChallengeDifficulty,
+  toChallengeCategory,
+  toChallengeDifficulty,
 } from './model'
 export { ChallengeCategoryPill } from './ui'
 export { ChallengeCategoryText } from './ui'

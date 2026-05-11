@@ -15,6 +15,7 @@ import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPa
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -124,6 +125,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   return tabKey === 'insight'
     ? ['workspace-subpanel', 'workspace-subpanel--flat', 'workspace-subpanel--insight']
     : ['workspace-subpanel', 'workspace-subpanel--flat']
+}
+
+function studentWeakCategory(student: TeacherStudentItem) {
+  return toChallengeCategory(student.weak_dimension)
 }
 </script>
 
@@ -357,7 +362,12 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 </div>
 
                 <div class="teacher-directory-row-tags">
+                  <ChallengeCategoryPill
+                    v-if="studentWeakCategory(student)"
+                    :category="studentWeakCategory(student)!"
+                  />
                   <span
+                    v-else
                     class="teacher-directory-state-chip teacher-directory-state-chip-empty"
                     :class="'workspace-directory-status-pill workspace-directory-status-pill--muted'"
                   >

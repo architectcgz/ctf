@@ -3,8 +3,12 @@ import { computed } from 'vue'
 import { ArrowRight, Clock3, Flame, ShieldAlert, Target } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
-import { getChallengeCategoryColor } from '@/entities/challenge'
-import { difficultyClass, difficultyLabel } from '@/utils/challenge'
+import {
+  ChallengeCategoryDifficultyPills,
+  ChallengeCategoryPill,
+  toChallengeCategory,
+} from '@/entities/challenge'
+import { difficultyLabel } from '@/utils/challenge'
 
 const props = withDefaults(
   defineProps<{
@@ -28,15 +32,6 @@ const headline = computed(() => visibleWeakDimensions.value[0] || '保持当前�
 const targetDifficulty = computed(() =>
   props.recommendations[0] ? difficultyLabel(props.recommendations[0].difficulty) : '待选择'
 )
-function categoryPillStyle(category: RecommendationItem['category']): Record<string, string> {
-  const color = getChallengeCategoryColor(category)
-  return {
-    '--challenge-category-pill-color': color,
-    '--challenge-category-pill-bg': `color-mix(in srgb, ${color} 10%, transparent)`,
-    '--challenge-category-pill-border': `color-mix(in srgb, ${color} 22%, transparent)`,
-  }
-}
-
 const summaryCards = computed(() => [
   {
     key: 'focus',
@@ -69,6 +64,10 @@ const summaryCards = computed(() => [
         : '当前没有推荐任务，可以先浏览全部题目。',
   },
 ])
+
+function weakDimensionCategory(value: string) {
+  return toChallengeCategory(value)
+}
 </script>
 
 <template>
@@ -91,14 +90,19 @@ const summaryCards = computed(() => [
 
         <div class="mt-5 flex flex-wrap gap-2">
           <template v-if="visibleWeakDimensions.length > 0">
-            <span
-              v-for="dim in visibleWeakDimensions"
-              :key="dim"
-              class="journal-soft-accent-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-            >
-              <ShieldAlert class="h-3 w-3" />
-              {{ dim }}
-            </span>
+            <template v-for="dim in visibleWeakDimensions" :key="dim">
+              <ChallengeCategoryPill
+                v-if="weakDimensionCategory(dim)"
+                :category="weakDimensionCategory(dim)!"
+              />
+              <span
+                v-else
+                class="journal-soft-accent-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+              >
+                <ShieldAlert class="h-3 w-3" />
+                {{ dim }}
+              </span>
+            </template>
           </template>
           <span v-else class="journal-weak-tag journal-weak-tag--stable"> 暂无明显短板 </span>
         </div>
@@ -172,15 +176,10 @@ const summaryCards = computed(() => [
                     <span class="journal-soft-body-title text-sm font-semibold">{{
                       item.title
                     }}</span>
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      :class="difficultyClass(item.difficulty)"
-                    >
-                      {{ difficultyLabel(item.difficulty) }}
-                    </span>
-                    <span class="journal-category-chip" :style="categoryPillStyle(item.category)">
-                      {{ item.category }}
-                    </span>
+                    <ChallengeCategoryDifficultyPills
+                      :category="item.category"
+                      :difficulty="item.difficulty"
+                    />
                   </div>
                   <p class="journal-soft-body-copy mt-2 text-sm leading-6">
                     {{ item.summary }}
@@ -304,22 +303,6 @@ const summaryCards = computed(() => [
   border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   color: var(--journal-accent);
-}
-
-.journal-category-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid var(--challenge-category-pill-border, var(--journal-soft-border));
-  background: var(
-    --challenge-category-pill-bg,
-    color-mix(in srgb, var(--journal-track) 82%, transparent)
-  );
-  padding: var(--space-0-5) var(--space-2);
-  font-size: var(--font-size-0-74);
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--challenge-category-pill-color, var(--journal-muted));
 }
 
 .journal-weak-tag {

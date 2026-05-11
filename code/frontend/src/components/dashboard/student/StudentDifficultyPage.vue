@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { BarChart2, Flame, Target } from 'lucide-vue-next'
 
+import { ChallengeDifficultyText, toChallengeDifficulty } from '@/entities/challenge'
 import { difficultyLabel } from '@/utils/challenge'
 
 import { orderDifficultyActionItems, selectDifficultyPriority } from './utils'
@@ -34,11 +35,11 @@ const emit = defineEmits<{
 }>()
 
 const barColorMap: Record<string, string> = {
-  beginner: 'var(--color-success)',
-  easy: 'color-mix(in srgb, var(--color-primary) 72%, white)',
-  medium: 'var(--color-warning)',
-  hard: 'color-mix(in srgb, var(--color-warning) 72%, var(--color-danger))',
-  insane: 'var(--color-danger)',
+  beginner: 'var(--challenge-difficulty-pill-beginner)',
+  easy: 'var(--challenge-difficulty-pill-easy)',
+  medium: 'var(--challenge-difficulty-pill-medium)',
+  hard: 'var(--challenge-difficulty-pill-hard)',
+  insane: 'var(--challenge-difficulty-pill-insane)',
 }
 
 const orderedStats = computed<RankedDifficultyStat[]>(() =>
@@ -112,6 +113,10 @@ function openPrimaryDifficulty(): void {
     return
   }
   emit('openChallenges')
+}
+
+function difficultyPillValue(difficulty: string) {
+  return toChallengeDifficulty(difficulty)
 }
 </script>
 
@@ -201,7 +206,11 @@ function openPrimaryDifficulty(): void {
                 </div>
                 <div class="difficulty-action-item__content">
                   <div class="difficulty-action-item__meta">
-                    <span class="difficulty-action-item__name">{{
+                    <ChallengeDifficultyText
+                      v-if="difficultyPillValue(item.difficulty)"
+                      :difficulty="difficultyPillValue(item.difficulty)!"
+                    />
+                    <span v-else class="difficulty-action-item__name">{{
                       difficultyLabel(item.difficulty)
                     }}</span>
                     <span class="difficulty-action-item__rate">{{ item.rate }}%</span>

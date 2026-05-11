@@ -6,6 +6,7 @@ import {
   ShieldCheck, Layout, Sidebar as SidebarIcon, Rows, Users,
   Menu, Bell, User, Settings, LogOut, ChevronRight
 } from 'lucide-vue-next'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 
 const currentLayout = ref('variant2') // 默认展示方案2
 
@@ -17,10 +18,10 @@ const stats = [
 ]
 
 const challenges = [
-  { id: 1, uuid: 'WEB-SSR-01', title: '内部笔记下载器：服务端请求伪造', category: 'Web', difficulty: '简单', points: 100 },
-  { id: 2, uuid: 'PWN-HEAP-05', title: '堆溢出：Tcache Poisoning 攻击实战', category: 'Pwn', difficulty: '困难', points: 850 },
-  { id: 3, uuid: 'MISC-TRAF-09', title: '流量分析：隐藏协议识别与提取', category: 'Misc', difficulty: '中等', points: 300 },
-]
+  { id: 1, uuid: 'WEB-SSR-01', title: '内部笔记下载器：服务端请求伪造', category: 'web', difficulty: 'easy', points: 100 },
+  { id: 2, uuid: 'PWN-HEAP-05', title: '堆溢出：Tcache Poisoning 攻击实战', category: 'pwn', difficulty: 'hard', points: 850 },
+  { id: 3, uuid: 'MISC-TRAF-09', title: '流量分析：隐藏协议识别与提取', category: 'misc', difficulty: 'medium', points: 300 },
+] as const
 
 const activeTab = ref('manage')
 const sidebarCollapsed = ref(false)
@@ -261,10 +262,10 @@ const sidebarCollapsed = ref(false)
                     </div>
                   </td>
                   <td class="px-6 py-5 text-center">
-                    <span class="text-[10px] font-black uppercase px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">{{ c.category }}</span>
+                    <ChallengeCategoryPill :category="c.category" />
                   </td>
                   <td class="px-6 py-5 text-center">
-                    <span class="text-[10px] font-bold uppercase text-slate-500">{{ c.difficulty }}</span>
+                    <ChallengeDifficultyText :difficulty="c.difficulty" />
                   </td>
                   <td class="px-6 py-5 text-center font-black text-slate-900 font-mono text-lg italic">
                     {{ c.points }}

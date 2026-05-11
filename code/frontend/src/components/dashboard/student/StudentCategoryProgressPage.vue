@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { BarChart2, Target, Trophy } from 'lucide-vue-next'
 
+import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
+
 import { rankCategoryActionItems } from './utils'
 
 interface CategoryStat {
@@ -92,6 +94,10 @@ function openPrimaryCategory(): void {
     return
   }
   emit('openChallenges')
+}
+
+function categoryPillValue(category: string) {
+  return toChallengeCategory(category)
 }
 </script>
 
@@ -201,7 +207,11 @@ function openPrimaryCategory(): void {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="category-action-item__name">{{ item.category }}</span>
+                    <ChallengeCategoryPill
+                      v-if="categoryPillValue(item.category)"
+                      :category="categoryPillValue(item.category)!"
+                    />
+                    <span v-else class="category-action-item__name">{{ item.category }}</span>
                     <span class="category-action-item__rate">{{ item.rate }}%</span>
                     <span class="category-action-item__count">{{ item.solved }}/{{ item.total }}</span>
                   </div>

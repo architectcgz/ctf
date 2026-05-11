@@ -7,6 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
+import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -20,7 +21,6 @@ import type {
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
-import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { toRadarScores } from '@/utils/skillProfile'
 import StudentInsightAttackSessionsSection from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue'
 import StudentInsightManualReviewSection from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue'
@@ -180,12 +180,12 @@ function openChallenge(challengeId: string): void {
                     {{ item.evidence }}
                   </p>
                 </div>
-                <span
-                  class="rounded-full px-2.5 py-1 text-xs font-medium"
-                  :class="difficultyClass(item.difficulty)"
-                >
-                  {{ difficultyLabel(item.difficulty) }}
-                </span>
+                <div class="insight-recommendation-pills">
+                  <ChallengeCategoryDifficultyPills
+                    :category="item.category"
+                    :difficulty="item.difficulty"
+                  />
+                </div>
               </div>
               <div
                 class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
@@ -314,6 +314,14 @@ function openChallenge(challengeId: string): void {
 .insight-dimension-empty {
   font-size: var(--font-size-0-84);
   color: var(--journal-muted);
+}
+
+.insight-recommendation-pills {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 :deep(.section-card) {

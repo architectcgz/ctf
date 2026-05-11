@@ -10,6 +10,12 @@ import type {
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
+import {
+  ChallengeCategoryPill,
+  ChallengeDifficultyText,
+  toChallengeCategory,
+  toChallengeDifficulty,
+} from '@/entities/challenge'
 import { useContestChallengeOrchestration } from '@/features/contest-workbench'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
@@ -221,7 +227,16 @@ function getChallengeActionKey(item: AdminContestChallengeViewData): string {
                       {{ getChallengeTitle(challenge) }}
                     </RouterLink>
                     <div class="challenge-subtitle">
-                      {{ challenge.category || '通用' }} · {{ challenge.difficulty || '常规' }}
+                      <ChallengeCategoryPill
+                        v-if="toChallengeCategory(challenge.category)"
+                        :category="toChallengeCategory(challenge.category)!"
+                      />
+                      <span v-else>{{ challenge.category || '通用' }}</span>
+                      <ChallengeDifficultyText
+                        v-if="toChallengeDifficulty(challenge.difficulty)"
+                        :difficulty="toChallengeDifficulty(challenge.difficulty)!"
+                      />
+                      <span v-else>{{ challenge.difficulty || '常规' }}</span>
                     </div>
                   </div>
                 </td>
@@ -462,6 +477,10 @@ function getChallengeActionKey(item: AdminContestChallengeViewData): string {
 }
 
 .challenge-subtitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   margin-top: var(--space-1);
   font-size: var(--font-size-13);
   color: var(--color-text-muted);

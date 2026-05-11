@@ -4,6 +4,11 @@ import { useRouter } from 'vue-router'
 
 import type { TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import {
+  ChallengeCategoryDifficultyPills,
+  ChallengeCategoryPill,
+  toChallengeCategory,
+} from '@/entities/challenge'
 import { useTeacherInterventionRecommendations } from '@/features/teacher-student-analysis'
 
 const props = defineProps<{
@@ -33,6 +38,10 @@ function openStudent(studentId: string): void {
       studentId,
     },
   })
+}
+
+function weakDimensionCategory(value?: string | null) {
+  return toChallengeCategory(value)
 }
 </script>
 
@@ -88,8 +97,16 @@ function openStudent(studentId: string): void {
               <span class="intervention-item__meta-inline intervention-item__meta-inline--username">
                 {{ item.student.username }}
               </span>
-              <span v-if="item.student.weak_dimension" class="intervention-item__meta-inline">
-                薄弱项 {{ item.student.weak_dimension }}
+              <span
+                v-if="item.student.weak_dimension"
+                class="intervention-item__meta-inline intervention-item__weak-inline"
+              >
+                <span>薄弱项</span>
+                <ChallengeCategoryPill
+                  v-if="weakDimensionCategory(item.student.weak_dimension)"
+                  :category="weakDimensionCategory(item.student.weak_dimension)!"
+                />
+                <span v-else>{{ item.student.weak_dimension }}</span>
               </span>
             </div>
           </div>
@@ -127,10 +144,12 @@ function openStudent(studentId: string): void {
                 <div class="intervention-item__recommendation-title">
                   {{ getRecommendation(item.student.id)?.title }}
                 </div>
-                <div class="intervention-item__recommendation-meta">
-                  {{ getRecommendation(item.student.id)?.category }} ·
-                  {{ getRecommendation(item.student.id)?.difficulty }}
-                </div>
+                <ChallengeCategoryDifficultyPills
+                  v-if="getRecommendation(item.student.id)"
+                  class="intervention-item__recommendation-meta"
+                  :category="getRecommendation(item.student.id)!.category"
+                  :difficulty="getRecommendation(item.student.id)!.difficulty"
+                />
               </div>
               <div class="intervention-item__recommendation-reason">
                 {{ getRecommendation(item.student.id)?.summary }}
@@ -296,6 +315,12 @@ function openStudent(studentId: string): void {
 .intervention-item__meta-inline--username {
   font-family: var(--font-family-mono);
   color: var(--panel-ink);
+}
+
+.intervention-item__weak-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
 }
 
 .intervention-item__recommendation--premium {

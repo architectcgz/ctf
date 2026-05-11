@@ -153,8 +153,9 @@ describe('student and user surface alignment', () => {
     expect(themeSource).toContain('--challenge-category-pill-forensics')
     expect(challengePresentationSource).toContain('var(--challenge-category-pill-web)')
     expect(studentRecommendationSource).toContain("from '@/entities/challenge'")
-    expect(studentRecommendationSource).toContain('categoryPillStyle(item.category)')
-    expect(studentRecommendationSource).toContain('--challenge-category-pill-color')
+    expect(studentRecommendationSource).toContain('<ChallengeCategoryDifficultyPills')
+    expect(studentRecommendationSource).toContain('toChallengeCategory')
+    expect(studentRecommendationSource).not.toContain('categoryPillStyle(item.category)')
     expect(studentRecommendationSource).not.toContain('--challenge-tone-')
   })
 
@@ -162,7 +163,8 @@ describe('student and user surface alignment', () => {
     expect(themeSource).toContain('--challenge-difficulty-pill-beginner')
     expect(themeSource).toContain('--challenge-difficulty-pill-insane')
     expect(challengePresentationSource).toContain('var(--challenge-difficulty-pill-easy)')
-    expect(studentRecommendationSource).toContain('difficultyClass(item.difficulty)')
+    expect(studentRecommendationSource).toContain('<ChallengeCategoryDifficultyPills')
+    expect(studentRecommendationSource).not.toContain('difficultyClass(item.difficulty)')
     expect(themeSource).not.toContain('--challenge-diff-beginner')
   })
 
