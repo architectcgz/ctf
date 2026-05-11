@@ -257,13 +257,6 @@ type PracticeInstanceStatsRepository interface {
 	CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 }
 
-type ManagedContainerState struct {
-	ID      string
-	Exists  bool
-	Running bool
-	Status  string
-}
-
 type RuntimeInstanceService interface {
 	CleanupRuntime(ctx context.Context, instance *model.Instance) error
 	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
