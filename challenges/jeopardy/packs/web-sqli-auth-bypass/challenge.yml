@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-sqli-auth-bypass
+  title: "Web 训练：认证绕过注入"
+  category: web
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:sqli-auth-bypass
+    - kp:sqli-auth-bypass
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_sqli_auth_bypass}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "直接看 SQL 拼接方式。"
+  - level: 2
+    title: Hint 2
+    content: "注释掉密码条件即可。"
+
+runtime:
+  type: none

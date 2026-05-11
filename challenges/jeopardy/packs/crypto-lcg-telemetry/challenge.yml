@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-lcg-telemetry
+  title: "Crypto 训练：LCG 遥测流"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:lcg-keystream
+    - kp:lcg-recovery
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/telemetry.txt
+      name: telemetry.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_lcg_telemetry}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "三段连续输出足够恢复 a 和 c。"
+  - level: 2
+    title: Hint 2
+    content: "密文字节对应的是后续状态的低字节。"
+
+runtime:
+  type: none

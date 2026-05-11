@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-uaf-callback
+  title: "Pwn 训练：释放后回调"
+  category: pwn
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:uaf-callback
+    - kp:use-after-free
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_uaf_callback}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先看 free 后指针是否清空。"
+  - level: 2
+    title: Hint 2
+    content: "同尺寸堆块复用是这题的关键。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-reset-token-predictable
+  title: "Web 训练：可预测重置令牌"
+  category: web
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:reset-token-predictable
+    - kp:predictable-token
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_reset_token_predictable}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先确认 token 到底依赖什么。"
+  - level: 2
+    title: Hint 2
+    content: "如果种子完全可见，就能本地重算。"
+
+runtime:
+  type: none

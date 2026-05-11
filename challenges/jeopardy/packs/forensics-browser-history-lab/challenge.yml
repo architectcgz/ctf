@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-browser-history-lab
+  title: "取证训练：浏览记录回看"
+  category: forensics
+  difficulty: beginner
+  points: 100
+  tags:
+    - topic:browser-history-sqlite
+    - kp:sqlite-history
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/History.db
+      name: History.db
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_browser_history_lab}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先列 sqlite 表，不要一上来盲猜字段。"
+  - level: 2
+    title: Hint 2
+    content: "浏览器历史最常看的就是 URL 和 title。"
+
+runtime:
+  type: none

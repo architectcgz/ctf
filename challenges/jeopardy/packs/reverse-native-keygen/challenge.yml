@@ -1,0 +1,38 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-native-keygen
+  title: "Reverse 训练：序列号生成器"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:native-keygen
+    - kp:keygenme
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/challenge.asm
+      name: challenge.asm
+    - path: attachments/notes.txt
+      name: notes.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{5675}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "题面给出的用户名会参与序列号计算。"
+  - level: 2
+    title: Hint 2
+    content: "如果暂时没还原公式，4 位数字也能黑盒验证。"
+
+runtime:
+  type: none

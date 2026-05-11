@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-off-by-one-auth
+  title: "Pwn 训练：单字节改权"
+  category: pwn
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:off-by-one-auth
+    - kp:off-by-one
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_off_by_one_auth}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "不是所有 off-by-one 都要拿 shell。"
+  - level: 2
+    title: Hint 2
+    content: "看看 17 字节刚好落在什么位置。"
+
+runtime:
+  type: none

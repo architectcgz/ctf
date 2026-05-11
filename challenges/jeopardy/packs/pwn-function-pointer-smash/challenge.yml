@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-function-pointer-smash
+  title: "Pwn 训练：函数指针改写"
+  category: pwn
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:function-pointer-smash
+    - kp:function-pointer-overwrite
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_function_pointer_smash}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "函数指针就在缓冲区后面。"
+  - level: 2
+    title: Hint 2
+    content: "这题不需要 ROP。"
+
+runtime:
+  type: none

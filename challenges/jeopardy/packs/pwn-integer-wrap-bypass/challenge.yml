@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-integer-wrap-bypass
+  title: "Pwn 训练：整数绕回门禁"
+  category: pwn
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:integer-wrap-bypass
+    - kp:integer-wrap
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_integer_wrap_bypass}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先确认发生了哪一步截断。"
+  - level: 2
+    title: Hint 2
+    content: "绕回后的比较值其实很小。"
+
+runtime:
+  type: none

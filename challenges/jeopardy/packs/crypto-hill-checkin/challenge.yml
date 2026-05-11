@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-hill-checkin
+  title: "Crypto 训练：Hill 签到纸"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:hill-cipher
+    - kp:hill-cipher
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/hill.txt
+      name: hill.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{hillcheckincode}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先把已知明文/密文拆成两个 2 字符块。"
+  - level: 2
+    title: Hint 2
+    content: "解密要用矩阵逆，而不是直接再乘一次。"
+
+runtime:
+  type: none

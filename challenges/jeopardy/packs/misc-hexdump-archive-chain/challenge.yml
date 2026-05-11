@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-hexdump-archive-chain
+  title: "Misc 训练：十六进制拆包链"
+  category: misc
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:hexdump-archive-chain
+    - kp:hexdump-rebuild
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/dump.txt
+      name: dump.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_hexdump_archive_chain}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先别急着脚本化，先看文件头。"
+  - level: 2
+    title: Hint 2
+    content: "每一层都能从魔数判断出类型。"
+
+runtime:
+  type: none

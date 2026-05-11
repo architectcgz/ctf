@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-native-crc32-gate
+  title: "Reverse 训练：CRC32 门限"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:native-crc32-gate
+    - kp:crc32-reverse
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/challenge.asm
+      name: challenge.asm
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{HUNT}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "输入空间只有 4 位大写字母。"
+  - level: 2
+    title: Hint 2
+    content: "先把目标 CRC 常量抠出来。"
+
+runtime:
+  type: none

@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU]
+"a"="notepad C:\\Users\\ops\\Desktop\\todo.txt"
+"b"="cmd /c type C:\\vault\\flag{forensics_registry_runmru}.txt"
+"MRUList"="ba"

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-pcap-dns-exfil
+  title: "取证训练：DNS 外带痕迹"
+  category: forensics
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:pcap-dns-exfil
+    - kp:pcap-dns
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/dns.pcap
+      name: dns.pcap
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_pcap_dns_exfil}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "子域名前面的两位编号不要丢。"
+  - level: 2
+    title: Hint 2
+    content: "大写字母加 2-7 很像 Base32。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-strings-signal
+  title: "Misc 训练：字符串筛线索"
+  category: misc
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:strings-grep
+    - kp:strings-grep
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/blob.bin
+      name: blob.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_strings_signal}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "不要先猜格式，先从 strings 入手。"
+  - level: 2
+    title: Hint 2
+    content: "关键词筛选通常能快速去掉大量噪声。"
+
+runtime:
+  type: none

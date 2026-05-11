@@ -1,0 +1,9 @@
+
+/tmp/tmpkpu1llv9/challenge.bin:     file format elf64-x86-64
+
+Contents of section .rodata:
+ 2000 01000200 00000000 00000000 00000000  ................
+ 2010 00000000 00000000 00000000 00000000  ................
+ 2020 666d636a 7f776b7d 6d7b7d70 6b7b6f83  fmcj.wk}m{}pk{o.
+ 2030 79877772 7784848a 8c787b8d 8e7e979c  y.wrw....x{..~..
+ 2040 0a006e6f 7065006f 6b00               ..nope.ok.      

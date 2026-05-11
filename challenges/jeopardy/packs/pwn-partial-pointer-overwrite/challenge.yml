@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-partial-pointer-overwrite
+  title: "Pwn 训练：部分指针覆盖"
+  category: pwn
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:partial-pointer-overwrite
+    - kp:partial-overwrite
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_partial_pointer_overwrite}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "只改 1 字节意味着要先看高位是否相同。"
+  - level: 2
+    title: Hint 2
+    content: "safe 和 win 离得很近。"
+
+runtime:
+  type: none

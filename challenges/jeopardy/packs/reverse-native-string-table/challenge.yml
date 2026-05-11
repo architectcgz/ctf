@@ -1,0 +1,42 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-native-string-table
+  title: "Reverse 训练：字符串表解密"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:native-string-table
+    - kp:string-table-decrypt
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/challenge.asm
+      name: challenge.asm
+    - path: attachments/challenge.rodata.txt
+      name: challenge.rodata.txt
+    - path: attachments/table.txt
+      name: table.txt
+    - path: attachments/key.txt
+      name: key.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_native_string_table}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "这是最基础的一字节字符串表混淆。"
+  - level: 2
+    title: Hint 2
+    content: "先把 key 找出来再批量逆运算。"
+
+runtime:
+  type: none

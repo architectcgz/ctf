@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-ssti-render-lab
+  title: "Web 训练：模板渲染注入"
+  category: web
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:ssti-render-lab
+    - kp:ssti
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_ssti_render_lab}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "看清模板占位语法。"
+  - level: 2
+    title: Hint 2
+    content: "真正危险的是服务端求值。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-xxe-local-reader
+  title: "Web 训练：XML 本地文件读取"
+  category: web
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:xxe-local-reader
+    - kp:xxe-file-read
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_xxe_local_reader}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "关键在 DOCTYPE 里的实体声明。"
+  - level: 2
+    title: Hint 2
+    content: "实体引用最终会出现在 `<data>` 里。"
+
+runtime:
+  type: none

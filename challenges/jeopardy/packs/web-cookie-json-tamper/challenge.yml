@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-cookie-json-tamper
+  title: "Web 训练：Cookie JSON 篡改"
+  category: web
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:cookie-json-tamper
+    - kp:cookie-tamper
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_cookie_json_tamper}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先判断 Cookie 有没有签名。"
+  - level: 2
+    title: Hint 2
+    content: "无签名 JSON 状态最容易直接改权限。"
+
+runtime:
+  type: none

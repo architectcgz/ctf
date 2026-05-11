@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-rsa-common-modulus-mail
+  title: "Crypto 训练：共模邮件回执"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:rsa-common-modulus
+    - kp:rsa-common-modulus
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/common.txt
+      name: common.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{dualroute}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先检查两个指数是否互素。"
+  - level: 2
+    title: Hint 2
+    content: "负指数要换成模逆。"
+
+runtime:
+  type: none

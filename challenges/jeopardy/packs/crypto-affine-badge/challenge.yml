@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-affine-badge
+  title: "Crypto 训练：Affine 门牌"
+  category: crypto
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:affine-cipher
+    - kp:affine-cipher
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/badge.txt
+      name: badge.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_affine_badge}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先确认字母替换满足线性函数。"
+  - level: 2
+    title: Hint 2
+    content: "26 下只有与 26 互素的 a 才可逆。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-special-filename
+  title: "Misc 训练：特殊文件名读取"
+  category: misc
+  difficulty: beginner
+  points: 100
+  tags:
+    - topic:special-filename
+    - kp:shell-special-filename
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/sample.tar.gz
+      name: sample.tar.gz
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_special_filename}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先想想 shell 怎么区分参数和路径。"
+  - level: 2
+    title: Hint 2
+    content: "前缀 `./` 通常能解决这类问题。"
+
+runtime:
+  type: none

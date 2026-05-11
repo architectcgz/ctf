@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-heap-adjacent-overflow
+  title: "Pwn 训练：堆相邻对象溢出"
+  category: pwn
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:heap-adjacent-overflow
+    - kp:heap-adjacent-overflow
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_heap_adjacent_overflow}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先算第一个堆块能写多少，再算第二个对象头。"
+  - level: 2
+    title: Hint 2
+    content: "覆盖目标仍然是回调指针。"
+
+runtime:
+  type: none

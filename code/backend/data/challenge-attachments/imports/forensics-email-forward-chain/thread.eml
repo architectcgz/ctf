@@ -1,0 +1,22 @@
+From: audit@local
+To: ops@local
+Subject: Fwd: export summary
+X-Mailer: Roundcube
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============0647866737709282254=="
+
+--===============0647866737709282254==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+请看附件，真正的导出值不在正文里。
+
+--===============0647866737709282254==
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="note.txt"
+MIME-Version: 1.0
+
+c2VhbGVkIGV4cG9ydCBjb2RlOiBmbGFne2ZvcmVuc2ljc19lbWFpbF9mb3J3YXJkX2NoYWlufQo=
+
+--===============0647866737709282254==--

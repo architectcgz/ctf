@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-rsa-broadcast-notice
+  title: "Crypto 训练：广播通知恢复"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:rsa-broadcast
+    - kp:rsa-broadcast
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/broadcast.txt
+      name: broadcast.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{tricastok}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "同一明文、同一低指数、不同模数。"
+  - level: 2
+    title: Hint 2
+    content: "先 CRT，再开整数立方根。"
+
+runtime:
+  type: none

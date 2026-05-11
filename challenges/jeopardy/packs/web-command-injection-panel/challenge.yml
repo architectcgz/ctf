@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-command-injection-panel
+  title: "Web 训练：诊断面板命令注入"
+  category: web
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:command-injection
+    - kp:command-injection
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_command_injection_panel}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "看 shell 命令是怎么拼的。"
+  - level: 2
+    title: Hint 2
+    content: "分号足够把第二条命令接进去。"
+
+runtime:
+  type: none
