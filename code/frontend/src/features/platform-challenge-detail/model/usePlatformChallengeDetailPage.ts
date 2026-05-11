@@ -3,7 +3,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { AdminChallengeFlagPayload } from '@/api/admin/authoring'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin/authoring'
-import { downloadAttachment as downloadChallengeAttachment } from '@/api/challenge'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
@@ -85,27 +84,21 @@ export function usePlatformChallengeDetailPage() {
     const attachmentURL = challenge.value?.attachment_url?.trim()
     if (!attachmentURL) return
 
+    downloadingAttachment.value = true
     try {
       const parsed = new URL(attachmentURL, window.location.origin)
       if (parsed.origin !== window.location.origin) {
-        window.open(attachmentURL, '_blank', 'noopener')
+        window.open(parsed.toString(), '_blank', 'noopener')
         return
       }
-    } catch {
-      // fallback to axios download for relative urls
-    }
 
-    downloadingAttachment.value = true
-    try {
-      const { blob, filename } = await downloadChallengeAttachment(attachmentURL)
-      const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url
-      link.download = filename
+      link.href = parsed.toString()
+      link.download = ''
+      link.rel = 'noopener'
       document.body.appendChild(link)
       link.click()
       link.remove()
-      URL.revokeObjectURL(url)
     } catch {
       toast.error('下载附件失败')
     } finally {

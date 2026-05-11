@@ -307,21 +307,18 @@ describe('Admin ChallengeDetail', () => {
 
     const originalCreateElement = document.createElement.bind(document)
     const clickMock = vi.fn()
+    let capturedAnchor: HTMLAnchorElement | null = null
     const createElementSpy = vi
       .spyOn(document, 'createElement')
       .mockImplementation((tagName: string) => {
         if (tagName === 'a') {
           const anchor = originalCreateElement(tagName)
           anchor.click = clickMock
+          capturedAnchor = anchor
           return anchor
         }
         return originalCreateElement(tagName)
       })
-
-    vi.stubGlobal('URL', {
-      createObjectURL: vi.fn(() => 'blob:demo'),
-      revokeObjectURL: vi.fn(),
-    })
 
     const wrapper = mount(ChallengeDetail, {
       global: {
@@ -343,13 +340,17 @@ describe('Admin ChallengeDetail', () => {
     await downloadButton!.trigger('click')
     await flushPromises()
 
-    expect(challengeApiMocks.downloadAttachment).toHaveBeenCalledWith(
-      '/api/v1/challenges/attachments/imports/demo.zip'
-    )
+    expect(challengeApiMocks.downloadAttachment).not.toHaveBeenCalled()
     expect(clickMock).toHaveBeenCalled()
+    expect(capturedAnchor).not.toBeNull()
+    if (!capturedAnchor) {
+      throw new Error('expected download anchor to be created')
+    }
+    const anchor = capturedAnchor as HTMLAnchorElement
+    expect(anchor.href).toContain('/api/v1/challenges/attachments/imports/demo.zip')
+    expect(anchor.hasAttribute('download')).toBe(true)
 
     createElementSpy.mockRestore()
-    vi.unstubAllGlobals()
   })
 
   it('加载失败后卸载页面时应清理延迟跳转定时器', async () => {

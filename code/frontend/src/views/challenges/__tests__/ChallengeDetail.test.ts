@@ -1352,4 +1352,66 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('下载附件')
     expect(wrapper.text()).toContain('题目描述')
   })
+
+  it('学生下载内部附件时应直接走浏览器原生下载链路', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Test Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: false,
+      attachment_url: '/api/v1/challenges/attachments/imports/demo.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const originalCreateElement = document.createElement.bind(document)
+    const clickMock = vi.fn()
+    let capturedAnchor: HTMLAnchorElement | null = null
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        if (tagName === 'a') {
+          const anchor = originalCreateElement(tagName)
+          anchor.click = clickMock
+          capturedAnchor = anchor
+          return anchor
+        }
+        return originalCreateElement(tagName)
+      })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载附件'))
+    expect(downloadButton).toBeTruthy()
+
+    await downloadButton!.trigger('click')
+    await flushPromises()
+
+    expect(challengeApiMocks.downloadAttachment).not.toHaveBeenCalled()
+    expect(clickMock).toHaveBeenCalled()
+    expect(capturedAnchor).not.toBeNull()
+    if (!capturedAnchor) {
+      throw new Error('expected download anchor to be created')
+    }
+    const anchor = capturedAnchor as HTMLAnchorElement
+    expect(anchor.href).toContain('/api/v1/challenges/attachments/imports/demo.zip')
+    expect(anchor.hasAttribute('download')).toBe(true)
+
+    createElementSpy.mockRestore()
+  })
 })
