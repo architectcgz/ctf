@@ -29,9 +29,11 @@
 - challenges/jeopardy/packs/forensics-ci-preview-artifact/challenge.yml
 - challenges/jeopardy/packs/misc-hidden-comment/challenge.yml
 - challenges/jeopardy/packs/pwn-length-gate/challenge.yml
+- challenges/jeopardy/packs/pwn-passkey-recovery-relay/challenge.yml
 - challenges/jeopardy/packs/reverse-agent-cache-key/challenge.yml
 - challenges/jeopardy/packs/web-header-door/challenge.yml
 - scripts/challenges/jeopardy_batch/generate.py
+- scripts/challenges/jeopardy_batch/verify.py
 - scripts/challenges/jeopardy_batch/registry.py
 - scripts/challenges/verify_jeopardy_packs.py
 - code/backend/internal/module/practice/application/commands/awd_defense_workspace_support.go
@@ -46,6 +48,8 @@
 ## Reason
 - This change expands the Jeopardy pack catalog, but it does not introduce a parallel pack format.
 - The new packs reuse the existing challenge.yml plus statement/writeup/attachments structure and the shared generator plus verifier workflow under scripts/challenges.
+- `pwn-ret2win-warmup` follows the same existing pwn container pack shape as `pwn-length-gate` and `pwn-passkey-recovery-relay`; the new slug is justified as new training content, not a new schema.
+- The verifier changes extend the existing `scripts/challenges/jeopardy_batch/verify.py` flow with real docker build/run execution for container packs instead of creating a second verifier entrypoint.
 - Creating new challenge slugs is appropriate here because the repo is intentionally adding more training content, while still following the existing pack schema and import layout.
 - The AWD stale-workspace repair reuses the existing workspace companion bootstrap and runtime adapter flow.
 - We are extending the current `practice` service tests and runtime ports to cover the missing-companion recovery path instead of introducing a separate restart workflow.
@@ -89,6 +93,7 @@
 - challenges/jeopardy/packs/pwn-heap-adjacent-overflow/challenge.yml
 - challenges/jeopardy/packs/pwn-integer-wrap-bypass/challenge.yml
 - challenges/jeopardy/packs/pwn-off-by-one-auth/challenge.yml
+- challenges/jeopardy/packs/pwn-ret2win-warmup/challenge.yml
 - challenges/jeopardy/packs/pwn-partial-pointer-overwrite/challenge.yml
 - challenges/jeopardy/packs/pwn-signed-index-leak/challenge.yml
 - challenges/jeopardy/packs/pwn-struct-auth-flip/challenge.yml
@@ -116,6 +121,8 @@
 - challenges/jeopardy/packs/web-ssti-render-lab/challenge.yml
 - challenges/jeopardy/packs/web-workflow-step-bypass/challenge.yml
 - challenges/jeopardy/packs/web-xxe-local-reader/challenge.yml
+- scripts/challenges/jeopardy_batch/container_runtime.py
+- scripts/challenges/jeopardy_batch/verify.py
 - code/backend/internal/module/practice/application/commands/instance_start_service_test.go
 - code/backend/internal/module/practice/application/commands/service_test.go
 - code/backend/internal/module/practice/ports/ports.go

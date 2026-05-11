@@ -14,7 +14,9 @@ meta:
 
 content:
   statement: statement.md
-  attachments: []
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
 
 flag:
   type: dynamic
