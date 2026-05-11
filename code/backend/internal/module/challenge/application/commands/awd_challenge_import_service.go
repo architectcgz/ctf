@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
@@ -39,6 +40,7 @@ type AWDChallengeImportService struct {
 	db         *gorm.DB
 	repo       challengeports.AWDChallengeCommandRepository
 	imageBuild *ImageBuildService
+	logger     *zap.Logger
 }
 
 func NewAWDChallengeImportService(
@@ -46,11 +48,17 @@ func NewAWDChallengeImportService(
 	repo challengeports.AWDChallengeCommandRepository,
 	imageBuild ...*ImageBuildService,
 ) *AWDChallengeImportService {
-	service := &AWDChallengeImportService{db: db, repo: repo}
+	service := &AWDChallengeImportService{db: db, repo: repo, logger: zap.NewNop()}
 	if len(imageBuild) > 0 {
 		service.imageBuild = imageBuild[0]
 	}
 	return service
+}
+
+func (s *AWDChallengeImportService) SetLogger(logger *zap.Logger) {
+	if s != nil && logger != nil {
+		s.logger = logger
+	}
 }
 
 func (s *AWDChallengeImportService) PreviewImport(
@@ -260,15 +268,27 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 	if parsed == nil {
 		return nil
 	}
+	var imageBuild *ImageBuildService
+	var logger *zap.Logger
+	if s != nil {
+		imageBuild = s.imageBuild
+		logger = s.logger
+	}
+
 	imageDelivery := dto.ChallengeImportImageDeliveryResp{
 		SourceType:   parsed.ImageSourceType,
 		SuggestedTag: parsed.SuggestedImageTag,
 	}
-	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && s != nil && s.imageBuild != nil {
-		if targetRef, err := s.imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeAWD, parsed.Slug, parsed.SuggestedImageTag); err == nil {
+	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && imageBuild != nil {
+		if targetRef, err := imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeAWD, parsed.Slug, parsed.SuggestedImageTag); err == nil {
 			imageDelivery.TargetImageRef = targetRef
 			imageDelivery.BuildStatus = model.ImageStatusPending
 		}
+	}
+	warnings := append([]string(nil), parsed.Warnings...)
+	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
+		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "preview")
+		warnings = appendChallengeImportImageBuildWarning(warnings, parsed.ImageSourceType)
 	}
 	return &dto.AWDChallengeImportPreviewResp{
 		ID:               id,
@@ -289,7 +309,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 		AccessConfig:     cloneAWDChallengeConfig(parsed.AccessConfig),
 		RuntimeConfig:    cloneAWDChallengeConfig(parsed.RuntimeConfig),
 		ImageDelivery:    imageDelivery,
-		Warnings:         append([]string(nil), parsed.Warnings...),
+		Warnings:         warnings,
 		CreatedAt:        createdAt,
 	}
 }
@@ -301,11 +321,18 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	parsed *domain.ParsedAWDChallengePackage,
 	buildSource *importedImageBuildSource,
 ) (int64, string, error) {
+	var imageBuild *ImageBuildService
+	var logger *zap.Logger
+	if s != nil {
+		imageBuild = s.imageBuild
+		logger = s.logger
+	}
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
-		if s == nil || s.imageBuild == nil {
-			return 0, "", fmt.Errorf("image build service is not configured")
+		if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
+			warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
+			return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 		}
-		result, err := s.imageBuild.VerifyExternalImageRefInTx(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
+		result, err := imageBuild.VerifyExternalImageRefInTx(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
 			return 0, "", err
 		}
@@ -315,8 +342,9 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 		imageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 		return imageID, parsed.RuntimeImageRef, err
 	}
-	if s == nil || s.imageBuild == nil {
-		return 0, "", fmt.Errorf("image build service is not configured")
+	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
+		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
+		return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 	}
 	sourceDir := parsed.RootDir
 	dockerfilePath := parsed.DockerfilePath
@@ -326,7 +354,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeAWD,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,

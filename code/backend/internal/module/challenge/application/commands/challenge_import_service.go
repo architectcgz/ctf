@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
@@ -305,6 +306,15 @@ func (s *ChallengeService) buildChallengeImportPreview(
 	parsed *domain.ParsedChallengePackage,
 	createdAt time.Time,
 ) *dto.ChallengeImportPreviewResp {
+	var imageBuild *ImageBuildService
+	if s != nil {
+		imageBuild = s.imageBuild
+	}
+	var logger *zap.Logger
+	if s != nil {
+		logger = s.logger
+	}
+
 	attachments := make([]dto.ChallengeImportAttachmentResp, 0, len(parsed.Attachments))
 	for _, attachment := range parsed.Attachments {
 		attachments = append(attachments, dto.ChallengeImportAttachmentResp{
@@ -326,11 +336,16 @@ func (s *ChallengeService) buildChallengeImportPreview(
 		SourceType:   parsed.ImageSourceType,
 		SuggestedTag: parsed.SuggestedImageTag,
 	}
-	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && s != nil && s.imageBuild != nil {
-		if targetRef, err := s.imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeJeopardy, parsed.Slug, parsed.SuggestedImageTag); err == nil {
+	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && imageBuild != nil {
+		if targetRef, err := imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeJeopardy, parsed.Slug, parsed.SuggestedImageTag); err == nil {
 			imageDelivery.TargetImageRef = targetRef
 			imageDelivery.BuildStatus = model.ImageStatusPending
 		}
+	}
+	warnings := append([]string(nil), parsed.Warnings...)
+	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
+		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "preview")
+		warnings = appendChallengeImportImageBuildWarning(warnings, parsed.ImageSourceType)
 	}
 
 	return &dto.ChallengeImportPreviewResp{
@@ -361,7 +376,7 @@ func (s *ChallengeService) buildChallengeImportPreview(
 		},
 		Topology:     domain.ChallengeImportTopologyRespFromParsed(parsed.Topology),
 		PackageFiles: domain.ChallengePackageFileRespList(parsed.PackageFiles),
-		Warnings:     parsed.Warnings,
+		Warnings:     warnings,
 		CreatedAt:    createdAt,
 	}
 }
@@ -379,8 +394,15 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
 		return resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 	}
-	if s == nil || s.imageBuild == nil {
-		return 0, fmt.Errorf("image build service is not configured")
+	var imageBuild *ImageBuildService
+	var logger *zap.Logger
+	if s != nil {
+		imageBuild = s.imageBuild
+		logger = s.logger
+	}
+	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
+		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
+		return 0, challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 	}
 	sourceDir := parsed.RootDir
 	dockerfilePath := parsed.DockerfilePath
@@ -390,7 +412,7 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := s.imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeJeopardy,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
@@ -414,10 +436,17 @@ func (s *ChallengeService) resolveExternalImageRefForCommit(
 	if strings.TrimSpace(imageRef) == "" {
 		return 0, nil
 	}
-	if s == nil || s.imageBuild == nil {
-		return 0, fmt.Errorf("image build service is not configured")
+	var imageBuild *ImageBuildService
+	var logger *zap.Logger
+	if s != nil {
+		imageBuild = s.imageBuild
+		logger = s.logger
 	}
-	result, err := s.imageBuild.VerifyExternalImageRefInTx(ctx, tx, packageSlug, imageRef)
+	if challengeImportMissingImageBuildService(imageBuild, domain.ImageSourceTypeExternalRef) {
+		warnChallengeImportImageBuildServiceUnavailable(logger, packageSlug, domain.ImageSourceTypeExternalRef, "commit")
+		return 0, challengeImportImageBuildServiceUnavailableError(domain.ImageSourceTypeExternalRef)
+	}
+	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, tx, packageSlug, imageRef)
 	if err != nil {
 		return 0, err
 	}
