@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"testing"
 
+	networktypes "github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 )
 
 func TestBuildSecurityOpts(t *testing.T) {
@@ -215,6 +217,78 @@ func TestSelectServicePort(t *testing.T) {
 			got := selectServicePort(tt.exposedPorts, tt.preferredPort)
 			if got != tt.want {
 				t.Fatalf("selectServicePort() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValidateReusableNetwork(t *testing.T) {
+	t.Parallel()
+
+	expectedLabels := runtimedomain.ChallengeInstanceLabels(runtimedomain.ComposeServiceAWD)
+	tests := []struct {
+		name    string
+		network networktypes.Inspect
+		wantErr bool
+	}{
+		{
+			name: "legacy managed network without compose labels is reusable",
+			network: networktypes.Inspect{
+				Internal: true,
+				Labels: map[string]string{
+					runtimedomain.ProjectLabelKey:           runtimedomain.ProjectLabelValue,
+					runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
+					runtimedomain.ChallengeInstanceLabelKey: runtimedomain.ChallengeInstanceLabelValue,
+				},
+			},
+		},
+		{
+			name: "compose managed network is reusable",
+			network: networktypes.Inspect{
+				Internal: true,
+				Labels: map[string]string{
+					runtimedomain.ProjectLabelKey:           runtimedomain.ProjectLabelValue,
+					runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
+					runtimedomain.ChallengeInstanceLabelKey: runtimedomain.ChallengeInstanceLabelValue,
+					runtimedomain.ComposeProjectLabelKey:    runtimedomain.ProjectLabelValue,
+					runtimedomain.ComposeServiceLabelKey:    runtimedomain.ComposeServiceAWD,
+				},
+			},
+		},
+		{
+			name: "non managed network is rejected",
+			network: networktypes.Inspect{
+				Internal: true,
+				Labels: map[string]string{
+					runtimedomain.ProjectLabelKey: runtimedomain.ProjectLabelValue,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "compose service mismatch is rejected",
+			network: networktypes.Inspect{
+				Internal: true,
+				Labels: map[string]string{
+					runtimedomain.ProjectLabelKey:           runtimedomain.ProjectLabelValue,
+					runtimedomain.ManagedByLabelKey:         runtimedomain.ManagedByLabelValue,
+					runtimedomain.ChallengeInstanceLabelKey: runtimedomain.ChallengeInstanceLabelValue,
+					runtimedomain.ComposeProjectLabelKey:    runtimedomain.ProjectLabelValue,
+					runtimedomain.ComposeServiceLabelKey:    runtimedomain.ComposeServiceJeopardy,
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validateReusableNetwork("ctf-awd-contest-8", expectedLabels, true, tt.network)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateReusableNetwork() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
