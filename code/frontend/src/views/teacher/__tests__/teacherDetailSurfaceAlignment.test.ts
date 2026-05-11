@@ -151,6 +151,16 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightPanelSource).not.toContain('challenge-btn-outline')
     expect(studentInsightPanelSource).not.toContain('challenge-btn-primary')
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-recommendation-list workspace-directory-list"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-recommendation-row workspace-directory-grid-row"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="workspace-directory-row-btn insight-recommendation-action"'
+    )
+    expect(studentInsightPanelSource).not.toContain('variant="action"')
     expect(studentInsightPanelSource).not.toContain('--metric-panel-background')
     expect(studentInsightPanelSource).not.toContain('insight-kpi-card--primary')
 

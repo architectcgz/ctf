@@ -5,32 +5,33 @@ Durable reuse knowledge belongs in `harness/reuse/index.yaml`; append-only summa
 
 ## Change type
 - component
+- list
 - layout
 
 ## Existing code searched
-- code/frontend/src/widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.vue
-- code/frontend/src/widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.test.ts
-- code/frontend/src/assets/styles/journal-notes.css
-- code/frontend/src/assets/styles/teacher-surface.css
-- code/frontend/src/components/teacher/class-management/StudentAnalysisPage.vue
 - code/frontend/src/components/teacher/StudentInsightPanel.vue
-- code/frontend/src/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue
+- code/frontend/src/components/common/AppCard.vue
+- code/frontend/src/style.css
+- code/frontend/src/components/teacher/student-management/StudentManagementPage.vue
+- code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewContestRow.vue
+- code/frontend/src/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue
+- code/frontend/src/views/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts
 
 ## Similar implementations found
-- code/frontend/src/assets/styles/journal-notes.css
-- code/frontend/src/assets/styles/teacher-surface.css
+- code/frontend/src/style.css
+- code/frontend/src/components/teacher/student-management/StudentManagementPage.vue
+- code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewContestRow.vue
 
 ## Decision
-- extend_existing
+- reuse_existing
 
 ## Reason
-- 证据复盘工作台已经使用 `journal` / `teacher-surface` / `metric-panel` 的共享暗色 surface token，不需要新增独立调色板。
-- 当前亮边框来自组件局部 observation 状态边框和 KPI 网格缺少 teacher surface 变量桥接；扩展现有 `metric-panel` surface 变体并收敛局部边框即可。
+- 推荐训练任务本质是可点击条目列表，不需要继续使用 `AppCard variant="action"` 的左侧强调边框。
+- 项目已有 `workspace-directory-list`、`workspace-directory-grid-row`、`workspace-directory-row-title`、`workspace-directory-row-subtitle`、`workspace-directory-row-btn` 这组通用目录列表样式，适合复用到推荐列表。
 
 ## Files to modify
-- code/frontend/src/assets/styles/journal-notes.css
-- code/frontend/src/widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.vue
-- code/frontend/src/widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.test.ts
+- code/frontend/src/components/teacher/StudentInsightPanel.vue
+- code/frontend/src/views/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts
 
 ## After implementation
-- No new durable reuse entry was added; this uses the existing dark surface alignment rules and shared metric-panel surface pattern.
+- No new durable reuse entry was added; this follows the existing workspace directory list pattern.

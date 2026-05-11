@@ -154,46 +154,39 @@ function openChallenge(challengeId: string): void {
             icon="BookOpen"
           />
 
-          <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
-            <AppCard
+          <div v-else class="insight-recommendation-list workspace-directory-list">
+            <button
               v-for="item in recommendations"
               :key="item.challenge_id"
-              as="button"
-              variant="action"
-              accent="primary"
-              interactive
-              class="text-left"
+              type="button"
+              class="insight-recommendation-row workspace-directory-grid-row"
               @click="openChallenge(item.challenge_id)"
             >
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h5 class="font-semibold text-[var(--color-text-primary)]">
-                    {{ item.title }}
-                  </h5>
-                  <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    {{ item.summary }}
-                  </p>
-                  <p
-                    v-if="item.evidence"
-                    class="mt-2 text-xs leading-5 text-[var(--color-text-tertiary)]"
-                  >
-                    {{ item.evidence }}
-                  </p>
-                </div>
-                <div class="insight-recommendation-pills">
-                  <ChallengeCategoryDifficultyPills
-                    :category="item.category"
-                    :difficulty="item.difficulty"
-                  />
-                </div>
+              <div class="workspace-directory-cell insight-recommendation-main">
+                <h5 class="workspace-directory-row-title">
+                  {{ item.title }}
+                </h5>
+                <p class="workspace-directory-row-subtitle">
+                  {{ item.summary }}
+                </p>
+                <p
+                  v-if="item.evidence"
+                  class="insight-recommendation-evidence"
+                >
+                  {{ item.evidence }}
+                </p>
               </div>
-              <div
-                class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
-              >
-                查看题目
+              <div class="insight-recommendation-pills">
+                <ChallengeCategoryDifficultyPills
+                  :category="item.category"
+                  :difficulty="item.difficulty"
+                />
+              </div>
+              <span class="workspace-directory-row-btn insight-recommendation-action">
+                <span>查看题目</span>
                 <ArrowRight class="h-4 w-4" />
-              </div>
-            </AppCard>
+              </span>
+            </button>
           </div>
         </SectionCard>
 
@@ -324,6 +317,34 @@ function openChallenge(challengeId: string): void {
   gap: var(--space-2);
 }
 
+.insight-recommendation-list {
+  --workspace-directory-grid-columns: minmax(0, 1fr) auto auto;
+  --workspace-directory-shell-padding: var(--space-2) var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.insight-recommendation-row {
+  gap: var(--space-4);
+}
+
+.insight-recommendation-main {
+  display: grid;
+  gap: var(--space-1);
+  align-content: center;
+}
+
+.insight-recommendation-evidence {
+  margin: var(--space-1) 0 0;
+  color: color-mix(in srgb, var(--journal-muted) 86%, transparent);
+  font-size: var(--font-size-12);
+  line-height: 1.65;
+}
+
+.insight-recommendation-action {
+  justify-self: end;
+  white-space: nowrap;
+}
+
 :deep(.section-card) {
   padding: var(--space-4) var(--space-1) var(--space-3);
   border: 0;
@@ -354,6 +375,19 @@ function openChallenge(challengeId: string): void {
 @media (max-width: 767px) {
   .insight-overview-layout {
     grid-template-columns: 1fr;
+  }
+
+  .insight-recommendation-list {
+    --workspace-directory-grid-columns: minmax(0, 1fr);
+  }
+
+  .insight-recommendation-row {
+    gap: var(--space-3);
+  }
+
+  .insight-recommendation-pills,
+  .insight-recommendation-action {
+    justify-self: start;
   }
 }
 </style>
