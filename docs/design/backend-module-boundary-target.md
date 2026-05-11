@@ -157,18 +157,18 @@ flowchart LR
 - Docker Engine、网络、ACL、文件、探活归 `container_runtime` 或平台适配层。
 - `practice`、`contest` 只依赖 `instance` contract，不知道 Docker 细节。
 
-当前状态（2026-05-11，phase 2 / slice 6）：
+当前状态（2026-05-11，phase 2 / slice 11）：
 
 - `internal/module/instance/` 已经落地 `application/commands`、`application/queries`、`ports`、`domain`，实例命令、实例查询、proxy ticket 和 maintenance use case 已有独立物理 owner。
-- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo / engine。
+- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo 与显式 capability adapter。
 - `runtime_cleaner` 与 AWD defense SSH gateway 已经从 `runtime/runtime.Module` 上移到 `InstanceModule` 注册；用户实例路由、教师实例路由、AWD target proxy 和 defense SSH 入口继续统一通过 `InstanceModule.Handler` 挂载。
 - app 层已经把 challenge / contest / ops 依赖的容器能力显式命名为 `ContainerRuntimeModule`；`BuildChallengeModule`、`BuildContestModule`、`BuildOpsModule`、`BuildInstanceModule` 都已经改依赖这个视图。
-- `runtime/runtime/module.go` 不再生产装配 instance command/query、proxy ticket 或 maintenance service，只保留 container-facing builder、`Engine` 和 practice/challenge/ops/contest 仍需复用的运行时能力。
+- `runtime/runtime/module.go` 不再生产装配 instance command/query、proxy ticket 或 maintenance service，只保留 container-facing builder 与 practice/challenge/ops/contest 仍需复用的显式 runtime capability fields，不再向上暴露宽 `Engine`。
 - `code/backend/internal/app/practice_flow_integration_test.go` 与 `code/backend/internal/module/runtime/service_test.go` 已继续切到 `instance/*` owner，减少了外部直接 new compat service 的调用点。
 - `internal/module/instance/contracts` 已经落地；生产使用的 runtime HTTP adapter 已收口到 `internal/app/composition/runtime_adapter_compat.go`，`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter。
 - `runtime/application/*` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除；实例命令、查询、proxy ticket、maintenance 的唯一 owner 固定在 `instance`。
 - 原本放在 `runtime/application` 目录里的实例行为测试已经切到 `instancecmd` / `instanceqry`，compat 层只保留最小 wrapper 测试。
-- `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module.Engine` 也改成由这些 capability port 组合出来的视图，不再在各文件里各自声明本地 engine-ish 接口。
+- `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，maintenance 需要的 inspect/start 组合留在 composition 边缘完成。
 
 建议动作：
 

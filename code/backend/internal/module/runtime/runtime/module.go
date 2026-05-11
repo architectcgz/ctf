@@ -19,16 +19,6 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-type Engine interface {
-	runtimeports.ContainerProvisioningRuntime
-	runtimeports.ContainerCleanupRuntime
-	runtimeports.ContainerFileRuntime
-	runtimeports.ContainerImageRuntime
-	runtimeports.ManagedContainerInventory
-	runtimeports.ManagedContainerStatsReader
-	runtimeports.ContainerInteractiveExecutor
-}
-
 type BackgroundJob struct {
 	Name  string
 	Start func(context.Context) error
@@ -46,15 +36,25 @@ type Module struct {
 	OpsRuntimeStatsProvider    opsports.RuntimeStatsProvider
 	ContestContainerFiles      contestports.AWDContainerFileWriter
 
-	Engine Engine
+	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
+	CleanupRuntime            runtimeports.ContainerCleanupRuntime
+	FileRuntime               runtimeports.ContainerFileRuntime
+	ManagedContainerInventory runtimeports.ManagedContainerInventory
+	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
 }
 
 type Deps struct {
-	Config *config.Config
-	Logger *zap.Logger
-	DB     *gorm.DB
-	Cache  *redislib.Client
-	Engine Engine
+	Config                    *config.Config
+	Logger                    *zap.Logger
+	DB                        *gorm.DB
+	Cache                     *redislib.Client
+	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
+	CleanupRuntime            runtimeports.ContainerCleanupRuntime
+	FileRuntime               runtimeports.ContainerFileRuntime
+	ImageRuntime              runtimeports.ContainerImageRuntime
+	ManagedContainerInventory runtimeports.ManagedContainerInventory
+	ManagedContainerStats     runtimeports.ManagedContainerStatsReader
+	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
 }
 
 type runtimeInstanceRepository interface {
@@ -107,7 +107,11 @@ func Build(deps Deps) *Module {
 		OpsRuntimeQuery:            opsDeps.query,
 		OpsRuntimeStatsProvider:    opsDeps.statsProvider,
 		ContestContainerFiles:      contestDeps.containerFiles,
-		Engine:                     deps.Engine,
+		ProvisioningRuntime:        deps.ProvisioningRuntime,
+		CleanupRuntime:             deps.CleanupRuntime,
+		FileRuntime:                deps.FileRuntime,
+		ManagedContainerInventory:  deps.ManagedContainerInventory,
+		InteractiveExecutor:        deps.InteractiveExecutor,
 	}
 }
 
@@ -121,11 +125,11 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 		log = zap.NewNop()
 	}
 	repo := runtimeinfra.NewRepository(deps.DB)
-	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.Engine, repo, log.Named("runtime_cleanup_service"))
-	provisioningService := runtimecmd.NewProvisioningService(repo, deps.Engine, &cfg.Container, log.Named("runtime_provisioning_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
+	provisioningService := runtimecmd.NewProvisioningService(repo, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
-	if deps.Engine != nil {
-		containerStatsService = runtimeapp.NewContainerStatsService(deps.Engine)
+	if deps.ManagedContainerStats != nil {
+		containerStatsService = runtimeapp.NewContainerStatsService(deps.ManagedContainerStats)
 	}
 
 	return runtimeModuleDeps{
@@ -136,8 +140,8 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
-		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.Engine),
-		containerFiles:        runtimeapp.NewContainerFileService(deps.Engine, log.Named("runtime_container_file_service")),
+		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.ImageRuntime),
+		containerFiles:        runtimeapp.NewContainerFileService(deps.FileRuntime, log.Named("runtime_container_file_service")),
 		containerPublicHost:   cfg.Container.PublicHost,
 	}
 }
@@ -155,7 +159,7 @@ type runtimePracticeDeps struct {
 func buildRuntimePracticeDeps(deps runtimeModuleDeps) runtimePracticeDeps {
 	return runtimePracticeDeps{
 		instanceRepository: deps.practiceInstanceRepo,
-		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService, deps.input.Engine),
+		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService, deps.input.ManagedContainerInventory),
 	}
 }
 

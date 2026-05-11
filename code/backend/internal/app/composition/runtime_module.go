@@ -5,6 +5,7 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	runtimemodule "ctf-platform/internal/module/runtime/runtime"
 	"go.uber.org/zap"
 )
@@ -21,16 +22,32 @@ type ContainerRuntimeModule struct {
 
 type RuntimeModule = ContainerRuntimeModule
 
+type runtimeCapabilityEngine interface {
+	runtimeports.ContainerProvisioningRuntime
+	runtimeports.ContainerCleanupRuntime
+	runtimeports.ContainerFileRuntime
+	runtimeports.ContainerImageRuntime
+	runtimeports.ManagedContainerInventory
+	runtimeports.ManagedContainerStatsReader
+	runtimeports.ContainerInteractiveExecutor
+}
+
 func BuildContainerRuntimeModule(root *Root) *ContainerRuntimeModule {
 	cfg := root.Config()
 	log := root.Logger()
 	engine := buildRuntimeEngine(root)
 	module := runtimemodule.Build(runtimemodule.Deps{
-		Config: cfg,
-		Logger: log,
-		DB:     root.DB(),
-		Cache:  root.Cache(),
-		Engine: engine,
+		Config:                    cfg,
+		Logger:                    log,
+		DB:                        root.DB(),
+		Cache:                     root.Cache(),
+		ProvisioningRuntime:       engine,
+		CleanupRuntime:            engine,
+		FileRuntime:               engine,
+		ImageRuntime:              engine,
+		ManagedContainerInventory: engine,
+		ManagedContainerStats:     engine,
+		InteractiveExecutor:       engine,
 	})
 
 	for _, job := range module.BackgroundJobs {
@@ -51,7 +68,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	return BuildContainerRuntimeModule(root)
 }
 
-func buildRuntimeEngine(root *Root) runtimemodule.Engine {
+func buildRuntimeEngine(root *Root) runtimeCapabilityEngine {
 	if root == nil {
 		return nil
 	}

@@ -87,9 +87,9 @@
 | `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket、基于 session 的当前用户解析 | 认证 handler、token service、登录链路应用服务 |
 | `identity` | 写模型 | 用户、角色、账号状态、资料、管理端用户能力 | 用户查询、资料命令/查询、管理端用户 handler |
 | `challenge` | 写模型 | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | 题目查询、镜像探针、Flag 规则读取 |
-| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计，以及 practice / challenge / contest 仍在复用的 container-facing adapter；底层实现仍落在 `internal/module/runtime/*` | `runtimemodule.Build(...)`、`Engine`、practice runtime bridge、底层容器适配实现 |
+| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计，以及 practice / challenge / contest 仍在复用的 container-facing adapter；底层实现仍落在 `internal/module/runtime/*` | `runtimemodule.Build(...)`、显式 runtime capability fields、practice runtime bridge、底层容器适配实现 |
 | `container_runtime` | app 层组合视图（迁移中） | 在 `internal/app/composition/runtime_module.go` 中承接 challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | image runtime、runtime probe、运行时统计 query、AWD 文件写入 |
-| `instance` | 写模型（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 runtime repo / engine，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
+| `instance` | 写模型（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 runtime repo 与显式 capability adapter，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
 | `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | 开题/续期/销毁/提交等应用服务与 handler |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | 画像查询、报告导出、归档能力 |
@@ -217,7 +217,7 @@ flowchart LR
     Auth -.token service 注入.-> Ops
 
     CR -->|runtime query / stats| Ops
-    CR -->|engine / repo| IM
+    CR -->|capability / repo| IM
     CR -->|image runtime / probe| Challenge
     CR -->|container files / probe| Contest
 
@@ -322,10 +322,12 @@ flowchart LR
 - `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
+- `runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口
+- `composition.BuildContainerRuntimeModule(...)` 仍可在边缘用本地 `buildRuntimeEngine(...)` helper 绑定底层实现，但 `InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
 - 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_adapter_compat.go`；`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
 - `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service
-- `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module.Engine` 也改成由这些 capability port 组合出来的运行时视图
+- `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；这些 service 和 app 层 wiring 现在都围绕显式 capability port 组合，不再把 `runtime/runtime.Module.Engine` 当成公共结构面
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 

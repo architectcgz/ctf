@@ -57,7 +57,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	repo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := runtimecmd.NewRuntimeCleanupService(module.Engine, repo, log.Named("runtime_cleanup_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(module.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
 	queryService := instanceqry.NewInstanceService(repo)
 	proxyTicketService := instanceqry.NewProxyTicketService(
@@ -67,7 +67,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	)
 	defenseWorkbenchService := instanceapp.NewAWDDefenseWorkbenchService(
 		repo,
-		newInstanceAWDDefenseWorkbenchRuntime(module.Engine),
+		newInstanceAWDDefenseWorkbenchRuntime(module.FileRuntime),
 		instanceapp.AWDDefenseWorkbenchConfig{
 			ReadOnlyEnabled: cfg.Container.DefenseWorkbenchReadOnlyEnabled,
 			Root:            cfg.Container.DefenseWorkbenchRoot,
@@ -75,7 +75,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		repo,
-		module.Engine,
+		newInstanceMaintenanceRuntime(module.ManagedContainerInventory, module.ProvisioningRuntime),
 		cleanupService,
 		&cfg.Container,
 		log.Named("instance_maintenance_service"),
@@ -94,11 +94,11 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		cleaner.Stop,
 	))
 
-	if cfg.Container.DefenseSSHEnabled && module.Engine != nil {
+	if cfg.Container.DefenseSSHEnabled && module.InteractiveExecutor != nil {
 		gateway := NewAWDDefenseSSHGateway(
 			proxyTicketService,
 			repo,
-			module.Engine,
+			module.InteractiveExecutor,
 			cfg.Container.DefenseSSHHostKeyPath,
 			cfg.Container.DefenseSSHPort,
 			log.Named("awd_defense_ssh_gateway"),
@@ -120,7 +120,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			defenseWorkbenchService,
 			cfg.Container.ProxyBodyPreviewSize,
 			int(cfg.Container.ProxyTicketTTL.Seconds()),
-			cfg.Container.DefenseSSHEnabled && module.Engine != nil,
+			cfg.Container.DefenseSSHEnabled && module.InteractiveExecutor != nil,
 			cfg.Container.DefenseSSHHost,
 			cfg.Container.DefenseSSHPort,
 		),
@@ -153,6 +153,42 @@ func newInstanceAWDDefenseWorkbenchRuntime(runtime runtimeports.ContainerFileRun
 		return nil
 	}
 	return &instanceAWDDefenseWorkbenchRuntimeAdapter{runtime: runtime}
+}
+
+type instanceMaintenanceRuntimeAdapter struct {
+	inventory    runtimeports.ManagedContainerInventory
+	provisioning runtimeports.ContainerProvisioningRuntime
+}
+
+func newInstanceMaintenanceRuntime(inventory runtimeports.ManagedContainerInventory, provisioning runtimeports.ContainerProvisioningRuntime) *instanceMaintenanceRuntimeAdapter {
+	if inventory == nil || provisioning == nil {
+		return nil
+	}
+	return &instanceMaintenanceRuntimeAdapter{
+		inventory:    inventory,
+		provisioning: provisioning,
+	}
+}
+
+func (a *instanceMaintenanceRuntimeAdapter) ListManagedContainers(ctx context.Context) ([]instanceports.ManagedContainer, error) {
+	if a == nil || a.inventory == nil {
+		return nil, nil
+	}
+	return a.inventory.ListManagedContainers(ctx)
+}
+
+func (a *instanceMaintenanceRuntimeAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*instanceports.ManagedContainerState, error) {
+	if a == nil || a.inventory == nil {
+		return nil, nil
+	}
+	return a.inventory.InspectManagedContainer(ctx, containerID)
+}
+
+func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, containerID string) error {
+	if a == nil || a.provisioning == nil {
+		return nil
+	}
+	return a.provisioning.StartContainer(ctx, containerID)
 }
 
 func (a *instanceAWDDefenseWorkbenchRuntimeAdapter) ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error) {

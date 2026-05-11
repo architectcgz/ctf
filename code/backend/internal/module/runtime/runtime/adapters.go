@@ -48,17 +48,21 @@ func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.C
 type runtimePracticeServiceAdapter struct {
 	cleaner     *runtimecmd.RuntimeCleanupService
 	provisioner *runtimecmd.ProvisioningService
-	engine      Engine
+	inspector   runtimeManagedContainerInspector
 }
 
-func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, engine Engine) practiceports.RuntimeInstanceService {
-	if cleaner == nil && provisioner == nil && engine == nil {
+type runtimeManagedContainerInspector interface {
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
+}
+
+func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, inspector runtimeManagedContainerInspector) practiceports.RuntimeInstanceService {
+	if cleaner == nil && provisioner == nil && inspector == nil {
 		return nil
 	}
 	return &runtimePracticeServiceAdapter{
 		cleaner:     cleaner,
 		provisioner: provisioner,
-		engine:      engine,
+		inspector:   inspector,
 	}
 }
 
@@ -89,10 +93,10 @@ func (a *runtimePracticeServiceAdapter) CreateContainer(ctx context.Context, ima
 }
 
 func (a *runtimePracticeServiceAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
-	if a == nil || a.engine == nil {
+	if a == nil || a.inspector == nil {
 		return nil, nil
 	}
-	state, err := a.engine.InspectManagedContainer(ctx, containerID)
+	state, err := a.inspector.InspectManagedContainer(ctx, containerID)
 	if err != nil || state == nil {
 		return nil, err
 	}

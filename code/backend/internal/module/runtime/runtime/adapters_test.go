@@ -141,16 +141,16 @@ func TestRuntimePracticeServiceAdapterInspectManagedContainerPropagatesErrors(t 
 }
 
 type stubRuntimePracticeEngine struct {
-	Engine
+	inventory runtimeManagedContainerInspector
 	inspectFn func(context.Context, string) (*runtimeports.ManagedContainerState, error)
 }
 
 func (s *stubRuntimePracticeEngine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
 	if s.inspectFn == nil {
-		if s.Engine == nil {
+		if s.inventory == nil {
 			return nil, nil
 		}
-		return s.Engine.InspectManagedContainer(ctx, containerID)
+		return s.inventory.InspectManagedContainer(ctx, containerID)
 	}
 	return s.inspectFn(ctx, containerID)
 }

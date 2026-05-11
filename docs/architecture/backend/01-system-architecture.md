@@ -19,7 +19,7 @@
   - 不负责：作为写模型 owner 修改练习、竞赛、评估等业务状态
 
 - `code/backend/internal/module/runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
-  - 负责：`internal/module/runtime/*` 当前承接 container runtime capability、共享 adapter 与底层运行时 ports；`internal/module/instance/*` 负责实例命令、查询、proxy ticket 与 maintenance owner；app 层再把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图
+  - 负责：`internal/module/runtime/*` 当前承接 container runtime capability、共享 adapter 与底层运行时 ports，并通过显式 capability fields 暴露 provisioning / cleanup / file / inventory / interactive 等能力；`internal/module/instance/*` 负责实例命令、查询、proxy ticket 与 maintenance owner；app 层再把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，并在 composition 本地拼出 maintenance 所需的 inspect/start 视图
   - 不负责：把 `runtime` 继续当成实例业务 owner，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图
 
 ## 1. 架构概览
@@ -176,7 +176,7 @@ flowchart TD
     RootNode --> Ops
 
     CR -->|runtime query / stats| Ops
-    CR -->|engine / repo| IM
+    CR -->|capability / repo| IM
     CR -->|image runtime / probe| Challenge
     CR -->|container files / probe| Contest
 
@@ -230,7 +230,7 @@ flowchart LR
     Auth -.token service.-> Ops
 
     CR -->|runtime query / stats| Ops
-    CR -->|engine / repo| IM
+    CR -->|capability / repo| IM
     CR -->|image runtime / probe| Challenge
     CR -->|container files / probe| Contest
 
@@ -252,9 +252,9 @@ flowchart LR
 | `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket | `identity`（代码），`ops`（装配注入审计记录器） |
 | `identity` | 写模型 | 用户、角色、权限、当前用户解析、管理端用户能力 | 无业务上游依赖 |
 | `challenge` | 写模型 | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `container_runtime`（装配注入运行时探针与镜像探测），代码级无跨模块 import |
-| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计、共享 runtime adapter；底层实现仍落在 `internal/module/runtime/*` | `challenge`、`contest`、`ops`、`practice`、`instance`（代码），以及 PostgreSQL / Redis / Docker Engine |
+| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计、共享 runtime adapter；底层实现仍落在 `internal/module/runtime/*`，并向上暴露显式 container runtime capability fields | `challenge`、`contest`、`ops`、`practice`、`instance`（代码），以及 PostgreSQL / Redis / Docker Engine |
 | `container_runtime` | app 层组合视图（迁移中） | challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | `runtime` 物理模块 |
-| `instance` | 写模型 + app 层组合视图 | `internal/module/instance/*` 负责实例 owner；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime`（装配依赖 `ContainerRuntimeModule` 提供的 engine / repo） |
+| `instance` | 写模型 + app 层组合视图 | `internal/module/instance/*` 负责实例 owner；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime`（装配依赖 `ContainerRuntimeModule` 提供的显式 runtime capability / repo） |
 | `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`、`assessment`（装配），`contest`、`runtime`（代码） |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`、`ops`（装配），`auth`、`runtime`（代码） |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
