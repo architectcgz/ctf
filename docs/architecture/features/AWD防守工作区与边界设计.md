@@ -148,7 +148,7 @@
 - `code/backend/internal/module/contest/application/queries/awd_workspace_query.go`
 - `code/backend/internal/module/contest/application/queries/awd_workspace_result.go`
 - `code/backend/internal/module/runtime/infrastructure/awd_target_proxy_repository.go`
-- `code/backend/internal/module/runtime/runtime/adapters.go`
+- `code/backend/internal/app/composition/runtime_adapter_compat.go`
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
 - `code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue`
 - `code/frontend/src/features/contest-awd-workspace/model/useAwdWorkspaceAccessActions.ts`

@@ -233,7 +233,7 @@ flowchart LR
 - `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
-- `runtime/runtime/adapters.go` 已开始直接依赖 `internal/module/instance/contracts`，而不是继续在 runtime 模块里声明一组本地临时 instance owner 接口
+- 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_adapter_compat.go`；`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
 - `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service
 - `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module.Engine` 也改成由这些 capability port 组合出来的运行时视图

@@ -91,8 +91,6 @@ type runtimeModuleDeps struct {
 	containerPublicHost   string
 }
 
-type runtimeDefenseWorkbenchRuntime = runtimeports.ContainerFileRuntime
-
 func Build(deps Deps) *Module {
 	internalDeps := buildRuntimeModuleDeps(deps)
 	practiceDeps := buildRuntimePracticeDeps(internalDeps)

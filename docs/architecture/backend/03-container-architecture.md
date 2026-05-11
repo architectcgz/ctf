@@ -13,9 +13,9 @@
 
 ## 当前设计
 
-- `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/commands/runtime_maintenance_service.go`
-  - 负责：封装当前单机 Docker Engine 适配、实例查询 / 清理 / 维护命令、运行态统计与底层运行时抽象
-  - 不负责：拥有题目配置、竞赛规则或教师复盘语义；这些仍归 `challenge`、`contest`、`assessment` 等 owner 模块
+- `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/{commands/provisioning_service.go,commands/runtime_cleanup_service.go,container_file_service.go,container_stats_service.go,image_runtime_service.go}`
+  - 负责：封装当前单机 Docker Engine 适配、容器创建 / 清理 / 文件 / 镜像 / 统计能力，以及 practice / challenge / ops 仍在复用的底层 runtime adapter
+  - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制
@@ -25,8 +25,8 @@
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
-- `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
-  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把 SSH 防守入口收敛到 ticket + scope 校验链路
+- `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_adapter_compat.go,awd_defense_ssh_gateway.go}`
+  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路
   - 不负责：让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
 
 ## 接口或数据影响

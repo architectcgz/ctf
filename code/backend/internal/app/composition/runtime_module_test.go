@@ -4,12 +4,14 @@ import (
 	"context"
 	"ctf-platform/internal/authctx"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -66,6 +68,44 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 		if err := engine.RemoveNetwork(context.Background(), networkID); err != nil {
 			t.Fatalf("RemoveNetwork() error = %v", err)
 		}
+	}
+}
+
+func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
+	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
+	adapter := newRuntimeHTTPServiceAdapter(
+		nil,
+		nil,
+		stubRuntimeHTTPProxyTickets{ticket: "ticket-secret", expiresAt: expiresAt},
+		nil,
+		nil,
+		0,
+		0,
+		true,
+		"ssh.ctf.local",
+		2222,
+		false,
+		"",
+	)
+
+	resp, err := adapter.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "student",
+		Role:     "student",
+	}, 5, 12)
+	if err != nil {
+		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected ssh access response")
+	}
+	if resp.Host != "ssh.ctf.local" ||
+		resp.Port != 2222 ||
+		resp.Username != "student+5+12" ||
+		resp.Password != "ticket-secret" ||
+		resp.Command != "ssh student+5+12@ssh.ctf.local -p 2222" ||
+		resp.ExpiresAt != expiresAt.Format(time.RFC3339) {
+		t.Fatalf("unexpected ssh access response: %+v", resp)
 	}
 }
 
@@ -267,6 +307,57 @@ func TestRuntimeHTTPServiceAdapterMapsAWDPackageDockerPathsToContainerRoot(t *te
 	}
 }
 
+func TestRuntimeHTTPServiceAdapterSavesOnlyEditableDefenseFiles(t *testing.T) {
+	workbench := &recordingRuntimeHTTPDefenseWorkbench{
+		fileContent: []byte("print('old')"),
+	}
+	adapter := newRuntimeHTTPServiceAdapter(
+		nil,
+		nil,
+		nil,
+		stubRuntimeHTTPProxyTicketReader{scope: testAWDDefenseSSHScope()},
+		workbench,
+		0,
+		0,
+		false,
+		"",
+		0,
+		true,
+		"/home/student",
+	)
+
+	resp, err := adapter.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseFileSaveReq{
+		Path:    "docker/challenge_app.py",
+		Content: "print('fixed')",
+		Backup:  true,
+	})
+	if err != nil {
+		t.Fatalf("SaveAWDDefenseFile() error = %v", err)
+	}
+	if workbench.readPath != "/home/student/challenge_app.py" {
+		t.Fatalf("expected backup read from mapped editable path, got %q", workbench.readPath)
+	}
+	if len(workbench.writePaths) != 2 {
+		t.Fatalf("expected backup and save writes, got %+v", workbench.writePaths)
+	}
+	if !strings.HasPrefix(workbench.writePaths[0], "/home/student/challenge_app.py.bak.") {
+		t.Fatalf("expected mapped backup path, got %+v", workbench.writePaths)
+	}
+	if workbench.writePaths[1] != "/home/student/challenge_app.py" {
+		t.Fatalf("expected mapped save path, got %+v", workbench.writePaths)
+	}
+	if resp.Path != "docker/challenge_app.py" || !strings.HasPrefix(resp.BackupPath, "docker/challenge_app.py.bak.") {
+		t.Fatalf("unexpected save response: %+v", resp)
+	}
+
+	if _, err := adapter.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseFileSaveReq{
+		Path:    "docker/app.py",
+		Content: "print('nope')",
+	}); err == nil {
+		t.Fatal("expected protected path save to fail")
+	}
+}
+
 type stubRuntimeHTTPProxyTickets struct {
 	ticket    string
 	expiresAt time.Time
@@ -337,6 +428,7 @@ type recordingRuntimeHTTPDefenseWorkbench struct {
 	readPath    string
 	listPath    string
 	fileContent []byte
+	writePaths  []string
 }
 
 func (s *recordingRuntimeHTTPDefenseWorkbench) ReadFileFromContainer(_ context.Context, _ string, filePath string, _ int64) ([]byte, error) {
@@ -352,7 +444,8 @@ func (s *recordingRuntimeHTTPDefenseWorkbench) ListDirectoryFromContainer(_ cont
 	}, nil
 }
 
-func (s *recordingRuntimeHTTPDefenseWorkbench) WriteFileToContainer(context.Context, string, string, []byte) error {
+func (s *recordingRuntimeHTTPDefenseWorkbench) WriteFileToContainer(_ context.Context, _ string, filePath string, _ []byte) error {
+	s.writePaths = append(s.writePaths, filePath)
 	return nil
 }
 
