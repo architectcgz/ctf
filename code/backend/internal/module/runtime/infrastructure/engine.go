@@ -209,37 +209,12 @@ func validateReusableNetwork(name string, labels map[string]string, internal boo
 	if network.Internal != internal {
 		return fmt.Errorf("existing network %q internal=%v does not match requested internal=%v", name, network.Internal, internal)
 	}
-	if !matchesManagedRuntimeNetworkLabels(network.Labels, labels) {
-		return fmt.Errorf("existing network %q is not a managed runtime network", name)
-	}
-	return nil
-}
-
-func matchesManagedRuntimeNetworkLabels(existing, expected map[string]string) bool {
-	if existing[runtimedomain.ManagedByLabelKey] != expected[runtimedomain.ManagedByLabelKey] {
-		return false
-	}
-	if existing[runtimedomain.ProjectLabelKey] != expected[runtimedomain.ProjectLabelKey] {
-		return false
-	}
-	for _, key := range []string{
-		runtimedomain.ChallengeInstanceLabelKey,
-		runtimedomain.ComposeProjectLabelKey,
-		runtimedomain.ComposeServiceLabelKey,
-	} {
-		if !matchesOptionalManagedRuntimeLabel(existing, expected, key) {
-			return false
+	for key, expected := range labels {
+		if network.Labels[key] != expected {
+			return fmt.Errorf("existing network %q is not a managed runtime network", name)
 		}
 	}
-	return true
-}
-
-func matchesOptionalManagedRuntimeLabel(existing, expected map[string]string, key string) bool {
-	value := strings.TrimSpace(existing[key])
-	if value == "" {
-		return true
-	}
-	return value == expected[key]
+	return nil
 }
 
 func buildContainerNetworkingConfig(networkName string, aliases []string) *networktypes.NetworkingConfig {
