@@ -22,12 +22,12 @@ export function getChallengeCategoryColor(
   colorMap: Partial<Record<ChallengeCategory, string>> = {}
 ): string {
   const colors: Record<ChallengeCategory, string> = {
-    web: 'var(--challenge-tone-web)',
-    pwn: 'var(--challenge-tone-pwn)',
-    reverse: 'var(--challenge-tone-reverse)',
-    crypto: 'var(--challenge-tone-crypto)',
-    misc: 'var(--challenge-tone-misc)',
-    forensics: 'var(--challenge-tone-forensics)',
+    web: 'var(--challenge-category-pill-web)',
+    pwn: 'var(--challenge-category-pill-pwn)',
+    reverse: 'var(--challenge-category-pill-reverse)',
+    crypto: 'var(--challenge-category-pill-crypto)',
+    misc: 'var(--challenge-category-pill-misc)',
+    forensics: 'var(--challenge-category-pill-forensics)',
   }
   return colorMap[category] ?? colors[category]
 }

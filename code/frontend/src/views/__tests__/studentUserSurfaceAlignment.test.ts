@@ -7,9 +7,11 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import challengePresentationSource from '@/entities/challenge/model/presentation.ts?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 
+const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,
   'utf-8'
@@ -144,6 +146,16 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('推荐摘要')
     expect(studentRecommendationSource).not.toContain('训练动作目录')
     expect(studentRecommendationSource).not.toContain('为什么先做这些')
+  })
+
+  it('student recommendation 题目分类胶囊应使用明确的 category-pill 专用变量', () => {
+    expect(themeSource).toContain('--challenge-category-pill-web')
+    expect(themeSource).toContain('--challenge-category-pill-forensics')
+    expect(challengePresentationSource).toContain('var(--challenge-category-pill-web)')
+    expect(studentRecommendationSource).toContain("from '@/entities/challenge'")
+    expect(studentRecommendationSource).toContain('categoryPillStyle(item.category)')
+    expect(studentRecommendationSource).toContain('--challenge-category-pill-color')
+    expect(studentRecommendationSource).not.toContain('--challenge-tone-')
   })
 
   it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {

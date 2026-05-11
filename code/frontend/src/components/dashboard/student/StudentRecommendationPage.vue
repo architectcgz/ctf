@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { ArrowRight, Clock3, Flame, ShieldAlert, Target } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
+import { getChallengeCategoryColor } from '@/entities/challenge'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 
 const props = withDefaults(
@@ -27,6 +28,15 @@ const headline = computed(() => visibleWeakDimensions.value[0] || '保持当前�
 const targetDifficulty = computed(() =>
   props.recommendations[0] ? difficultyLabel(props.recommendations[0].difficulty) : '待选择'
 )
+function categoryPillStyle(category: RecommendationItem['category']): Record<string, string> {
+  const color = getChallengeCategoryColor(category)
+  return {
+    '--challenge-category-pill-color': color,
+    '--challenge-category-pill-bg': `color-mix(in srgb, ${color} 10%, transparent)`,
+    '--challenge-category-pill-border': `color-mix(in srgb, ${color} 22%, transparent)`,
+  }
+}
+
 const summaryCards = computed(() => [
   {
     key: 'focus',
@@ -168,7 +178,7 @@ const summaryCards = computed(() => [
                     >
                       {{ difficultyLabel(item.difficulty) }}
                     </span>
-                    <span class="journal-category-chip">
+                    <span class="journal-category-chip" :style="categoryPillStyle(item.category)">
                       {{ item.category }}
                     </span>
                   </div>
@@ -300,13 +310,16 @@ const summaryCards = computed(() => [
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid var(--journal-soft-border);
-  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
+  border: 1px solid var(--challenge-category-pill-border, var(--journal-soft-border));
+  background: var(
+    --challenge-category-pill-bg,
+    color-mix(in srgb, var(--journal-track) 82%, transparent)
+  );
   padding: var(--space-0-5) var(--space-2);
   font-size: var(--font-size-0-74);
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--journal-muted);
+  color: var(--challenge-category-pill-color, var(--journal-muted));
 }
 
 .journal-weak-tag {

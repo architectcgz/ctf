@@ -46,7 +46,7 @@ defineEmits<{
         class="challenge-chip"
         :class="'workspace-directory-status-pill'"
         :style="{
-          '--challenge-chip-bg': `${getChallengeCategoryColor(challenge.category)}18`,
+          '--challenge-chip-bg': `color-mix(in srgb, ${getChallengeCategoryColor(challenge.category)} 10%, transparent)`,
           '--challenge-chip-color': getChallengeCategoryColor(challenge.category),
         }"
       >
@@ -59,7 +59,7 @@ defineEmits<{
         class="challenge-chip"
         :class="'workspace-directory-status-pill'"
         :style="{
-          '--challenge-chip-bg': `${getChallengeDifficultyColor(challenge.difficulty)}18`,
+          '--challenge-chip-bg': `color-mix(in srgb, ${getChallengeDifficultyColor(challenge.difficulty)} 10%, transparent)`,
           '--challenge-chip-color': getChallengeDifficultyColor(challenge.difficulty),
         }"
       >

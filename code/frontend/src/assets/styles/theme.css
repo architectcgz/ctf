@@ -142,6 +142,37 @@
   --color-cat-crypto: #f59e0b;
   --color-cat-misc: #10b981;
   --color-cat-forensics: #06b6d4;
+  /* 题目分类胶囊专用色 */
+  --challenge-category-pill-web: color-mix(
+    in srgb,
+    var(--color-cat-web) 82%,
+    var(--color-text-primary)
+  );
+  --challenge-category-pill-pwn: color-mix(
+    in srgb,
+    var(--color-cat-pwn) 72%,
+    var(--color-text-primary)
+  );
+  --challenge-category-pill-reverse: color-mix(
+    in srgb,
+    var(--color-cat-reverse) 74%,
+    var(--color-text-primary)
+  );
+  --challenge-category-pill-crypto: color-mix(
+    in srgb,
+    var(--color-cat-crypto) 76%,
+    var(--color-text-primary)
+  );
+  --challenge-category-pill-misc: color-mix(
+    in srgb,
+    var(--color-cat-misc) 78%,
+    var(--color-text-primary)
+  );
+  --challenge-category-pill-forensics: color-mix(
+    in srgb,
+    var(--color-cat-forensics) 78%,
+    var(--color-text-primary)
+  );
   /* 难度色 */
   --color-diff-beginner: #10b981;
   --color-diff-easy: #3b82f6;

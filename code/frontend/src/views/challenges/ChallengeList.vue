@@ -11,11 +11,11 @@ type ChallengeSummaryKey = 'total' | 'visible' | 'solved' | 'unsolved'
 const challengeSummaryVisuals: Record<ChallengeSummaryKey, { icon: Component; accent: string }> = {
   total: {
     icon: BookOpen,
-    accent: 'var(--challenge-tone-web)',
+    accent: 'var(--challenge-category-pill-web)',
   },
   visible: {
     icon: Layers3,
-    accent: 'var(--challenge-tone-crypto)',
+    accent: 'var(--challenge-category-pill-crypto)',
   },
   solved: {
     icon: ShieldCheck,
@@ -188,16 +188,6 @@ const {
   );
   --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
-  --challenge-tone-web: color-mix(in srgb, var(--color-cat-web) 82%, var(--journal-ink));
-  --challenge-tone-pwn: color-mix(in srgb, var(--color-cat-pwn) 72%, var(--journal-ink));
-  --challenge-tone-reverse: color-mix(in srgb, var(--color-cat-reverse) 74%, var(--journal-ink));
-  --challenge-tone-crypto: color-mix(in srgb, var(--color-cat-crypto) 76%, var(--journal-ink));
-  --challenge-tone-misc: color-mix(in srgb, var(--color-cat-misc) 78%, var(--journal-ink));
-  --challenge-tone-forensics: color-mix(
-    in srgb,
-    var(--color-cat-forensics) 78%,
-    var(--journal-ink)
-  );
   --challenge-diff-beginner: color-mix(in srgb, var(--color-diff-beginner) 76%, var(--journal-ink));
   --challenge-diff-easy: color-mix(in srgb, var(--color-diff-easy) 78%, var(--journal-ink));
   --challenge-diff-medium: color-mix(in srgb, var(--color-diff-medium) 80%, var(--journal-ink));

@@ -282,17 +282,6 @@ const {
   --journal-warning-soft: color-mix(in srgb, var(--color-warning) 12%, transparent);
   --journal-danger-ink: color-mix(in srgb, var(--color-danger) 82%, var(--journal-ink));
   --journal-danger-soft: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  --challenge-tone-web: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
-  --challenge-tone-pwn: color-mix(in srgb, var(--color-danger) 78%, var(--journal-ink));
-  --challenge-tone-reverse: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --challenge-tone-crypto: color-mix(in srgb, var(--color-warning) 82%, var(--journal-ink));
-  --challenge-tone-misc: color-mix(in srgb, var(--color-success) 76%, var(--journal-ink));
-  --challenge-tone-forensics: color-mix(in srgb, var(--color-primary) 62%, var(--journal-ink));
-  --challenge-tone-beginner: var(--challenge-tone-misc);
-  --challenge-tone-easy: var(--challenge-tone-web);
-  --challenge-tone-medium: var(--challenge-tone-crypto);
-  --challenge-tone-hard: var(--challenge-tone-pwn);
-  --challenge-tone-insane: var(--challenge-tone-reverse);
 }
 
 .workspace-shell {

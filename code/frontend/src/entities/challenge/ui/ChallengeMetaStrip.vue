@@ -32,13 +32,7 @@ function buildMetaPillStyle(color: string): Record<string, string> {
     </span>
     <span
       class="meta-pill"
-      :style="buildMetaPillStyle(getChallengeDifficultyColor(challenge.difficulty, {
-        beginner: 'var(--challenge-tone-beginner)',
-        easy: 'var(--challenge-tone-easy)',
-        medium: 'var(--challenge-tone-medium)',
-        hard: 'var(--challenge-tone-hard)',
-        insane: 'var(--challenge-tone-insane)',
-      }))"
+      :style="buildMetaPillStyle(getChallengeDifficultyColor(challenge.difficulty))"
     >
       {{ getChallengeDifficultyLabel(challenge.difficulty) }}
     </span>
