@@ -1,6 +1,6 @@
 package ports
 
-import "time"
+import instanceports "ctf-platform/internal/module/instance/ports"
 
 type ManagedContainerStat struct {
 	ContainerID   string
@@ -11,15 +11,6 @@ type ManagedContainerStat struct {
 	MemoryLimit   int64
 }
 
-type ManagedContainer struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
-}
+type ManagedContainer = instanceports.ManagedContainer
 
-type ManagedContainerState struct {
-	ID      string
-	Exists  bool
-	Running bool
-	Status  string
-}
+type ManagedContainerState = instanceports.ManagedContainerState

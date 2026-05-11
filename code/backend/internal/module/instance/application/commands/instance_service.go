@@ -10,26 +10,27 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instancedomain "ctf-platform/internal/module/instance/domain"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type InstanceService struct {
 	repo    instanceCommandRepository
-	cleaner runtimeports.RuntimeCleaner
+	cleaner instanceports.RuntimeCleaner
 	config  *config.ContainerConfig
 	logger  *zap.Logger
 }
 
 type instanceCommandRepository interface {
-	runtimeports.InstanceLookupRepository
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.InstanceExtendRepository
-	runtimeports.InstanceStatusRepository
+	instanceports.InstanceLookupRepository
+	instanceports.InstanceUserLookupRepository
+	instanceports.InstanceAccessRepository
+	instanceports.InstanceExtendRepository
+	instanceports.InstanceStatusRepository
 }
 
-func NewInstanceService(repo instanceCommandRepository, cleaner runtimeports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
+func NewInstanceService(repo instanceCommandRepository, cleaner instanceports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -169,15 +170,11 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
+		RemainingExtends: instancedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
 }
 
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
+func normalizeContext(ctx context.Context) context.Context {
+	return ctx
 }

@@ -897,6 +897,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		t.Fatalf("build composition root: %v", err)
 	}
 	runtimeModule := composition.BuildRuntimeModule(root)
+	instanceModule := composition.BuildInstanceModule(root, runtimeModule)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
@@ -911,8 +912,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
-		runtimeModule.PracticeInstanceRepository,
-		runtimeModule.PracticeRuntimeService,
+		instanceModule.PracticeInstanceRepository,
+		instanceModule.PracticeRuntimeService,
 		nil,
 		nil,
 		cache,

@@ -21,7 +21,7 @@ type OpsModule struct {
 	runtime *opsruntime.Module
 }
 
-func BuildOpsModule(root *Root, runtime *RuntimeModule) *OpsModule {
+func BuildOpsModule(root *Root, runtime *ContainerRuntimeModule) *OpsModule {
 	module := opsruntime.Build(opsruntime.Deps{
 		Config:       root.Config(),
 		Logger:       root.Logger(),

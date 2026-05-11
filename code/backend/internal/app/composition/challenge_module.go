@@ -41,7 +41,7 @@ func (s *challengePublishNotificationSender) SendChallengePublishCheckResult(ctx
 	})
 }
 
-func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*ChallengeModule, error) {
+func BuildChallengeModule(root *Root, runtime *ContainerRuntimeModule, ops *OpsModule) (*ChallengeModule, error) {
 	module, err := challengeruntime.Build(challengeruntime.Deps{
 		AppContext:    root.Context(),
 		Config:        root.Config(),

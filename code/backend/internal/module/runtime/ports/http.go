@@ -2,52 +2,32 @@ package ports
 
 import (
 	"context"
-	"time"
 
 	"ctf-platform/internal/model"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type CountRunningRepository interface {
 	CountRunning(ctx context.Context) (int64, error)
 }
 
-type InstanceLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Instance, error)
-}
+type InstanceLookupRepository = instanceports.InstanceLookupRepository
 
-type InstanceUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
-}
+type InstanceUserLookupRepository = instanceports.InstanceUserLookupRepository
 
-type InstanceAccessRepository interface {
-	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
-}
+type InstanceAccessRepository = instanceports.InstanceAccessRepository
 
-type UserVisibleInstanceRepository interface {
-	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
-}
+type UserVisibleInstanceRepository = instanceports.UserVisibleInstanceRepository
 
-type TeacherInstanceQueryRepository interface {
-	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
-}
+type TeacherInstanceQueryRepository = instanceports.TeacherInstanceQueryRepository
 
-type InstanceExtendRepository interface {
-	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
-}
+type InstanceExtendRepository = instanceports.InstanceExtendRepository
 
-type InstanceStatusRepository interface {
-	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
-}
+type InstanceStatusRepository = instanceports.InstanceStatusRepository
 
-type RuntimeCleaner interface {
-	CleanupRuntime(ctx context.Context, instance *model.Instance) error
-}
+type RuntimeCleaner = instanceports.RuntimeCleaner
 
-type TeacherInstanceFilter struct {
-	ClassName string
-	Keyword   string
-	StudentNo string
-}
+type TeacherInstanceFilter = instanceports.TeacherInstanceFilter
 
 type AWDDefenseWorkspaceLookupRepository interface {
 	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
@@ -58,99 +38,23 @@ type AWDDefenseWorkspaceWriteRepository interface {
 	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
 }
 
-type UserVisibleInstanceRow struct {
-	ID             int64
-	ContestMode    string
-	ChallengeID    int64
-	ChallengeTitle string
-	Category       string
-	Difficulty     string
-	FlagType       string
-	Status         string
-	ShareScope     model.ShareScope
-	AccessURL      string
-	ExpiresAt      time.Time
-	ExtendCount    int
-	MaxExtends     int
-	CreatedAt      time.Time
-}
+type UserVisibleInstanceRow = instanceports.UserVisibleInstanceRow
 
-type TeacherInstanceRow struct {
-	ID              int64
-	StudentID       int64
-	StudentName     string
-	StudentUsername string
-	StudentNo       *string
-	ClassName       string
-	ChallengeID     int64
-	ChallengeTitle  string
-	Status          string
-	AccessURL       string
-	ExpiresAt       time.Time
-	ExtendCount     int
-	MaxExtends      int
-	CreatedAt       time.Time
-}
+type TeacherInstanceRow = instanceports.TeacherInstanceRow
 
-type ProxyTicketClaims struct {
-	UserID               int64            `json:"user_id"`
-	Username             string           `json:"username"`
-	Role                 string           `json:"role"`
-	InstanceID           int64            `json:"instance_id"`
-	ContestID            *int64           `json:"contest_id,omitempty"`
-	ShareScope           model.ShareScope `json:"share_scope"`
-	Purpose              string           `json:"purpose,omitempty"`
-	AWDAttackerTeamID    *int64           `json:"awd_attacker_team_id,omitempty"`
-	AWDVictimTeamID      *int64           `json:"awd_victim_team_id,omitempty"`
-	AWDServiceID         *int64           `json:"awd_service_id,omitempty"`
-	AWDChallengeID       *int64           `json:"awd_challenge_id,omitempty"`
-	AWDWorkspaceRevision *int64           `json:"awd_workspace_revision,omitempty"`
-	IssuedAt             time.Time        `json:"issued_at"`
-}
+type ProxyTicketClaims = instanceports.ProxyTicketClaims
 
 const (
-	ProxyTicketPurposeInstanceAccess = "instance_access"
-	ProxyTicketPurposeAWDAttack      = "awd_attack"
-	ProxyTicketPurposeAWDDefenseSSH  = "awd_defense_ssh"
+	ProxyTicketPurposeInstanceAccess = instanceports.ProxyTicketPurposeInstanceAccess
+	ProxyTicketPurposeAWDAttack      = instanceports.ProxyTicketPurposeAWDAttack
+	ProxyTicketPurposeAWDDefenseSSH  = instanceports.ProxyTicketPurposeAWDDefenseSSH
 )
 
-type AWDTargetProxyScope struct {
-	InstanceID     int64
-	ContestID      int64
-	AttackerTeamID int64
-	VictimTeamID   int64
-	ServiceID      int64
-	AWDChallengeID int64
-	ShareScope     model.ShareScope
-	Status         string
-	AccessURL      string
-	RuntimeDetails string
-}
+type AWDTargetProxyScope = instanceports.AWDTargetProxyScope
 
-type AWDDefenseSSHScope struct {
-	InstanceID        int64
-	ContestID         int64
-	TeamID            int64
-	ServiceID         int64
-	AWDChallengeID    int64
-	WorkspaceRevision int64
-	ContainerID       string
-	ShareScope        model.ShareScope
-	EditablePaths     []string `gorm:"-"`
-	ProtectedPaths    []string `gorm:"-"`
-}
+type AWDDefenseSSHScope = instanceports.AWDDefenseSSHScope
 
-type AWDDefenseSSHSession struct {
-	UserID            int64
-	Username          string
-	InstanceID        int64
-	ContestID         int64
-	TeamID            int64
-	ServiceID         int64
-	ChallengeID       int64
-	WorkspaceRevision int64
-	ContainerID       string
-}
+type AWDDefenseSSHSession = instanceports.AWDDefenseSSHSession
 
 type ContainerDirectoryEntry struct {
 	Name string
@@ -158,16 +62,9 @@ type ContainerDirectoryEntry struct {
 	Size int64
 }
 
-type ProxyTicketStore interface {
-	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
-	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
-}
+type ProxyTicketStore = instanceports.ProxyTicketStore
 
-type ProxyTicketInstanceReader interface {
-	FindByID(ctx context.Context, id int64) (*model.Instance, error)
-	FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*AWDTargetProxyScope, error)
-	FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*AWDDefenseSSHScope, error)
-}
+type ProxyTicketInstanceReader = instanceports.ProxyTicketInstanceReader
 
 type ProxyTrafficEventRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error

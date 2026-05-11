@@ -8,10 +8,10 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
-type runtimeMaintenanceRepository interface {
+type instanceMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindExpired(ctx context.Context) ([]*model.Instance, error)
 	ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error)
@@ -21,26 +21,27 @@ type runtimeMaintenanceRepository interface {
 	ListActiveContainerIDs(ctx context.Context) ([]string, error)
 }
 
-type runtimeMaintenanceEngine interface {
-	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
+type instanceMaintenanceEngine interface {
+	ListManagedContainers(ctx context.Context) ([]instanceports.ManagedContainer, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*instanceports.ManagedContainerState, error)
 	StartContainer(ctx context.Context, containerID string) error
 }
 
-type runtimeMaintenanceCleaner interface {
-	runtimeports.RuntimeCleaner
+type instanceMaintenanceCleaner interface {
+	instanceports.RuntimeCleaner
 	RemoveContainer(ctx context.Context, containerID string) error
 }
 
-type RuntimeMaintenanceService struct {
-	repo    runtimeMaintenanceRepository
-	engine  runtimeMaintenanceEngine
-	cleaner runtimeMaintenanceCleaner
+// InstanceMaintenanceService 收口实例 owner 视角的后台维护能力。
+type InstanceMaintenanceService struct {
+	repo    instanceMaintenanceRepository
+	engine  instanceMaintenanceEngine
+	cleaner instanceMaintenanceCleaner
 	config  *config.ContainerConfig
 	logger  *zap.Logger
 }
 
-func NewRuntimeMaintenanceService(repo runtimeMaintenanceRepository, engine runtimeMaintenanceEngine, cleaner runtimeMaintenanceCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *RuntimeMaintenanceService {
+func NewInstanceMaintenanceService(repo instanceMaintenanceRepository, engine instanceMaintenanceEngine, cleaner instanceMaintenanceCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceMaintenanceService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -56,7 +57,7 @@ func NewRuntimeMaintenanceService(repo runtimeMaintenanceRepository, engine runt
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
-	return &RuntimeMaintenanceService{
+	return &InstanceMaintenanceService{
 		repo:    repo,
 		engine:  engine,
 		cleaner: cleaner,
@@ -65,7 +66,7 @@ func NewRuntimeMaintenanceService(repo runtimeMaintenanceRepository, engine runt
 	}
 }
 
-func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) error {
+func (s *InstanceMaintenanceService) CleanExpiredInstances(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	instances, err := s.repo.FindExpired(ctx)
 	if err != nil {
@@ -89,7 +90,7 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 	return nil
 }
 
-func (s *RuntimeMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Context) error {
+func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	if s.engine == nil {
 		s.logger.Debug("跳过运行时丢失恢复，Docker 引擎未启用")
@@ -139,7 +140,7 @@ func (s *RuntimeMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Cont
 	return nil
 }
 
-func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
+func (s *InstanceMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	if s.engine == nil {
 		s.logger.Debug("跳过孤儿容器清理，Docker 引擎未启用")
@@ -181,7 +182,7 @@ func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	return nil
 }
 
-func (s *RuntimeMaintenanceService) isInstanceRuntimeLost(ctx context.Context, instance *model.Instance, now time.Time) (bool, string, []string, error) {
+func (s *InstanceMaintenanceService) isInstanceRuntimeLost(ctx context.Context, instance *model.Instance, now time.Time) (bool, string, []string, error) {
 	if instance.Status == model.InstanceStatusCreating && now.Sub(instance.UpdatedAt) < s.runtimeCreateTimeout() {
 		return false, "", nil, nil
 	}
@@ -210,7 +211,7 @@ func (s *RuntimeMaintenanceService) isInstanceRuntimeLost(ctx context.Context, i
 	return false, "", nil, nil
 }
 
-func (s *RuntimeMaintenanceService) restartStoppedContainers(ctx context.Context, instance *model.Instance, containerIDs []string) error {
+func (s *InstanceMaintenanceService) restartStoppedContainers(ctx context.Context, instance *model.Instance, containerIDs []string) error {
 	operationID := s.recordSystemAWDOperation(ctx, instance, model.AWDServiceOperationTypeRecover, model.AWDServiceOperationStatusRecovering, "container_not_running", "")
 	for _, containerID := range containerIDs {
 		if err := s.engine.StartContainer(ctx, containerID); err != nil {
@@ -229,7 +230,7 @@ func (s *RuntimeMaintenanceService) restartStoppedContainers(ctx context.Context
 	return nil
 }
 
-func (s *RuntimeMaintenanceService) recordSystemAWDOperation(ctx context.Context, instance *model.Instance, operationType, status, reason, errorMessage string) int64 {
+func (s *InstanceMaintenanceService) recordSystemAWDOperation(ctx context.Context, instance *model.Instance, operationType, status, reason, errorMessage string) int64 {
 	if s == nil || s.repo == nil || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return 0
 	}
@@ -259,7 +260,7 @@ func (s *RuntimeMaintenanceService) recordSystemAWDOperation(ctx context.Context
 	return operation.ID
 }
 
-func (s *RuntimeMaintenanceService) finishAWDOperation(ctx context.Context, operationID int64, status, errorMessage string) {
+func (s *InstanceMaintenanceService) finishAWDOperation(ctx context.Context, operationID int64, status, errorMessage string) {
 	if operationID <= 0 || s == nil || s.repo == nil {
 		return
 	}
@@ -271,16 +272,16 @@ func (s *RuntimeMaintenanceService) finishAWDOperation(ctx context.Context, oper
 	}
 }
 
-func (s *RuntimeMaintenanceService) runtimeCreateTimeout() time.Duration {
+func (s *InstanceMaintenanceService) runtimeCreateTimeout() time.Duration {
 	if s == nil || s.config == nil || s.config.CreateTimeout <= 0 {
 		return 30 * time.Second
 	}
 	return s.config.CreateTimeout
 }
 
-func selectOrphanContainers(managedContainers []runtimeports.ManagedContainer, activeContainerIDs map[string]struct{}, gracePeriod time.Duration) []runtimeports.ManagedContainer {
+func selectOrphanContainers(managedContainers []instanceports.ManagedContainer, activeContainerIDs map[string]struct{}, gracePeriod time.Duration) []instanceports.ManagedContainer {
 	now := time.Now()
-	orphanContainers := make([]runtimeports.ManagedContainer, 0, len(managedContainers))
+	orphanContainers := make([]instanceports.ManagedContainer, 0, len(managedContainers))
 	for _, container := range managedContainers {
 		if _, exists := activeContainerIDs[container.ID]; exists {
 			continue

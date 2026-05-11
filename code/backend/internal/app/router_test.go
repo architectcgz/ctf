@@ -36,7 +36,6 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
-	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
@@ -288,10 +287,6 @@ func TestBuildRoot(t *testing.T) {
 	}
 }
 
-func TestIdentityModuleContractsCompile(t *testing.T) {
-	var _ identitycontracts.Authenticator = (*identitycmd.AuthenticatorService)(nil)
-}
-
 func TestOpsModuleContractsCompile(t *testing.T) {
 	var _ auditlog.Recorder = (*opscmd.AuditService)(nil)
 }
@@ -310,16 +305,15 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "AdminHandler", reflect.TypeOf(&identityhttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileCommands", reflect.TypeOf((*identitycontracts.ProfileCommandService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileQueries", reflect.TypeOf((*identitycontracts.ProfileQueryService)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identitycontracts.Authenticator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeRuntimeProbe", reflect.TypeOf((*challengeports.ChallengeRuntimeProbe)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "OpsRuntimeQuery", reflect.TypeOf((*opsports.RuntimeQuery)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "OpsRuntimeStatsProvider", reflect.TypeOf((*opsports.RuntimeStatsProvider)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ContestContainerFiles", reflect.TypeOf((*contestports.AWDContainerFileWriter)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ChallengeRuntimeProbe", reflect.TypeOf((*challengeports.ChallengeRuntimeProbe)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "OpsRuntimeQuery", reflect.TypeOf((*opsports.RuntimeQuery)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "OpsRuntimeStatsProvider", reflect.TypeOf((*opsports.RuntimeStatsProvider)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ContestContainerFiles", reflect.TypeOf((*contestports.AWDContainerFileWriter)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditService", reflect.TypeOf((*auditlog.Recorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditHandler", reflect.TypeOf(&opshttp.AuditHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf(&opshttp.DashboardHandler{}))
@@ -355,24 +349,29 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "RecommendationService")
 	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "ReportService")
 	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "Service")
+	assertNoField(t, reflect.TypeOf(composition.InstanceModule{}), "Service")
 	assertNoField(t, reflect.TypeOf(composition.PracticeModule{}), "Service")
-	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Query")
-	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Repository")
-	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Service")
+	assertNoField(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "Handler")
+	assertNoField(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "PracticeRuntimeService")
+	assertNoField(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "Query")
+	assertNoField(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "Repository")
+	assertNoField(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "Service")
+	assertNoField(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService")
 	assertNoField(t, reflect.TypeOf(composition.IdentityModule{}), "users")
 }
 
-func TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies(t *testing.T) {
+func TestCompositionBuildersUseRuntimeAndInstanceModulesForDependencies(t *testing.T) {
 	t.Parallel()
 
-	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 1, reflect.TypeOf(&composition.RuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildInstanceModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 2, reflect.TypeOf(&composition.OpsModule{}))
-	assertFunctionParamType(t, reflect.TypeOf(composition.BuildContestModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
-	assertFunctionParamType(t, reflect.TypeOf(composition.BuildOpsModule), 1, reflect.TypeOf(&composition.RuntimeModule{}))
-	assertFunctionParamType(t, reflect.TypeOf(composition.BuildPracticeModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildContestModule), 2, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildOpsModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildPracticeModule), 2, reflect.TypeOf(&composition.InstanceModule{}))
 }
 
-func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
+func TestBuildOpsModuleDelegatesToContainerRuntime(t *testing.T) {
 	t.Parallel()
 
 	content, err := os.ReadFile(filepath.Join("composition", "ops_module.go"))
@@ -395,7 +394,7 @@ func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
-func TestBuildRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
+func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	t.Parallel()
 
 	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
@@ -405,15 +404,41 @@ func TestBuildRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
+		"type ContainerRuntimeModule struct",
+		"type RuntimeModule = ContainerRuntimeModule",
+		"func BuildContainerRuntimeModule(root *Root) *ContainerRuntimeModule {",
+		"func BuildRuntimeModule(root *Root) *RuntimeModule {",
 		"module := runtimemodule.Build(",
 		"runtimemodule.Deps{",
 		"module.BackgroundJobs",
-		"module.ProxyTicketService",
-		"module.SSHExecutor",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("runtime module should delegate through %s", marker)
+		}
+	}
+}
+
+func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "instance_module.go"))
+	if err != nil {
+		t.Fatalf("read instance_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"module := runtime.runtime",
+		"runtimeinfra.NewRepository(root.DB())",
+		"instancecmd.NewInstanceService(",
+		"instanceqry.NewProxyTicketService(",
+		"instancecmd.NewInstanceMaintenanceService(",
+		"runtimehttp.NewHandler(m.service",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("instance module should delegate through %s", marker)
 		}
 	}
 }
@@ -462,24 +487,19 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"runtimeInstanceRepository",
 		"practiceInstanceRepo",
 		"practiceInstanceRepository",
-		"instanceCommands",
-		"runtimeHTTPCommandService",
-		"instanceQueries",
-		"runtimeHTTPQueryService",
 		"countRunningQuery",
 		"opsports.RuntimeQuery",
-		"proxyTicketService",
-		"runtimeHTTPProxyTicketService",
 		"cleanupService",
 		"*runtimecmd.RuntimeCleanupService",
-		"maintenanceService",
-		"*runtimecmd.RuntimeMaintenanceService",
 		"provisioningService",
 		"*runtimecmd.ProvisioningService",
+		"containerStatsService",
+		"*runtimeapp.ContainerStatsService",
 		"imageRuntime",
 		"challengeports.ImageRuntime",
 		"containerFiles",
 		"contestports.AWDContainerFileWriter",
+		"containerPublicHost",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -498,13 +518,9 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"runtimecmd.NewInstanceService(",
 		"runtimecmd.NewRuntimeCleanupService(",
-		"runtimecmd.NewRuntimeMaintenanceService(",
 		"runtimecmd.NewProvisioningService(",
-		"runtimeqry.NewInstanceService(",
 		"runtimeqry.NewCountRunningService(",
-		"runtimeqry.NewProxyTicketService(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -513,6 +529,10 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	}
 
 	blocked := []string{
+		"runtimecmd.NewInstanceService(",
+		"runtimecmd.NewRuntimeMaintenanceService(",
+		"runtimeqry.NewInstanceService(",
+		"runtimeqry.NewProxyTicketService(",
 		"runtimeapp.NewInstanceService(",
 		"runtimeapp.NewQueryService(",
 		"runtimeapp.NewProxyTicketService(",
@@ -751,7 +771,7 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 		"type PracticeModule = practiceruntime.Module",
 		"practiceruntime.Build(",
 		"practiceruntime.Deps{",
-		"runtime.PracticeInstanceRepository",
+		"instance.PracticeInstanceRepository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -782,8 +802,8 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"practiceruntime.Deps{",
-		"runtime.PracticeInstanceRepository",
-		"runtime.PracticeRuntimeService",
+		"instance.PracticeInstanceRepository",
+		"instance.PracticeRuntimeService",
 		"challenge.Catalog",
 		"challenge.ImageStore",
 		"assessment.ProfileService",
@@ -1001,10 +1021,7 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type identityModuleDeps struct",
-		"users",
-		"*identityinfra.Repository",
-		"tokenService",
-		"identitycontracts.Authenticator",
+		"users *identityinfra.Repository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -1012,8 +1029,11 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(source, "users:        identityinfra.NewRepository(root.DB())") {
+	if !strings.Contains(source, "users: identityinfra.NewRepository(root.DB())") {
 		t.Fatalf("identity composition should build repository in buildIdentityModuleDeps")
+	}
+	if strings.Contains(source, "tokenService") {
+		t.Fatalf("identity composition should not keep token service wiring")
 	}
 }
 

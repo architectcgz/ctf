@@ -120,8 +120,7 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
-		"users        identitycontracts.UserRepository",
-		"tokenService identitycontracts.Authenticator",
+		"identitycontracts.UserRepository",
 		"identityhttp.NewHandler(",
 	}
 	for _, marker := range expected {
@@ -133,6 +132,7 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	blocked := []string{
 		"type identityModuleDeps struct",
 		"identityinfra.NewRepository(root.DB())",
+		"tokenService",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

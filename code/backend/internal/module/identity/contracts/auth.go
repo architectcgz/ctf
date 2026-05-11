@@ -5,12 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	authcontracts "ctf-platform/internal/module/auth/contracts"
 )
-
-type Authenticator interface {
-	authcontracts.TokenService
-}
 
 type UserListFilter struct {
 	Keyword   string

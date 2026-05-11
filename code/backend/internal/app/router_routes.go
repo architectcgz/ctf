@@ -36,9 +36,9 @@ type userRouteDeps struct {
 	assessment        *composition.AssessmentModule
 	challenge         *composition.ChallengeModule
 	contest           *composition.ContestModule
+	instance          *composition.InstanceModule
 	practice          *composition.PracticeModule
 	practiceReadmodel *composition.PracticeReadmodelModule
-	runtime           *composition.RuntimeModule
 	teachingReadmodel *composition.TeachingReadmodelModule
 }
 
@@ -682,24 +682,24 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		middleware.ParseInt64Param("team_id"),
-		deps.runtime.Handler.AccessAWDTarget,
+		deps.instance.Handler.AccessAWDTarget,
 	)
 	protected.POST("/contests/:id/awd/services/:sid/defense/ssh",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
-		deps.runtime.Handler.AccessAWDDefenseSSH,
+		deps.instance.Handler.AccessAWDDefenseSSH,
 	)
 	apiV1.GET("/contests/:id/awd/services/:sid/targets/:team_id/proxy",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		middleware.ParseInt64Param("team_id"),
-		deps.runtime.Handler.ProxyAWDTarget,
+		deps.instance.Handler.ProxyAWDTarget,
 	)
 	apiV1.Any("/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		middleware.ParseInt64Param("team_id"),
-		deps.runtime.Handler.ProxyAWDTarget,
+		deps.instance.Handler.ProxyAWDTarget,
 	)
 	protected.GET("/contests/:id/teams", deps.contest.TeamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)
@@ -821,14 +821,14 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.GET("/challenges/:id/submissions/mine", deps.practice.Handler.ListMyChallengeSubmissions)
 	protected.GET("/scoreboard/ranking", deps.practice.Handler.GetRanking)
-	protected.GET("/instances", deps.runtime.Handler.ListInstances)
+	protected.GET("/instances", deps.instance.Handler.ListInstances)
 	protected.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.runtime.Handler.DestroyInstance,
+		deps.instance.Handler.DestroyInstance,
 	)
 	protected.POST("/instances/:id/extend",
 		audit(middleware.AuditOptions{
@@ -836,11 +836,11 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.runtime.Handler.ExtendInstance,
+		deps.instance.Handler.ExtendInstance,
 	)
-	protected.POST("/instances/:id/access", deps.runtime.Handler.AccessInstance)
-	apiV1.GET("/instances/:id/proxy", deps.runtime.Handler.ProxyInstance)
-	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.runtime.Handler.ProxyInstance)
+	protected.POST("/instances/:id/access", deps.instance.Handler.AccessInstance)
+	apiV1.GET("/instances/:id/proxy", deps.instance.Handler.ProxyInstance)
+	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.instance.Handler.ProxyInstance)
 
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", deps.practiceReadmodel.Handler.GetProgress)
@@ -855,14 +855,14 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/classes/:name/summary", deps.teachingReadmodel.Handler.GetClassSummary)
 	teacherOrAbove.GET("/classes/:name/trend", deps.teachingReadmodel.Handler.GetClassTrend)
 	teacherOrAbove.GET("/classes/:name/review", deps.teachingReadmodel.Handler.GetClassReview)
-	teacherOrAbove.GET("/instances", deps.runtime.Handler.ListTeacherInstances)
+	teacherOrAbove.GET("/instances", deps.instance.Handler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.runtime.Handler.DestroyTeacherInstance,
+		deps.instance.Handler.DestroyTeacherInstance,
 	)
 	teacherOrAbove.GET("/students/:id/progress", deps.teachingReadmodel.Handler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", deps.assessment.Handler.GetStudentSkillProfile)

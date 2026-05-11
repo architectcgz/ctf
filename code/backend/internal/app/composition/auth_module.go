@@ -2,8 +2,8 @@ package composition
 
 import (
 	"ctf-platform/internal/auditlog"
-	authruntime "ctf-platform/internal/module/auth/runtime"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authruntime "ctf-platform/internal/module/auth/runtime"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 )
@@ -20,8 +20,8 @@ type authModuleDeps struct {
 	auditRecorder   auditlog.Recorder
 }
 
-func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*authruntime.Module, error) {
-	deps := buildAuthModuleDeps(ops, identity)
+func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule, tokenService authcontracts.TokenService) (*authruntime.Module, error) {
+	deps := buildAuthModuleDeps(ops, identity, tokenService)
 	return authruntime.Build(authruntime.Deps{
 		Config:          root.Config(),
 		Logger:          root.Logger(),
@@ -33,10 +33,10 @@ func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*aut
 	}), nil
 }
 
-func buildAuthModuleDeps(ops *OpsModule, identity *IdentityModule) authModuleDeps {
+func buildAuthModuleDeps(ops *OpsModule, identity *IdentityModule, tokenService authcontracts.TokenService) authModuleDeps {
 	return authModuleDeps{
 		users:           identity.userRepo,
-		tokenService:    identity.TokenService,
+		tokenService:    tokenService,
 		profileCommands: identity.ProfileCommands,
 		profileQueries:  identity.ProfileQueries,
 		auditRecorder:   ops.AuditService,

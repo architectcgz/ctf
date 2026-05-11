@@ -4,7 +4,7 @@ import contestruntime "ctf-platform/internal/module/contest/runtime"
 
 type ContestModule = contestruntime.Module
 
-func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
+func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *ContainerRuntimeModule) *ContestModule {
 	module := contestruntime.Build(contestruntime.Deps{
 		Config:                root.Config(),
 		Logger:                root.Logger(),

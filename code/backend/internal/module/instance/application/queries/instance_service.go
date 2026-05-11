@@ -7,7 +7,8 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instancedomain "ctf-platform/internal/module/instance/domain"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -16,10 +17,10 @@ type InstanceService struct {
 }
 
 type instanceQueryRepository interface {
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.UserVisibleInstanceRepository
-	runtimeports.TeacherInstanceQueryRepository
+	instanceports.InstanceUserLookupRepository
+	instanceports.InstanceAccessRepository
+	instanceports.UserVisibleInstanceRepository
+	instanceports.TeacherInstanceQueryRepository
 }
 
 func NewInstanceService(repo instanceQueryRepository) *InstanceService {
@@ -62,7 +63,7 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
 	ctx = normalizeContext(ctx)
 
-	filter := runtimeports.TeacherInstanceFilter{}
+	filter := instanceports.TeacherInstanceFilter{}
 	if query != nil {
 		filter.ClassName = strings.TrimSpace(query.ClassName)
 		filter.Keyword = strings.TrimSpace(query.Keyword)
@@ -102,7 +103,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	return result, nil
 }
 
-func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
+func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
 	accessURL := inst.AccessURL
 	if inst.ContestMode == model.ContestModeAWD {
 		accessURL = ""
@@ -120,15 +121,15 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 		AccessURL:        accessURL,
 		Access:           dto.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    remainingTime(inst.ExpiresAt, now),
+		RemainingTime:    instancedomain.RemainingTime(inst.ExpiresAt, now),
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
+		RemainingExtends: instancedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
 }
 
-func toTeacherInstanceItem(item runtimeports.TeacherInstanceRow, now time.Time) dto.TeacherInstanceItem {
+func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time) dto.TeacherInstanceItem {
 	return dto.TeacherInstanceItem{
 		ID:              item.ID,
 		StudentID:       item.StudentID,
@@ -142,7 +143,7 @@ func toTeacherInstanceItem(item runtimeports.TeacherInstanceRow, now time.Time) 
 		AccessURL:       item.AccessURL,
 		Access:          dto.BuildInstanceAccessInfo(item.AccessURL),
 		ExpiresAt:       item.ExpiresAt,
-		RemainingTime:   remainingTime(item.ExpiresAt, now),
+		RemainingTime:   instancedomain.RemainingTime(item.ExpiresAt, now),
 		ExtendCount:     item.ExtendCount,
 		MaxExtends:      item.MaxExtends,
 		CreatedAt:       item.CreatedAt,
@@ -154,22 +155,6 @@ func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
 		return model.InstanceStatusExpired
 	}
 	return status
-}
-
-func remainingTime(expiresAt, now time.Time) int64 {
-	remaining := int64(expiresAt.Sub(now).Seconds())
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
-}
-
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
 }
 
 func normalizeContext(ctx context.Context) context.Context {

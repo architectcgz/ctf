@@ -23,8 +23,24 @@ func (s stubAWDDefenseSSHGatewayProxyTickets) IssueAWDDefenseSSHTicket(context.C
 	return "", time.Time{}, nil
 }
 
+func (s stubAWDDefenseSSHGatewayProxyTickets) IssueTicket(context.Context, authctx.CurrentUser, int64) (string, time.Time, error) {
+	return "", time.Time{}, nil
+}
+
+func (s stubAWDDefenseSSHGatewayProxyTickets) IssueAWDTargetTicket(context.Context, authctx.CurrentUser, int64, int64, int64) (string, time.Time, error) {
+	return "", time.Time{}, nil
+}
+
 func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return s.claims, s.err
+}
+
+func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+	return "", nil
+}
+
+func (s stubAWDDefenseSSHGatewayProxyTickets) MaxAge() int {
+	return 900
 }
 
 func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {

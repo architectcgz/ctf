@@ -1,12 +1,10 @@
 package runtime
 
 import (
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
@@ -18,22 +16,18 @@ type Module struct {
 	AdminHandler    *identityhttp.Handler
 	ProfileCommands identitycontracts.ProfileCommandService
 	ProfileQueries  identitycontracts.ProfileQueryService
-	TokenService    identitycontracts.Authenticator
 	Users           identitycontracts.UserRepository
 }
 
 type Deps struct {
-	Config       *config.Config
-	Logger       *zap.Logger
-	DB           *gorm.DB
-	Cache        *redislib.Client
-	TokenService authcontracts.TokenService
+	Config *config.Config
+	Logger *zap.Logger
+	DB     *gorm.DB
 }
 
 type moduleDeps struct {
-	input        Deps
-	users        identitycontracts.UserRepository
-	tokenService identitycontracts.Authenticator
+	input Deps
+	users identitycontracts.UserRepository
 }
 
 func Build(deps Deps) *Module {
@@ -44,16 +38,14 @@ func Build(deps Deps) *Module {
 		AdminHandler:    adminHandler,
 		ProfileCommands: profileCommands,
 		ProfileQueries:  profileQueries,
-		TokenService:    internalDeps.tokenService,
 		Users:           internalDeps.users,
 	}
 }
 
 func newModuleDeps(deps Deps) moduleDeps {
 	return moduleDeps{
-		input:        deps,
-		users:        identityinfra.NewRepository(deps.DB),
-		tokenService: identitycmd.NewAuthenticatorService(deps.TokenService),
+		input: deps,
+		users: identityinfra.NewRepository(deps.DB),
 	}
 }
 

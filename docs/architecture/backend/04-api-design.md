@@ -18,7 +18,7 @@
   - 不负责：承载 handler 内部实现、权限判断细节或运行时补偿逻辑；这些仍以后端代码为准
 
 - `code/backend/internal/app/router.go`、`code/backend/internal/app/router_routes.go`
-  - 负责：装配 `/api/v1/*` 路由、模块 handler、中间件、审计入口和运行时代理路径，把 `auth`、`challenge`、`practice`、`contest`、`assessment`、`ops` 的对外命名空间固定下来
+  - 负责：装配 `/api/v1/*` 路由、模块 handler、中间件、审计入口和运行时代理路径，把 `auth`、`challenge`、`practice`、`contest`、`assessment`、`ops` 的对外命名空间固定下来；当前 `/instances*`、AWD target proxy 和 defense SSH 相关路径统一通过 `InstanceModule.Handler` 挂载，而 `challenge`、`contest`、`ops` 依赖的容器能力则通过 `ContainerRuntimeModule` 装配，但外部 URL 与响应契约保持不变
   - 不负责：在 composition 层实现业务状态机或直接拼装 DTO 字段
 
 - `code/backend/internal/middleware/request_id.go`、`auth.go`、`audit.go`、`recovery.go`
@@ -34,6 +34,7 @@
 - 当前统一响应结构以 `ApiEnvelopeBase` 为根，核心字段是 `code`、`message`、`data`、`request_id`；见 `docs/contracts/openapi-v1.yaml`。
 - 当前认证仍以服务端 Session + Cookie 为主，并通过 `GET /api/v1/ws-ticket`、实例访问 proxy ticket、AWD 攻击 / 防守 ticket 承接 WebSocket 与运行时访问。
 - 当前重要 API 面包括 challenge import / commit / self-check、附件下载、实例访问、竞赛状态 / 榜单、AWD service 管理 / preview / readiness / round / attack log，以及教师复盘 / 报告导出链路；如果示例与 `openapi-v1.yaml` 冲突，以契约文档优先。
+- 2026-05-11 的 runtime-instance phase 2 / slice 2 没有新增、删除或重命名外部 HTTP 路径；变化仅在内部装配层：实例访问、教师实例列表、AWD target proxy 与 defense SSH 路由由 `InstanceModule` 承接，`challenge`、`contest`、`ops` 依赖的容器能力由 `ContainerRuntimeModule` 承接；`RuntimeModule` 仅保留过渡兼容别名。
 
 ## Guardrail
 

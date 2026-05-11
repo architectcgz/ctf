@@ -16,9 +16,17 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-type runtimeHTTPCommandService interface{}
+type runtimeHTTPCommandService interface {
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
+}
 
-type runtimeHTTPQueryService interface{}
+type runtimeHTTPQueryService interface {
+	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
+}
 
 type runtimeDefenseWorkbenchRuntime interface {
 	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
@@ -28,19 +36,22 @@ type runtimeDefenseWorkbenchRuntime interface {
 }
 
 type runtimeHTTPServiceAdapter struct {
-	proxyTickets         runtimeHTTPProxyTicketService
-	proxyTicketReader    runtimeports.ProxyTicketInstanceReader
-	defenseWorkbench     runtimeDefenseWorkbenchRuntime
-	proxyBodyPreviewSize int
-	defenseSSHEnabled    bool
-	defenseSSHHost       string
-	defenseSSHPort       int
-	defenseWorkbenchRoot string
+	commandService                  runtimeHTTPCommandService
+	queryService                    runtimeHTTPQueryService
+	proxyTickets                    runtimeHTTPProxyTicketService
+	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
+	defenseWorkbench                runtimeDefenseWorkbenchRuntime
+	proxyBodyPreviewSize            int
+	defenseSSHEnabled               bool
+	defenseSSHHost                  string
+	defenseSSHPort                  int
+	defenseWorkbenchReadOnlyEnabled bool
+	defenseWorkbenchRoot            string
 }
 
 func newRuntimeHTTPServiceAdapter(
-	_ runtimeHTTPCommandService,
-	_ runtimeHTTPQueryService,
+	commandService runtimeHTTPCommandService,
+	queryService runtimeHTTPQueryService,
 	proxyTickets runtimeHTTPProxyTicketService,
 	proxyTicketReader runtimeports.ProxyTicketInstanceReader,
 	defenseWorkbench runtimeDefenseWorkbenchRuntime,
@@ -52,18 +63,79 @@ func newRuntimeHTTPServiceAdapter(
 	defenseWorkbenchRoot string,
 ) *runtimeHTTPServiceAdapter {
 	adapter := &runtimeHTTPServiceAdapter{
-		proxyTickets:         proxyTickets,
-		proxyTicketReader:    proxyTicketReader,
-		defenseWorkbench:     defenseWorkbench,
-		proxyBodyPreviewSize: proxyBodyPreviewSize,
-		defenseSSHEnabled:    defenseSSHEnabled,
-		defenseSSHHost:       defenseSSHHost,
-		defenseSSHPort:       defenseSSHPort,
+		commandService:                  commandService,
+		queryService:                    queryService,
+		proxyTickets:                    proxyTickets,
+		proxyTicketReader:               proxyTicketReader,
+		defenseWorkbench:                defenseWorkbench,
+		proxyBodyPreviewSize:            proxyBodyPreviewSize,
+		defenseSSHEnabled:               defenseSSHEnabled,
+		defenseSSHHost:                  defenseSSHHost,
+		defenseSSHPort:                  defenseSSHPort,
+		defenseWorkbenchReadOnlyEnabled: defenseWorkbenchEnabled,
 	}
-	if defenseWorkbenchEnabled {
-		adapter.defenseWorkbenchRoot = strings.TrimSpace(defenseWorkbenchRoot)
-	}
+	adapter.defenseWorkbenchRoot = strings.TrimSpace(defenseWorkbenchRoot)
 	return adapter
+}
+
+func (a *runtimeHTTPServiceAdapter) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	if a == nil || a.commandService == nil {
+		return errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.commandService.DestroyInstance(ctx, instanceID, userID)
+}
+
+func (a *runtimeHTTPServiceAdapter) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	if a == nil || a.commandService == nil {
+		return nil, errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.commandService.ExtendInstance(ctx, instanceID, userID)
+}
+
+func (a *runtimeHTTPServiceAdapter) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
+	if a == nil || a.queryService == nil {
+		return "", errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.queryService.GetAccessURL(ctx, instanceID, userID)
+}
+
+func (a *runtimeHTTPServiceAdapter) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	if a == nil || a.queryService == nil {
+		return nil, errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.queryService.GetUserInstances(ctx, userID)
+}
+
+func (a *runtimeHTTPServiceAdapter) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+	if a == nil || a.queryService == nil {
+		return nil, errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.queryService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
+}
+
+func (a *runtimeHTTPServiceAdapter) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
+	if a == nil || a.commandService == nil {
+		return errRuntimeHTTPInstanceServiceUnavailable()
+	}
+	return a.commandService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
+}
+
+func (a *runtimeHTTPServiceAdapter) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error) {
+	if a == nil || a.proxyTickets == nil {
+		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+
+	ticket, _, err := a.proxyTickets.IssueTicket(ctx, user, instanceID)
+	return ticket, err
+}
+
+func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error) {
+	if a == nil || a.proxyTickets == nil {
+		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+
+	ticket, _, err := a.proxyTickets.IssueAWDTargetTicket(ctx, user, contestID, serviceID, victimTeamID)
+	return ticket, err
 }
 
 func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error) {
@@ -124,9 +196,79 @@ func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context,
 	}, nil
 }
 
+func (a *runtimeHTTPServiceAdapter) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	scope, root, err := a.resolveDefenseWorkbenchScope(ctx, user, contestID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	cleanPath, containerPath, err := resolveEditableDefenseFilePath(scope, root, req.Path)
+	if err != nil {
+		return nil, err
+	}
+	content := []byte(req.Content)
+	if len(content) > 256*1024 {
+		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("awd defense file is too large"))
+	}
+
+	backupPath := ""
+	if req.Backup {
+		existing, readErr := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, containerPath, 256*1024)
+		if readErr == nil {
+			backupPath = fmt.Sprintf("%s.bak.%d", cleanPath, time.Now().Unix())
+			backupContainerPath := defenseWorkbenchContainerPath(root, backupPath)
+			if err := a.defenseWorkbench.WriteFileToContainer(ctx, scope.ContainerID, backupContainerPath, existing); err != nil {
+				return nil, errcode.ErrInternal.WithCause(err)
+			}
+		}
+	}
+	if err := a.defenseWorkbench.WriteFileToContainer(ctx, scope.ContainerID, containerPath, content); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	return &dto.AWDDefenseFileSaveResp{
+		Path:       cleanPath,
+		Size:       len(content),
+		BackupPath: backupPath,
+	}, nil
+}
+
+func (a *runtimeHTTPServiceAdapter) RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	command := strings.TrimSpace(req.Command)
+	if command == "" || len(command) > 2000 {
+		return nil, errcode.ErrInvalidParams
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, errcode.ErrForbidden
+	}
+
+	runCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	output, err := a.defenseWorkbench.ExecContainerCommand(runCtx, scope.ContainerID, []string{"/bin/sh", "-lc", command}, nil, 64*1024)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	return &dto.AWDDefenseCommandResp{
+		Command: command,
+		Output:  string(output),
+	}, nil
+}
+
 func (a *runtimeHTTPServiceAdapter) resolveDefenseWorkbenchScope(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, string, error) {
 	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
 		return nil, "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	if !a.defenseWorkbenchReadOnlyEnabled {
+		return nil, "", errcode.ErrForbidden
 	}
 	root := strings.TrimSpace(a.defenseWorkbenchRoot)
 	if !strings.HasPrefix(root, "/") || root == "/" {
@@ -378,6 +520,38 @@ func isSensitiveDefensePath(value string) bool {
 
 func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
+}
+
+func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+	if a == nil || a.proxyTickets == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	return a.proxyTickets.ResolveTicket(ctx, ticket)
+}
+
+func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+	if a == nil || a.proxyTickets == nil {
+		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	return a.proxyTickets.ResolveAWDTargetAccessURL(ctx, claims, contestID, serviceID, victimTeamID)
+}
+
+func (a *runtimeHTTPServiceAdapter) ProxyTicketMaxAge() int {
+	if a == nil || a.proxyTickets == nil {
+		return 0
+	}
+	return a.proxyTickets.MaxAge()
+}
+
+func (a *runtimeHTTPServiceAdapter) ProxyBodyPreviewSize() int {
+	if a == nil {
+		return 0
+	}
+	return a.proxyBodyPreviewSize
+}
+
+func errRuntimeHTTPInstanceServiceUnavailable() error {
+	return errcode.ErrInternal.WithCause(fmt.Errorf("instance application service is not configured"))
 }
 
 func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {

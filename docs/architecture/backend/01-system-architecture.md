@@ -7,7 +7,7 @@
 ## 当前设计
 
 - `code/backend/internal/app/router.go`、`code/backend/internal/app/composition/*.go`
-  - 负责：装配 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 模块，注册 HTTP 路由、后台任务和进程生命周期关闭逻辑；Guardrail 见 `code/backend/internal/app/router_test.go` 与 `code/backend/internal/app/full_router_integration_test.go`
+  - 负责：装配 `auth`、`identity`、`challenge`、`container_runtime`、`instance`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 模块，注册 HTTP 路由、后台任务和进程生命周期关闭逻辑；其中 `ContainerRuntimeModule` 收口 challenge/contest/ops 的 container-facing 能力，`InstanceModule` 收口实例与 AWD 访问入口；Guardrail 见 `code/backend/internal/app/router_test.go` 与 `code/backend/internal/app/full_router_integration_test.go`
   - 不负责：实现具体业务规则、状态迁移或持久化细节
 
 - `code/backend/internal/module/*/application`、`code/backend/internal/module/*/domain`、`code/backend/internal/module/*/ports`、`code/backend/internal/module/*/infrastructure`
@@ -18,9 +18,9 @@
   - 负责：教师视角、练习视角和复盘查询的只读聚合；HTTP 入口见 `code/backend/internal/module/teaching_readmodel/api/http/handler.go`
   - 不负责：作为写模型 owner 修改练习、竞赛、评估等业务状态
 
-- `code/backend/internal/module/runtime`、`code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
-  - 负责：容器运行时、实例访问代理 ticket、AWD 防守 SSH ticket、后台清理任务与运行时统计；相关入口见 `code/backend/internal/module/runtime/api/http/handler.go`
-  - 不负责：直接承载挑战内容管理、用户认证或教师运营聚合逻辑
+- `code/backend/internal/module/runtime`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
+  - 负责：当前仍复用同一个 `runtime` 物理模块，但在 app 层拆成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图；前者承接容器运行时、镜像探针、容器文件和运行时统计，后者承接实例访问代理、AWD 防守 SSH 入口和 `practice` 依赖的实例仓储/运行时服务；`RuntimeModule` 仅保留兼容别名
+  - 不负责：把这一阶段成果写成 `internal/module/instance` 或 `internal/module/container_runtime` 已经独立落地，或让 `practice`、用户实例路由继续直接依赖整块容器运行时视图
 
 ## 1. 架构概览
 
@@ -114,8 +114,9 @@ flowchart LR
   - `events.Bus`
   - 后台任务注册表
 - HTTP 路由装配入口是 `internal/app/buildRouterRuntime`。当前装配顺序为：
-  - `runtime`
+  - `container_runtime`
   - `ops`
+  - `instance`
   - `identity`
   - `auth`
   - `challenge`
@@ -124,7 +125,10 @@ flowchart LR
   - `contest`
   - `practice`
   - `practice_readmodel`
-- `runtime` 模块内部统一装配运行时引擎、实例查询/续期能力、代理票据服务、清理任务和运行时统计能力；上层模块只依赖其暴露的 query / service / handler。
+- 当前 app 层把同一个 `runtime` 物理模块收口成两种视图：
+  - `ContainerRuntimeModule`：供 `challenge`、`contest`、`ops` 使用的镜像探针、容器文件和运行时统计能力
+  - `InstanceModule`：供 `practice` 和用户/教师实例路由使用的实例仓储、运行时服务与实例访问 handler，并在开启防守 SSH 时注册网关任务
+- `internal/module/runtime/*` 目前仍同时承载实例业务与容器适配实现；这一步只完成了 composition 边界收窄，还没有完成物理包拆分。
 - `HTTPServer` 复用同一套 composition 结果，只负责：
   - 启动 `composition.Root` 已注册的后台任务
   - 关闭各模块异步组件
@@ -143,18 +147,20 @@ flowchart LR
 ```mermaid
 flowchart LR
     auth --> identity
+    challenge --> containerRuntime
     practice --> challenge
-    practice --> runtime
+    practice --> instance
+    instance --> containerRuntime
     practice --> assessment
     contest --> challenge
-    contest --> runtime
+    contest --> containerRuntime
     contest --> ops
     assessment --> challenge
     assessment --> practice
     practiceReadmodel --> practice
     teachingReadmodel --> assessment
     teachingReadmodel --> contest
-    ops --> runtime
+    ops --> containerRuntime
 ```
 
 ### 3.2 当前模块职责
@@ -164,8 +170,10 @@ flowchart LR
 | `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket | `identity`、`ops` |
 | `identity` | 写模型 | 用户、角色、权限、当前用户解析、管理端用户能力 | 无业务上游依赖 |
 | `challenge` | 写模型 | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `runtime`（运行时探针与镜像探测） |
-| `runtime` | 写模型 / 基础运行时 | Docker 运行时、实例访问代理、端口与 ACL、清理任务、运行时统计 | PostgreSQL、Redis、Docker Engine |
-| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`runtime`、`assessment` |
+| `runtime` | 写模型 / 基础运行时（当前物理模块） | Docker 运行时、镜像探针、容器文件访问、清理任务、运行时统计；底层实现仍落在 `internal/module/runtime/*` | PostgreSQL、Redis、Docker Engine |
+| `container_runtime` | app 层组合视图（迁移中） | challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | `runtime` 物理模块 |
+| `instance` | app 层组合视图（迁移中） | 实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime` 物理模块 |
+| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`、`assessment` |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`runtime`、`ops` |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`、`practice` |
 | `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `runtime` |
@@ -177,6 +185,7 @@ flowchart LR
 - `/api/v1/teacher/*` 只是路由命名空间，不代表存在名为 `teacher` 的业务 owner 模块。
 - `ops` 替代旧的 `system` 叙事，承接通知、审计、运营支撑与运行时可观测能力。
 - `practice_readmodel` 与 `teaching_readmodel` 负责只读聚合，不承担业务状态修改。
+- `instance` 当前只是 app 层组合视图，不代表 `internal/module/instance` 已经独立存在。
 
 ### 3.3 模块协作方式
 
@@ -191,6 +200,7 @@ flowchart LR
 ### 3.4 架构守卫
 
 - `internal/app/composition/architecture_test.go` 当前已经阻止 composition 和 runtime 回退到旧的 `internal/module/container` 依赖。
+- `internal/app/router_test.go` 当前已经约束 `ContainerRuntimeModule` 不再暴露 `Handler` / `PracticeRuntimeService`，并要求 `BuildPracticeModule` 依赖 `InstanceModule`。
 - 新模块必须先确定 owner，再决定是否需要 `domain`、`ports`、`contracts`；禁止先堆目录、后找边界。
 - 后端对外的长期事实源以 `docs/architecture/backend/` 与专题架构文档为准，不再保留迁移中间稿。
 
@@ -486,21 +496,22 @@ flowchart LR
 #### 路由分组与中间件挂载
 
 ```go
-runtimeModule := buildRuntimeModule(root)
-opsModule := buildOpsModule(root, runtimeModule)
+containerRuntimeModule := buildContainerRuntimeModule(root)
+opsModule := buildOpsModule(root, containerRuntimeModule)
+instanceModule := buildInstanceModule(root, containerRuntimeModule)
 
 identityModule, err := buildIdentityModule(root)
 authModule, err := buildAuthModule(root, opsModule, identityModule)
-challengeModule, err := buildChallengeModule(root, runtimeModule, opsModule)
+challengeModule, err := buildChallengeModule(root, containerRuntimeModule, opsModule)
 assessmentModule := buildAssessmentModule(root, challengeModule)
 teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
-contestModule := buildContestModule(root, challengeModule, runtimeModule)
-practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
+contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
+practiceModule := buildPracticeModule(root, challengeModule, instanceModule, assessmentModule)
 practiceReadmodelModule := buildPracticeReadmodelModule(root)
 
-runtimeModule.BuildHandler(root, opsModule)
+instanceModule.BuildHandler(root, opsModule)
 // 再把 handler 挂到 /api/v1、/teacher、/authoring、/admin 等路由组
-// 统一复用 identityModule.TokenService 和 identityModule.Users 做认证上下文解析
+// 统一复用 tokenService 和 identityModule.Users 做认证上下文解析
 ```
 
 #### 限流策略

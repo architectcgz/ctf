@@ -11,6 +11,7 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
@@ -18,23 +19,25 @@ import (
 )
 
 type routerRuntime struct {
-	engine     *gin.Engine
-	closers    []lifecycleComponent
-	assessment *composition.AssessmentModule
-	contest    *composition.ContestModule
-	runtime    *composition.RuntimeModule
+	engine           *gin.Engine
+	closers          []lifecycleComponent
+	assessment       *composition.AssessmentModule
+	containerRuntime *composition.ContainerRuntimeModule
+	contest          *composition.ContestModule
+	instance         *composition.InstanceModule
 }
 
 var (
 	buildAuthModule              = composition.BuildAuthModule
 	buildAssessmentModule        = composition.BuildAssessmentModule
+	buildContainerRuntimeModule  = composition.BuildContainerRuntimeModule
 	buildChallengeModule         = composition.BuildChallengeModule
 	buildContestModule           = composition.BuildContestModule
 	buildIdentityModule          = composition.BuildIdentityModule
+	buildInstanceModule          = composition.BuildInstanceModule
 	buildOpsModule               = composition.BuildOpsModule
 	buildPracticeModule          = composition.BuildPracticeModule
 	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
-	buildRuntimeModule           = composition.BuildRuntimeModule
 	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
 )
 
@@ -78,15 +81,18 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
 
-	runtimeModule := buildRuntimeModule(root)
-	opsModule := buildOpsModule(root, runtimeModule)
+	containerRuntimeModule := buildContainerRuntimeModule(root)
+	opsModule := buildOpsModule(root, containerRuntimeModule)
+	instanceModule := buildInstanceModule(root, containerRuntimeModule)
 
 	identityModule, err := buildIdentityModule(root)
 	if err != nil {
 		return nil, err
 	}
 
-	authModule, err := buildAuthModule(root, opsModule, identityModule)
+	tokenService := authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache)
+
+	authModule, err := buildAuthModule(root, opsModule, identityModule, tokenService)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +121,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	authGroup.GET("/cas/callback", authModule.Handler.CASCallback)
 
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(identityModule.TokenService, cfg.Auth.SessionCookieName, identityModule.Users))
+	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName, identityModule.Users))
 	if cfg.RateLimit.Global.Enabled {
 		protected.Use(middleware.RateLimitByUser(rateChecker, "global", cfg.RateLimit.Global.Limit, cfg.RateLimit.Global.Window))
 	}
@@ -124,7 +130,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authModule.Handler.IssueWSTicket)
 
-	opsModule.BuildNotificationHandler(root, identityModule.TokenService)
+	opsModule.BuildNotificationHandler(root, tokenService)
 	protected.GET("/notifications", opsModule.NotificationHandler.ListNotifications)
 	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), opsModule.NotificationHandler.MarkAsRead)
 	engine.GET("/ws/notifications", opsModule.NotificationHandler.ServeWS)
@@ -139,22 +145,22 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
-	challengeModule, err := buildChallengeModule(root, runtimeModule, opsModule)
+	challengeModule, err := buildChallengeModule(root, containerRuntimeModule, opsModule)
 	if err != nil {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
 	teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
-	contestModule := buildContestModule(root, challengeModule, runtimeModule)
+	contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 	contestModule.BindRealtimeBroadcaster(opsModule.WebSocketManager)
 	contestRealtimeHandler := contesthttp.NewRealtimeHandler(
-		identityModule.TokenService,
+		tokenService,
 		opsModule.WebSocketManager,
 		log.Named("contest_realtime_handler"),
 	)
-	practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
+	practiceModule := buildPracticeModule(root, challengeModule, instanceModule, assessmentModule)
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
-	runtimeModule.BuildHandler(root, opsModule)
+	instanceModule.BuildHandler(root, opsModule)
 
 	registerTeacherAuthoringRoutes(authoring, adminRouteDeps{
 		identityHandler: identityModule.AdminHandler,
@@ -183,7 +189,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		contest:           contestModule,
 		practice:          practiceModule,
 		practiceReadmodel: practiceReadmodelModule,
-		runtime:           runtimeModule,
+		instance:          instanceModule,
 		teachingReadmodel: teachingReadmodelModule,
 	})
 	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
@@ -191,10 +197,11 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/ws/contests/:id/awd-preview", contestRealtimeHandler.ServeAWDPreviewWS)
 
 	return &routerRuntime{
-		engine:     engine,
-		assessment: assessmentModule,
-		contest:    contestModule,
-		runtime:    runtimeModule,
+		engine:           engine,
+		assessment:       assessmentModule,
+		containerRuntime: containerRuntimeModule,
+		contest:          contestModule,
+		instance:         instanceModule,
 		closers: []lifecycleComponent{
 			{name: "report_export_tasks", closer: assessmentModule.BackgroundTasks},
 			{name: "image_cleanup_tasks", closer: challengeModule.BackgroundTasks},

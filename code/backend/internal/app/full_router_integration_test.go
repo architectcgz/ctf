@@ -27,6 +27,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -439,7 +440,8 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 
 	var calls []string
 
-	originalBuildRuntimeModule := buildRuntimeModule
+	originalBuildContainerRuntimeModule := buildContainerRuntimeModule
+	originalBuildInstanceModule := buildInstanceModule
 	originalBuildOpsModule := buildOpsModule
 	originalBuildIdentityModule := buildIdentityModule
 	originalBuildAuthModule := buildAuthModule
@@ -450,7 +452,8 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildPracticeModule := buildPracticeModule
 	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
-		buildRuntimeModule = originalBuildRuntimeModule
+		buildContainerRuntimeModule = originalBuildContainerRuntimeModule
+		buildInstanceModule = originalBuildInstanceModule
 		buildOpsModule = originalBuildOpsModule
 		buildIdentityModule = originalBuildIdentityModule
 		buildAuthModule = originalBuildAuthModule
@@ -462,16 +465,23 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
 	}()
 
-	buildRuntimeModule = func(root *composition.Root) *composition.RuntimeModule {
+	buildContainerRuntimeModule = func(root *composition.Root) *composition.ContainerRuntimeModule {
 		if root == nil {
-			t.Fatal("expected root for runtime module builder")
+			t.Fatal("expected root for container runtime module builder")
 		}
-		calls = append(calls, "runtime")
-		return originalBuildRuntimeModule(root)
+		calls = append(calls, "container_runtime")
+		return originalBuildContainerRuntimeModule(root)
 	}
-	buildOpsModule = func(root *composition.Root, runtime *composition.RuntimeModule) *composition.OpsModule {
+	buildInstanceModule = func(root *composition.Root, runtime *composition.ContainerRuntimeModule) *composition.InstanceModule {
 		if root == nil || runtime == nil {
-			t.Fatal("expected root and runtime for ops module builder")
+			t.Fatal("expected root and container runtime for instance module builder")
+		}
+		calls = append(calls, "instance")
+		return originalBuildInstanceModule(root, runtime)
+	}
+	buildOpsModule = func(root *composition.Root, runtime *composition.ContainerRuntimeModule) *composition.OpsModule {
+		if root == nil || runtime == nil {
+			t.Fatal("expected root and container runtime for ops module builder")
 		}
 		calls = append(calls, "ops")
 		return originalBuildOpsModule(root, runtime)
@@ -483,16 +493,16 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "identity")
 		return originalBuildIdentityModule(root)
 	}
-	buildAuthModule = func(root *composition.Root, ops *composition.OpsModule, identity *composition.IdentityModule) (*authruntime.Module, error) {
-		if root == nil || ops == nil || identity == nil {
-			t.Fatal("expected root, ops and identity for auth module builder")
+	buildAuthModule = func(root *composition.Root, ops *composition.OpsModule, identity *composition.IdentityModule, tokenService authcontracts.TokenService) (*authruntime.Module, error) {
+		if root == nil || ops == nil || identity == nil || tokenService == nil {
+			t.Fatal("expected root, ops, identity and token service for auth module builder")
 		}
 		calls = append(calls, "auth")
-		return originalBuildAuthModule(root, ops, identity)
+		return originalBuildAuthModule(root, ops, identity, tokenService)
 	}
-	buildChallengeModule = func(root *composition.Root, runtime *composition.RuntimeModule, ops *composition.OpsModule) (*composition.ChallengeModule, error) {
+	buildChallengeModule = func(root *composition.Root, runtime *composition.ContainerRuntimeModule, ops *composition.OpsModule) (*composition.ChallengeModule, error) {
 		if root == nil || runtime == nil || ops == nil {
-			t.Fatal("expected root, runtime and ops for challenge module builder")
+			t.Fatal("expected root, container runtime and ops for challenge module builder")
 		}
 		calls = append(calls, "challenge")
 		return originalBuildChallengeModule(root, runtime, ops)
@@ -511,19 +521,19 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "teaching_readmodel")
 		return originalBuildTeachingReadmodelModule(root, assessment)
 	}
-	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.RuntimeModule) *composition.ContestModule {
+	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.ContainerRuntimeModule) *composition.ContestModule {
 		if root == nil || challenge == nil || runtime == nil {
-			t.Fatal("expected root, challenge and runtime for contest module builder")
+			t.Fatal("expected root, challenge and container runtime for contest module builder")
 		}
 		calls = append(calls, "contest")
 		return originalBuildContestModule(root, challenge, runtime)
 	}
-	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.RuntimeModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
-		if root == nil || challenge == nil || runtime == nil || assessment == nil {
-			t.Fatal("expected root, challenge, runtime, and assessment for practice module builder")
+	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, instance *composition.InstanceModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
+		if root == nil || challenge == nil || instance == nil || assessment == nil {
+			t.Fatal("expected root, challenge, instance, and assessment for practice module builder")
 		}
 		calls = append(calls, "practice")
-		return originalBuildPracticeModule(root, challenge, runtime, assessment)
+		return originalBuildPracticeModule(root, challenge, instance, assessment)
 	}
 	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
 		if root == nil {
@@ -541,7 +551,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"runtime", "ops", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice", "practice_readmodel"}
+	expectedCalls := []string{"container_runtime", "ops", "instance", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice", "practice_readmodel"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

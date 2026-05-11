@@ -6,7 +6,7 @@ import (
 
 type PracticeModule = practiceruntime.Module
 
-func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) *PracticeModule {
+func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule, assessment *AssessmentModule) *PracticeModule {
 	module := practiceruntime.Build(practiceruntime.Deps{
 		AppContext:     root.Context(),
 		Config:         root.Config(),
@@ -14,8 +14,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 		DB:             root.DB(),
 		Cache:          root.Cache(),
 		Events:         root.Events,
-		InstanceRepo:   runtime.PracticeInstanceRepository,
-		RuntimeService: runtime.PracticeRuntimeService,
+		InstanceRepo:   instance.PracticeInstanceRepository,
+		RuntimeService: instance.PracticeRuntimeService,
 		ChallengeRepo:  challenge.Catalog,
 		ImageStore:     challenge.ImageStore,
 		Assessment:     assessment.ProfileService,

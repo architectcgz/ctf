@@ -141,7 +141,6 @@ var allowedModuleDependencies = map[string]struct{}{
 	"contest -> auth":                  {},
 	"contest -> challenge":             {},
 	"contest -> runtime":               {},
-	"identity -> auth":                 {},
 	"ops -> auth":                      {},
 	"ops -> practice":                  {},
 	"practice -> assessment":           {},
@@ -150,6 +149,7 @@ var allowedModuleDependencies = map[string]struct{}{
 	"practice -> runtime":              {},
 	"runtime -> challenge":             {},
 	"runtime -> contest":               {},
+	"runtime -> instance":              {},
 	"runtime -> ops":                   {},
 	"runtime -> practice":              {},
 	"teaching_readmodel -> assessment": {},
@@ -174,7 +174,6 @@ var allowedTransactionFiles = map[string]struct{}{
 
 var allowedOversizedRuntimeModules = map[string]struct{}{
 	"challenge/runtime/module.go": {},
-	"runtime/runtime/module.go":   {},
 }
 
 var allowedTimeNowFiles = map[string]struct{}{
@@ -237,6 +236,10 @@ var allowedTimeNowFiles = map[string]struct{}{
 	"practice/application/commands/score_service.go":                       {},
 	"practice/application/commands/submission_service.go":                  {},
 	"practice/infrastructure/repository.go":                                {},
+	"instance/application/commands/instance_service.go":                    {},
+	"instance/application/commands/maintenance_service.go":                 {},
+	"instance/application/queries/instance_service.go":                     {},
+	"instance/application/queries/proxy_ticket_service.go":                 {},
 	"runtime/application/commands/instance_service.go":                     {},
 	"runtime/application/commands/provisioning_service.go":                 {},
 	"runtime/application/commands/runtime_maintenance_service.go":          {},

@@ -14,12 +14,20 @@
 ## 当前设计
 
 - `code/backend/internal/app/composition/*.go`、`code/backend/internal/app/router.go`
-  - 负责：在进程级 composition root 中装配 `runtime`、`ops`、`identity`、`auth`、`challenge`、`assessment`、`teaching_readmodel`、`contest`、`practice`、`practice_readmodel` 模块，并统一管理 background jobs 与 closers
+  - 负责：在进程级 composition root 中装配 `container_runtime`、`ops`、`instance`、`identity`、`auth`、`challenge`、`assessment`、`teaching_readmodel`、`contest`、`practice`、`practice_readmodel` 模块，并统一管理 background jobs 与 closers；其中 `ContainerRuntimeModule` 是容器/运行时能力视图，`InstanceModule` 是实例与访问入口视图
   - 不负责：实现模块内部业务规则或绕过模块 runtime 直接在 app 层拼接业务依赖
 
 - `code/backend/internal/module/*/{api,application,domain,ports,infrastructure,runtime,contracts}`
   - 负责：按 Onion 依赖方向组织写模型和读模型模块，确保 `api -> application -> domain`，`infrastructure -> ports`，`runtime` 只做模块内 wiring
   - 不负责：跨模块直接依赖对方 `infrastructure`，或让 handler 成为“页面控制器式”大杂烩
+
+- `code/backend/internal/app/router.go`、`code/backend/internal/module/auth/contracts/token_service.go`
+  - 负责：在 app 层创建 `auth` 的 token service，并把它传给认证中间件、`auth` runtime、通知 WebSocket 和竞赛实时 WebSocket handler
+  - 不负责：把 token/session 能力重新挂回 `identity` 模块，或在 `identity` 里再包装一层认证抽象
+
+- `code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
+  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner` 与 AWD 防守 SSH gateway；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，`RuntimeModule` 仅保留兼容别名
+  - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的兼容 mirror 误写成长期 owner
 
 - `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
   - 负责：承担教师视角、练习视角和复盘聚合查询，把跨 owner 只读拼装集中到 readmodel 层
@@ -47,6 +55,13 @@
 - 当前模块边界已经从旧的 `teacher / system / container` 叙事收口到 `teaching_readmodel / ops / runtime`。
 - 下文保留的“结论 / 版图 / 硬规则 / 统一口径”是当前事实的详细展开；如果与 `composition` 或模块代码冲突，以代码和 guardrail test 为准。
 
+## 目标演进稿
+
+- [../../design/backend-module-boundary-target.md](../../design/backend-module-boundary-target.md)
+  - 状态：`Draft`，不是当前已落地事实。
+  - 用途：记录后端模块边界的目标划分、依赖方向、对外暴露规则和迁移债务，避免把当前历史遗留结构直接写成合理终态。
+  - 回收条件：完成对应迁移并通过架构 guardrail 后，再把目标结论回收到本文档的 `Current` 事实中。
+
 ## 1. 结论
 
 当前后端的事实口径如下：
@@ -54,7 +69,7 @@
 - **运行形态**：单个 Go API 进程，配套 PostgreSQL、Redis、Docker Engine，整体仍是单体部署。
 - **代码架构**：按业务模块组织的 Onion Architecture，而不是大一统的 handler/service/repository 三层堆叠。
 - **模块类型**：写模型模块负责状态变更，读模型模块负责跨模块只读聚合。
-- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_readmodel`、`ops`、`runtime`。
+- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_readmodel`、`ops`、`runtime` 物理模块，并在 app 层明确成 `container_runtime + instance` 两个组合视图。
 
 这里关注的是“系统现在是什么”，不记录迁移过程。
 
@@ -64,10 +79,12 @@
 
 | 模块 | 类型 | 当前 owner 能力 | 典型对外暴露 |
 |------|------|----------------|--------------|
-| `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket | 认证 handler、登录链路应用服务 |
-| `identity` | 写模型 | 用户、角色、权限、当前用户解析、管理端用户能力 | token service、用户查询、管理端用户 handler |
+| `auth` | 写模型 | 注册、登录、登出、CAS、会话票据、WebSocket ticket、基于 session 的当前用户解析 | 认证 handler、token service、登录链路应用服务 |
+| `identity` | 写模型 | 用户、角色、账号状态、资料、管理端用户能力 | 用户查询、资料命令/查询、管理端用户 handler |
 | `challenge` | 写模型 | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | 题目查询、镜像探针、Flag 规则读取 |
-| `runtime` | 写模型 / 基础运行时 | Docker 运行时、代理访问、端口与 ACL、清理任务、运行时统计 | 运行时 query、实例访问 handler、background jobs |
+| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计，以及 practice / challenge / contest 仍在复用的 container-facing adapter；底层实现仍落在 `internal/module/runtime/*` | `runtimemodule.Build(...)`、`Engine`、practice runtime bridge、底层容器适配实现 |
+| `container_runtime` | app 层组合视图（迁移中） | 在 `internal/app/composition/runtime_module.go` 中承接 challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | image runtime、runtime probe、运行时统计 query、AWD 文件写入 |
+| `instance` | 写模型（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 runtime repo / engine，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
 | `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | 开题/续期/销毁/提交等应用服务与 handler |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | 画像查询、报告导出、归档能力 |
@@ -139,23 +156,24 @@ flowchart LR
 
 `internal/app/buildRouterRuntime` 当前按以下顺序创建模块：
 
-1. `runtime`
+1. `container_runtime`
 2. `ops`
-3. `identity`
-4. `auth`
-5. `challenge`
-6. `assessment`
-7. `teaching_readmodel`
-8. `contest`
-9. `practice`
-10. `practice_readmodel`
+3. `instance`
+4. `identity`
+5. `auth`
+6. `challenge`
+7. `assessment`
+8. `teaching_readmodel`
+9. `contest`
+10. `practice`
+11. `practice_readmodel`
 
 这个顺序体现的是依赖准备关系，而不是页面菜单顺序。
 
 ### 4.3 生命周期管理
 
 - 模块自己的后台任务通过 `composition.Root.RegisterBackgroundJob` 注册到进程级任务表。
-- `runtime` 模块当前会注册清理任务，并在开启防守 SSH 时注册额外网关任务。
+- `instance` 组合视图当前负责注册 `runtime_cleaner` 和 AWD 防守 SSH gateway，并统一构建实例访问 handler；`container_runtime` 组合视图不再负责实例清理任务装配。
 - `HTTPServer` 启动时统一拉起 background jobs，关闭时统一停止任务并关闭模块异步组件。
 - `routerRuntime.closers` 负责承接需要显式 `Close(ctx)` 的模块级异步资源。
 
@@ -173,11 +191,13 @@ flowchart LR
 ```mermaid
 flowchart LR
     auth --> identity
+    challenge --> containerRuntime
     practice --> challenge
-    practice --> runtime
+    practice --> instance
+    instance --> containerRuntime
     practice --> assessment
     contest --> challenge
-    contest --> runtime
+    contest --> containerRuntime
     contest --> ops
     assessment --> challenge
     assessment --> practice
@@ -185,7 +205,8 @@ flowchart LR
     teachingReadmodel --> assessment
     teachingReadmodel --> contest
     teachingReadmodel --> practice
-    ops --> runtime
+    ops --> auth
+    ops --> containerRuntime
 ```
 
 ### 5.2 协作方式
@@ -199,12 +220,14 @@ flowchart LR
 
 ### 5.3 共享运行时边界
 
-`runtime` 是当前多个模块共享的运行时 owner：
+`runtime` 当前仍是共享的底层物理模块，但 app 层已经把“实例入口”从“容器运行能力”中拆成两个显式组合视图，并把实例 owner use case 直接装到 `internal/module/instance/*`：
 
-- `challenge` 通过它做镜像探测和运行时探针接入
-- `practice` 通过它完成实例编排、访问代理、续期与清理
-- `contest` 通过它完成 AWD 服务运行态、容器文件写入和运行时编排
-- `ops` 通过它读取运行时统计与概览信息
+- `challenge` 继续通过 `ContainerRuntimeModule` 做镜像探测和运行时探针接入
+- `contest` 继续通过 `ContainerRuntimeModule` 完成 AWD 服务运行态、容器文件写入和运行时编排
+- `ops` 继续通过 `ContainerRuntimeModule` 读取运行时统计与概览信息
+- `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
+- 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
+- `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 
@@ -214,9 +237,13 @@ flowchart LR
 
 这里只保留能力边界，不把页面视角混成 owner：
 
-- 身份、角色、权限、当前用户解析：`identity`，认证入口由 `auth` 承接。
+- 用户、角色、账号状态、资料与管理端用户能力：`identity`。
+- 会话、token、WebSocket ticket 与当前用户解析：`auth`。
 - 题目元数据、附件、Flag 规则、题包信息：`challenge`。
-- 运行时资源、访问代理、端口与 ACL、运行时任务：`runtime`。
+- 运行时资源、镜像探针、容器文件读写、端口与 ACL、运行时任务：`runtime`。
+- 容器运行时能力视图：当前在 app 层由 `container_runtime` 组合视图对外收口，底层实现仍落在 `runtime` 物理模块。
+- 实例记录、实例续期/销毁、实例可见性查询、proxy ticket 与实例维护调度：`internal/module/instance`。
+- 实例访问入口、AWD target / defense SSH 访问入口，以及实例 owner 与 runtime adapter 的最终装配：当前在 app 层由 `instance` 组合视图对外收口。
 - 练习开题、个人训练进度、Flag 提交与练习态更新：`practice`。
 - 竞赛配置、队伍、排行榜、AWD 轮次与服务运行态：`contest`。
 - 评估任务、画像、报告导出、归档：`assessment`。
@@ -230,6 +257,8 @@ flowchart LR
 ## 7. 当前架构约束
 
 - `internal/app/composition/architecture_test.go` 已经阻止 composition 和 runtime 回退到旧的 `internal/module/container` 依赖。
+- `code/backend/internal/app/router_test.go` 已经约束 `ContainerRuntimeModule` 不再暴露 `Handler` / `PracticeRuntimeService`，并要求 `BuildPracticeModule` 依赖 `InstanceModule`。
+- `code/backend/internal/app/architecture_rules_test.go` 已经阻止 `runtime` 模块继续跨模块直连 `instance/application`、`api` 或 `infrastructure` 层。
 - 新增模块时先确定 owner，再决定是否需要 `domain`、`ports`、`contracts`；禁止为了“看起来像 Clean Architecture”机械建空目录。
 - 长期事实文档只保留最终架构，不再保留“迁移中间态”“重构收口过程”文档。
 - 如果未来确实要拆分独立服务，应沿现有模块的 `application + ports + contracts` 边界抽离，而不是重新按页面或角色分组。

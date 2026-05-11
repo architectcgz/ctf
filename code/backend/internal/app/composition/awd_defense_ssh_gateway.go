@@ -42,8 +42,12 @@ type AWDDefenseSSHGateway struct {
 }
 
 type runtimeHTTPProxyTicketService interface {
+	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
+	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
 	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
+	MaxAge() int
 }
 
 type runtimeContainerInteractiveExecutor interface {
