@@ -198,6 +198,13 @@
   --metric-panel-helper-line-height: 1.7;
 }
 
+.metric-panel-teacher-surface {
+  --metric-panel-border: var(
+    --teacher-card-border,
+    color-mix(in srgb, var(--color-border-default) 62%, transparent)
+  );
+}
+
 .metric-panel-workspace-surface {
   --metric-panel-border: var(
     --workspace-line-soft,

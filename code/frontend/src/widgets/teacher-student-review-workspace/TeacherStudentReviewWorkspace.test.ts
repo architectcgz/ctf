@@ -98,6 +98,9 @@ describe('TeacherStudentReviewWorkspace', () => {
     expect(wrapper.text()).toContain('POST')
     expect(wrapper.text()).toContain('/login')
     expect(wrapper.findAll('.metric-panel-label svg')).toHaveLength(4)
+    expect(wrapper.get('.insight-kpi-grid').classes()).toContain('metric-panel-default-surface')
+    expect(wrapper.get('.insight-kpi-grid').classes()).toContain('metric-panel-teacher-surface')
+    expect(wrapper.get('.insight-kpi-grid').classes()).not.toContain('metric-panel-workspace-surface')
   })
 
   it('应在筛选变更时发出查询更新事件', async () => {

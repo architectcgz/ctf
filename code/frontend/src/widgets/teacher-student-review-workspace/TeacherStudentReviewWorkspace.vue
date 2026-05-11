@@ -157,7 +157,7 @@ const observations = computed(() =>
     </div>
 
     <div
-      class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
+      class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"
     >
       <article
         v-for="item in summaryItems"
@@ -297,20 +297,28 @@ const observations = computed(() =>
 }
 
 .review-observation {
+  --review-observation-accent: var(--journal-border);
   display: grid;
   gap: var(--space-1-5);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--review-observation-accent) 4%, transparent),
+      transparent 72%
+    ),
+    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--review-observation-accent) 30%, transparent);
   padding: var(--space-3) var(--space-3-5);
 }
 
 .review-observation--good {
-  border-color: color-mix(in srgb, var(--color-success-500) 40%, var(--journal-border));
+  --review-observation-accent: var(--color-success);
 }
 
 .review-observation--attention {
-  border-color: color-mix(in srgb, var(--color-warning-500) 40%, var(--journal-border));
+  --review-observation-accent: var(--color-warning);
 }
 
 .review-observation__label {
