@@ -1,185 +1,171 @@
 # 前端 API 层设计
 
-> 对应：../backend/04-api-design.md
->
-> **统一接口契约（强制）**：前后端联调时，接口契约以 `ctf/docs/contracts/openapi-v1.yaml`（机器可读）与 `ctf/docs/contracts/api-contract-v1.md`（说明性文档）保持一致为准；本文只描述前端实现策略与模块划分。
+> 状态：Current
+> 事实源：`code/frontend/src/api/`、`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`
+> 替代：无
 
----
+## 定位
 
-## 1. Axios 实例与拦截器
+本文档只说明前端请求层的封装方式、模块边界、错误回退和数据归一化规则。
 
-### 1.1 基础配置
+- 覆盖：`request.ts`、各业务 API 模块、teacher/admin 子目录拆分、错误模型和环境变量。
+- 不覆盖：页面如何展示错误提示、页面如何组织 loading 状态、后端接口语义本身；接口契约仍以 `docs/contracts/` 为准。
 
-```ts
-// api/request.ts
-const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
-  timeout: 15000,
-  // 若浏览器与 API 不同源，需要开启 withCredentials 以携带 session cookie
-  // withCredentials: true,
-  headers: { 'Content-Type': 'application/json' }
-})
-```
+## 当前设计
 
-### 1.2 请求拦截器
+- `code/frontend/src/api/request.ts`
+  - 负责：创建统一 `Axios` 实例、注入 `baseURL / timeout / withCredentials`、解包响应 envelope、构造 `ApiError`、处理 401/429/5xx 状态页回退、暴露 `request<T>()`
+  - 不负责：直接弹 Toast、直接决定页面重试策略，或实现 token refresh 链路
 
-```
-请求发出前:
-  ├─ 浏览器自动携带 session cookie
-  └─ 公开接口与受保护接口共用同一请求实例
-```
+- `code/frontend/src/api/auth.ts`、`challenge.ts`、`contest.ts`、`instance.ts`、`notification.ts`、`scoreboard.ts`
+  - 负责：按领域封装学生侧和共享能力接口，并在 API 边界完成 ID、可空字段和响应结构归一化
+  - 不负责：在页面层重复写 URL、手动解 envelope，或把同类接口继续散落到多个 view
 
-### 1.3 响应拦截器
+- `code/frontend/src/api/teacher/`、`code/frontend/src/api/admin/`
+  - 负责：按教师工作区和平台工作区拆分接口 owner，避免旧的 `api/teacher.ts`、`api/admin.ts` 大文件继续膨胀
+  - 不负责：要求所有后台接口都落在同一个 URL 前缀；当前 `authoring`、`reports` 等接口仍按后端契约分组
 
-```
-响应到达后:
-  ├─ HTTP 2xx + code === 0 → 返回 data 字段
-  ├─ HTTP 401 → 清理登录态并跳转 /login
-  ├─ HTTP 429 → Toast "请求过于频繁" + 读取 Retry-After
-  ├─ HTTP 4xx/5xx → 通过 errorMap 映射错误码为中文提示 → Toast
-  └─ 网络错误 → Toast "网络连接失败"
-```
+## 1. 请求入口与统一契约
 
-### 1.4 401 处理
+`request.ts` 当前固定使用以下基线：
 
-关键实现：认证已切到服务端 session，前端不再维护 token，也不做 `/auth/refresh` 重试链路；401 统一按登录态失效处理。
+| 配置项 | 当前值 | 来源 |
+| --- | --- | --- |
+| `baseURL` | `import.meta.env.VITE_API_BASE_URL || '/api/v1'` | `request.ts` |
+| `timeout` | `Number(import.meta.env.VITE_API_TIMEOUT) || 15000` | `request.ts` |
+| `withCredentials` | `true` | `request.ts` |
+| 头部 | `Content-Type: application/json` | `request.ts` |
+
+统一响应包结构：
 
 ```ts
-// 401 处理
-if (error.response?.status === 401) {
-  authStore.logout()
-  router.push('/login')
-  return Promise.reject(error)
+interface ApiEnvelope<T> {
+  code: number
+  message: string
+  data: T
+  request_id: string
+  errors?: Array<{ field: string; message: string }>
 }
 ```
 
-> 约束：前端禁止将后端返回的 `message` 当作 HTML 渲染；Toast/提示只显示文本，并优先使用 `errorMap`/通用文案（必要时附带 `request_id` 便于排障）。
+处理规则：
 
----
+1. HTTP 2xx 且 `code === 0` 时，`request<T>()` 返回 `data`
+2. HTTP 2xx 但 `code !== 0` 时，构造 `ApiError`
+3. HTTP 非 2xx 时，按状态码和错误码映射构造 `ApiError`
 
-## 2. API 模块划分
+## 2. 错误模型与回退
 
-每个模块对应一个文件，导出具名函数，与后端模块一一对应。
+`ApiError` 当前暴露这些字段：
 
-### 2.1 认证模块 `api/auth.ts`
+- `message`
+- `code`
+- `requestId`
+- `status`
+- `errors`
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `login(data)` | POST | `/auth/login` |
-| `register(data)` | POST | `/auth/register` |
-| `logout()` | POST | `/auth/logout` |
-| `getProfile()` | GET | `/auth/profile` |
-| `changePassword(data)` | PUT | `/auth/password` |
-| `getWsTicket()` | POST | `/auth/ws-ticket` |
+当前回退策略：
 
-说明：认证采用 HttpOnly session cookie；同源无需额外配置；不同源需 `withCredentials` + 后端 CORS 允许。
+| 场景 | 当前行为 |
+| --- | --- |
+| `401` | 构造 `ApiError`；非登录/注册请求会执行 `authStore.logout()` 并跳到 `/401` |
+| `429` | 读取 `Retry-After`，构造提示文案，跳到 `/429` |
+| `5xx` / `502` / `503` / `504` | 构造通用失败文案，跳到对应错误页 |
+| 后端业务错误码 | 通过 `mapErrorCode()` 生成用户可读文案 |
+| 网络错误 | 返回 `网络连接失败` 的 `ApiError` |
+| 取消请求 | 直接透传，不进入错误状态页 |
 
-### 2.2 靶场模块 `api/challenge.ts`
+相关代码：
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getChallenges(params)` | GET | `/challenges` |
-| `getChallengeDetail(id)` | GET | `/challenges/:id` |
-| `getChallengeWriteup(id)` | GET | `/challenges/:id/writeup` |
-| `upsertMyChallengeWriteup(id, data)` | POST | `/challenges/:id/writeup-submissions` |
-| `getMyChallengeWriteup(id)` | GET | `/challenges/:id/writeup-submissions/me` |
-| `submitFlag(id, flag)` | POST | `/challenges/:id/submissions` |
-| `unlockHint(id, level)` | POST | `/challenges/:id/hints/:level/unlock` |
-| `createInstance(id)` | POST | `/challenges/:id/instances` |
+- 错误页映射：`code/frontend/src/utils/errorStatusPage.ts`
+- 错误码文案：`code/frontend/src/utils/errorMap.ts`
 
-### 2.3 实例模块 `api/instance.ts`
+说明：
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getMyInstances()` | GET | `/instances` |
-| `destroyInstance(id)` | DELETE | `/instances/:id` |
-| `extendInstance(id)` | POST | `/instances/:id/extend` |
+- 当前前端不做 refresh token 重试；认证模式已经切到 HttpOnly session cookie。
+- 请求层只返回错误对象和状态页跳转，不在这里直接展示 Toast。
 
-### 2.4 竞赛模块 `api/contest.ts`
+## 3. 模块边界
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getContests(params)` | GET | `/contests` |
-| `getContestDetail(id)` | GET | `/contests/:id` |
-| `registerContest(id)` | POST | `/contests/:id/register` |
-| `getContestChallenges(id)` | GET | `/contests/:id/challenges` |
-| `submitContestFlag(contestId, contestChallengeId, flag)` | POST | `/contests/:id/challenges/:cid/submissions` |
-| `getScoreboard(id, params)` | GET | `/contests/:id/scoreboard` |
-| `getAnnouncements(id)` | GET | `/contests/:id/announcements` |
-| `createTeam(cid, data)` | POST | `/contests/:id/teams` |
-| `joinTeam(cid, tid)` | POST | `/contests/:id/teams/:tid/join` |
-| `getMyProgress(id)` | GET | `/contests/:id/my-progress` |
+### 3.1 共享与学生侧模块
 
-### 2.5 评估模块 `api/assessment.ts`
+| 文件 | 当前负责 |
+| --- | --- |
+| `api/auth.ts` | 登录、注册、登出、读取 profile、修改密码、获取 ws ticket |
+| `api/challenge.ts` | 题目列表、详情、题解、社区解法、Flag 提交、实例创建 |
+| `api/contest.ts` | 竞赛列表、详情、队伍、公告、排行榜、AWD 工作区与相关数据 |
+| `api/instance.ts` | 我的实例、实例续期、销毁、访问入口 |
+| `api/notification.ts` | 通知列表、标记已读 |
+| `api/scoreboard.ts` | 练习排行榜等独立排行入口 |
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getSkillProfile()` | GET | `/users/me/skill-profile` |
-| `getRecommendations()` | GET | `/users/me/recommendations` |
-| `getMyProgress()` | GET | `/users/me/progress` |
-| `getMyTimeline()` | GET | `/users/me/timeline` |
-| `exportPersonalReport(data)` | POST | `/reports/personal` |
+### 3.2 教师工作区模块
 
-### 2.6 通知模块 `api/notification.ts`
+`code/frontend/src/api/teacher/index.ts` 当前重导出以下子模块：
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getNotifications(params)` | GET | `/notifications` |
-| `markAsRead(id)` | PUT | `/notifications/:id/read` |
+| 文件 | 当前负责 |
+| --- | --- |
+| `teacher/classes.ts` | 班级目录、班级学生、班级摘要、趋势、复盘、洞察 |
+| `teacher/students.ts` | 学生进度、画像、建议、证据、时间线、复盘归档 |
+| `teacher/writeups.ts` | 题解审核、社区题解推荐/隐藏、人工评审流 |
+| `teacher/instances.ts` | 教师视角实例目录、销毁、班级报告导出 |
+| `teacher/awd-reviews.ts` | AWD 复盘、轮次、攻击记录、归档导出 |
 
-### 2.7 教师模块 `api/teacher.ts`
+### 3.3 平台工作区模块
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getClasses()` | GET | `/teacher/classes` |
-| `getClassStudents(name)` | GET | `/teacher/classes/:name/students` |
-| `getStudentProgress(id)` | GET | `/teacher/students/:id/progress` |
-| `getStudentEvidence(id)` | GET | `/teacher/students/:id/evidence` |
-| `getTeacherWriteupSubmissions(params)` | GET | `/teacher/writeup-submissions` |
-| `getTeacherWriteupSubmission(id)` | GET | `/teacher/writeup-submissions/:id` |
-| `reviewTeacherWriteupSubmission(id, data)` | PUT | `/teacher/writeup-submissions/:id/review` |
-| `exportClassReport(data)` | POST | `/reports/class` |
+`code/frontend/src/api/admin/index.ts` 当前重导出以下子模块：
 
-### 2.8 管理后台 `api/admin.ts`
+| 文件 | 当前负责 |
+| --- | --- |
+| `admin/platform.ts` | 平台概览、审计、镜像、通知发布等平台侧能力 |
+| `admin/users.ts` | 用户目录、创建、更新、删除、导入 |
+| `admin/authoring.ts` | 题目创作、题包导入、拓扑、题解管理、镜像相关创作接口 |
+| `admin/awd-authoring.ts` | AWD 题目库和导入管理 |
+| `admin/contests.ts` | 竞赛管理、公告、队伍、AWD 运维与导出 |
 
-| 函数 | 方法 | 路径 |
-|------|------|------|
-| `getDashboard()` | GET | `/admin/dashboard` |
-| `getUsers(params)` | GET | `/admin/users` |
-| `createUser(data)` | POST | `/admin/users` |
-| `updateUser(id, data)` | PUT | `/admin/users/:id` |
-| `deleteUser(id)` | DELETE | `/admin/users/:id` |
-| `importUsers(file)` | POST | `/admin/users/import` |
-| `getChallenges(params)` | GET | `/admin/challenges` |
-| `createChallenge(data)` | POST | `/admin/challenges` |
-| `updateChallenge(id, data)` | PUT | `/admin/challenges/:id` |
-| `deleteChallenge(id)` | DELETE | `/admin/challenges/:id` |
-| `getImages(params)` | GET | `/admin/images` |
-| `createImage(data)` | POST | `/admin/images` |
-| `deleteImage(id)` | DELETE | `/admin/images/:id` |
-| `getAuditLogs(params)` | GET | `/admin/audit-logs` |
-| `getContests(params)` | GET | `/admin/contests` |
-| `createContest(data)` | POST | `/admin/contests` |
-| `updateContest(id, data)` | PUT | `/admin/contests/:id` |
-| `deleteContest(id)` | DELETE | `/admin/contests/:id` |
+说明：
 
----
+- 当前事实已经不再是“一个 `api/teacher.ts`、一个 `api/admin.ts` 总表”。
+- 平台工作区接口并不都落在 `/admin/*` 下；例如题目创作走 `/authoring/*`，导出能力也会走 `/reports/*`。
 
-## 3. 错误码映射
+## 4. 数据归一化规则
 
-```ts
-// utils/errorMap.ts
-// 后端错误码 → 前端用户友好提示
-// 仅覆盖需要特殊提示的错误码，其余使用通用失败文案（可附带 request_id）
-const ERROR_MAP = {
-  11001: '用户名或密码错误',
-  11010: '登录失败次数过多，请稍后再试',
-  13002: '实例数量已达上限，请先销毁已有实例',
-  13003: 'Flag 错误，请检查后重试',
-  13004: '提交过于频繁，请稍后再试',
-  14003: '队伍人数已满',
-  14008: '邀请码无效',
-}
-```
+前端当前把“接口返回值清洗”放在 API 边界，而不是让页面自己兜底。
 
-优先使用 `ERROR_MAP` 中的提示；未命中则使用通用失败文案（可附带 `request_id` 便于定位）。后端返回的 `message` 仅作为调试信息输出到控制台，不作为用户提示直接透传（避免泄露内部细节）。
+主要规则：
+
+- 统一把数字 ID 转成字符串，例如：
+  - `auth.ts` 的 `getProfile()`
+  - `challenge.ts` 的 `normalizeChallengeDetail()`
+  - `contest.ts` 的 `normalizeContest()`、`normalizeTeam()`
+  - `instance.ts` 的 `normalizeInstanceData()`
+- 对可空字段补默认值，例如：
+  - `challenge.ts` 给 `tags`、`hints`、`need_target`、`instance_sharing` 补默认值
+  - `instance.ts` 统一计算 `remaining_extends`
+- 对页面更好处理的 404 语义，在 API 边界改写成 `null`，例如：
+  - `getChallengeWriteup()`
+  - `getMyChallengeWriteupSubmission()`
+- 上传类接口在 API 边界构造 `FormData`，例如：
+  - `admin/users.ts` 的 `importUsers()`
+
+这层的直接目的，是让 feature model 读取到的都是已经收口过的业务数据，而不是把“ID 可能是 number”“字段可能缺省”继续传播到页面。
+
+## 5. 接口或数据影响
+
+当前请求层依赖这些长期约定：
+
+- 认证依赖浏览器自动携带的 session cookie，因此 `withCredentials` 必须保持开启
+- 所有业务 API 默认从 `/api/v1` 起步，除非 `VITE_API_BASE_URL` 覆盖
+- 错误对象允许携带 `request_id`，页面可在必要时展示给用户或埋点系统
+- 表单校验失败可通过 `errors` 字段传递字段级错误
+
+## 6. 边界与已知例外
+
+- 页面 view 不直接 import 非 contract API 模块；业务调用应下沉到 feature model。
+- 请求层当前没有统一的自动重试机制；竞赛实时刷新、导出轮询等重试逻辑继续留在 feature/composable。
+- `getAxiosInstance()` 只作为少量特殊场景的逃生口，默认调用方仍应使用 `request<T>()`。
+
+## 7. Guardrail
+
+- 前端分层边界，防止低层 UI 和页面随意穿透到 API：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
+- route view 不直接依赖业务 API：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 长期接口契约：`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`

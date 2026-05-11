@@ -11,12 +11,14 @@
   - `internal/module/assessment/infrastructure`
   - `frontend/src/features/teacher-awd-review`
   - `frontend/src/widgets/teacher-awd-review`
+- 关联文档：
+  - `docs/architecture/features/赛事导出与复盘归档架构.md`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-29-awd-checker-completion`
-- 最后更新：`2026-05-07`
+- 最后更新：`2026-05-09`
 
 ## 1. 背景与问题
 
-教师端当前已经有独立的 AWD 复盘目录、详情页和正式导出链路，不再依附管理员运维页或浏览器本地拼装 JSON。需要明确的，是这条链路现在如何以代码事实组织：
+教师端当前已经有独立的 AWD 复盘目录、详情页和正式导出链路，不再依附管理员运维页或浏览器本地拼装 JSON。这里需要说明的，是“单场 AWD 赛事 archive 数据集”本身如何组织；通用 `reports` 生命周期和下载契约已经由共享专题单独 owning。
 
 - 教师复盘以“单场 AWD 赛事”为主身份
 - 页面详情与导出归档共用同一份 contest archive 读模型
@@ -26,6 +28,7 @@
 
 - 教师 AWD 复盘的正式只读模型是 `TeacherAWDReviewArchiveResp`。
 - `TeacherAWDReviewService` 负责目录和详情查询，`ReportService` 负责异步导出，二者共享同一份 `AWDReviewExportBuilder`。
+- 通用 `reports` 生命周期、状态轮询和下载契约由 `赛事导出与复盘归档架构.md` owning；本文只收口 AWD 赛事级 archive 数据集和导出门禁。
 - ZIP 归档可对任意 AWD 赛事生成当前快照；PDF 报告只允许在赛事 `ended` 后导出。
 - 页面详情和导出归档都来自同一份 archive builder，不允许各自拼一套事实。
 - AWD 赛事级复盘 archive 继续独立于个人 / 班级报告；不会把队伍分数直接回写成学生个人 `score / solved / rank`。
@@ -41,14 +44,14 @@
 
 - `TeacherAWDReviewService`
   - 负责：把 repository 结果组装成 `TeacherAWDReviewArchiveResp`
-  - 不负责：报告生命周期和下载状态
+  - 不负责：重新定义通用 report 任务生命周期
 
 - `AWDReviewExportBuilder`
   - 负责：复用 `GetContestArchive` 构建导出输入
   - 不负责：文件格式渲染
 
 - `ReportService`
-  - 负责：创建 `report` 记录、异步任务、状态轮询、下载过期控制
+  - 负责：复用通用 report 任务链创建 AWD review archive / report 导出任务
   - 不负责：重新组织 AWD 复盘事实
 
 - `RenderAWDReviewArchiveZip` / `RenderAWDReviewReportPDF`
@@ -89,6 +92,7 @@
   - `final`：赛事已结束
 - `team_id` 查询必须与 `round` 一起使用；后端会拒绝“只给 team 不给 round”的请求。
 - `export_ready` 由 contest 状态是否 `ended` 决定，前端据此控制是否允许导出 PDF 报告。
+- AWD 赛事导出的任务状态、下载轮询和过期控制复用共享 `reports` 契约，不在本文重复定义第二套任务模型。
 - AWD 赛事 archive 只服务赛事级复盘；个人 / 班级报告仍沿用练习型统计口径，AWD 个人事件通过证据链和归档页表达，而不是直接抬高 `score / solved / rank`。
 - 归档 ZIP 至少包含：
   - `manifest.json`
@@ -111,7 +115,7 @@
 1. 教师在详情页点击“归档导出”或“生成评估报告”。
 2. `TeacherAWDReviewHandler` 调用 `ReportService.CreateTeacherAWDReviewArchive` 或 `CreateTeacherAWDReviewReport`。
 3. `ReportService` 创建 `report` 记录，后台任务通过 `AWDReviewExportBuilder.BuildArchive` 读取当前 archive。
-4. ZIP 或 PDF 渲染完成后，生命周期仓库把状态更新为 `ready`，前端通过 `useReportStatusPolling` 轮询获取下载地址。
+4. ZIP 或 PDF 渲染完成后，生命周期仓库把状态更新为 `ready`；前端轮询和下载契约复用共享 report 任务链。
 
 ## 6. 接口与契约
 
@@ -127,6 +131,7 @@
 - `exportArchive` 不要求赛事结束
 - `exportReport` 仅在 `canExportReport = true` 时开放
 - 详情页 round 切换通过 query `round` 驱动，不另建第二套路由
+- 任务状态轮询与下载接口不在本文重复列出，复用 `赛事导出与复盘归档架构.md` 的共享契约
 
 ## 7. 兼容与迁移
 

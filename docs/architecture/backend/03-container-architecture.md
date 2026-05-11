@@ -1,6 +1,52 @@
 # 容器编排架构设计
 
-> 版本：v1.0 | 日期：2026-03-01 | 状态：Current
+> 状态：Current
+> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/config.go`
+> 替代：无
+
+## 定位
+
+本文档说明当前单机 Docker runtime、实例编排、访问代理和防守 SSH 边界。
+
+- 负责：描述当前后端如何创建、维护、回收练习 / 竞赛 / AWD 实例，以及哪些网络与访问能力已经采用。
+- 不负责：把未来多机调度、gVisor / Kata、浏览器式防守工作台或外部集群方案写成当前已落地事实。
+
+## 当前设计
+
+- `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/commands/runtime_maintenance_service.go`
+  - 负责：封装当前单机 Docker Engine 适配、实例查询 / 清理 / 维护命令、运行态统计与底层运行时抽象
+  - 不负责：拥有题目配置、竞赛规则或教师复盘语义；这些仍归 `challenge`、`contest`、`assessment` 等 owner 模块
+
+- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
+  - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制
+  - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
+
+- `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+  - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
+  - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
+
+- `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
+  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把 SSH 防守入口收敛到 ticket + scope 校验链路
+  - 不负责：让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
+
+## 接口或数据影响
+
+- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
+- 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
+- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`contest.awd.scheduler_*`，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+
+## Guardrail
+
+- 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
+- 练习实例创建与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`
+- 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
+- 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
+- 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
+
+## 历史迁移
+
+- 当前事实已经收口到“单机 Docker runtime + 调度器 + proxy ticket + SSH 防守网关”这条主链路。
+- 下文保留的 `gVisor / Kata`、多物理机扩展、Swarm、预热等章节只作为详细参考或演进说明；如果与前述当前设计冲突，以代码和配置为准。
 
 ## 1. 容器管理架构概览
 
@@ -135,10 +181,10 @@ stateDiagram-v2
 
 ### 2.4 状态机实现要点
 
-- 状态持久化到数据库（`container_instances` 表的 `status` 字段），避免进程重启丢失状态
+- 状态持久化到数据库（`instances` 表的 `status` 字段），避免进程重启丢失状态
 - 每次状态转换使用**乐观锁**（`UPDATE ... WHERE status = ? AND version = ?`），防止并发竞争
 - 异常状态（`failed`、`crashed`）设置最大保留时间（默认 30 分钟），超时后自动进入清理流程
-- 所有状态转换记录到 `instance_events` 表，便于审计和问题排查
+- 当前代码未维护独立 `instance_events` 表；问题排查主要结合 `instances.status`、`runtime_details`、`access_url`、结构化日志和相关审计记录完成
 
 ## 3. 网络隔离方案
 
@@ -985,33 +1031,32 @@ import (
 )
 
 // GenerateDynamicFlag 动态 Flag 生成
-// 三层密钥分离：global_secret / contest_salt / instance_nonce
-// 算法：HMAC-SHA256(global_secret + contest_salt, user_id:challenge_id:instance_nonce)
+// 当前训练/普通竞赛链路使用单一全局密钥 + 实例 nonce：
+// HMAC-SHA256(global_secret, user_id:challenge_id:instance_nonce)
 //
 // 安全保证：
 // 1. 不同用户得到不同 Flag（防止抄袭）
 // 2. 无法从 Flag 反推其他用户的 Flag
-// 3. 单一密钥泄露不会导致全部 Flag 可计算
+// 3. 全局密钥不入库，服务端可按 nonce 复算校验
 // 4. 同一用户同一题的不同实例产生不同 Flag（instance_nonce）
-func GenerateDynamicFlag(globalSecret, contestSalt string,
+func GenerateDynamicFlag(globalSecret string,
     userID, challengeID uint64, instanceNonce string) string {
 
-    key := []byte(globalSecret + contestSalt)
     message := fmt.Sprintf("%d:%d:%s", userID, challengeID, instanceNonce)
 
-    mac := hmac.New(sha256.New, key)
+    mac := hmac.New(sha256.New, []byte(globalSecret))
     mac.Write([]byte(message))
     hash := hex.EncodeToString(mac.Sum(nil))
 
-    // 取前 32 位作为 Flag 内容
     return fmt.Sprintf("flag{%s}", hash[:32])
 }
 ```
 
 **安全要点：**
-- `globalSecret` 存储在环境变量 `CTF_FLAG_SECRET`，禁止写入数据库或日志
-- `contestSalt` 每场竞赛独立随机 32 字节，在数据库中使用 AES-GCM 加密存储
-- `instanceNonce` 每个实例创建时随机生成，存入 instances 表
+- `globalSecret` 通过 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或等效部署注入提供，禁止写入数据库或日志
+- `instanceNonce` 每个实例创建时随机生成，存入 `instances.nonce`
+- 训练与普通竞赛实例由用户或队伍标识 + 题目编号 + nonce 复算 Flag
+- AWD 轮次 Flag 会将队伍、题目、赛事和轮次信息拼接为 nonce，再复用同一 HMAC 生成函数
 - Flag 验证时服务端重新计算比对，不依赖容器内的 Flag 值
 
 ### 7.3 Flag 注入方式
@@ -1563,8 +1608,8 @@ container:
     # 仅用于临时工作目录（如必须落地中间文件时使用），**必须挂载在 tmpfs**（例如 /run/ctf），禁止写入持久化磁盘。
     # 推荐实现：CopyToContainer 直接使用内存构建 tar（buf），避免任何宿主机落盘。
     tmp_dir: "/run/ctf"
-    # 动态 Flag 全局密钥通过环境变量注入：CTF_FLAG_SECRET（禁止写入数据库或日志）
-    # contest_salt 为每场竞赛独立随机值，存库时 AES-GCM 加密（contests.contest_salt_enc），服务端解密后参与 HMAC 计算
+    # 动态 Flag 全局密钥通过环境变量注入：CTF_CONTAINER_FLAG_GLOBAL_SECRET（禁止写入数据库或日志）
+    # 实例 nonce 在实例创建时生成并落库；AWD 轮次 Flag 通过 team/contest/round/challenge 组合信息拼接 nonce 后复用同一 HMAC 生成逻辑
 
   # 安全配置
   security:

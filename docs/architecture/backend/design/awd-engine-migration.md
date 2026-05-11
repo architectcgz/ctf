@@ -1,6 +1,51 @@
 # AWD 对抗引擎迁移设计
 
-> 状态：已采用
+> 状态：Current
+> 事实源：`code/backend/internal/module/contest/application/commands/`、`code/backend/internal/module/contest/application/jobs/`、`docs/contracts/challenge-pack-v1.md`
+> 替代：无
+
+## 定位
+
+本文档说明 AWD 运行态已经采用的 service 模型、轮次执行链路和题包 / runtime 的边界。
+
+- 负责：描述当前 AWD 能力如何落在 `contest`、`practice`、`runtime`、`challenge` 模块，以及 `service_id` 怎样成为运行态主身份。
+- 不负责：继续把“独立外部 A/D 引擎”或“旧的 challenge_id 直连运行态模型”写成当前事实。
+
+## 当前设计
+
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`、`code/backend/internal/module/challenge/domain/awd_package_parser.go`、`docs/contracts/challenge-pack-v1.md`
+  - 负责：把 AWD 题包中的镜像、checker 默认值、`defense_workspace`、`defense_scope` 等配置解析为 challenge 侧基础事实，并在导入阶段准备 build source / registry 校验前置条件
+  - 不负责：直接拥有赛事级服务顺序、轮次窗口、队伍实例或计分规则；这些仍归 `contest` 和 `practice`
+
+- `code/backend/internal/module/contest/application/commands/contest_awd_service_service.go`、`awd_service.go`、`contest_awd_service_support.go`
+  - 负责：将 `contest_awd_services.id` 固定为赛事运行态主身份，承接 `checker_type`、`checker_config`、分值和 runtime_config，并把 `service_id` 贯穿到 preview / readiness / 运行态查询
+  - 不负责：继续让 `contest_challenges` 或 `challenge_id` 承担每队每轮服务运行态 owner；`challenge_id` 现在只保留题目来源与基础默认值语义
+
+- `code/backend/internal/module/contest/application/jobs/awd_round_runtime.go`、`awd_round_updater.go`、`awd_checks.go`、`awd_score_recalc_loader.go`
+  - 负责：驱动轮次同步、checker 执行、`awd_team_services` 快照、`awd_attack_logs` / `awd_traffic_events` 计分输入和榜单回写
+  - 不负责：把 AWD 裁判主链路外包给独立进程或外部调度平台；当前 jobs 仍运行在同一后端进程里
+
+- `code/backend/internal/module/practice/application/commands/contest_instance_scope.go`、`instance_start_service.go`、`code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`
+  - 负责：按 `contest_id + team_id + service_id` 派生队伍共享实例、攻击访问 ticket 和防守 SSH ticket，使赛事运行态与实例访问都围绕 `service_id` 对齐
+  - 不负责：让学生直接按 `challenge_id` 打开独立实例，或回到浏览器式防守工作台主入口
+
+## 接口或数据影响
+
+- 当前 AWD 主数据表是 `contest_awd_services`、`awd_rounds`、`awd_team_services`、`awd_attack_logs`、`awd_service_operations`、`awd_defense_workspaces`；对应 migration 见 `code/backend/migrations/000001_init_schema.up.sql`、`000002_create_awd_service_operations.up.sql`、`000006_create_awd_defense_workspaces.up.sql`。
+- 管理端与学员端契约通过 `docs/contracts/openapi-v1.yaml` 暴露，包括 AWD service CRUD、checker preview、readiness、round summary、attack logs、workspace 等接口。
+- `service_id` 现在是运行态主身份，`challenge_id` 只承担题目来源和默认配置继承；若两者语义冲突，以 `contest_awd_services` 和运行态查询结果为准。
+
+## Guardrail
+
+- AWD service / preview / 运行态对齐：`code/backend/internal/module/contest/application/commands/awd_service_test.go`
+- readiness 门禁：`code/backend/internal/module/contest/application/commands/awd_readiness_gate_internal_test.go`、`awd_readiness_gate_command_test.go`
+- 轮次调度与锁续租：`code/backend/internal/module/contest/application/jobs/awd_round_scheduler_runtime_internal_test.go`、`awd_round_updater_test.go`
+- 路由与整体装配：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
+
+## 历史迁移
+
+- 这篇文档已经从“方案比较 / 迁移提案”收口为 adopted 专题事实；下文保留的背景、比较和迁移策略只作为 why / how 参考。
+- 如果下文某处仍把独立外部引擎、旧 `challenge_id` 运行态或未采用页面路线写成主链路，以本页 `当前设计`、`docs/contracts/challenge-pack-v1.md` 和当前代码为准。
 
 ## 0. 当前阶段落地边界（2026-04-18）
 

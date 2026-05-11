@@ -1,9 +1,23 @@
 # CTF 靶场平台 — 文件存储设计（MVP：宿主机文件系统）
 
-> 版本：v1.0 | 日期：2026-03-03 | 状态：草稿
-> 关联：题目包规范 `ctf/docs/contracts/challenge-pack-v1.md`
+> 状态：Current
+> 事实源：`code/backend/internal/module/challenge/application/commands/`、`docs/contracts/challenge-pack-v1.md`
+> 替代：无
+> 关联：题目包规范 `docs/contracts/challenge-pack-v1.md`
 
----
+## 当前设计
+
+- `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
+  - 负责：把题目包预览目录落到 `./data/challenge-import-previews` 或 `./data/awd-challenge-import-previews`，写入 `preview.json`，并在 commit 后清理预览目录；Guardrail 见 `code/backend/internal/module/challenge/runtime/module_import_test.go`
+  - 不负责：在 preview / commit 阶段启动容器或把导入预览目录直接暴露给学员访问
+
+- `code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/app/router_routes.go`
+  - 负责：提供题目附件下载与 `SelfCheckChallenge` 入口，并把对外下载路径收敛为 `/api/v1/challenges/attachments/...`
+  - 不负责：让调用方直接读取宿主机真实路径或绕过鉴权访问导入产物
+
+- `docs/contracts/challenge-pack-v1.md`、`docs/contracts/api-contract-v1.md`
+  - 负责：约束题目包 import preview / commit 契约、附件声明方式与导入后可见的对象结构
+  - 不负责：替代后端实现里对目录、清理、隔离和失败回滚的具体处理
 
 ## 1. 目标与约束
 

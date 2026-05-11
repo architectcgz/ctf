@@ -1,161 +1,155 @@
-# 前端构建、部署与开发规范
+# 前端构建与运行入口
 
----
+> 状态：Current
+> 事实源：`code/frontend/vite.config.ts`、`code/frontend/package.json`、`code/frontend/src/main.ts`
+> 替代：无
 
-## 1. 构建配置
+## 定位
 
-### 1.1 环境变量
+本文档只说明前端构建链、开发代理、运行入口和当前可执行的校验命令。
 
-```bash
-# .env.development
-# 推荐：开发环境走 Vite Proxy，保持同源（避免 CORS，并支持基于 Cookie 的刷新方案）
-VITE_API_BASE_URL=/api/v1
-VITE_WS_BASE_URL=/ws
+- 覆盖：Vite 配置、环境变量、插件、分包策略、启动脚本、全局样式入口。
+- 不覆盖：反向代理和生产部署的具体运维脚本；那类内容应进入 `docs/operations/`。
 
-# .env.production
-VITE_API_BASE_URL=/api/v1
-# 推荐：生产环境使用相对路径，自动继承当前站点协议（https -> wss）
-VITE_WS_BASE_URL=/ws
-```
+## 当前设计
 
-> 备注：如果开发环境必须直连后端（不同域/不同端口），需后端开启 CORS，并在刷新方案采用 HttpOnly Cookie 时确保 `withCredentials` + `SameSite` 配置正确。
+- `code/frontend/vite.config.ts`
+  - 负责：Vite 插件装配、`@` alias、开发服务器、`/api` 与 `/ws` proxy、ECharts 与生态依赖的 manual chunk 规则
+  - 不负责：运行时登录态恢复、页面错误处理或主题样式加载
 
-### 1.2 Vite 配置要点
+- `code/frontend/package.json`
+  - 负责：声明前端依赖版本和 `dev / build / preview / typecheck / lint / format / test / check:theme-tail` 脚本
+  - 不负责：替代仓库级 workflow 检查
 
-```ts
-// vite.config.ts
-export default defineConfig({
-  plugins: [vue(), tailwindcss()],
-  resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
-  },
-  server: {
-    proxy: {
-      '/api': { target: 'http://localhost:8080', changeOrigin: true },
-      '/ws': { target: 'ws://localhost:8080', ws: true }
-    }
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'echarts': ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/renderers', 'vue-echarts'],
-          'vendor': ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios']
-        }
-      }
-    }
-  }
-})
-```
+- `code/frontend/src/main.ts`
+  - 负责：创建 Vue 应用、挂载 Pinia 和 Router、接入全局错误处理、提前恢复 session、导入全局样式
+  - 不负责：每个页面自己的数据预取或业务重试策略
 
-### 1.2.1 本地共享组件自动注册
+## 1. 构建入口
 
-- 推荐保留 `unplugin-auto-import` 与 `unplugin-vue-components`，用于 Vue / Router / Pinia API 和仓库内本地组件的自动声明生成。
-- 主题统一走全局设计令牌与语义化 CSS 变量，不再维护外部 UI 组件库的第二套主题桥接变量。
+`vite.config.ts` 当前加载这些插件：
 
-### 1.3 分包策略
+| 插件 | 当前作用 |
+| --- | --- |
+| `@vitejs/plugin-vue` | Vue SFC 编译 |
+| `@tailwindcss/vite` | Tailwind 4 集成 |
+| `unplugin-auto-import` | 自动导入 `vue`、`vue-router`、`pinia`，生成 `src/auto-imports.d.ts` |
+| `unplugin-vue-components` | 本地组件类型声明，生成 `src/components.d.ts` |
 
-| Chunk | 包含内容 | 预估大小 |
-|-------|----------|----------|
-| vendor | Vue + Router + Pinia + Axios | ~60KB gzip |
-| echarts | ECharts 按需模块 | ~120KB gzip |
-| views/* | 各页面按路由自动分割 | 各 5-20KB |
-| index | 入口 + 全局组件 + 样式 | ~30KB gzip |
+固定配置：
 
----
+- alias：`@ -> code/frontend/src`
+- dev server：`0.0.0.0:5173`
 
-## 2. 部署方案
+## 2. 环境变量与开发代理
 
-### 2.1 Nginx 配置
+当前配置里真正生效的环境变量：
 
-```nginx
-server {
-    listen 80;
-    server_name ctf.campus.edu;
-    root /var/www/ctf/dist;
-    index index.html;
+| 变量 | 当前用途 | 默认值 |
+| --- | --- | --- |
+| `VITE_DEV_PROXY_TARGET` | 开发时 `/api` 和 `/ws` 的代理目标 | `http://127.0.0.1:8080` |
+| `VITE_API_BASE_URL` | Axios base URL | `/api/v1` |
+| `VITE_API_TIMEOUT` | Axios 请求超时 | `15000` |
+| `VITE_WS_BASE_URL` | WebSocket base path | `/ws` |
 
-    # SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+dev proxy 规则：
 
-    # API 代理
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Request-ID $request_id;
-    }
+- `/api` -> `proxyTarget`
+- `/ws` -> `wsProxyTarget`
+- `wsProxyTarget` 由 `proxyTarget.replace(/^http/i, 'ws')` 推导
 
-    # WebSocket 代理
-    location /ws/ {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 86400s;
-    }
+这意味着当前本地开发默认是：
 
-    # 静态资源缓存
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-```
+- 浏览器访问 Vite
+- Vite 代转 API 和 WebSocket
+- 前端仍按同源路径 `/api/v1`、`/ws` 发请求
 
-### 2.2 构建部署流程
+## 3. 当前分包策略
 
-```
-npm run build → dist/ → 复制到 Nginx 静态目录 → reload Nginx
-```
+`vite.config.ts` 当前没有用静态 chunk 表，而是按依赖路径做 `manualChunks(id)`：
 
----
+| Chunk | 当前内容 |
+| --- | --- |
+| `vue-core` | Vue 本体 |
+| `vue-ecosystem` | `vue-router`、`pinia`、`@vueuse/core` |
+| `network` | `axios` |
+| `vue-echarts` | `vue-echarts` |
+| `echarts-charts` | `echarts/charts` |
+| `echarts-components` | `echarts/components`、`echarts/features` |
+| `echarts-renderers` | `echarts/renderers` |
+| `echarts-runtime` | `echarts` 核心运行时 |
+| `zrender` | `zrender` |
 
-## 3. 开发规范
+当前目标不是“每个页面一个手写 chunk”，而是先把重依赖拆清，再让路由懒加载处理页面级切分。
 
-### 3.1 文件命名
+## 4. 运行时启动链
 
-| 类型 | 命名规则 | 示例 |
-|------|----------|------|
-| 视图组件 | PascalCase + View/List/Detail 后缀 | `DashboardView.vue` |
-| 通用组件 | PascalCase + App 前缀 | `AppButton.vue` |
-| Composable | camelCase + use 前缀 | `useCountdown.ts` |
-| Store | camelCase | `auth.ts` |
-| API 模块 | camelCase | `challenge.ts` |
-| 工具函数 | camelCase | `format.ts` |
+`src/main.ts` 当前启动顺序：
 
-### 3.2 组件规范
+1. `createApp(App)`
+2. `createPinia()`
+3. `app.use(pinia)`
+4. `app.use(router)`
+5. 注册 `app.config.errorHandler`
+6. 提前执行 `useAuthStore(pinia).restore()`
+7. `app.mount('#app')`
 
-- 使用 `<script setup>` 语法
-- 统一使用 `<script setup lang="ts">`，并在同目录内避免同时存在同名 `.js/.ts` 文件
-- Props 使用 `defineProps` 声明类型
-- Emits 使用 `defineEmits` 显式声明
-- 模板中使用 PascalCase 引用组件
-- 样式使用 Tailwind 类名，避免 `<style>` 块（除非需要深度选择器）
-- 共享组件与本地 modal / drawer 模板优先使用主题 token 与语义类控制样式，避免新增依赖特定外部组件库内部 DOM 的 `:deep()` 覆盖
+全局错误处理规则：
 
-### 3.4 类型检查（建议加入 CI）
+- `ApiError` 直接放过，由请求层和页面自己处理
+- 非 `ApiError` 的 Vue 运行时异常跳 `/500`
 
-- `vue-tsc --noEmit`：做 SFC/TS 类型检查（不产物）
+说明：
 
-### 3.3 Git 分支与提交
+- 登录态恢复不会阻塞应用挂载，但 Router guard 会等待同一个 `restorePromise`
+- 页面级数据预取仍放在各自 feature model，不挪到 `main.ts`
 
-- 分支: `feat/页面名` 或 `fix/问题描述`
-- 提交: 遵循全局 CODEX.md 中的 commit 规范
-- 每个页面可独立提交，保持原子性
+## 5. 全局样式入口
 
----
+`main.ts` 当前按顺序加载：
 
-## 4. 性能优化策略
+1. `style.css`
+2. `assets/styles/theme.css`
+3. `assets/styles/surface-shell-background.css`
+4. `assets/styles/teacher-surface.css`
+5. `assets/styles/page-tabs.css`
+6. `assets/styles/workspace-shell.css`
+7. `assets/styles/journal-eyebrows.css`
+8. `assets/styles/journal-notes.css`
+9. `assets/styles/journal-soft-surfaces.css`
+10. `assets/styles/journal-admin-shell.css`
+11. `assets/styles/journal-user-shell.css`
+12. `assets/styles/journal-user-directory.css`
 
-| 策略 | 实现方式 |
-|------|----------|
-| 路由懒加载 | 所有视图 `() => import()` |
-| ECharts 按需引入 | 仅导入 radar/line/bar/gauge + canvas renderer |
-| 图片懒加载 | `loading="lazy"` 属性 |
-| 虚拟滚动 | 审计日志等大列表场景（Phase 2） |
-| 请求去重 | Axios 拦截器对相同 GET 请求去重 |
-| 骨架屏 | 页面级 AppSkeleton 替代白屏 |
-| prefers-reduced-motion | 所有动画降级为 instant |
+这说明当前前端运行时依赖的是“样式层组合”，而不是运行时 UI 组件库主题注入。
+
+## 6. 当前脚本与最小校验
+
+`package.json` 当前脚本：
+
+| 命令 | 当前用途 |
+| --- | --- |
+| `npm run dev` | 本地开发 |
+| `npm run build` | 生产构建 |
+| `npm run preview` | 预览构建产物 |
+| `npm run typecheck` | `vue-tsc --noEmit` |
+| `npm run check:theme-tail` | 检查硬编码主题尾部 token |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier |
+| `npm run test` / `npm run test:run` | Vitest |
+
+当前文档任务关联度最高的运行校验：
+
+- `npm run check:theme-tail`
+- `npm run typecheck`
+- `npm run test:run`
+
+## 7. 部署边界
+
+当前前端代码只假设：
+
+- 静态资源由前端服务器或反向代理提供
+- `/api` 指向后端 HTTP
+- `/ws` 指向后端 WebSocket
+
+具体 Nginx、容器或 systemd 配置不在当前事实源里，避免把未维护的运维样例继续写成活动文档。

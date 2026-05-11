@@ -1,167 +1,180 @@
-# 前端统一间距体系（CTF）
+# 前端间距与主题节奏系统
 
-> 状态：已落地到共享样式层（workspace/tab/surface/divider）
-> 适用范围：`code/frontend/src` 全部路由页面与页面承载组件
+> 状态：Current
+> 事实源：`code/frontend/src/assets/styles/theme.css`、`code/frontend/src/style.css`、`code/frontend/src/assets/styles/*.css`、`code/frontend/package.json`
+> 替代：无
 
----
+## 定位
 
-## 1. 覆盖范围总览
+本文档只说明前端现在如何用全局 token、语义间距和共享样式壳保持页面节奏一致。
 
-本次按路由入口盘点了 **42 个前端路由页面**（来自 `router/index.ts`）：
+- 覆盖：`theme.css` 的间距刻度、workspace 语义变量、共享壳样式、目录页节奏和主题检查脚本。
+- 不覆盖：单个页面的全部 CSS 细节。
 
-- admin（12）
-  - `@/views/admin/AdminDashboard.vue`
-  - `@/views/admin/AuditLog.vue`
-  - `@/views/admin/ChallengeDetail.vue`
-  - `@/views/admin/ChallengeManage.vue`
-  - `@/views/admin/ChallengePackageFormat.vue`
-  - `@/views/admin/ChallengeTopologyStudio.vue`
-  - `@/views/admin/ChallengeWriteup.vue`
-  - `@/views/admin/CheatDetection.vue`
-  - `@/views/admin/ContestManage.vue`
-  - `@/views/admin/EnvironmentTemplateLibrary.vue`
-  - `@/views/admin/ImageManage.vue`
-  - `@/views/admin/UserManage.vue`
-- teacher（8）
-  - `@/views/teacher/ClassManagement.vue`
-  - `@/views/teacher/InstanceManagement.vue`
-  - `@/views/teacher/ReportExport.vue`
-  - `@/views/teacher/TeacherClassStudents.vue`
-  - `@/views/teacher/TeacherDashboard.vue`
-  - `@/views/teacher/TeacherStudentAnalysis.vue`
-  - `@/views/teacher/TeacherStudentManagement.vue`
-  - `@/views/teacher/TeacherStudentReviewArchive.vue`
-- errors（8）
-  - `@/views/errors/BadGatewayView.vue`
-  - `@/views/errors/ForbiddenView.vue`
-  - `@/views/errors/GatewayTimeoutView.vue`
-  - `@/views/errors/InternalServerErrorView.vue`
-  - `@/views/errors/NotFoundView.vue`
-  - `@/views/errors/ServiceUnavailableView.vue`
-  - `@/views/errors/TooManyRequestsView.vue`
-  - `@/views/errors/UnauthorizedView.vue`
-- profile（3）
-  - `@/views/profile/SecuritySettings.vue`
-  - `@/views/profile/SkillProfile.vue`
-  - `@/views/profile/UserProfile.vue`
-- notifications（2）
-  - `@/views/notifications/NotificationDetail.vue`
-  - `@/views/notifications/NotificationList.vue`
-- contests（2）
-  - `@/views/contests/ContestDetail.vue`
-  - `@/views/contests/ContestList.vue`
-- challenges（2）
-  - `@/views/challenges/ChallengeDetail.vue`
-  - `@/views/challenges/ChallengeList.vue`
-- auth（2）
-  - `@/views/auth/LoginView.vue`
-  - `@/views/auth/RegisterView.vue`
-- 其他（3）
-  - `@/views/dashboard/DashboardView.vue`
-  - `@/views/instances/InstanceList.vue`
-  - `@/views/scoreboard/ScoreboardView.vue`
+## 当前设计
 
-同时盘点了 **16 个页面承载组件**（`components/**/**Page.vue`），这些组件承担 teacher/admin/student 的主体布局实现，已纳入同一间距体系。
+- `code/frontend/src/assets/styles/theme.css`
+  - 负责：定义全局色彩、字号、间距刻度和 workspace 语义变量，例如 `--space-*`、`--space-workspace-*`、`--space-section-*`
+  - 不负责：直接绑定某个具体页面结构
 
----
+- `code/frontend/src/style.css`
+  - 负责：目录页、路由转场、页面标题、副标题和通用列表容器的共享节奏
+  - 不负责：替代各专题样式文件的局部视觉规则
 
-## 2. 现状审计结论
+- `code/frontend/src/assets/styles/workspace-shell.css`、`page-tabs.css`、`teacher-surface.css` 以及 `journal-*.css`
+  - 负责：把语义间距 token 落到工作台壳、tab rail、教师工作区和 journal 系列表面样式
+  - 不负责：允许页面继续写一套脱离 token 的平行间距系统
 
-对 `views + components` 的 class 间距工具类做统计后，发现：
+- `code/frontend/scripts/check-theme-tail.mjs`
+  - 负责：阻止 `src/components`、`src/views`、`src/composables`、`src/utils` 中继续写硬编码主题尾部 token
+  - 不负责：自动修正页面样式；它只做守门
 
-- 高频值集中在 `px-4 / px-3 / py-3 / gap-3 / py-2 / gap-2 / space-y-2`，说明页面已自然聚集到少量主值。
-- 仍有大量局部硬编码和页面私有微调（例如 `pt-*`、`mt-*` 单点修补），导致跨页节奏不稳定。
-- `workspace-shell`、`top-tabs`、`teacher-surface`、`journal-divider` 这些共享骨架层之前存在固定数值，页面间很难统一调整。
+## 1. 全局间距刻度
 
-结论：
+`theme.css` 当前提供的基础刻度以 4px 网格为主，保留若干半步：
 
-- 问题不在“没有间距值”，而在“缺少统一 token + 语义层绑定 + 共享层收敛”。
+- `--space-0`
+- `--space-0-5`
+- `--space-1`
+- `--space-1-5`
+- `--space-2`
+- `--space-2-5`
+- `--space-3`
+- `--space-3-5`
+- `--space-4`
+- `--space-4-5`
+- `--space-5`
+- `--space-5-5`
+- `--space-6`
+- `--space-7`
+- `--space-8`
+- `--space-10`
+- `--space-12`
 
----
+使用原则：
 
-## 3. 统一间距设计体系
+- 新布局优先从这些 token 取值
+- 不再把新的 `px` 常量散落到业务页面
 
-### 3.1 基础刻度（Global Scale）
+## 2. 语义间距变量
 
-定义在 `theme.css`：
+`theme.css` 当前已经把一部分高频节奏上升为语义变量：
 
-- `--space-0` 到 `--space-12`
-- 采用 4px 基础网格，并保留历史兼容步长（如 `--space-2-5`=10px、`--space-5-5`=22px）
+### 2.1 Workspace 壳层
 
-目标：
+- `--space-workspace-topbar-gap-x`
+- `--space-workspace-topbar-gap-y`
+- `--space-workspace-topbar-padding-top`
+- `--space-workspace-side-padding`
+- `--space-workspace-topbar-leading-gap-x`
+- `--space-workspace-topbar-leading-gap-y`
+- `--space-workspace-note-gap-x`
+- `--space-workspace-note-gap-y`
+- `--space-workspace-tabs-gap`
+- `--space-workspace-tabs-offset-top`
+- `--space-workspace-tab-padding-top`
+- `--space-workspace-tab-padding-bottom`
+- `--space-workspace-content-padding`
 
-- 新样式优先只用该刻度；避免新增任意 px/rem 常量。
+### 2.2 分区与分隔
 
-### 3.2 语义间距（Semantic Spacing）
+- `--space-section-gap`
+- `--space-section-gap-compact`
+- `--space-divider-gap`
+- `--space-divider-gap-compact`
 
-定义在 `theme.css`，面向布局语义而非组件名：
+这些语义变量的目的，是让页面结构改“语义层”，而不是逐页追着 `margin` 和 `padding` 改。
 
-- workspace 壳层
-  - `--space-workspace-topbar-gap-x/y`
-  - `--space-workspace-topbar-padding-top`
-  - `--space-workspace-side-padding`
-  - `--space-workspace-tabs-gap`
-  - `--space-workspace-tabs-offset-top`
-  - `--space-workspace-content-padding`
-- 分区与分隔线
-  - `--space-section-gap`
-  - `--space-section-gap-compact`
-  - `--space-divider-gap`
-  - `--space-divider-gap-compact`
+## 3. 当前共享绑定位置
 
-目标：
+### 3.1 `style.css`
 
-- 统一改“语义变量”，而不是全仓逐页改 `mt/pt/gap`。
+当前负责这些共享节奏：
 
-### 3.3 共享层绑定规则
+- `workspace-directory-section`
+- `workspace-directory-loading`
+- `workspace-directory-empty`
+- `workspace-directory-list`
+- `workspace-directory-pagination`
+- 页面标题和副标题的全局 token
+- route transition 位移和时长
 
-已绑定到以下共享样式文件：
+目录页当前规则：
 
-- `workspace-shell.css`
-  - 顶栏、tabs、content-pane 的 gap/padding 改为语义 token
-- `page-tabs.css`
-  - 通用 tab rail、tab heading/copy 的默认间距改为 token
-- `teacher-surface.css`
-  - board/section/filter/topbar/actions/summary 改为 token
-- `journal-soft-surfaces.css`
-  - note/eyebrow/button 的默认内边距与间距改为 token
-- `journal-notes.css`
-  - `journal-divider`、note helper/card padding 改为 token
+- `workspace-directory-section` 默认 `display: grid`
+- section 自己控制 `gap`
+- `list-heading` 默认不叠加额外底部 margin
+- `workspace-directory-toolbar` 通过 `--workspace-directory-toolbar-gap-bottom: 0` 收口，避免重复间距
 
----
+### 3.2 `workspace-shell.css`
 
-## 4. 组件与页面使用约束
+当前绑定：
 
-### 4.1 必须遵守
+- `workspace-topbar`
+- `topbar-leading`
+- `top-note`
+- `top-tabs`
+- `top-tab`
+- `content-pane`
 
-- 页面优先使用共享骨架（`workspace-shell` / `top-tabs` / `content-pane`）提供的间距。
-- 新增间距优先使用 `var(--space-*)` 或语义 token。
-- 页面局部需要微调时，先覆盖语义 token，再考虑局部类。
+这决定了工作台页面的上边距、tab rail 和正文 padding 都走语义 token。
 
-### 4.2 禁止事项
+### 3.3 `page-tabs.css`
 
-- 在页面 scoped CSS 中新增大量裸值（如 `padding: 22px 28px 0`）。
-- 同一层级混用多套间距逻辑（例如同时写 `space-y-*` 和额外 hardcoded `margin-top` 链式覆盖）。
-- 为了解决单页问题，新增只在一个页面可见的“伪全局常量”。
+当前绑定：
 
----
+- `workspace-tab-heading`
+- `workspace-tab-heading__title`
+- `workspace-tab-copy`
+- `top-tabs` 与 `top-tab` 的 journal 风格变体
 
-## 5. 落地与迁移策略
+### 3.4 `teacher-surface.css`
 
-- 第一阶段（已完成）：统一共享层 token 化（本次提交）。
-- 第二阶段（按页面批次）：
-  - teacher 类页面先迁移（班级管理/学生管理/分析页）
-  - admin 类目录页迁移（challenge/image/user/contest）
-  - student 类仪表盘子页收敛
-- 第三阶段：测试基线固化（style tests 覆盖 token 与共享层绑定）。
+当前绑定：
 
----
+- `teacher-surface-board`
+- `teacher-surface-section`
+- `teacher-surface-filter`
+- `teacher-topbar`
+- `teacher-summary`
+- `teacher-actions`
 
-## 6. 验收清单
+说明：
 
-- [x] 有全局间距刻度 token。
-- [x] 有语义间距 token。
-- [x] 共享壳层样式已消费语义 token。
-- [x] 通用分隔线样式可复用，且间距可 token 化。
-- [x] 文档写明覆盖范围、规则和迁移策略。
+- 教师工作区的主要垂直节奏已经通过 `--space-section-gap`、`--space-divider-gap` 等 token 收口
+- 仍有少量半结构样式保留在该文件内，但不应再新起一套间距体系
+
+## 4. 主题与明暗模式
+
+`theme.css` 同时承担主题变量基线：
+
+- 默认 `:root` 是 dark-first token
+- `[data-theme='light']` 会覆盖基础色板
+- `[data-brand='green' | 'cyan' | 'blue' | 'orange']` 会切主色
+
+间距系统和主题系统当前是一起工作的：
+
+- 页面节奏由 `--space-*` 与语义变量决定
+- 颜色和表面层级由 `--color-*` 与 `--theme-*` 决定
+
+## 5. 使用约束
+
+必须遵守：
+
+- 页面优先复用 `workspace-shell`、`content-pane`、`top-tabs`、`workspace-directory-*` 这些共享壳
+- 新增布局优先使用 `var(--space-*)` 或现有语义变量
+- 需要微调时，优先覆盖语义变量，而不是直接写更多裸值
+
+避免继续扩散：
+
+- 在业务组件里新增一串脱离 token 的固定 spacing 常量
+- 为了解决单页问题，临时叠加一层全局类名
+- 让目录 section 的 `gap` 和 toolbar 自带间距重复叠加
+
+## 6. Guardrail
+
+- 主题尾部硬编码检查：`code/frontend/scripts/check-theme-tail.mjs`
+- 运行命令：`cd code/frontend && npm run check:theme-tail`
+- 目录表格继续走主题 token：`code/frontend/src/components/common/__tests__/WorkspaceDataTable.test.ts`
+- 布局壳和 full-bleed 内容壳：`code/frontend/src/components/layout/__tests__/AppLayout.test.ts`
 

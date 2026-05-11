@@ -1,165 +1,171 @@
-# CTF 靶场平台 — 前端架构设计
+# CTF 靶场平台 — 前端架构总览
 
-> 版本：v1.0 | 日期：2026-03-02 | 状态：Current
-> 对应后端架构：../backend/01-system-architecture.md
-> 对应 API 设计：../backend/04-api-design.md
-> 对应设计系统：./06-components.md 与 ./09-spacing-system.md
-> 对应间距体系：./09-spacing-system.md
+> 状态：Current
+> 事实源：`code/frontend/src/`、`code/frontend/vite.config.ts`、`code/frontend/package.json`
+> 替代：无
+> 对应后端架构：`docs/architecture/backend/01-system-architecture.md`
+> 对应 API 设计：`docs/architecture/backend/04-api-design.md`
 
----
+## 当前设计
 
-## 1. 技术选型
+- `code/frontend/src/router/`、`code/frontend/src/config/backofficeNavigation.ts`
+  - 负责：注册学生端、`/academy/*`、`/platform/*` 路由，维护登录态守卫、默认首页映射和后台导航归属
+  - 不负责：页面内部数据流和业务状态机
 
-| 组件 | 选型 | 版本 | 选型理由 |
-|------|------|------|----------|
-| 框架 | Vue 3 | 3.5+ | Composition API，TypeScript 支持，校园项目学习成本低 |
-| 构建 | Vite | 7.x | 开发热更新快，Tailwind CSS 官方插件支持 |
-| 路由 | Vue Router 4 | 4.x | 路由守卫做权限控制，支持嵌套路由和懒加载 |
-| 状态管理 | Pinia | 3.x | Vue 3 官方推荐，TypeScript 友好，DevTools 集成 |
-| UI 原语 | 仓库内共享组件 + modal / drawer 模板 | - | 围绕业务工作台、主题 token 和交互一致性组织，减少外部组件库耦合 |
-| 样式 | Tailwind CSS 4 + 语义化 CSS 变量 | 4.x | 原子类负责布局，语义类和 token 负责工作台、弹窗、表格与状态风格 |
-| HTTP | Axios | 1.x | 拦截器统一处理 Token 刷新和错误码映射 |
-| 图表 | ECharts + vue-echarts | 6.x + 8.x | 能力雷达图、排行榜趋势图、仪表盘统计 |
-| 图标 | Lucide Vue Next | 0.x（锁版本） | 统一图标风格，Tree-shakable |
-| Markdown | md-editor-v3 | 5.x（锁版本） | 题目描述编辑（管理端）与渲染（学员端） |
-| 终端 | xterm.js | 5.x | WebSocket + xterm 实现浏览器内 SSH 连接靶机（Phase 2） |
-| WebSocket | 原生 WebSocket | - | 封装 composable，支持心跳、重连、ticket 认证 |
+- `code/frontend/src/views/**`、`code/frontend/src/features/**/model`、`code/frontend/src/composables/use*.ts`
+  - 负责：route view 只保留页面壳，页面级查询、导出、实时桥接和 query 同步下沉到 feature model / composable
+  - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面
 
-### 共享前端原语使用边界（必须）
+- `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
+  - 负责：登录快照、通知列表、竞赛共享状态这类跨页面共享数据
+  - 不负责：单页筛选、局部表单和一次性临时状态
 
-- **优先复用仓库内共享原语**（如 `ui-btn`、`WorkspaceDataTable`、`AdminSurfaceModal`、`DeleteConfirmModal`），避免同一工作流出现两套交互契约。
-- **只在两类场景新增通用组件**：
-  - 需要统一业务行为（如：权限控制按钮、提交 loading、防重复点击、统一错误展示）
-  - 需要统一主题 token 与工作台视觉骨架（如：危险确认、目录分页、侧边抽屉、指标卡片）
-- **主题统一**：以全局设计令牌和语义化 CSS 变量为唯一来源，不再维护外部 UI 组件库的第二套主题桥接变量。
+- `code/frontend/src/components/common/`、`code/frontend/src/components/common/modal-templates/`、`code/frontend/src/components/layout/`
+  - 负责：共享 UI 原语、overlay 模板和应用总布局；Guardrail 见 `code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`、`code/frontend/src/components/layout/__tests__/AppLayout.test.ts`
+  - 不负责：承载具体业务 owner
 
----
+## 1. 架构骨架
 
-## 2. 项目目录结构
+当前前端采用“薄 route view + feature model owner + 轻量 Pinia + 共享样式壳”的结构。
 
-```
-frontend/
-├── public/
-│   └── favicon.svg
+主链路：
+
+1. `router` 决定路由命名空间、认证和标题
+2. `views/**` 作为路由页面入口
+3. `features/**/model` 负责编排 API、query 同步、分页、导出和实时能力
+4. `stores/**` 只承接跨页共享状态
+5. `components/common/**` 和 `assets/styles/*.css` 负责统一交互骨架和视觉节奏
+
+## 2. 当前目录骨架
+
+```text
+code/frontend/
 ├── src/
-│   ├── api/                    # API 请求层
-│   │   ├── request.ts          # Axios 实例 + 拦截器
-│   │   ├── auth.ts             # 认证相关 API
-│   │   ├── challenge.ts        # 靶场 API
-│   │   ├── contest.ts          # 竞赛 API
-│   │   ├── instance.ts         # 实例 API
-│   │   ├── assessment.ts       # 评估 API
-│   │   ├── notification.ts     # 通知 API
-│   │   ├── admin.ts            # 管理后台 API
-│   │   └── teacher.ts          # 教师 API
-│   ├── assets/                 # 静态资源
-│   │   └── images/
-│   ├── components/             # 全局通用组件
-│   │   ├── common/             # 基础 UI 组件
-│   │   │   ├── AppButton.vue
-│   │   │   ├── AppCard.vue
-│   │   │   ├── AppInput.vue
-│   │   │   ├── AppSelect.vue
-│   │   │   ├── AppTable.vue
-│   │   │   ├── AppPagination.vue
-│   │   │   ├── AppTag.vue
-│   │   │   ├── AppToast.vue
-│   │   │   ├── AppDialog.vue
-│   │   │   ├── AppDrawer.vue
-│   │   │   ├── AppDropdown.vue
-│   │   │   ├── AppSkeleton.vue
-│   │   │   ├── AppEmpty.vue
-│   │   │   └── AppLoading.vue
-│   │   ├── layout/             # 布局组件
-│   │   │   ├── AppLayout.vue   # 主布局壳（TopNav + Sidebar + Content）
-│   │   │   ├── TopNav.vue
-│   │   │   ├── Sidebar.vue
-│   │   │   └── NotificationDropdown.vue
-│   │   └── charts/             # 图表组件
-│   │       ├── RadarChart.vue  # 能力雷达图
-│   │       ├── LineChart.vue   # 趋势折线图
-│   │       ├── BarChart.vue    # 柱状图
-│   │       └── GaugeChart.vue  # 仪表盘环形图
-│   ├── composables/            # 组合式函数
-│   │   ├── useAuth.ts          # 认证状态 + Token 管理
-│   │   ├── useWebSocket.ts     # WebSocket 连接管理
-│   │   ├── useToast.ts         # Toast 通知
-│   │   ├── usePagination.ts    # 分页逻辑
-│   │   ├── useCountdown.ts     # 倒计时（实例/竞赛）
-│   │   └── useClipboard.ts     # 复制到剪贴板
-│   ├── router/
-│   │   ├── index.ts            # 路由定义 + 守卫
-│   │   └── guards.ts           # 路由守卫逻辑
-│   ├── stores/                 # Pinia 状态管理
-│   │   ├── auth.ts             # 用户认证状态
-│   │   ├── notification.ts     # 通知状态
-│   │   └── contest.ts          # 当前竞赛状态（WebSocket 驱动）
-│   ├── utils/                  # 工具函数
-│   │   ├── constants.ts        # 常量定义（角色、状态、分类色标等）
-│   │   ├── format.ts           # 格式化（时间、数字、文件大小）
-│   │   └── errorMap.ts         # 错误码 → 用户提示映射
-│   ├── views/                  # 页面视图
-│   │   ├── auth/
-│   │   │   ├── LoginView.vue
-│   │   │   └── RegisterView.vue
-│   │   ├── dashboard/
-│   │   │   └── DashboardView.vue
-│   │   ├── challenges/
-│   │   │   ├── ChallengeList.vue
-│   │   │   └── ChallengeDetail.vue
-│   │   ├── contests/
-│   │   │   ├── ContestList.vue
-│   │   │   └── ContestDetail.vue  # 内含 Tab: 题目/公告/队伍/排行榜
-│   │   ├── scoreboard/
-│   │   │   └── ScoreboardView.vue
-│   │   ├── instances/
-│   │   │   └── InstanceList.vue
-│   │   ├── profile/
-│   │   │   ├── SkillProfile.vue
-│   │   │   └── UserProfile.vue
-│   │   ├── notifications/
-│   │   │   └── NotificationList.vue
+│   ├── api/
+│   │   ├── request.ts
+│   │   ├── auth.ts
+│   │   ├── challenge.ts
+│   │   ├── contest.ts
+│   │   ├── instance.ts
+│   │   ├── notification.ts
+│   │   ├── scoreboard.ts
 │   │   ├── teacher/
-│   │   │   ├── TeacherDashboard.vue
-│   │   │   ├── ClassManagement.vue
-│   │   │   └── ReportExport.vue
 │   │   └── admin/
-│   │       ├── AdminDashboard.vue
-│   │       ├── ChallengeManage.vue
-│   │       ├── ContestManage.vue
-│   │       ├── UserManage.vue
-│   │       ├── ImageManage.vue
-│   │       ├── CheatDetection.vue
-│   │       └── AuditLog.vue
-│   ├── App.vue
+│   ├── router/
+│   │   ├── index.ts
+│   │   ├── guards.ts
+│   │   └── routes/
+│   ├── stores/
+│   │   ├── auth.ts
+│   │   ├── notification.ts
+│   │   └── contest.ts
+│   ├── features/
+│   │   └── */model/
+│   ├── composables/
+│   │   └── use*.ts
+│   ├── components/
+│   │   ├── common/
+│   │   ├── common/modal-templates/
+│   │   ├── layout/
+│   │   ├── teacher/
+│   │   ├── platform/
+│   │   └── contests/ / scoreboard/ ...
+│   ├── views/
+│   │   ├── auth/
+│   │   ├── dashboard/
+│   │   ├── challenges/
+│   │   ├── contests/
+│   │   ├── notifications/
+│   │   ├── profile/
+│   │   ├── scoreboard/
+│   │   ├── teacher/
+│   │   └── platform/
+│   ├── assets/styles/
+│   ├── __tests__/
 │   ├── main.ts
-│   └── style.css               # Tailwind 入口 + @theme 设计令牌
-├── index.html
+│   └── style.css
 ├── vite.config.ts
-├── package.json
-└── .env.development            # 开发环境变量
+└── package.json
 ```
 
----
+## 3. 关键边界
 
-## 3. 版本锁定策略（必须）
+### 3.1 路由与命名空间
 
-- **禁止使用 `latest`**：所有依赖必须锁定到明确的 semver 区间（例如 `^7.3.1` / `~7.3.1`），避免“今天能跑、明天爆炸”。
-- **框架/构建链升级优先级**：Vite/Vue/Pinia 属于底座依赖，统一在一个迭代周期内升级与回归验证；业务依赖（图表/编辑器）按需升级。
-- **文档与代码一致性**：本文档以仓库当前前端基线（Vite 7 / Pinia 3 / ECharts 6）为准，后续升级需同步更新 `ctf/frontend/package.json` 与本目录文档。
+- 教师工作区正式 URL：`/academy/*`
+- 平台工作区正式 URL：`/platform/*`
+- 学生端当前是混合命名，不是统一 `/student/*` 前缀
+- 旧 `/teacher/*` 当前只保留 redirect 兼容，不再作为活动入口
 
----
+详情见：
 
-## 4. 安全基线（必须）
+- `02-routing.md`
 
-- **富文本/Markdown 安全**：题目描述、公告、通知等内容渲染前必须做 sanitize（白名单策略），禁止任意 HTML 注入（否则可直接窃取 Token/接管账号）。
-- **登录态存储**：必须由后端写入 HttpOnly session cookie；前端不持久化认证 token，也不把登录态落到 localStorage / IndexedDB。
-- **错误提示**：Toast/弹窗只展示用户可理解的文案；不直接透传后端 `message`（避免泄露内部信息），必要时附带 `request_id` 便于定位。
-- **WebSocket ticket**：短期一次性 ticket 如通过 URL query 传递，网关必须避免记录 querystring（防止在日志/代理链路中泄露）。
+### 3.2 状态 owner
 
----
+- 全局共享状态只保留 `auth`、`notification`、`contest`
+- 页面级状态默认进 `features/**/model` 或 `composables/use*.ts`
 
-## 5. TypeScript 基线（必须）
+详情见：
 
-- **默认 TypeScript**：除非被第三方库限制，`src/` 下所有业务代码使用 `.ts`；Vue SFC 使用 `<script setup lang="ts">`。
-- **类型边界**：API 返回值、Store 状态、路由 meta（如 `roles/title/icon`）必须有明确类型；禁止在核心链路长期使用 `any`。
+- `03-state-management.md`
+
+### 3.3 请求与实时
+
+- HTTP 统一走 `api/request.ts`，使用 session cookie、envelope 解包和 `ApiError`
+- WebSocket 统一走 `useWebSocket()`，ticket、心跳、重连和鉴权失败回退都在这一层
+
+详情见：
+
+- `04-api-layer.md`
+- `05-websocket-composables.md`
+
+### 3.4 共享原语与样式
+
+- 共享组件集中在 `components/common/`
+- overlay 模板集中在 `components/common/modal-templates/`
+- 全局节奏和主题由 `theme.css`、`style.css`、`workspace-shell.css`、`page-tabs.css`、`teacher-surface.css` 等样式文件共同维护
+
+详情见：
+
+- `06-components.md`
+- `09-spacing-system.md`
+
+## 4. 当前技术基线
+
+| 类别 | 当前基线 |
+| --- | --- |
+| 框架 | Vue 3 |
+| 构建 | Vite 7 |
+| 路由 | Vue Router 4 |
+| 状态管理 | Pinia 3 |
+| 样式 | Tailwind CSS 4 + CSS 变量 |
+| HTTP | Axios |
+| 图表 | ECharts + vue-echarts |
+| 图标 | lucide-vue-next |
+| Markdown / sanitize | marked + DOMPurify |
+| 测试 | Vitest + Vue Test Utils |
+
+说明：
+
+- 当前前端没有活动的外部 UI 组件库事实源；共享原语和样式壳都在仓库内维护。
+- 运行入口、代理和分包策略见 `08-build-deploy.md`。
+
+## 5. Guardrail
+
+- 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
+- route view 边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 后台导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
+- 共享弹窗模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
+- 主题尾部硬编码检查：`cd code/frontend && npm run check:theme-tail`
+
+## 6. 读取顺序
+
+1. `02-routing.md`
+2. `03-state-management.md`
+3. `04-api-layer.md`
+4. `05-websocket-composables.md`
+5. `06-components.md`
+6. `07-pages-dataflow.md`
+7. `08-build-deploy.md`
+8. `09-spacing-system.md`

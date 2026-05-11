@@ -1,115 +1,151 @@
 # 前端路由设计
 
-> 对应：01-architecture-overview.md §2 目录结构
+> 状态：Current
+> 事实源：`code/frontend/src/router/`、`code/frontend/src/config/backofficeNavigation.ts`、`code/frontend/src/utils/roleRoutes.ts`
+> 替代：无
 
----
+## 定位
 
-## 1. 路由表
+本文档只说明前端页面路由的注册方式、命名空间、权限守卫、错误页回退和导航匹配规则。
 
-### 1.1 公开路由（无需认证）
+- 覆盖：`Vue Router` 路由树、`/academy/*` 与 `/platform/*` 命名空间、登录态恢复、角色校验、错误状态页和默认首页映射。
+- 不覆盖：页面内部的 tab/query 状态、列表筛选、异步数据加载和业务流程编排；这些能力由 `code/frontend/src/features/**/model` 或 `code/frontend/src/composables/use*.ts` 负责。
 
-| 路径 | 名称 | 视图组件 | 说明 |
-|------|------|----------|------|
-| `/login` | Login | `auth/LoginView.vue` | 登录页 |
-| `/register` | Register | `auth/RegisterView.vue` | 注册页 |
+## 当前设计
 
-### 1.2 主布局路由（需认证，AppLayout 包裹）
+- `code/frontend/src/router/index.ts`、`code/frontend/src/router/routes/appShellRoute.ts`
+  - 负责：组装认证路由、主应用壳、错误页和工具页；在 `/` 下挂载学生端、教师端和平台端子路由，并把根路径重定向到 `/student/dashboard`
+  - 不负责：承载页面内的数据请求、筛选状态或业务动作
 
-| 路径 | 名称 | 视图组件 | 角色 | 说明 |
-|------|------|----------|------|------|
-| `/dashboard` | Dashboard | `dashboard/DashboardView.vue` | 全部 | 仪表盘（根据角色渲染不同内容） |
-| `/challenges` | Challenges | `challenges/ChallengeList.vue` | student, teacher | 靶场列表 |
-| `/challenges/:id` | ChallengeDetail | `challenges/ChallengeDetail.vue` | student, teacher | 靶场详情 + Flag 提交 |
-| `/contests` | Contests | `contests/ContestList.vue` | 全部 | 竞赛列表 |
-| `/contests/:id` | ContestDetail | `contests/ContestDetail.vue` | 全部 | 竞赛详情（Tab 子视图） |
-| `/scoreboard` | Scoreboard | `scoreboard/ScoreboardView.vue` | 全部 | 排行榜入口，展示竞赛排行列表和全站积分榜 |
-| `/scoreboard/:contestId` | ScoreboardDetail | `scoreboard/ScoreboardDetail.vue` | 全部 | 单个竞赛排行榜详情 |
-| `/instances` | Instances | `instances/InstanceList.vue` | student | 我的实例 |
-| `/skill-profile` | SkillProfile | `profile/SkillProfile.vue` | student | 能力评估 |
-| `/profile` | Profile | `profile/UserProfile.vue` | 全部 | 个人资料 + 安全设置 |
-| `/notifications` | Notifications | `notifications/NotificationList.vue` | 全部 | 通知中心 |
+- `code/frontend/src/router/routes/studentRoutes.ts`、`teacherRoutes.ts`、`platformRoutes.ts`
+  - 负责：声明各工作区的正式 URL、组件入口和 `meta.requiresAuth / meta.roles / meta.title / meta.icon`
+  - 不负责：根据角色动态拼接第二套路由树，也不在页面组件里复制权限判断
 
-### 1.3 教师路由（需 teacher/admin 角色）
+- `code/frontend/src/router/guards.ts`
+  - 负责：公开页放行、登录态恢复、未登录跳转 `/login?redirect=...`、角色不匹配跳 `/403`、异常时登出并回到登录页、`afterEach` 更新标题、`router.onError` 跳 `/500`
+  - 不负责：显示复杂业务降级 UI；守卫只做导航级回退
 
-| 路径 | 名称 | 视图组件 | 说明 |
-|------|------|----------|------|
-| `/teacher/dashboard` | TeacherDashboard | `teacher/TeacherDashboard.vue` | 教学概览 |
-| `/teacher/classes` | ClassManagement | `teacher/ClassManagement.vue` | 班级管理 |
-| `/teacher/reports` | ReportExport | `teacher/ReportExport.vue` | 报告导出 |
+- `code/frontend/src/config/backofficeNavigation.ts`、`code/frontend/src/utils/roleRoutes.ts`、`code/frontend/src/utils/routeTitle.ts`
+  - 负责：教师/管理员导航高亮、详情页回归所属目录项、角色默认首页和页面标题解析
+  - 不负责：替代路由注册本身，也不决定页面内的 tab 或二级状态
 
-### 1.4 管理员路由（需 admin 角色）
+## 1. 运行入口
 
-| 路径 | 名称 | 视图组件 | 说明 |
-|------|------|----------|------|
-| `/admin/dashboard` | AdminDashboard | `admin/AdminDashboard.vue` | 系统概览 |
-| `/admin/challenges` | ChallengeManage | `admin/ChallengeManage.vue` | 靶场管理 |
-| `/admin/contests` | ContestManage | `admin/ContestManage.vue` | 竞赛管理 |
-| `/admin/users` | UserManage | `admin/UserManage.vue` | 用户管理 |
-| `/admin/images` | ImageManage | `admin/ImageManage.vue` | 镜像管理 |
-| `/admin/cheat` | CheatDetection | `admin/CheatDetection.vue` | 作弊检测 |
-| `/admin/audit` | AuditLog | `admin/AuditLog.vue` | 审计日志 |
+路由注册从 `code/frontend/src/router/index.ts` 开始：
 
-### 1.5 系统路由（兜底）
+1. 挂载 `authRoutes`
+2. 挂载 `appShellRoute`
+3. 挂载 `errorRoutes`
+4. 挂载 `utilityRoutes`
+5. 在 `setupRouterGuards(router)` 中接入全局守卫
 
-| 路径 | 名称 | 视图组件 | 说明 |
-|------|------|----------|------|
-| `/403` | Forbidden | `errors/ForbiddenView.vue` | 无权限页面（可选；也可 Toast 后重定向仪表盘） |
-| `/:pathMatch(.*)*` | NotFound | `errors/NotFoundView.vue` | 404 页面（SPA fallback） |
+`appShellRoute` 当前是整个受保护应用的唯一壳：
 
----
+- 路径：`/`
+- 组件：`@/components/layout/AppLayout.vue`
+- 默认跳转：`/student/dashboard`
+- 子路由来源：
+  - `studentRoutes`
+  - `teacherRoutes`
+  - `platformRoutes`
 
-## 2. 路由守卫
+## 2. 路由命名空间与分组
 
-### 2.1 全局前置守卫流程
+### 2.1 公开页与错误页
 
-```
-beforeEach(to, from)
-  │
-  ├─ 白名单路由（/login, /register）？ → 放行
-  │
-  ├─ 无 Token？ → 重定向 /login?redirect=to.fullPath
-  │
-  ├─ Token 存在但用户信息未加载？ → 调用 GET /api/v1/auth/profile 加载
-  │   └─ 失败（Token 过期）？ → 尝试 refresh → 仍失败 → 清除状态 → /login
-  │
-  ├─ 路由 meta.roles 存在？ → 校验当前用户角色
-  │   └─ 角色不匹配？ → 重定向 /dashboard（或 /403）+ 无权限 Toast 提示
-  │
-  └─ 放行
-```
+| 分组 | 当前入口 | 说明 |
+| --- | --- | --- |
+| 认证页 | `/login`、`/register` | 来自 `authRoutes.ts`，不要求登录 |
+| 错误页 | `/401`、`/403`、`/404`、`/429`、`/500`、`/502`、`/503`、`/504` | 来自 `errorRoutes.ts`，由守卫和请求层回退 |
+| 工具页 | `/ui-lab` | 仅 `admin` 可访问，不属于正式业务导航入口 |
+| 兜底 | `/:pathMatch(.*)* -> /404` | 来自 `utilityRoutes.ts` |
 
-### 2.2 路由 meta 定义
+### 2.2 学生端与共享题目页
 
-```ts
-{
-  path: '/admin/challenges',
-  name: 'ChallengeManage',
-  component: () => import('@/views/admin/ChallengeManage.vue'),
-  meta: {
-    roles: ['admin'],       // 允许的角色列表
-    title: '靶场管理',       // 页面标题（document.title）
-    icon: 'Settings'        // 侧边栏图标名
-  }
-}
-```
+学生工作区当前不是“所有页面都带 `/student/*` 前缀”的模型，而是混合命名：
 
-### 2.3 竞赛详情 Tab 子路由
+| 路由组 | 当前正式路径 | 说明 |
+| --- | --- | --- |
+| 学生首页 | `/student/dashboard` | `/dashboard` 只是兼容 redirect |
+| 学生实例 | `/student/instances` | `/instances` 只是兼容 redirect |
+| 能力画像 | `/student/skill-profile` | `/skill-profile` 只是兼容 redirect |
+| 题目与竞赛共享页 | `/challenges`、`/challenges/:id`、`/contests`、`/contests/:id`、`/scoreboard`、`/scoreboard/:contestId` | 面向学生和教师共用 |
+| 通知与个人资料 | `/notifications`、`/notifications/:id`、`/profile`、`/settings/security` | 通过 `meta.roles` 或默认登录态控制 |
 
-ContestDetail 内部使用组件级 Tab 切换（非路由级），通过 query 参数 `?tab=challenges|announcements|team|scoreboard` 控制当前 Tab，支持浏览器前进后退和直接链接分享。
+约束：
 
----
+- 不能把现有学生路由误写成“统一的 `/student/*` 命名空间”。
+- 页面内部 tab 状态不进入顶层路由表，继续放在 feature model 里处理，例如 `useContestDetailRoutePage`、`useScoreboardRoutePage`、`useStudentDashboardPage`。
 
-## 3. 懒加载策略
+### 2.3 教师工作区
 
-- 所有视图组件使用 `() => import()` 动态导入
-- 按路由分组自动 code splitting（Vite 默认行为）
-- ECharts 按需引入（仅导入 radar/line/bar/gauge 组件）
-- md-editor-v3 仅在管理端编辑页引入，学员端使用轻量 Markdown 渲染
+`teacherRoutes.ts` 当前正式入口是 `/academy/*`：
 
----
+| 路由组 | 当前正式路径 | 兼容入口 |
+| --- | --- | --- |
+| 教学概览 | `/academy/overview` | `/teacher/dashboard` |
+| 班级与学生 | `/academy/classes`、`/academy/students`、`/academy/classes/:className/**` | 对应 `/teacher/classes...`、`/teacher/students...` |
+| AWD 复盘 | `/academy/awd-reviews`、`/academy/awd-reviews/:contestId` | `/teacher/awd-reviews...` |
+| 实例管理 | `/academy/instances` | `/teacher/instances` |
 
-## 4. 页面标题与菜单元信息（约定）
+说明：
 
-- `meta.title`：用于设置 `document.title`（建议统一前缀，例如 `CTF 靶场平台 - {title}`）。
-- `meta.icon`：侧边栏图标名（Lucide icon key）。
-- `meta.roles`：与后端一致的角色枚举：`student` / `teacher` / `admin`（文档中表格的 S/T/A 仅用于说明权限范围）。
+- `/teacher/*` 仍存在于当前代码里，但只做 redirect 兼容，不是新的活动命名空间。
+- 教师端多数页面同时允许 `teacher`、`admin` 访问，最终权限仍以 `meta.roles` 判定。
+
+### 2.4 平台工作区
+
+`platformRoutes.ts` 当前正式入口是 `/platform/*`：
+
+| 路由组 | 当前正式路径 | 权限说明 |
+| --- | --- | --- |
+| 平台总览与教学目录 | `/platform/overview`、`/platform/classes`、`/platform/students`、`/platform/classes/:className/**`、`/platform/awd-reviews/**`、`/platform/instances` | 主要面向 `admin` |
+| 题目创作与题库管理 | `/platform/challenges/**`、`/platform/awd-challenges/**` | 当前允许 `teacher`、`admin` |
+| 赛事运维与大屏 | `/platform/contest-ops/**`、`/platform/contests/:contestId/**` | 当前允许 `admin`，导航匹配由 `backofficeNavigation.ts` 维护 |
+| 治理类页面 | 用户、通知、镜像、审计等 `platform` 目录页面 | 当前由 `admin` 使用 |
+
+说明：
+
+- 当前前端页面路由树里没有活动的 `/admin/*` 页面命名空间。
+- `/platform/*` 表示平台工作区 owner，而不是“所有页面都只能由 admin 访问”；共享创作页仍以 `meta.roles` 决定访问角色。
+
+## 3. 路由守卫与回退
+
+`code/frontend/src/router/guards.ts` 当前守卫顺序如下：
+
+1. 命中公开页 `/login` 或 `/register` 时直接放行
+2. 对公开页也会尝试 `ensureSessionRestored()`，已登录用户访问登录/注册页时，按 `redirect` 参数或 `getRoleDashboardPath()` 跳转
+3. 受保护页面在首次进入时调用 `authStore.restore()`
+4. 恢复后仍未登录时，跳转到 `/login?redirect=${to.fullPath}`
+5. `meta.roles` 与当前用户角色不匹配时，提示“无权限访问该页面”并跳 `/403`
+6. 守卫内部出现异常时，执行 `authStore.logout()` 并跳回登录页
+7. `afterEach` 调用 `resolveRouteTitle()`，按 `APP_TITLE_PREFIX` 更新页面标题
+8. `router.onError` 统一跳到 `/500`
+
+相关路径：
+
+- 登录态恢复：`code/frontend/src/stores/auth.ts`
+- 默认首页映射：`code/frontend/src/utils/roleRoutes.ts`
+- 标题解析：`code/frontend/src/utils/routeTitle.ts`
+
+## 4. 导航匹配与边界
+
+当前导航匹配不依赖“页面自己知道应该高亮哪个菜单”，而是统一交给 `code/frontend/src/config/backofficeNavigation.ts`。
+
+- 教师与管理员详情页会回映到所属目录项，而不是把每个详情页单独做成导航入口。
+- `getBackofficeModuleByPath()` 负责把 `/academy/classes/:className/students/:studentId/review-archive` 这类详情页映射回 `operations` 模块。
+- `getVisibleBackofficeSecondaryItems()` 负责根据角色裁剪可见目录项，并保持当前项的 active 状态。
+
+这层规则的直接目的，是避免在 `.vue` 页面里重复写导航归属判断。
+
+## 5. 兼容与历史例外
+
+- `/teacher/*` 当前仍保留 redirect，属于旧命名空间迁移兼容；正式事实源只认 `/academy/*`。
+- `/dashboard`、`/instances`、`/skill-profile` 当前仍保留 redirect，属于学生端早期路径兼容。
+- `resolveRouteTitle()` 对 `/dashboard` 和 `/student/dashboard` 做了特例处理，允许通过 query/变体路由生成不同标题。
+
+## 6. Guardrail
+
+- 路由 view 不能直接持有路由状态或 query-tab 逻辑：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 教师/管理员导航映射和命名空间匹配：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
+- 默认首页与角色跳转：`code/frontend/src/utils/roleRoutes.ts`

@@ -1,12 +1,52 @@
 # CTF 靶场平台 API 设计规范
 
-> 版本：v1.0 | 更新日期：2026-04-01
+> 状态：Current
+> 事实源：`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`、`code/backend/internal/app/router_routes.go`
+> 替代：无
 
-> 接口契约：
-> - OpenAPI（机器可读）：`ctf/docs/contracts/openapi-v1.yaml`
-> - 说明性契约（字段/示例补充）：`ctf/docs/contracts/api-contract-v1.md`
+## 定位
 
----
+本文档说明当前后端 HTTP / WebSocket 契约的事实入口、路由装配边界和统一响应口径。
+
+- 负责：描述当前接口命名空间、Envelope、鉴权票据、核心模块路由以及契约事实源的优先级。
+- 不负责：替代 OpenAPI、handler 实现或前端页面文案成为唯一真相；也不把旧示例中的过时字段自动视为当前契约。
+
+## 当前设计
+
+- `docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`
+  - 负责：定义当前 HTTP / WebSocket 契约、Envelope、分页结构、AWD service/readiness/checker preview、challenge import/self-check、teacher review 等字段事实；OpenAPI 是机器可读主契约，说明文档补充示例与非 OpenAPI 细节
+  - 不负责：承载 handler 内部实现、权限判断细节或运行时补偿逻辑；这些仍以后端代码为准
+
+- `code/backend/internal/app/router.go`、`code/backend/internal/app/router_routes.go`
+  - 负责：装配 `/api/v1/*` 路由、模块 handler、中间件、审计入口和运行时代理路径，把 `auth`、`challenge`、`practice`、`contest`、`assessment`、`ops` 的对外命名空间固定下来
+  - 不负责：在 composition 层实现业务状态机或直接拼装 DTO 字段
+
+- `code/backend/internal/middleware/request_id.go`、`auth.go`、`audit.go`、`recovery.go`
+  - 负责：补齐 `request_id`、认证上下文、审计记录和统一错误恢复，使 `code / message / data / request_id` 的响应口径能稳定落到 handler 链路
+  - 不负责：替代模块 application service 的业务错误语义，或绕开模块 owner 直接写协议分支
+
+- `code/backend/internal/module/*/api/http/*.go`、`code/backend/internal/module/auth/infrastructure/token_service.go`、`code/backend/internal/app/composition/ops_module.go`
+  - 负责：在各模块内完成参数绑定、DTO 映射、Session / WebSocket ticket、实例访问 proxy ticket 和通知推送接入
+  - 不负责：让前端直接依赖底层 Redis / Docker / SQL 结构，或回退到无 Envelope、无 request id 的散装接口风格
+
+## 接口或数据影响
+
+- 当前统一响应结构以 `ApiEnvelopeBase` 为根，核心字段是 `code`、`message`、`data`、`request_id`；见 `docs/contracts/openapi-v1.yaml`。
+- 当前认证仍以服务端 Session + Cookie 为主，并通过 `GET /api/v1/ws-ticket`、实例访问 proxy ticket、AWD 攻击 / 防守 ticket 承接 WebSocket 与运行时访问。
+- 当前重要 API 面包括 challenge import / commit / self-check、附件下载、实例访问、竞赛状态 / 榜单、AWD service 管理 / preview / readiness / round / attack log，以及教师复盘 / 报告导出链路；如果示例与 `openapi-v1.yaml` 冲突，以契约文档优先。
+
+## Guardrail
+
+- 路由装配与全链路 HTTP 验证：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
+- 状态矩阵与实例访问链路：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
+- Auth / Session 契约：`code/backend/internal/module/auth/api/http/http_integration_test.go`
+- 通知与 WebSocket 契约：`code/backend/internal/module/ops/api/http/notification_http_integration_test.go`
+- 题目导入与附件 / 自检契约：`code/backend/internal/app/challenge_import_integration_test.go`
+
+## 历史迁移
+
+- 当前接口事实已经收口为“契约文档 + router 装配 + 模块 handler”三层结构，不再依赖单篇 API 说明文档独自维护所有字段。
+- 下文保留的示例、错误码段落和列表页说明仍可作为详细参考；若与 `docs/contracts/openapi-v1.yaml` 或当前 handler 行为冲突，以契约和代码为准。
 
 ## 1. API 设计规范
 

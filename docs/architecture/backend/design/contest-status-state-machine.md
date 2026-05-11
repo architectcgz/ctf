@@ -1,6 +1,51 @@
 # 竞赛状态机设计
 
-> 状态：已采用
+> 状态：Current
+> 事实源：`code/backend/internal/model/contest.go`、`code/backend/internal/module/contest/application/jobs/`、`code/backend/internal/module/contest/infrastructure/`
+> 替代：无
+
+## 定位
+
+本文档说明当前竞赛状态机的状态集合、推进方式和副作用重放边界。
+
+- 负责：描述 `contests.status`、`contest_status_transitions`、调度锁与手动 / 自动状态迁移的统一口径。
+- 不负责：继续把旧的 `published / cancelled / archived` 等历史候选状态写成当前后端事实。
+
+## 当前设计
+
+- `code/backend/internal/model/contest.go`、`code/backend/internal/module/contest/domain/status_transition.go`
+  - 负责：定义当前已采用的竞赛状态集合 `draft / registration / running / frozen / ended`，以及 `manual_update / time_window` 等迁移原因和副作用状态 `pending / succeeded / failed`
+  - 不负责：承诺额外状态枚举已经落地，或让页面自行扩展状态含义脱离后端模型
+
+- `code/backend/internal/module/contest/infrastructure/contest_status_update_repository.go`、`contest_status_transition_repository.go`
+  - 负责：在事务内更新 `contests.status`，并持久化 `contest_status_transitions` 作为迁移审计与副作用重放依据
+  - 不负责：允许后台命令或脚本直接改 `contests` 行而绕开 transition 记录
+
+- `code/backend/internal/module/contest/application/jobs/status_update_runner.go`、`lock_keepalive.go`、`status_transition_service.go`
+  - 负责：按时间窗自动推进状态、持有并续租调度锁、跳过已被其他实例持有的 scheduler，并为 side effect replay 提供稳定入口
+  - 不负责：依赖外部 cron 在数据库外维护一套平行状态机，或让锁过期后出现多实例并发推进
+
+- `code/backend/internal/module/contest/application/commands/contest_update_commands.go`、`scoreboard_admin_freeze_commands.go`
+  - 负责：承接管理员手动修改或冻结操作，并复用同一套 transition 协议和副作用 runner
+  - 不负责：绕过状态机直接写榜单缓存、实例清理或公告广播逻辑
+
+## 接口或数据影响
+
+- 当前状态机直接影响 `contests.status`、`contest_status_transitions.side_effect_status`、榜单冻结逻辑以及 AWD 自动开赛 / 轮次调度窗口。
+- 管理端更新赛事、冻结榜单和只读查询仍通过 `docs/contracts/openapi-v1.yaml` 中的 contest / scoreboard 契约暴露；接口只消费状态机结果，不重定义状态枚举。
+- Redis 中只保留调度锁和辅助缓存，锁 key 见 `code/backend/internal/pkg/redis/keys.go`，不会替代 PostgreSQL 中的 transition audit。
+
+## Guardrail
+
+- migration 与状态迁移表：`code/backend/internal/app/contest_status_transition_migration_test.go`
+- 时间口径与 contest 时间字段：`code/backend/internal/app/contest_time_migration_test.go`
+- 自动调度与锁行为：`code/backend/internal/module/contest/application/jobs/status_updater_test.go`
+- 手动状态更新共享同一协议：`code/backend/internal/module/contest/application/commands/contest_service_test.go`
+
+## 历史迁移
+
+- 这篇文档的 adopted 事实已经收口到五态状态机和 `contest_status_transitions` 审计表。
+- 下文保留的背景、目标和分阶段落地只作为历史说明；若与 `code/backend/internal/model/contest.go`、`status_update_runner.go` 冲突，以当前代码为准。
 
 ## 0. 落地状态（2026-05-03）
 

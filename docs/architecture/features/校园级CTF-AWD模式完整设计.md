@@ -14,8 +14,13 @@
   - `code/frontend/src/views/contests`
   - `code/frontend/src/views/teacher`
   - `code/frontend/src/router/routes`
+- 关联文档：
+  - `docs/architecture/features/AWD学员实战工作台设计.md`
+  - `docs/architecture/features/AWD防守工作区与边界设计.md`
+  - `docs/architecture/features/AWD教师复盘归档与报告导出设计.md`
+  - `docs/architecture/features/教学复盘优化设计.md`
 - 过程追溯：旧稿 `校园级CTF-AWD模式完整设计.md`
-- 最后更新：`2026-05-07`
+- 最后更新：`2026-05-09`
 
 ## 1. 背景与问题
 
@@ -24,6 +29,7 @@
 - AWD 与 Jeopardy 已经在资源层和赛事层分开建模
 - 比赛编排、运行时、计分、学生入口和教师复盘都已经落在主平台内
 - 深度防守入口已经收敛为 SSH，不是浏览器 IDE
+- 学生战场、SSH 防守边界、教师赛事复盘和个人教学复盘都已经各自有 owning 专题；本文只保留六层总览和跨层主身份
 
 ## 2. 架构结论
 
@@ -41,6 +47,7 @@
   - `awd_traffic_events`
 - 当前学生攻防入口是“内嵌战场工作台 + target proxy + defense SSH”，不是浏览器源码编辑器。
 - 当前教师入口是“AWD 赛事复盘 + 学生证据读模型 + 评估导出”三条并行链路，而不是单一大而全读模型。
+- 学生战场、SSH 防守边界、AWD 赛事 archive 和个人教学复盘细节分别由对应 owning 专题文档继续展开，本文不重复列第二套接口和页面行为说明。
 - 当前已支持的 checker 类型是：
   - `legacy_probe`
   - `http_standard`
@@ -139,42 +146,32 @@
 ### 5.3 学生战场链路
 
 1. 学生通过 `/contests/:id` 进入内嵌 AWD 战场。
-2. `GET /contests/:id/awd/workspace` 返回当前轮次、本队服务、目标目录和最近战报。
-3. 学生可启动 / 重启本队服务、打开目标、提交 stolen flag、申请 defense SSH。
-4. defense SSH 进入独立工作区 `/workspace`，不直接进入比赛服务容器。
+2. 工作台 read model、动作接口和前端 owner 由 `AWD学员实战工作台设计.md` 继续展开。
+3. 深度防守入口与 `/workspace` SSH 边界由 `AWD防守工作区与边界设计.md` 继续展开。
+4. 当前学生深度防守入口仍只有 SSH，不存在浏览器文件工作台。
 
 ### 5.4 教师复盘链路
 
 1. 教师通过 `/academy/awd-reviews` 查看 AWD 赛事目录与详情。
-2. `TeacherAWDReviewService` 提供赛事级复盘 archive。
-3. `ReportService` 负责复盘 ZIP 和 PDF 报告导出。
-4. 教师学生分析页通过 `teaching_readmodel` 继续读取：
-   - `evidence`
-   - `attack-sessions`
-   - `review-archive`
+2. AWD 赛事级 archive、ZIP/PDF 导出和详情页切片由 `AWD教师复盘归档与报告导出设计.md` 继续展开。
+3. 教师个人教学复盘工作台、证据链、攻击会话和稳定归档快照由 `教学复盘优化设计.md` 及其关联专题继续展开。
+4. 当前教师侧并行保留“赛事复盘”与“个人教学复盘”两条入口，不合并成单一聚合对象。
 
 ## 6. 接口与契约
 
 ### 6.1 学生接口
 
-- `GET /contests/:id/awd/workspace`
-- `POST /contests/:id/awd/services/:sid/instances`
-- `POST /contests/:id/awd/services/:sid/instances/restart`
-- `POST /contests/:id/awd/services/:sid/submissions`
-- `POST /contests/:id/awd/services/:sid/targets/:team_id/access`
-- `GET /contests/:id/awd/services/:sid/targets/:team_id/proxy`
-- `ANY /contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath`
-- `POST /contests/:id/awd/services/:sid/defense/ssh`
+- 学生战场接口组详见：
+  - `AWD学员实战工作台设计.md`
+  - `AWD防守工作区与边界设计.md`
 
 ### 6.2 教师接口
 
-- `GET /teacher/awd/reviews`
-- `GET /teacher/awd/reviews/:id`
-- `POST /teacher/awd/reviews/:id/export/archive`
-- `POST /teacher/awd/reviews/:id/export/report`
-- `GET /teacher/students/:id/evidence`
-- `GET /teacher/students/:id/attack-sessions`
-- `GET /teacher/students/:id/review-archive`
+- AWD 赛事复盘接口组详见 `AWD教师复盘归档与报告导出设计.md`
+- 教师个人复盘接口组详见：
+  - `教学复盘优化设计.md`
+  - `攻击证据链与教学复盘架构.md`
+  - `攻击会话读模型与复盘工作台架构.md`
 
 ### 6.3 赛事配置接口
 

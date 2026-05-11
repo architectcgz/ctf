@@ -1,9 +1,53 @@
 
 # CTF 网络攻防靶场平台 — 数据库设计文档
 
-> 版本：v1.0 | 日期：2026-03-01 | 状态：Current
+> 状态：Current
+> 事实源：`code/backend/migrations/`、`code/backend/internal/model/`、`code/backend/internal/module/*/infrastructure/`
+> 替代：无
 
----
+## 定位
+
+本文档说明当前后端持久化层的事实源、owner 分工和关键数据边界。
+
+- 负责：给出 PostgreSQL 主 schema、GORM 模型、读写 owner、缓存分工和新增专题表的当前口径。
+- 不负责：替代 migration SQL、GORM model 或 repository 作为最终 DDL / 查询真相；也不把教师端聚合 DTO 写成底层表结构。
+
+## 当前设计
+
+- `code/backend/migrations/000001_init_schema.up.sql`、`000002_create_awd_service_operations.up.sql`、`000003_create_contest_status_transitions.up.sql`、`000005_create_image_build_jobs.up.sql`、`000006_create_awd_defense_workspaces.up.sql`
+  - 负责：定义当前 PostgreSQL 主 schema，覆盖用户、题目、实例、竞赛、AWD、评估、导出、审计以及后续专题增量表；新增结构统一通过 migration 递进落库
+  - 不负责：把文档中的示意表或历史命名直接当成当前数据库真相；最终字段、索引和外键以 migration 为准
+
+- `code/backend/internal/model/challenge.go`、`instance.go`、`contest.go`、`contest_awd_service.go`、`contest_status_transition.go`、`image_build_job.go`、`awd_service_operation.go`、`awd_defense_workspace.go`
+  - 负责：声明当前 GORM 模型、状态枚举、默认值和关键关系，例如 `instance_sharing`、`share_scope`、`service_id`、`contest.status`、`contest_awd_services` 和 `awd_defense_workspaces`
+  - 不负责：在 API 层泄漏 persistence 内部字段，或把读模型聚合结果反向定义成底层表 schema
+
+- `code/backend/internal/module/*/infrastructure/` 与 `code/backend/internal/module/teaching_readmodel/infrastructure/repository.go`
+  - 负责：按 owner 模块读写各自表，教师复盘、证据链、画像和归档查询通过 readmodel repository 做跨表聚合；依据见 `practice/infrastructure/repository.go`、`contest/infrastructure/*.go`、`assessment/infrastructure/*.go`
+  - 不负责：让读模型 owner 修改练习、竞赛或题目写侧状态，也不让页面查询直接越过 owner 拼接写库逻辑
+
+- `code/backend/internal/pkg/redis/keys.go`、`code/backend/internal/module/runtime/infrastructure/proxy_ticket_store.go`
+  - 负责：提供会话、榜单缓存、调度锁、代理票据等 Redis key 约束；缓存和锁只承担性能与并发职责，不覆盖 PostgreSQL 中的业务真相
+  - 不负责：成为需要审计、归档或跨模块恢复的长期事实源
+
+## 接口或数据影响
+
+- 当前数据库事实由 `code/backend/migrations/` 和 `code/backend/internal/model/` 联合定义，`contest_status_transitions`、`awd_service_operations`、`image_build_jobs`、`awd_defense_workspaces` 是已采用的增量专题表，而不是文档草案。
+- API 只暴露 DTO 与对象标识，不直接暴露底层路径或内部 JSON 结构；契约以 `docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`、`docs/contracts/challenge-pack-v1.md` 为准。
+- `instances.share_scope` / `service_id`、`challenges.instance_sharing`、`contests.status`、`contest_awd_services.runtime_config`、`awd_attack_logs.submitted_by_user_id` 等字段直接影响实例复用、状态机、AWD 计分和画像回流链路。
+
+## Guardrail
+
+- migration 文件与顺序：`code/backend/internal/app/migration_files_test.go`
+- 时间与 migration 口径：`code/backend/internal/app/contest_time_migration_test.go`
+- 竞赛状态迁移表：`code/backend/internal/app/contest_status_transition_migration_test.go`
+- 练习 / 实例仓储边界：`code/backend/internal/module/practice/infrastructure/repository_test.go`
+- 评估 / 报告仓储边界：`code/backend/internal/module/assessment/infrastructure/report_repository_test.go`
+
+## 历史迁移
+
+- 当前事实已经从“单份数据库蓝图”收口为 `migration + model + owner repository` 三层事实源；下文保留的模块展开、ER 和字段清单只作为详细参考。
+- 如果下文某个字段、索引、状态枚举或表关系与 `code/backend/migrations/*.sql`、`code/backend/internal/model/*.go` 冲突，以代码为准。
 
 ## 目录
 

@@ -1,8 +1,12 @@
 # AWD 题目配置面板方案
 
-## 状态
+> 状态：Draft
+> 事实源：中间方案、交互取舍与待落地页面组织，不覆盖当前 `docs/architecture/` 最终事实
+> 替代：无
 
-中间方案，尚未作为当前最终架构或页面事实源采用。
+## 定位
+
+本文档保留后台 AWD service 配置入口的中间交互方案和页面组织取舍。
 
 - 当前文档保留方案比较、交互取舍和待落地设计，不覆盖 `docs/architecture/` 中的最终事实。
 - 如果后续能力落地并稳定，应把最终边界和页面事实回收到 `docs/architecture/features/` 或 `docs/architecture/frontend/pages/`。

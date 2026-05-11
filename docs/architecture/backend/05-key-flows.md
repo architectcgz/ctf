@@ -1,8 +1,57 @@
 # 关键流程设计文档
 
-> 本文档描述 CTF 靶场平台的核心业务流程，包含时序图、关键决策点、异常处理与并发控制策略。
+> 状态：Current
+> 事实源：`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/module/contest/application/jobs/`、`code/backend/internal/module/challenge/application/commands/`
+> 替代：无
 
----
+## 定位
+
+本文档说明当前已经采用的关键业务流程 owner、状态推进和主要副作用。
+
+- 负责：说明实例编排、访问票据、竞赛状态机、AWD 轮次与题包导入这些主链路现在怎么跑。
+- 不负责：把旧的候选方案、未启用队列或未来异步重构写成当前事实；细节流程图仅作为展开说明。
+
+## 当前设计
+
+- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
+  - 负责：处理练习 / 竞赛 / AWD 开题链路中的作用域锁、实例占位、`pending -> creating -> running` 状态推进、端口与运行时补偿
+  - 不负责：引入独立 Redis 队列或让 HTTP 请求直接等待完整 Docker 冷启动；当前排队事实仍落在 `instances` 表与调度器循环里
+
+- `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`instance_service.go`
+  - 负责：把实例访问、AWD 攻击访问和 AWD 防守 SSH 入口统一收敛到 proxy ticket / access URL 链路，避免直接暴露容器地址
+  - 不负责：让前端或外部工具绕过平台鉴权直接使用底层容器网络信息
+
+- `code/backend/internal/module/contest/application/jobs/status_update_runner.go`、`status_transition_service.go`、`statusmachine/side_effects.go`
+  - 负责：推进 `contests.status` 的时间窗状态机、调度锁续租、transition replay 和副作用重放，保证 `registration / running / frozen / ended` 口径一致
+  - 不负责：让管理命令或定时任务直接改表而跳过 transition 记录与副作用协议
+
+- `code/backend/internal/module/contest/application/jobs/awd_round_runtime.go`、`awd_round_updater.go`、`awd_checks.go`、`awd_service_check_empty_result.go`
+  - 负责：驱动 AWD 轮次同步、checker 执行、快照写入、空实例兜底结果和计分输入表更新
+  - 不负责：把 AWD 裁判链路外包给独立引擎进程；当前主链路仍在 `contest` 模块内部 jobs
+
+- `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`awd_challenge_import_service.go`、`challenge_service.go`
+  - 负责：处理题包 preview / commit / self-check、附件持久化、镜像构建源准备和题目自检的运行时探测
+  - 不负责：在导入 preview 阶段启动正式学员实例，或把导入工作目录作为长期运行态的一部分
+
+## 接口或数据影响
+
+- 关键状态字段包括 `instances.status`、`instances.share_scope`、`contests.status`、`contest_status_transitions.side_effect_status`、`awd_rounds.status`、`awd_team_services.service_status`、`image_build_jobs.status`。
+- 关键流程入口包括实例启动 / 续期 / 访问、contest 更新与冻结、AWD service preview / readiness / rounds / attack logs，以及 challenge import / commit / self-check；契约以 `docs/contracts/openapi-v1.yaml` 为准。
+- 主要副作用落在 PostgreSQL、Redis 锁与缓存、Docker runtime、附件目录和 registry / build source 目录；这些副作用的 owner 分别受 `practice`、`contest`、`runtime`、`challenge` 模块控制。
+
+## Guardrail
+
+- 练习 / 实例流程集成：`code/backend/internal/app/practice_flow_integration_test.go`
+- 路由级状态矩阵与实例访问：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
+- 开题调度与补偿：`code/backend/internal/module/practice/application/commands/instance_provisioning_test.go`、`instance_start_service_test.go`
+- 竞赛状态机与锁续租：`code/backend/internal/module/contest/application/jobs/status_updater_test.go`、`awd_round_scheduler_runtime_internal_test.go`
+- AWD 轮次与 checker：`code/backend/internal/module/contest/application/jobs/awd_round_updater_test.go`、`code/backend/internal/module/contest/application/commands/awd_service_test.go`
+- 题包导入 / 附件 / 自检：`code/backend/internal/app/challenge_import_integration_test.go`、`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
+
+## 历史迁移
+
+- 当前事实已经从“单篇流程蓝图”收口为“owner service / scheduler / job + 契约 + integration tests”的组合事实源。
+- 下文保留的长时序图、决策表和异常表仍可作为详细参考；若出现旧的同步启动、旧状态名或未启用方案描述，以前述当前设计和代码为准。
 
 ## 目录
 
@@ -77,7 +126,7 @@ sequenceDiagram
 | 实例数限制 | 数据库 `COUNT(*) WHERE status IN ('pending','creating','running')` | 排队态也计入占位，防止一个用户在高峰期刷满队列 |
 | 启动节流 | `container.scheduler.max_concurrent_starts` | 显式限制同一时刻的 Docker 冷启动数 |
 | 宿主机容量保护 | `container.scheduler.max_active_instances` 控制 `creating + running` | 不再默认宿主机可以无限接单 |
-| Flag 生成算法 | `HMAC-SHA256(global_secret + contest_salt, uid + ":" + challenge_id + ":" + instance_nonce)` | 三层密钥分离（详见 01 ADR-004）：global_secret 环境变量注入、contest_salt 每赛独立加密存储、instance_nonce 每实例随机 |
+| Flag 生成算法 | `HMAC-SHA256(global_secret, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练/普通竞赛链路由全局密钥与实例随机 `nonce` 共同生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
 | 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
@@ -119,7 +168,7 @@ sequenceDiagram
 
 - `proxy ticket` 在“访问实例”时签发，不在“启动实例”时签发
 - ticket 用于平台代理访问链路的短时鉴权
-- ticket 同时携带 `user_id`、`instance_id`、`challenge_id`、`contest_id`、`share_scope` 等访问上下文
+- ticket 当前携带 `user_id`、`instance_id`、`contest_id`、`share_scope`、`purpose` 以及 AWD 目标访问所需的队伍/服务上下文
 
 它和最终提交内容不是同一类凭证：
 
@@ -130,7 +179,7 @@ sequenceDiagram
 
 1. `POST /api/v1/challenges/:id/instances`
    负责创建或复用实例
-2. `GET /api/v1/instances/:id/access`
+2. `POST /api/v1/instances/:id/access`
    负责校验访问权限、签发 `proxy ticket`、返回平台代理访问地址
 
 ---

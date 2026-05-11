@@ -1,8 +1,51 @@
 # CTF 平台后端 Onion 架构与模块边界
 
-> 版本：v1.1 | 日期：2026-05-07 | 状态：当前事实
+> 状态：Current
+> 事实源：`code/backend/internal/app/composition/`、`code/backend/internal/module/`、`code/backend/internal/app/router.go`
+> 替代：无
 
----
+## 定位
+
+本文档说明当前后端模块化单体的 owner 边界、依赖方向和运行时装配规则。
+
+- 负责：描述单进程部署下的 Onion 模块划分、读写 owner、composition root 和跨模块协作约束。
+- 不负责：承载历史迁移步骤、一次性重构任务单，或把旧的 `teacher / system / container` 模块叙事继续保留成当前事实。
+
+## 当前设计
+
+- `code/backend/internal/app/composition/*.go`、`code/backend/internal/app/router.go`
+  - 负责：在进程级 composition root 中装配 `runtime`、`ops`、`identity`、`auth`、`challenge`、`assessment`、`teaching_readmodel`、`contest`、`practice`、`practice_readmodel` 模块，并统一管理 background jobs 与 closers
+  - 不负责：实现模块内部业务规则或绕过模块 runtime 直接在 app 层拼接业务依赖
+
+- `code/backend/internal/module/*/{api,application,domain,ports,infrastructure,runtime,contracts}`
+  - 负责：按 Onion 依赖方向组织写模型和读模型模块，确保 `api -> application -> domain`，`infrastructure -> ports`，`runtime` 只做模块内 wiring
+  - 不负责：跨模块直接依赖对方 `infrastructure`，或让 handler 成为“页面控制器式”大杂烩
+
+- `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
+  - 负责：承担教师视角、练习视角和复盘聚合查询，把跨 owner 只读拼装集中到 readmodel 层
+  - 不负责：拥有练习、竞赛、题目、评估的写侧状态，也不反向成为新的万能 owner
+
+- `code/backend/internal/platform/events/bus.go`
+  - 负责：提供进程内事件总线给异步通知和非关键路径联动使用
+  - 不负责：替代强一致性的同步模块调用，或成为跨进程消息中间件抽象
+
+## 接口或数据影响
+
+- 模块对外稳定 contract 位于各自 `contracts` 目录，外部 HTTP / WebSocket 路由则经由 `code/backend/internal/app/router_routes.go` 暴露。
+- 写模型 owner 负责自己的表和状态变更；读模型只消费 owner 暴露的 query / contract / repository 能力，不直接回写底层表。
+- 当前模块边界与依赖方向由 `docs/architecture/backend/01-system-architecture.md` 和本文件共同构成后端组织事实。
+
+## Guardrail
+
+- 模块依赖方向：`code/backend/internal/module/architecture_test.go`
+- 进程级装配规则：`code/backend/internal/app/architecture_rules_test.go`
+- composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`
+- 路由与运行时装配：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
+
+## 历史迁移
+
+- 当前模块边界已经从旧的 `teacher / system / container` 叙事收口到 `teaching_readmodel / ops / runtime`。
+- 下文保留的“结论 / 版图 / 硬规则 / 统一口径”是当前事实的详细展开；如果与 `composition` 或模块代码冲突，以代码和 guardrail test 为准。
 
 ## 1. 结论
 

@@ -1,6 +1,51 @@
 # 题目实例共享策略设计
 
-> 状态：已采用
+> 状态：Current
+> 事实源：`code/backend/internal/model/challenge.go`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/module/practice/infrastructure/repository.go`
+> 替代：无
+
+## 定位
+
+本文档说明当前题目实例共享模型、作用域解析和 AWD 下的 service 级复用边界。
+
+- 负责：描述 `instance_sharing`、`share_scope`、`service_id`、队伍共享和实例复用的当前规则。
+- 不负责：把纯页面交互或历史共享设想继续当成当前运行态主链路。
+
+## 当前设计
+
+- `code/backend/internal/model/challenge.go`、`docs/contracts/openapi-v1.yaml`
+  - 负责：定义挑战配置中的 `instance_sharing` 与实例结果中的 `share_scope`，当前合法枚举只有 `per_user`、`per_team`、`shared`
+  - 不负责：引入额外共享模式或让前端自行扩展 share scope 语义
+
+- `code/backend/internal/module/practice/application/commands/contest_instance_scope.go`、`instance_start_service.go`
+  - 负责：根据 contest mode、团队关系、`challenge.instance_sharing` 与 `service_id` 解析有效作用域；AWD 场景统一按 `contest_id + team_id + service_id` 派生队伍共享实例
+  - 不负责：把实例作用域判断下放给前端，或允许 AWD 按个人 / challenge 粒度绕开 service 维度复用
+
+- `code/backend/internal/module/practice/infrastructure/repository.go`
+  - 负责：执行 scope 锁、按 `contest_id / team_id / service_id / user_id` 查询可复用实例、统计运行中实例并维持复用边界
+  - 不负责：全局无作用域复用，或忽略 `service_id` 直接把同队所有 AWD 服务合并成一个实例
+
+- `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`flag_service.go`、`code/backend/internal/module/runtime/application/commands/instance_service.go`
+  - 负责：校验共享配置是否合法、决定共享实例的 flag subject 口径，并在实例查询 / 访问返回里保持 `share_scope` 与访问结果一致
+  - 不负责：把共享实例重新退化为 per-user flag 语义，或允许无校验地开启 `shared`
+
+## 接口或数据影响
+
+- 当前共享策略直接影响 `challenges.instance_sharing`、`instances.share_scope`、`instances.team_id`、`instances.service_id` 和 AWD 运行态实例查询结果。
+- 契约字段见 `docs/contracts/openapi-v1.yaml` 中的 `InstanceSharing`、challenge detail、instance detail 和 AWD 相关接口。
+- AWD 防守工作区、访问 ticket 与 teacher review 会继续读取 `service_id` 作用域下的实例事实，而不是重新从 challenge 粒度推断。
+
+## Guardrail
+
+- challenge 配置与共享校验：`code/backend/internal/module/challenge/application/commands/challenge_service_test.go`
+- 开题 / 复用 / 作用域解析：`code/backend/internal/module/practice/application/commands/instance_start_service_test.go`、`contest_instance_service_test.go`
+- 仓储级 scope 约束：`code/backend/internal/module/practice/infrastructure/repository_test.go`
+- runtime 返回 share scope：`code/backend/internal/module/runtime/service_test.go`
+
+## 历史迁移
+
+- 当前 adopted 规则已经明确：普通题按 `per_user / per_team / shared` 解释，AWD 统一强制收敛到 `service_id` 维度的队伍共享实例。
+- 下文保留的配置模型、生命周期和接口细节仍可作为展开说明；若与前述当前设计冲突，以 `challenge.go`、`contest_instance_scope.go` 和 repository 实现为准。
 
 ## 1. 设计概览
 

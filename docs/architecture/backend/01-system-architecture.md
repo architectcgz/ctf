@@ -1,8 +1,26 @@
 # CTF 网络攻防靶场平台 — 整体架构设计
 
-> 版本：v1.1 | 日期：2026-05-07 | 状态：当前事实
+> 状态：Current
+> 事实源：`code/backend/internal/app/`、`code/backend/internal/module/`、`docs/contracts/`
+> 替代：无
 
----
+## 当前设计
+
+- `code/backend/internal/app/router.go`、`code/backend/internal/app/composition/*.go`
+  - 负责：装配 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 模块，注册 HTTP 路由、后台任务和进程生命周期关闭逻辑；Guardrail 见 `code/backend/internal/app/router_test.go` 与 `code/backend/internal/app/full_router_integration_test.go`
+  - 不负责：实现具体业务规则、状态迁移或持久化细节
+
+- `code/backend/internal/module/*/application`、`code/backend/internal/module/*/domain`、`code/backend/internal/module/*/ports`、`code/backend/internal/module/*/infrastructure`
+  - 负责：按模块 owner 承担用例编排、状态机、端口定义与外部适配；依赖方向由 `code/backend/internal/module/architecture_test.go` 和各模块 `architecture_test.go` 约束
+  - 不负责：跨模块直接依赖对方 `infrastructure`，也不在 `api` 层写业务规则
+
+- `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
+  - 负责：教师视角、练习视角和复盘查询的只读聚合；HTTP 入口见 `code/backend/internal/module/teaching_readmodel/api/http/handler.go`
+  - 不负责：作为写模型 owner 修改练习、竞赛、评估等业务状态
+
+- `code/backend/internal/module/runtime`、`code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
+  - 负责：容器运行时、实例访问代理 ticket、AWD 防守 SSH ticket、后台清理任务与运行时统计；相关入口见 `code/backend/internal/module/runtime/api/http/handler.go`
+  - 不负责：直接承载挑战内容管理、用户认证或教师运营聚合逻辑
 
 ## 1. 架构概览
 
