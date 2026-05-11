@@ -33,6 +33,7 @@ const (
 	seedTeacherUsername = "zhaoxiaofeng"
 	defaultPassword     = "Password123"
 	seedUserAgent       = "seed-teaching-review-data/1.0"
+	seedAWDContestTitle = "教学复盘样本 AWD 迁移演练"
 )
 
 type userSeed struct {
@@ -58,6 +59,17 @@ type challengeCatalog struct {
 	byCategory map[string][]challengeRef
 }
 
+type awdChallengeRef struct {
+	ID         int64
+	Name       string
+	Category   string
+	Difficulty string
+}
+
+type awdChallengeCatalog struct {
+	byCategory map[string][]awdChallengeRef
+}
+
 type proxySeed struct {
 	Offset         time.Duration
 	Method         string
@@ -81,6 +93,20 @@ type writeupSeed struct {
 	Recommended bool
 }
 
+type awdAttackSeed struct {
+	Offset        time.Duration
+	SubmittedFlag string
+	IsSuccess     bool
+	ScoreGained   int
+}
+
+type awdScenario struct {
+	ChallengeCategory string
+	ChallengeIndex    int
+	StartOffset       time.Duration
+	Attacks           []awdAttackSeed
+}
+
 type sessionSeed struct {
 	ChallengeCategory string
 	ChallengeIndex    int
@@ -93,22 +119,29 @@ type sessionSeed struct {
 }
 
 type studentScenario struct {
+	Label    string
 	User     userSeed
 	Profiles map[string]float64
 	Sessions []sessionSeed
+	AWD      *awdScenario
 }
 
 type seededStudentResult struct {
-	User            *model.User
-	Recommendations dto.TeacherRecommendationResp
-	Archive         *assessmentcmd.ReviewArchiveData
+	User                 *model.User
+	ScenarioLabel        string
+	PracticeSessionCount int
+	AWDAttackCount       int
+	Recommendations      dto.TeacherRecommendationResp
+	Archive              *assessmentcmd.ReviewArchiveData
 }
 
 type seedResult struct {
-	ClassName   string
-	Teacher     *model.User
-	Students    []seededStudentResult
-	ClassReview *dto.TeacherClassReviewResp
+	ClassName            string
+	Teacher              *model.User
+	PracticeSessionCount int
+	AWDAttackCount       int
+	Students             []seededStudentResult
+	ClassReview          *dto.TeacherClassReviewResp
 }
 
 func main() {
@@ -170,6 +203,10 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 	if err != nil {
 		return nil, err
 	}
+	awdCatalog, err := loadAWDChallengeCatalog(ctx, db)
+	if err != nil {
+		return nil, err
+	}
 	scenarios := buildStudentScenarios()
 
 	teacherSpec := userSeed{
@@ -210,7 +247,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 			if student == nil {
 				return fmt.Errorf("student not found after upsert: %s", scenario.User.Username)
 			}
-			if err := seedStudentScenario(tx, teacher, student, scenario, catalog); err != nil {
+			if err := seedStudentScenario(tx, teacher, student, scenario, catalog, awdCatalog); err != nil {
 				return err
 			}
 		}
@@ -272,6 +309,8 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 	}
 
 	results := make([]seededStudentResult, 0, len(scenarios))
+	practiceSessionCount := 0
+	awdAttackCount := 0
 	sort.SliceStable(scenarios, func(i, j int) bool {
 		return scenarios[i].User.StudentNo < scenarios[j].User.StudentNo
 	})
@@ -292,18 +331,25 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		if archiveErr != nil {
 			return nil, fmt.Errorf("load review archive for %s: %w", student.Username, archiveErr)
 		}
+		practiceSessionCount += len(scenario.Sessions)
+		awdAttackCount += countAWDAttacks(scenario.AWD)
 		results = append(results, seededStudentResult{
-			User:            student,
-			Recommendations: studentRecommendations,
-			Archive:         archive,
+			User:                 student,
+			ScenarioLabel:        scenario.Label,
+			PracticeSessionCount: len(scenario.Sessions),
+			AWDAttackCount:       countAWDAttacks(scenario.AWD),
+			Recommendations:      studentRecommendations,
+			Archive:              archive,
 		})
 	}
 
 	return &seedResult{
-		ClassName:   seedClassName,
-		Teacher:     teacher,
-		Students:    results,
-		ClassReview: classReview,
+		ClassName:            seedClassName,
+		Teacher:              teacher,
+		PracticeSessionCount: practiceSessionCount,
+		AWDAttackCount:       awdAttackCount,
+		Students:             results,
+		ClassReview:          classReview,
 	}, nil
 }
 
@@ -356,9 +402,36 @@ func loadChallengeCatalog(ctx context.Context, db *gorm.DB) (*challengeCatalog, 
 	return catalog, nil
 }
 
+func loadAWDChallengeCatalog(ctx context.Context, db *gorm.DB) (*awdChallengeCatalog, error) {
+	var rows []model.AWDChallenge
+	err := db.WithContext(ctx).
+		Where("status = ?", model.AWDChallengeStatusPublished).
+		Order("created_at DESC").
+		Find(&rows).Error
+	if err != nil {
+		return nil, fmt.Errorf("load published awd challenges: %w", err)
+	}
+
+	catalog := &awdChallengeCatalog{byCategory: make(map[string][]awdChallengeRef)}
+	for _, row := range rows {
+		category := strings.ToLower(strings.TrimSpace(row.Category))
+		if category == "" {
+			continue
+		}
+		catalog.byCategory[category] = append(catalog.byCategory[category], awdChallengeRef{
+			ID:         row.ID,
+			Name:       row.Name,
+			Category:   category,
+			Difficulty: row.Difficulty,
+		})
+	}
+	return catalog, nil
+}
+
 func buildStudentScenarios() []studentScenario {
 	return []studentScenario{
 		{
+			Label: "稳定闭环 + AWD 迁移",
 			User: userSeed{
 				Username:  "linchenxi",
 				Name:      "林宸熙",
@@ -412,8 +485,18 @@ func buildStudentScenarios() []studentScenario {
 					},
 				},
 			},
+			AWD: &awdScenario{
+				ChallengeCategory: "web",
+				ChallengeIndex:    0,
+				StartOffset:       -1*24*time.Hour + 6*time.Hour,
+				Attacks: []awdAttackSeed{
+					{Offset: 12 * time.Minute, SubmittedFlag: "awd{web-replay-miss}", IsSuccess: false, ScoreGained: 0},
+					{Offset: 34 * time.Minute, SubmittedFlag: "awd{web-replay-hit}", IsSuccess: true, ScoreGained: 120},
+				},
+			},
 		},
 		{
+			Label: "高试错后成功，但缺少复盘",
 			User: userSeed{
 				Username:  "zhangyuchen",
 				Name:      "张雨辰",
@@ -445,12 +528,14 @@ func buildStudentScenarios() []studentScenario {
 					Submissions: []submissionSeed{
 						{Offset: 33 * time.Minute, Flag: "flag{shift-mail-11}", Correct: false},
 						{Offset: 61 * time.Minute, Flag: "flag{wrong-frequency}", Correct: false},
+						{Offset: 79 * time.Minute, Flag: "flag{still-not-right}", Correct: false},
 						{Offset: 96 * time.Minute, Flag: "flag{crypto-postcard-shift-3}", Correct: true},
 					},
 				},
 			},
 		},
 		{
+			Label: "单维弱项暴露型",
 			User: userSeed{
 				Username:  "wangzihan",
 				Name:      "王梓涵",
@@ -498,6 +583,7 @@ func buildStudentScenarios() []studentScenario {
 			},
 		},
 		{
+			Label: "低活跃掉队型",
 			User: userSeed{
 				Username:  "chensiyuan",
 				Name:      "陈思远",
@@ -531,6 +617,7 @@ func buildStudentScenarios() []studentScenario {
 			},
 		},
 		{
+			Label: "已形成闭环，但 Web 仍需补基础",
 			User: userSeed{
 				Username:  "limuyang",
 				Name:      "李沐阳",
@@ -584,6 +671,7 @@ func buildStudentScenarios() []studentScenario {
 			},
 		},
 		{
+			Label: "早期完成后停滞，补样本后可形成明确弱项",
 			User: userSeed{
 				Username:  "zhoujianning",
 				Name:      "周嘉宁",
@@ -631,6 +719,59 @@ func buildStudentScenarios() []studentScenario {
 					},
 					Submissions: []submissionSeed{
 						{Offset: 58 * time.Minute, Flag: "flag{stream-backup-ticket}", Correct: true},
+					},
+				},
+				{
+					ChallengeCategory: "forensics",
+					ChallengeIndex:    0,
+					StartOffset:       -2*24*time.Hour + 150*time.Minute,
+					Duration:          42 * time.Minute,
+					Access:            true,
+					ProxyRequests: []proxySeed{
+						{Offset: 6 * time.Minute, Method: "GET", Path: "/mailbox.eml", Status: 200},
+					},
+					Submissions: []submissionSeed{
+						{Offset: 29 * time.Minute, Flag: "flag{forensics-halfway}", Correct: false},
+					},
+				},
+			},
+		},
+		{
+			Label: "高频试错未命中型",
+			User: userSeed{
+				Username:  "songyuehan",
+				Name:      "宋月涵",
+				Email:     "2024310107@xinan.example.edu.cn",
+				Role:      model.RoleStudent,
+				ClassName: seedClassName,
+				StudentNo: "2024310107",
+			},
+			Profiles: map[string]float64{
+				"web":       0.51,
+				"crypto":    0.28,
+				"forensics": 0.47,
+				"misc":      0.56,
+				"pwn":       0.39,
+				"reverse":   0.45,
+			},
+			Sessions: []sessionSeed{
+				{
+					ChallengeCategory: "crypto",
+					ChallengeIndex:    1,
+					StartOffset:       -36 * time.Hour,
+					Duration:          115 * time.Minute,
+					Access:            true,
+					ProxyRequests: []proxySeed{
+						{Offset: 8 * time.Minute, Method: "GET", Path: "/backup.bin", Status: 200},
+						{Offset: 22 * time.Minute, Method: "POST", Path: "/xor", Status: 400, PayloadPreview: "key=0x12"},
+						{Offset: 37 * time.Minute, Method: "POST", Path: "/xor", Status: 400, PayloadPreview: "key=0x6f"},
+						{Offset: 53 * time.Minute, Method: "POST", Path: "/stream", Status: 500, PayloadPreview: "nonce=15"},
+					},
+					Submissions: []submissionSeed{
+						{Offset: 28 * time.Minute, Flag: "flag{stream-fail-1}", Correct: false},
+						{Offset: 46 * time.Minute, Flag: "flag{stream-fail-2}", Correct: false},
+						{Offset: 69 * time.Minute, Flag: "flag{stream-fail-3}", Correct: false},
+						{Offset: 92 * time.Minute, Flag: "flag{stream-fail-4}", Correct: false},
 					},
 				},
 			},
@@ -722,6 +863,9 @@ func resetSeededData(tx *gorm.DB, userIDs []int64, teacherID int64) error {
 	if len(userIDs) == 0 {
 		return nil
 	}
+	if err := resetSeededAWDData(tx); err != nil {
+		return err
+	}
 	if err := tx.Where("user_id IN ?", userIDs).Delete(&model.AuditLog{}).Error; err != nil {
 		return fmt.Errorf("delete audit logs: %w", err)
 	}
@@ -746,12 +890,52 @@ func resetSeededData(tx *gorm.DB, userIDs []int64, teacherID int64) error {
 	return ensureUserRole(tx, teacherID, model.RoleTeacher)
 }
 
+func resetSeededAWDData(tx *gorm.DB) error {
+	var contestIDs []int64
+	if err := tx.Unscoped().Model(&model.Contest{}).
+		Where("mode = ? AND title LIKE ?", model.ContestModeAWD, seedAWDContestTitle+"%").
+		Pluck("id", &contestIDs).Error; err != nil {
+		return fmt.Errorf("find seeded awd contests: %w", err)
+	}
+	if len(contestIDs) == 0 {
+		return nil
+	}
+
+	var roundIDs []int64
+	if err := tx.Model(&model.AWDRound{}).Where("contest_id IN ?", contestIDs).Pluck("id", &roundIDs).Error; err != nil {
+		return fmt.Errorf("find seeded awd rounds: %w", err)
+	}
+
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.AWDTrafficEvent{}).Error; err != nil {
+		return fmt.Errorf("delete awd traffic events: %w", err)
+	}
+	if len(roundIDs) > 0 {
+		if err := tx.Where("round_id IN ?", roundIDs).Delete(&model.AWDAttackLog{}).Error; err != nil {
+			return fmt.Errorf("delete awd attack logs: %w", err)
+		}
+	}
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.TeamMember{}).Error; err != nil {
+		return fmt.Errorf("delete awd team members: %w", err)
+	}
+	if err := tx.Unscoped().Where("contest_id IN ?", contestIDs).Delete(&model.Team{}).Error; err != nil {
+		return fmt.Errorf("delete awd teams: %w", err)
+	}
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.AWDRound{}).Error; err != nil {
+		return fmt.Errorf("delete awd rounds: %w", err)
+	}
+	if err := tx.Unscoped().Where("id IN ?", contestIDs).Delete(&model.Contest{}).Error; err != nil {
+		return fmt.Errorf("delete awd contests: %w", err)
+	}
+	return nil
+}
+
 func seedStudentScenario(
 	tx *gorm.DB,
 	teacher *model.User,
 	student *model.User,
 	scenario studentScenario,
 	catalog *challengeCatalog,
+	awdCatalog *awdChallengeCatalog,
 ) error {
 	now := time.Now().UTC().Truncate(time.Second)
 	for _, session := range scenario.Sessions {
@@ -760,6 +944,11 @@ func seedStudentScenario(
 			return err
 		}
 		if err := createSession(tx, teacher, student, challenge, session, now); err != nil {
+			return err
+		}
+	}
+	if scenario.AWD != nil {
+		if err := seedStudentAWDScenario(tx, teacher, student, scenario.AWD, awdCatalog, now); err != nil {
 			return err
 		}
 	}
@@ -907,6 +1096,103 @@ func upsertSkillProfiles(tx *gorm.DB, userID int64, profiles map[string]float64,
 	return nil
 }
 
+func seedStudentAWDScenario(
+	tx *gorm.DB,
+	teacher *model.User,
+	student *model.User,
+	scenario *awdScenario,
+	catalog *awdChallengeCatalog,
+	base time.Time,
+) error {
+	if scenario == nil {
+		return nil
+	}
+	challenge, err := catalog.pick(scenario.ChallengeCategory, scenario.ChallengeIndex)
+	if err != nil {
+		return err
+	}
+
+	contestStart := base.Add(scenario.StartOffset)
+	contestEnd := contestStart.Add(2 * time.Hour)
+	contest := &model.Contest{
+		Title:         fmt.Sprintf("%s - %s", seedAWDContestTitle, student.Username),
+		Description:   "用于教学复盘样本的 AWD 迁移演练数据。",
+		Mode:          model.ContestModeAWD,
+		StartTime:     contestStart.Add(-30 * time.Minute),
+		EndTime:       contestEnd,
+		Status:        model.ContestStatusEnded,
+		StatusVersion: 1,
+		CreatedAt:     contestStart.Add(-45 * time.Minute),
+		UpdatedAt:     contestEnd,
+	}
+	if err := tx.Create(contest).Error; err != nil {
+		return fmt.Errorf("create seed awd contest for %s: %w", student.Username, err)
+	}
+
+	round := &model.AWDRound{
+		ContestID:    contest.ID,
+		RoundNumber:  1,
+		Status:       model.AWDRoundStatusFinished,
+		StartedAt:    timePtr(contestStart),
+		EndedAt:      timePtr(contestEnd),
+		AttackScore:  80,
+		DefenseScore: 50,
+		CreatedAt:    contestStart.Add(-10 * time.Minute),
+		UpdatedAt:    contestEnd,
+	}
+	if err := tx.Create(round).Error; err != nil {
+		return fmt.Errorf("create seed awd round for %s: %w", student.Username, err)
+	}
+
+	attackerTeam := &model.Team{
+		ContestID:  contest.ID,
+		Name:       fmt.Sprintf("%s-攻方队", student.Name),
+		CaptainID:  student.ID,
+		InviteCode: fmt.Sprintf("A%05d", student.ID%100000),
+		MaxMembers: 4,
+		CreatedAt:  contestStart.Add(-20 * time.Minute),
+		UpdatedAt:  contestEnd,
+	}
+	if err := tx.Create(attackerTeam).Error; err != nil {
+		return fmt.Errorf("create attacker team for %s: %w", student.Username, err)
+	}
+
+	victimTeam := &model.Team{
+		ContestID:  contest.ID,
+		Name:       "教学复盘样本靶队",
+		CaptainID:  teacher.ID,
+		InviteCode: fmt.Sprintf("V%05d", student.ID%100000),
+		MaxMembers: 4,
+		CreatedAt:  contestStart.Add(-20 * time.Minute),
+		UpdatedAt:  contestEnd,
+	}
+	if err := tx.Create(victimTeam).Error; err != nil {
+		return fmt.Errorf("create victim team for %s: %w", student.Username, err)
+	}
+
+	for idx, attack := range scenario.Attacks {
+		attackAt := contestStart.Add(attack.Offset)
+		if err := tx.Create(&model.AWDAttackLog{
+			RoundID:           round.ID,
+			AttackerTeamID:    attackerTeam.ID,
+			VictimTeamID:      victimTeam.ID,
+			ServiceID:         7000 + challenge.ID,
+			AWDChallengeID:    challenge.ID,
+			AttackType:        model.AWDAttackTypeFlagCapture,
+			Source:            model.AWDAttackSourceSubmission,
+			SubmittedFlag:     attack.SubmittedFlag,
+			SubmittedByUserID: int64Ptr(student.ID),
+			IsSuccess:         attack.IsSuccess,
+			ScoreGained:       attack.ScoreGained,
+			CreatedAt:         attackAt.Add(time.Duration(idx) * time.Second),
+		}).Error; err != nil {
+			return fmt.Errorf("create awd attack log for %s/%s: %w", student.Username, challenge.Name, err)
+		}
+	}
+
+	return nil
+}
+
 func (c *challengeCatalog) pick(category string, index int) (challengeRef, error) {
 	normalized := strings.ToLower(strings.TrimSpace(category))
 	items := c.byCategory[normalized]
@@ -914,6 +1200,22 @@ func (c *challengeCatalog) pick(category string, index int) (challengeRef, error
 		return challengeRef{}, fmt.Errorf("challenge category %s does not have index %d", normalized, index)
 	}
 	return items[index], nil
+}
+
+func (c *awdChallengeCatalog) pick(category string, index int) (awdChallengeRef, error) {
+	normalized := strings.ToLower(strings.TrimSpace(category))
+	items := c.byCategory[normalized]
+	if index < 0 || index >= len(items) {
+		return awdChallengeRef{}, fmt.Errorf("awd challenge category %s does not have index %d", normalized, index)
+	}
+	return items[index], nil
+}
+
+func countAWDAttacks(scenario *awdScenario) int {
+	if scenario == nil {
+		return 0
+	}
+	return len(scenario.Attacks)
 }
 
 func proxyDetailJSON(method, path, query string, status int, payloadPreview string) string {
@@ -949,6 +1251,7 @@ func auditActionForMethod(method string) string {
 func printSeedSummary(result *seedResult) {
 	fmt.Printf("教学复盘样本数据已写入班级 %s\n", result.ClassName)
 	fmt.Printf("教师账号: %s / %s (%s)\n", result.Teacher.Username, defaultPassword, result.Teacher.Name)
+	fmt.Printf("样本规模: %d 名学生，%d 个练习会话，%d 条 AWD 攻击记录\n", len(result.Students), result.PracticeSessionCount, result.AWDAttackCount)
 	fmt.Println()
 	fmt.Println("班级复盘结论:")
 	for _, item := range result.ClassReview.Items {
@@ -980,6 +1283,10 @@ func printSeedSummary(result *seedResult) {
 			name = student.User.Username
 		}
 		fmt.Printf("- %s (%s / %s)\n", name, student.User.Username, student.User.StudentNo)
+		if student.ScenarioLabel != "" {
+			fmt.Printf("  样本画像: %s\n", student.ScenarioLabel)
+		}
+		fmt.Printf("  训练足迹: practice=%d, awd=%d\n", student.PracticeSessionCount, student.AWDAttackCount)
 		if len(student.Recommendations.Challenges) == 0 {
 			fmt.Println("  推荐题: 无")
 		} else {
