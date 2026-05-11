@@ -132,6 +132,41 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 	}
 }
 
+func TestAWDChallengeImportPreviewWarnsWhenPlatformBuildServiceUnavailable(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-platform-build.zip",
+		bytes.NewReader(buildAWDPlatformBuildImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	}
+	if preview.ImageDelivery.TargetImageRef != "" {
+		t.Fatalf("expected no target image ref without build service, got %q", preview.ImageDelivery.TargetImageRef)
+	}
+	if preview.ImageDelivery.BuildStatus != "" {
+		t.Fatalf("expected no build status without build service, got %q", preview.ImageDelivery.BuildStatus)
+	}
+	if len(preview.Warnings) == 0 {
+		t.Fatal("expected preview warnings when image build service is unavailable")
+	}
+	if !awdChallengeImportWarningsContain(preview.Warnings, "当前后端未启用题包镜像构建/校验服务") {
+		t.Fatalf("expected service unavailable warning, got %+v", preview.Warnings)
+	}
+}
+
 func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
@@ -195,6 +230,57 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(previewDir, preview.ID)); !os.IsNotExist(err) {
 		t.Fatalf("expected preview dir to be removed after commit, stat err = %v", err)
 	}
+}
+
+func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenPlatformBuildServiceMissing(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("CHALLENGE_IMAGE_BUILD_SOURCE_DIR", t.TempDir())
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-platform-build.zip",
+		bytes.NewReader(buildAWDPlatformBuildImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	_, err = service.CommitImport(context.Background(), 2001, preview.ID)
+	if err == nil {
+		t.Fatal("expected commit to fail when image build service is unavailable")
+	}
+	assertAWDChallengeImportServiceUnavailableError(t, err)
+}
+
+func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenExternalImageVerificationServiceMissing(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-external-ref.zip",
+		bytes.NewReader(buildAWDChallengeImportArchiveWithMeta(t, "awd-external-ref", "AWD External Ref", "registry.example.edu/ctf/awd-external-ref:v1")),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	_, err = service.CommitImport(context.Background(), 2001, preview.ID)
+	if err == nil {
+		t.Fatal("expected commit to fail when external image verification service is unavailable")
+	}
+	assertAWDChallengeImportServiceUnavailableError(t, err)
 }
 
 func TestAWDChallengeImportRejectsDuplicateSlug(t *testing.T) {
@@ -422,6 +508,33 @@ func readAWDCheckerArtifactDigestForTest(t *testing.T, checkerConfigRaw string) 
 		t.Fatalf("expected artifact digest: %+v", artifact)
 	}
 	return digest
+}
+
+func assertAWDChallengeImportServiceUnavailableError(t *testing.T, err error) {
+	t.Helper()
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected app error, got %v", err)
+	}
+	if appErr.Code != errcode.ErrServiceUnavailable.Code {
+		t.Fatalf("expected service unavailable code, got %+v", appErr)
+	}
+	if appErr.HTTPStatus != errcode.ErrServiceUnavailable.HTTPStatus {
+		t.Fatalf("expected service unavailable status, got %+v", appErr)
+	}
+	if !strings.Contains(appErr.Message, "当前后端未启用题包镜像构建/校验服务") {
+		t.Fatalf("unexpected service unavailable message: %q", appErr.Message)
+	}
+}
+
+func awdChallengeImportWarningsContain(warnings []string, needle string) bool {
+	for _, warning := range warnings {
+		if strings.Contains(warning, needle) {
+			return true
+		}
+	}
+	return false
 }
 
 func buildAWDChallengeImportArchive(t *testing.T) []byte {

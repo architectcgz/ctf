@@ -144,6 +144,43 @@ func TestPreviewChallengeImportReturnsPlatformBuildImageDelivery(t *testing.T) {
 	}
 }
 
+func TestPreviewChallengeImportWarnsWhenPlatformBuildServiceUnavailable(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
+	preview, err := service.PreviewChallengeImport(
+		context.Background(),
+		4,
+		"web-platform-build.zip",
+		bytes.NewReader(buildZipArchiveFromDir(t, packageDir)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewChallengeImport() error = %v", err)
+	}
+
+	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	}
+	if preview.ImageDelivery.TargetImageRef != "" {
+		t.Fatalf("expected no target image ref without build service, got %q", preview.ImageDelivery.TargetImageRef)
+	}
+	if preview.ImageDelivery.BuildStatus != "" {
+		t.Fatalf("expected no build status without build service, got %q", preview.ImageDelivery.BuildStatus)
+	}
+	if len(preview.Warnings) == 0 {
+		t.Fatal("expected preview warnings when image build service is unavailable")
+	}
+	if !challengeImportWarningsContain(preview.Warnings, "当前后端未启用题包镜像构建/校验服务") {
+		t.Fatalf("expected service unavailable warning, got %+v", preview.Warnings)
+	}
+}
+
 func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
@@ -212,6 +249,62 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 		job.TargetRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
 		t.Fatalf("unexpected build job: %+v", job)
 	}
+}
+
+func TestCommitChallengeImportReturnsServiceUnavailableWhenPlatformBuildServiceMissing(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
+	preview, err := service.PreviewChallengeImport(
+		context.Background(),
+		4,
+		"web-platform-build.zip",
+		bytes.NewReader(buildZipArchiveFromDir(t, packageDir)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewChallengeImport() error = %v", err)
+	}
+
+	_, err = service.CommitChallengeImport(context.Background(), 4, preview.ID)
+	if err == nil {
+		t.Fatal("expected commit to fail when image build service is unavailable")
+	}
+	assertChallengeImportServiceUnavailableError(t, err)
+}
+
+func TestCommitChallengeImportReturnsServiceUnavailableWhenExternalImageVerificationServiceMissing(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := writeExternalRefChallengePackage(t, tempDir, "web-external-ref", "registry.example.edu/ctf/web-external-ref:v1")
+	preview, err := service.PreviewChallengeImport(
+		context.Background(),
+		4,
+		"web-external-ref.zip",
+		bytes.NewReader(buildZipArchiveFromDir(t, packageDir)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewChallengeImport() error = %v", err)
+	}
+
+	_, err = service.CommitChallengeImport(context.Background(), 4, preview.ID)
+	if err == nil {
+		t.Fatal("expected commit to fail when external image verification service is unavailable")
+	}
+	assertChallengeImportServiceUnavailableError(t, err)
 }
 
 func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *testing.T) {
@@ -782,6 +875,33 @@ func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record sto
 	}
 }
 
+func assertChallengeImportServiceUnavailableError(t *testing.T, err error) {
+	t.Helper()
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected app error, got %v", err)
+	}
+	if appErr.Code != errcode.ErrServiceUnavailable.Code {
+		t.Fatalf("expected service unavailable code, got %+v", appErr)
+	}
+	if appErr.HTTPStatus != errcode.ErrServiceUnavailable.HTTPStatus {
+		t.Fatalf("expected service unavailable status, got %+v", appErr)
+	}
+	if !strings.Contains(appErr.Message, "当前后端未启用题包镜像构建/校验服务") {
+		t.Fatalf("unexpected service unavailable message: %q", appErr.Message)
+	}
+}
+
+func challengeImportWarningsContain(warnings []string, needle string) bool {
+	for _, warning := range warnings {
+		if strings.Contains(warning, needle) {
+			return true
+		}
+	}
+	return false
+}
+
 func buildZipArchiveFromDir(t *testing.T, root string) []byte {
 	t.Helper()
 
@@ -853,6 +973,48 @@ runtime:
   type: container
   image:
     tag: v1
+  service:
+    protocol: http
+    port: 8080
+`
+	if err := os.WriteFile(filepath.Join(packageDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
+	}
+	return packageDir
+}
+
+func writeExternalRefChallengePackage(t *testing.T, root string, slug string, imageRef string) string {
+	t.Helper()
+
+	packageDir := filepath.Join(root, slug+"-package")
+	if err := os.MkdirAll(packageDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(packageDir) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "statement.md"), []byte("external ref statement"), 0o644); err != nil {
+		t.Fatalf("WriteFile(statement.md) error = %v", err)
+	}
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  slug: ` + slug + `
+  title: External Ref Challenge
+  category: web
+  difficulty: easy
+  points: 100
+
+content:
+  statement: statement.md
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{external-ref}
+
+runtime:
+  type: container
+  image:
+    ref: ` + imageRef + `
   service:
     protocol: http
     port: 8080

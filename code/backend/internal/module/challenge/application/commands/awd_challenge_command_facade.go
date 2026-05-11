@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
@@ -27,6 +28,12 @@ func NewAWDChallengeCommandFacade(
 	return &AWDChallengeCommandFacade{
 		core:    NewAWDChallengeService(repo),
 		imports: NewAWDChallengeImportService(db, repo, buildService),
+	}
+}
+
+func (s *AWDChallengeCommandFacade) SetImportLogger(logger *zap.Logger) {
+	if s != nil && s.imports != nil {
+		s.imports.SetLogger(logger)
 	}
 }
 
