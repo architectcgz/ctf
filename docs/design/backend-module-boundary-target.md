@@ -157,7 +157,7 @@ flowchart LR
 - Docker Engine、网络、ACL、文件、探活归 `container_runtime` 或平台适配层。
 - `practice`、`contest` 只依赖 `instance` contract，不知道 Docker 细节。
 
-当前状态（2026-05-11，phase 2 / slice 4）：
+当前状态（2026-05-11，phase 2 / slice 5）：
 
 - `internal/module/instance/` 已经落地 `application/commands`、`application/queries`、`ports`、`domain`，实例命令、实例查询、proxy ticket 和 maintenance use case 已有独立物理 owner。
 - `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo / engine。
@@ -165,15 +165,16 @@ flowchart LR
 - app 层已经把 challenge / contest / ops 依赖的容器能力显式命名为 `ContainerRuntimeModule`；`BuildChallengeModule`、`BuildContestModule`、`BuildOpsModule`、`BuildInstanceModule` 都已经改依赖这个视图。
 - `runtime/runtime/module.go` 不再生产装配 instance command/query、proxy ticket 或 maintenance service，只保留 container-facing builder、`Engine` 和 practice/challenge/ops/contest 仍需复用的运行时能力。
 - `code/backend/internal/app/practice_flow_integration_test.go` 与 `code/backend/internal/module/runtime/service_test.go` 已继续切到 `instance/*` owner，减少了外部直接 new compat service 的调用点。
+- `internal/module/instance/contracts` 已经落地，`runtime/runtime/adapters.go` 现在通过它依赖实例 owner 的 command / query / proxy ticket service，而不是继续在 runtime 模块内声明一组临时接口。
 - 当前仍保留 `runtime/application/*` 的兼容 mirror，供存量测试和兼容调用路径继续使用；这层不再是生产 wiring 的 owner。
 - 但这层 mirror 还不能直接压成 `runtime -> instance/application` 的转发 wrapper，因为 `code/backend/internal/app/architecture_rules_test.go` 会把它判成 concrete cross-module import 违规。
 
 建议动作：
 
-1. 在当前 `InstanceModule` 组合视图基础上定义 `instance/contracts` 或其他可跨模块复用的中性 landing zone，给 compat 层后续瘦身预留合法落点。
+1. 基于已经落地的 `instance/contracts`，把 `runtime/application/*` compat mirror 继续压成 contract-backed wrapper，而不是继续保留双份实现。
 2. 把剩余依赖 `runtime/application/*` 兼容 mirror 的调用方和测试逐步切到 `instance/*` 或 `InstanceModule`，避免继续维持双份实例业务实现。
 3. 把 Docker/ACL/文件操作收口成 container runtime ports。
-4. 待兼容调用方完成迁移后，再删除旧 `runtime` mirror；如果删除前仍需要 compat import path，就只能基于新的中性 landing zone 缩成薄层，而不是直接 import `instance/application/*`。
+4. 待兼容调用方完成迁移后，再删除旧 `runtime` mirror；如果删除前仍需要 compat import path，就只能基于 `instance/contracts` 这类中性落点缩成薄层，而不是直接 import `instance/application/*`。
 
 ### 阶段 3：事件化评估与运营副作用
 

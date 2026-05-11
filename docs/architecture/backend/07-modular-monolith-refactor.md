@@ -26,8 +26,12 @@
   - 不负责：把 token/session 能力重新挂回 `identity` 模块，或在 `identity` 里再包装一层认证抽象
 
 - `code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
-  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner` 与 AWD 防守 SSH gateway；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，`RuntimeModule` 仅保留兼容别名
+  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并通过 `internal/module/instance/contracts` 把它们交给 runtime access adapter，对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner` 与 AWD 防守 SSH gateway；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，`RuntimeModule` 仅保留兼容别名
   - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的兼容 mirror 误写成长期 owner；当前 compat mirror 仍保留 duplicated implementation，但它既不是生产 wiring owner，也不能直接改成 `runtime -> instance/application` wrapper，因为这会触发 `code/backend/internal/app/architecture_rules_test.go`
+
+- `code/backend/internal/module/instance/contracts/*.go`
+  - 负责：作为 `runtime -> instance` 的合法跨模块落点，定义实例 owner 暴露给外部模块的 command / query / proxy ticket / maintenance service contract
+  - 不负责：承载实例业务规则实现，或把 runtime adapter 便利方法反向塞回 instance owner contract
 
 - `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
   - 负责：承担教师视角、练习视角和复盘聚合查询，把跨 owner 只读拼装集中到 readmodel 层
@@ -229,6 +233,7 @@ flowchart LR
 - `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
+- `runtime/runtime/adapters.go` 已开始直接依赖 `internal/module/instance/contracts`，而不是继续在 runtime 模块里声明一组本地临时 instance owner 接口
 - `practice_flow_integration_test.go` 与 `runtime/service_test.go` 这类外部 broad integration / service 测试已经继续切到 `instance/*` owner；`runtime/application/*` 目前只剩兼容 import path 和同目录存量测试仍在使用
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。

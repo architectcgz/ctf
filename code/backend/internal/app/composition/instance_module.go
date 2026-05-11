@@ -109,6 +109,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			repo,
 			module.Engine,
 			cfg.Container.ProxyBodyPreviewSize,
+			int(cfg.Container.ProxyTicketTTL.Seconds()),
 			cfg.Container.DefenseSSHEnabled && module.Engine != nil,
 			cfg.Container.DefenseSSHHost,
 			cfg.Container.DefenseSSHPort,

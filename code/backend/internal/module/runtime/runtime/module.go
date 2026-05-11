@@ -9,9 +9,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -221,25 +219,4 @@ func buildRuntimeContestDeps(deps runtimeModuleDeps) runtimeContestDeps {
 	return runtimeContestDeps{
 		containerFiles: deps.containerFiles,
 	}
-}
-
-type runtimeHTTPCommandService interface {
-	DestroyInstance(ctx context.Context, instanceID, userID int64) error
-	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
-	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
-}
-
-type runtimeHTTPQueryService interface {
-	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
-}
-
-type runtimeHTTPProxyTicketService interface {
-	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
-	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
-	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
-	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
-	MaxAge() int
 }

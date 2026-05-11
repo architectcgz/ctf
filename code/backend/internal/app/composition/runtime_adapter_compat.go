@@ -11,22 +11,11 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
-
-type runtimeHTTPCommandService interface {
-	DestroyInstance(ctx context.Context, instanceID, userID int64) error
-	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
-	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
-}
-
-type runtimeHTTPQueryService interface {
-	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
-}
 
 type runtimeDefenseWorkbenchRuntime interface {
 	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
@@ -36,12 +25,13 @@ type runtimeDefenseWorkbenchRuntime interface {
 }
 
 type runtimeHTTPServiceAdapter struct {
-	commandService                  runtimeHTTPCommandService
-	queryService                    runtimeHTTPQueryService
-	proxyTickets                    runtimeHTTPProxyTicketService
+	commandService                  instancecontracts.InstanceCommandService
+	queryService                    instancecontracts.InstanceQueryService
+	proxyTickets                    instancecontracts.ProxyTicketService
 	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
 	defenseWorkbench                runtimeDefenseWorkbenchRuntime
 	proxyBodyPreviewSize            int
+	proxyTicketMaxAge               int
 	defenseSSHEnabled               bool
 	defenseSSHHost                  string
 	defenseSSHPort                  int
@@ -50,12 +40,13 @@ type runtimeHTTPServiceAdapter struct {
 }
 
 func newRuntimeHTTPServiceAdapter(
-	commandService runtimeHTTPCommandService,
-	queryService runtimeHTTPQueryService,
-	proxyTickets runtimeHTTPProxyTicketService,
+	commandService instancecontracts.InstanceCommandService,
+	queryService instancecontracts.InstanceQueryService,
+	proxyTickets instancecontracts.ProxyTicketService,
 	proxyTicketReader runtimeports.ProxyTicketInstanceReader,
 	defenseWorkbench runtimeDefenseWorkbenchRuntime,
 	proxyBodyPreviewSize int,
+	proxyTicketMaxAge int,
 	defenseSSHEnabled bool,
 	defenseSSHHost string,
 	defenseSSHPort int,
@@ -69,6 +60,7 @@ func newRuntimeHTTPServiceAdapter(
 		proxyTicketReader:               proxyTicketReader,
 		defenseWorkbench:                defenseWorkbench,
 		proxyBodyPreviewSize:            proxyBodyPreviewSize,
+		proxyTicketMaxAge:               proxyTicketMaxAge,
 		defenseSSHEnabled:               defenseSSHEnabled,
 		defenseSSHHost:                  defenseSSHHost,
 		defenseSSHPort:                  defenseSSHPort,
@@ -537,10 +529,10 @@ func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Contex
 }
 
 func (a *runtimeHTTPServiceAdapter) ProxyTicketMaxAge() int {
-	if a == nil || a.proxyTickets == nil {
+	if a == nil {
 		return 0
 	}
-	return a.proxyTickets.MaxAge()
+	return a.proxyTicketMaxAge
 }
 
 func (a *runtimeHTTPServiceAdapter) ProxyBodyPreviewSize() int {

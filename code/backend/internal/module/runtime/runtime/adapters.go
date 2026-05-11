@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
@@ -53,12 +54,13 @@ func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.C
 }
 
 type runtimeHTTPServiceAdapter struct {
-	commandService                  runtimeHTTPCommandService
-	queryService                    runtimeHTTPQueryService
-	proxyTickets                    runtimeHTTPProxyTicketService
+	commandService                  instancecontracts.InstanceCommandService
+	queryService                    instancecontracts.InstanceQueryService
+	proxyTickets                    instancecontracts.ProxyTicketService
 	proxyTicketReader               runtimeports.ProxyTicketInstanceReader
 	defenseWorkbench                runtimeDefenseWorkbenchRuntime
 	proxyBodyPreviewSize            int
+	proxyTicketMaxAge               int
 	defenseWorkbenchReadOnlyEnabled bool
 	defenseWorkbenchRoot            string
 	defenseSSHEnabled               bool
@@ -66,7 +68,7 @@ type runtimeHTTPServiceAdapter struct {
 	defenseSSHPort                  int
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int, defenseWorkbenchReadOnlyEnabled bool, defenseWorkbenchRoot string) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService instancecontracts.InstanceCommandService, queryService instancecontracts.InstanceQueryService, proxyTickets instancecontracts.ProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, proxyTicketMaxAge int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int, defenseWorkbenchReadOnlyEnabled bool, defenseWorkbenchRoot string) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
 		commandService:                  commandService,
 		queryService:                    queryService,
@@ -74,6 +76,7 @@ func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, quer
 		proxyTicketReader:               proxyTicketReader,
 		defenseWorkbench:                defenseWorkbench,
 		proxyBodyPreviewSize:            proxyBodyPreviewSize,
+		proxyTicketMaxAge:               proxyTicketMaxAge,
 		defenseWorkbenchReadOnlyEnabled: defenseWorkbenchReadOnlyEnabled,
 		defenseWorkbenchRoot:            strings.TrimSpace(defenseWorkbenchRoot),
 		defenseSSHEnabled:               defenseSSHEnabled,
@@ -549,14 +552,14 @@ func isSensitiveDefensePath(value string) bool {
 	}
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*instancecontracts.ProxyTicketClaims, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *instancecontracts.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
 	if a == nil || a.proxyTickets == nil {
 		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
@@ -564,10 +567,10 @@ func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Contex
 }
 
 func (a *runtimeHTTPServiceAdapter) ProxyTicketMaxAge() int {
-	if a == nil || a.proxyTickets == nil {
+	if a == nil {
 		return 0
 	}
-	return a.proxyTickets.MaxAge()
+	return a.proxyTicketMaxAge
 }
 
 func (a *runtimeHTTPServiceAdapter) ProxyBodyPreviewSize() int {
