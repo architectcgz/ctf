@@ -48,11 +48,11 @@ export function getChallengeDifficultyColor(
   colorMap: Partial<Record<ChallengeDifficulty, string>> = {}
 ): string {
   const defaultColors: Record<ChallengeDifficulty, string> = {
-    beginner: 'var(--challenge-diff-beginner)',
-    easy: 'var(--challenge-diff-easy)',
-    medium: 'var(--challenge-diff-medium)',
-    hard: 'var(--challenge-diff-hard)',
-    insane: 'var(--challenge-diff-insane)',
+    beginner: 'var(--challenge-difficulty-pill-beginner)',
+    easy: 'var(--challenge-difficulty-pill-easy)',
+    medium: 'var(--challenge-difficulty-pill-medium)',
+    hard: 'var(--challenge-difficulty-pill-hard)',
+    insane: 'var(--challenge-difficulty-pill-insane)',
   }
 
   return colorMap[difficulty] ?? defaultColors[difficulty]

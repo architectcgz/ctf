@@ -179,6 +179,32 @@
   --color-diff-medium: #f59e0b;
   --color-diff-hard: #ef4444;
   --color-diff-insane: #7c3aed;
+  /* 题目难度胶囊专用色 */
+  --challenge-difficulty-pill-beginner: color-mix(
+    in srgb,
+    var(--color-diff-beginner) 76%,
+    var(--color-text-primary)
+  );
+  --challenge-difficulty-pill-easy: color-mix(
+    in srgb,
+    var(--color-diff-easy) 78%,
+    var(--color-text-primary)
+  );
+  --challenge-difficulty-pill-medium: color-mix(
+    in srgb,
+    var(--color-diff-medium) 80%,
+    var(--color-text-primary)
+  );
+  --challenge-difficulty-pill-hard: color-mix(
+    in srgb,
+    var(--color-diff-hard) 80%,
+    var(--color-text-primary)
+  );
+  --challenge-difficulty-pill-insane: color-mix(
+    in srgb,
+    var(--color-diff-insane) 84%,
+    var(--color-text-primary)
+  );
   --shell-sidebar-collapsed: 5.5rem;
   --shell-sidebar-expanded: 15.5rem;
   --ui-motion-fast: 160ms ease;

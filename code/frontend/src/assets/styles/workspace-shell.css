@@ -815,33 +815,73 @@
 }
 
 .difficulty-chip--beginner {
-  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-beginner) 22%, transparent);
-  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-beginner) 10%, transparent);
-  --difficulty-chip-color: var(--color-diff-beginner);
+  --difficulty-chip-border: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-beginner) 22%,
+    transparent
+  );
+  --difficulty-chip-bg: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-beginner) 10%,
+    transparent
+  );
+  --difficulty-chip-color: var(--challenge-difficulty-pill-beginner);
 }
 
 .difficulty-chip--easy {
-  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-easy) 22%, transparent);
-  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-easy) 10%, transparent);
-  --difficulty-chip-color: var(--color-diff-easy);
+  --difficulty-chip-border: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-easy) 22%,
+    transparent
+  );
+  --difficulty-chip-bg: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-easy) 10%,
+    transparent
+  );
+  --difficulty-chip-color: var(--challenge-difficulty-pill-easy);
 }
 
 .difficulty-chip--medium {
-  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-medium) 22%, transparent);
-  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-medium) 10%, transparent);
-  --difficulty-chip-color: var(--color-diff-medium);
+  --difficulty-chip-border: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-medium) 22%,
+    transparent
+  );
+  --difficulty-chip-bg: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-medium) 10%,
+    transparent
+  );
+  --difficulty-chip-color: var(--challenge-difficulty-pill-medium);
 }
 
 .difficulty-chip--hard {
-  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-hard) 22%, transparent);
-  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-hard) 10%, transparent);
-  --difficulty-chip-color: var(--color-diff-hard);
+  --difficulty-chip-border: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-hard) 22%,
+    transparent
+  );
+  --difficulty-chip-bg: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-hard) 10%,
+    transparent
+  );
+  --difficulty-chip-color: var(--challenge-difficulty-pill-hard);
 }
 
 .difficulty-chip--insane {
-  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-insane) 22%, transparent);
-  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-insane) 10%, transparent);
-  --difficulty-chip-color: var(--color-diff-insane);
+  --difficulty-chip-border: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-insane) 22%,
+    transparent
+  );
+  --difficulty-chip-bg: color-mix(
+    in srgb,
+    var(--challenge-difficulty-pill-insane) 10%,
+    transparent
+  );
+  --difficulty-chip-color: var(--challenge-difficulty-pill-insane);
 }
 
 .difficulty-chip--unknown {

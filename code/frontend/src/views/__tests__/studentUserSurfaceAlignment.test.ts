@@ -158,6 +158,14 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('--challenge-tone-')
   })
 
+  it('题目难度胶囊应使用明确的 difficulty-pill 专用变量', () => {
+    expect(themeSource).toContain('--challenge-difficulty-pill-beginner')
+    expect(themeSource).toContain('--challenge-difficulty-pill-insane')
+    expect(challengePresentationSource).toContain('var(--challenge-difficulty-pill-easy)')
+    expect(studentRecommendationSource).toContain('difficultyClass(item.difficulty)')
+    expect(themeSource).not.toContain('--challenge-diff-beginner')
+  })
+
   it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
     expect(studentCategoryProgressSource).toContain('优先补这个分类')
     expect(studentCategoryProgressSource).toContain(
