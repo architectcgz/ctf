@@ -27,7 +27,7 @@
 
 - `code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
   - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner` 与 AWD 防守 SSH gateway；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，`RuntimeModule` 仅保留兼容别名
-  - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的兼容 mirror 误写成长期 owner
+  - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的兼容 mirror 误写成长期 owner；当前 compat mirror 仍保留 duplicated implementation，但它既不是生产 wiring owner，也不能直接改成 `runtime -> instance/application` wrapper，因为这会触发 `code/backend/internal/app/architecture_rules_test.go`
 
 - `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
   - 负责：承担教师视角、练习视角和复盘聚合查询，把跨 owner 只读拼装集中到 readmodel 层
@@ -49,6 +49,7 @@
 - 进程级装配规则：`code/backend/internal/app/architecture_rules_test.go`
 - composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`
 - 路由与运行时装配：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
+- compat mirror 当前限制：`code/backend/internal/app/architecture_rules_test.go` 明确禁止 `runtime -> instance application` 的 concrete cross-module import，因此 `runtime/application/*` 现阶段还不能直接压成跨模块 wrapper
 
 ## 历史迁移
 
@@ -228,6 +229,7 @@ flowchart LR
 - `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
+- `practice_flow_integration_test.go` 与 `runtime/service_test.go` 这类外部 broad integration / service 测试已经继续切到 `instance/*` owner；`runtime/application/*` 目前只剩兼容 import path 和同目录存量测试仍在使用
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 

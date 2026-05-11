@@ -15,8 +15,9 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -1287,7 +1288,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 
 	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
-	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
@@ -1345,7 +1346,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		removeContainerErr: errors.New("Error response from daemon: No such container: missing-ctr"),
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
-	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
@@ -1781,8 +1782,8 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 }
 
 type testRuntimeService struct {
-	commands *runtimecmd.InstanceService
-	queries  *runtimeqry.InstanceService
+	commands *instancecmd.InstanceService
+	queries  *instanceqry.InstanceService
 }
 
 func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
@@ -1817,8 +1818,8 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	return &testRuntimeService{
-		commands: runtimecmd.NewInstanceService(repo, cleanupService, cfg, nil),
-		queries:  runtimeqry.NewInstanceService(repo),
+		commands: instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
+		queries:  instanceqry.NewInstanceService(repo),
 	}
 }
 

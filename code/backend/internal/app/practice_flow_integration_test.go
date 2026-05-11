@@ -36,6 +36,8 @@ import (
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -49,7 +51,6 @@ import (
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingreadmodelhttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
@@ -899,9 +900,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	runtimeModule := composition.BuildRuntimeModule(root)
 	instanceModule := composition.BuildInstanceModule(root, runtimeModule)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
-	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
-	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
-	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
+	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
+	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo)
+	runtimeProxyTicketService := instanceqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,
