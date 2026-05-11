@@ -73,13 +73,7 @@ const radarScores = computed(() => toRadarScores(props.profile))
 const rankedProfileDimensions = computed(() =>
   [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
 )
-const showManualReviewSection = computed(
-  () =>
-    !props.activeSection ||
-    props.activeSection === 'all' ||
-    props.activeSection === 'manual-review' ||
-    props.activeSection === 'writeups'
-)
+const showManualReviewSection = computed(() => props.activeSection === 'manual-review')
 
 function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boolean {
   return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
@@ -197,8 +191,14 @@ function openChallenge(challengeId: string): void {
           :writeup-total="writeupTotal"
           :writeup-total-pages="writeupTotalPages"
           :writeup-pagination-loading="writeupPaginationLoading"
+          :manual-review-submissions="manualReviewSubmissions"
+          :active-manual-review="activeManualReview"
+          :manual-review-loading="manualReviewLoading"
+          :manual-review-saving="manualReviewSaving"
           @open-challenge="emit('openChallenge', $event)"
+          @open-manual-review="emit('openManualReview', $event)"
           @moderate-writeup="emit('moderateWriteup', $event)"
+          @review-manual-review="emit('reviewManualReview', $event)"
           @change-writeup-page="emit('changeWriteupPage', $event)"
         />
 

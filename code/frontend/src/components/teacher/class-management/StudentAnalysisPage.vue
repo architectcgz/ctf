@@ -78,7 +78,6 @@ type WorkspaceTab =
   | 'overview'
   | 'recommendations'
   | 'writeups'
-  | 'manual-review'
   | 'evidence'
   | 'timeline'
 
@@ -107,12 +106,6 @@ const workspaceTabs: WorkspaceTabItem[] = [
     label: '发布的题解',
     buttonId: 'student-tab-writeups',
     panelId: 'student-writeups',
-  },
-  {
-    key: 'manual-review',
-    label: '人工审核',
-    buttonId: 'student-tab-manual-review',
-    panelId: 'student-manual-review',
   },
   {
     key: 'evidence',

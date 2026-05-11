@@ -387,7 +387,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
     expect(wrapper.text()).toContain('复盘工作台')
-    expect(wrapper.text()).toContain('人工审核题')
+    expect(wrapper.text()).toContain('题解列表')
     expect(wrapper.text()).toContain('misc-essay')
     expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('会话数')
@@ -395,6 +395,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('实操请求')
     expect(wrapper.text()).toContain('POST /login')
     expect(wrapper.text()).toContain('社区题解状态')
+    expect(wrapper.text()).toContain('审核状态')
+    expect(wrapper.text()).toContain('查看审核')
     expect(wrapper.text()).toContain('推荐题解')
     expect(wrapper.text()).toContain('已公开')
     expect(wrapper.text()).toContain('取消推荐')
@@ -465,6 +467,45 @@ describe('TeacherStudentAnalysis', () => {
 
     expect(teacherApiMocks.hideTeacherCommunityWriteup).toHaveBeenCalledWith('writeup-1')
     expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledTimes(2)
+  })
+
+  it('应在题解列表内打开并处理人工审核提交', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const reviewButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('查看审核'))
+
+    expect(reviewButton).toBeDefined()
+
+    await reviewButton?.trigger('click')
+    await flushPromises()
+
+    expect(teacherApiMocks.getTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1')
+    expect(wrapper.text()).toContain('完整答案正文')
+
+    const approveButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('审核通过'))
+
+    expect(approveButton).toBeDefined()
+
+    await approveButton?.trigger('click')
+    await flushPromises()
+
+    expect(teacherApiMocks.reviewTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1', {
+      review_status: 'approved',
+      review_comment: undefined,
+    })
   })
 
   it('应该支持包含百分号的班级名路由参数', async () => {
@@ -648,6 +689,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-overview').exists()).toBe(true)
     expect(wrapper.find('#student-tab-recommendations').exists()).toBe(true)
     expect(wrapper.find('#student-tab-writeups').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-manual-review').exists()).toBe(false)
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
     expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
