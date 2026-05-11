@@ -27,6 +27,8 @@ docs/design/*
 !docs/plan/
 !docs/plan/impl-plan/
 !docs/plan/impl-plan/*.md
+!docs/todos/
+!docs/todos/*.md
 !docs/refs/
 !docs/refs/*.md
 !docs/reviews/
