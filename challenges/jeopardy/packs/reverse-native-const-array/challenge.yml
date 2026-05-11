@@ -1,0 +1,40 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-native-const-array
+  title: "Reverse 训练：常量数组回推"
+  category: reverse
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:native-const-array
+    - kp:native-const-array
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/challenge.asm
+      name: challenge.asm
+    - path: attachments/challenge.rodata.txt
+      name: challenge.rodata.txt
+    - path: attachments/constants.txt
+      name: constants.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_native_const_array}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "常量表里每个值都比原字符大一个位置偏移。"
+  - level: 2
+    title: Hint 2
+    content: "objdump 的 rodata 已经足够解题。"
+
+runtime:
+  type: none

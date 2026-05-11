@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-email-forward-chain
+  title: "取证训练：转发邮件链"
+  category: forensics
+  difficulty: beginner
+  points: 100
+  tags:
+    - topic:email-thread-eml
+    - kp:eml-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/thread.eml
+      name: thread.eml
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_email_forward_chain}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "正文和附件是不同 part。"
+  - level: 2
+    title: Hint 2
+    content: "先把 MIME 结构走通，再看具体内容。"
+
+runtime:
+  type: none

@@ -1,0 +1,38 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-sqlite-wal-chat
+  title: "取证训练：聊天库 WAL 残留"
+  category: forensics
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:sqlite-wal-recovery
+    - kp:sqlite-wal
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/chat.db
+      name: chat.db
+    - path: attachments/chat.db-wal
+      name: chat.db-wal
+    - path: attachments/chat.db-shm
+      name: chat.db-shm
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_sqlite_wal_chat}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "把三份文件放在同一目录再开。"
+  - level: 2
+    title: Hint 2
+    content: "这是典型的 WAL 残留场景。"
+
+runtime:
+  type: none

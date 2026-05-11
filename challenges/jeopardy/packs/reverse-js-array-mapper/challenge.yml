@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-js-array-mapper
+  title: "Reverse 训练：前端数组映射"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:js-array-mapper
+    - kp:js-deobfuscation
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/check.js
+      name: check.js
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_js_array_mapper}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先把数组内容抠出来。"
+  - level: 2
+    title: Hint 2
+    content: "真正的变换只有一次 xor。"
+
+runtime:
+  type: none

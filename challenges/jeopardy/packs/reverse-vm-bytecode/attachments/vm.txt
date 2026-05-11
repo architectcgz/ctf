@@ -1,0 +1,5 @@
+# tiny vm
+# 0x01 imm -> push
+# 0x02 imm -> xor top
+# 0x03 -> output top
+# 0xFF -> halt

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-protocol-frame
+  title: "Reverse 训练：协议帧复原"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:protocol-frame
+    - kp:protocol-recovery
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/checker.txt
+      name: checker.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{10203040}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先区分数据字段和校验字段。"
+  - level: 2
+    title: Hint 2
+    content: "题面只要求你恢复关键字段，不必真的发包。"
+
+runtime:
+  type: none

@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-vm-bytecode
+  title: "Reverse 训练：自定义字节码机"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:vm-bytecode
+    - kp:custom-vm
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/vm.txt
+      name: vm.txt
+    - path: attachments/program.vmb
+      name: program.vmb
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_vm_bytecode}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先把指令集读清楚。"
+  - level: 2
+    title: Hint 2
+    content: "这类 VM 题通常先写个最小解释器。"
+
+runtime:
+  type: none

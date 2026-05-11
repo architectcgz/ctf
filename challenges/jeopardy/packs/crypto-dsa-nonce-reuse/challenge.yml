@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-dsa-nonce-reuse
+  title: "Crypto 训练：DSA 随机数复用"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:dsa-nonce-reuse
+    - kp:dsa-nonce-reuse
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/signatures.txt
+      name: signatures.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_dsa_nonce_reuse}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先从两次签名里恢复同一个 k。"
+  - level: 2
+    title: Hint 2
+    content: "最后一层只是很短的重复密钥异或。"
+
+runtime:
+  type: none

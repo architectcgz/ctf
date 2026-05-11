@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-cron-spool-inspection
+  title: "Misc 训练：计划任务遗留"
+  category: misc
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:cron-spool-inspection
+    - kp:cron-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/cron.tar.gz
+      name: cron.tar.gz
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_cron_spool_inspection}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先找入口，再跟脚本链，不要只停在 crontab。"
+  - level: 2
+    title: Hint 2
+    content: "输出路径变量通常就是关键线索。"
+
+runtime:
+  type: none

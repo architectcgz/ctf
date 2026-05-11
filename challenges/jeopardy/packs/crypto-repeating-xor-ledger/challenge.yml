@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-repeating-xor-ledger
+  title: "Crypto 训练：重复密钥异或账本"
+  category: crypto
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:repeating-key-xor
+    - kp:repeating-key-xor
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/ledger.bin
+      name: ledger.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_repeating_xor_ledger}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先比较不同 keysize 的归一化汉明距离。"
+  - level: 2
+    title: Hint 2
+    content: "拆列后每一列都可以看成单字节异或。"
+
+runtime:
+  type: none

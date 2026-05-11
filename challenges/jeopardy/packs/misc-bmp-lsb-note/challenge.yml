@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-bmp-lsb-note
+  title: "Misc 训练：BMP 低位留言"
+  category: misc
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:bmp-lsb
+    - kp:bmp-lsb
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/cover.bmp
+      name: cover.bmp
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_bmp_lsb_note}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "BMP 最适合做直接像素位分析。"
+  - level: 2
+    title: Hint 2
+    content: "优先看未压缩的单个颜色通道。"
+
+runtime:
+  type: none

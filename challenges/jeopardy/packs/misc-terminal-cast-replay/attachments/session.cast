@@ -1,0 +1,3 @@
+{"version": 2, "width": 80, "height": 24, "timestamp": 1715251200, "env": {"TERM": "xterm-256color"}}
+[0.1, "o", "$ cat /srv/export-code.txt\r\n"]
+[0.2, "o", "flag{misc_terminal_cast_replay}\r\n"]

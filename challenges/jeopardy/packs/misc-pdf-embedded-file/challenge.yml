@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-pdf-embedded-file
+  title: "Misc 训练：PDF 内嵌附件"
+  category: misc
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:pdf-embedded-file
+    - kp:pdf-object-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/brief.pdf
+      name: brief.pdf
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_pdf_embedded_file}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "重点看 `/EmbeddedFile` 和 `stream`。"
+  - level: 2
+    title: Hint 2
+    content: "先把 PDF 当结构化文本对象看。"
+
+runtime:
+  type: none

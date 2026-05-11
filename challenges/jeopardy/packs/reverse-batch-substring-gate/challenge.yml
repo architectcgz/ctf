@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-batch-substring-gate
+  title: "Reverse 训练：Batch 子串拼接门"
+  category: reverse
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:batch-substring-gate
+    - kp:batch-substring-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/gate.bat
+      name: gate.bat
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_batch_substring_gate}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "Batch 切片语法和 shell 不一样。"
+  - level: 2
+    title: Hint 2
+    content: "每段切片长度都已经给出来了。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-shell-parameter-maze
+  title: "Reverse 训练：Shell 参数迷宫"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:shell-parameter-maze
+    - kp:shell-parameter-expansion
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/check.sh
+      name: check.sh
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_shell_parameter_maze}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "`#` 是去前缀，`%` 是去后缀。"
+  - level: 2
+    title: Hint 2
+    content: "这里只用了最基础的两步裁剪。"
+
+runtime:
+  type: none

@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-rsa-fermat-ledger
+  title: "Crypto 训练：Fermat 审批单"
+  category: crypto
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:rsa-fermat
+    - kp:rsa-fermat-factor
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/rsa.txt
+      name: rsa.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{closefile}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "模数的两个因子只差几十。"
+  - level: 2
+    title: Hint 2
+    content: "这是 Fermat 分解的典型使用场景。"
+
+runtime:
+  type: none

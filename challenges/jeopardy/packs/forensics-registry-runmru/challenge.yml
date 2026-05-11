@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-registry-runmru
+  title: "取证训练：RunMRU 导出审计"
+  category: forensics
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:registry-export
+    - kp:registry-runmru
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/runmru.reg
+      name: runmru.reg
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_registry_runmru}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "RunMRU 是最直接的命令执行痕迹之一。"
+  - level: 2
+    title: Hint 2
+    content: "先定位这个键，再看值内容。"
+
+runtime:
+  type: none

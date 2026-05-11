@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-file-upload-double-ext
+  title: "Web 训练：双扩展上传绕过"
+  category: web
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:file-upload-double-ext
+    - kp:file-upload-bypass
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_file_upload_double_ext}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "想想服务端到底检查的是哪个扩展。"
+  - level: 2
+    title: Hint 2
+    content: "访问阶段又是按什么逻辑处理文件。"
+
+runtime:
+  type: none

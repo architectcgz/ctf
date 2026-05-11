@@ -1,0 +1,15 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Names << /EmbeddedFiles << /Names [(note.txt) 2 0 R] >> >> >>
+endobj
+2 0 obj
+<< /Type /Filespec /F (note.txt) /EF << /F 3 0 R >> >>
+endobj
+3 0 obj
+<< /Type /EmbeddedFile /Length 29 >>
+stream
+flag{misc_pdf_embedded_file}
+endstream
+endobj
+trailer << /Root 1 0 R >>
+%%EOF

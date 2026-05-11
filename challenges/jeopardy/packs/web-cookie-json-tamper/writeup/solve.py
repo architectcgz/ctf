@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import base64, json, os, socket, subprocess, sys, time, urllib.request
+from pathlib import Path
+
+
+def start(app: Path, port: int):
+    env = os.environ.copy()
+    env["PORT"] = str(port)
+    proc = subprocess.Popen([sys.executable, str(app)], cwd=app.parent, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for _ in range(50):
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.1):
+                return proc
+        except OSError:
+            time.sleep(0.1)
+    raise SystemExit("server not ready")
+
+
+def main() -> None:
+    root = Path(__file__).resolve().parents[1]
+    proc = start(root / "attachments" / "app.py", 18084)
+    try:
+        token = base64.urlsafe_b64encode(json.dumps({"user":"guest","role":"admin"}).encode()).decode()
+        req = urllib.request.Request("http://127.0.0.1:18084/admin", headers={"Cookie": f"session={token}"})
+        print(urllib.request.urlopen(req).read().decode().strip())
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
+if __name__ == "__main__":
+    main()

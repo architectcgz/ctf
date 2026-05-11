@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-pickle-session-lab
+  title: "Web 训练：反序列化会话"
+  category: web
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:pickle-session-lab
+    - kp:unsafe-deserialization
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/app.py
+      name: app.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_pickle_session_lab}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "`pickle.loads` 本身就是危险入口。"
+  - level: 2
+    title: Hint 2
+    content: "想想 `__reduce__` 能把还原动作改成什么。"
+
+runtime:
+  type: none

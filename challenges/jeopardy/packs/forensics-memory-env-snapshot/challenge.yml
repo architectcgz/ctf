@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-memory-env-snapshot
+  title: "取证训练：内存环境快照"
+  category: forensics
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:memory-strings-snapshot
+    - kp:strings-memory
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/snapshot.bin
+      name: snapshot.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_memory_env_snapshot}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先用 strings 类思路筛文本。"
+  - level: 2
+    title: Hint 2
+    content: "环境变量样式的键值对很值得重点看。"
+
+runtime:
+  type: none

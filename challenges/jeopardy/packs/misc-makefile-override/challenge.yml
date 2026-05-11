@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-makefile-override
+  title: "Misc 训练：Make 变量覆盖"
+  category: misc
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:makefile-override
+    - kp:make-override
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/makepack.tar.gz
+      name: makepack.tar.gz
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_makefile_override}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "注意 `?=` 的含义。"
+  - level: 2
+    title: Hint 2
+    content: "命令行变量优先级高于默认值。"
+
+runtime:
+  type: none

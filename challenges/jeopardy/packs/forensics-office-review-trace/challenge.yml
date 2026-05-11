@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-office-review-trace
+  title: "取证训练：文档修订痕迹"
+  category: forensics
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:office-ooxml-review
+    - kp:ooxml-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/review.docx
+      name: review.docx
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_office_review_trace}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "OOXML 文档本质是 zip。"
+  - level: 2
+    title: Hint 2
+    content: "优先检查 comments、revisions 这类侧边结构。"
+
+runtime:
+  type: none

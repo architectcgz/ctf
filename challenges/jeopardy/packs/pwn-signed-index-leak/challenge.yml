@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-signed-index-leak
+  title: "Pwn 训练：负索引泄露"
+  category: pwn
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:signed-index-leak
+    - kp:signed-oob-read
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_signed_index_leak}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "只校验 `idx < 8` 往往意味着下界没收口。"
+  - level: 2
+    title: Hint 2
+    content: "先算一个槽位占多少字节。"
+
+runtime:
+  type: none

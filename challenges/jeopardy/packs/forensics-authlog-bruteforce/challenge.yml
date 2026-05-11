@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-authlog-bruteforce
+  title: "取证训练：认证日志还原"
+  category: forensics
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:authlog-timeline
+    - kp:authlog-analysis
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/auth.log
+      name: auth.log
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_authlog_bruteforce}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先看 Accepted password 之后发生了什么。"
+  - level: 2
+    title: Hint 2
+    content: "sudo COMMAND 行通常最有价值。"
+
+runtime:
+  type: none

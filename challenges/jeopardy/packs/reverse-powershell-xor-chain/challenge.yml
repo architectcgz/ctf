@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-powershell-xor-chain
+  title: "Reverse 训练：PowerShell 异或链"
+  category: reverse
+  difficulty: easy
+  points: 150
+  tags:
+    - topic:powershell-xor-chain
+    - kp:powershell-deobfuscation
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/check.ps1
+      name: check.ps1
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_powershell_xor_chain}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "PowerShell 的 `-bxor` 就是按位异或。"
+  - level: 2
+    title: Hint 2
+    content: "数组里每个数字都对应一个字符。"
+
+runtime:
+  type: none

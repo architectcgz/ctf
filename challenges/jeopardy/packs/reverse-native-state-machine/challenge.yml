@@ -1,0 +1,38 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-native-state-machine
+  title: "Reverse 训练：状态机走图"
+  category: reverse
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:native-state-machine
+    - kp:state-machine-trace
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/challenge.asm
+      name: challenge.asm
+    - path: attachments/state_table.txt
+      name: state_table.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{ldd}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先把转移表抽出来。"
+  - level: 2
+    title: Hint 2
+    content: "求路径问题用 BFS 往往最稳。"
+
+runtime:
+  type: none

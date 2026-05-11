@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-env-precedence-merge
+  title: "Misc 训练：环境变量优先级"
+  category: misc
+  difficulty: medium
+  points: 200
+  tags:
+    - topic:env-precedence-merge
+    - kp:env-precedence
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/envpack.tar.gz
+      name: envpack.tar.gz
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_env_precedence_merge}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "这题关键不在格式，而在覆盖顺序。"
+  - level: 2
+    title: Hint 2
+    content: "最终值就是最后一个生效的同名变量。"
+
+runtime:
+  type: none

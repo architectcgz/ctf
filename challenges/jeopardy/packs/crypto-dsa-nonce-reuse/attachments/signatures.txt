@@ -1,0 +1,10 @@
+p=30803
+q=1531
+g=1274
+y=15326
+h1=871
+h2=1204
+r=67
+s1=1084
+s2=363
+cipher_hex=f3b24f46eebd5c58e5aa417ef1ad4f7efbb14042f0815c44e0ad4b5c
