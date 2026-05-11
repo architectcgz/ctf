@@ -191,30 +191,119 @@ flowchart LR
 
 ## 5. 跨模块协作边界
 
-### 5.1 当前主要依赖关系
+### 5.1 当前装配视图依赖
 
 ```mermaid
 flowchart LR
-    auth --> identity
-    challenge --> containerRuntime
-    practice --> challenge
-    practice --> instance
-    instance --> containerRuntime
-    practice --> assessment
-    contest --> challenge
-    contest --> containerRuntime
-    contest --> ops
-    assessment --> challenge
-    assessment --> practice
-    practiceReadmodel --> practice
-    teachingReadmodel --> assessment
-    teachingReadmodel --> contest
-    teachingReadmodel --> practice
-    ops --> auth
-    ops --> containerRuntime
+    subgraph Views["app/composition 组合视图"]
+        CR["container_runtime"]
+        IM["instance"]
+    end
+
+    subgraph Modules["组合后的模块输出"]
+        Identity["identity"]
+        Auth["auth"]
+        Challenge["challenge"]
+        Assessment["assessment"]
+        Teaching["teaching_readmodel"]
+        Contest["contest"]
+        Practice["practice"]
+        PracticeRM["practice_readmodel"]
+        Ops["ops"]
+    end
+
+    Identity -->|users / profile services| Auth
+    Ops -.audit recorder 注入.-> Auth
+    Auth -.token service 注入.-> Ops
+
+    CR -->|runtime query / stats| Ops
+    CR -->|engine / repo| IM
+    CR -->|image runtime / probe| Challenge
+    CR -->|container files / probe| Contest
+
+    Challenge -->|catalog| Assessment
+    Assessment -->|recommendations| Teaching
+
+    Challenge -->|catalog / image store / flag validator| Contest
+    Ops -->|ws manager| Contest
+
+    Challenge -->|catalog / image store| Practice
+    IM -->|instance repo / runtime svc| Practice
+    Assessment -->|profile service| Practice
 ```
 
-### 5.2 协作方式
+这张图描述的是 `internal/app/composition/*.go` 里的进程装配关系，也就是 router/runtime 在启动时把哪些模块或组合视图接在一起。`container_runtime`、`instance` 在这里是 app 层组合视图，不是 `internal/module/*` 下的物理模块。
+
+- 实线表示当前组合装配里的能力提供关系。
+- 虚线表示 capability injection，不等同于模块内部 import。
+
+### 5.2 当前代码级模块依赖
+
+这里的“代码级依赖”指 `internal/module/*` 之间实际发生的 import 关系，以 `code/backend/internal/module/architecture_allowlist_test.go` 为准；它和上面的装配视图不完全等价。
+
+```mermaid
+flowchart LR
+    subgraph Physical["internal/module 物理模块"]
+        Identity["identity"]
+        Auth["auth"]
+        Challenge["challenge"]
+        Assessment["assessment"]
+        Ops["ops"]
+        Contest["contest"]
+        Practice["practice"]
+        Instance["instance"]
+        Runtime["runtime"]
+        PracticeRM["practice_readmodel\nno module import"]
+        TeachingRM["teaching_readmodel"]
+    end
+
+    Auth -->|contracts| Identity
+
+    Assessment -->|practice contracts| Practice
+    Assessment -->|contest contracts| Contest
+
+    Ops -->|token service| Auth
+    Ops -->|practice events| Practice
+
+    Contest -->|token service| Auth
+    Contest -->|contracts / ports| Challenge
+    Contest -.runtime.domain reviewed exception.-> Runtime
+
+    Practice -->|profile service| Assessment
+    Practice -->|challenge contracts| Challenge
+    Practice -.contest.domain reviewed exception.-> Contest
+    Practice -->|runtime ports| Runtime
+
+    Runtime -->|challenge ports| Challenge
+    Runtime -->|contest ports| Contest
+    Runtime -->|ops ports| Ops
+    Runtime -->|practice ports| Practice
+    Runtime -->|instance ports| Instance
+
+    TeachingRM -->|recommendation provider| Assessment
+```
+
+| 模块 | 当前允许直接依赖 | 主要边界落点 | 说明 |
+|------|------------------|--------------|------|
+| `identity` | 无 | 无 | 纯 owner 模块，对外提供用户、资料、管理端用户 contract |
+| `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
+| `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime` |
+| `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
+| `ops` | `auth`、`practice` | `auth/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 practice 事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
+| `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
+| `practice` | `assessment`、`challenge`、`contest`、`runtime` | `assessment/contracts`、`challenge/contracts`、`contest/domain`、`runtime/ports` | 生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
+| `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
+| `runtime` | `challenge`、`contest`、`ops`、`practice`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops / practice 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape |
+| `practice_readmodel` | 无 | 无 | 当前通过本模块 repository 直接读库聚合练习态，不 import `practice` 写模块 |
+| `teaching_readmodel` | `assessment` | `assessment/contracts` | 当前只直接复用 `assessment.RecommendationProvider`；其余教师视角聚合查询由本模块 repository 完成 |
+
+补充说明：
+
+- `practice_readmodel` 语义上服务练习态列表和时间线，但当前实现不是通过 `practice/contracts` 聚合，而是由本模块 repository 直接查询只读事实。
+- `teaching_readmodel` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装。
+- `runtime -> instance` 这条代码级依赖当前主要落在 `runtime/ports/http.go`、`runtime/ports/metrics.go` 对 `instance/ports` shape 的复用，以及测试继续校验旧能力是否已迁到 `instance` owner。
+
+### 5.3 协作方式
 
 | 方式 | 当前用途 | 规则 |
 |------|----------|------|
@@ -223,7 +312,7 @@ flowchart LR
 | `readmodel` 聚合 | 教师端、复盘、统计、跨模块列表查询 | 只读，不拥有状态变更 |
 | `events.Bus` | 异步通知、非关键路径广播 | 不能替代关键写路径事务语义 |
 
-### 5.3 共享运行时边界
+### 5.4 共享运行时边界
 
 `runtime` 当前仍是共享的底层物理模块，但 app 层已经把“实例入口”从“容器运行能力”中拆成两个显式组合视图，并把实例 owner use case 直接装到 `internal/module/instance/*`：
 
