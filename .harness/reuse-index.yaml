@@ -1,0 +1,24 @@
+# Durable reuse index. Keep this file cumulative; do not replace it with the current task.
+entries:
+  - id: challenge-attachment-native-download
+    updated_at: "2026-05-11"
+    change_types:
+      - hook
+      - page
+    keywords:
+      - challenge-detail
+      - platform-challenge-detail
+      - attachment
+      - native-download
+      - content-disposition
+    decision: extend_existing
+    must_reuse:
+      - code/frontend/src/features/challenge-detail/model/useChallengeDetailInteractions.ts
+      - code/frontend/src/features/platform-challenge-detail/model/usePlatformChallengeDetailPage.ts
+      - code/frontend/src/api/challenge.ts
+    tests:
+      - code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts
+      - code/frontend/src/views/platform/__tests__/ChallengeDetail.test.ts
+    notes:
+      - Use the existing backend attachment endpoint and browser-native download path.
+      - Do not add a parallel Axios Blob/objectURL download service for the same attachment flow.

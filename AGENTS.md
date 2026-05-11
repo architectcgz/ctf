@@ -106,9 +106,10 @@
   当任务新增或修改 `page / component / hook / service / store / api / form / table / modal / layout / schema` 时，编码前必须先执行：
   1. `Classify`：判断本次改动属于页面、组件、接口、状态、样式、表单还是业务逻辑。
   2. `Search`：至少在 `code/frontend/src/views`、`code/frontend/src/components`、`code/frontend/src/features`、`code/frontend/src/widgets`、`code/frontend/src/composables`、`code/frontend/src/api`、`code/frontend/src/stores` 中搜索相似实现；涉及 backend service/schema 时额外搜索 `code/backend/internal`。
-  3. `Decide`：在 `.harness/reuse-decision.md` 中写清 `reuse_existing / extend_existing / refactor_existing / create_new_with_reason`。
+  3. `Decide`：在 `.harness/reuse-decision.md` 中写清本次任务的 `reuse_existing / extend_existing / refactor_existing / create_new_with_reason`。
   4. `Implement`：只有前三步完成后才允许写代码。
 - 新增页面前必须先阅读 `harness/policies/project-patterns.yaml`。若命中已有 pattern，优先复用其中的 `examples` 和 `must_reuse` 模块。
+- `.harness/reuse-decision.md` 只保存当前任务决策，可以被下一次受保护改动覆盖；长期复用线索必须沉淀到 `.harness/reuse-index.yaml`，完整历史摘要追加到 `.harness/reuse-history.md`，避免历史复用判断随当前任务被替换。
 - 不允许在已有实现可以复用、扩展或先抽取的情况下继续创建并行页面、表格、表单、API wrapper、hook 或 store。
 - 本地 workflow 是 reuse-first harness 的权威入口。
   `scripts/check-reuse-first.sh` 和 `.githooks/pre-commit` 会把缺少复用决策、未引用相似页面 / hook / API wrapper 的变更视为失败；GitHub workflow 不是这条规则成立的前提。

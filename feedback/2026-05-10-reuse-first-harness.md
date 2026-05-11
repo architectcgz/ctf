@@ -13,7 +13,8 @@
 ## 解决方案
 
 - 新增 `harness/policies/reuse-first.yaml` 和 `harness/policies/project-patterns.yaml`，把受保护创建面和项目标准模式机器可读化。
-- 新增 `.harness/reuse-decision.md`，要求在受保护改动前先写复用决策。
+- 新增 `.harness/reuse-decision.md`，要求在受保护改动前先写当前任务复用决策；该文件可以被下一次任务覆盖。
+- 新增 `.harness/reuse-index.yaml` 和 `.harness/reuse-history.md`，分别保存长期复用索引和 append-only 历史摘要，避免历史复用线索随当前任务被替换。
 - 新增 `harness/checks/*` 和 `scripts/check-reuse-first.sh`，让本地 pre-commit 与手工自检都能拒绝未做复用检索的新实现。
 - 在 `AGENTS.md` 中补上 `Classify -> Search -> Decide -> Implement` 的硬步骤。
 
@@ -23,7 +24,8 @@
 
 1. 模式索引
 2. 决策证据
-3. 提交前脚本
-4. 本地 hook / 本地脚本复查
+3. 长期复用索引和历史记录
+4. 提交前脚本
+5. 本地 hook / 本地脚本复查
 
 这样 agent 即使知道原则，也很难绕开执行闭环。

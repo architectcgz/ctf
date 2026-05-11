@@ -156,6 +156,8 @@ check_contains "docs/architecture/README.md" 'code/frontend/src/__tests__/archit
 echo "[C11] reuse-first harness is wired"
 check_dir ".harness"
 check_file ".harness/reuse-decision.md"
+check_file ".harness/reuse-index.yaml"
+check_file ".harness/reuse-history.md"
 check_dir "harness"
 check_file "harness/policies/reuse-first.yaml"
 check_file "harness/policies/project-patterns.yaml"
@@ -170,6 +172,8 @@ check_file "harness/checks/check-api-wrapper-duplication.py"
 check_contains "AGENTS.md" 'reuse-first harness' "AGENTS declares reuse-first harness"
 check_contains "AGENTS.md" 'harness/policies/project-patterns\.yaml' "AGENTS references project patterns index"
 check_contains "AGENTS.md" '\.harness/reuse-decision\.md' "AGENTS references reuse decision file"
+check_contains "AGENTS.md" '\.harness/reuse-index\.yaml' "AGENTS references durable reuse index"
+check_contains "AGENTS.md" '\.harness/reuse-history\.md' "AGENTS references append-only reuse history"
 check_contains "AGENTS.md" '本地 workflow 是 reuse-first harness 的权威入口' "AGENTS marks local workflow as authoritative"
 
 if [[ "$fail" -eq 0 ]]; then

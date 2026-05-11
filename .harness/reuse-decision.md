@@ -1,5 +1,8 @@
 # Reuse Decision
 
+This file is only for the current task and may be overwritten.
+Durable reuse knowledge belongs in `.harness/reuse-index.yaml`; append-only summaries belong in `.harness/reuse-history.md`.
+
 ## Change type
 - hook
 - page

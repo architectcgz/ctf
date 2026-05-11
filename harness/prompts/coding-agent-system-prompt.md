@@ -33,6 +33,10 @@ You are not allowed to create a parallel implementation if an existing one can b
 
 Before implementation, update `.harness/reuse-decision.md`.
 
+`.harness/reuse-decision.md` is the current task scratchpad. It may be overwritten by the next protected change.
+Before searching from scratch, also read `.harness/reuse-index.yaml` for durable reusable patterns.
+After implementation, append reusable decisions to `.harness/reuse-history.md` and update `.harness/reuse-index.yaml` when future agents should find the pattern directly.
+
 The Reuse Decision must include:
 
 - Change type

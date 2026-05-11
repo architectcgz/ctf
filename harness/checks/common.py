@@ -12,6 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REUSE_DECISION_PATH = ROOT / ".harness" / "reuse-decision.md"
+REUSE_HISTORY_PATH = ROOT / ".harness" / "reuse-history.md"
+REUSE_INDEX_PATH = ROOT / ".harness" / "reuse-index.yaml"
 POLICY_DIR = ROOT / "harness" / "policies"
 
 SEARCH_ROOTS = [
@@ -201,6 +203,14 @@ def load_reuse_decision_text() -> str:
     if not REUSE_DECISION_PATH.is_file():
         return ""
     return REUSE_DECISION_PATH.read_text(encoding="utf-8")
+
+
+def load_reuse_reference_text() -> str:
+    parts = [load_reuse_decision_text()]
+    for path in (REUSE_INDEX_PATH, REUSE_HISTORY_PATH):
+        if path.is_file():
+            parts.append(path.read_text(encoding="utf-8"))
+    return "\n".join(part for part in parts if part)
 
 
 def validate_reuse_decision(text: str, protected_paths: list[str]) -> list[str]:

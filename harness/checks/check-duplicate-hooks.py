@@ -10,7 +10,7 @@ from common import (
     extract_keyword_hits,
     extract_name_tokens,
     get_changed_files,
-    load_reuse_decision_text,
+    load_reuse_reference_text,
     parse_diff_args,
     read_text,
     repo_files,
@@ -39,7 +39,7 @@ def main() -> int:
         print("PASS: no new hook files added")
         return 0
 
-    decision_text = load_reuse_decision_text()
+    decision_text = load_reuse_reference_text()
     existing_hooks = repo_files(HOOK_PATTERNS, exclude=set(new_hooks))
     failures = 0
 
@@ -63,7 +63,8 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please reference the similar hooks in .harness/reuse-decision.md before creating another one-off hook.",
+            "Please reference the similar hooks in .harness/reuse-decision.md before creating another one-off hook. "
+            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
             file=sys.stderr,
         )
 

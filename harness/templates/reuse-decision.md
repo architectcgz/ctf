@@ -1,5 +1,11 @@
 # Reuse Decision
 
+This file is only for the current task and may be overwritten by the next protected change.
+Durable reuse knowledge belongs in:
+
+- `.harness/reuse-index.yaml` for searchable pattern entries.
+- `.harness/reuse-history.md` for append-only decision history.
+
 ## Change type
 page / component / hook / service / store / api / form / table / modal / layout / schema
 
@@ -24,3 +30,7 @@ Explain why the existing implementation can be reused, extended, refactored, or 
 ## Files to modify
 - code/frontend/src/views/example/ExampleList.vue
 - code/frontend/src/components/common/WorkspaceDataTable.vue
+
+## After implementation
+- If this decision is reusable, append a short entry to `.harness/reuse-history.md`.
+- If future tasks should find this pattern without rereading old decisions, add or update an entry in `.harness/reuse-index.yaml`.

@@ -9,7 +9,7 @@ from common import (
     extract_keyword_hits,
     extract_name_tokens,
     get_changed_files,
-    load_reuse_decision_text,
+    load_reuse_reference_text,
     parse_diff_args,
     read_text,
     repo_files,
@@ -50,7 +50,7 @@ def main() -> int:
         print("PASS: no new page files added")
         return 0
 
-    decision_text = load_reuse_decision_text()
+    decision_text = load_reuse_reference_text()
     existing_pages = repo_files(PAGE_PATTERNS, exclude=set(new_pages))
     failures = 0
 
@@ -75,7 +75,8 @@ def main() -> int:
             print(f"- {candidate}", file=sys.stderr)
         print(
             "Please update .harness/reuse-decision.md to reference these files and explain "
-            "why you are reusing, extending, refactoring, or creating a new page.",
+            "why you are reusing, extending, refactoring, or creating a new page. "
+            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
             file=sys.stderr,
         )
 

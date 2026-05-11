@@ -7,7 +7,7 @@ from common import (
     API_PATTERNS,
     extract_request_signatures,
     get_changed_files,
-    load_reuse_decision_text,
+    load_reuse_reference_text,
     parse_diff_args,
     read_text,
     repo_files,
@@ -52,7 +52,7 @@ def main() -> int:
         print("PASS: no new API wrapper files added")
         return 0
 
-    decision_text = load_reuse_decision_text()
+    decision_text = load_reuse_reference_text()
     existing_api_files = repo_files(API_PATTERNS, exclude=set(new_api_files))
     failures = 0
 
@@ -78,7 +78,8 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please cite the existing API wrappers in .harness/reuse-decision.md and explain why they cannot be extended.",
+            "Please cite the existing API wrappers in .harness/reuse-decision.md and explain why they cannot be extended. "
+            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
             file=sys.stderr,
         )
 

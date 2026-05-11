@@ -29,14 +29,16 @@
 2. `harness/policies/project-patterns.yaml`
    - 用当前仓库真实页面、表格、toolbar、hook、API wrapper 建立模式索引。
 3. `.harness/reuse-decision.md`
-   - 作为每次受保护改动前必须更新的复用决策记录。
-4. `harness/checks/*.py` + `scripts/check-reuse-first.sh`
+   - 作为每次受保护改动前必须更新的当前任务复用决策记录，可以被下一次任务覆盖。
+4. `.harness/reuse-index.yaml` + `.harness/reuse-history.md`
+   - 长期保存可复用模式索引和 append-only 历史摘要，避免当前任务覆盖历史复用线索。
+5. `harness/checks/*.py` + `scripts/check-reuse-first.sh`
    - 机械化检查 reuse decision、相似页面、重复 hook、重复 API wrapper。
-5. `.githooks/pre-commit`
+6. `.githooks/pre-commit`
    - 本地提交前执行 reuse-first 检查。
-6. 可选的远端 workflow
+7. 可选的远端 workflow
    - 若仓库需要额外兜底，可再接 CI；但它不是本轮约束成立的前提。
-6. `AGENTS.md` + `harness/prompts/coding-agent-system-prompt.md`
+8. `AGENTS.md` + `harness/prompts/coding-agent-system-prompt.md`
    - 把 Step 1 Classify / Step 2 Search / Step 3 Decide / Step 4 Implement 固化进当前 agent 工作流。
 
 ### 结构适配
@@ -54,6 +56,8 @@
 - 新增 `harness/templates/reuse-decision.md`
 - 新增 `harness/templates/pattern-index-example.yaml`
 - 新增 `.harness/reuse-decision.md`
+- 新增 `.harness/reuse-index.yaml`
+- 新增 `.harness/reuse-history.md`
 - 新增 `harness/prompts/coding-agent-system-prompt.md`
 
 验证：
@@ -94,7 +98,7 @@
 
 ## Plan Review
 
-- ownership：reuse-first 的事实源分成三层，`harness/policies/*` 管规则，`.harness/reuse-decision.md` 管本轮决策证据，`harness/checks/*` 管执行。
+- ownership：reuse-first 的事实源分成四层，`harness/policies/*` 管规则，`.harness/reuse-decision.md` 管本轮决策证据，`.harness/reuse-index.yaml` 和 `.harness/reuse-history.md` 管长期复用线索，`harness/checks/*` 管执行。
 - reuse point：页面模式、hook/API 复用点都落到 `project-patterns.yaml`，避免把“先搜一搜”只写在 prompt 里。
 - hidden redesign risk：这一轮不动历史页面结构，只新增 guardrail；不会形成“先上规则、马上再重构规则本身”的第二轮立刻重设计。
 - touched debt：当前前端已有 `components/*Page.vue` 与 `views/*.vue` 并存，这是已知历史形态。这一轮不新增第三种页面入口，而是把两类现有入口都纳入 reuse-first 检查。
