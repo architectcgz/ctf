@@ -12,11 +12,12 @@ import (
 )
 
 type Handler struct {
-	service teachingreadmodelqueries.Service
+	service         teachingreadmodelqueries.Service
+	overviewService teachingreadmodelqueries.OverviewService
 }
 
-func NewHandler(service teachingreadmodelqueries.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service teachingreadmodelqueries.Service, overviewService teachingreadmodelqueries.OverviewService) *Handler {
+	return &Handler{service: service, overviewService: overviewService}
 }
 
 func (h *Handler) ListClasses(c *gin.Context) {
@@ -73,7 +74,7 @@ func (h *Handler) ListClassStudents(c *gin.Context) {
 func (h *Handler) GetOverview(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 
-	overview, err := h.service.GetOverview(c.Request.Context(), currentUser.UserID, currentUser.Role)
+	overview, err := h.overviewService.GetOverview(c.Request.Context(), currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return

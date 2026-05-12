@@ -127,10 +127,20 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 		"repo            readmodelports.Repository",
 		"recommendations assessmentcontracts.RecommendationProvider",
 		"buildQueryService(",
+		"buildOverviewService(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("teaching_readmodel runtime should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"Query   readmodelqueries.Service",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("teaching_readmodel runtime should not keep wide query export marker %s", marker)
 		}
 	}
 }

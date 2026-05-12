@@ -5,12 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
-	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -147,15 +142,7 @@ func (s *overviewRepoStub) GetOverviewTrend(
 	return &readmodelports.OverviewTrend{}, nil
 }
 
-type overviewRecommendationStub struct{}
-
-func (overviewRecommendationStub) Recommend(context.Context, int64, int) (*dto.RecommendationResp, error) {
-	return &dto.RecommendationResp{}, nil
-}
-
-var _ assessmentcontracts.RecommendationProvider = (*overviewRecommendationStub)(nil)
-
-func TestQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
+func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 	t.Parallel()
 
 	repo := &overviewRepoStub{
@@ -223,12 +210,7 @@ func TestQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 		},
 	}
 
-	service := NewQueryService(
-		repo,
-		overviewRecommendationStub{},
-		config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100},
-		zap.NewNop(),
-	)
+	service := NewOverviewService(repo)
 
 	overview, err := service.GetOverview(context.Background(), 11, model.RoleTeacher)
 	if err != nil {
@@ -264,7 +246,7 @@ func TestQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 	}
 }
 
-func TestQueryServiceGetOverviewWithoutAccessibleClassReturnsEmptyScope(t *testing.T) {
+func TestOverviewQueryServiceGetOverviewWithoutAccessibleClassReturnsEmptyScope(t *testing.T) {
 	t.Parallel()
 
 	repo := &overviewRepoStub{
@@ -273,12 +255,7 @@ func TestQueryServiceGetOverviewWithoutAccessibleClassReturnsEmptyScope(t *testi
 		},
 	}
 
-	service := NewQueryService(
-		repo,
-		overviewRecommendationStub{},
-		config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100},
-		zap.NewNop(),
-	)
+	service := NewOverviewService(repo)
 
 	overview, err := service.GetOverview(context.Background(), 22, model.RoleTeacher)
 	if err != nil {

@@ -196,11 +196,12 @@ flowchart LR
 
 ### 阶段 4：复核 readmodel
 
-当前状态（2026-05-12，phase 4 / slice 1）：
+当前状态（2026-05-12，phase 4 / slice 2）：
 
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已并回 `practice/application/queries` 与 `practice/api/http`。
 - `internal/module/practice_readmodel/` 已删除，因为这两条查询只读取 `practice` 自有事实，不构成跨 owner readmodel。
 - 当前 readmodel 只保留 `teaching_readmodel` 这类真实跨 owner 聚合入口。
+- 教师总览 `GetOverview` 已从宽 `teaching_readmodel/application/queries.Service` 中拆到独立 `OverviewService`；`teaching_readmodel/api/http.Handler` 不再通过单个大一统 query 接口承接 overview。
 
 目标：
 
@@ -211,7 +212,7 @@ flowchart LR
 
 1. 逐个查询标注数据来源和 UI consumer。
 2. 纯 practice 查询继续留在 `practice/application/queries`。
-3. 跨 owner 查询保留 `teaching_readmodel`，并拆小 ports：证据链、班级洞察、教师总览等。
+3. 跨 owner 查询保留 `teaching_readmodel`，并继续把 class insight / student review 从剩余宽 query surface 里拆开。
 
 ### 阶段 5：收窄 application concrete allowlist
 

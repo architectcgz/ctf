@@ -14,7 +14,6 @@ import (
 
 type Module struct {
 	Handler *teachinghttp.Handler
-	Query   readmodelqueries.Service
 }
 
 type Deps struct {
@@ -44,8 +43,7 @@ func Build(deps Deps) *Module {
 	service := buildQueryService(internalDeps)
 
 	return &Module{
-		Handler: teachinghttp.NewHandler(service),
-		Query:   service,
+		Handler: teachinghttp.NewHandler(service, buildOverviewService(internalDeps)),
 	}
 }
 
@@ -66,4 +64,8 @@ func buildQueryService(deps moduleDeps) readmodelqueries.Service {
 		cfg.Pagination,
 		log.Named("teaching_readmodel_query_service"),
 	)
+}
+
+func buildOverviewService(deps moduleDeps) readmodelqueries.OverviewService {
+	return readmodelqueries.NewOverviewService(deps.repo)
 }
