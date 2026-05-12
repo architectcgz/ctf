@@ -12,28 +12,25 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 )
 
-type stubPracticeQuery struct {
+type stubPracticeProgressQuery struct {
 	getProgressFn func(ctx context.Context, userID int64) (*dto.ProgressResp, error)
 	getTimelineFn func(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error)
 }
 
-func (s *stubPracticeQuery) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
+func (s *stubPracticeProgressQuery) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
 	return s.getProgressFn(ctx, userID)
 }
 
-func (s *stubPracticeQuery) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
+func (s *stubPracticeProgressQuery) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
 	return s.getTimelineFn(ctx, userID, limit, offset)
 }
 
-func TestNewHandlerAcceptsPracticeQueryContract(t *testing.T) {
+func TestHandlerUsesPracticeQueryForProgress(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	var _ practicereadmodelqueries.Service = (*stubPracticeQuery)(nil)
-
-	handler := NewHandler(&stubPracticeQuery{
+	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
 		getProgressFn: func(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
 			if userID != 42 {
 				t.Fatalf("unexpected user id: %d", userID)
@@ -71,8 +68,8 @@ func TestNewHandlerAcceptsPracticeQueryContract(t *testing.T) {
 func TestHandlerUsesPracticeQueryForTimeline(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	now := time.Now()
-	handler := NewHandler(&stubPracticeQuery{
+	now := time.Now().UTC()
+	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
 		getTimelineFn: func(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
 			if userID != 7 {
 				t.Fatalf("unexpected user id: %d", userID)

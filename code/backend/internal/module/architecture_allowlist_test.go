@@ -84,7 +84,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"practice/application/commands/submission_service.go -> gorm.io/gorm":                                {},
 	"practice/application/queries/score_service.go -> github.com/redis/go-redis/v9":                      {},
 	"practice/application/queries/score_service.go -> gorm.io/gorm":                                      {},
-	"practice_readmodel/application/queries/service.go -> github.com/redis/go-redis/v9":                  {},
 }
 
 var allowedCrossModulePrivateImports = map[string]struct{}{

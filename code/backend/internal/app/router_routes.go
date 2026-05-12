@@ -38,7 +38,6 @@ type userRouteDeps struct {
 	contest           *composition.ContestModule
 	instance          *composition.InstanceModule
 	practice          *composition.PracticeModule
-	practiceReadmodel *composition.PracticeReadmodelModule
 	teachingReadmodel *composition.TeachingReadmodelModule
 }
 
@@ -843,8 +842,8 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.instance.Handler.ProxyInstance)
 
 	usersGroup := protected.Group("/users")
-	usersGroup.GET("/me/progress", deps.practiceReadmodel.Handler.GetProgress)
-	usersGroup.GET("/me/timeline", deps.practiceReadmodel.Handler.GetTimeline)
+	usersGroup.GET("/me/progress", deps.practice.Handler.GetProgress)
+	usersGroup.GET("/me/timeline", deps.practice.Handler.GetTimeline)
 	usersGroup.GET("/me/skill-profile", deps.assessment.Handler.GetMySkillProfile)
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)

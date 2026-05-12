@@ -7,7 +7,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *QueryService) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
+func (s *ProgressTimelineService) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
 	events, err := s.repo.GetUserTimeline(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)

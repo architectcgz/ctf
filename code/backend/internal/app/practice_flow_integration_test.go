@@ -46,9 +46,6 @@ import (
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
-	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
-	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -876,7 +873,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		},
 		logger,
 	)
-	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, cache, &challengeqry.Config{
+	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, challengeinfra.NewSolvedCountCache(cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
 	challengeHandler := challengehttp.NewHandler(challengeCommandService, challengeQueryService)
@@ -921,10 +918,13 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		logger)
 
 	practiceScoreQueryService := practiceqry.NewScoreService(practiceRepo, cache, logger, &cfg.Score)
-	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService)
-	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
-	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
-	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
+	practiceProgressTimelineService := practiceqry.NewProgressTimelineService(
+		practiceRepo,
+		practiceinfra.NewProgressCache(cache),
+		cfg.Cache.ProgressTTL,
+		logger,
+	)
+	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService, practiceProgressTimelineService)
 	teachingReadmodelRepo := teachingreadmodelinfra.NewRepository(db)
 	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, nil, cfg.Pagination, logger)
 	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(teachingReadmodelService)
@@ -976,8 +976,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	apiV1.GET("/instances/:id/proxy", runtimeHandler.ProxyInstance)
 	apiV1.Any("/instances/:id/proxy/*proxyPath", runtimeHandler.ProxyInstance)
 	usersGroup := protected.Group("/users")
-	usersGroup.GET("/me/progress", practiceReadmodelHandler.GetProgress)
-	usersGroup.GET("/me/timeline", practiceReadmodelHandler.GetTimeline)
+	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
+	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
 	teacherGroup := protected.Group("/teacher")
 	teacherGroup.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
 	teacherGroup.GET("/students/:id/evidence", teachingReadmodelHandler.GetStudentEvidence)

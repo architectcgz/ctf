@@ -7,16 +7,16 @@
 ## 当前设计
 
 - `code/backend/internal/app/router.go`、`code/backend/internal/app/composition/*.go`
-  - 负责：装配 `auth`、`identity`、`challenge`、`container_runtime`、`instance`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 模块，注册 HTTP 路由、后台任务和进程生命周期关闭逻辑；其中 `ContainerRuntimeModule` 收口 challenge/contest/ops 的 container-facing 能力，`InstanceModule` 收口实例与 AWD 访问入口；Guardrail 见 `code/backend/internal/app/router_test.go` 与 `code/backend/internal/app/full_router_integration_test.go`
+  - 负责：装配 `auth`、`identity`、`challenge`、`container_runtime`、`instance`、`practice`、`contest`、`assessment`、`ops`、`teaching_readmodel` 模块，注册 HTTP 路由、后台任务和进程生命周期关闭逻辑；其中 `ContainerRuntimeModule` 收口 challenge/contest/ops 的 container-facing 能力，`InstanceModule` 收口实例与 AWD 访问入口；`practice` 现在同时承接用户态 `progress` / `timeline` 查询；Guardrail 见 `code/backend/internal/app/router_test.go` 与 `code/backend/internal/app/full_router_integration_test.go`
   - 不负责：实现具体业务规则、状态迁移或持久化细节
 
 - `code/backend/internal/module/*/application`、`code/backend/internal/module/*/domain`、`code/backend/internal/module/*/ports`、`code/backend/internal/module/*/infrastructure`
   - 负责：按模块 owner 承担用例编排、状态机、端口定义与外部适配；依赖方向由 `code/backend/internal/module/architecture_test.go` 和各模块 `architecture_test.go` 约束
   - 不负责：跨模块直接依赖对方 `infrastructure`，也不在 `api` 层写业务规则
 
-- `code/backend/internal/module/practice_readmodel`、`code/backend/internal/module/teaching_readmodel`
-  - 负责：教师视角、练习视角和复盘查询的只读聚合；HTTP 入口见 `code/backend/internal/module/teaching_readmodel/api/http/handler.go`
-  - 不负责：作为写模型 owner 修改练习、竞赛、评估等业务状态
+- `code/backend/internal/module/practice`、`code/backend/internal/module/teaching_readmodel`
+  - 负责：`practice` 负责训练写路径以及用户态 `GET /api/v1/users/me/progress`、`GET /api/v1/users/me/timeline` 查询；`teaching_readmodel` 负责教师视角和复盘查询聚合
+  - 不负责：把只读取 practice 自有事实的用户态查询继续拆成独立 readmodel，或作为写模型 owner 修改练习、竞赛、评估等业务状态
 
 - `code/backend/internal/module/runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
   - 负责：`internal/module/runtime/*` 当前承接 container runtime capability、共享 adapter 与底层运行时 ports，并通过显式 capability fields 暴露 provisioning / cleanup / file / inventory / interactive 等能力；`internal/module/instance/*` 负责实例命令、查询、proxy ticket 与 maintenance owner；app 层再把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，并在 composition 本地拼出 maintenance 所需的 inspect/start 视图
@@ -92,7 +92,7 @@ flowchart LR
 
 补充约定：
 
-- `practice_readmodel`、`teaching_readmodel` 是只读聚合模块，不以写模型 owner 自居。
+- `teaching_readmodel` 是跨 owner 的只读聚合模块；`practice` 内的 progress / timeline query 只读取本模块自有事实。
 - 并不是每个模块都必须拥有全部子目录；例如读模型模块可以没有 `domain`，但依赖方向仍保持一致。
 
 ### 2.3 依赖规则
@@ -102,7 +102,7 @@ flowchart LR
 - `infrastructure` 负责实现 `ports`，并连接 PostgreSQL、Redis、Docker、文件系统等外部资源。
 - `runtime` 与 `internal/app/composition` 位于最外层，只负责装配，不承载业务规则。
 - 跨模块调用优先走对方的 `application` / `contracts` / `ports`，禁止直接依赖对方 `infrastructure`。
-- 需要跨模块做复杂只读聚合时，进入 `practice_readmodel` 或 `teaching_readmodel`，而不是把教师视角或页面视角写成业务 owner。
+- 需要跨模块做复杂只读聚合时，进入 `teaching_readmodel`，而不是把教师视角或页面视角写成业务 owner。
 
 ### 2.4 Composition Root 与生命周期
 
@@ -124,7 +124,6 @@ flowchart LR
   - `teaching_readmodel`
   - `contest`
   - `practice`
-  - `practice_readmodel`
 - 当前 app 层把同一个 `runtime` 物理模块收口成两种视图：
   - `ContainerRuntimeModule`：供 `challenge`、`contest`、`ops` 使用的镜像探针、容器文件和运行时统计能力
   - `InstanceModule`：供 `practice` 和用户/教师实例路由使用的实例仓储、运行时服务与实例访问 handler，并在开启防守 SSH 时注册网关任务
@@ -159,7 +158,6 @@ flowchart TD
         Teaching["TeachingReadmodelModule"]
         Contest["ContestModule"]
         Practice["PracticeModule"]
-        PracticeRM["PracticeReadmodelModule"]
         Ops["OpsModule"]
     end
 
@@ -172,7 +170,6 @@ flowchart TD
     RootNode --> Teaching
     RootNode --> Contest
     RootNode --> Practice
-    RootNode --> PracticeRM
     RootNode --> Ops
 
     CR -->|runtime query / stats| Ops
@@ -222,7 +219,6 @@ flowchart LR
         Teaching["teaching_readmodel"]
         Contest["contest"]
         Practice["practice"]
-        PracticeRM["practice_readmodel"]
         Ops["ops"]
     end
 
@@ -256,18 +252,17 @@ flowchart LR
 | `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计、共享 runtime adapter；底层实现仍落在 `internal/module/runtime/*`，并向上暴露显式 container runtime capability fields | `challenge`、`contest`、`ops`、`practice`、`instance`（代码），以及 PostgreSQL / Redis / Docker Engine |
 | `container_runtime` | app 层组合视图（迁移中） | challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | `runtime` 物理模块 |
 | `instance` | 写模型 + app 层组合视图 | `internal/module/instance/*` 负责实例 owner；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime`（装配依赖 `ContainerRuntimeModule` 提供的显式 runtime capability / repo） |
-| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`（装配），`contest`、`runtime`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
+| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度与时间线查询 | `challenge`、`instance`（装配），`contest`、`runtime`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`（装配），`auth`、`runtime`（代码）；公告、榜单刷新和 AWD 预览进度通过 `contest` 事件交给 `ops` relay |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
 | `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`challenge`、`contest`、`practice`（代码）；其中 challenge / practice 通知与 contest realtime relay 都由事件消费者处理 |
-| `practice_readmodel` | 读模型 | 练习态只读聚合查询 | 当前无跨模块 import，主要由本模块 repository 直接聚合 |
 | `teaching_readmodel` | 读模型 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | `assessment`（装配 + 代码），其余聚合查询由本模块 repository 完成 |
 
 边界说明：
 
 - `/api/v1/teacher/*` 只是路由命名空间，不代表存在名为 `teacher` 的业务 owner 模块。
 - `ops` 替代旧的 `system` 叙事，承接通知、审计、运营支撑与运行时可观测能力。
-- `practice_readmodel` 与 `teaching_readmodel` 负责只读聚合，不承担业务状态修改。
+- `teaching_readmodel` 负责跨 owner 的只读聚合，不承担业务状态修改。
 - `instance` 已经有独立的 `internal/module/instance/*` owner；app 层 `InstanceModule` 只是它当前对外暴露的组合视图与访问入口。
 - 更细的模块依赖表与代码级 allowlist 说明见 [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md)。
 
@@ -278,7 +273,7 @@ flowchart LR
 | 方式 | 适用场景 | 当前做法 |
 |------|----------|----------|
 | 应用服务调用 | 同步、强一致性用例 | 模块间通过 `application`、`ports`、`contracts` 暴露最小能力 |
-| 读模型聚合 | 教师端、复盘、统计、跨模块列表页 | 进入 `practice_readmodel` / `teaching_readmodel`，避免写模块互相穿透 SQL |
+| 读模型聚合 | 教师端、复盘、统计、跨模块列表页 | 进入 `teaching_readmodel`，避免写模块互相穿透 SQL |
 | 进程内事件 | 异步、非关键路径通知 | 统一复用 `internal/platform/events.Bus` |
 
 ### 3.4 架构守卫
@@ -368,7 +363,6 @@ ctf/code/backend/
 │       ├── contest/
 │       ├── assessment/
 │       ├── ops/
-│       ├── practice_readmodel/
 │       └── teaching_readmodel/
 │           └── {api,application,domain?,ports,infrastructure,runtime,contracts?}
 ├── migrations/                      # 当前生效迁移
@@ -592,7 +586,6 @@ assessmentModule := buildAssessmentModule(root, challengeModule)
 teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
 contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
-practiceReadmodelModule := buildPracticeReadmodelModule(root)
 instanceModule.BuildHandler(root, opsModule)
 // 再把 handler 挂到 /api/v1、/teacher、/authoring、/admin 等路由组
 // 统一复用 tokenService 和 identityModule.Users 做认证上下文解析

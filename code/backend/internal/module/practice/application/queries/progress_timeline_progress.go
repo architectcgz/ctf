@@ -2,25 +2,20 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *QueryService) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
-	cacheKey := constants.UserProgressKey(userID)
+func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
 	if s.cache != nil {
-		cached, err := s.cache.Get(ctx, cacheKey).Result()
-		if err == nil {
-			var resp dto.ProgressResp
-			if json.Unmarshal([]byte(cached), &resp) == nil {
-				return &resp, nil
-			}
-			s.logger.Warn("进度缓存反序列化失败", zap.Int64("user_id", userID))
+		cached, hit, err := s.cache.GetUserProgress(ctx, userID)
+		if err != nil {
+			s.logger.Warn("读取用户进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
+		} else if hit {
+			return cached, nil
 		}
 	}
 
@@ -67,8 +62,8 @@ func (s *QueryService) GetProgress(ctx context.Context, userID int64) (*dto.Prog
 	}
 
 	if s.cache != nil {
-		if data, err := json.Marshal(resp); err == nil {
-			_ = s.cache.Set(ctx, cacheKey, data, s.cacheTTL).Err()
+		if err := s.cache.StoreUserProgress(ctx, userID, resp, s.cacheTTL); err != nil {
+			s.logger.Warn("保存用户进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 	}
 

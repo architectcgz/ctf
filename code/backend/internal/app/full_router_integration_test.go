@@ -450,7 +450,6 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildTeachingReadmodelModule := buildTeachingReadmodelModule
 	originalBuildContestModule := buildContestModule
 	originalBuildPracticeModule := buildPracticeModule
-	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
 		buildContainerRuntimeModule = originalBuildContainerRuntimeModule
 		buildInstanceModule = originalBuildInstanceModule
@@ -462,7 +461,6 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildTeachingReadmodelModule = originalBuildTeachingReadmodelModule
 		buildContestModule = originalBuildContestModule
 		buildPracticeModule = originalBuildPracticeModule
-		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
 	}()
 
 	buildContainerRuntimeModule = func(root *composition.Root) *composition.ContainerRuntimeModule {
@@ -535,13 +533,6 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "practice")
 		return originalBuildPracticeModule(root, challenge, instance)
 	}
-	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
-		if root == nil {
-			t.Fatal("expected root for practice readmodel module builder")
-		}
-		calls = append(calls, "practice_readmodel")
-		return originalBuildPracticeReadmodelModule(root)
-	}
 
 	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -551,7 +542,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"container_runtime", "ops", "instance", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice", "practice_readmodel"}
+	expectedCalls := []string{"container_runtime", "ops", "instance", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

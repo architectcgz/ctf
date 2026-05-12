@@ -43,7 +43,6 @@
 | `assessment` | 分析产物写模型 | 能力画像、推荐、报告、复盘归档、评估重建任务 | 提交判定、竞赛计分主链路、教师页面聚合查询 | 画像/推荐/报告 contract、报告 handler、事件消费者 |
 | `ops` | 运营支撑 | 审计、通知、WebSocket 广播适配、运行概览、风险视图 | 业务状态 owner、业务规则决策 | audit recorder、notification handler、realtime broadcaster adapter |
 | `teaching_readmodel` | 读模型 | 教师班级、学生证据链、复盘、跨训练/竞赛/评估的只读聚合 | 写入训练/竞赛/评估事实、替代 owner 规则 | 教师端 query handler、只读 query service |
-| `practice_readmodel` | 读模型候选 | 仅在个人进度/时间线确实跨多个 owner 时保留 | 如果只读取 practice 自有事实，则不应独立存在 | 个人进度/时间线 query；迁移时需重新判定是否并回 `practice/application/queries` |
 
 ### 命名说明
 
@@ -121,7 +120,6 @@ flowchart LR
 | `runtime` 职责过宽 | 实例状态、Docker 适配、proxy ticket、教师查询、AWD 文件能力混在一个 owner | 拆成 `instance` 业务 owner 与 `container_runtime` 适配能力 | 高 |
 | `assessment / ops` 事件化边界仍未完全收口 | `practice` 画像链已切到事件消费，但通知、广播、缓存失效和其他副作用仍有继续统一 owner 表达的空间 | 副作用默认经事件或窄 port 触发，避免业务写路径继续同步背负实现细节 | 中 |
 | `contest -> ops` 实时广播耦合 | 竞赛业务服务知道 WebSocket 适配细节 | `contest` 使用 broadcaster port 或事件，`ops` 实现适配 | 中 |
-| `practice_readmodel` 边界不稳定 | 可能只是 practice 查询被单独拆出，也可能是真跨 owner 聚合 | 复核查询来源；纯 practice 查询并回，跨 owner 查询保留 | 中 |
 | application 层 GORM/Redis allowlist 多 | 用例层仍暴露框架和存储实现，影响测试和迁移 | 用 ports 包装事务、缓存、锁和查询能力 | 中 |
 | readmodel repository 过宽 | 容易成为跨表万能仓库 | 按教师目录、学生证据、班级洞察等 query capability 拆小 | 低到中 |
 
@@ -197,16 +195,22 @@ flowchart LR
 
 ### 阶段 4：复核 readmodel
 
+当前状态（2026-05-12，phase 4 / slice 1）：
+
+- `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已并回 `practice/application/queries` 与 `practice/api/http`。
+- `internal/module/practice_readmodel/` 已删除，因为这两条查询只读取 `practice` 自有事实，不构成跨 owner readmodel。
+- 当前 readmodel 只保留 `teaching_readmodel` 这类真实跨 owner 聚合入口。
+
 目标：
 
 - `teaching_readmodel` 保留为教师视角跨 owner 聚合。
-- `practice_readmodel` 只有在确实跨 owner 时保留。
+- 如果未来个人进度/时间线再次跨 owner，再重新评估是否需要专门 readmodel。
 
 建议动作：
 
 1. 逐个查询标注数据来源和 UI consumer。
-2. 纯 practice 查询迁回 `practice/application/queries`。
-3. 跨 owner 查询保留 readmodel，并拆小 ports：个人进度、时间线、证据链、班级洞察等。
+2. 纯 practice 查询继续留在 `practice/application/queries`。
+3. 跨 owner 查询保留 `teaching_readmodel`，并拆小 ports：证据链、班级洞察、教师总览等。
 
 ### 阶段 5：收窄 application concrete allowlist
 

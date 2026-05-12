@@ -89,6 +89,11 @@ type moduleDeps struct {
 		practiceports.PracticeRankingListRepository
 		practiceports.PracticeUserDirectoryRepository
 	}
+	// queryRepo      practiceports.PracticeProgressTimelineQueryRepository
+	queryRepo interface {
+		practiceports.PracticeProgressQueryRepository
+		practiceports.PracticeTimelineQueryRepository
+	}
 	// instanceRepo   practiceports.InstanceRepository
 	instanceRepo interface {
 		practiceports.PracticeInstanceLookupRepository
@@ -101,11 +106,12 @@ type moduleDeps struct {
 	runtimeService practiceports.RuntimeInstanceService
 	challengeRepo  challengecontracts.PracticeChallengeContract
 	imageStore     challengecontracts.ImageStore
+	progressCache  practiceports.PracticeUserProgressCache
 }
 
 func Build(deps Deps) *Module {
 	internalDeps := newModuleDeps(deps)
-	service, rankingService := buildHandler(internalDeps)
+	service, rankingService, progressTimelineService := buildHandler(internalDeps)
 	service.StartBackgroundTasks(deps.AppContext)
 	service.SetEventBus(deps.Events)
 
@@ -114,7 +120,7 @@ func Build(deps Deps) *Module {
 			{Name: "practice_instance_scheduler", Run: service.RunProvisioningLoop},
 		},
 		BackgroundTasks: service,
-		Handler:         practicehttp.NewHandler(service, rankingService),
+		Handler:         practicehttp.NewHandler(service, rankingService, progressTimelineService),
 	}
 }
 
@@ -125,19 +131,27 @@ func newModuleDeps(deps Deps) moduleDeps {
 		commandRepo:    repo,
 		scoreRepo:      repo,
 		rankingRepo:    repo,
+		queryRepo:      repo,
 		instanceRepo:   deps.InstanceRepo,
 		runtimeService: deps.RuntimeService,
 		challengeRepo:  deps.ChallengeRepo,
 		imageStore:     deps.ImageStore,
+		progressCache:  practiceinfra.NewProgressCache(deps.Cache),
 	}
 }
 
-func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreService) {
+func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreService, *practiceqry.ProgressTimelineService) {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	cache := deps.input.Cache
 
 	scoreService := practicecmd.NewScoreService(deps.scoreRepo, cache, log.Named("score_service"), &cfg.Score)
+	progressTimelineService := practiceqry.NewProgressTimelineService(
+		deps.queryRepo,
+		deps.progressCache,
+		cfg.Cache.ProgressTTL,
+		log.Named("practice_progress_timeline_query_service"),
+	)
 	service := practicecmd.NewService(
 		deps.commandRepo,
 		deps.challengeRepo,
@@ -151,5 +165,5 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 
 	rankingService := practiceqry.NewScoreService(deps.rankingRepo, cache, log.Named("practice_score_query_service"), &cfg.Score)
 
-	return service, rankingService
+	return service, rankingService, progressTimelineService
 }

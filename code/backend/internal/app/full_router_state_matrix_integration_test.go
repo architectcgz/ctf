@@ -20,7 +20,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
-	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
+	practicehttp "ctf-platform/internal/module/practice/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -69,23 +69,23 @@ func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
 	}
 }
 
-func TestStudentPracticeReadRoutesAreServedByPracticeReadmodel(t *testing.T) {
+func TestStudentPracticeReadRoutesAreServedByPracticeModule(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
-	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
+	originalBuildPracticeModule := buildPracticeModule
 	t.Cleanup(func() {
-		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
+		buildPracticeModule = originalBuildPracticeModule
 	})
 
 	called := false
-	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
-		module := originalBuildPracticeReadmodelModule(root)
+	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, instance *composition.InstanceModule) *composition.PracticeModule {
+		module := originalBuildPracticeModule(root, challenge, instance)
 		called = true
 		if module == nil || module.Handler == nil {
-			t.Fatal("expected practice readmodel module handler")
+			t.Fatal("expected practice module handler")
 		}
-		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&practicereadmodelhttp.Handler{}); got != want {
-			t.Fatalf("practice readmodel handler type = %v, want %v", got, want)
+		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&practicehttp.Handler{}); got != want {
+			t.Fatalf("practice handler type = %v, want %v", got, want)
 		}
 		return module
 	}
@@ -98,7 +98,7 @@ func TestStudentPracticeReadRoutesAreServedByPracticeReadmodel(t *testing.T) {
 		t.Fatal("expected router")
 	}
 	if !called {
-		t.Fatal("expected practice readmodel module builder to be called")
+		t.Fatal("expected practice module builder to be called")
 	}
 }
 

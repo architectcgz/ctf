@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/practice_readmodel/ports"
+	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 func (r *Repository) GetUserProgress(ctx context.Context, userID int64) (totalScore int, totalSolved int, err error) {
@@ -24,8 +24,8 @@ func (r *Repository) GetUserProgress(ctx context.Context, userID int64) (totalSc
 	return result.TotalScore, result.TotalSolved, nil
 }
 
-func (r *Repository) GetCategoryStats(ctx context.Context, userID int64) ([]readmodelports.CategoryProgressStat, error) {
-	stats := make([]readmodelports.CategoryProgressStat, 0)
+func (r *Repository) GetCategoryStats(ctx context.Context, userID int64) ([]practiceports.CategoryProgressStat, error) {
+	stats := make([]practiceports.CategoryProgressStat, 0)
 	if err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.category,
@@ -42,8 +42,8 @@ func (r *Repository) GetCategoryStats(ctx context.Context, userID int64) ([]read
 	return stats, nil
 }
 
-func (r *Repository) GetDifficultyStats(ctx context.Context, userID int64) ([]readmodelports.DifficultyProgressStat, error) {
-	stats := make([]readmodelports.DifficultyProgressStat, 0)
+func (r *Repository) GetDifficultyStats(ctx context.Context, userID int64) ([]practiceports.DifficultyProgressStat, error) {
+	stats := make([]practiceports.DifficultyProgressStat, 0)
 	if err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.difficulty,

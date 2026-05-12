@@ -42,7 +42,6 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	"ctf-platform/pkg/errcode"
@@ -76,6 +75,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertHasRoute(t, router, "DELETE", "/api/v1/teacher/instances/:id")
 	assertHasRoute(t, router, "GET", "/api/v1/users/me/progress")
 	assertHasRoute(t, router, "GET", "/api/v1/users/me/timeline")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/users/me/progress", "internal/module/practice/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/users/me/timeline", "internal/module/practice/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/audit-logs", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/dashboard", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/cheat-detection", "internal/module/ops")
@@ -296,10 +297,6 @@ func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
 	var _ teachingreadmodelqueries.Service = (*teachingreadmodelqueries.QueryService)(nil)
 }
 
-func TestPracticeReadmodelModuleContractsCompile(t *testing.T) {
-	var _ practicereadmodelqueries.Service = (*practicereadmodelqueries.QueryService)(nil)
-}
-
 func TestCompositionModulesExposeContracts(t *testing.T) {
 	t.Parallel()
 
@@ -309,7 +306,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.PracticeModule{}), "Handler", reflect.TypeOf(&practicehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ChallengeRuntimeProbe", reflect.TypeOf((*challengeports.ChallengeRuntimeProbe)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "OpsRuntimeQuery", reflect.TypeOf((*opsports.RuntimeQuery)(nil)).Elem())
@@ -1037,37 +1034,6 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	}
 	if strings.Contains(source, "tokenService") {
 		t.Fatalf("identity composition should not keep token service wiring")
-	}
-}
-
-func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
-	t.Parallel()
-
-	content, err := os.ReadFile(filepath.Join("composition", "practice_readmodel_module.go"))
-	if err != nil {
-		t.Fatalf("read practice_readmodel_module.go: %v", err)
-	}
-
-	source := string(content)
-	expected := []string{
-		"type PracticeReadmodelModule = practicereadmodelruntime.Module",
-		"practicereadmodelruntime.Build(",
-		"practicereadmodelruntime.Deps{",
-	}
-	for _, marker := range expected {
-		if !strings.Contains(source, marker) {
-			t.Fatalf("practice readmodel composition should declare typed deps marker %s", marker)
-		}
-	}
-
-	blocked := []string{
-		"type practiceReadmodelModuleDeps struct",
-		"practicereadmodelinfra.NewRepository(",
-	}
-	for _, marker := range blocked {
-		if strings.Contains(source, marker) {
-			t.Fatalf("practice readmodel composition should not keep wiring marker %s", marker)
-		}
 	}
 }
 

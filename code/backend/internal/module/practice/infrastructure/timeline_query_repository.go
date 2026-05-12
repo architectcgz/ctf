@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/practice_readmodel/ports"
+	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type timelineEventRow struct {
@@ -22,7 +22,7 @@ type timelineEventRow struct {
 	Detail      string
 }
 
-func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, offset int) ([]readmodelports.TimelineEventRecord, error) {
+func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, offset int) ([]practiceports.TimelineEventRecord, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -93,7 +93,7 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 	})
 
 	if offset >= len(events) {
-		return []readmodelports.TimelineEventRecord{}, nil
+		return []practiceports.TimelineEventRecord{}, nil
 	}
 
 	end := offset + limit
@@ -101,9 +101,9 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 		end = len(events)
 	}
 
-	items := make([]readmodelports.TimelineEventRecord, 0, end-offset)
+	items := make([]practiceports.TimelineEventRecord, 0, end-offset)
 	for _, event := range events[offset:end] {
-		items = append(items, readmodelports.TimelineEventRecord{
+		items = append(items, practiceports.TimelineEventRecord{
 			Type:        event.Type,
 			ChallengeID: event.ChallengeID,
 			Title:       event.Title,

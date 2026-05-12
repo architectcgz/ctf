@@ -37,7 +37,6 @@ var (
 	buildInstanceModule          = composition.BuildInstanceModule
 	buildOpsModule               = composition.BuildOpsModule
 	buildPracticeModule          = composition.BuildPracticeModule
-	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
 	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
 )
 
@@ -158,7 +157,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		log.Named("contest_realtime_handler"),
 	)
 	practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
-	practiceReadmodelModule := buildPracticeReadmodelModule(root)
 	instanceModule.BuildHandler(root, opsModule)
 
 	registerTeacherAuthoringRoutes(authoring, adminRouteDeps{
@@ -187,7 +185,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		challenge:         challengeModule,
 		contest:           contestModule,
 		practice:          practiceModule,
-		practiceReadmodel: practiceReadmodelModule,
 		instance:          instanceModule,
 		teachingReadmodel: teachingReadmodelModule,
 	})

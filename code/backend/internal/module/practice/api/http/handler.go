@@ -18,6 +18,7 @@ import (
 type Handler struct {
 	service        practiceService
 	rankingService practiceRankingService
+	progressQuery  practiceProgressTimelineQueryService
 }
 
 type practiceService interface {
@@ -38,8 +39,13 @@ type practiceRankingService interface {
 	GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error)
 }
 
-func NewHandler(service practiceService, rankingService practiceRankingService) *Handler {
-	return &Handler{service: service, rankingService: rankingService}
+type practiceProgressTimelineQueryService interface {
+	GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error)
+	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error)
+}
+
+func NewHandler(service practiceService, rankingService practiceRankingService, progressQuery practiceProgressTimelineQueryService) *Handler {
+	return &Handler{service: service, rankingService: rankingService, progressQuery: progressQuery}
 }
 
 // StartChallenge 启动靶机实例
@@ -244,6 +250,47 @@ func (h *Handler) GetRanking(c *gin.Context) {
 	}
 
 	resp, err := h.rankingService.GetRanking(c.Request.Context(), limit)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetProgress 获取个人解题进度
+// GET /api/v1/users/me/progress
+func (h *Handler) GetProgress(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+
+	resp, err := h.progressQuery.GetProgress(c.Request.Context(), userID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetTimeline 获取解题时间线
+// GET /api/v1/users/me/timeline
+func (h *Handler) GetTimeline(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+
+	var req struct {
+		Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`
+		Offset int `form:"offset" binding:"omitempty,min=0"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	if req.Limit == 0 {
+		req.Limit = 100
+	}
+
+	resp, err := h.progressQuery.GetTimeline(c.Request.Context(), userID, req.Limit, req.Offset)
 	if err != nil {
 		response.FromError(c, err)
 		return
