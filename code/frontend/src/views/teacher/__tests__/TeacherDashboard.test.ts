@@ -252,6 +252,11 @@ describe('TeacherDashboard', () => {
       'class="overview-panel workspace-directory-section teacher-directory-section"'
     )
     expect(teacherDashboardPageSource).toContain('class="hero-rail workspace-subpanel"')
+    expect(teacherDashboardPageSource).toContain('aria-hidden="true"')
+    expect(teacherDashboardPageSource).not.toContain('Class Pulse')
+    expect(teacherDashboardPageSource).not.toContain('.rail-label')
+    expect(teacherDashboardPageSource).not.toContain('.rail-score')
+    expect(teacherDashboardPageSource).not.toContain('.rail-copy')
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
     expect(teacherDashboardPageSource).not.toContain('--page-top-tabs')
     expect(teacherDashboardPageSource).toContain(
@@ -288,6 +293,7 @@ describe('TeacherDashboard', () => {
       4
     )
     expect(wrapper.find('#overview .hero-rail.workspace-subpanel').exists()).toBe(true)
+    expect(wrapper.get('#overview .hero-rail.workspace-subpanel').text()).toBe('')
     expect(wrapper.find('#overview .student-insight-list').exists()).toBe(false)
     expect(wrapper.find('#portrait .weak-list').exists()).toBe(true)
     expect(wrapper.find('#insight .student-insight-list').exists()).toBe(true)

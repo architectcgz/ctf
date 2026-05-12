@@ -59,8 +59,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 })
 
 const {
-  activeRateText,
-  riskStudentCount,
   overviewDescription,
   metaPills,
   overviewMetrics,
@@ -168,20 +166,7 @@ const {
             </div>
           </div>
 
-          <aside class="hero-rail workspace-subpanel">
-            <div class="rail-label">Class Pulse</div>
-            <div class="rail-score">
-              {{ activeRateText.replace('%', '') }}
-              <small v-if="activeRateText !== '--'">% active</small>
-            </div>
-            <div class="rail-copy">
-              {{
-                riskStudentCount > 0
-                  ? `当前仍有 ${riskStudentCount} 名学生需要优先回流训练节奏。`
-                  : '班级整体节奏稳定，建议关注薄弱维度补强。'
-              }}
-            </div>
-          </aside>
+          <aside class="hero-rail workspace-subpanel" aria-hidden="true" />
         </section>
 
         <section
@@ -500,33 +485,6 @@ const {
   padding: var(--space-5);
   border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--teacher-card-border));
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-}
-
-.rail-label {
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--journal-accent) 68%, var(--journal-muted));
-}
-
-.rail-score {
-  margin-top: var(--space-3);
-  font: 900 var(--font-size-38, 2.375rem) / 1 var(--font-family-mono);
-  color: var(--journal-ink);
-}
-
-.rail-score small {
-  margin-left: var(--space-1);
-  font: 700 var(--font-size-12) / 1 var(--font-family-sans);
-  color: var(--journal-muted);
-}
-
-.rail-copy {
-  margin-top: var(--space-4);
-  font-size: var(--font-size-13);
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .teacher-dashboard-panel-body {
