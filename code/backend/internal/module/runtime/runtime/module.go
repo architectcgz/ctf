@@ -11,7 +11,6 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
-	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
@@ -28,13 +27,11 @@ type BackgroundJob struct {
 type Module struct {
 	BackgroundJobs []BackgroundJob
 
-	PracticeInstanceRepository practiceInstanceRepository
-	PracticeRuntimeService     practiceports.RuntimeInstanceService
-	ChallengeImageRuntime      challengeports.ImageRuntime
-	ChallengeRuntimeProbe      challengeports.ChallengeRuntimeProbe
-	OpsRuntimeQuery            opsports.RuntimeQuery
-	OpsRuntimeStatsProvider    opsports.RuntimeStatsProvider
-	ContestContainerFiles      contestports.AWDContainerFileWriter
+	ChallengeImageRuntime   challengeports.ImageRuntime
+	ChallengeRuntimeProbe   challengeports.ChallengeRuntimeProbe
+	OpsRuntimeQuery         opsports.RuntimeQuery
+	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
+	ContestContainerFiles   contestports.AWDContainerFileWriter
 
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
@@ -69,19 +66,9 @@ type runtimeInstanceRepository interface {
 	runtimeports.CountRunningRepository
 }
 
-type practiceInstanceRepository interface {
-	practiceports.PracticeInstanceLookupRepository
-	practiceports.PracticeInstanceRuntimeWriteRepository
-	practiceports.PracticeInstanceAWDOperationRepository
-	practiceports.PracticeInstanceStatusRepository
-	practiceports.PracticePendingInstanceRepository
-	practiceports.PracticeInstanceStatsRepository
-}
-
 type runtimeModuleDeps struct {
 	input                 Deps
 	repo                  runtimeInstanceRepository
-	practiceInstanceRepo  practiceInstanceRepository
 	countRunningQuery     opsports.RuntimeQuery
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
@@ -93,25 +80,22 @@ type runtimeModuleDeps struct {
 
 func Build(deps Deps) *Module {
 	internalDeps := buildRuntimeModuleDeps(deps)
-	practiceDeps := buildRuntimePracticeDeps(internalDeps)
 	challengeDeps := buildRuntimeChallengeDeps(internalDeps)
 	opsDeps := buildRuntimeOpsDeps(internalDeps)
 	contestDeps := buildRuntimeContestDeps(internalDeps)
 
 	return &Module{
-		BackgroundJobs:             buildBackgroundJobs(internalDeps),
-		PracticeInstanceRepository: practiceDeps.instanceRepository,
-		PracticeRuntimeService:     practiceDeps.runtimeService,
-		ChallengeImageRuntime:      challengeDeps.imageRuntime,
-		ChallengeRuntimeProbe:      challengeDeps.runtimeProbe,
-		OpsRuntimeQuery:            opsDeps.query,
-		OpsRuntimeStatsProvider:    opsDeps.statsProvider,
-		ContestContainerFiles:      contestDeps.containerFiles,
-		ProvisioningRuntime:        deps.ProvisioningRuntime,
-		CleanupRuntime:             deps.CleanupRuntime,
-		FileRuntime:                deps.FileRuntime,
-		ManagedContainerInventory:  deps.ManagedContainerInventory,
-		InteractiveExecutor:        deps.InteractiveExecutor,
+		BackgroundJobs:            buildBackgroundJobs(internalDeps),
+		ChallengeImageRuntime:     challengeDeps.imageRuntime,
+		ChallengeRuntimeProbe:     challengeDeps.runtimeProbe,
+		OpsRuntimeQuery:           opsDeps.query,
+		OpsRuntimeStatsProvider:   opsDeps.statsProvider,
+		ContestContainerFiles:     contestDeps.containerFiles,
+		ProvisioningRuntime:       deps.ProvisioningRuntime,
+		CleanupRuntime:            deps.CleanupRuntime,
+		FileRuntime:               deps.FileRuntime,
+		ManagedContainerInventory: deps.ManagedContainerInventory,
+		InteractiveExecutor:       deps.InteractiveExecutor,
 	}
 }
 
@@ -135,7 +119,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	return runtimeModuleDeps{
 		input:                 deps,
 		repo:                  repo,
-		practiceInstanceRepo:  repo,
 		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
@@ -149,18 +132,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 func buildBackgroundJobs(deps runtimeModuleDeps) []BackgroundJob {
 	_ = deps
 	return nil
-}
-
-type runtimePracticeDeps struct {
-	instanceRepository practiceInstanceRepository
-	runtimeService     practiceports.RuntimeInstanceService
-}
-
-func buildRuntimePracticeDeps(deps runtimeModuleDeps) runtimePracticeDeps {
-	return runtimePracticeDeps{
-		instanceRepository: deps.practiceInstanceRepo,
-		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService, deps.input.ManagedContainerInventory),
-	}
 }
 
 type runtimeChallengeDeps struct {

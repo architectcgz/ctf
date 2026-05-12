@@ -279,8 +279,7 @@ flowchart LR
     Runtime -->|challenge ports| Challenge
     Runtime -->|contest ports| Contest
     Runtime -->|ops ports| Ops
-    Runtime -->|practice ports| Practice
-    Runtime -->|instance ports| Instance
+        Runtime -->|instance ports| Instance
 
     TeachingRM -->|recommendation provider| Assessment
 ```
@@ -295,7 +294,7 @@ flowchart LR
 | `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度改为发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
 | `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
-| `runtime` | `challenge`、`contest`、`ops`、`practice`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops / practice 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape |
+| `runtime` | `challenge`、`contest`、`ops`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape；practice-facing glue 已上移到 `composition.InstanceModule` |
 | `teaching_readmodel` | `assessment` | `assessment/contracts` | 当前只直接复用 `assessment.RecommendationProvider`；其余教师视角聚合查询由本模块 repository 完成 |
 
 补充说明：
@@ -303,6 +302,7 @@ flowchart LR
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已在 2026-05-12 phase 4 / slice 1 并回 `practice/application/queries` 与 `practice/api/http`，因为它们只读取 practice 自有事实，不再保留独立 `practice_readmodel` 模块。
 - `teaching_readmodel` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装。
 - `runtime -> instance` 这条代码级依赖当前主要落在 `runtime/ports/http.go`、`runtime/ports/metrics.go` 对 `instance/ports` shape 的复用，以及测试继续校验旧能力是否已迁到 `instance` owner。
+- `runtime -> practice` 这条代码级依赖已在 2026-05-12 phase 2 / slice 14 删除；`PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `runtimeinfra.Repository`、`RuntimeCleanupService`、`ProvisioningService` 和显式 capability fields 后暴露给 `practice`。
 - `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis。`contest/application/jobs/status_updater.go` 的调度锁则通过 `contest/ports.ContestStatusUpdateLockStore` 配合 `contest/infrastructure/status_update_lock_store.go` 落到 Redis，AWD round scheduler 仍保留自己的 Redis 锁实现。
 
 ### 5.3 协作方式
@@ -325,8 +325,9 @@ flowchart LR
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
 - `runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口
+- `InstanceModule` 现在直接在 composition 边缘组合 `PracticeInstanceRepository` 与 `PracticeRuntimeService`；这层 practice-facing glue 已不再停留在 `runtime/runtime.Module` 或 `runtime/runtime/adapters.go`
 - `composition.BuildContainerRuntimeModule(...)` 仍可在边缘用本地 `buildRuntimeEngine(...)` helper 绑定底层实现，但 `InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
-- 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_http_service_adapter.go`；`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
+- 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_http_service_adapter.go`；`runtime/runtime/adapters.go` 只保留 challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
 - `composition/runtime_adapter_compat.go` 也已删除；当前活跃的 runtime HTTP facade 只保留在 `composition/runtime_http_service_adapter.go`，并且只覆盖仍在路由表里的实例访问、proxy 和 AWD defense SSH 入口
 - `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service

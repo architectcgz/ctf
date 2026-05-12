@@ -154,7 +154,7 @@ flowchart LR
 - Docker Engine、网络、ACL、文件、探活归 `container_runtime` 或平台适配层。
 - `practice`、`contest` 只依赖 `instance` contract，不知道 Docker 细节。
 
-当前状态（2026-05-11，phase 2 / slice 11）：
+当前状态（2026-05-12，phase 2 / slice 14）：
 
 - `internal/module/instance/` 已经落地 `application/commands`、`application/queries`、`ports`、`domain`，实例命令、实例查询、proxy ticket 和 maintenance use case 已有独立物理 owner。
 - `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo 与显式 capability adapter。
@@ -166,6 +166,7 @@ flowchart LR
 - `runtime/application/*` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除；实例命令、查询、proxy ticket、maintenance 的唯一 owner 固定在 `instance`。
 - 原本放在 `runtime/application` 目录里的实例行为测试已经切到 `instancecmd` / `instanceqry`，compat 层只保留最小 wrapper 测试。
 - `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，maintenance 需要的 inspect/start 组合留在 composition 边缘完成。
+- `code/backend/internal/app/composition/instance_module.go` 现在直接基于 `runtimeinfra.NewRepository(...)` 与本地 practice runtime adapter 暴露 `PracticeInstanceRepository`、`PracticeRuntimeService`；`runtime/runtime.Module` 与 `runtime/runtime/adapters.go` 已不再 import `practice/ports`，`runtime -> practice` allowlist 也已删除。
 
 建议动作：
 

@@ -57,6 +57,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 
 	repo := runtimeinfra.NewRepository(root.DB())
 	cleanupService := runtimecmd.NewRuntimeCleanupService(module.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
+	provisioningService := runtimecmd.NewProvisioningService(repo, module.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
 	queryService := instanceqry.NewInstanceService(repo)
 	proxyTicketService := instanceqry.NewProxyTicketService(
@@ -102,8 +103,8 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	return &InstanceModule{
-		PracticeInstanceRepository: module.PracticeInstanceRepository,
-		PracticeRuntimeService:     module.PracticeRuntimeService,
+		PracticeInstanceRepository: repo,
+		PracticeRuntimeService:     newPracticeRuntimeServiceAdapter(cleanupService, provisioningService, module.ManagedContainerInventory),
 		service: newRuntimeHTTPServiceAdapter(
 			commandService,
 			queryService,

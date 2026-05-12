@@ -482,8 +482,6 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"type runtimeModuleDeps struct",
 		"repo",
 		"runtimeInstanceRepository",
-		"practiceInstanceRepo",
-		"practiceInstanceRepository",
 		"countRunningQuery",
 		"opsports.RuntimeQuery",
 		"cleanupService",
@@ -501,6 +499,18 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("runtime runtime module should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"practiceInstanceRepo",
+		"practiceInstanceRepository",
+		"PracticeInstanceRepository",
+		"PracticeRuntimeService",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime runtime module should not keep practice-facing glue marker %s", marker)
 		}
 	}
 }

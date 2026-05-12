@@ -7,7 +7,6 @@ import (
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
-	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -43,124 +42,6 @@ func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.C
 		})
 	}
 	return result, nil
-}
-
-type runtimePracticeServiceAdapter struct {
-	cleaner     *runtimecmd.RuntimeCleanupService
-	provisioner *runtimecmd.ProvisioningService
-	inspector   runtimeManagedContainerInspector
-}
-
-type runtimeManagedContainerInspector interface {
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
-}
-
-func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, inspector runtimeManagedContainerInspector) practiceports.RuntimeInstanceService {
-	if cleaner == nil && provisioner == nil && inspector == nil {
-		return nil
-	}
-	return &runtimePracticeServiceAdapter{
-		cleaner:     cleaner,
-		provisioner: provisioner,
-		inspector:   inspector,
-	}
-}
-
-func (a *runtimePracticeServiceAdapter) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
-	if a == nil || a.cleaner == nil {
-		return nil
-	}
-	return a.cleaner.CleanupRuntime(ctx, instance)
-}
-
-func (a *runtimePracticeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
-	if a == nil || a.provisioner == nil || req == nil {
-		return nil, nil
-	}
-
-	result, err := a.provisioner.CreateTopology(ctx, toRuntimeTopologyCreateRequest(req))
-	if err != nil {
-		return nil, err
-	}
-	return fromRuntimeTopologyCreateResult(result), nil
-}
-
-func (a *runtimePracticeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
-	if a == nil || a.provisioner == nil {
-		return "", "", 0, 0, nil
-	}
-	return a.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
-}
-
-func (a *runtimePracticeServiceAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
-	if a == nil || a.inspector == nil {
-		return nil, nil
-	}
-	state, err := a.inspector.InspectManagedContainer(ctx, containerID)
-	if err != nil || state == nil {
-		return nil, err
-	}
-	return &practiceports.ManagedContainerState{
-		ID:      state.ID,
-		Exists:  state.Exists,
-		Running: state.Running,
-		Status:  state.Status,
-	}, nil
-}
-
-func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {
-	if req == nil {
-		return nil
-	}
-
-	networks := make([]runtimeports.TopologyCreateNetwork, 0, len(req.Networks))
-	for _, network := range req.Networks {
-		networks = append(networks, runtimeports.TopologyCreateNetwork{
-			Key:      network.Key,
-			Name:     network.Name,
-			Internal: network.Internal,
-			Shared:   network.Shared,
-		})
-	}
-
-	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
-	for _, node := range req.Nodes {
-		nodes = append(nodes, runtimeports.TopologyCreateNode{
-			Key:             node.Key,
-			Image:           node.Image,
-			Env:             cloneRuntimeStringMap(node.Env),
-			Command:         append([]string(nil), node.Command...),
-			WorkingDir:      node.WorkingDir,
-			ServicePort:     node.ServicePort,
-			ServiceProtocol: node.ServiceProtocol,
-			IsEntryPoint:    node.IsEntryPoint,
-			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
-			NetworkAliases:  append([]string(nil), node.NetworkAliases...),
-			Mounts:          append([]model.ContainerMount(nil), node.Mounts...),
-			Resources:       cloneRuntimeResourceLimits(node.Resources),
-		})
-	}
-
-	return &runtimeports.TopologyCreateRequest{
-		Networks:                   networks,
-		Nodes:                      nodes,
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		ReservedHostPort:           req.ReservedHostPort,
-		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
-		ContainerName:              req.ContainerName,
-	}
-}
-
-func fromRuntimeTopologyCreateResult(result *runtimeports.TopologyCreateResult) *practiceports.TopologyCreateResult {
-	if result == nil {
-		return nil
-	}
-	return &practiceports.TopologyCreateResult{
-		PrimaryContainerID: result.PrimaryContainerID,
-		NetworkID:          result.NetworkID,
-		AccessURL:          result.AccessURL,
-		RuntimeDetails:     result.RuntimeDetails,
-	}
 }
 
 func cloneRuntimeStringMap(input map[string]string) map[string]string {

@@ -146,7 +146,6 @@ var allowedModuleDependencies = map[string]struct{}{
 	"runtime -> contest":               {},
 	"runtime -> instance":              {},
 	"runtime -> ops":                   {},
-	"runtime -> practice":              {},
 	"teaching_readmodel -> assessment": {},
 }
 

@@ -126,6 +126,13 @@ func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
 	assertStructDoesNotDeclareField(t, fileNode, "Deps", "Engine")
 }
 
+func TestRuntimeWiringDoesNotImportPracticePorts(t *testing.T) {
+	t.Parallel()
+
+	assertFileDoesNotImport(t, filepath.Join("runtime", "module.go"), "ctf-platform/internal/module/practice/ports")
+	assertFileDoesNotImport(t, filepath.Join("runtime", "adapters.go"), "ctf-platform/internal/module/practice/ports")
+}
+
 func TestAPIHTTPDoesNotDeclareRetiredDefenseWorkbenchMethods(t *testing.T) {
 	t.Parallel()
 

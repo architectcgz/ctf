@@ -1,156 +1,100 @@
 package runtime
 
 import (
-	"context"
-	"errors"
-	"reflect"
 	"testing"
 
 	"ctf-platform/internal/model"
-	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
-func TestRuntimePracticeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
-	req := &practiceports.TopologyCreateRequest{
-		ContainerName: "ctf-workspace-workspace-c8-t15-s21-r1",
-		Networks: []practiceports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
+	req := &challengeTopologyCreateRequestStub{
+		Networks: []challengeTopologyCreateNetworkStub{
+			{Key: model.TopologyDefaultNetworkKey, Internal: true},
 		},
-		Nodes: []practiceports.TopologyCreateNode{
+		Nodes: []challengeTopologyCreateNodeStub{
 			{
-				Key:            "web",
-				Command:        []string{"tail", "-f", "/dev/null"},
-				WorkingDir:     "/workspace",
-				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
-				NetworkAliases: []string{"awd-c8-t15-s21"},
-				Mounts: []model.ContainerMount{
-					{Source: "ctf-workspace-root-c8-t15-s21-r1-src", Target: "/workspace/src", ReadOnly: false},
-				},
-			},
-		},
-		DisableEntryPortPublishing: true,
-	}
-
-	got := toRuntimeTopologyCreateRequest(req)
-	if len(got.Networks) != 1 || got.Networks[0].Name != "ctf-awd-contest-8" || !got.Networks[0].Shared {
-		t.Fatalf("expected AWD network fields to be preserved, got %+v", got.Networks)
-	}
-	if len(got.Nodes) != 1 || len(got.Nodes[0].NetworkAliases) != 1 || got.Nodes[0].NetworkAliases[0] != "awd-c8-t15-s21" {
-		t.Fatalf("expected AWD network aliases to be preserved, got %+v", got.Nodes)
-	}
-	if len(got.Nodes[0].Command) != 3 || got.Nodes[0].Command[0] != "tail" || got.Nodes[0].WorkingDir != "/workspace" {
-		t.Fatalf("expected runtime command and working dir to be preserved, got %+v", got.Nodes[0])
-	}
-	if len(got.Nodes[0].Mounts) != 1 || got.Nodes[0].Mounts[0].Target != "/workspace/src" {
-		t.Fatalf("expected runtime mounts to be preserved, got %+v", got.Nodes[0].Mounts)
-	}
-	if got.ContainerName != "ctf-workspace-workspace-c8-t15-s21-r1" {
-		t.Fatalf("expected container name to be preserved, got %+v", got)
-	}
-}
-
-func TestRuntimePracticeTopologyAdapterPreservesWorkspaceShellFields(t *testing.T) {
-	req := &practiceports.TopologyCreateRequest{
-		ContainerName: "workspace-companion",
-		Nodes: []practiceports.TopologyCreateNode{
-			{
-				Key:             "workspace",
-				Image:           "python:3.12-alpine",
-				Env:             map[string]string{"LANG": "C.UTF-8"},
-				Command:         []string{"/bin/sh", "-lc", "apk add --no-cache git vim nano && exec tail -f /dev/null"},
-				WorkingDir:      "/workspace",
-				ServicePort:     22,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				Key:             "web",
+				Image:           "ctf/web:latest",
+				Env:             map[string]string{"MODE": "awd"},
+				ServicePort:     8080,
+				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
-				NetworkAliases:  []string{"awd-c8-t15-s21-workspace"},
-				Mounts: []model.ContainerMount{
-					{Source: "workspace-src", Target: "/workspace/src"},
-					{Source: "workspace-data", Target: "/workspace/data", ReadOnly: true},
-				},
+				Resources:       &model.ResourceLimits{CPUQuota: 50000, Memory: 256 * 1024 * 1024, PidsLimit: 128},
 			},
 		},
-	}
-
-	got := toRuntimeTopologyCreateRequest(req)
-	if got.ContainerName != "workspace-companion" {
-		t.Fatalf("expected container name preserved, got %+v", got)
-	}
-	if len(got.Nodes) != 1 {
-		t.Fatalf("expected one node, got %+v", got.Nodes)
-	}
-	node := got.Nodes[0]
-	if !reflect.DeepEqual(node.Command, req.Nodes[0].Command) {
-		t.Fatalf("expected command preserved, got %+v", node.Command)
-	}
-	if node.WorkingDir != req.Nodes[0].WorkingDir {
-		t.Fatalf("expected working dir preserved, got %q", node.WorkingDir)
-	}
-	if !reflect.DeepEqual(node.Mounts, req.Nodes[0].Mounts) {
-		t.Fatalf("expected mounts preserved, got %+v", node.Mounts)
-	}
-	if !reflect.DeepEqual(node.Env, req.Nodes[0].Env) {
-		t.Fatalf("expected env preserved, got %+v", node.Env)
-	}
-}
-
-func TestRuntimePracticeServiceAdapterInspectManagedContainerDelegatesToEngine(t *testing.T) {
-	adapter := newRuntimePracticeServiceAdapter(nil, nil, &stubRuntimePracticeEngine{
-		inspectFn: func(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
-			if containerID != "workspace-ctr" {
-				t.Fatalf("unexpected container inspect target: %s", containerID)
-			}
-			return &runtimeports.ManagedContainerState{
-				ID:      containerID,
-				Exists:  true,
-				Running: true,
-				Status:  "running",
-			}, nil
+		Policies: []model.TopologyTrafficPolicy{
+			{Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
-	})
+	}
 
-	got, err := adapter.InspectManagedContainer(context.Background(), "workspace-ctr")
-	if err != nil {
-		t.Fatalf("InspectManagedContainer() error = %v", err)
+	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts())
+	if len(got.Networks) != 1 || !got.Networks[0].Internal {
+		t.Fatalf("expected challenge runtime network fields to be preserved, got %+v", got.Networks)
 	}
-	if got == nil {
-		t.Fatal("expected managed container state")
+	if len(got.Nodes) != 1 || got.Nodes[0].Image != "ctf/web:latest" {
+		t.Fatalf("expected AWD network aliases to be preserved, got %+v", got.Nodes)
 	}
-	if got.ID != "workspace-ctr" || !got.Exists || !got.Running || got.Status != "running" {
-		t.Fatalf("unexpected managed container state: %+v", got)
+	if got.Nodes[0].ServicePort != 8080 || got.Nodes[0].ServiceProtocol != model.ChallengeTargetProtocolHTTP {
+		t.Fatalf("expected runtime service fields to be preserved, got %+v", got.Nodes[0])
+	}
+	if got.Nodes[0].Resources == nil || got.Nodes[0].Resources.CPUQuota != 50000 {
+		t.Fatalf("expected runtime resources to be preserved, got %+v", got.Nodes[0].Resources)
+	}
+	if len(got.Policies) != 1 || len(got.Policies[0].Ports) != 1 || got.Policies[0].Ports[0] != 8080 {
+		t.Fatalf("expected policies preserved, got %+v", got.Policies)
 	}
 }
 
-func TestRuntimePracticeServiceAdapterInspectManagedContainerPropagatesErrors(t *testing.T) {
-	wantErr := errors.New("inspect failed")
-	adapter := newRuntimePracticeServiceAdapter(nil, nil, &stubRuntimePracticeEngine{
-		inspectFn: func(context.Context, string) (*runtimeports.ManagedContainerState, error) {
-			return nil, wantErr
-		},
-	})
-
-	got, err := adapter.InspectManagedContainer(context.Background(), "workspace-ctr")
-	if !errors.Is(err, wantErr) {
-		t.Fatalf("expected inspect error %v, got %v", wantErr, err)
-	}
-	if got != nil {
-		t.Fatalf("expected nil managed container state on error, got %+v", got)
-	}
+type challengeTopologyCreateRequestStub struct {
+	Networks []challengeTopologyCreateNetworkStub
+	Nodes    []challengeTopologyCreateNodeStub
+	Policies []model.TopologyTrafficPolicy
 }
 
-type stubRuntimePracticeEngine struct {
-	inventory runtimeManagedContainerInspector
-	inspectFn func(context.Context, string) (*runtimeports.ManagedContainerState, error)
+type challengeTopologyCreateNetworkStub struct {
+	Key      string
+	Internal bool
 }
 
-func (s *stubRuntimePracticeEngine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
-	if s.inspectFn == nil {
-		if s.inventory == nil {
-			return nil, nil
-		}
-		return s.inventory.InspectManagedContainer(ctx, containerID)
+type challengeTopologyCreateNodeStub struct {
+	Key             string
+	Image           string
+	Env             map[string]string
+	ServicePort     int
+	ServiceProtocol string
+	IsEntryPoint    bool
+	NetworkKeys     []string
+	Resources       *model.ResourceLimits
+}
+
+func (r *challengeTopologyCreateRequestStub) toPorts() *challengeports.RuntimeTopologyCreateRequest {
+	networks := make([]challengeports.RuntimeTopologyCreateNetwork, 0, len(r.Networks))
+	for _, network := range r.Networks {
+		networks = append(networks, challengeports.RuntimeTopologyCreateNetwork{
+			Key:      network.Key,
+			Internal: network.Internal,
+		})
 	}
-	return s.inspectFn(ctx, containerID)
+
+	nodes := make([]challengeports.RuntimeTopologyCreateNode, 0, len(r.Nodes))
+	for _, node := range r.Nodes {
+		nodes = append(nodes, challengeports.RuntimeTopologyCreateNode{
+			Key:             node.Key,
+			Image:           node.Image,
+			Env:             node.Env,
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: node.ServiceProtocol,
+			IsEntryPoint:    node.IsEntryPoint,
+			NetworkKeys:     node.NetworkKeys,
+			Resources:       node.Resources,
+		})
+	}
+
+	return &challengeports.RuntimeTopologyCreateRequest{
+		Networks: networks,
+		Nodes:    nodes,
+		Policies: append([]model.TopologyTrafficPolicy(nil), r.Policies...),
+	}
 }
