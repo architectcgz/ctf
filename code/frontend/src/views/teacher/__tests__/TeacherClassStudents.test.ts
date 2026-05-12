@@ -288,6 +288,8 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('class="teacher-directory-shell workspace-directory-list"')
     expect(classStudentsPageSource).toContain('class="teacher-student-directory-table"')
     expect(classStudentsPageSource).toContain("label: '做题数 / 得分数'")
+    expect(classStudentsPageSource).not.toContain('class="teacher-directory-row-metrics"')
+    expect(classStudentsPageSource).not.toMatch(/\.teacher-directory-row-metrics\s*\{/)
     expect(classStudentsPageSource).toContain('当前班级学生总数')
     expect(classStudentsPageSource).toContain('当前班级人均完成题目数')
     expect(classStudentsPageSource).toMatch(

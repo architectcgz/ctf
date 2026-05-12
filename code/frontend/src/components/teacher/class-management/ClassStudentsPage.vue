@@ -380,9 +380,7 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
                   </template>
 
                   <template #cell-metrics="{ row }">
-                    <span class="teacher-directory-row-metrics">
-                      {{ (row as ClassStudentDirectoryRow).metrics }}
-                    </span>
+                    <span>{{ (row as ClassStudentDirectoryRow).metrics }}</span>
                   </template>
 
                   <template #cell-actions="{ row }">
@@ -536,13 +534,6 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.teacher-directory-row-metrics {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-0-81);
-  font-weight: 800;
-  color: var(--color-text-primary);
 }
 
 .teacher-filter-reset {
