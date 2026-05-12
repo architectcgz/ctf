@@ -234,7 +234,7 @@ flowchart LR
 
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
-    Assessment -->|profile service| Practice
+    Practice -.practice.flag_accepted event.-> Assessment
 ```
 
 这张图描述的是 `internal/app/composition/*.go` 里的进程装配关系，也就是 router/runtime 在启动时把哪些模块或组合视图接在一起。`container_runtime`、`instance` 在这里是 app 层组合视图，不是 `internal/module/*` 下的物理模块。
@@ -274,7 +274,6 @@ flowchart LR
     Contest -->|contracts / ports| Challenge
     Contest -.runtime.domain reviewed exception.-> Runtime
 
-    Practice -->|profile service| Assessment
     Practice -->|challenge contracts| Challenge
     Practice -.contest.domain reviewed exception.-> Contest
     Practice -->|runtime ports| Runtime
@@ -296,7 +295,7 @@ flowchart LR
 | `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
 | `ops` | `auth`、`practice` | `auth/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 practice 事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
-| `practice` | `assessment`、`challenge`、`contest`、`runtime` | `assessment/contracts`、`challenge/contracts`、`contest/domain`、`runtime/ports` | 生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
+| `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
 | `runtime` | `challenge`、`contest`、`ops`、`practice`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops / practice 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape |
 | `practice_readmodel` | 无 | 无 | 当前通过本模块 repository 直接读库聚合练习态，不 import `practice` 写模块 |

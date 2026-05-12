@@ -61,7 +61,6 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       30000,
@@ -80,8 +79,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
@@ -172,7 +170,6 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       30000,
@@ -184,8 +181,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5104, 3104, 7104)
 	if err != nil {
@@ -266,7 +262,6 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				DefaultTTL:           time.Hour,
@@ -276,8 +271,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5105, 3105, 7105)
 	if err != nil {
@@ -391,7 +385,6 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				DefaultTTL:           time.Hour,
@@ -401,8 +394,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -585,7 +577,6 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				FlagGlobalSecret:     "restart-secret",
@@ -595,8 +586,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -819,7 +809,6 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				FlagGlobalSecret:     "restart-secret",
@@ -829,8 +818,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -915,7 +903,6 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       30000,
@@ -934,8 +921,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
@@ -1006,10 +992,8 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3}},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)
@@ -1093,10 +1077,8 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3, MaxExtends: 2, Scheduler: config.ContainerSchedulerConfig{Enabled: true}}},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)

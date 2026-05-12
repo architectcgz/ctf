@@ -72,7 +72,6 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       hostPort,
@@ -91,8 +90,8 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
+
 	service.StartBackgroundTasks(context.Background())
 
 	resp, err := service.StartChallenge(context.Background(), 43, 202)
@@ -180,7 +179,6 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PublicHost:         "127.0.0.1",
@@ -190,8 +188,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 				StartProbeAttempts: 2,
 			},
 		},
-		nil,
-	)
+		nil)
 
 	err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{static}")
 	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
@@ -251,10 +248,8 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 1}},
-		nil,
-	)
+		nil)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -339,10 +334,8 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 2}},
-		nil,
-	)
+		nil)
 
 	instance := &model.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: model.InstanceStatusCreating}
 	challenge := &model.Challenge{
@@ -532,7 +525,6 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PublicHost:         "127.0.0.1",
@@ -542,8 +534,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 				StartProbeAttempts: 1,
 			},
 		},
-		nil,
-	)
+		nil)
 
 	instance := &model.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: model.InstanceStatusCreating}
 	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
@@ -612,7 +603,6 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       30000,
@@ -631,8 +621,8 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 				},
 			},
 		},
-		nil,
-	)
+		nil)
+
 	service.StartBackgroundTasks(context.Background())
 
 	first, err := service.StartChallenge(context.Background(), 51, 203)

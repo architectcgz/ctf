@@ -16,10 +16,6 @@ import (
 
 const errMsgChallengeNoTarget = "该题目不需要靶机实例"
 
-type AssessmentService interface {
-	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
-}
-
 type ScoreUpdater interface {
 	UpdateUserScore(ctx context.Context, userID int64) error
 	lockTimeout() time.Duration
@@ -57,20 +53,19 @@ type instanceRepository interface {
 }
 
 type Service struct {
-	repo              practiceCommandRepository
-	challengeRepo     challengecontracts.PracticeChallengeContract
-	imageRepo         challengecontracts.ImageStore
-	instanceRepo      instanceRepository
-	runtimeService    practiceports.RuntimeInstanceService
-	scoreService      ScoreUpdater
-	assessmentService AssessmentService
-	redis             *redis.Client
-	config            *config.Config
-	logger            *zap.Logger
-	eventBus          platformevents.Bus
-	baseCtx           context.Context
-	cancel            context.CancelFunc
-	tasks             sync.WaitGroup
+	repo           practiceCommandRepository
+	challengeRepo  challengecontracts.PracticeChallengeContract
+	imageRepo      challengecontracts.ImageStore
+	instanceRepo   instanceRepository
+	runtimeService practiceports.RuntimeInstanceService
+	scoreService   ScoreUpdater
+	redis          *redis.Client
+	config         *config.Config
+	logger         *zap.Logger
+	eventBus       platformevents.Bus
+	baseCtx        context.Context
+	cancel         context.CancelFunc
+	tasks          sync.WaitGroup
 }
 
 func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
@@ -88,7 +83,6 @@ func NewService(
 	instanceRepo instanceRepository,
 	runtimeService practiceports.RuntimeInstanceService,
 	scoreService ScoreUpdater,
-	assessmentService AssessmentService,
 	redis *redis.Client,
 	cfg *config.Config,
 	logger *zap.Logger,
@@ -100,15 +94,14 @@ func NewService(
 		cfg = &config.Config{}
 	}
 	return &Service{
-		repo:              repo,
-		challengeRepo:     challengeRepo,
-		imageRepo:         imageRepo,
-		instanceRepo:      instanceRepo,
-		runtimeService:    runtimeService,
-		scoreService:      scoreService,
-		assessmentService: assessmentService,
-		redis:             redis,
-		config:            cfg,
-		logger:            logger,
+		repo:           repo,
+		challengeRepo:  challengeRepo,
+		imageRepo:      imageRepo,
+		instanceRepo:   instanceRepo,
+		runtimeService: runtimeService,
+		scoreService:   scoreService,
+		redis:          redis,
+		config:         cfg,
+		logger:         logger,
 	}
 }

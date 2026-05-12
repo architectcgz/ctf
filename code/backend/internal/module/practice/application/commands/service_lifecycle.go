@@ -3,11 +3,9 @@ package commands
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -19,33 +17,6 @@ func (s *Service) StartBackgroundTasks(ctx context.Context) {
 		s.cancel()
 	}
 	s.baseCtx, s.cancel = context.WithCancel(ctx)
-}
-
-func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
-	if s.assessmentService == nil || !model.IsValidDimension(dimension) {
-		return
-	}
-
-	s.runAsyncTask(func(ctx context.Context) {
-		timer := time.NewTimer(s.config.Assessment.IncrementalUpdateDelay)
-		defer timer.Stop()
-
-		select {
-		case <-timer.C:
-		case <-ctx.Done():
-			return
-		}
-
-		updateCtx, cancel := context.WithTimeout(ctx, s.config.Assessment.IncrementalUpdateTimeout)
-		defer cancel()
-
-		if err := s.assessmentService.UpdateSkillProfileForDimension(updateCtx, userID, dimension); err != nil && !errors.Is(err, context.Canceled) {
-			s.logger.Error("更新能力画像失败",
-				zap.Int64("user_id", userID),
-				zap.String("dimension", dimension),
-				zap.Error(err))
-		}
-	})
 }
 
 func (s *Service) Close(ctx context.Context) error {

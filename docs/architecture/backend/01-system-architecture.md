@@ -192,7 +192,7 @@ flowchart TD
 
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
-    Assessment -->|profile service| Practice
+    Practice -.practice.flag_accepted event.-> Assessment
 ```
 
 补充说明：
@@ -255,7 +255,7 @@ flowchart LR
 | `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计、共享 runtime adapter；底层实现仍落在 `internal/module/runtime/*`，并向上暴露显式 container runtime capability fields | `challenge`、`contest`、`ops`、`practice`、`instance`（代码），以及 PostgreSQL / Redis / Docker Engine |
 | `container_runtime` | app 层组合视图（迁移中） | challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | `runtime` 物理模块 |
 | `instance` | 写模型 + app 层组合视图 | `internal/module/instance/*` 负责实例 owner；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime`（装配依赖 `ContainerRuntimeModule` 提供的显式 runtime capability / repo） |
-| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`、`assessment`（装配），`contest`、`runtime`（代码） |
+| `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`（装配），`contest`、`runtime`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
 | `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`、`ops`（装配），`auth`、`runtime`（代码） |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
 | `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`practice`（代码） |
@@ -590,9 +590,8 @@ challengeModule, err := buildChallengeModule(root, containerRuntimeModule, opsMo
 assessmentModule := buildAssessmentModule(root, challengeModule)
 teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
 contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
-practiceModule := buildPracticeModule(root, challengeModule, instanceModule, assessmentModule)
+practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
 practiceReadmodelModule := buildPracticeReadmodelModule(root)
-
 instanceModule.BuildHandler(root, opsModule)
 // 再把 handler 挂到 /api/v1、/teacher、/authoring、/admin 等路由组
 // 统一复用 tokenService 和 identityModule.Users 做认证上下文解析

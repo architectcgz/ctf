@@ -467,7 +467,6 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 		contestInstanceTestRuntimeService{},
 		nil,
 		nil,
-		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
 				PortRangeStart:       30000,
@@ -480,8 +479,8 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 				CreateTimeout:        time.Second,
 			},
 		},
-		zap.NewNop(),
-	)
+		zap.NewNop())
+
 }
 
 func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeID int64, now time.Time) {

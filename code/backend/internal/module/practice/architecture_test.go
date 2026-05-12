@@ -145,7 +145,6 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 		"runtimeService practiceports.RuntimeInstanceService",
 		"challengeRepo  challengecontracts.PracticeChallengeContract",
 		"imageStore     challengecontracts.ImageStore",
-		"assessment     assessmentcontracts.ProfileService",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -157,6 +156,7 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 		"repo *practiceinfra.Repository",
 		"type practiceModuleDeps struct",
 		"type practiceModuleExternalDeps struct",
+		"assessmentcontracts.ProfileService",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

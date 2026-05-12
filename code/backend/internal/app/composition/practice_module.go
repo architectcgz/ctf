@@ -6,7 +6,7 @@ import (
 
 type PracticeModule = practiceruntime.Module
 
-func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule, assessment *AssessmentModule) *PracticeModule {
+func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule) *PracticeModule {
 	module := practiceruntime.Build(practiceruntime.Deps{
 		AppContext:     root.Context(),
 		Config:         root.Config(),
@@ -18,7 +18,6 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		RuntimeService: instance.PracticeRuntimeService,
 		ChallengeRepo:  challenge.Catalog,
 		ImageStore:     challenge.ImageStore,
-		Assessment:     assessment.ProfileService,
 	})
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))

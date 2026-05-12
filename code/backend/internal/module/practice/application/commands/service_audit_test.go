@@ -60,7 +60,6 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -71,8 +70,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	if _, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}"); err != nil {
 		t.Fatalf("SubmitFlag() first error = %v", err)

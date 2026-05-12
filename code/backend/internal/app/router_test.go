@@ -806,7 +806,6 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 		"instance.PracticeRuntimeService",
 		"challenge.Catalog",
 		"challenge.ImageStore",
-		"assessment.ProfileService",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -817,6 +816,7 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	blocked := []string{
 		"type practiceModuleExternalDeps struct",
 		"buildPracticeModuleExternalDeps(",
+		"assessment.ProfileService",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

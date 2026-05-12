@@ -255,17 +255,6 @@ func assertAWDDefenseWorkspaceShellNode(t *testing.T, node practiceports.Topolog
 	}
 }
 
-type stubAssessmentService struct {
-	updateFn func(ctx context.Context, userID int64, dimension string) error
-}
-
-func (s *stubAssessmentService) UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error {
-	if s.updateFn == nil {
-		return nil
-	}
-	return s.updateFn(ctx, userID, dimension)
-}
-
 type stubScoreUpdater struct {
 	updateFn func(ctx context.Context, userID int64) error
 	lockWait time.Duration

@@ -11,68 +11,6 @@ import (
 	"time"
 )
 
-func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
-	t.Parallel()
-
-	startedCh := make(chan struct{})
-	var calls atomic.Int32
-	service := NewService(
-		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
-				return nil, gorm.ErrRecordNotFound
-			},
-			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
-				return nil
-			},
-		},
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		&stubAssessmentService{
-			updateFn: func(ctx context.Context, userID int64, dimension string) error {
-				if userID != 42 {
-					t.Fatalf("unexpected userID: %d", userID)
-				}
-				if dimension != model.DimensionWeb {
-					t.Fatalf("unexpected dimension: %s", dimension)
-				}
-				calls.Add(1)
-				close(startedCh)
-				<-ctx.Done()
-				return ctx.Err()
-			},
-		},
-		nil,
-		&config.Config{
-			Assessment: config.AssessmentConfig{
-				IncrementalUpdateDelay:   0,
-				IncrementalUpdateTimeout: time.Minute,
-			},
-		},
-		nil,
-	)
-	service.StartBackgroundTasks(context.Background())
-
-	service.triggerAssessmentUpdate(42, model.DimensionWeb)
-
-	select {
-	case <-startedCh:
-	case <-time.After(time.Second):
-		t.Fatal("expected assessment update to start")
-	}
-
-	closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := service.Close(closeCtx); err != nil {
-		t.Fatalf("Close() error = %v", err)
-	}
-	if calls.Load() != 1 {
-		t.Fatalf("expected one assessment update call, got %d", calls.Load())
-	}
-}
-
 func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	t.Parallel()
 
@@ -104,10 +42,9 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 			},
 		},
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
+
 	service.StartBackgroundTasks(context.Background())
 
 	service.triggerScoreUpdate(7)
@@ -154,9 +91,7 @@ func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
-		nil,
-	)
+		nil)
 
 	service.markInstanceFailed(nil, &model.Instance{ID: 42})
 }
@@ -165,7 +100,7 @@ func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 	t.Parallel()
 
 	publishCalled := false
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil).
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, nil).
 		SetEventBus(&stubPracticeEventBus{
 			publishFn: func(ctx context.Context, evt events.Event) error {
 				publishCalled = true
@@ -185,7 +120,7 @@ func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := service.Close(closeCtx); err != nil {
@@ -207,7 +142,7 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{
 		Container: config.ContainerConfig{
 			Scheduler: config.ContainerSchedulerConfig{
 				Enabled: true,
@@ -226,7 +161,7 @@ func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
 func TestPracticeServiceCloseRejectsNilContext(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	if err := service.Close(nil); err == nil {
 		t.Fatal("expected Close(nil) to reject missing context")

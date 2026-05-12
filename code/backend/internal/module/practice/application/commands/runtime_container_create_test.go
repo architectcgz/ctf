@@ -661,10 +661,8 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	challenge, topology, err := service.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, 42)

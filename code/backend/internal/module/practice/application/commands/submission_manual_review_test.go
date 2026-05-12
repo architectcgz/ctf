@@ -50,7 +50,6 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -61,8 +60,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.SubmitFlag(context.Background(), 9, 19, "flag{regex-42}")
 	if err != nil {
@@ -104,7 +102,6 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -115,8 +112,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.SubmitFlag(context.Background(), 8, 18, "answer with reasoning")
 	if err != nil {
@@ -202,7 +198,6 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				return nil
 			},
 		},
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -216,8 +211,8 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				ProgressTTL: time.Minute,
 			},
 		},
-		nil,
-	)
+		nil)
+
 	service.StartBackgroundTasks(context.Background())
 
 	resp, err := service.ReviewManualReviewSubmission(
@@ -293,7 +288,6 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -307,8 +301,8 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 				ProgressTTL: time.Minute,
 			},
 		},
-		nil,
-	)
+		nil)
+
 	service.SetEventBus(bus)
 
 	received := make(chan practicecontracts.FlagAcceptedEvent, 1)
@@ -369,7 +363,6 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -380,8 +373,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{shared-static}")
 	if err != nil {
@@ -433,7 +425,6 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -444,8 +435,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	first, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
@@ -534,7 +524,6 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		runtimeinfrarepo.NewRepository(db),
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -548,8 +537,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 				SolveGracePeriod: 10 * time.Minute,
 			},
 		},
-		nil,
-	)
+		nil)
 
 	beforeSubmit := time.Now()
 	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
@@ -639,10 +627,8 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
 
 	items, err := service.ListMyChallengeSubmissions(context.Background(), 7, 11)
 	if err != nil {
@@ -691,7 +677,6 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		&stubPracticeInstanceStore{},
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -702,8 +687,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{legacy}")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -763,7 +747,6 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -774,8 +757,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 				},
 			},
 		},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
@@ -861,10 +843,8 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.ReviewManualReviewSubmission(
@@ -914,7 +894,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 			return []practiceports.TeacherManualReviewSubmissionRecord{}, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
@@ -938,7 +918,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
 	if err == nil {
@@ -963,7 +943,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -993,7 +973,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -1023,7 +1003,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	studentID := int64(0)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
@@ -1054,7 +1034,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	challengeID := int64(0)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
@@ -1085,7 +1065,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -1132,7 +1112,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
@@ -1159,7 +1139,7 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleStudent)
 	if err == nil {
@@ -1188,7 +1168,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1223,7 +1203,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1258,7 +1238,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1338,10 +1318,8 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1390,10 +1368,8 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		nil,
 		&config.Config{},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	items, err := service.ListMyChallengeSubmissions(ctx, 7, 11)
@@ -1454,7 +1430,6 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		instanceStore,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -1463,8 +1438,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 			},
 			Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
 		},
-		nil,
-	)
+		nil)
 
 	flag := flagcrypto.GenerateDynamicFlag(7, 11, "12345678901234567890123456789012", "nonce-301", "flag")
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
@@ -1533,7 +1507,6 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		instanceStore,
 		nil,
 		nil,
-		nil,
 		redisClient,
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
@@ -1542,8 +1515,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 			},
 			Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
 		},
-		nil,
-	)
+		nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {

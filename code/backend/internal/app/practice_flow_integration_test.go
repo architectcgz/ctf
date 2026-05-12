@@ -916,11 +916,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		instanceModule.PracticeInstanceRepository,
 		instanceModule.PracticeRuntimeService,
 		nil,
-		nil,
 		cache,
 		cfg,
-		logger,
-	)
+		logger)
+
 	practiceScoreQueryService := practiceqry.NewScoreService(practiceRepo, cache, logger, &cfg.Score)
 	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)

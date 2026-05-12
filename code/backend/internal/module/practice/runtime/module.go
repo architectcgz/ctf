@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
@@ -52,7 +51,6 @@ type Deps struct {
 	RuntimeService practiceports.RuntimeInstanceService
 	ChallengeRepo  challengecontracts.PracticeChallengeContract
 	ImageStore     challengecontracts.ImageStore
-	Assessment     assessmentcontracts.ProfileService
 }
 
 type moduleDeps struct {
@@ -103,7 +101,6 @@ type moduleDeps struct {
 	runtimeService practiceports.RuntimeInstanceService
 	challengeRepo  challengecontracts.PracticeChallengeContract
 	imageStore     challengecontracts.ImageStore
-	assessment     assessmentcontracts.ProfileService
 }
 
 func Build(deps Deps) *Module {
@@ -132,7 +129,6 @@ func newModuleDeps(deps Deps) moduleDeps {
 		runtimeService: deps.RuntimeService,
 		challengeRepo:  deps.ChallengeRepo,
 		imageStore:     deps.ImageStore,
-		assessment:     deps.Assessment,
 	}
 }
 
@@ -149,11 +145,10 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		deps.instanceRepo,
 		deps.runtimeService,
 		scoreService,
-		deps.assessment,
 		cache,
 		cfg,
-		log.Named("practice_service"),
-	)
+		log.Named("practice_service"))
+
 	rankingService := practiceqry.NewScoreService(deps.rankingRepo, cache, log.Named("practice_score_query_service"), &cfg.Score)
 
 	return service, rankingService
