@@ -38,6 +38,17 @@ function matchContestOperationsManagePath(path: string): boolean {
   return /^\/platform\/contests\/[^/]+\/(?:manage|awd-config)(?:\/.*)?$/.test(path)
 }
 
+function matchClassWorkspacePath(path: string, prefix: string): boolean {
+  return (
+    matchExact(path, [prefix]) ||
+    new RegExp(`^${prefix}\\/[^/]+(?:\\/(?:trend|review|insights|intervention))?$`).test(path)
+  )
+}
+
+function matchClassStudentDetailPath(path: string, prefix: string): boolean {
+  return new RegExp(`^${prefix}\\/[^/]+\\/students\\/[^/]+(?:\\/.*)?$`).test(path)
+}
+
 const backofficeModules: BackofficeModule[] = [
   {
     key: 'overview',
@@ -70,14 +81,14 @@ const backofficeModules: BackofficeModule[] = [
         label: '班级管理',
         path: '/academy/classes',
         roles: ['teacher'],
-        isMatch: (path) => matchExact(path, ['/academy/classes']),
+        isMatch: (path) => matchClassWorkspacePath(path, '/academy/classes'),
       },
       {
         routeName: 'PlatformClassManagement',
         label: '班级管理',
         path: '/platform/classes',
         roles: ['admin'],
-        isMatch: (path) => matchExact(path, ['/platform/classes']),
+        isMatch: (path) => matchClassWorkspacePath(path, '/platform/classes'),
       },
       {
         routeName: 'TeacherStudentManagement',
@@ -85,7 +96,8 @@ const backofficeModules: BackofficeModule[] = [
         path: '/academy/students',
         roles: ['teacher'],
         isMatch: (path) =>
-          matchAny(path, ['/academy/students', '/academy/classes']),
+          matchAny(path, ['/academy/students']) ||
+          matchClassStudentDetailPath(path, '/academy/classes'),
       },
       {
         routeName: 'PlatformStudentManagement',
@@ -93,7 +105,8 @@ const backofficeModules: BackofficeModule[] = [
         path: '/platform/students',
         roles: ['admin'],
         isMatch: (path) =>
-          matchAny(path, ['/platform/students', '/platform/classes']),
+          matchAny(path, ['/platform/students']) ||
+          matchClassStudentDetailPath(path, '/platform/classes'),
       },
       {
         routeName: 'TeacherAWDReviewIndex',

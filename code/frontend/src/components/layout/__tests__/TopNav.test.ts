@@ -450,7 +450,7 @@ describe('TopNav', () => {
     expect(breadcrumbButtons.map((button) => button.text())).toEqual([
       'Workspace',
       '教学运营',
-      '学生管理',
+      '班级管理',
       'Class A',
     ])
 
@@ -512,6 +512,19 @@ describe('TopNav', () => {
       '教学运营',
       '学生管理',
       '学生 stu-1',
+    ])
+
+    wrapper.unmount()
+  })
+
+  it('教师侧班级详情页应归属班级管理面包屑', async () => {
+    const { wrapper } = await mountBackofficeTopNav('/academy/classes/CTF-1', 'teacher')
+
+    expect(wrapper.findAll('.topnav-breadcrumb button').map((button) => button.text())).toEqual([
+      'Workspace',
+      '教学运营',
+      '班级管理',
+      'CTF-1',
     ])
 
     wrapper.unmount()

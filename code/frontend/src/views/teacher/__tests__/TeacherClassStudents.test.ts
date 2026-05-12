@@ -330,6 +330,56 @@ describe('TeacherClassStudents', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
+  it('管理员在班级详情内切换班级、查看学生和返回概览时应停留在后台路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
+
+    teacherApiMocks.getClasses.mockResolvedValue([
+      { name: 'Class A', student_count: 2 },
+      { name: 'Class B', student_count: 1 },
+    ])
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.find('#class-tab-students').trigger('click')
+    await wrapper.find('select[aria-label="选择班级"]').setValue('Class B')
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openStudent', 'stu-1')
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openDashboard')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'PlatformClassStudents',
+      params: { className: 'Class B' },
+      query: { panel: 'students' },
+    })
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'PlatformStudentAnalysis',
+      params: { className: 'Class A', studentId: 'stu-1' },
+    })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
+  })
+
   it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {
     teacherApiMocks.getClasses.mockResolvedValue([
       { name: 'Class A', student_count: 2 },

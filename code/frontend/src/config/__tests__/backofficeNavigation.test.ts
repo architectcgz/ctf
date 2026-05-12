@@ -41,6 +41,9 @@ describe('backofficeNavigation', () => {
     expect(getBackofficeModuleByPath('/platform/awd-reviews/contest-1')?.key).toBe('operations')
     expect(getBackofficeModuleByPath('/platform/instances')?.key).toBe('operations')
 
+    const classDetailItems = getVisibleBackofficeSecondaryItems('/platform/classes/class-a', 'admin')
+    expect(classDetailItems.find((item) => item.active)?.routeName).toBe('PlatformClassManagement')
+
     const items = getVisibleBackofficeSecondaryItems(
       '/platform/classes/class-a/students/student-1/review-archive',
       'admin'

@@ -10,7 +10,12 @@ import type {
 } from '@/api/contracts'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
-import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
+import {
+  resolveClassManagementRouteName,
+  resolveClassStudentsRouteName,
+  resolveStudentAnalysisRouteName,
+  resolveTeachingDashboardRouteName,
+} from '@/utils/teachingWorkspaceRouting'
 
 export function useTeacherClassStudentsPage() {
   const route = useRoute()
@@ -97,7 +102,7 @@ export function useTeacherClassStudentsPage() {
     }
 
     router.push({
-      name: 'TeacherClassStudents',
+      name: resolveClassStudentsRouteName(authStore.user?.role),
       params: { className },
       query: route.query,
     })
@@ -130,7 +135,7 @@ export function useTeacherClassStudentsPage() {
 
   function openStudent(studentId: string): void {
     router.push({
-      name: 'TeacherStudentAnalysis',
+      name: resolveStudentAnalysisRouteName(authStore.user?.role),
       params: {
         className: selectedClassName.value,
         studentId,
@@ -143,7 +148,7 @@ export function useTeacherClassStudentsPage() {
   }
 
   function openDashboard(): void {
-    router.push({ name: 'TeacherDashboard' })
+    router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })
   }
 
   function openClassReportDialog(): void {
