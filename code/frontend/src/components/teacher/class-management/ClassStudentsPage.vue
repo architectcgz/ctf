@@ -198,16 +198,16 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
           aria-labelledby="class-tab-overview"
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
-          <header class="teacher-topbar">
+          <header class="teacher-topbar class-overview-topbar">
             <div class="teacher-heading">
-              <section class="teacher-summary">
+              <section class="teacher-summary class-overview-summary">
                 <div class="teacher-summary-title">
                   <span>Class Snapshot</span>
                 </div>
                 <div
                   class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
                 >
-                  <div class="progress-card metric-panel-card">
+                  <article class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
                       <span>班级人数</span>
                       <Users class="h-4 w-4" />
@@ -215,8 +215,9 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
                     <div class="progress-card-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
                     </div>
-                  </div>
-                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-hint metric-panel-helper">当前班级学生总数</div>
+                  </article>
+                  <article class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
                       <span>平均解题</span>
                       <Target class="h-4 w-4" />
@@ -224,8 +225,9 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
                     <div class="progress-card-value metric-panel-value">
                       {{ averageSolvedText }}
                     </div>
-                  </div>
-                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-hint metric-panel-helper">当前班级人均完成题目数</div>
+                  </article>
+                  <article class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
                       <span>近 7 天活跃率</span>
                       <Activity class="h-4 w-4" />
@@ -233,7 +235,10 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
                     <div class="progress-card-value metric-panel-value">
                       {{ activeRateText }}
                     </div>
-                  </div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      近 7 天内至少产生训练事件的学生占比
+                    </div>
+                  </article>
                 </div>
               </section>
             </div>
@@ -446,6 +451,15 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
 
 .teacher-badge-card {
   border: 1px solid var(--teacher-card-border);
+}
+
+.class-overview-topbar {
+  border-bottom: 0;
+}
+
+.class-overview-summary {
+  padding: 0;
+  border-bottom: 0;
 }
 
 .teacher-directory-shell {

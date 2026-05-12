@@ -263,6 +263,10 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('class="top-tabs"')
     expect(classStudentsPageSource).toContain('class="content-pane"')
     expect(classStudentsPageSource).toContain('WorkspaceDataTable')
+    expect(classStudentsPageSource).toContain('class="teacher-topbar class-overview-topbar"')
+    expect(classStudentsPageSource).toContain('class="teacher-summary class-overview-summary"')
+    expect(classStudentsPageSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"')
+    expect(classStudentsPageSource).toContain('class="progress-card metric-panel-card"')
     expect(classStudentsPageSource).toMatch(
       /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
@@ -284,6 +288,14 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('class="teacher-directory-shell workspace-directory-list"')
     expect(classStudentsPageSource).toContain('class="teacher-student-directory-table"')
     expect(classStudentsPageSource).toContain("label: '做题数 / 得分数'")
+    expect(classStudentsPageSource).toContain('当前班级学生总数')
+    expect(classStudentsPageSource).toContain('当前班级人均完成题目数')
+    expect(classStudentsPageSource).toMatch(
+      /\.class-overview-topbar\s*\{[^}]*border-bottom:\s*0;/s
+    )
+    expect(classStudentsPageSource).toMatch(
+      /\.class-overview-summary\s*\{[^}]*padding:\s*0;[^}]*border-bottom:\s*0;/s
+    )
     expect(classStudentsPageSource).toContain('<span>班级人数</span>')
     expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')
     expect(classStudentsPageSource).toContain('<span>平均解题</span>')
