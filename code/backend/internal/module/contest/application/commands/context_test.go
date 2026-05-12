@@ -20,6 +20,25 @@ func (s *stubContestEventBus) Publish(ctx context.Context, evt platformevents.Ev
 	return nil
 }
 
+func TestPublishContestWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	publishCalled := false
+	publishContestWeakEvent(nil, &stubContestEventBus{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishCalled = true
+			if ctx != nil {
+				t.Fatalf("expected publish ctx to stay nil, got %v", ctx)
+			}
+			return nil
+		},
+	}, platformevents.Event{Name: "contest.test"})
+
+	if !publishCalled {
+		t.Fatal("expected event to be published")
+	}
+}
+
 func TestAWDServicePublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 	t.Parallel()
 

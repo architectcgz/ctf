@@ -181,12 +181,13 @@ flowchart LR
 - 训练和竞赛写路径不被画像、通知、广播实现拖住。
 - `assessment`、`ops` 作为消费者处理可重试副作用。
 
-当前状态（2026-05-12，phase 3 / slices 1-2）：
+当前状态（2026-05-12，phase 3 / slices 1-3）：
 
 - `practice` runtime / composition 对 `assessment.ProfileService` 的直接注入已删除。
 - 正确提交与人工评审通过后的能力画像增量更新，统一通过 `practice.flag_accepted` 事件交给 `assessment` 消费。
 - 题目发布自检完成后的教师通知，统一通过 `challenge.publish_check_finished` 事件交给 `ops` 消费。
-- `contest` 的实时广播仍通过 `RealtimeBroadcaster` port 注入，但 phase 3 里与 `ops`、缓存失效和其他副作用相关的统一收口还没有全部结束。
+- 竞赛公告创建/删除、榜单刷新、AWD 预览进度，统一通过 `contest` 事件交给 `ops` relay 做 WebSocket 广播。
+- phase 3 里与缓存失效和其他副作用相关的统一收口还没有全部结束。
 
 建议动作：
 

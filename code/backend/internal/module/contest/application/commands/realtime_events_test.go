@@ -6,41 +6,11 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
-	ctfws "ctf-platform/pkg/websocket"
+	platformevents "ctf-platform/internal/platform/events"
 )
-
-type contestRealtimeBroadcastCall struct {
-	channel string
-	message ctfws.Envelope
-}
-
-type contestRealtimeUserBroadcastCall struct {
-	userID  int64
-	message ctfws.Envelope
-}
-
-type contestRealtimeBroadcasterStub struct {
-	calls     []contestRealtimeBroadcastCall
-	userCalls []contestRealtimeUserBroadcastCall
-}
-
-func (s *contestRealtimeBroadcasterStub) SendToChannel(channel string, message ctfws.Envelope) int {
-	s.calls = append(s.calls, contestRealtimeBroadcastCall{
-		channel: channel,
-		message: message,
-	})
-	return 1
-}
-
-func (s *contestRealtimeBroadcasterStub) SendToUser(userID int64, message ctfws.Envelope) int {
-	s.userCalls = append(s.userCalls, contestRealtimeUserBroadcastCall{
-		userID:  userID,
-		message: message,
-	})
-	return 1
-}
 
 type scoreboardUpdaterStub struct {
 	updateCalls [][2]int64
@@ -64,12 +34,21 @@ func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testin
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
-	broadcaster := &contestRealtimeBroadcasterStub{}
+	bus := platformevents.NewBus()
+	received := make(chan contestcontracts.AnnouncementCreatedEvent, 1)
+	bus.Subscribe(contestcontracts.EventAnnouncementCreated, func(_ context.Context, evt platformevents.Event) error {
+		payload, ok := evt.Payload.(contestcontracts.AnnouncementCreatedEvent)
+		if !ok {
+			t.Fatalf("unexpected payload type: %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
 	service := &ParticipationService{
 		contestRepo: contestRepo,
 		repo:        participationRepo,
 		teamRepo:    teamRepo,
-		broadcaster: broadcaster,
+		eventBus:    bus,
 	}
 
 	now := time.Now()
@@ -97,14 +76,20 @@ func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testin
 	if item == nil || item.ID == 0 {
 		t.Fatalf("expected created announcement, got %+v", item)
 	}
-	if len(broadcaster.calls) != 1 {
-		t.Fatalf("expected 1 realtime broadcast, got %d", len(broadcaster.calls))
-	}
-	if broadcaster.calls[0].channel != "contest:77:announcements" {
-		t.Fatalf("unexpected broadcast channel: %s", broadcaster.calls[0].channel)
-	}
-	if broadcaster.calls[0].message.Type != "contest.announcement.created" {
-		t.Fatalf("unexpected broadcast type: %s", broadcaster.calls[0].message.Type)
+
+	select {
+	case evt := <-received:
+		if evt.ContestID != 77 || evt.AnnouncementID != item.ID {
+			t.Fatalf("unexpected event payload: %+v", evt)
+		}
+		if evt.Title != "比赛开始" || evt.Content != "欢迎接入实时公告。" {
+			t.Fatalf("unexpected event announcement body: %+v", evt)
+		}
+		if evt.CreatedAt.IsZero() || evt.OccurredAt.IsZero() {
+			t.Fatalf("expected non-zero event timestamps, got %+v", evt)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected contest.announcement_created event to be published")
 	}
 }
 
@@ -112,10 +97,19 @@ func TestSubmissionServiceSyncCorrectSubmissionScoreboardBroadcastsRealtimeEvent
 	t.Parallel()
 
 	scoreboard := &scoreboardUpdaterStub{}
-	broadcaster := &contestRealtimeBroadcasterStub{}
+	bus := platformevents.NewBus()
+	received := make(chan contestcontracts.ScoreboardUpdatedEvent, 1)
+	bus.Subscribe(contestcontracts.EventScoreboardUpdated, func(_ context.Context, evt platformevents.Event) error {
+		payload, ok := evt.Payload.(contestcontracts.ScoreboardUpdatedEvent)
+		if !ok {
+			t.Fatalf("unexpected payload type: %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
 	service := &SubmissionService{
 		scoreboardService: scoreboard,
-		broadcaster:       broadcaster,
+		eventBus:          bus,
 	}
 
 	contestID := int64(88)
@@ -129,13 +123,16 @@ func TestSubmissionServiceSyncCorrectSubmissionScoreboardBroadcastsRealtimeEvent
 	if len(scoreboard.updateCalls) != 1 {
 		t.Fatalf("expected 1 scoreboard update, got %d", len(scoreboard.updateCalls))
 	}
-	if len(broadcaster.calls) != 1 {
-		t.Fatalf("expected 1 realtime broadcast, got %d", len(broadcaster.calls))
-	}
-	if broadcaster.calls[0].channel != "contest:88:scoreboard" {
-		t.Fatalf("unexpected broadcast channel: %s", broadcaster.calls[0].channel)
-	}
-	if broadcaster.calls[0].message.Type != "scoreboard.updated" {
-		t.Fatalf("unexpected broadcast type: %s", broadcaster.calls[0].message.Type)
+
+	select {
+	case evt := <-received:
+		if evt.ContestID != contestID {
+			t.Fatalf("unexpected event payload: %+v", evt)
+		}
+		if evt.OccurredAt.IsZero() {
+			t.Fatalf("expected non-zero occurred_at, got %+v", evt)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected contest.scoreboard_updated event to be published")
 	}
 }

@@ -231,7 +231,7 @@ flowchart LR
 
     Challenge -->|catalog / image store / flag validator| Contest
     Challenge -.challenge.publish_check_finished event.-> Ops
-    Ops -->|ws manager| Contest
+    Contest -.contest realtime events.-> Ops
 
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
@@ -269,6 +269,7 @@ flowchart LR
     Assessment -->|contest contracts| Contest
 
     Ops -->|token service| Auth
+    Ops -->|contest realtime events| Contest
     Ops -->|practice events| Practice
 
     Contest -->|token service| Auth
@@ -294,8 +295,8 @@ flowchart LR
 | `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
 | `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime`，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费 |
 | `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
-| `ops` | `auth`、`challenge`、`practice` | `auth/contracts`、`challenge/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
-| `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
+| `ops` | `auth`、`challenge`、`contest`、`practice` | `auth/contracts`、`challenge/contracts`、`contest/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；contest realtime relay 订阅公告 / 榜单 / AWD 预览事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
+| `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度改为发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
 | `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
 | `runtime` | `challenge`、`contest`、`ops`、`practice`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops / practice 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape |

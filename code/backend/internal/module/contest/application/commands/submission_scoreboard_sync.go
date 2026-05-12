@@ -2,9 +2,10 @@ package commands
 
 import (
 	"context"
+	"time"
 
-	contestports "ctf-platform/internal/module/contest/ports"
-	ctfws "ctf-platform/pkg/websocket"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 func (s *SubmissionService) syncCorrectSubmissionScoreboard(ctx context.Context, contestID *int64, teamScoreDeltas map[int64]int) error {
@@ -28,10 +29,11 @@ func (s *SubmissionService) syncCorrectSubmissionScoreboard(ctx context.Context,
 	}
 
 	if updated {
-		broadcastContestRealtimeEvent(s.broadcaster, contestports.ScoreboardChannel(*contestID), ctfws.Envelope{
-			Type: "scoreboard.updated",
-			Payload: map[string]any{
-				"contest_id": *contestID,
+		publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
+			Name: contestcontracts.EventScoreboardUpdated,
+			Payload: contestcontracts.ScoreboardUpdatedEvent{
+				ContestID:  *contestID,
+				OccurredAt: contestEventTimestamp(time.Now().UTC()),
 			},
 		})
 	}

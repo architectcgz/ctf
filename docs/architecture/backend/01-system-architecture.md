@@ -189,7 +189,7 @@ flowchart TD
 
     Challenge -->|catalog / image store / flag validator| Contest
     Challenge -.challenge.publish_check_finished event.-> Ops
-    Ops -->|ws manager| Contest
+    Contest -.contest realtime events.-> Ops
 
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
@@ -239,11 +239,11 @@ flowchart LR
     Assessment -->|recommendations| Teaching
 
     Challenge -->|catalog / image store / flag validator| Contest
-    Ops -->|ws manager| Contest
+    Contest -.contest realtime events.-> Ops
 
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
-    Assessment -->|profile service| Practice
+    Practice -.practice.flag_accepted event.-> Assessment
 ```
 
 ### 3.2 当前模块职责
@@ -257,9 +257,9 @@ flowchart LR
 | `container_runtime` | app 层组合视图（迁移中） | challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | `runtime` 物理模块 |
 | `instance` | 写模型 + app 层组合视图 | `internal/module/instance/*` 负责实例 owner；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `runtime`（装配依赖 `ContainerRuntimeModule` 提供的显式 runtime capability / repo） |
 | `practice` | 写模型 | 练习开题、排队与 provisioning、Flag 提交、个人训练进度 | `challenge`、`instance`（装配），`contest`、`runtime`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
-| `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`、`ops`（装配），`auth`、`runtime`（代码） |
+| `contest` | 写模型 | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`（装配），`auth`、`runtime`（代码）；公告、榜单刷新和 AWD 预览进度通过 `contest` 事件交给 `ops` relay |
 | `assessment` | 写模型 | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
-| `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`challenge`、`practice`（代码）；其中 challenge / practice 通知由事件消费者处理 |
+| `ops` | 写模型 / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`challenge`、`contest`、`practice`（代码）；其中 challenge / practice 通知与 contest realtime relay 都由事件消费者处理 |
 | `practice_readmodel` | 读模型 | 练习态只读聚合查询 | 当前无跨模块 import，主要由本模块 repository 直接聚合 |
 | `teaching_readmodel` | 读模型 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | `assessment`（装配 + 代码），其余聚合查询由本模块 repository 完成 |
 

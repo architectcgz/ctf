@@ -3,12 +3,11 @@ package commands
 import (
 	"context"
 	"strings"
+	"time"
 
-	contestports "ctf-platform/internal/module/contest/ports"
-	ctfws "ctf-platform/pkg/websocket"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 )
-
-const awdPreviewProgressEventType = "awd.preview.progress"
 
 type awdPreviewRequesterContextKey struct{}
 
@@ -35,7 +34,7 @@ func awdPreviewRequesterFromContext(ctx context.Context) (int64, bool) {
 
 func broadcastAWDPreviewProgress(
 	ctx context.Context,
-	broadcaster contestports.RealtimeBroadcaster,
+	bus platformevents.Bus,
 	contestID int64,
 	requestID string,
 	phaseKey string,
@@ -46,33 +45,31 @@ func broadcastAWDPreviewProgress(
 	status string,
 	extra map[string]any,
 ) {
-	if broadcaster == nil {
+	if bus == nil {
 		return
 	}
 	userID, ok := awdPreviewRequesterFromContext(ctx)
 	if !ok {
 		return
 	}
-	payload := map[string]any{
-		"contest_id":         contestID,
-		"preview_request_id": strings.TrimSpace(requestID),
-		"phase_key":          strings.TrimSpace(phaseKey),
-		"phase_label":        strings.TrimSpace(phaseLabel),
-		"detail":             strings.TrimSpace(detail),
-		"status":             strings.TrimSpace(status),
+	event := contestcontracts.AWDPreviewProgressEvent{
+		UserID:           userID,
+		ContestID:        contestID,
+		PreviewRequestID: strings.TrimSpace(requestID),
+		PhaseKey:         strings.TrimSpace(phaseKey),
+		PhaseLabel:       strings.TrimSpace(phaseLabel),
+		Detail:           strings.TrimSpace(detail),
+		Attempt:          attempt,
+		TotalAttempts:    totalAttempts,
+		Status:           strings.TrimSpace(status),
+		OccurredAt:       contestEventTimestamp(time.Now().UTC()),
 	}
-	if attempt > 0 {
-		payload["attempt"] = attempt
-	}
-	if totalAttempts > 0 {
-		payload["total_attempts"] = totalAttempts
-	}
-	for key, value := range extra {
-		payload[key] = value
+	if extraError, ok := extra["error"].(string); ok {
+		event.Error = strings.TrimSpace(extraError)
 	}
 
-	broadcaster.SendToUser(userID, ctfws.Envelope{
-		Type:    awdPreviewProgressEventType,
-		Payload: payload,
+	publishContestWeakEvent(ctx, bus, platformevents.Event{
+		Name:    contestcontracts.EventAWDPreviewProgress,
+		Payload: event,
 	})
 }

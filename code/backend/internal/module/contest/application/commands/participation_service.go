@@ -1,6 +1,9 @@
 package commands
 
-import contestports "ctf-platform/internal/module/contest/ports"
+import (
+	contestports "ctf-platform/internal/module/contest/ports"
+	platformevents "ctf-platform/internal/platform/events"
+)
 
 type participationCommandRepository interface {
 	contestports.ContestParticipationRegistrationLookupRepository
@@ -13,7 +16,7 @@ type ParticipationService struct {
 	contestRepo contestports.ContestLookupRepository
 	repo        participationCommandRepository
 	teamRepo    contestports.ContestTeamFinder
-	broadcaster contestports.RealtimeBroadcaster
+	eventBus    platformevents.Bus
 }
 
 func NewParticipationService(contestRepo contestports.ContestLookupRepository, repo participationCommandRepository, teamRepo contestports.ContestTeamFinder) *ParticipationService {
@@ -24,6 +27,10 @@ func NewParticipationService(contestRepo contestports.ContestLookupRepository, r
 	}
 }
 
-func (s *ParticipationService) SetRealtimeBroadcaster(broadcaster contestports.RealtimeBroadcaster) {
-	s.broadcaster = broadcaster
+func (s *ParticipationService) SetEventBus(bus platformevents.Bus) *ParticipationService {
+	if s == nil {
+		return nil
+	}
+	s.eventBus = bus
+	return s
 }

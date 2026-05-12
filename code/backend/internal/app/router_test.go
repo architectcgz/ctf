@@ -93,6 +93,7 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/awd/reviews/:id", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/archive", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/report", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/overview", "internal/module/teaching_readmodel/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/evidence", "internal/module/teaching_readmodel/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/attack-sessions", "internal/module/teaching_readmodel/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/writeup-submissions", "internal/module/challenge/api/http")
@@ -636,6 +637,7 @@ func TestBuildContestModuleDelegatesToRuntime(t *testing.T) {
 	expected := []string{
 		"contestruntime.Build(",
 		"contestruntime.Deps{",
+		"Events:                root.Events",
 		"root.RegisterBackgroundJob(",
 		"NewLoopBackgroundJob(job.Name, job.Run)",
 	}
@@ -658,6 +660,8 @@ func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 	blocked := []string{
 		"challenge         *ChallengeModule",
 		"runtime           *RuntimeModule",
+		"bindRealtime",
+		"SetRealtimeBroadcaster",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

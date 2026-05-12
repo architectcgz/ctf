@@ -222,7 +222,7 @@ func (s *AWDService) reportAWDPreviewProgress(
 	status string,
 	extra map[string]any,
 ) {
-	broadcastAWDPreviewProgress(ctx, s.broadcaster, contestID, requestID, phaseKey, phaseLabel, detail, attempt, totalAttempts, status, extra)
+	broadcastAWDPreviewProgress(ctx, s.eventBus, contestID, requestID, phaseKey, phaseLabel, detail, attempt, totalAttempts, status, extra)
 }
 
 func (s *AWDService) reportAWDPreviewFailure(ctx context.Context, contestID int64, requestID string, phaseKey string, detail string, err error) {

@@ -65,6 +65,7 @@ func Build(deps Deps) *Module {
 	auditHandler, auditService := buildAuditHandler(internalDeps)
 	dashboardHandler := buildDashboardHandler(internalDeps)
 	riskHandler := buildRiskHandler(internalDeps)
+	registerContestRealtimeConsumers(internalDeps)
 
 	return &Module{
 		AuditService:     auditService,
@@ -127,6 +128,11 @@ func buildRiskHandler(deps moduleDeps) *opshttp.RiskHandler {
 	log := deps.input.Logger
 	riskService := opsqry.NewRiskService(deps.riskRepo, log.Named("risk_service"))
 	return opshttp.NewRiskHandler(riskService)
+}
+
+func registerContestRealtimeConsumers(deps moduleDeps) {
+	relayService := opscmd.NewContestRealtimeService(deps.webSocketManager)
+	relayService.RegisterContestEventConsumers(deps.input.Events)
 }
 
 func buildNotificationHandler(deps moduleDeps, tokenService authcontracts.TokenService) *opshttp.NotificationHandler {

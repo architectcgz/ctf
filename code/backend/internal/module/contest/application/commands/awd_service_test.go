@@ -33,7 +33,6 @@ import (
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 const (
@@ -111,37 +110,6 @@ type fakeAWDPreviewRoundManager struct {
 	previewResponses []*contestports.AWDServicePreviewResult
 	previewErrors    []error
 	previewRequests  []contestports.AWDServicePreviewRequest
-}
-
-type testRealtimeEnvelope struct {
-	Type    string
-	Payload map[string]any
-}
-
-type testRealtimeBroadcaster struct {
-	userCalls []struct {
-		userID  int64
-		message testRealtimeEnvelope
-	}
-}
-
-func (b *testRealtimeBroadcaster) SendToChannel(_ string, _ ctfws.Envelope) int {
-	return 0
-}
-
-func (b *testRealtimeBroadcaster) SendToUser(userID int64, message ctfws.Envelope) int {
-	payload, _ := message.Payload.(map[string]any)
-	b.userCalls = append(b.userCalls, struct {
-		userID  int64
-		message testRealtimeEnvelope
-	}{
-		userID: userID,
-		message: testRealtimeEnvelope{
-			Type:    message.Type,
-			Payload: payload,
-		},
-	})
-	return 1
 }
 
 func (f *fakeAWDPreviewRoundManager) RunRoundServiceChecks(_ context.Context, _ *model.Contest, _ *model.AWDRound, _ string) error {
@@ -1199,7 +1167,16 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 			},
 		},
 	}
-	broadcaster := &testRealtimeBroadcaster{}
+	bus := platformevents.NewBus()
+	received := make(chan contestcontracts.AWDPreviewProgressEvent, 8)
+	bus.Subscribe(contestcontracts.EventAWDPreviewProgress, func(_ context.Context, evt platformevents.Event) error {
+		payload, ok := evt.Payload.(contestcontracts.AWDPreviewProgressEvent)
+		if !ok {
+			t.Fatalf("unexpected payload type: %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
 
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
@@ -1217,7 +1194,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 		awdChallengeRepo,
 		nil,
 	)
-	service.SetRealtimeBroadcaster(broadcaster)
+	service.SetEventBus(bus)
 
 	ctx := contestcmd.WithAWDPreviewRequester(context.Background(), 9001)
 	_, err = service.PreviewChecker(ctx, 281, contestcmd.PreviewCheckerInput{
@@ -1240,32 +1217,35 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 	}
 
 	expectedPhases := []string{"prepare", "attempt-1", "attempt-2", "attempt-3", "summary"}
-	if len(broadcaster.userCalls) != len(expectedPhases) {
-		t.Fatalf("expected %d realtime progress events, got %d", len(expectedPhases), len(broadcaster.userCalls))
+	gotEvents := make([]contestcontracts.AWDPreviewProgressEvent, 0, len(expectedPhases))
+	for range expectedPhases {
+		select {
+		case evt := <-received:
+			gotEvents = append(gotEvents, evt)
+		case <-time.After(time.Second):
+			t.Fatalf("expected %d realtime progress events, got %d", len(expectedPhases), len(gotEvents))
+		}
 	}
 	for index, expectedPhase := range expectedPhases {
-		call := broadcaster.userCalls[index]
-		if call.userID != 9001 {
-			t.Fatalf("unexpected broadcast user: %d", call.userID)
+		evt := gotEvents[index]
+		if evt.UserID != 9001 {
+			t.Fatalf("unexpected broadcast user: %d", evt.UserID)
 		}
-		if call.message.Type != "awd.preview.progress" {
-			t.Fatalf("unexpected realtime type: %s", call.message.Type)
+		if evt.PhaseKey != expectedPhase {
+			t.Fatalf("event %d unexpected phase_key: %s", index, evt.PhaseKey)
 		}
-		if got := call.message.Payload["phase_key"]; got != expectedPhase {
-			t.Fatalf("event %d unexpected phase_key: %#v", index, got)
+		if evt.PreviewRequestID != "preview-progress-1" {
+			t.Fatalf("event %d unexpected preview_request_id: %s", index, evt.PreviewRequestID)
 		}
-		if got := call.message.Payload["preview_request_id"]; got != "preview-progress-1" {
-			t.Fatalf("event %d unexpected preview_request_id: %#v", index, got)
-		}
-		if got := call.message.Payload["status"]; got != "running" {
-			t.Fatalf("event %d unexpected status: %#v", index, got)
+		if evt.Status != "running" {
+			t.Fatalf("event %d unexpected status: %s", index, evt.Status)
 		}
 	}
-	if broadcaster.userCalls[1].message.Payload["attempt"] != 1 {
-		t.Fatalf("attempt-1 payload missing attempt: %#v", broadcaster.userCalls[1].message.Payload)
+	if gotEvents[1].Attempt != 1 {
+		t.Fatalf("attempt-1 event missing attempt: %+v", gotEvents[1])
 	}
-	if broadcaster.userCalls[3].message.Payload["attempt"] != 3 {
-		t.Fatalf("attempt-3 payload missing attempt: %#v", broadcaster.userCalls[3].message.Payload)
+	if gotEvents[3].Attempt != 3 {
+		t.Fatalf("attempt-3 event missing attempt: %+v", gotEvents[3])
 	}
 }
 

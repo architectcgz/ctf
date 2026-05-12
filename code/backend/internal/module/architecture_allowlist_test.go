@@ -143,6 +143,7 @@ var allowedModuleDependencies = map[string]struct{}{
 	"contest -> runtime":               {},
 	"ops -> auth":                      {},
 	"ops -> challenge":                 {},
+	"ops -> contest":                   {},
 	"ops -> practice":                  {},
 	"practice -> challenge":            {},
 	"practice -> contest":              {},

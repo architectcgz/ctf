@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/contest/application/statusmachine"
 	contestports "ctf-platform/internal/module/contest/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type ScoreboardAdminService struct {
@@ -14,7 +15,7 @@ type ScoreboardAdminService struct {
 	sideEffects *statusmachine.SideEffectRunner
 	redis       *redislib.Client
 	cfg         *config.ContestConfig
-	broadcaster contestports.RealtimeBroadcaster
+	eventBus    platformevents.Bus
 }
 
 func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepository, redis *redislib.Client, cfg *config.ContestConfig) *ScoreboardAdminService {
@@ -31,6 +32,10 @@ func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepositor
 	}
 }
 
-func (s *ScoreboardAdminService) SetRealtimeBroadcaster(broadcaster contestports.RealtimeBroadcaster) {
-	s.broadcaster = broadcaster
+func (s *ScoreboardAdminService) SetEventBus(bus platformevents.Bus) *ScoreboardAdminService {
+	if s == nil {
+		return nil
+	}
+	s.eventBus = bus
+	return s
 }

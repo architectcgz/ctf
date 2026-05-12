@@ -1,18 +1,22 @@
 package commands
 
 import (
+	"context"
 	"time"
 
-	contestports "ctf-platform/internal/module/contest/ports"
-	ctfws "ctf-platform/pkg/websocket"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
-func broadcastContestRealtimeEvent(broadcaster contestports.RealtimeBroadcaster, channel string, message ctfws.Envelope) {
-	if broadcaster == nil || channel == "" {
+func contestEventTimestamp(ts time.Time) time.Time {
+	if ts.IsZero() {
+		return time.Now().UTC()
+	}
+	return ts.UTC()
+}
+
+func publishContestWeakEvent(ctx context.Context, bus platformevents.Bus, evt platformevents.Event) {
+	if bus == nil {
 		return
 	}
-	if message.Timestamp.IsZero() {
-		message.Timestamp = time.Now().UTC()
-	}
-	broadcaster.SendToChannel(channel, message)
+	_ = bus.Publish(ctx, evt)
 }

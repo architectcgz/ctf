@@ -12,7 +12,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
-	contestports "ctf-platform/internal/module/contest/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 type contestRealtimeAuthContextKey struct{}
@@ -44,7 +44,7 @@ func (h *RealtimeHandler) ServeAnnouncementWS(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	h.serveContestWS(c, contestports.AnnouncementChannel(contestID))
+	h.serveContestWS(c, contestcontracts.AnnouncementChannel(contestID))
 }
 
 func (h *RealtimeHandler) ServeScoreboardWS(c *gin.Context) {
@@ -53,7 +53,7 @@ func (h *RealtimeHandler) ServeScoreboardWS(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	h.serveContestWS(c, contestports.ScoreboardChannel(contestID))
+	h.serveContestWS(c, contestcontracts.ScoreboardChannel(contestID))
 }
 
 func (h *RealtimeHandler) ServeAWDPreviewWS(c *gin.Context) {

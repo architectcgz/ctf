@@ -7,10 +7,10 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	contestports "ctf-platform/internal/module/contest/ports"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req CreateAnnouncementInput) (*dto.ContestAnnouncementResp, error) {
@@ -21,7 +21,7 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	item := &model.ContestAnnouncement{
 		ContestID: contestID,
 		Title:     req.Title,
@@ -34,16 +34,15 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	result := contestResponseMapperInst.ToContestAnnouncementRespBasePtr(item)
-	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
-		Type: "contest.announcement.created",
-		Payload: map[string]any{
-			"contest_id": contestID,
-			"announcement": map[string]any{
-				"id":         result.ID,
-				"title":      result.Title,
-				"content":    result.Content,
-				"created_at": result.CreatedAt,
-			},
+	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
+		Name: contestcontracts.EventAnnouncementCreated,
+		Payload: contestcontracts.AnnouncementCreatedEvent{
+			ContestID:      contestID,
+			AnnouncementID: result.ID,
+			Title:          result.Title,
+			Content:        result.Content,
+			CreatedAt:      result.CreatedAt,
+			OccurredAt:     contestEventTimestamp(result.CreatedAt),
 		},
 	})
 	return result, nil
@@ -57,11 +56,12 @@ func (s *ParticipationService) DeleteAnnouncement(ctx context.Context, contestID
 	if !deleted {
 		return errcode.ErrContestAnnouncementNotFound
 	}
-	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
-		Type: "contest.announcement.deleted",
-		Payload: map[string]any{
-			"contest_id":      contestID,
-			"announcement_id": announcementID,
+	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
+		Name: contestcontracts.EventAnnouncementDeleted,
+		Payload: contestcontracts.AnnouncementDeletedEvent{
+			ContestID:      contestID,
+			AnnouncementID: announcementID,
+			OccurredAt:     contestEventTimestamp(time.Now().UTC()),
 		},
 	})
 	return nil
