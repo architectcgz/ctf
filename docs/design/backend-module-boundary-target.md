@@ -109,7 +109,7 @@ flowchart LR
 
 - `practice` 发布 `SubmissionRecorded`、`ChallengeSolved`、`InstanceStarted` 等事实事件。
 - `contest` 发布 `ContestSubmissionScored`、`ScoreboardUpdated`、`AWDAttackRecorded`、`ContestStatusChanged` 等事实事件。
-- `challenge` 发布 `PublishCheckCompleted`、`ChallengePublished` 等事实事件。
+- `challenge` 发布 `PublishCheckFinished`、`ChallengePublished` 等事实事件。
 - `assessment` 和 `ops` 作为消费者处理画像更新、缓存失效、通知、广播和审计补充。
 
 事件不是事务替代品。强一致写路径仍由 owner application service 和 repository transaction 负责。
@@ -121,7 +121,6 @@ flowchart LR
 | `runtime` 职责过宽 | 实例状态、Docker 适配、proxy ticket、教师查询、AWD 文件能力混在一个 owner | 拆成 `instance` 业务 owner 与 `container_runtime` 适配能力 | 高 |
 | `assessment / ops` 事件化边界仍未完全收口 | `practice` 画像链已切到事件消费，但通知、广播、缓存失效和其他副作用仍有继续统一 owner 表达的空间 | 副作用默认经事件或窄 port 触发，避免业务写路径继续同步背负实现细节 | 中 |
 | `contest -> ops` 实时广播耦合 | 竞赛业务服务知道 WebSocket 适配细节 | `contest` 使用 broadcaster port 或事件，`ops` 实现适配 | 中 |
-| `challenge` 通知发送依赖运维实现 | 题目发布自检和通知发送边界混合 | `challenge` 发布事件或依赖 `NotificationSender` 窄 port | 中 |
 | `practice_readmodel` 边界不稳定 | 可能只是 practice 查询被单独拆出，也可能是真跨 owner 聚合 | 复核查询来源；纯 practice 查询并回，跨 owner 查询保留 | 中 |
 | application 层 GORM/Redis allowlist 多 | 用例层仍暴露框架和存储实现，影响测试和迁移 | 用 ports 包装事务、缓存、锁和查询能力 | 中 |
 | readmodel repository 过宽 | 容易成为跨表万能仓库 | 按教师目录、学生证据、班级洞察等 query capability 拆小 | 低到中 |
@@ -182,10 +181,11 @@ flowchart LR
 - 训练和竞赛写路径不被画像、通知、广播实现拖住。
 - `assessment`、`ops` 作为消费者处理可重试副作用。
 
-当前状态（2026-05-12，phase 3 / slice 1）：
+当前状态（2026-05-12，phase 3 / slices 1-2）：
 
 - `practice` runtime / composition 对 `assessment.ProfileService` 的直接注入已删除。
 - 正确提交与人工评审通过后的能力画像增量更新，统一通过 `practice.flag_accepted` 事件交给 `assessment` 消费。
+- 题目发布自检完成后的教师通知，统一通过 `challenge.publish_check_finished` 事件交给 `ops` 消费。
 - `contest` 的实时广播仍通过 `RealtimeBroadcaster` port 注入，但 phase 3 里与 `ops`、缓存失效和其他副作用相关的统一收口还没有全部结束。
 
 建议动作：

@@ -14,8 +14,10 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -27,10 +29,6 @@ type SelfCheckConfig struct {
 	PublishCheckBatchSize    int
 }
 
-type ChallengeNotificationSender interface {
-	SendChallengePublishCheckResult(ctx context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error
-}
-
 type challengeCommandRepository interface {
 	challengeports.ChallengeWriteRepository
 	challengeports.ChallengeInstanceUsageRepository
@@ -38,21 +36,38 @@ type challengeCommandRepository interface {
 }
 
 type ChallengeService struct {
-	db            *gorm.DB
-	repo          challengeCommandRepository
-	imageRepo     challengeports.ImageQueryRepository
-	topologyRepo  challengeports.ChallengeTopologyReadRepository
-	packageRepo   challengeports.ChallengePackageRevisionRepository
-	runtimeProbe  challengeports.ChallengeRuntimeProbe
-	imageBuild    *ImageBuildService
-	notifications ChallengeNotificationSender
-	selfCheckCfg  SelfCheckConfig
-	logger        *zap.Logger
+	db           *gorm.DB
+	repo         challengeCommandRepository
+	imageRepo    challengeports.ImageQueryRepository
+	topologyRepo challengeports.ChallengeTopologyReadRepository
+	packageRepo  challengeports.ChallengePackageRevisionRepository
+	runtimeProbe challengeports.ChallengeRuntimeProbe
+	imageBuild   *ImageBuildService
+	eventBus     platformevents.Bus
+	selfCheckCfg SelfCheckConfig
+	logger       *zap.Logger
 }
 
 func (s *ChallengeService) SetImageBuildService(service *ImageBuildService) {
 	if s != nil {
 		s.imageBuild = service
+	}
+}
+
+func (s *ChallengeService) SetEventBus(bus platformevents.Bus) *ChallengeService {
+	if s == nil {
+		return nil
+	}
+	s.eventBus = bus
+	return s
+}
+
+func (s *ChallengeService) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
+	if s == nil || s.eventBus == nil {
+		return
+	}
+	if err := s.eventBus.Publish(ctx, evt); err != nil {
+		s.logger.Warn("publish_challenge_event_failed", zap.String("event", evt.Name), zap.Error(err))
 	}
 }
 
@@ -65,7 +80,6 @@ func NewChallengeService(
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
 	cfg SelfCheckConfig,
 	logger *zap.Logger,
-	notifications ...ChallengeNotificationSender,
 ) *ChallengeService {
 	if logger == nil {
 		logger = zap.NewNop()
@@ -80,24 +94,16 @@ func NewChallengeService(
 		cfg.PublishCheckBatchSize = 1
 	}
 	service := &ChallengeService{
-		db:            db,
-		repo:          repo,
-		imageRepo:     imageRepo,
-		topologyRepo:  topologyRepo,
-		packageRepo:   packageRepo,
-		runtimeProbe:  runtimeProbe,
-		notifications: firstChallengeNotificationSender(notifications),
-		selfCheckCfg:  cfg,
-		logger:        logger,
+		db:           db,
+		repo:         repo,
+		imageRepo:    imageRepo,
+		topologyRepo: topologyRepo,
+		packageRepo:  packageRepo,
+		runtimeProbe: runtimeProbe,
+		selfCheckCfg: cfg,
+		logger:       logger,
 	}
 	return service
-}
-
-func firstChallengeNotificationSender(senders []ChallengeNotificationSender) ChallengeNotificationSender {
-	if len(senders) == 0 {
-		return nil
-	}
-	return senders[0]
 }
 
 func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*dto.ChallengeResp, error) {
@@ -443,10 +449,17 @@ func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model
 	if err := s.repo.UpdatePublishCheckJob(ctx, job); err != nil {
 		s.logger.Warn("update publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
 	}
-	if s.notifications != nil && challenge != nil {
-		if err := s.notifications.SendChallengePublishCheckResult(ctx, job.RequestedBy, challenge.ID, challenge.Title, passed, job.FailureSummary); err != nil {
-			s.logger.Warn("send publish check notification failed", zap.Int64("job_id", job.ID), zap.Error(err))
-		}
+	if challenge != nil {
+		s.publishWeakEvent(ctx, platformevents.Event{
+			Name: challengecontracts.EventPublishCheckFinished,
+			Payload: challengecontracts.PublishCheckFinishedEvent{
+				UserID:         job.RequestedBy,
+				ChallengeID:    challenge.ID,
+				ChallengeTitle: challenge.Title,
+				Passed:         passed,
+				FailureSummary: job.FailureSummary,
+			},
+		})
 	}
 }
 

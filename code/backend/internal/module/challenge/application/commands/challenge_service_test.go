@@ -3,10 +3,12 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	platformevents "ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	"errors"
@@ -15,29 +17,6 @@ import (
 
 	"go.uber.org/zap"
 )
-
-type stubChallengeNotificationSender struct {
-	calls []stubChallengeNotificationCall
-}
-
-type stubChallengeNotificationCall struct {
-	userID         int64
-	challengeID    int64
-	challengeTitle string
-	passed         bool
-	failureSummary string
-}
-
-func (s *stubChallengeNotificationSender) SendChallengePublishCheckResult(_ context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error {
-	s.calls = append(s.calls, stubChallengeNotificationCall{
-		userID:         userID,
-		challengeID:    challengeID,
-		challengeTitle: challengeTitle,
-		passed:         passed,
-		failureSummary: failureSummary,
-	})
-	return nil
-}
 
 func newTestService(repo challengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
 	return NewChallengeService(nil, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
@@ -283,10 +262,16 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
-	notifier := &stubChallengeNotificationSender{}
 	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop(), notifier)
+	}, zap.NewNop())
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
 
 	job, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID)
 	if err != nil {
@@ -298,12 +283,12 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByID(context.Background(), challenge.ID)
+	publishedChallenge, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if published.Status != model.ChallengeStatusPublished {
-		t.Fatalf("expected published challenge status, got %s", published.Status)
+	if publishedChallenge.Status != model.ChallengeStatusPublished {
+		t.Fatalf("expected published challenge status, got %s", publishedChallenge.Status)
 	}
 
 	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
@@ -320,11 +305,18 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("expected published_at to be set, got %+v", latest)
 	}
 
-	if len(notifier.calls) != 1 {
-		t.Fatalf("expected 1 notification, got %+v", notifier.calls)
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
 	}
-	if !notifier.calls[0].passed || notifier.calls[0].challengeID != challenge.ID || notifier.calls[0].userID != teacher.ID {
-		t.Fatalf("unexpected notification payload: %+v", notifier.calls[0])
+	if publishedEvents[0].Name != challengecontracts.EventPublishCheckFinished {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
+	}
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishCheckFinishedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if !payload.Passed || payload.ChallengeID != challenge.ID || payload.UserID != teacher.ID {
+		t.Fatalf("unexpected event payload: %+v", payload)
 	}
 }
 
@@ -356,10 +348,16 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	notifier := &stubChallengeNotificationSender{}
 	service := NewChallengeService(db, repo, imageRepo, repo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop(), notifier)
+	}, zap.NewNop())
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
 
 	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
 		t.Fatalf("RequestPublishCheck() error = %v", err)
@@ -386,14 +384,18 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		t.Fatalf("expected failure summary, got %+v", latest)
 	}
 
-	if len(notifier.calls) != 1 {
-		t.Fatalf("expected 1 notification, got %+v", notifier.calls)
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
 	}
-	if notifier.calls[0].passed {
-		t.Fatalf("expected failure notification, got %+v", notifier.calls[0])
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishCheckFinishedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
 	}
-	if notifier.calls[0].failureSummary == "" {
-		t.Fatalf("expected failure summary in notification, got %+v", notifier.calls[0])
+	if payload.Passed {
+		t.Fatalf("expected failure event, got %+v", payload)
+	}
+	if payload.FailureSummary == "" {
+		t.Fatalf("expected failure summary in event, got %+v", payload)
 	}
 }
 
@@ -427,10 +429,16 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	notifier := &stubChallengeNotificationSender{}
 	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop(), notifier)
+	}, zap.NewNop())
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
 
 	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
 		t.Fatalf("RequestPublishCheck() error = %v", err)
@@ -438,12 +446,12 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByID(context.Background(), challenge.ID)
+	publishedChallenge, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if published.Status != model.ChallengeStatusPublished {
-		t.Fatalf("expected attachment-only challenge to publish, got %s", published.Status)
+	if publishedChallenge.Status != model.ChallengeStatusPublished {
+		t.Fatalf("expected attachment-only challenge to publish, got %s", publishedChallenge.Status)
 	}
 	if probe.createContainerCalled || probe.createTopologyCalled {
 		t.Fatalf("attachment-only challenge publish check should skip runtime startup")
@@ -458,6 +466,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	}
 	if latest.Result == nil || !latest.Result.Precheck.Passed || !latest.Result.Runtime.Passed {
 		t.Fatalf("expected successful self-check result, got %+v", latest.Result)
+	}
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
 	}
 }
 

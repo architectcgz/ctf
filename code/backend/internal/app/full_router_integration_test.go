@@ -500,12 +500,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "auth")
 		return originalBuildAuthModule(root, ops, identity, tokenService)
 	}
-	buildChallengeModule = func(root *composition.Root, runtime *composition.ContainerRuntimeModule, ops *composition.OpsModule) (*composition.ChallengeModule, error) {
-		if root == nil || runtime == nil || ops == nil {
-			t.Fatal("expected root, container runtime and ops for challenge module builder")
+	buildChallengeModule = func(root *composition.Root, runtime *composition.ContainerRuntimeModule) (*composition.ChallengeModule, error) {
+		if root == nil || runtime == nil {
+			t.Fatal("expected root and container runtime for challenge module builder")
 		}
 		calls = append(calls, "challenge")
-		return originalBuildChallengeModule(root, runtime, ops)
+		return originalBuildChallengeModule(root, runtime)
 	}
 	buildAssessmentModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.AssessmentModule {
 		if root == nil || challenge == nil {

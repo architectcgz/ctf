@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
@@ -169,6 +170,51 @@ func TestNotificationServiceRegisterPracticeEventConsumers(t *testing.T) {
 		t.Fatalf("unexpected created notifications = %+v", repo.created)
 	}
 	if repo.created[0].Link == nil || *repo.created[0].Link != "/challenges/12" {
+		t.Fatalf("unexpected created notification link = %+v", repo.created[0].Link)
+	}
+}
+
+func TestNotificationServiceRegisterChallengeEventConsumers(t *testing.T) {
+	repo := &stubNotificationRepository{}
+	service := NewNotificationService(repo, config.PaginationConfig{
+		DefaultPageSize: 20,
+		MaxPageSize:     100,
+	}, nil, zap.NewNop())
+	bus := &recordingBus{}
+
+	service.RegisterChallengeEventConsumers(bus)
+
+	if got := len(bus.subscribers[challengecontracts.EventPublishCheckFinished]); got != 1 {
+		t.Fatalf("publish_check_finished subscribers = %d, want 1", got)
+	}
+	if got := len(bus.subscribers); got != 1 {
+		t.Fatalf("challenge subscriber count = %d, want 1", got)
+	}
+
+	err := bus.Publish(context.Background(), platformevents.Event{
+		Name: challengecontracts.EventPublishCheckFinished,
+		Payload: challengecontracts.PublishCheckFinishedEvent{
+			UserID:         9,
+			ChallengeID:    21,
+			ChallengeTitle: "Web 101",
+			Passed:         false,
+			FailureSummary: "镜像缺失",
+		},
+	})
+	if err != nil {
+		t.Fatalf("Publish(publish_check_finished) error = %v", err)
+	}
+
+	if len(repo.created) != 1 {
+		t.Fatalf("created notifications len = %d, want 1", len(repo.created))
+	}
+	if repo.created[0].Title != "题目发布失败" {
+		t.Fatalf("unexpected created notifications = %+v", repo.created)
+	}
+	if repo.created[0].Content != "《Web 101》未通过平台自检：镜像缺失" {
+		t.Fatalf("unexpected created notification content = %q", repo.created[0].Content)
+	}
+	if repo.created[0].Link == nil || *repo.created[0].Link != "/admin/challenges/21" {
 		t.Fatalf("unexpected created notification link = %+v", repo.created[0].Link)
 	}
 }

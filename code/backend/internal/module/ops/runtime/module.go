@@ -145,6 +145,7 @@ func buildNotificationHandler(deps moduleDeps, tokenService authcontracts.TokenS
 		log.Named("notification_query_service"),
 	)
 	notificationCommandService.RegisterPracticeEventConsumers(deps.input.Events)
+	notificationCommandService.RegisterChallengeEventConsumers(deps.input.Events)
 	return opshttp.NewNotificationHandler(
 		notificationCommandService,
 		notificationQueryService,

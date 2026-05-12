@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type challengeCommandContextRepoStub struct {
@@ -158,6 +159,19 @@ func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopology(ctx context.C
 	return nil
 }
 func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
+	return nil
+}
+
+type challengeCommandEventBusStub struct {
+	publishFn func(ctx context.Context, evt platformevents.Event) error
+}
+
+func (s *challengeCommandEventBusStub) Subscribe(string, platformevents.Handler) {}
+
+func (s *challengeCommandEventBusStub) Publish(ctx context.Context, evt platformevents.Event) error {
+	if s.publishFn != nil {
+		return s.publishFn(ctx, evt)
+	}
 	return nil
 }
 
@@ -599,5 +613,25 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 	service.processPublishCheckJob(ctx, 51)
 	if !loadJobCalled || !findChallengeCalled || !publishUpdateCalled || updateJobCalled == 0 {
 		t.Fatalf("expected process job calls, got load=%v find=%v publish=%v updateJob=%d", loadJobCalled, findChallengeCalled, publishUpdateCalled, updateJobCalled)
+	}
+}
+
+func TestChallengeServicePublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	publishCalled := false
+	service := (&ChallengeService{}).SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishCalled = true
+			if ctx != nil {
+				t.Fatalf("expected publish ctx to stay nil, got %v", ctx)
+			}
+			return nil
+		},
+	})
+
+	service.publishWeakEvent(nil, platformevents.Event{Name: "challenge.test"})
+	if !publishCalled {
+		t.Fatal("expected event to be published")
 	}
 }

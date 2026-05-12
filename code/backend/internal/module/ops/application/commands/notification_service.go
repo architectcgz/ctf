@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
@@ -51,6 +52,13 @@ func (s *NotificationService) RegisterPracticeEventConsumers(bus platformevents.
 	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeFlagAccepted)
 }
 
+func (s *NotificationService) RegisterChallengeEventConsumers(bus platformevents.Bus) {
+	if s == nil || bus == nil {
+		return
+	}
+	bus.Subscribe(challengecontracts.EventPublishCheckFinished, s.handleChallengePublishCheckFinished)
+}
+
 func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, evt platformevents.Event) error {
 	payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
 	if !ok {
@@ -61,6 +69,30 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 		Type:    "challenge",
 		Title:   "题目解出",
 		Content: fmt.Sprintf("你已成功提交题目 #%d 的 Flag，获得 %d 分。", payload.ChallengeID, payload.Points),
+		Link:    &link,
+	})
+}
+
+func (s *NotificationService) handleChallengePublishCheckFinished(ctx context.Context, evt platformevents.Event) error {
+	payload, ok := evt.Payload.(challengecontracts.PublishCheckFinishedEvent)
+	if !ok {
+		return fmt.Errorf("unexpected challenge publish check event payload: %T", evt.Payload)
+	}
+
+	title := "题目发布失败"
+	content := fmt.Sprintf("《%s》未通过平台自检。", payload.ChallengeTitle)
+	if payload.Passed {
+		title = "题目发布成功"
+		content = fmt.Sprintf("《%s》已通过平台自检并自动发布。", payload.ChallengeTitle)
+	} else if payload.FailureSummary != "" {
+		content = fmt.Sprintf("《%s》未通过平台自检：%s", payload.ChallengeTitle, payload.FailureSummary)
+	}
+
+	link := fmt.Sprintf("/admin/challenges/%d", payload.ChallengeID)
+	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
+		Type:    model.NotificationTypeChallenge,
+		Title:   title,
+		Content: content,
 		Link:    &link,
 	})
 }

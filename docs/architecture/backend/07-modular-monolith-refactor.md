@@ -230,6 +230,7 @@ flowchart LR
     Assessment -->|recommendations| Teaching
 
     Challenge -->|catalog / image store / flag validator| Contest
+    Challenge -.challenge.publish_check_finished event.-> Ops
     Ops -->|ws manager| Contest
 
     Challenge -->|catalog / image store| Practice
@@ -291,9 +292,9 @@ flowchart LR
 |------|------------------|--------------|------|
 | `identity` | 无 | 无 | 纯 owner 模块，对外提供用户、资料、管理端用户 contract |
 | `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
-| `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime` |
+| `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime`，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费 |
 | `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
-| `ops` | `auth`、`practice` | `auth/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 practice 事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
+| `ops` | `auth`、`challenge`、`practice` | `auth/contracts`、`challenge/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
 | `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |

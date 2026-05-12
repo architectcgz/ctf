@@ -145,7 +145,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
-	challengeModule, err := buildChallengeModule(root, containerRuntimeModule, opsModule)
+	challengeModule, err := buildChallengeModule(root, containerRuntimeModule)
 	if err != nil {
 		return nil, err
 	}

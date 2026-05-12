@@ -716,7 +716,7 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		"type ChallengeModule = challengeruntime.Module",
 		"challengeruntime.Build(",
 		"challengeruntime.Deps{",
-		"buildChallengeNotificationSender(",
+		"Events:       root.Events",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

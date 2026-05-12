@@ -15,6 +15,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type BackgroundJob struct {
@@ -42,14 +43,14 @@ type Module struct {
 }
 
 type Deps struct {
-	AppContext    context.Context
-	Config        *config.Config
-	Logger        *zap.Logger
-	DB            *gorm.DB
-	Cache         *redislib.Client
-	ImageRuntime  challengeports.ImageRuntime
-	RuntimeProbe  challengeports.ChallengeRuntimeProbe
-	Notifications challengecmd.ChallengeNotificationSender
+	AppContext   context.Context
+	Config       *config.Config
+	Logger       *zap.Logger
+	DB           *gorm.DB
+	Cache        *redislib.Client
+	Events       platformevents.Bus
+	ImageRuntime challengeports.ImageRuntime
+	RuntimeProbe challengeports.ChallengeRuntimeProbe
 }
 
 type moduleDeps struct {
@@ -267,9 +268,9 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 			PublishCheckBatchSize:    cfg.Challenge.PublishCheck.BatchSize,
 		},
 		deps.input.Logger.Named("challenge_command_service"),
-		deps.input.Notifications,
 	)
 	challengeCommandService.SetImageBuildService(imageBuildService)
+	challengeCommandService.SetEventBus(deps.input.Events)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, deps.input.Cache, &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))

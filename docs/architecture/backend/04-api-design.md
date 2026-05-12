@@ -35,6 +35,7 @@
 - 当前认证仍以服务端 Session + Cookie 为主，并通过 `GET /api/v1/ws-ticket`、实例访问 proxy ticket、AWD 攻击 / 防守 ticket 承接 WebSocket 与运行时访问。
 - 当前重要 API 面包括 challenge import / commit / self-check、附件下载、实例访问、竞赛状态 / 榜单、AWD service 管理 / preview / readiness / round / attack log，以及教师复盘 / 报告导出链路；如果示例与 `openapi-v1.yaml` 冲突，以契约文档优先。
 - 2026-05-11 的 runtime-instance phase 2 / slice 2 没有新增、删除或重命名外部 HTTP 路径；变化仅在内部装配层：实例访问、教师实例列表、AWD target proxy 与 defense SSH 路由由 `InstanceModule` 承接，`challenge`、`contest`、`ops` 依赖的容器能力由 `ContainerRuntimeModule` 承接；`RuntimeModule` 仅保留过渡兼容别名。
+- 2026-05-12 的 challenge-ops boundary phase 3 / slice 2 没有新增、删除或重命名外部 HTTP / WebSocket 契约；题目发布自检完成后的教师通知仍通过既有 `/api/v1/notifications` 与 `/ws/notifications` 暴露，内部改为由 `challenge.publish_check_finished` 事件从 `challenge` 交给 `ops` 消费。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail
