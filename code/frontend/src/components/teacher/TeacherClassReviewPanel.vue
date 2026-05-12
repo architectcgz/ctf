@@ -132,7 +132,7 @@ function severityLabel(severity: AdviceSeverity): string {
 .review-item {
   --review-accent: var(--panel-accent);
   border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--review-accent) 12%, var(--panel-border));
+  border: 1px solid var(--panel-border);
   border-left: 5px solid color-mix(in srgb, var(--review-accent) 64%, transparent);
   background: linear-gradient(
     145deg,
@@ -151,7 +151,6 @@ function severityLabel(severity: AdviceSeverity): string {
   box-shadow:
     0 10px 15px -3px rgb(0 0 0 / 0.1),
     0 4px 6px -4px rgb(0 0 0 / 0.1);
-  border-color: color-mix(in srgb, var(--review-accent) 30%, var(--panel-border));
 }
 
 .review-item--primary {
@@ -237,7 +236,7 @@ function severityLabel(severity: AdviceSeverity): string {
 
 .review-item__recommendation--premium {
   margin-top: var(--space-5);
-  border-top: 1px solid color-mix(in srgb, var(--review-accent) 12%, var(--panel-border));
+  border-top: 1px solid var(--panel-divider);
   padding-top: var(--space-4);
 }
 

@@ -179,7 +179,7 @@ function weakDimensionCategory(value?: string | null) {
 .intervention-item {
   --intervention-accent: var(--panel-accent);
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--intervention-accent) 12%, var(--panel-border));
+  border: 1px solid var(--panel-border);
   background:
     linear-gradient(
       180deg,
@@ -206,7 +206,6 @@ function weakDimensionCategory(value?: string | null) {
   box-shadow:
     0 2px 4px rgb(15 23 42 / 0.1),
     0 14px 28px color-mix(in srgb, var(--intervention-accent) 8%, rgb(15 23 42 / 0.08));
-  border-color: color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));
 }
 
 .intervention-item--primary {
@@ -325,7 +324,7 @@ function weakDimensionCategory(value?: string | null) {
 
 .intervention-item__recommendation--premium {
   margin-top: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--intervention-accent) 14%, var(--panel-border));
+  border: 1px solid var(--panel-border);
   border-radius: 14px;
   background: color-mix(in srgb, var(--panel-surface-subtle) 90%, transparent);
   padding: var(--space-3) var(--space-4);

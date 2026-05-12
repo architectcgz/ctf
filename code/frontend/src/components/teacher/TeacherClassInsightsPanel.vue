@@ -204,7 +204,7 @@ function weakDimensionCategory(value?: string | null) {
 }
 
 .teacher-subsection--bare {
-  border: 1px solid var(--teacher-card-border);
+  border: 1px solid var(--panel-border);
   border-radius: 28px;
   background: linear-gradient(
     165deg,
@@ -219,7 +219,6 @@ function weakDimensionCategory(value?: string | null) {
 }
 
 .teacher-subsection--bare:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, var(--teacher-card-border));
   box-shadow: 0 12px 20px -10px rgb(0 0 0 / 0.08);
 }
 

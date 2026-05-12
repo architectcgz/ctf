@@ -49,8 +49,14 @@ describe('teacher detail surface alignment', () => {
     expect(classStudentsSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
+    expect(classStudentsSource).toContain('class="teacher-directory-shell workspace-directory-list"')
+    expect(classStudentsSource).toContain('class="teacher-student-directory-table"')
+    expect(classStudentsSource).not.toContain('teacher-table-shell')
     expect(classStudentsSource).toMatch(
-      /\.teacher-table-shell\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+      /\.teacher-directory-shell\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(/s
+    )
+    expect(classStudentsSource).toMatch(
+      /\.teacher-student-directory-table\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(\s*in srgb,\s*var\(--teacher-card-border\)\s*86%,\s*transparent\s*\);/s
     )
 
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
@@ -213,6 +219,42 @@ describe('teacher detail surface alignment', () => {
     expect(teacherPanelShellSource).toContain('--panel-accent: var(--journal-accent);')
     expect(teacherPanelShellSource).toContain(
       '--panel-accent-strong: var(--journal-accent-strong);'
+    )
+  })
+
+  it('teacher class workspace review insight intervention cards should reuse shared border tokens', () => {
+    expect(classInsightsPanelSource).toContain('--showcase-panel-border: var(--panel-border);')
+    expect(classInsightsPanelSource).toMatch(
+      /\.teacher-subsection--bare\s*\{[\s\S]*border:\s*1px solid var\(--panel-border\);/s
+    )
+    expect(classInsightsPanelSource).not.toMatch(
+      /\.teacher-subsection--bare:hover\s*\{[\s\S]*border-color:/s
+    )
+
+    expect(classReviewPanelSource).toMatch(
+      /\.review-item\s*\{[\s\S]*border:\s*1px solid var\(--panel-border\);/s
+    )
+    expect(classReviewPanelSource).toMatch(
+      /\.review-item__recommendation--premium\s*\{[\s\S]*border-top:\s*1px solid var\(--panel-divider\);/s
+    )
+    expect(classReviewPanelSource).not.toContain(
+      'border: 1px solid color-mix(in srgb, var(--review-accent) 12%, var(--panel-border));'
+    )
+    expect(classReviewPanelSource).not.toContain(
+      'border-color: color-mix(in srgb, var(--review-accent) 30%, var(--panel-border));'
+    )
+
+    expect(interventionPanelSource).toMatch(
+      /\.intervention-item\s*\{[\s\S]*border:\s*1px solid var\(--panel-border\);/s
+    )
+    expect(interventionPanelSource).toMatch(
+      /\.intervention-item__recommendation--premium\s*\{[\s\S]*border:\s*1px solid var\(--panel-border\);/s
+    )
+    expect(interventionPanelSource).not.toContain(
+      'border: 1px solid color-mix(in srgb, var(--intervention-accent) 12%, var(--panel-border));'
+    )
+    expect(interventionPanelSource).not.toContain(
+      'border-color: color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));'
     )
   })
 })
