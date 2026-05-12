@@ -7,6 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { RADAR_AREA_FILL, resolveRadarCanvasVisuals } from '@/components/charts/radarVisuals'
+import { useEChartsMountGate } from '@/components/charts/echartsMountGate'
 
 use([RadarComponent, TooltipComponent, LegendComponent, EChartsRadarChart, CanvasRenderer])
 
@@ -35,6 +36,7 @@ const props = withDefaults(
     centerY: '50%',
   }
 )
+const { containerRef, isChartReady } = useEChartsMountGate()
 
 const option = computed<EChartsOption>(() => {
   const visuals = resolveRadarCanvasVisuals(RADAR_AREA_FILL)
@@ -79,5 +81,7 @@ const option = computed<EChartsOption>(() => {
 </script>
 
 <template>
-  <VChart :class="[props.heightClass, 'w-full']" :option="option" autoresize />
+  <div ref="containerRef" :class="[props.heightClass, 'w-full']">
+    <VChart v-if="isChartReady" class="h-full w-full" :option="option" autoresize />
+  </div>
 </template>

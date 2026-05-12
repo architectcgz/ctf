@@ -6,6 +6,7 @@ import { BarChart as EChartsBarChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { useEChartsMountGate } from '@/components/charts/echartsMountGate'
 
 use([GridComponent, TooltipComponent, EChartsBarChart, CanvasRenderer])
 
@@ -19,6 +20,7 @@ const props = withDefaults(
     seriesName: '统计值',
   }
 )
+const { containerRef, isChartReady } = useEChartsMountGate()
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -60,9 +62,12 @@ const option = computed<EChartsOption>(() => ({
 </script>
 
 <template>
-  <VChart
-    class="h-80 w-full"
-    :option="option"
-    autoresize
-  />
+  <div ref="containerRef" class="h-80 w-full">
+    <VChart
+      v-if="isChartReady"
+      class="h-full w-full"
+      :option="option"
+      autoresize
+    />
+  </div>
 </template>
