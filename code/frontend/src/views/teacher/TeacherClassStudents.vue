@@ -25,26 +25,28 @@ const {
 </script>
 
 <template>
-  <ClassStudentsPage
-    :classes="classes"
-    :selected-class-name="selectedClassName"
-    :students="students"
-    :review="review"
-    :summary="summary"
-    :trend="trend"
-    :student-no-query="studentNoQuery"
-    :loading-students="loadingStudents"
-    :error="error"
-    @retry="initialize"
-    @open-class-management="openClassManagement"
-    @open-dashboard="openDashboard"
-    @open-report-export="openClassReportDialog"
-    @select-class="selectClass"
-    @update-student-no-query="updateStudentNoQuery"
-    @open-student="openStudent"
-  />
-  <TeacherClassReportExportDialog
-    v-model="reportDialogVisible"
-    :default-class-name="selectedClassName"
-  />
+  <section class="teacher-route-root">
+    <ClassStudentsPage
+      :classes="classes"
+      :selected-class-name="selectedClassName"
+      :students="students"
+      :review="review"
+      :summary="summary"
+      :trend="trend"
+      :student-no-query="studentNoQuery"
+      :loading-students="loadingStudents"
+      :error="error"
+      @retry="initialize"
+      @open-class-management="openClassManagement"
+      @open-dashboard="openDashboard"
+      @open-report-export="openClassReportDialog"
+      @select-class="selectClass"
+      @update-student-no-query="updateStudentNoQuery"
+      @open-student="openStudent"
+    />
+    <TeacherClassReportExportDialog
+      v-model="reportDialogVisible"
+      :default-class-name="selectedClassName"
+    />
+  </section>
 </template>

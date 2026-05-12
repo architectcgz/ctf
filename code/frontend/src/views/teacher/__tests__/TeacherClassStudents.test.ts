@@ -238,6 +238,13 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
   })
 
+  it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
+    expect(teacherClassStudentsSource).toContain('class="teacher-route-root"')
+    expect(teacherClassStudentsSource).toMatch(
+      /<template>\s*<section class="teacher-route-root">[\s\S]*<ClassStudentsPage[\s\S]*<TeacherClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
+    )
+  })
+
   it('班级学生薄弱项应复用题目分类胶囊色，并先归一化后判断分类值', () => {
     expect(classStudentsPageSource).toContain('ChallengeCategoryPill')
     expect(classStudentsPageSource).toContain('toChallengeCategory(student.weak_dimension)')

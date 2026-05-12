@@ -425,6 +425,13 @@ describe('TeacherStudentAnalysis', () => {
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
   })
 
+  it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
+    expect(teacherStudentAnalysisSource).toContain('class="teacher-route-root"')
+    expect(teacherStudentAnalysisSource).toMatch(
+      /<template>\s*<section class="teacher-route-root">[\s\S]*<StudentAnalysisPage[\s\S]*<TeacherClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
+    )
+  })
+
   it('学员分析头部应只保留姓名标题，不重复显示英文 eyebrow 和用户名 chip', () => {
     expect(studentAnalysisPageSource).not.toContain('Student Analysis')
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
