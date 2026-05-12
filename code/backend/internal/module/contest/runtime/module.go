@@ -132,6 +132,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	log := deps.input.Logger
 	cache := deps.input.Cache
 	statusSideEffects := contestinfra.NewContestStatusSideEffectStore(cache)
+	statusUpdateLockStore := contestinfra.NewContestStatusUpdateLockStore(cache)
 
 	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, cache, &cfg.Contest)
 	scoreboardCommands.SetStatusSideEffectStore(statusSideEffects)
@@ -143,7 +144,6 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	readinessQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
 	statusUpdater := contestjobs.NewStatusUpdater(
 		deps.contestStatus,
-		cache,
 		cfg.Contest.StatusUpdateInterval,
 		cfg.Contest.StatusUpdateBatchSize,
 		cfg.Contest.StatusUpdateLockTTL,
@@ -151,6 +151,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 		deps.awdRepo,
 	)
 	statusUpdater.SetStatusSideEffectStore(statusSideEffects)
+	statusUpdater.SetStatusUpdateLockStore(statusUpdateLockStore)
 
 	return contesthttp.NewHandler(contestCommands, contestQueries, readinessQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater
 }

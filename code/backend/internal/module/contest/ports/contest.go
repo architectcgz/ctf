@@ -165,3 +165,13 @@ type ContestStatusSideEffectStore interface {
 	ClearFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
 	ClearEndedContestRuntimeState(ctx context.Context, contestID int64) error
 }
+
+type ContestStatusUpdateLockLease interface {
+	Key() string
+	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
+	Release(ctx context.Context) (bool, error)
+}
+
+type ContestStatusUpdateLockStore interface {
+	AcquireStatusUpdateLock(ctx context.Context, ttl time.Duration) (ContestStatusUpdateLockLease, bool, error)
+}

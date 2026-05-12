@@ -8,12 +8,11 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
-	"ctf-platform/internal/pkg/redislock"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *StatusUpdater) updateStatuses(ctx context.Context) {
-	lock, acquired, err := redislock.Acquire(ctx, u.redis, rediskeys.ContestStatusUpdateLockKey(), u.lockTTL)
+	lock, acquired, err := u.acquireStatusUpdateLock(ctx)
 	if err != nil {
 		u.log.Error("acquire_contest_status_update_lock_failed", zap.Error(err))
 		return
@@ -121,6 +120,13 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 			u.log.Info("contest_status_updated", zap.Int64("contest_id", contest.ID), zap.String("old_status", contest.Status), zap.String("new_status", newStatus))
 		}
 	}
+}
+
+func (u *StatusUpdater) acquireStatusUpdateLock(ctx context.Context) (contestports.ContestStatusUpdateLockLease, bool, error) {
+	if u == nil || u.lockStore == nil || u.lockTTL <= 0 {
+		return nil, true, nil
+	}
+	return u.lockStore.AcquireStatusUpdateLock(ctx, u.lockTTL)
 }
 
 func (u *StatusUpdater) replayTransitionSideEffects(ctx context.Context) {

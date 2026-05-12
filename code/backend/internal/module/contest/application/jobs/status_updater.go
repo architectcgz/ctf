@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/module/contest/application/statusmachine"
@@ -17,15 +16,15 @@ type StatusUpdater struct {
 	recorder     contestStatusTransitionRecorder
 	replayer     contestStatusTransitionReplayer
 	sideEffects  *statusmachine.SideEffectRunner
+	lockStore    contestports.ContestStatusUpdateLockStore
 	awdRepo      contestports.AWDReadinessQuery
-	redis        *redislib.Client
 	log          *zap.Logger
 	interval     time.Duration
 	batchSize    int
 	lockTTL      time.Duration
 }
 
-func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger, awdRepos ...contestports.AWDReadinessQuery) *StatusUpdater {
+func NewStatusUpdater(repo contestports.ContestStatusRepository, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger, awdRepos ...contestports.AWDReadinessQuery) *StatusUpdater {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -51,7 +50,6 @@ func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib
 		replayer:     replayer,
 		sideEffects:  statusmachine.NewSideEffectRunner(nil),
 		awdRepo:      awdRepo,
-		redis:        redis,
 		log:          log,
 		interval:     interval,
 		batchSize:    batchSize,
@@ -64,6 +62,14 @@ func (u *StatusUpdater) SetStatusSideEffectStore(store contestports.ContestStatu
 		return nil
 	}
 	u.sideEffects = statusmachine.NewSideEffectRunner(store)
+	return u
+}
+
+func (u *StatusUpdater) SetStatusUpdateLockStore(store contestports.ContestStatusUpdateLockStore) *StatusUpdater {
+	if u == nil {
+		return nil
+	}
+	u.lockStore = store
 	return u
 }
 

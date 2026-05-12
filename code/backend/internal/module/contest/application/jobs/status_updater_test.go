@@ -71,7 +71,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 			},
 		},
 	}
-	updater := NewStatusUpdater(repo, nil, time.Minute, 100, 30*time.Second, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, 30*time.Second, nil)
 	repo.transitionApplied = true
 
 	updater.updateStatuses(context.Background())
@@ -83,7 +83,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 
 func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 	repo := &statusUpdaterRepoStub{}
-	updater := NewStatusUpdater(repo, nil, time.Minute, 100, 30*time.Second, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, 30*time.Second, nil)
 
 	updater.updateStatuses(context.Background())
 
@@ -133,7 +133,7 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 		t.Fatalf("seed service status cache: %v", err)
 	}
 
-	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, 30*time.Second, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, 30*time.Second, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	repo.transitionApplied = true
 
@@ -169,7 +169,6 @@ func TestStatusUpdaterUpdateStatuses_BlocksAWDRegistrationStartWhenReadinessNotR
 
 	updater := NewStatusUpdater(
 		contestinfra.NewRepository(db),
-		nil,
 		time.Minute,
 		100,
 		30*time.Second,
@@ -220,7 +219,7 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 		t.Fatalf("seed team rank: %v", err)
 	}
 
-	updater := NewStatusUpdater(contestinfra.NewRepository(db), redisClient, time.Minute, 100, time.Minute, nil)
+	updater := NewStatusUpdater(contestinfra.NewRepository(db), time.Minute, 100, time.Minute, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
@@ -294,7 +293,7 @@ func TestStatusUpdaterReplaysFailedTransitionSideEffects(t *testing.T) {
 		t.Fatalf("seed team rank: %v", err)
 	}
 
-	updater := NewStatusUpdater(contestinfra.NewRepository(db), redisClient, time.Minute, 100, time.Minute, nil)
+	updater := NewStatusUpdater(contestinfra.NewRepository(db), time.Minute, 100, time.Minute, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
@@ -337,8 +336,9 @@ func TestStatusUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {
 			EndTime:       time.Now().Add(time.Hour),
 		},
 	}
-	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, 60*time.Millisecond, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, 60*time.Millisecond, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	updater.SetStatusUpdateLockStore(contestinfra.NewContestStatusUpdateLockStore(redisClient))
 	repo.transitionApplied = true
 
 	lockKey := rediskeys.ContestStatusUpdateLockKey()
@@ -396,8 +396,9 @@ func TestStatusUpdaterUpdateStatuses_SkipsWhenSchedulerLockHeld(t *testing.T) {
 		t.Fatalf("seed scheduler lock: %v", err)
 	}
 
-	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, time.Minute, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, time.Minute, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	updater.SetStatusUpdateLockStore(contestinfra.NewContestStatusUpdateLockStore(redisClient))
 	updater.updateStatuses(context.Background())
 
 	if len(repo.receivedStatus) != 0 {
@@ -435,7 +436,7 @@ func TestStatusUpdaterSkipsSideEffectsWhenTransitionIsStale(t *testing.T) {
 		t.Fatalf("seed source rank: %v", err)
 	}
 
-	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, time.Minute, nil)
+	updater := NewStatusUpdater(repo, time.Minute, 100, time.Minute, nil)
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
@@ -452,7 +453,7 @@ func TestStatusUpdaterStartRunsImmediately(t *testing.T) {
 	repo := &statusUpdaterRepoStub{
 		listCalled: make(chan struct{}),
 	}
-	updater := NewStatusUpdater(repo, nil, time.Hour, 100, 30*time.Second, nil)
+	updater := NewStatusUpdater(repo, time.Hour, 100, 30*time.Second, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})

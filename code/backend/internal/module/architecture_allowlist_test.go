@@ -64,7 +64,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"contest/application/jobs/awd_round_runtime_bridge.go -> net/http":                                   {},
 	"contest/application/jobs/awd_round_updater.go -> github.com/redis/go-redis/v9":                      {},
 	"contest/application/jobs/awd_round_updater.go -> net/http":                                          {},
-	"contest/application/jobs/status_updater.go -> github.com/redis/go-redis/v9":                         {},
 	"contest/application/queries/awd_support.go -> gorm.io/gorm":                                         {},
 	"contest/application/queries/awd_workspace_query.go -> gorm.io/gorm":                                 {},
 	"contest/application/queries/participation_progress_query.go -> gorm.io/gorm":                        {},
