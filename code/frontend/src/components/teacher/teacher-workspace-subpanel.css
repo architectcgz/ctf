@@ -1,3 +1,42 @@
+.workspace-subpanel {
+  --teacher-workspace-panel-border: var(--teacher-card-border, var(--panel-border));
+  --teacher-workspace-panel-background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface, var(--panel-surface)) 98%, var(--color-bg-base)),
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle, var(--panel-surface-subtle)) 95%,
+      var(--color-bg-base)
+    )
+  );
+  --teacher-workspace-panel-shadow: 0 10px 24px var(--color-shadow-soft);
+  --teacher-workspace-panel-padding: var(--space-5);
+  --teacher-workspace-panel-header-gap: var(--space-4);
+  --teacher-workspace-line-soft: color-mix(
+    in srgb,
+    var(--teacher-divider, var(--panel-divider)) 92%,
+    transparent
+  );
+  --teacher-workspace-chart-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--panel-surface)) 92%,
+    transparent
+  );
+  --teacher-workspace-review-background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--journal-surface, var(--panel-surface)) 98%, var(--color-bg-base)),
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle, var(--panel-surface-subtle)) 96%,
+      var(--color-bg-base)
+    )
+  );
+  --teacher-workspace-eyebrow-color: var(
+    --journal-accent-strong,
+    var(--panel-accent-strong, var(--color-primary))
+  );
+}
+
 .workspace-subpanel :deep(.teacher-panel) {
   border: 1px solid var(--teacher-workspace-panel-border);
   border-radius: 22px;

@@ -12,6 +12,16 @@ describe('teacher workspace subpanel adoption', () => {
     expect(existsSync(teacherWorkspaceSubpanelPath)).toBe(true)
 
     const teacherWorkspaceSubpanelSource = readFileSync(teacherWorkspaceSubpanelPath, 'utf-8')
+    expect(teacherWorkspaceSubpanelSource).toContain('.workspace-subpanel {')
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '--teacher-workspace-panel-border: var(--teacher-card-border, var(--panel-border));'
+    )
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '--teacher-workspace-line-soft: color-mix('
+    )
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '--teacher-workspace-review-background: linear-gradient('
+    )
     expect(teacherWorkspaceSubpanelSource).toContain('.workspace-subpanel :deep(.teacher-panel) {')
     expect(teacherWorkspaceSubpanelSource).toContain(
       '.workspace-subpanel--flat :deep(.teacher-panel) {'
