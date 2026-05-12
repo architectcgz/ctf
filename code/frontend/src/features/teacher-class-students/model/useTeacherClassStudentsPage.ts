@@ -1,9 +1,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getClasses, getClassReview, getClassSummary, getClassTrend } from '@/api/teacher'
+import { getClassReview, getClassSummary, getClassTrend } from '@/api/teacher'
 import type {
-  TeacherClassItem,
   TeacherClassReviewData,
   TeacherClassSummaryData,
   TeacherClassTrendData,
@@ -12,7 +11,6 @@ import { useStudentFilters, useStudentListQuery } from '@/features/student-direc
 import { useAuthStore } from '@/stores/auth'
 import {
   resolveClassManagementRouteName,
-  resolveClassStudentsRouteName,
   resolveStudentAnalysisRouteName,
   resolveTeachingDashboardRouteName,
 } from '@/utils/teachingWorkspaceRouting'
@@ -22,7 +20,6 @@ export function useTeacherClassStudentsPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const classes = ref<TeacherClassItem[]>([])
   const review = ref<TeacherClassReviewData | null>(null)
   const summary = ref<TeacherClassSummaryData | null>(null)
   const trend = ref<TeacherClassTrendData | null>(null)
@@ -44,14 +41,6 @@ export function useTeacherClassStudentsPage() {
 
   function classNameFromRoute(): string {
     return String(route.params.className || '')
-  }
-
-  async function loadClasses(): Promise<void> {
-    try {
-      classes.value = await getClasses()
-    } catch (err) {
-      console.error('加载班级列表失败:', err)
-    }
   }
 
   function clearWorkspaceDetails(): void {
@@ -96,18 +85,6 @@ export function useTeacherClassStudentsPage() {
     filters.updateStudentNoQuery(value)
   }
 
-  function selectClass(className: string): void {
-    if (!className || className === selectedClassName.value) {
-      return
-    }
-
-    router.push({
-      name: resolveClassStudentsRouteName(authStore.user?.role),
-      params: { className },
-      query: route.query,
-    })
-  }
-
   async function loadClassWorkspace(className = classNameFromRoute()): Promise<void> {
     if (!className) {
       filters.updateSelectedClassName('')
@@ -125,7 +102,6 @@ export function useTeacherClassStudentsPage() {
     workspaceError.value = null
 
     try {
-      await loadClasses()
       await loadClassWorkspace()
     } catch (err) {
       console.error('初始化班级学生页面失败:', err)
@@ -172,7 +148,6 @@ export function useTeacherClassStudentsPage() {
   })
 
   return {
-    classes,
     selectedClassName,
     students,
     review,
@@ -186,7 +161,6 @@ export function useTeacherClassStudentsPage() {
     openClassManagement,
     openDashboard,
     openClassReportDialog,
-    selectClass,
     updateStudentNoQuery,
     openStudent,
   }

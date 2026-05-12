@@ -191,7 +191,7 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.text()).toContain('学生列表')
     expect(wrapper.find('.teacher-topbar').exists()).toBe(true)
     expect(wrapper.find('.teacher-summary').exists()).toBe(true)
-    expect(wrapper.find('.teacher-controls').exists()).toBe(true)
+    expect(wrapper.find('.teacher-directory-shell').exists()).toBe(true)
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
     expect(wrapper.find('#class-tab-overview').exists()).toBe(true)
     expect(wrapper.find('#class-tab-trend').exists()).toBe(true)
@@ -215,11 +215,17 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.text()).toContain('推荐训练题')
     expect(wrapper.text()).toContain('crypto-lab')
     await wrapper.find('#class-tab-students').trigger('click')
-    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
+    const studentsPanel = wrapper.get('#class-students')
+    expect(studentsPanel.find('table').exists()).toBe(true)
+    expect(studentsPanel.findAll('tbody tr')).toHaveLength(2)
+    expect(studentsPanel.text()).toContain('学号')
+    expect(studentsPanel.text()).toContain('学生名称')
+    expect(studentsPanel.text()).toContain('昵称')
+    expect(studentsPanel.text()).toContain('做题数 / 得分数')
+    expect(studentsPanel.text()).not.toContain('切换班级')
+    expect(studentsPanel.text()).not.toContain('返回列表')
+    expect(studentsPanel.find('select').exists()).toBe(false)
+    expect(studentsPanel.find('input[placeholder="输入学号精确查询"]').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
     expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('alice')
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
@@ -256,14 +262,15 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).not.toContain('class="workspace-topbar"')
     expect(classStudentsPageSource).toContain('class="top-tabs"')
     expect(classStudentsPageSource).toContain('class="content-pane"')
+    expect(classStudentsPageSource).toContain('WorkspaceDataTable')
     expect(classStudentsPageSource).toMatch(
       /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
     expect(classStudentsPageSource).toMatch(
-      /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
+      /class="teacher-directory-row-title"[\s\S]*:title="\(row as ClassStudentDirectoryRow\)\.name"/s
     )
     expect(classStudentsPageSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="student\.username"/s
+      /class="teacher-directory-row-points"[\s\S]*:title="\(row as ClassStudentDirectoryRow\)\.username"/s
     )
     expect(classStudentsPageSource).toMatch(
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
@@ -271,6 +278,12 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toMatch(
       /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
+    expect(classStudentsPageSource).not.toContain('class="teacher-section-head"')
+    expect(classStudentsPageSource).not.toContain('切换班级')
+    expect(classStudentsPageSource).not.toContain("emit('selectClass'")
+    expect(classStudentsPageSource).toContain('class="teacher-directory-shell workspace-directory-list"')
+    expect(classStudentsPageSource).toContain('class="teacher-student-directory-table"')
+    expect(classStudentsPageSource).toContain("label: '做题数 / 得分数'")
     expect(classStudentsPageSource).toContain('<span>班级人数</span>')
     expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')
     expect(classStudentsPageSource).toContain('<span>平均解题</span>')
@@ -337,7 +350,7 @@ describe('TeacherClassStudents', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
-  it('管理员在班级详情内切换班级、查看学生和返回概览时应停留在后台路由', async () => {
+  it('管理员在班级详情内查看学生和返回概览时应停留在后台路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth({
       id: 'admin-1',
@@ -346,11 +359,6 @@ describe('TeacherClassStudents', () => {
       class_name: 'Class A',
     })
 
-    teacherApiMocks.getClasses.mockResolvedValue([
-      { name: 'Class A', student_count: 2 },
-      { name: 'Class B', student_count: 1 },
-    ])
-
     const wrapper = mount(TeacherClassStudents, {
       global: {
         components: {
@@ -368,60 +376,13 @@ describe('TeacherClassStudents', () => {
     await flushPromises()
     await flushPromises()
 
-    await wrapper.find('#class-tab-students').trigger('click')
-    await wrapper.find('select[aria-label="选择班级"]').setValue('Class B')
-    await flushPromises()
-
     wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openStudent', 'stu-1')
     wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openDashboard')
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformClassStudents',
-      params: { className: 'Class B' },
-      query: { panel: 'students' },
-    })
     expect(pushMock).toHaveBeenCalledWith({
       name: 'PlatformStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
     expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
-  })
-
-  it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {
-    teacherApiMocks.getClasses.mockResolvedValue([
-      { name: 'Class A', student_count: 2 },
-      { name: 'Class B', student_count: 1 },
-    ])
-
-    const wrapper = mount(TeacherClassStudents, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-    await wrapper.find('#class-tab-students').trigger('click')
-
-    const classSelect = wrapper.find('select[aria-label="选择班级"]')
-    expect(classSelect.exists()).toBe(true)
-
-    await classSelect.setValue('Class B')
-    await flushPromises()
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'TeacherClassStudents',
-      params: { className: 'Class B' },
-      query: { panel: 'students' },
-    })
   })
 
   it('应该忽略过期学号搜索请求的返回结果', async () => {

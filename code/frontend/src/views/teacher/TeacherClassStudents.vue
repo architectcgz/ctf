@@ -4,7 +4,6 @@ import TeacherClassReportExportDialog from '@/components/teacher/reports/Teacher
 import { useTeacherClassStudentsPage } from '@/features/teacher-class-students'
 
 const {
-  classes,
   selectedClassName,
   students,
   review,
@@ -18,7 +17,6 @@ const {
   openClassManagement,
   openDashboard,
   openClassReportDialog,
-  selectClass,
   updateStudentNoQuery,
   openStudent,
 } = useTeacherClassStudentsPage()
@@ -27,7 +25,6 @@ const {
 <template>
   <section class="teacher-route-root">
     <ClassStudentsPage
-      :classes="classes"
       :selected-class-name="selectedClassName"
       :students="students"
       :review="review"
@@ -40,7 +37,6 @@ const {
       @open-class-management="openClassManagement"
       @open-dashboard="openDashboard"
       @open-report-export="openClassReportDialog"
-      @select-class="selectClass"
       @update-student-no-query="updateStudentNoQuery"
       @open-student="openStudent"
     />
