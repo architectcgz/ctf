@@ -19,7 +19,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"challenge/application/commands/topology_service.go -> gorm.io/gorm":                                 {},
 	"challenge/application/commands/writeup_service.go -> gorm.io/gorm":                                  {},
 	"challenge/application/queries/awd_challenge_service.go -> gorm.io/gorm":                             {},
-	"challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9":                 {},
 	"challenge/application/queries/challenge_service.go -> gorm.io/gorm":                                 {},
 	"challenge/application/queries/flag_service.go -> gorm.io/gorm":                                      {},
 	"challenge/application/queries/image_service.go -> gorm.io/gorm":                                     {},

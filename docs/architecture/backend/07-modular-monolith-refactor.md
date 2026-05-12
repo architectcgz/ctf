@@ -293,7 +293,7 @@ flowchart LR
 |------|------------------|--------------|------|
 | `identity` | 无 | 无 | 纯 owner 模块，对外提供用户、资料、管理端用户 contract |
 | `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
-| `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime`，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费 |
+| `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime`，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费；题目详情 solved-count 缓存通过 `challenge/ports.ChallengeSolvedCountCache` 交给模块内 infrastructure Redis adapter 处理 |
 | `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
 | `ops` | `auth`、`challenge`、`contest`、`practice` | `auth/contracts`、`challenge/contracts`、`contest/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；contest realtime relay 订阅公告 / 榜单 / AWD 预览事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度改为发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |

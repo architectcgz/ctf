@@ -271,7 +271,7 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	)
 	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeCommandService.SetEventBus(deps.input.Events)
-	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, deps.input.Cache, &challengeqry.Config{
+	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))
 	return challengeCommandService, challengehttp.NewHandler(challengeCommandService, challengeQueryService)

@@ -210,6 +210,11 @@ flowchart LR
 
 ### 阶段 5：收窄 application concrete allowlist
 
+当前状态（2026-05-12，phase 5 / slice 1）：
+
+- `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
+- `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
+
 目标：
 
 - application 不长期直接依赖 GORM、Redis、Docker、HTTP client。

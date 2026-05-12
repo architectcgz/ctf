@@ -57,6 +57,11 @@ type ChallengeBatchStatsRepository interface {
 	BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
 
+type ChallengeSolvedCountCache interface {
+	GetSolvedCount(ctx context.Context, challengeID int64) (count int64, hit bool, err error)
+	StoreSolvedCount(ctx context.Context, challengeID int64, count int64, ttl time.Duration) error
+}
+
 type AWDChallengeCommandRepository interface {
 	CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
 	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)

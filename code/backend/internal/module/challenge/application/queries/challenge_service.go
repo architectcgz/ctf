@@ -2,10 +2,8 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -13,15 +11,14 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/cache"
 	"ctf-platform/pkg/errcode"
 )
 
 type ChallengeService struct {
-	repo   challengeQueryRepository
-	redis  *redis.Client
-	config *Config
-	log    *zap.Logger
+	repo             challengeQueryRepository
+	solvedCountCache challengeports.ChallengeSolvedCountCache
+	config           *Config
+	log              *zap.Logger
 }
 
 type challengeQueryRepository interface {
@@ -31,15 +28,15 @@ type challengeQueryRepository interface {
 	challengeports.ChallengeBatchStatsRepository
 }
 
-func NewChallengeService(repo challengeQueryRepository, redis *redis.Client, config *Config, log *zap.Logger) *ChallengeService {
+func NewChallengeService(repo challengeQueryRepository, solvedCountCache challengeports.ChallengeSolvedCountCache, config *Config, log *zap.Logger) *ChallengeService {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	return &ChallengeService{
-		repo:   repo,
-		redis:  redis,
-		config: config,
-		log:    log,
+		repo:             repo,
+		solvedCountCache: solvedCountCache,
+		config:           config,
+		log:              log,
 	}
 }
 
@@ -187,27 +184,25 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {
-	if s.redis == nil {
+	if s.solvedCountCache == nil {
 		return s.repo.GetSolvedCount(ctx, challengeID)
 	}
 
-	cacheKey := cache.ChallengeSolvedCountKey(challengeID)
-	cached, err := s.redis.Get(ctx, cacheKey).Result()
-	if err == nil {
-		var count int64
-		if json.Unmarshal([]byte(cached), &count) == nil {
-			return count, nil
-		}
-	} else if err != redis.Nil {
-		s.log.Error("redis get failed, fallback to db", zap.String("key", cacheKey), zap.Error(err))
+	count, hit, err := s.solvedCountCache.GetSolvedCount(ctx, challengeID)
+	if err == nil && hit {
+		return count, nil
+	}
+	if err != nil {
+		s.log.Error("solved count cache get failed, fallback to db", zap.Int64("challenge_id", challengeID), zap.Error(err))
 	}
 
-	count, err := s.repo.GetSolvedCount(ctx, challengeID)
+	count, err = s.repo.GetSolvedCount(ctx, challengeID)
 	if err != nil {
 		return 0, err
 	}
 
-	data, _ := json.Marshal(count)
-	s.redis.Set(ctx, cacheKey, data, s.config.SolvedCountCacheTTL)
+	if s.config != nil && s.config.SolvedCountCacheTTL > 0 {
+		_ = s.solvedCountCache.StoreSolvedCount(ctx, challengeID, count, s.config.SolvedCountCacheTTL)
+	}
 	return count, nil
 }
