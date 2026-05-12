@@ -214,6 +214,7 @@ flowchart LR
 
 - `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
+- `contest/application/commands/challenge_service.go` 里未使用的 Redis 注入链已删除，不再把无效 cache client 传入 contest challenge command service。
 
 目标：
 

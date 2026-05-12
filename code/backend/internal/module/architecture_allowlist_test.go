@@ -38,7 +38,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"contest/application/commands/awd_team_validation_support.go -> gorm.io/gorm":                        {},
 	"contest/application/commands/awd_validation_support.go -> gorm.io/gorm":                             {},
 	"contest/application/commands/challenge_add_commands.go -> gorm.io/gorm":                             {},
-	"contest/application/commands/challenge_service.go -> github.com/redis/go-redis/v9":                  {},
 	"contest/application/commands/contest_awd_service_service.go -> github.com/redis/go-redis/v9":        {},
 	"contest/application/commands/contest_awd_service_service.go -> gorm.io/gorm":                        {},
 	"contest/application/commands/contest_awd_service_support.go -> github.com/redis/go-redis/v9":        {},

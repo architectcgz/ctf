@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -16,12 +14,6 @@ import (
 func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
-	return newContestChallengeCommandServiceWithRedis(t, nil)
-}
-
-func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
-	t.Helper()
-
 	db := contesttestsupport.SetupContestTestDB(t)
 	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
@@ -29,7 +21,6 @@ func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis
 			challengeinfra.NewRepository(db),
 			contestinfra.NewRepository(db),
 			awdRepo,
-			redisClient,
 		),
 		challengeinfra.NewRepository(db),
 		contestinfra.NewRepository(db),
