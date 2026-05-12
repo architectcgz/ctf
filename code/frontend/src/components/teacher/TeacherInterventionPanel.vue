@@ -48,7 +48,6 @@ function weakDimensionCategory(value?: string | null) {
 <template>
   <section class="teacher-panel" :class="{ 'teacher-panel--shellless': bare }">
     <header v-if="!bare" class="teacher-panel__header">
-      <div class="journal-eyebrow">Intervention</div>
       <h2 class="teacher-panel__title">优先介入学生</h2>
       <p class="teacher-panel__subtitle">
         {{

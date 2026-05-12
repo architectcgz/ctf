@@ -46,6 +46,11 @@
   color: var(--panel-ink);
 }
 
+.teacher-panel__header > .teacher-panel__title:first-child,
+.teacher-subsection__header > .teacher-panel__title:first-child {
+  margin-top: 0;
+}
+
 .teacher-panel__subtitle {
   margin-top: var(--space-2);
   font-size: var(--font-size-0-84);

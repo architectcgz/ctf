@@ -41,4 +41,15 @@ describe('teacher eyebrow shared styles', () => {
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)
     }
   })
+
+  it('班级工作区的 trend review insight action panel 不应继续渲染 eyebrow 结构', () => {
+    for (const source of [
+      teacherClassInsightsSource,
+      teacherClassReviewSource,
+      teacherClassTrendSource,
+      teacherInterventionSource,
+    ]) {
+      expect(source).not.toContain('class="journal-eyebrow"')
+    }
+  })
 })

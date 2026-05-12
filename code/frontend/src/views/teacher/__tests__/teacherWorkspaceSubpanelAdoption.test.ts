@@ -26,8 +26,11 @@ describe('teacher workspace subpanel adoption', () => {
     expect(teacherWorkspaceSubpanelSource).toContain(
       '.workspace-subpanel--flat :deep(.teacher-panel) {'
     )
-    expect(teacherWorkspaceSubpanelSource).toContain(
+    expect(teacherWorkspaceSubpanelSource).not.toContain(
       '.workspace-subpanel :deep(.journal-eyebrow) {'
+    )
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '.workspace-subpanel :deep(.teacher-panel__header > .teacher-panel__title:first-child),'
     )
 
     for (const source of [classStudentsSource, teacherDashboardSource]) {

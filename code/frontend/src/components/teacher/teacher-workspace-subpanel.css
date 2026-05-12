@@ -31,10 +31,6 @@
       var(--color-bg-base)
     )
   );
-  --teacher-workspace-eyebrow-color: var(
-    --journal-accent-strong,
-    var(--panel-accent-strong, var(--color-primary))
-  );
 }
 
 .workspace-subpanel :deep(.teacher-panel) {
@@ -58,23 +54,16 @@
   margin-bottom: var(--teacher-workspace-panel-header-gap);
 }
 
-.workspace-subpanel :deep(.journal-eyebrow) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--teacher-workspace-eyebrow-color);
-}
-
 .workspace-subpanel :deep(.teacher-panel__title) {
   margin-top: var(--space-2-5);
   font-size: var(--font-size-22);
   line-height: 1.15;
   color: var(--journal-ink);
+}
+
+.workspace-subpanel :deep(.teacher-panel__header > .teacher-panel__title:first-child),
+.workspace-subpanel :deep(.teacher-subsection__header > .teacher-panel__title:first-child) {
+  margin-top: 0;
 }
 
 .workspace-subpanel :deep(.teacher-subsection + .teacher-subsection) {

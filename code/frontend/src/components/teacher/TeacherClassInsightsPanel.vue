@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { GraduationCap, FileChartColumnIncreasing } from 'lucide-vue-next'
 
 import type { TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -76,10 +75,6 @@ function weakDimensionCategory(value?: string | null) {
         "
       >
         <header class="teacher-subsection__header">
-          <div class="journal-eyebrow">
-            <GraduationCap class="inline-block w-3 h-3 mr-1 mb-0.5 opacity-60" />
-            Top Students
-          </div>
           <h2 class="teacher-panel__title">
             班级 Top 学生
           </h2>
@@ -142,10 +137,6 @@ function weakDimensionCategory(value?: string | null) {
         "
       >
         <header class="teacher-subsection__header">
-          <div class="journal-eyebrow">
-            <FileChartColumnIncreasing class="inline-block w-3 h-3 mr-1 mb-0.5 opacity-60" />
-            Skill Distribution
-          </div>
           <h2 class="teacher-panel__title">
             薄弱维度分布
           </h2>

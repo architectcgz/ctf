@@ -40,7 +40,6 @@ function severityLabel(severity: AdviceSeverity): string {
 <template>
   <section class="teacher-panel" :class="{ 'teacher-panel--shellless': bare }">
     <header v-if="!bare" class="teacher-panel__header">
-      <div class="journal-eyebrow">Review</div>
       <h2 class="teacher-panel__title">教学复盘结论</h2>
       <p class="teacher-panel__subtitle">
         {{ panelSubtitle }}

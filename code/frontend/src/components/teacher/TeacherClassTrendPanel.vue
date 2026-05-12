@@ -50,9 +50,6 @@ const series = computed(() => [
     class="teacher-panel"
   >
     <header class="teacher-panel__header">
-      <div class="journal-eyebrow">
-        Trend
-      </div>
       <h2 class="teacher-panel__title">
         {{ panelTitle }}
       </h2>
