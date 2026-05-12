@@ -3,6 +3,7 @@ package composition
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,6 +15,22 @@ func TestCompositionAndRuntimeDoNotImportLegacyContainerModule(t *testing.T) {
 
 	assertDirDoesNotImport(t, ".", "ctf-platform/internal/module/container")
 	assertDirDoesNotImport(t, filepath.Join("..", "..", "module", "runtime"), "ctf-platform/internal/module/container")
+}
+
+func TestCompositionDoesNotReintroduceRuntimeCompatFacade(t *testing.T) {
+	t.Parallel()
+
+	if _, err := os.Stat("runtime_adapter_compat.go"); err == nil {
+		t.Fatal("composition must not reintroduce runtime_adapter_compat.go")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat runtime_adapter_compat.go: %v", err)
+	}
+}
+
+func TestInstanceModuleDoesNotInjectRetiredDefenseWorkbenchService(t *testing.T) {
+	t.Parallel()
+
+	assertFileDoesNotContain(t, "instance_module.go", "AWDDefenseWorkbenchService")
 }
 
 func assertDirDoesNotImport(t *testing.T, dirPath string, blockedImport string) {
@@ -49,5 +66,17 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 		if importPath == blockedImport {
 			t.Fatalf("%s must not import %s", filePath, blockedImport)
 		}
+	}
+}
+
+func assertFileDoesNotContain(t *testing.T, filePath string, blockedSnippet string) {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	if strings.Contains(string(content), blockedSnippet) {
+		t.Fatalf("%s must not contain %q", filePath, blockedSnippet)
 	}
 }

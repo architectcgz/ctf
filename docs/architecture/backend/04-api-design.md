@@ -40,6 +40,7 @@
 ## Guardrail
 
 - 路由装配与全链路 HTTP 验证：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
+- runtime access facade 与 retired defense workbench 约束：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
 - 状态矩阵与实例访问链路：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - Auth / Session 契约：`code/backend/internal/module/auth/api/http/http_integration_test.go`
 - 通知与 WebSocket 契约：`code/backend/internal/module/ops/api/http/notification_http_integration_test.go`

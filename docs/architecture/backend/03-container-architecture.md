@@ -38,6 +38,7 @@
 ## Guardrail
 
 - 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
+- runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
 - 练习实例创建与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`
 - 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
 - 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`

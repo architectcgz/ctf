@@ -52,6 +52,11 @@
 - 模块依赖方向：`code/backend/internal/module/architecture_test.go`
 - 进程级装配规则：`code/backend/internal/app/architecture_rules_test.go`
 - composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`
+  - 阻止 `runtime_adapter_compat.go` compat facade 文件名回流
+  - 阻止 `InstanceModule` 再注入 `AWDDefenseWorkbenchService`
+- runtime 物理模块边界：`code/backend/internal/module/runtime/architecture_test.go`
+  - 阻止 `runtime/runtime.Module` 与 `Deps` 回到宽 `Engine` 结构面
+  - 阻止 runtime HTTP handler 为已下线的 defense workbench 路由保留死 service interface
 - 路由与运行时装配：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
 - `code/backend/internal/app/architecture_rules_test.go` 仍明确禁止 `runtime -> instance application` 的 concrete cross-module import；因此如果未来再出现 compat 需求，必须重新选择合法落点，不能直接把实例 owner 逻辑补回 `runtime/application/*`
 

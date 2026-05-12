@@ -20,11 +20,12 @@
 - [x] P1：决定 `runtime_adapter_compat.go` 是继续保留还是删除
   - 如果 compat path 继续保留，只允许保持薄 wrapper
   - 如果仓库内生产调用已经迁空，下一刀就是删除 compat 文件本体
-- [ ] P2：补一轮新的 architecture guardrail
+- [x] P2：补一轮新的 architecture guardrail
   - 防止 compat 逻辑、宽 engine 依赖和 owner 混住再次回流
 
 ## 本轮完成标准
 
 - `runtime_adapter_compat.go` 已删除，仍然需要的 runtime HTTP facade 现在位于 `internal/app/composition/runtime_http_service_adapter.go`
 - `instance` owner 对 AWD defense workbench 的 contract、实现和测试已能独立表达，但当前生产路由只保留 AWD defense SSH，不再注入浏览器 workbench facade
-- 下一轮仅剩新的 architecture guardrail，用来防止 compat 逻辑、宽 engine 依赖和 owner 混住再次回流
+- `code/backend/internal/app/composition/architecture_test.go` 现在会阻止 `runtime_adapter_compat.go` 和 `AWDDefenseWorkbenchService` 注入回流
+- `code/backend/internal/module/runtime/architecture_test.go` 现在会阻止 `runtime/runtime.Module` / `Deps` 回到宽 `Engine` 结构面，并阻止 runtime HTTP handler 重新声明 retired defense workbench 方法

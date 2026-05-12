@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -116,6 +117,27 @@ func TestPortsDoNotDeclareWideInstanceRepository(t *testing.T) {
 	}
 }
 
+func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
+	t.Parallel()
+
+	fileNode := parseGoFile(t, filepath.Join("runtime", "module.go"))
+	assertTypeDoesNotExist(t, fileNode, "Engine")
+	assertStructDoesNotDeclareField(t, fileNode, "Module", "Engine")
+	assertStructDoesNotDeclareField(t, fileNode, "Deps", "Engine")
+}
+
+func TestAPIHTTPDoesNotDeclareRetiredDefenseWorkbenchMethods(t *testing.T) {
+	t.Parallel()
+
+	fileNode := parseGoFile(t, filepath.Join("api", "http", "handler.go"))
+	assertInterfaceDoesNotDeclareMethods(t, fileNode, "runtimeService",
+		"ReadAWDDefenseFile",
+		"ListAWDDefenseDirectory",
+		"SaveAWDDefenseFile",
+		"RunAWDDefenseCommand",
+	)
+}
+
 func TestRootPackageKeepsOnlyDocFile(t *testing.T) {
 	t.Parallel()
 
@@ -155,4 +177,96 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 			t.Fatalf("%s must not import %s", filePath, blockedImport)
 		}
 	}
+}
+
+func parseGoFile(t *testing.T, filePath string) *ast.File {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, 0)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+	return fileNode
+}
+
+func assertTypeDoesNotExist(t *testing.T, fileNode *ast.File, typeName string) {
+	t.Helper()
+
+	if _, ok := lookupTypeSpec(fileNode, typeName); ok {
+		t.Fatalf("%s must not be declared in this file", typeName)
+	}
+}
+
+func assertStructDoesNotDeclareField(t *testing.T, fileNode *ast.File, typeName string, fieldName string) {
+	t.Helper()
+
+	typeSpec := findTypeSpec(t, fileNode, typeName)
+	structType, ok := typeSpec.Type.(*ast.StructType)
+	if !ok {
+		t.Fatalf("%s must stay a struct", typeName)
+	}
+
+	for _, field := range structType.Fields.List {
+		for _, name := range field.Names {
+			if name.Name == fieldName {
+				t.Fatalf("%s must not declare field %s", typeName, fieldName)
+			}
+		}
+	}
+}
+
+func assertInterfaceDoesNotDeclareMethods(t *testing.T, fileNode *ast.File, typeName string, methodNames ...string) {
+	t.Helper()
+
+	typeSpec := findTypeSpec(t, fileNode, typeName)
+	interfaceType, ok := typeSpec.Type.(*ast.InterfaceType)
+	if !ok {
+		t.Fatalf("%s must stay an interface", typeName)
+	}
+
+	blockedMethods := make(map[string]struct{}, len(methodNames))
+	for _, methodName := range methodNames {
+		blockedMethods[methodName] = struct{}{}
+	}
+
+	for _, field := range interfaceType.Methods.List {
+		for _, name := range field.Names {
+			if _, blocked := blockedMethods[name.Name]; blocked {
+				t.Fatalf("%s must not declare method %s", typeName, name.Name)
+			}
+		}
+	}
+}
+
+func findTypeSpec(t *testing.T, fileNode *ast.File, typeName string) *ast.TypeSpec {
+	t.Helper()
+
+	typeSpec, ok := lookupTypeSpec(fileNode, typeName)
+	if ok {
+		return typeSpec
+	}
+
+	t.Fatalf("type %s not found", typeName)
+	return nil
+}
+
+func lookupTypeSpec(fileNode *ast.File, typeName string) (*ast.TypeSpec, bool) {
+	for _, decl := range fileNode.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok || genDecl.Tok != token.TYPE {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			typeSpec, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			if typeSpec.Name.Name == typeName {
+				return typeSpec, true
+			}
+		}
+	}
+
+	return nil, false
 }
