@@ -3,19 +3,17 @@ package statusmachine
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type SideEffectRunner struct {
-	redis *redislib.Client
+	store contestports.ContestStatusSideEffectStore
 }
 
-func NewSideEffectRunner(redis *redislib.Client) *SideEffectRunner {
-	return &SideEffectRunner{redis: redis}
+func NewSideEffectRunner(store contestports.ContestStatusSideEffectStore) *SideEffectRunner {
+	return &SideEffectRunner{store: store}
 }
 
 func (r *SideEffectRunner) Run(ctx context.Context, result contestdomain.ContestStatusTransitionResult) error {
@@ -35,31 +33,22 @@ func (r *SideEffectRunner) Run(ctx context.Context, result contestdomain.Contest
 }
 
 func (r *SideEffectRunner) createFrozenSnapshot(ctx context.Context, contestID int64) error {
-	if r.redis == nil {
+	if r == nil || r.store == nil {
 		return nil
 	}
-	srcKey := rediskeys.RankContestTeamKey(contestID)
-	dstKey := rediskeys.RankContestFrozenKey(contestID)
-	return r.redis.ZUnionStore(ctx, dstKey, &redislib.ZStore{
-		Keys:    []string{srcKey},
-		Weights: []float64{1},
-	}).Err()
+	return r.store.CreateFrozenScoreboardSnapshot(ctx, contestID)
 }
 
 func (r *SideEffectRunner) clearEndedContestRuntimeState(ctx context.Context, contestID int64) error {
-	if r.redis == nil || contestID <= 0 {
+	if r == nil || r.store == nil {
 		return nil
 	}
-	return r.redis.Del(
-		ctx,
-		rediskeys.AWDCurrentRoundKey(contestID),
-		rediskeys.AWDServiceStatusKey(contestID),
-	).Err()
+	return r.store.ClearEndedContestRuntimeState(ctx, contestID)
 }
 
 func (r *SideEffectRunner) clearFrozenSnapshot(ctx context.Context, contestID int64) error {
-	if r.redis == nil || contestID <= 0 {
+	if r == nil || r.store == nil {
 		return nil
 	}
-	return r.redis.Del(ctx, rediskeys.RankContestFrozenKey(contestID)).Err()
+	return r.store.ClearFrozenScoreboardSnapshot(ctx, contestID)
 }

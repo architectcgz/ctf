@@ -131,11 +131,14 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	cache := deps.input.Cache
+	statusSideEffects := contestinfra.NewContestStatusSideEffectStore(cache)
 
 	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, cache, &cfg.Contest)
+	scoreboardCommands.SetStatusSideEffectStore(statusSideEffects)
 	scoreboardCommands.SetEventBus(deps.input.Events)
 	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
-	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, cache, log.Named("contest_service"))
+	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))
+	contestCommands.SetStatusSideEffectStore(statusSideEffects)
 	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
 	readinessQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
 	statusUpdater := contestjobs.NewStatusUpdater(
@@ -147,6 +150,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 		log.Named("contest_status_updater"),
 		deps.awdRepo,
 	)
+	statusUpdater.SetStatusSideEffectStore(statusSideEffects)
 
 	return contesthttp.NewHandler(contestCommands, contestQueries, readinessQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater
 }

@@ -26,10 +26,18 @@ func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepositor
 	return &ScoreboardAdminService{
 		repo:        repo,
 		transition:  transitionRepo,
-		sideEffects: statusmachine.NewSideEffectRunner(redis),
+		sideEffects: statusmachine.NewSideEffectRunner(nil),
 		redis:       redis,
 		cfg:         cfg,
 	}
+}
+
+func (s *ScoreboardAdminService) SetStatusSideEffectStore(store contestports.ContestStatusSideEffectStore) *ScoreboardAdminService {
+	if s == nil {
+		return nil
+	}
+	s.sideEffects = statusmachine.NewSideEffectRunner(store)
+	return s
 }
 
 func (s *ScoreboardAdminService) SetEventBus(bus platformevents.Bus) *ScoreboardAdminService {

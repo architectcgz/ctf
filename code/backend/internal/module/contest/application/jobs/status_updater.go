@@ -49,7 +49,7 @@ func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib
 		transitioner: newContestStatusTransitionService(repo),
 		recorder:     recorder,
 		replayer:     replayer,
-		sideEffects:  statusmachine.NewSideEffectRunner(redis),
+		sideEffects:  statusmachine.NewSideEffectRunner(nil),
 		awdRepo:      awdRepo,
 		redis:        redis,
 		log:          log,
@@ -57,6 +57,14 @@ func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib
 		batchSize:    batchSize,
 		lockTTL:      lockTTL,
 	}
+}
+
+func (u *StatusUpdater) SetStatusSideEffectStore(store contestports.ContestStatusSideEffectStore) *StatusUpdater {
+	if u == nil {
+		return nil
+	}
+	u.sideEffects = statusmachine.NewSideEffectRunner(store)
+	return u
 }
 
 func (u *StatusUpdater) Start(ctx context.Context) {

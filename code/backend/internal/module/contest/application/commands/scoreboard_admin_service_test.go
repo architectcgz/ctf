@@ -164,7 +164,9 @@ func newScoreboardAdminServiceForTest(t *testing.T) (*ScoreboardAdminService, *g
 	t.Cleanup(func() {
 		_ = redisClient.Close()
 	})
-	return NewScoreboardAdminService(contestinfra.NewRepository(db), redisClient, nil), db, redisClient, mini
+	service := NewScoreboardAdminService(contestinfra.NewRepository(db), redisClient, nil)
+	service.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	return service, db, redisClient, mini
 }
 
 func createScoreboardContest(t *testing.T, db *gorm.DB, contest *model.Contest) {

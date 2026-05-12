@@ -210,11 +210,13 @@ flowchart LR
 
 ### 阶段 5：收窄 application concrete allowlist
 
-当前状态（2026-05-12，phase 5 / slice 1）：
+当前状态（2026-05-12，phase 5 / slices 1-3）：
 
 - `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
 - `contest/application/commands/challenge_service.go` 里未使用的 Redis 注入链已删除，不再把无效 cache client 传入 contest challenge command service。
+- `contest/application/statusmachine/side_effects.go` 现在只负责编排冻结榜快照创建、解冻快照清理和比赛结束缓存清理，具体 Redis key / client 细节已通过 `contest/ports.ContestStatusSideEffectStore` 下沉到模块内 infrastructure adapter。
+- `contest/application/commands/contest_service.go` 不再为状态迁移副作用链持有 Redis client；`contest/application/jobs/status_updater.go` 仍保留调度锁 Redis 依赖，但状态迁移副作用本身已经改成通过 side-effect store 注入。
 
 目标：
 

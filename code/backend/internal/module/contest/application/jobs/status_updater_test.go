@@ -134,6 +134,7 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 	}
 
 	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, 30*time.Second, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	repo.transitionApplied = true
 
 	updater.updateStatuses(context.Background())
@@ -220,6 +221,7 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 	}
 
 	updater := NewStatusUpdater(contestinfra.NewRepository(db), redisClient, time.Minute, 100, time.Minute, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
 	var contest model.Contest
@@ -293,6 +295,7 @@ func TestStatusUpdaterReplaysFailedTransitionSideEffects(t *testing.T) {
 	}
 
 	updater := NewStatusUpdater(contestinfra.NewRepository(db), redisClient, time.Minute, 100, time.Minute, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
 	if !mini.Exists(rediskeys.RankContestFrozenKey(42)) {
@@ -335,6 +338,7 @@ func TestStatusUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {
 		},
 	}
 	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, 60*time.Millisecond, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	repo.transitionApplied = true
 
 	lockKey := rediskeys.ContestStatusUpdateLockKey()
@@ -393,6 +397,7 @@ func TestStatusUpdaterUpdateStatuses_SkipsWhenSchedulerLockHeld(t *testing.T) {
 	}
 
 	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, time.Minute, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
 	if len(repo.receivedStatus) != 0 {
@@ -431,6 +436,7 @@ func TestStatusUpdaterSkipsSideEffectsWhenTransitionIsStale(t *testing.T) {
 	}
 
 	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, time.Minute, nil)
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
 	if mini.Exists(rediskeys.RankContestFrozenKey(51)) {

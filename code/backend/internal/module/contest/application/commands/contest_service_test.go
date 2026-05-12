@@ -29,7 +29,7 @@ func (s *stubContestRepository) FindByID(context.Context, int64) (*model.Contest
 func (s *stubContestRepository) Update(context.Context, *model.Contest) error { return nil }
 
 func TestContestServiceCreateContestRejectsInvalidTimeRange(t *testing.T) {
-	service := contestcmd.NewContestService(&stubContestRepository{}, nil, nil, zap.NewNop())
+	service := contestcmd.NewContestService(&stubContestRepository{}, nil, zap.NewNop())
 
 	_, err := service.CreateContest(context.Background(), contestcmd.CreateContestInput{
 		Title:     "contest",
@@ -308,7 +308,11 @@ func newContestCommandServiceForTestWithRedis(t *testing.T, redisClient *redis.C
 	t.Helper()
 
 	db := contesttestsupport.SetupAWDTestDB(t)
-	return contestcmd.NewContestService(contestinfra.NewRepository(db), contestinfra.NewAWDRepository(db), redisClient, zap.NewNop()), db
+	service := contestcmd.NewContestService(contestinfra.NewRepository(db), contestinfra.NewAWDRepository(db), zap.NewNop())
+	if redisClient != nil {
+		service.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	}
+	return service, db
 }
 
 func newContestCommandRedisForTest(t *testing.T) (*miniredis.Miniredis, *redis.Client) {

@@ -308,6 +308,7 @@ flowchart LR
 - `practice_readmodel` 语义上服务练习态列表和时间线，但当前实现不是通过 `practice/contracts` 聚合，而是由本模块 repository 直接查询只读事实。
 - `teaching_readmodel` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装。
 - `runtime -> instance` 这条代码级依赖当前主要落在 `runtime/ports/http.go`、`runtime/ports/metrics.go` 对 `instance/ports` shape 的复用，以及测试继续校验旧能力是否已迁到 `instance` owner。
+- `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis，`contest/application/jobs/status_updater.go` 仍保留调度锁 Redis 依赖。
 
 ### 5.3 协作方式
 

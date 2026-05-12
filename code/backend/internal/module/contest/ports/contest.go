@@ -159,3 +159,9 @@ type ContestStatusRepository interface {
 	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
 	ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
 }
+
+type ContestStatusSideEffectStore interface {
+	CreateFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
+	ClearFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
+	ClearEndedContestRuntimeState(ctx context.Context, contestID int64) error
+}

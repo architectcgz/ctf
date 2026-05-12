@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
@@ -31,7 +30,7 @@ type contestCommandStatusTransitionRepository interface {
 	MarkTransitionSideEffectsFailed(ctx context.Context, id int64, cause error) error
 }
 
-func NewContestService(repo contestCommandRepository, awdRepo contestports.AWDReadinessQuery, redis *redislib.Client, log *zap.Logger) *ContestService {
+func NewContestService(repo contestCommandRepository, awdRepo contestports.AWDReadinessQuery, log *zap.Logger) *ContestService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -42,8 +41,16 @@ func NewContestService(repo contestCommandRepository, awdRepo contestports.AWDRe
 	return &ContestService{
 		repo:           repo,
 		transitionRepo: transitionRepo,
-		sideEffects:    statusmachine.NewSideEffectRunner(redis),
+		sideEffects:    statusmachine.NewSideEffectRunner(nil),
 		awdRepo:        awdRepo,
 		log:            log,
 	}
+}
+
+func (s *ContestService) SetStatusSideEffectStore(store contestports.ContestStatusSideEffectStore) *ContestService {
+	if s == nil {
+		return nil
+	}
+	s.sideEffects = statusmachine.NewSideEffectRunner(store)
+	return s
 }
