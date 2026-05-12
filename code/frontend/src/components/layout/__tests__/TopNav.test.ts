@@ -195,7 +195,10 @@ async function mountTopNav() {
 
 async function mountBackofficeTopNav(
   path = '/platform/overview',
-  role: 'admin' | 'teacher' = 'admin'
+  role: 'admin' | 'teacher' = 'admin',
+  options?: {
+    sidebarCollapsed?: boolean
+  }
 ) {
   setActivePinia(createPinia())
   localStorage.clear()
@@ -218,7 +221,7 @@ async function mountBackofficeTopNav(
   const wrapper = mount(TopNav, {
     attachTo: document.body,
     props: {
-      sidebarCollapsed: false,
+      sidebarCollapsed: options?.sidebarCollapsed ?? false,
       notificationStatus: 'open',
     },
     global: {
@@ -325,6 +328,41 @@ describe('TopNav', () => {
     expect(topNavSource).toContain('useWorkspaceShellNavigation')
     expect(topNavSource).toContain('topnav-shell--admin')
     expect(topNavSource).toContain('Workspace')
+  })
+
+  it('桌面侧栏折叠后应放宽 topnav 内容宽度，让左右区块向两侧展开', async () => {
+    expect(topNavSource).toContain(
+      ":class=\"{ 'topnav-inner-shell--sidebar-collapsed': sidebarCollapsed && !isMobile }\""
+    )
+    expect(topNavSource).toContain('--topnav-shell-max-width: 100rem;')
+    expect(topNavSource).toMatch(
+      /@media \(min-width: 768px\)\s*\{[\s\S]*\.topnav-inner-shell--sidebar-collapsed\s*\{[\s\S]*--topnav-shell-max-width:\s*calc\(100rem \+ 4rem\);/s
+    )
+    expect(topNavSource).toMatch(
+      /@media \(min-width: 1280px\)\s*\{[\s\S]*\.topnav-inner-shell--sidebar-collapsed\s*\{[\s\S]*--topnav-shell-max-width:\s*calc\(100rem \+ 6rem\);/s
+    )
+
+    const originalWidth = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 1280,
+    })
+
+    const { wrapper } = await mountBackofficeTopNav('/platform/overview', 'admin', {
+      sidebarCollapsed: true,
+    })
+
+    expect(wrapper.find('.topnav-inner-shell').classes()).toContain(
+      'topnav-inner-shell--sidebar-collapsed'
+    )
+
+    wrapper.unmount()
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: originalWidth,
+    })
   })
 
   it('tokenizes backoffice shell surfaces so dark theme does not fall back to white chrome', () => {

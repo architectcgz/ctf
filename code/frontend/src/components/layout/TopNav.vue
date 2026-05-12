@@ -2,6 +2,7 @@
   <header class="topnav-shell topnav-shell--admin sticky top-0 z-50">
     <div
       class="topnav-inner topnav-inner-shell mx-auto flex h-16 w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8"
+      :class="{ 'topnav-inner-shell--sidebar-collapsed': sidebarCollapsed && !isMobile }"
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button
@@ -412,7 +413,9 @@ onUnmounted(() => {
 }
 
 .topnav-inner-shell {
-  max-width: 100rem;
+  --topnav-shell-max-width: 100rem;
+  max-width: var(--topnav-shell-max-width);
+  transition: max-width var(--ui-motion-normal);
 }
 
 .topnav-main,
@@ -760,9 +763,19 @@ onUnmounted(() => {
 }
 
 @media (min-width: 768px) {
+  .topnav-inner-shell--sidebar-collapsed {
+    --topnav-shell-max-width: calc(100rem + 4rem);
+  }
+
   .topnav-page-title {
     font-size: 0.9375rem;
     line-height: 1.375rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .topnav-inner-shell--sidebar-collapsed {
+    --topnav-shell-max-width: calc(100rem + 6rem);
   }
 }
 </style>
