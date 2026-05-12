@@ -1,5 +1,12 @@
 <script setup>
 import { computed } from 'vue'
+import {
+  RADAR_AREA_FILL,
+  RADAR_AREA_STROKE,
+  RADAR_GRID_STROKE,
+  RADAR_LABEL_FILL,
+  RADAR_POINT_FILL,
+} from '@/components/charts/radarVisuals'
 
 const props = defineProps({
   scores: {
@@ -11,11 +18,11 @@ const props = defineProps({
 const center = 140
 const radius = 96
 const rings = [0.25, 0.5, 0.75, 1]
-const gridStroke = 'color-mix(in srgb, var(--color-text-muted) 18%, transparent)'
-const polygonFill = 'color-mix(in srgb, var(--color-primary) 22%, transparent)'
-const polygonStroke = 'var(--color-primary)'
-const centerFill = 'color-mix(in srgb, var(--color-primary-hover) 82%, var(--color-primary))'
-const labelFill = 'var(--color-text-muted)'
+const gridStroke = RADAR_GRID_STROKE
+const polygonFill = RADAR_AREA_FILL
+const polygonStroke = RADAR_AREA_STROKE
+const centerFill = RADAR_POINT_FILL
+const labelFill = RADAR_LABEL_FILL
 
 const points = computed(() => {
   const total = props.scores.length
@@ -51,10 +58,7 @@ function ringPoints(scale) {
 
 <template>
   <div class="rounded-2xl border border-[var(--color-primary)]/10 bg-[var(--color-bg-surface)] p-4">
-    <svg
-      viewBox="0 0 280 280"
-      class="h-[280px] w-full"
-    >
+    <svg viewBox="0 0 280 280" class="h-[280px] w-full">
       <polygon
         v-for="scale in rings"
         :key="scale"
@@ -73,27 +77,15 @@ function ringPoints(scale) {
         :stroke="gridStroke"
       />
       <polygon
+        class="radar-surface__area"
         :points="polygon"
         :fill="polygonFill"
         :stroke="polygonStroke"
         stroke-width="2"
       />
-      <circle
-        cx="140"
-        cy="140"
-        r="4"
-        :fill="centerFill"
-      />
-      <g
-        v-for="point in points"
-        :key="point.name"
-      >
-        <circle
-          :cx="point.x"
-          :cy="point.y"
-          r="4"
-          :fill="point.color"
-        />
+      <circle cx="140" cy="140" r="4" :fill="centerFill" />
+      <g v-for="point in points" :key="point.name">
+        <circle :cx="point.x" :cy="point.y" r="4" :fill="point.color" />
         <text
           :x="point.labelX"
           :y="point.labelY"

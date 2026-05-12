@@ -6,6 +6,7 @@ import { RadarChart as EChartsRadarChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { RADAR_AREA_FILL, resolveRadarCanvasVisuals } from '@/components/charts/radarVisuals'
 
 use([RadarComponent, TooltipComponent, LegendComponent, EChartsRadarChart, CanvasRenderer])
 
@@ -35,15 +36,8 @@ const props = withDefaults(
   }
 )
 
-function cssVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-}
-
 const option = computed<EChartsOption>(() => {
-  const primary = cssVar('--color-primary')
-  const primaryHover = cssVar('--color-primary-hover')
-  const axisLabelColor =
-    cssVar('--color-text-primary') || cssVar('--color-text-secondary') || primary
+  const visuals = resolveRadarCanvasVisuals(RADAR_AREA_FILL)
   return {
     tooltip: { trigger: 'item' },
     radar: {
@@ -54,14 +48,14 @@ const option = computed<EChartsOption>(() => {
         max: indicator.max ?? 100,
       })),
       axisName: {
-        color: axisLabelColor,
+        color: visuals.axisLabelColor,
         fontSize: props.labelFontSize,
         fontWeight: 600,
       },
       axisNameGap: props.axisNameGap,
       splitArea: {
         areaStyle: {
-          color: [`${primary}0a`],
+          color: [visuals.splitAreaFill],
         },
       },
     },
@@ -73,9 +67,9 @@ const option = computed<EChartsOption>(() => {
           {
             value: props.values,
             name: props.name,
-            areaStyle: { color: `${primary}33` },
-            lineStyle: { color: primary },
-            itemStyle: { color: primaryHover },
+            areaStyle: { color: visuals.areaFill },
+            lineStyle: { color: visuals.primary },
+            itemStyle: { color: visuals.pointFill },
           },
         ],
       },
@@ -85,9 +79,5 @@ const option = computed<EChartsOption>(() => {
 </script>
 
 <template>
-  <VChart
-    :class="[props.heightClass, 'w-full']"
-    :option="option"
-    autoresize
-  />
+  <VChart :class="[props.heightClass, 'w-full']" :option="option" autoresize />
 </template>

@@ -11,6 +11,7 @@ import cContextTooltipSource from '@/components/common/modal-templates/CContextT
 import authEntryShellSource from '@/components/auth/AuthEntryShell.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
+import radarVisualsSource from '@/components/charts/radarVisuals.ts?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import studentLegacyOverviewSource from '@/components/dashboard/student/StudentOverviewPage.vue?raw'
@@ -77,6 +78,13 @@ function expectNoHardcodedThemeTokens(
 }
 
 describe('shared theme token adoption', () => {
+  it('雷达图应复用共享视觉配置并保留面积填充层', () => {
+    expect(radarVisualsSource).toContain('RADAR_AREA_FILL')
+    expect(skillRadarSource).toContain('RADAR_AREA_FILL')
+    expect(skillRadarSource).toContain('radar-surface__area')
+    expect(radarChartSource).toContain('RADAR_AREA_FILL')
+  })
+
   it('共享组件与基础图表不应回退到硬编码主题色', () => {
     expectNoHardcodedThemeTokens(appCardSource, 'AppCard', ['rgba(139,148,158,0.08)'])
     expectNoHardcodedThemeTokens(appLayoutSource, 'AppLayout', [
