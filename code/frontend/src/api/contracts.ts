@@ -921,6 +921,41 @@ export interface TeacherClassReviewData {
   items: TeacherClassReviewItemData[]
 }
 
+export interface TeacherOverviewSummaryData {
+  class_count: number
+  student_count: number
+  active_student_count: number
+  active_rate: number
+  average_solved: number
+  recent_event_count: number
+  risk_student_count: number
+}
+
+export interface TeacherOverviewTrendPoint {
+  date: string
+  active_student_count: number
+  event_count: number
+  solve_count: number
+}
+
+export interface TeacherOverviewTrendData {
+  points: TeacherOverviewTrendPoint[]
+}
+
+export interface TeacherOverviewWeakDimensionData {
+  dimension: string
+  student_count: number
+}
+
+export interface TeacherOverviewClassFocusData {
+  class_name: string
+  student_count: number
+  active_rate: number
+  recent_event_count: number
+  risk_student_count: number
+  dominant_weak_dimension?: string
+}
+
 export interface TeacherStudentItem {
   id: ID
   username: string
@@ -932,6 +967,15 @@ export interface TeacherStudentItem {
   recent_event_count?: number
   weak_dimension?: string
   progress?: MyProgressData
+}
+
+export interface TeacherOverviewData {
+  summary: TeacherOverviewSummaryData
+  trend: TeacherOverviewTrendData
+  focus_classes: TeacherOverviewClassFocusData[]
+  focus_students: TeacherStudentItem[]
+  spotlight_student?: TeacherStudentItem | null
+  weak_dimensions: TeacherOverviewWeakDimensionData[]
 }
 
 export interface TeacherEvidenceSummaryData {

@@ -4,6 +4,7 @@ import type {
   PageResult,
   RecommendationItem,
   TeacherClassItem,
+  TeacherOverviewData,
   TeacherClassReviewData,
   TeacherClassSummaryData,
   TeacherClassTrendData,
@@ -31,6 +32,65 @@ export async function getClasses(params?: {
   return params ? payload : payload.list
 }
 
+function normalizeTeacherStudent(item: {
+  id: string | number
+  username: string
+  student_no?: string
+  name?: string
+  class_name?: string
+  solved_count?: number
+  total_score?: number
+  recent_event_count?: number
+  weak_dimension?: string
+}) {
+  return {
+    ...item,
+    id: String(item.id),
+  }
+}
+
+export async function getTeacherOverview(): Promise<TeacherOverviewData> {
+  const payload = await request<{
+    summary: TeacherOverviewData['summary']
+    trend: TeacherOverviewData['trend']
+    focus_classes: TeacherOverviewData['focus_classes']
+    focus_students: Array<{
+      id: string | number
+      username: string
+      student_no?: string
+      name?: string
+      class_name?: string
+      solved_count?: number
+      total_score?: number
+      recent_event_count?: number
+      weak_dimension?: string
+    }>
+    spotlight_student?: {
+      id: string | number
+      username: string
+      student_no?: string
+      name?: string
+      class_name?: string
+      solved_count?: number
+      total_score?: number
+      recent_event_count?: number
+      weak_dimension?: string
+    } | null
+    weak_dimensions: TeacherOverviewData['weak_dimensions']
+  }>({
+    method: 'GET',
+    url: '/teacher/overview',
+  })
+
+  return {
+    ...payload,
+    focus_students: payload.focus_students.map(normalizeTeacherStudent),
+    spotlight_student: payload.spotlight_student
+      ? normalizeTeacherStudent(payload.spotlight_student)
+      : null,
+  }
+}
+
 export async function getClassStudents(
   name: string,
   params?: { keyword?: string; student_no?: string }
@@ -55,10 +115,7 @@ export async function getClassStudents(
     },
   })
 
-  return payload.map((item) => ({
-    ...item,
-    id: String(item.id),
-  }))
+  return payload.map(normalizeTeacherStudent)
 }
 
 export interface TeacherStudentDirectoryParams {
@@ -104,10 +161,7 @@ export async function getStudentsDirectory(
 
   return {
     ...payload,
-    list: payload.list.map((item) => ({
-      ...item,
-      id: String(item.id),
-    })),
+    list: payload.list.map(normalizeTeacherStudent),
   }
 }
 

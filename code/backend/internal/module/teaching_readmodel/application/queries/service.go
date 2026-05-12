@@ -34,6 +34,7 @@ type teachingReadModelQueryRepository interface {
 	readmodelports.TeachingStudentProfileRepository
 	readmodelports.TeachingStudentActivityRepository
 	readmodelports.TeachingClassInsightRepository
+	readmodelports.TeachingOverviewRepository
 }
 
 var _ Service = (*QueryService)(nil)
@@ -235,6 +236,70 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), nil
+}
+
+func (s *QueryService) GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*dto.TeacherOverviewResp, error) {
+	classItems, err := s.listAccessibleClassItems(ctx, requesterID, requesterRole)
+	if err != nil {
+		return nil, err
+	}
+	if len(classItems) == 0 {
+		return &dto.TeacherOverviewResp{
+			Summary:        dto.TeacherOverviewSummaryResp{},
+			Trend:          dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}},
+			FocusClasses:   []dto.TeacherOverviewClassFocusResp{},
+			FocusStudents:  []dto.TeacherStudentItem{},
+			WeakDimensions: []dto.TeacherOverviewWeakDimensionResp{},
+		}, nil
+	}
+
+	classNames := make([]string, 0, len(classItems))
+	for _, item := range classItems {
+		if name := strings.TrimSpace(item.Name); name != "" {
+			classNames = append(classNames, name)
+		}
+	}
+	if len(classNames) == 0 {
+		return &dto.TeacherOverviewResp{
+			Summary:        dto.TeacherOverviewSummaryResp{},
+			Trend:          dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}},
+			FocusClasses:   []dto.TeacherOverviewClassFocusResp{},
+			FocusStudents:  []dto.TeacherStudentItem{},
+			WeakDimensions: []dto.TeacherOverviewWeakDimensionResp{},
+		}, nil
+	}
+
+	since := time.Now().AddDate(0, 0, -6)
+	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
+
+	studentItems, err := s.repo.ListStudentsByClasses(ctx, classNames, "", "", startOfDay)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	students := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(studentItems))
+
+	trend, err := s.repo.GetOverviewTrend(ctx, classNames, startOfDay, 7)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	focusClasses, err := s.buildOverviewClassFocuses(ctx, classItems, startOfDay)
+	if err != nil {
+		return nil, err
+	}
+
+	focusStudents := selectRiskStudents(students, 6)
+	summary := buildOverviewSummary(classItems, students, focusStudents)
+	spotlightStudent := selectTopStudent(students)
+
+	return &dto.TeacherOverviewResp{
+		Summary:          summary,
+		Trend:            mapOverviewTrend(trend),
+		FocusClasses:     focusClasses,
+		FocusStudents:    focusStudents,
+		SpotlightStudent: spotlightStudent,
+		WeakDimensions:   buildOverviewWeakDimensions(students),
+	}, nil
 }
 
 func (s *QueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error) {
@@ -855,6 +920,38 @@ func (s *QueryService) getAccessibleStudent(ctx context.Context, requesterID int
 	return student, nil
 }
 
+func (s *QueryService) listAccessibleClassItems(ctx context.Context, requesterID int64, requesterRole string) ([]readmodelports.ClassItem, error) {
+	if requesterRole == model.RoleAdmin {
+		items, err := s.repo.ListClasses(ctx, 0, 0)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return items, nil
+	}
+
+	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if requester == nil {
+		return nil, errcode.ErrUnauthorized
+	}
+
+	className := strings.TrimSpace(requester.ClassName)
+	if className == "" {
+		return []readmodelports.ClassItem{}, nil
+	}
+
+	count, err := s.repo.CountStudentsByClass(ctx, className)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	return []readmodelports.ClassItem{{
+		Name:         className,
+		StudentCount: count,
+	}}, nil
+}
+
 func (s *QueryService) ensureClassAccess(ctx context.Context, requesterID int64, requesterRole, className string) error {
 	if requesterRole == model.RoleAdmin {
 		return nil
@@ -910,6 +1007,26 @@ func selectRiskStudents(students []dto.TeacherStudentItem, limit int) []dto.Teac
 	return limitStudents(filtered, limit)
 }
 
+func selectTopStudent(students []dto.TeacherStudentItem) *dto.TeacherStudentItem {
+	if len(students) == 0 {
+		return nil
+	}
+
+	sorted := append([]dto.TeacherStudentItem(nil), students...)
+	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].SolvedCount != sorted[j].SolvedCount {
+			return sorted[i].SolvedCount > sorted[j].SolvedCount
+		}
+		if sorted[i].TotalScore != sorted[j].TotalScore {
+			return sorted[i].TotalScore > sorted[j].TotalScore
+		}
+		return sorted[i].Username < sorted[j].Username
+	})
+
+	top := sorted[0]
+	return &top
+}
+
 func selectWeakDimensionStudents(students []dto.TeacherStudentItem) (string, []dto.TeacherStudentItem) {
 	counter := make(map[string]int)
 	grouped := make(map[string][]dto.TeacherStudentItem)
@@ -955,6 +1072,135 @@ func limitStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherSt
 		return students
 	}
 	return students[:limit]
+}
+
+func (s *QueryService) buildOverviewClassFocuses(
+	ctx context.Context,
+	classItems []readmodelports.ClassItem,
+	since time.Time,
+) ([]dto.TeacherOverviewClassFocusResp, error) {
+	focuses := make([]dto.TeacherOverviewClassFocusResp, 0, len(classItems))
+	for _, item := range classItems {
+		if strings.TrimSpace(item.Name) == "" {
+			continue
+		}
+
+		summary, err := s.repo.GetClassSummary(ctx, item.Name, since)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		studentItems, err := s.repo.ListStudentsByClass(ctx, item.Name, "", "", since)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		students := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(studentItems))
+		dominantWeakDimension, _ := selectWeakDimensionStudents(students)
+		riskStudents := selectRiskStudents(students, len(students))
+
+		focuses = append(focuses, dto.TeacherOverviewClassFocusResp{
+			ClassName:             item.Name,
+			StudentCount:          summary.StudentCount,
+			ActiveRate:            summary.ActiveRate,
+			RecentEventCount:      summary.RecentEventCount,
+			RiskStudentCount:      int64(len(riskStudents)),
+			DominantWeakDimension: dominantWeakDimension,
+		})
+	}
+
+	sort.Slice(focuses, func(i, j int) bool {
+		if focuses[i].RiskStudentCount != focuses[j].RiskStudentCount {
+			return focuses[i].RiskStudentCount > focuses[j].RiskStudentCount
+		}
+		if focuses[i].RecentEventCount != focuses[j].RecentEventCount {
+			return focuses[i].RecentEventCount > focuses[j].RecentEventCount
+		}
+		return focuses[i].ClassName < focuses[j].ClassName
+	})
+
+	if len(focuses) > 6 {
+		return focuses[:6], nil
+	}
+	return focuses, nil
+}
+
+func buildOverviewSummary(
+	classItems []readmodelports.ClassItem,
+	students []dto.TeacherStudentItem,
+	focusStudents []dto.TeacherStudentItem,
+) dto.TeacherOverviewSummaryResp {
+	summary := dto.TeacherOverviewSummaryResp{
+		ClassCount:       int64(len(classItems)),
+		StudentCount:     int64(len(students)),
+		RiskStudentCount: int64(len(focusStudents)),
+	}
+	if len(students) == 0 {
+		return summary
+	}
+
+	totalSolved := 0
+	for _, student := range students {
+		totalSolved += student.SolvedCount
+		summary.RecentEventCount += int64(student.RecentEventCount)
+		if student.RecentEventCount > 0 {
+			summary.ActiveStudentCount++
+		}
+	}
+
+	summary.AverageSolved = float64(totalSolved) / float64(len(students))
+	summary.ActiveRate = float64(summary.ActiveStudentCount) * 100 / float64(len(students))
+	return summary
+}
+
+func mapOverviewTrend(source *readmodelports.OverviewTrend) dto.TeacherOverviewTrendResp {
+	if source == nil || len(source.Points) == 0 {
+		return dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}}
+	}
+
+	points := make([]dto.TeacherOverviewTrendPoint, 0, len(source.Points))
+	for _, point := range source.Points {
+		points = append(points, dto.TeacherOverviewTrendPoint{
+			Date:               point.Date,
+			ActiveStudentCount: point.ActiveStudentCount,
+			EventCount:         point.EventCount,
+			SolveCount:         point.SolveCount,
+		})
+	}
+	return dto.TeacherOverviewTrendResp{Points: points}
+}
+
+func buildOverviewWeakDimensions(students []dto.TeacherStudentItem) []dto.TeacherOverviewWeakDimensionResp {
+	counter := make(map[string]int64)
+	for _, student := range students {
+		if student.WeakDimension == nil {
+			continue
+		}
+		key := strings.TrimSpace(*student.WeakDimension)
+		if key == "" {
+			continue
+		}
+		counter[key]++
+	}
+	if len(counter) == 0 {
+		return []dto.TeacherOverviewWeakDimensionResp{}
+	}
+
+	items := make([]dto.TeacherOverviewWeakDimensionResp, 0, len(counter))
+	for dimension, count := range counter {
+		items = append(items, dto.TeacherOverviewWeakDimensionResp{
+			Dimension:    dimension,
+			StudentCount: count,
+		})
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].StudentCount != items[j].StudentCount {
+			return items[i].StudentCount > items[j].StudentCount
+		}
+		return items[i].Dimension < items[j].Dimension
+	})
+	if len(items) > 6 {
+		return items[:6]
+	}
+	return items
 }
 
 func joinStudentNames(students []dto.TeacherStudentItem) string {

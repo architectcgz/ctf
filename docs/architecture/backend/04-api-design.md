@@ -37,6 +37,7 @@
 - 2026-05-11 的 runtime-instance phase 2 / slice 2 没有新增、删除或重命名外部 HTTP 路径；变化仅在内部装配层：实例访问、教师实例列表、AWD target proxy 与 defense SSH 路由由 `InstanceModule` 承接，`challenge`、`contest`、`ops` 依赖的容器能力由 `ContainerRuntimeModule` 承接；`RuntimeModule` 仅保留过渡兼容别名。
 - 2026-05-12 的 challenge-ops boundary phase 3 / slice 2 没有新增、删除或重命名外部 HTTP / WebSocket 契约；题目发布自检完成后的教师通知仍通过既有 `/api/v1/notifications` 与 `/ws/notifications` 暴露，内部改为由 `challenge.publish_check_finished` 事件从 `challenge` 交给 `ops` 消费。
 - 2026-05-12 的 contest-ops boundary phase 3 / slice 3 同样没有新增、删除或重命名外部 HTTP / WebSocket 契约；`/ws/contests/:id/announcements`、`/ws/contests/:id/scoreboard`、`/ws/contests/:id/awd-preview` 保持现有消息类型与 payload，内部改为由 `contest` 发布 realtime 事件、`ops` relay 到既有 WebSocket manager。
+- 2026-05-12 的 teacher overview aggregate 新增 `GET /api/v1/teacher/overview`；该接口由 `teaching_readmodel` 输出 summary-scope 聚合结果，服务 `/academy/overview`，不再让前端通过默认班级去拼 `classes/:name/*` 的 detail DTO。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail

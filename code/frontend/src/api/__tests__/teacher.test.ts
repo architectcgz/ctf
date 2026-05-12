@@ -11,6 +11,7 @@ import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
   getClasses,
+  getTeacherOverview,
   getStudentAttackSessions,
   getStudentEvidence,
   getStudentsDirectory,
@@ -131,6 +132,80 @@ describe('teacher api contract', () => {
       total: 31,
       page: 2,
       page_size: 10,
+    })
+  })
+
+  it('获取教师概览时应请求 overview 接口并标准化学生标识字段', async () => {
+    requestMock.mockResolvedValue({
+      summary: {
+        class_count: 2,
+        student_count: 5,
+        active_student_count: 3,
+        active_rate: 60,
+        average_solved: 3.4,
+        recent_event_count: 12,
+        risk_student_count: 1,
+      },
+      trend: {
+        points: [
+          {
+            date: '2026-03-05',
+            active_student_count: 2,
+            event_count: 5,
+            solve_count: 2,
+          },
+        ],
+      },
+      focus_classes: [
+        {
+          class_name: 'Class A',
+          student_count: 3,
+          active_rate: 50,
+          recent_event_count: 5,
+          risk_student_count: 1,
+          dominant_weak_dimension: 'crypto',
+        },
+      ],
+      focus_students: [
+        {
+          id: 9,
+          username: 'alice',
+          name: 'Alice',
+          class_name: 'Class A',
+          solved_count: 4,
+          total_score: 320,
+          recent_event_count: 0,
+          weak_dimension: 'crypto',
+        },
+      ],
+      spotlight_student: {
+        id: 12,
+        username: 'bob',
+        name: 'Bob',
+        class_name: 'Class B',
+        solved_count: 6,
+        total_score: 430,
+        recent_event_count: 4,
+        weak_dimension: 'web',
+      },
+      weak_dimensions: [{ dimension: 'crypto', student_count: 2 }],
+    })
+
+    const result = await getTeacherOverview()
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/overview',
+    })
+    expect(result.focus_students[0]).toMatchObject({
+      id: '9',
+      username: 'alice',
+      class_name: 'Class A',
+    })
+    expect(result.spotlight_student).toMatchObject({
+      id: '12',
+      username: 'bob',
+      class_name: 'Class B',
     })
   })
 

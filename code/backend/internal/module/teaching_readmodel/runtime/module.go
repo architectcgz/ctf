@@ -34,6 +34,7 @@ type moduleDeps struct {
 		readmodelports.TeachingStudentProfileRepository
 		readmodelports.TeachingStudentActivityRepository
 		readmodelports.TeachingClassInsightRepository
+		readmodelports.TeachingOverviewRepository
 	}
 	recommendations assessmentcontracts.RecommendationProvider
 }

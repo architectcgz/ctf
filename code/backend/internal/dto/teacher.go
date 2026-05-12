@@ -56,6 +56,50 @@ type TeacherClassReviewResp struct {
 	Items     []TeacherClassReviewItem `json:"items"`
 }
 
+type TeacherOverviewSummaryResp struct {
+	ClassCount         int64   `json:"class_count"`
+	StudentCount       int64   `json:"student_count"`
+	ActiveStudentCount int64   `json:"active_student_count"`
+	ActiveRate         float64 `json:"active_rate"`
+	AverageSolved      float64 `json:"average_solved"`
+	RecentEventCount   int64   `json:"recent_event_count"`
+	RiskStudentCount   int64   `json:"risk_student_count"`
+}
+
+type TeacherOverviewTrendPoint struct {
+	Date               string `json:"date"`
+	ActiveStudentCount int64  `json:"active_student_count"`
+	EventCount         int64  `json:"event_count"`
+	SolveCount         int64  `json:"solve_count"`
+}
+
+type TeacherOverviewTrendResp struct {
+	Points []TeacherOverviewTrendPoint `json:"points"`
+}
+
+type TeacherOverviewWeakDimensionResp struct {
+	Dimension    string `json:"dimension"`
+	StudentCount int64  `json:"student_count"`
+}
+
+type TeacherOverviewClassFocusResp struct {
+	ClassName             string  `json:"class_name"`
+	StudentCount          int64   `json:"student_count"`
+	ActiveRate            float64 `json:"active_rate"`
+	RecentEventCount      int64   `json:"recent_event_count"`
+	RiskStudentCount      int64   `json:"risk_student_count"`
+	DominantWeakDimension string  `json:"dominant_weak_dimension,omitempty"`
+}
+
+type TeacherOverviewResp struct {
+	Summary          TeacherOverviewSummaryResp         `json:"summary"`
+	Trend            TeacherOverviewTrendResp           `json:"trend"`
+	FocusClasses     []TeacherOverviewClassFocusResp    `json:"focus_classes"`
+	FocusStudents    []TeacherStudentItem               `json:"focus_students"`
+	SpotlightStudent *TeacherStudentItem                `json:"spotlight_student,omitempty"`
+	WeakDimensions   []TeacherOverviewWeakDimensionResp `json:"weak_dimensions"`
+}
+
 type TeacherStudentItem struct {
 	ID               int64   `json:"id"`
 	Username         string  `json:"username"`

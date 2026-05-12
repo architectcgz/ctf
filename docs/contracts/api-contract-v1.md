@@ -642,26 +642,80 @@ export interface TeacherClassItem {
 export type TeacherClassListData = TeacherClassItem[]
 ```
 
-### 6.2 GET `/api/v1/teacher/classes/:name/students`
+### 6.2 GET `/api/v1/teacher/overview`
 
-`data`（缺少示例，需确认）：
+`data`：
 
 ```ts
+export interface TeacherOverviewSummaryData {
+  class_count: number
+  student_count: number
+  active_student_count: number
+  active_rate: number
+  average_solved: number
+  recent_event_count: number
+  risk_student_count: number
+}
+
+export interface TeacherOverviewTrendPoint {
+  date: string
+  active_student_count: number
+  event_count: number
+  solve_count: number
+}
+
+export interface TeacherOverviewTrendData {
+  points: TeacherOverviewTrendPoint[]
+}
+
+export interface TeacherOverviewWeakDimensionData {
+  dimension: string
+  student_count: number
+}
+
+export interface TeacherOverviewClassFocusData {
+  class_name: string
+  student_count: number
+  active_rate: number
+  recent_event_count: number
+  risk_student_count: number
+  dominant_weak_dimension?: string
+}
+
 export interface TeacherStudentItem {
   id: ID
   username: string
+  student_no?: string
   name?: string
+  class_name?: string
+  solved_count?: number
+  total_score?: number
+  recent_event_count?: number
+  weak_dimension?: string
   progress?: MyProgressData
 }
 
-export type TeacherStudentListData = TeacherStudentItem[]
+export interface TeacherOverviewData {
+  summary: TeacherOverviewSummaryData
+  trend: TeacherOverviewTrendData
+  focus_classes: TeacherOverviewClassFocusData[]
+  focus_students: TeacherStudentItem[]
+  spotlight_student?: TeacherStudentItem | null
+  weak_dimensions: TeacherOverviewWeakDimensionData[]
+}
 ```
 
-### 6.3 GET `/api/v1/teacher/students/:id/progress`
+> 当前教师权限模型仍会自动收敛到教师自己的 `class_name`，但 `overview` contract 已按可访问教学范围聚合，不再把“默认班级详情”固化到前端页面 owner。
+
+### 6.3 GET `/api/v1/teacher/classes/:name/students`
+
+`data`：`TeacherStudentItem[]`
+
+### 6.4 GET `/api/v1/teacher/students/:id/progress`
 
 `data`：`MyProgressData`（或包含更细颗粒度的 challenge 列表；需确认）。
 
-### 6.4 GET `/api/v1/teacher/students/:id/evidence`
+### 6.5 GET `/api/v1/teacher/students/:id/evidence`
 
 `data`：
 

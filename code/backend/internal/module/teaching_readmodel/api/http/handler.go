@@ -70,6 +70,18 @@ func (h *Handler) ListClassStudents(c *gin.Context) {
 	response.Success(c, items)
 }
 
+func (h *Handler) GetOverview(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+
+	overview, err := h.service.GetOverview(c.Request.Context(), currentUser.UserID, currentUser.Role)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, overview)
+}
+
 func (h *Handler) GetClassSummary(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 

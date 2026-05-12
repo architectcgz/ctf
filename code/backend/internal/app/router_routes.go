@@ -849,6 +849,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
 
+	teacherOrAbove.GET("/overview", deps.teachingReadmodel.Handler.GetOverview)
 	teacherOrAbove.GET("/classes", deps.teachingReadmodel.Handler.ListClasses)
 	teacherOrAbove.GET("/students", deps.teachingReadmodel.Handler.ListStudents)
 	teacherOrAbove.GET("/classes/:name/students", deps.teachingReadmodel.Handler.ListClassStudents)

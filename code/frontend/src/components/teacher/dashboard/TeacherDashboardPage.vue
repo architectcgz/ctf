@@ -2,27 +2,12 @@
 import { toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
-import type {
-  TeacherClassItem,
-  TeacherClassReviewData,
-  TeacherClassSummaryData,
-  TeacherClassTrendData,
-  TeacherStudentItem,
-} from '@/api/contracts'
-import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
-import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
-import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
-import { useTeacherDashboardMetrics } from '@/features/teacher-dashboard'
+import type { TeacherOverviewData } from '@/api/contracts'
+import { useTeacherOverviewWorkspace } from '@/features/teacher-dashboard'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
-  classes: TeacherClassItem[]
-  students: TeacherStudentItem[]
-  selectedClassName: string
-  selectedClass: TeacherClassItem | null
-  review: TeacherClassReviewData | null
-  summary: TeacherClassSummaryData | null
-  trend: TeacherClassTrendData | null
+  overview: TeacherOverviewData | null
   error: string | null
 }>()
 
@@ -65,13 +50,12 @@ const {
   studentInsightRows,
   portraitSummaryNotes,
   weakDimensionStats,
-} = useTeacherDashboardMetrics({
-  students: toRef(props, 'students'),
-  selectedClassName: toRef(props, 'selectedClassName'),
-  selectedClass: toRef(props, 'selectedClass'),
-  review: toRef(props, 'review'),
-  summary: toRef(props, 'summary'),
-  trend: toRef(props, 'trend'),
+  focusClasses,
+  trendSignals,
+  reviewHighlights,
+  interventionTargets,
+} = useTeacherOverviewWorkspace({
+  overview: toRef(props, 'overview'),
 })
 </script>
 
@@ -322,8 +306,59 @@ const {
               </div>
             </header>
 
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" bare />
+            <div class="teacher-dashboard-panel-body trend-grid">
+              <div
+                v-if="trendSignals.some((item) => item.value !== '--')"
+                class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+              >
+                <article
+                  v-for="item in trendSignals"
+                  :key="item.key"
+                  class="summary-note progress-card metric-panel-card"
+                >
+                  <div class="summary-note-label progress-card-label metric-panel-label">
+                    {{ item.label }}
+                  </div>
+                  <div class="summary-note-value progress-card-value metric-panel-value">
+                    {{ item.value }}
+                  </div>
+                  <div class="summary-note-copy progress-card-hint metric-panel-helper">
+                    {{ item.copy }}
+                  </div>
+                </article>
+              </div>
+              <div v-else class="workspace-directory-empty portrait-empty">暂无可复盘的趋势数据</div>
+
+              <div v-if="focusClasses.length > 0" class="focus-class-list workspace-directory-list">
+                <article
+                  v-for="(item, index) in focusClasses.slice(0, 4)"
+                  :key="item.class_name"
+                  class="focus-class-row"
+                >
+                  <div class="weak-rank">
+                    {{ `${index + 1}`.padStart(2, '0') }}
+                  </div>
+                  <div class="focus-class-row__main">
+                    <h3 class="focus-class-row__title">{{ item.class_name }}</h3>
+                    <p class="focus-class-row__detail">
+                      {{
+                        item.dominant_weak_dimension
+                          ? `当前主要薄弱维度为 ${item.dominant_weak_dimension}，共有 ${item.risk_student_count} 名待跟进学生。`
+                          : `当前共有 ${item.risk_student_count} 名待跟进学生，薄弱维度仍在形成中。`
+                      }}
+                    </p>
+                    <div class="focus-class-row__chips">
+                      <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
+                        活跃率 {{ Math.round(item.active_rate) }}%
+                      </span>
+                      <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
+                        近 7 天 {{ item.recent_event_count }} 次事件
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div v-else class="workspace-directory-empty portrait-empty">暂无重点班级趋势摘要</div>
             </div>
           </section>
         </section>
@@ -340,13 +375,36 @@ const {
           <section class="overview-panel workspace-directory-section teacher-directory-section">
             <header class="list-heading">
               <div>
-                <h2 class="list-heading__title">教学复盘结论</h2>
+                <h2 class="list-heading__title">教学复盘摘要</h2>
               </div>
             </header>
 
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" bare />
+            <div
+              v-if="reviewHighlights.length > 0"
+              class="teacher-dashboard-panel-body review-highlight-list workspace-directory-list"
+            >
+              <article
+                v-for="item in reviewHighlights"
+                :key="item.key"
+                class="review-highlight-item"
+                :class="`review-highlight-item--${item.tone}`"
+              >
+                <div class="review-highlight-item__main">
+                  <h3 class="review-highlight-item__title">{{ item.title }}</h3>
+                  <p class="review-highlight-item__detail">{{ item.detail }}</p>
+                  <div class="review-highlight-item__chips">
+                    <span
+                      v-for="chip in item.chips"
+                      :key="chip"
+                      class="workspace-directory-status-pill workspace-directory-status-pill--muted"
+                    >
+                      {{ chip }}
+                    </span>
+                  </div>
+                </div>
+              </article>
             </div>
+            <div v-else class="workspace-directory-empty portrait-empty">暂无可展示的复盘摘要</div>
           </section>
         </section>
 
@@ -366,9 +424,31 @@ const {
               </div>
             </header>
 
-            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-              <TeacherInterventionPanel :students="students" :class-name="selectedClassName" bare />
+            <div
+              v-if="interventionTargets.length > 0"
+              class="teacher-dashboard-panel-body intervention-target-list workspace-directory-list"
+            >
+              <article
+                v-for="item in interventionTargets"
+                :key="item.id"
+                class="intervention-target-row"
+              >
+                <div class="intervention-target-row__main">
+                  <h3 class="intervention-target-row__title">{{ item.title }}</h3>
+                  <p class="intervention-target-row__detail">{{ item.detail }}</p>
+                  <div class="intervention-target-row__meta">
+                    <span
+                      v-for="meta in item.meta"
+                      :key="meta"
+                      class="workspace-directory-status-pill workspace-directory-status-pill--muted"
+                    >
+                      {{ meta }}
+                    </span>
+                  </div>
+                </div>
+              </article>
             </div>
+            <div v-else class="workspace-directory-empty portrait-empty">暂无需要优先介入的学生</div>
           </section>
         </section>
     </main>
@@ -653,6 +733,13 @@ const {
   -webkit-line-clamp: 2;
 }
 
+.trend-grid,
+.review-highlight-list,
+.intervention-target-list {
+  display: grid;
+  gap: var(--space-5);
+}
+
 .teacher-dashboard-panel-body.workspace-subpanel--flat {
   display: flex;
   flex-direction: column;
@@ -749,6 +836,82 @@ const {
 .student-insight-chip {
   background: color-mix(in srgb, var(--journal-surface) 78%, transparent);
   color: var(--journal-muted);
+}
+
+.focus-class-list,
+.review-highlight-list,
+.intervention-target-list {
+  display: grid;
+  overflow: hidden;
+}
+
+.focus-class-row,
+.review-highlight-item,
+.intervention-target-row {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4-5) var(--space-5);
+  border-bottom: 1px solid var(--workspace-directory-row-divider);
+}
+
+.focus-class-row:last-child,
+.review-highlight-item:last-child,
+.intervention-target-row:last-child {
+  border-bottom: 0;
+}
+
+.focus-class-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.focus-class-row__main,
+.review-highlight-item__main,
+.intervention-target-row__main {
+  min-width: 0;
+}
+
+.focus-class-row__title,
+.review-highlight-item__title,
+.intervention-target-row__title {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--journal-ink);
+}
+
+.focus-class-row__detail,
+.review-highlight-item__detail,
+.intervention-target-row__detail {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-14);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.focus-class-row__chips,
+.review-highlight-item__chips,
+.intervention-target-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.review-highlight-item {
+  border-left: 3px solid transparent;
+}
+
+.review-highlight-item--ready {
+  border-left-color: color-mix(in srgb, var(--color-success) 42%, transparent);
+}
+
+.review-highlight-item--warning {
+  border-left-color: color-mix(in srgb, var(--color-warning) 42%, transparent);
+}
+
+.review-highlight-item--danger {
+  border-left-color: color-mix(in srgb, var(--color-danger) 42%, transparent);
 }
 
 @media (max-width: 1180px) {

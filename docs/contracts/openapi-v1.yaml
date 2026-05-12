@@ -1788,7 +1788,13 @@ components:
       properties:
         id: { $ref: "#/components/schemas/ID" }
         username: { type: string }
+        student_no: { type: string, nullable: true }
         name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        solved_count: { type: integer, nullable: true, minimum: 0 }
+        total_score: { type: integer, nullable: true, minimum: 0 }
+        recent_event_count: { type: integer, nullable: true, minimum: 0 }
+        weak_dimension: { type: string, nullable: true }
         progress: { $ref: "#/components/schemas/MyProgressData", nullable: true }
 
     ApiEnvelopeTeacherStudentListData:
@@ -1800,6 +1806,90 @@ components:
             data:
               type: array
               items: { $ref: "#/components/schemas/TeacherStudentItem" }
+
+    TeacherOverviewSummaryData:
+      type: object
+      required:
+        [
+          class_count,
+          student_count,
+          active_student_count,
+          active_rate,
+          average_solved,
+          recent_event_count,
+          risk_student_count,
+        ]
+      properties:
+        class_count: { type: integer, minimum: 0 }
+        student_count: { type: integer, minimum: 0 }
+        active_student_count: { type: integer, minimum: 0 }
+        active_rate: { type: number, minimum: 0 }
+        average_solved: { type: number, minimum: 0 }
+        recent_event_count: { type: integer, minimum: 0 }
+        risk_student_count: { type: integer, minimum: 0 }
+
+    TeacherOverviewTrendPoint:
+      type: object
+      required: [date, active_student_count, event_count, solve_count]
+      properties:
+        date: { type: string }
+        active_student_count: { type: integer, minimum: 0 }
+        event_count: { type: integer, minimum: 0 }
+        solve_count: { type: integer, minimum: 0 }
+
+    TeacherOverviewTrendData:
+      type: object
+      required: [points]
+      properties:
+        points:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherOverviewTrendPoint" }
+
+    TeacherOverviewWeakDimensionData:
+      type: object
+      required: [dimension, student_count]
+      properties:
+        dimension: { type: string }
+        student_count: { type: integer, minimum: 0 }
+
+    TeacherOverviewClassFocusData:
+      type: object
+      required: [class_name, student_count, active_rate, recent_event_count, risk_student_count]
+      properties:
+        class_name: { type: string }
+        student_count: { type: integer, minimum: 0 }
+        active_rate: { type: number, minimum: 0 }
+        recent_event_count: { type: integer, minimum: 0 }
+        risk_student_count: { type: integer, minimum: 0 }
+        dominant_weak_dimension: { type: string, nullable: true }
+
+    TeacherOverviewData:
+      type: object
+      required: [summary, trend, focus_classes, focus_students, weak_dimensions]
+      properties:
+        summary: { $ref: "#/components/schemas/TeacherOverviewSummaryData" }
+        trend: { $ref: "#/components/schemas/TeacherOverviewTrendData" }
+        focus_classes:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherOverviewClassFocusData" }
+        focus_students:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherStudentItem" }
+        spotlight_student:
+          allOf:
+            - $ref: "#/components/schemas/TeacherStudentItem"
+          nullable: true
+        weak_dimensions:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherOverviewWeakDimensionData" }
+
+    ApiEnvelopeTeacherOverviewData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherOverviewData" }
 
     TeacherEvidenceSummaryData:
       type: object
@@ -3425,6 +3515,19 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherClassListData" }
+
+  /teacher/overview:
+    get:
+      tags: [Teacher]
+      summary: 教师教学概览
+      security:
+        - sessionCookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherOverviewData" }
 
   /teacher/classes/{name}/students:
     get:

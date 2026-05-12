@@ -80,6 +80,17 @@ type ClassTrend struct {
 	Points    []ClassTrendPoint
 }
 
+type OverviewTrendPoint struct {
+	Date               string
+	ActiveStudentCount int64
+	EventCount         int64
+	SolveCount         int64
+}
+
+type OverviewTrend struct {
+	Points []OverviewTrendPoint
+}
+
 type TeachingUserLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 }
@@ -111,4 +122,9 @@ type TeachingClassInsightRepository interface {
 	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassSummary, error)
 	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassTrend, error)
 	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
+}
+
+type TeachingOverviewRepository interface {
+	ListStudentsByClasses(ctx context.Context, classNames []string, keyword, studentNo string, since time.Time) ([]StudentItem, error)
+	GetOverviewTrend(ctx context.Context, classNames []string, since time.Time, days int) (*OverviewTrend, error)
 }

@@ -1,10 +1,15 @@
-import type { TeacherClassTrendData, TeacherStudentItem } from '@/api/contracts'
+import type {
+  TeacherOverviewClassFocusData,
+  TeacherOverviewTrendData,
+  TeacherStudentItem,
+} from '@/api/contracts'
 
 interface BuildStudentInsightRowsOptions {
   riskStudentCount: number
-  topStudent: TeacherStudentItem | null
+  spotlightStudent: TeacherStudentItem | null
   dominantWeakDimension: string
   strongestDimensionCount: number
+  focusClass: TeacherOverviewClassFocusData | null
 }
 
 export interface TeacherDashboardInsightRow {
@@ -19,38 +24,44 @@ export interface TeacherDashboardInsightRow {
 export function buildStudentInsightRows(
   options: BuildStudentInsightRowsOptions
 ): TeacherDashboardInsightRow[] {
-  const { riskStudentCount, topStudent, dominantWeakDimension, strongestDimensionCount } = options
+  const {
+    riskStudentCount,
+    spotlightStudent,
+    dominantWeakDimension,
+    strongestDimensionCount,
+    focusClass,
+  } = options
   const rows: TeacherDashboardInsightRow[] = []
 
   rows.push({
     key: 'risk',
     title:
       riskStudentCount > 0
-        ? `风险组: ${riskStudentCount} 名学生近 7 天无训练动作`
-        : '风险组: 当前没有连续掉线学生',
+        ? `风险组: ${riskStudentCount} 名学生处于低活跃或低进度区间`
+        : '风险组: 当前没有明显掉队学生',
     chips:
       riskStudentCount > 0
-        ? ['活跃断层', '建议优先回访', '影响完成率']
+        ? ['优先回访', '训练回流', '影响完成率']
         : ['训练稳定', '保持观察'],
     detail:
       riskStudentCount > 0
-        ? '这部分学生此前具备基础训练记录，但最近一周基本掉出训练节奏，优先补一组低门槛题目会比直接推高难题更有效。'
-        : '班级当前没有明显的活跃断层，可以把更多精力放在薄弱维度补强和中段学生提升上。',
+        ? '这部分学生需要先拉回训练链路，再决定是否继续推进难度；先补一组低门槛题目通常比直接加压更有效。'
+        : '当前教学范围内没有明显掉队样本，可以把更多注意力放在薄弱维度补强和重点班级观察上。',
     status: riskStudentCount > 0 ? '高优先级' : '稳定',
     tone: riskStudentCount > 0 ? 'warning' : 'ready',
   })
 
   rows.push({
     key: 'strong',
-    title: topStudent
-      ? `进步组: ${topStudent.name || topStudent.username} 当前保持领先`
+    title: spotlightStudent
+      ? `头部样本: ${spotlightStudent.name || spotlightStudent.username} 当前保持领先`
       : '进步组: 暂无头部样本',
-    chips: topStudent ? ['头部样本', '可转入更高阶题单'] : ['等待样本'],
-    detail: topStudent
-      ? `${topStudent.name || topStudent.username} 当前累计 ${topStudent.solved_count ?? 0} 题、${topStudent.total_score ?? 0} 分，可作为班级示范样本继续拉动训练氛围。`
+    chips: spotlightStudent ? ['头部样本', '可转入更高阶题单'] : ['等待样本'],
+    detail: spotlightStudent
+      ? `${spotlightStudent.name || spotlightStudent.username} 当前累计 ${spotlightStudent.solved_count ?? 0} 题、${spotlightStudent.total_score ?? 0} 分，可作为课堂示范样本继续拉动训练氛围。`
       : '还没有足够的学生表现数据用于识别班级示范样本。',
-    status: topStudent ? '可推进' : '待观察',
-    tone: topStudent ? 'ready' : 'warning',
+    status: spotlightStudent ? '可推进' : '待观察',
+    tone: spotlightStudent ? 'ready' : 'warning',
   })
 
   rows.push({
@@ -71,50 +82,74 @@ export function buildStudentInsightRows(
     tone: dominantWeakDimension !== '待观察' ? 'danger' : 'warning',
   })
 
+  rows.push({
+    key: 'class-focus',
+    title: focusClass
+      ? `${focusClass.class_name} 是当前最值得观察的班级`
+      : '重点班级仍在形成中',
+    chips: focusClass
+      ? [
+          `${focusClass.risk_student_count} 名待跟进`,
+          `活跃率 ${Math.round(focusClass.active_rate)}%`,
+        ]
+      : ['等待样本'],
+    detail: focusClass
+      ? `${focusClass.class_name} 近 7 天共有 ${focusClass.recent_event_count} 次训练事件，${focusClass.dominant_weak_dimension || '薄弱维度尚未集中'} 方向最值得继续下钻。`
+      : '当前还没有足够的范围数据用于锁定重点班级。',
+    status: focusClass ? '需观察' : '待观察',
+    tone: focusClass ? 'warning' : 'ready',
+  })
+
   return rows
 }
 
 interface BuildPortraitSummaryNotesOptions {
+  classCount: number
   strongestDimensionCount: number
   dominantWeakDimension: string
-  firstReviewTitle?: string
+  focusClassName?: string
+  riskStudentCount: number
 }
 
 export function buildPortraitSummaryNotes(options: BuildPortraitSummaryNotesOptions) {
-  const { strongestDimensionCount, dominantWeakDimension, firstReviewTitle } = options
+  const { classCount, strongestDimensionCount, dominantWeakDimension, focusClassName, riskStudentCount } =
+    options
   return [
+    {
+      key: 'scope',
+      label: '覆盖班级',
+      value: `${classCount} 个`,
+      copy: focusClassName ? `当前最值得下钻的是 ${focusClassName}` : '等待重点班级浮现',
+    },
     {
       key: 'impact',
       label: '影响学生',
       value: `${strongestDimensionCount} 人`,
       copy:
         dominantWeakDimension === '待观察'
-          ? '等待能力画像形成'
+          ? '等待薄弱维度形成'
           : `当前最集中暴露在 ${dominantWeakDimension} 方向`,
     },
     {
-      key: 'action',
-      label: '优先动作',
-      value: firstReviewTitle || '补训题单',
-      copy: '优先用结构化题单把低活跃学生重新拉回训练链路。',
-    },
-    {
-      key: 'window',
-      label: '观察窗口',
-      value: '近 7 天',
-      copy: '先观察活跃率与薄弱维度是否回升，再决定是否安排线下复盘。',
+      key: 'risk',
+      label: '待跟进学生',
+      value: `${riskStudentCount} 人`,
+      copy: '先把掉队学生拉回训练链路，再安排统一讲解或专项题单。',
     },
   ]
 }
 
-export function buildTrendSignals(points: TeacherClassTrendData['points']) {
+export function buildTrendSignals(points: TeacherOverviewTrendData['points']) {
   const totalEvents = points.reduce((sum, point) => sum + point.event_count, 0)
   const totalSolves = points.reduce((sum, point) => sum + point.solve_count, 0)
   const peakActive = points.reduce((max, point) => Math.max(max, point.active_student_count), 0)
-  const peakDay = points.reduce<TeacherClassTrendData['points'][number] | null>((current, point) => {
-    if (!current || point.event_count > current.event_count) return point
-    return current
-  }, null)
+  const peakDay = points.reduce<TeacherOverviewTrendData['points'][number] | null>(
+    (current, point) => {
+      if (!current || point.event_count > current.event_count) return point
+      return current
+    },
+    null
+  )
 
   return [
     {
@@ -130,7 +165,7 @@ export function buildTrendSignals(points: TeacherClassTrendData['points']) {
       label: '成功解题',
       value: totalSolves ? `${totalSolves}` : '--',
       copy: totalSolves
-        ? '把训练事件和解题转化放在同一条时间轴上观察更容易定位断层。'
+        ? '把训练事件和解题转化放在同一条时间轴上观察，更容易判断课堂动作是否真正起效。'
         : '等待成功解题数据形成趋势。',
     },
     {
@@ -138,7 +173,7 @@ export function buildTrendSignals(points: TeacherClassTrendData['points']) {
       label: '活跃波动',
       value: peakActive ? `${peakActive} 人` : '--',
       copy: peakActive
-        ? '班级没有明显断崖，但尾部学生的参与深度仍然偏弱。'
+        ? '当前范围内活跃人数没有明显断崖，但尾部学生的参与深度仍然偏弱。'
         : '当前还无法判断活跃波动。',
     },
   ]

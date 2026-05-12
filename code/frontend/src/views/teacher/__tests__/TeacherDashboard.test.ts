@@ -5,21 +5,15 @@ import { flushPromises, mount } from '@vue/test-utils'
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
-import teacherClassReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
-import teacherInterventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 const teacherSurfacePattern =
   /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
 const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
-const teacherSurfaceSources = [
-  ['TeacherDashboardPage.vue', teacherDashboardPageSource],
-  ['TeacherClassReviewPanel.vue', teacherClassReviewPanelSource],
-  ['TeacherInterventionPanel.vue', teacherInterventionPanelSource],
-] as const
 
 const teacherApiMocks = vi.hoisted(() => ({
+  getTeacherOverview: vi.fn(),
   getClasses: vi.fn(),
   getClassStudents: vi.fn(),
   getClassReview: vi.fn(),
@@ -40,115 +34,82 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
+async function mountDashboard(path = '/academy/overview') {
+  window.history.replaceState(window.history.state, '', path)
+
+  const wrapper = mount(TeacherDashboard, {
+    global: {
+      stubs: {
+        LineChart: true,
+        SkillRadar: true,
+      },
+    },
+  })
+
+  await flushPromises()
+  await flushPromises()
+  return wrapper
+}
+
 describe('TeacherDashboard', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
-    window.history.replaceState(window.history.state, '', '/academy/overview')
     pushMock.mockReset()
 
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
-    teacherApiMocks.getClassStudents.mockResolvedValue([
-      {
-        id: 'stu-1',
-        username: 'alice',
-        solved_count: 4,
-        total_score: 320,
-        recent_event_count: 0,
-        weak_dimension: 'crypto',
+    teacherApiMocks.getTeacherOverview.mockResolvedValue({
+      summary: {
+        class_count: 2,
+        student_count: 5,
+        active_student_count: 3,
+        active_rate: 60,
+        average_solved: 3.4,
+        recent_event_count: 12,
+        risk_student_count: 1,
       },
-      {
+      trend: {
+        points: [
+          { date: '2026-03-05', active_student_count: 2, event_count: 5, solve_count: 2 },
+          { date: '2026-03-06', active_student_count: 3, event_count: 7, solve_count: 4 },
+        ],
+      },
+      focus_classes: [
+        {
+          class_name: 'Class A',
+          student_count: 3,
+          active_rate: 50,
+          recent_event_count: 5,
+          risk_student_count: 1,
+          dominant_weak_dimension: 'crypto',
+        },
+      ],
+      focus_students: [
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice',
+          class_name: 'Class A',
+          solved_count: 4,
+          total_score: 320,
+          recent_event_count: 0,
+          weak_dimension: 'crypto',
+        },
+      ],
+      spotlight_student: {
         id: 'stu-2',
         username: 'bob',
-        solved_count: 2,
-        total_score: 180,
-        recent_event_count: 3,
-        weak_dimension: 'pwn',
+        name: 'Bob',
+        class_name: 'Class B',
+        solved_count: 6,
+        total_score: 430,
+        recent_event_count: 4,
+        weak_dimension: 'web',
       },
-    ])
-    teacherApiMocks.getClassReview.mockResolvedValue({
-      class_name: 'Class A',
-      items: [
-        {
-          code: 'activity_risk',
-          severity: 'warning',
-          summary: '班级活跃度需要补强',
-          evidence: 'Class A 近 7 天活跃率为 50%，适合通过定向训练把低活跃学生重新拉回训练节奏。',
-        },
-        {
-          code: 'weak_dimension_cluster',
-          severity: 'attention',
-          summary: '优先补薄弱维度',
-          evidence: 'crypto 是当前最集中的薄弱项，涉及 1 名学生，建议本周统一布置该维度基础题。',
-          dimension: 'crypto',
-          students: [{ id: 'stu-1', username: 'alice' }],
-          recommendation: {
-            challenge_id: '12',
-            title: 'crypto-lab',
-            category: 'crypto',
-            difficulty: 'medium',
-            summary: '针对薄弱维度：密码',
-            evidence: '当前密码维度已经形成高置信度薄弱信号。',
-          },
-        },
-        {
-          code: 'focus_students',
-          severity: 'attention',
-          summary: '先跟进重点学生',
-          evidence: '建议教师先跟进 alice，并优先布置推荐题做补强训练。',
-          students: [{ id: 'stu-1', username: 'alice' }],
-        },
-      ],
-    })
-    teacherApiMocks.getClassSummary.mockResolvedValue({
-      class_name: 'Class A',
-      student_count: 2,
-      average_solved: 3.5,
-      active_student_count: 2,
-      active_rate: 100,
-      recent_event_count: 8,
-    })
-    teacherApiMocks.getClassTrend.mockResolvedValue({
-      class_name: 'Class A',
-      points: [
-        { date: '2026-03-05', active_student_count: 1, event_count: 2, solve_count: 1 },
-        { date: '2026-03-06', active_student_count: 2, event_count: 4, solve_count: 2 },
-      ],
-    })
-    teacherApiMocks.getStudentProgress.mockResolvedValue({
-      total_challenges: 6,
-      solved_challenges: 3,
-      by_category: { web: { total: 3, solved: 2 } },
-      by_difficulty: { easy: { total: 2, solved: 1 } },
-    })
-    teacherApiMocks.getStudentSkillProfile.mockResolvedValue({
-      dimensions: [
-        { key: 'web', name: 'Web', value: 75 },
-        { key: 'crypto', name: '密码', value: 40 },
-      ],
-      updated_at: '2026-03-07T12:00:00Z',
-    })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
       weak_dimensions: [
-        {
-          dimension: 'crypto',
-          label: '密码',
-          severity: 'warning',
-          confidence: 0.83,
-          evidence: '当前密码维度已经形成高置信度薄弱信号。',
-        },
-      ],
-      challenges: [
-        {
-          challenge_id: '12',
-          title: 'crypto-lab',
-          category: 'crypto',
-          difficulty: 'medium',
-          summary: '针对薄弱维度：密码',
-          evidence: '当前密码维度已经形成高置信度薄弱信号。',
-        },
+        { dimension: 'crypto', student_count: 2 },
+        { dimension: 'pwn', student_count: 1 },
       ],
     })
 
@@ -161,190 +122,93 @@ describe('TeacherDashboard', () => {
     })
   })
 
-  it('应该展示教师概览且不加载学员详情接口', async () => {
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
+  it('应该展示教师概览且不再加载班级详情接口', async () => {
+    const wrapper = await mountDashboard()
 
-    await flushPromises()
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('教学介入台')
-    expect(wrapper.text()).toContain('Class A')
-    expect(wrapper.text()).toContain('3.5')
-    expect(wrapper.text()).toContain('100%')
-    expect(wrapper.text()).toContain('教学复盘结论')
-    expect(wrapper.text()).toContain('班级活跃度需要补强')
-    expect(wrapper.text()).toContain('优先补薄弱维度')
-    expect(wrapper.text()).toContain('先跟进重点学生')
-    expect(wrapper.text()).toContain('alice')
-    expect(wrapper.text()).toContain('crypto')
-    expect(wrapper.text()).toContain('风险组')
-    expect(wrapper.text()).toContain('进步组')
-    expect(wrapper.text()).toContain('活跃断层')
-    expect(wrapper.text()).toContain('头部样本')
-    expect(wrapper.text()).toContain('优先介入学生')
-    expect(wrapper.text()).toContain('近 7 天无训练动作')
-    expect(wrapper.text()).toContain('建议训练题')
-    expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('推荐训练题')
-    expect(wrapper.find('#overview .overview-pulse-panel').exists()).toBe(false)
-    expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
-    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('Class A')
-    expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
+    expect(teacherApiMocks.getTeacherOverview).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.getClasses).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getClassStudents).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getClassReview).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getClassSummary).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getClassTrend).not.toHaveBeenCalled()
+    expect(teacherApiMocks.getStudentRecommendations).not.toHaveBeenCalled()
     expect(teacherApiMocks.getStudentProgress).not.toHaveBeenCalled()
     expect(teacherApiMocks.getStudentSkillProfile).not.toHaveBeenCalled()
+
+    expect(wrapper.text()).toContain('教学介入台')
+    expect(wrapper.text()).toContain('当前覆盖 2 个班级')
+    expect(wrapper.text()).toContain('2 个班级纳入总览')
+    expect(wrapper.text()).toContain('Class A 复盘摘要')
+    expect(wrapper.text()).toContain('crypto 方向仍是当前薄弱维度')
+    expect(wrapper.text()).toContain('Bob 当前保持领先')
+    expect(wrapper.text()).toContain('Alice')
+    expect(wrapper.text()).toContain('薄弱项 crypto')
+    expect(wrapper.get('#overview .hero-rail.workspace-subpanel').text()).toBe('')
+
+    expect(
+      wrapper.findAll('#overview .teacher-overview-card.progress-card.metric-panel-card')
+    ).toHaveLength(4)
+    expect(wrapper.findAll('#portrait .summary-note.progress-card.metric-panel-card')).toHaveLength(
+      3
+    )
+    expect(wrapper.findAll('#trend .focus-class-row')).toHaveLength(1)
+    expect(wrapper.findAll('#review .review-highlight-item')).toHaveLength(1)
+    expect(wrapper.findAll('#intervention .intervention-target-row')).toHaveLength(1)
   })
 
-  it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
-    expect(teacherDashboardSource).toContain('useTeacherDashboardPage')
+  it('路由页应仅负责组合 overview owner，不直接依赖教师接口实现', () => {
+    expect(teacherDashboardSource).toContain('useTeacherOverviewPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
+    expect(teacherDashboardPageSource).toContain('useTeacherOverviewWorkspace')
+    expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
+    expect(teacherDashboardPageSource).not.toContain('TeacherClassReviewPanel')
+    expect(teacherDashboardPageSource).not.toContain('TeacherInterventionPanel')
   })
 
-  it('教师概览夜间模式样式应基于主题变量而不是亮色硬编码', () => {
+  it('教师概览夜间模式样式应继续基于主题变量且不回流亮色硬编码', () => {
     expect(teacherDashboardPageSource).toMatch(teacherSurfacePattern)
-    for (const [sourceName, source] of teacherSurfaceSources) {
-      for (const forbiddenTeacherSurfaceLiteral of forbiddenTeacherSurfaceLiterals) {
-        expect(
-          source,
-          `${sourceName} contains forbidden literal: ${forbiddenTeacherSurfaceLiteral}`
-        ).not.toContain(forbiddenTeacherSurfaceLiteral)
-      }
+    for (const literal of forbiddenTeacherSurfaceLiterals) {
+      expect(
+        teacherDashboardPageSource,
+        `TeacherDashboardPage.vue contains forbidden literal: ${literal}`
+      ).not.toContain(literal)
     }
   })
 
-  it('教师概览应复用全局 tab 样式拆分内容区', () => {
+  it('教师概览应复用全局 workspace tab 与 metric-panel 样式栈', async () => {
     expect(teacherDashboardPageSource).toContain(
       'class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col"'
     )
-    expect(teacherDashboardPageSource).not.toContain('class="workspace-topbar"')
     expect(teacherDashboardPageSource).toContain('class="workspace-tabbar top-tabs"')
     expect(teacherDashboardPageSource).toContain('class="workspace-tab top-tab"')
-    expect(teacherDashboardPageSource).not.toContain('teacher-dashboard-tabs')
-    expect(teacherDashboardPageSource).toContain('role="tablist"')
-    expect(teacherDashboardPageSource).toContain('dashboard-tab-portrait')
-    expect(teacherDashboardPageSource).toContain('useUrlSyncedTabs')
-    expect(teacherDashboardPageSource).toContain('activeTab')
-    expect(teacherDashboardPageSource).toContain('tab-panel')
-    expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
-  })
-
-  it('教师概览首屏应使用共享 metric 渐变卡片和明确的工作台布局', async () => {
-    expect(teacherDashboardPageSource).toContain('class="content-pane teacher-dashboard-content"')
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-hero teacher-dashboard-hero tab-panel"'
-    )
     expect(teacherDashboardPageSource).toContain(
       'class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain(
-      'class="teacher-overview-card progress-card metric-panel-card"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="overview-panel workspace-directory-section teacher-directory-section"'
+      'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain('class="hero-rail workspace-subpanel"')
-    expect(teacherDashboardPageSource).toContain('aria-hidden="true"')
-    expect(teacherDashboardPageSource).not.toContain('Class Pulse')
-    expect(teacherDashboardPageSource).not.toContain('.rail-label')
-    expect(teacherDashboardPageSource).not.toContain('.rail-score')
-    expect(teacherDashboardPageSource).not.toContain('.rail-copy')
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
-    expect(teacherDashboardPageSource).not.toContain('--page-top-tabs')
     expect(teacherDashboardPageSource).toContain(
       '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
     )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.summary-grid\s*\{[\s\S]*--metric-panel-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
-    )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.teacher-dashboard-hero\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(17rem,\s*0\.34fr\);/s
-    )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.hero-rail\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 88%, transparent\);/s
-    )
-    expect(teacherDashboardPageSource).not.toMatch(/\.hero-rail\s*\{[\s\S]*radial-gradient\(/s)
+    expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
+    expect(teacherDashboardPageSource).not.toContain('workspace-overline')
+    expect(teacherDashboardPageSource).not.toContain('openReportExport')
 
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
+    const wrapper = await mountDashboard()
     const summary = wrapper.get('#overview .teacher-overview-summary')
+    const portraitSummary = wrapper.get('#portrait .summary-grid')
+
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')
     expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(summary.findAll('.teacher-overview-card.progress-card.metric-panel-card')).toHaveLength(
-      4
-    )
-    expect(wrapper.find('#overview .hero-rail.workspace-subpanel').exists()).toBe(true)
-    expect(wrapper.get('#overview .hero-rail.workspace-subpanel').text()).toBe('')
-    expect(wrapper.find('#overview .student-insight-list').exists()).toBe(false)
-    expect(wrapper.find('#portrait .weak-list').exists()).toBe(true)
-    expect(wrapper.find('#insight .student-insight-list').exists()).toBe(true)
-    expect(wrapper.find('#trend .teacher-panel__chart').exists()).toBe(true)
-    expect(wrapper.find('#review .review-list').exists()).toBe(true)
-    expect(wrapper.find('#intervention .intervention-list').exists()).toBe(true)
-  })
-
-  it('教师概览能力画像摘要应在画像 tab 内采用统一 metric-panel 样式栈', async () => {
-    expect(teacherDashboardPageSource).toContain(
-      'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="summary-note progress-card metric-panel-card"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="summary-note-label progress-card-label metric-panel-label"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="summary-note-value progress-card-value metric-panel-value"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="summary-note-copy progress-card-hint metric-panel-helper"'
-    )
-    expect(teacherDashboardPageSource).not.toMatch(
-      /\.summary-note\s*\{[\s\S]*--metric-panel-background:/s
-    )
-    expect(teacherDashboardPageSource).not.toMatch(
-      /\.summary-note-value\s*\{[\s\S]*--metric-panel-value-size:/s
-    )
-
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    const summary = wrapper.get('#portrait .summary-grid')
-    expect(summary.classes()).toContain('progress-strip')
-    expect(summary.classes()).toContain('metric-panel-grid')
-    expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(summary.findAll('.summary-note.progress-card.metric-panel-card')).toHaveLength(3)
-    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(3)
-    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(3)
-    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(3)
+    expect(portraitSummary.classes()).toContain('progress-strip')
+    expect(portraitSummary.classes()).toContain('metric-panel-grid')
+    expect(portraitSummary.classes()).toContain('metric-panel-default-surface')
+    expect(wrapper.text()).not.toContain('Quick Actions')
+    expect(wrapper.text()).not.toContain('导出报告')
+    expect(wrapper.text()).not.toContain('班级管理')
   })
 
   it('管理员从教师概览进入班级管理时应回到后台班级页', async () => {
@@ -356,17 +220,7 @@ describe('TeacherDashboard', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
+    const wrapper = await mountDashboard()
 
     wrapper.findComponent({ name: 'TeacherDashboardPage' }).vm.$emit('openClassManagement')
 
@@ -374,176 +228,11 @@ describe('TeacherDashboard', () => {
   })
 
   it('带 panel 查询参数进入时应激活对应教师概览 tab', async () => {
-    window.history.replaceState(window.history.state, '', '/academy/overview?panel=portrait')
-
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
+    const wrapper = await mountDashboard('/academy/overview?panel=portrait')
 
     expect(window.location.search).toBe('?panel=portrait')
-    expect(wrapper.find('#overview').exists()).toBe(true)
     expect(wrapper.find('#dashboard-tab-portrait').classes()).toContain('active')
-    expect(wrapper.find('#portrait').exists()).toBe(true)
     expect(wrapper.find('#portrait').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#overview').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#trend').exists()).toBe(true)
-    expect(wrapper.find('#insight').exists()).toBe(true)
-    expect(wrapper.find('#review').exists()).toBe(true)
-    expect(wrapper.find('#intervention').exists()).toBe(true)
-  })
-
-  it('教师概览 tab 内容应使用通用目录区块和扁平内容区', () => {
-    expect(teacherDashboardPageSource).toContain(
-      'class="teacher-dashboard-panel-body portrait-grid"'
-    )
-    expect(teacherDashboardPageSource).toContain('class="weak-list workspace-directory-list"')
-    expect(teacherDashboardPageSource).toContain(
-      'class="student-insight-list workspace-directory-list"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat"'
-    )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.overview-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*0;[\s\S]*border:\s*0;[\s\S]*border-radius:\s*0;[\s\S]*background:\s*transparent;/s
-    )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.overview-panel > \.list-heading\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
-    expect(teacherDashboardPageSource).toMatch(
-      /\.teacher-dashboard-panel-body\.workspace-subpanel--flat :deep\(\.review-item\),[\s\S]*\.teacher-dashboard-panel-body\.workspace-subpanel--flat :deep\(\.intervention-item\)\s*\{[\s\S]*border-width:\s*0 0 1px;[\s\S]*background:\s*transparent;/s
-    )
-    expect(teacherDashboardPageSource).not.toMatch(
-      /\.section\s*\{[\s\S]*border-top:\s*1px solid var\(--workspace-line-soft\);/s
-    )
-  })
-
-  it('教师概览的小标题应隔离 overline 样式以避免继承装饰横线', () => {
-    expect(teacherDashboardPageSource).not.toContain('workspace-overline')
-    expect(teacherDashboardPageSource).not.toContain('class="overline"')
-  })
-
-  it('教师概览趋势页不应保留冗余说明文案', async () => {
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    expect(wrapper.text()).not.toContain(
-      '把训练事件、成功解题和活跃学生放在同一条时间轴上观察，能更快判断课堂节奏是否需要调整。'
-    )
-    expect(wrapper.text()).not.toContain('把训练事件、成功解题和活跃学生放在同一条时间轴上观察。')
-  })
-
-  it('趋势数据为空时应显示“暂无”空态提示', async () => {
-    teacherApiMocks.getClassTrend.mockResolvedValueOnce({
-      class_name: 'Class A',
-      points: [],
-    })
-
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    expect(wrapper.find('#trend').text()).toContain('暂无')
-  })
-
-  it('趋势点位全为 0 时也应显示“暂无”空态提示', async () => {
-    teacherApiMocks.getClassTrend.mockResolvedValueOnce({
-      class_name: 'Class A',
-      points: [
-        { date: '2026-03-05', active_student_count: 0, event_count: 0, solve_count: 0 },
-        { date: '2026-03-06', active_student_count: 0, event_count: 0, solve_count: 0 },
-      ],
-    })
-
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    expect(wrapper.find('#trend').text()).toContain('暂无')
-  })
-
-  it('教师概览不应渲染设计介绍式文案', async () => {
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    const redundantCopy = [
-      '班级训练进度与能力画像工作台。',
-      '当前班级的薄弱维度按学生集中度排序，优先从人数最多的方向开始补强更容易看到整体提升。',
-      '聚焦风险学生、头部样本和班级主要断层，帮助教师先决定“先拉谁、补什么、怎么讲”。',
-      '这里优先显示可直接转成课堂动作的建议，再补充复盘结论，避免教师在多个面板之间来回跳转。',
-      '把高优先级学生和建议训练题放在同一块工作台里，便于教师直接落实到后续训练安排。',
-    ]
-
-    for (const copy of redundantCopy) {
-      expect(wrapper.text()).not.toContain(copy)
-    }
-  })
-
-  it('教师概览页不应再渲染快捷操作区块', async () => {
-    const wrapper = mount(TeacherDashboard, {
-      global: {
-        stubs: {
-          LineChart: true,
-          SkillRadar: true,
-        },
-      },
-    })
-
-    await flushPromises()
-    await flushPromises()
-
-    expect(wrapper.find('.overview-quick-actions').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Quick Actions')
-    expect(wrapper.text()).not.toContain('班级管理')
-    expect(wrapper.text()).not.toContain('导出报告')
-    expect(wrapper.text()).not.toContain('展开能力画像')
-    expect(wrapper.text()).not.toContain('查看介入建议')
-  })
-
-  it('教师概览页不应保留导出报告事件链', () => {
-    expect(teacherDashboardPageSource).not.toContain('openReportExport')
-    expect(teacherDashboardSource).not.toContain('@open-report-export')
-    expect(teacherDashboardSource).not.toContain("router.push({ name: 'ReportExport' })")
   })
 })

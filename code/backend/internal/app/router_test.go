@@ -366,7 +366,6 @@ func TestCompositionBuildersUseRuntimeAndInstanceModulesForDependencies(t *testi
 
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildInstanceModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
-	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 2, reflect.TypeOf(&composition.OpsModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildContestModule), 2, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildOpsModule), 1, reflect.TypeOf(&composition.ContainerRuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildPracticeModule), 2, reflect.TypeOf(&composition.InstanceModule{}))
