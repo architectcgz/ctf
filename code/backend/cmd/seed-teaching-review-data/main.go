@@ -29,12 +29,41 @@ import (
 )
 
 const (
-	seedClassName       = "信安2401"
-	seedTeacherUsername = "zhaoxiaofeng"
-	defaultPassword     = "Password123"
-	seedUserAgent       = "seed-teaching-review-data/1.0"
-	seedAWDContestTitle = "教学复盘样本 AWD 迁移演练"
+	seedClassName                  = "信安2401"
+	seedTeacherUsername            = "zhaoxiaofeng"
+	defaultPassword                = "Password123"
+	seedUserAgent                  = "seed-teaching-review-data/1.0"
+	seedAWDContestTitle            = "教学复盘样本 AWD 迁移演练"
+	coverageExpansionMinChallenges = 48
+	coverageMaxStudentsPerCategory = 4
 )
+
+var coverageStudentSeeds = []userSeed{
+	{Username: "guhaoran", Name: "顾浩然"},
+	{Username: "xushiyu", Name: "徐诗雨"},
+	{Username: "liangzixuan", Name: "梁梓轩"},
+	{Username: "tianruohan", Name: "田若涵"},
+	{Username: "songyiran", Name: "宋奕然"},
+	{Username: "hejingyi", Name: "何静怡"},
+	{Username: "wenhaoyu", Name: "温浩宇"},
+	{Username: "qinchuxi", Name: "秦初曦"},
+	{Username: "zhujiale", Name: "朱嘉乐"},
+	{Username: "luoyanxi", Name: "罗妍希"},
+	{Username: "pengzihan", Name: "彭子涵"},
+	{Username: "shenmingrui", Name: "沈铭睿"},
+	{Username: "caoruiwen", Name: "曹芮雯"},
+	{Username: "fuyuze", Name: "付宇泽"},
+	{Username: "linwenqi", Name: "林文琪"},
+	{Username: "duyichen", Name: "杜奕辰"},
+	{Username: "jiangzimo", Name: "蒋梓墨"},
+	{Username: "maoruiting", Name: "毛瑞婷"},
+	{Username: "yangjunhao", Name: "杨骏豪"},
+	{Username: "zhaomengyao", Name: "赵梦瑶"},
+	{Username: "wuxichen", Name: "吴希辰"},
+	{Username: "sunyuhan", Name: "孙语涵"},
+	{Username: "tanjiahao", Name: "谭嘉豪"},
+	{Username: "zhouyuxin", Name: "周雨昕"},
+}
 
 type userSeed struct {
 	Username  string
@@ -135,6 +164,19 @@ type seededStudentResult struct {
 	Archive              *assessmentcmd.ReviewArchiveData
 }
 
+type categoryCoverage struct {
+	Published int
+	Used      int
+}
+
+type seedCoverageSummary struct {
+	PublishedChallenges          int
+	UsedPracticeChallenges       int
+	StudentsWithRecommendations  int
+	UniqueTopRecommendationCount int
+	ByCategory                   map[string]categoryCoverage
+}
+
 type seedResult struct {
 	ClassName            string
 	Teacher              *model.User
@@ -142,6 +184,7 @@ type seedResult struct {
 	AWDAttackCount       int
 	Students             []seededStudentResult
 	ClassReview          *dto.TeacherClassReviewResp
+	Coverage             seedCoverageSummary
 }
 
 func main() {
@@ -207,7 +250,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 	if err != nil {
 		return nil, err
 	}
-	scenarios := buildStudentScenarios()
+	scenarios := buildStudentScenarios(catalog)
 
 	teacherSpec := userSeed{
 		Username:  seedTeacherUsername,
@@ -280,7 +323,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 	recommendationService := assessmentqry.NewRecommendationService(
 		assessmentRepo,
 		challengeinfra.NewRepository(db),
-		cache,
+		assessmentinfra.NewRecommendationCacheStore(cache),
 		cfg.Recommendation,
 		zap.NewNop(),
 	)
@@ -354,6 +397,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		AWDAttackCount:       awdAttackCount,
 		Students:             results,
 		ClassReview:          classReview,
+		Coverage:             buildSeedCoverageSummary(catalog, scenarios, results),
 	}, nil
 }
 
@@ -432,7 +476,262 @@ func loadAWDChallengeCatalog(ctx context.Context, db *gorm.DB) (*awdChallengeCat
 	return catalog, nil
 }
 
-func buildStudentScenarios() []studentScenario {
+func buildStudentScenarios(catalog *challengeCatalog) []studentScenario {
+	scenarios := buildBaseStudentScenarios()
+	return append(scenarios, buildCoverageStudentScenarios(catalog)...)
+}
+
+func buildCoverageStudentScenarios(catalog *challengeCatalog) []studentScenario {
+	if !shouldExpandCoverage(catalog) {
+		return nil
+	}
+
+	scenarios := make([]studentScenario, 0, len(model.AllDimensions)*2)
+	seedIndex := 0
+	for dimIndex, dimension := range model.AllDimensions {
+		items := catalog.byCategory[dimension]
+		studentsPerCategory := coverageStudentsPerCategory(len(items))
+		if studentsPerCategory == 0 {
+			continue
+		}
+		for variant := 0; variant < studentsPerCategory; variant++ {
+			if seedIndex >= len(coverageStudentSeeds) {
+				return scenarios
+			}
+			spec := coverageStudentSeeds[seedIndex]
+			seedIndex++
+			scenarios = append(scenarios, buildCoverageStudentScenario(spec, dimIndex, variant, catalog))
+		}
+	}
+	return scenarios
+}
+
+func shouldExpandCoverage(catalog *challengeCatalog) bool {
+	if catalog == nil {
+		return false
+	}
+	return catalog.totalCount() >= coverageExpansionMinChallenges
+}
+
+func coverageStudentsPerCategory(challengeCount int) int {
+	if challengeCount < 4 {
+		return 0
+	}
+	students := challengeCount / 4
+	if students < 1 {
+		students = 1
+	}
+	if students > coverageMaxStudentsPerCategory {
+		students = coverageMaxStudentsPerCategory
+	}
+	return students
+}
+
+func buildCoverageStudentScenario(
+	spec userSeed,
+	dimensionIndex int,
+	variant int,
+	catalog *challengeCatalog,
+) studentScenario {
+	weakDimension := model.AllDimensions[dimensionIndex%len(model.AllDimensions)]
+	strongDimension := nextCoverageDimension(catalog, dimensionIndex+1, weakDimension)
+	steadyDimension := nextCoverageDimension(catalog, dimensionIndex+2, weakDimension, strongDimension)
+	studentSerial := dimensionIndex*coverageMaxStudentsPerCategory + variant + 1
+
+	spec.Role = model.RoleStudent
+	spec.ClassName = seedClassName
+	spec.StudentNo = fmt.Sprintf("20243102%02d", studentSerial)
+	spec.Email = fmt.Sprintf("%s@xinan.example.edu.cn", spec.StudentNo)
+
+	weakItems := catalog.byCategory[weakDimension]
+	weakSolvedPrefix := coverageWeakSolvedPrefixCount(len(weakItems), variant)
+	weakBase := coverageWeakAttemptBase(len(weakItems), weakSolvedPrefix)
+
+	labelSuffix := []string{
+		"高试错补量",
+		"稳态训练补量",
+		"短时冲刺补量",
+		"交替练习补量",
+	}[variant%4]
+	baseOffset := -6*24*time.Hour + time.Duration(dimensionIndex*11+variant*7)*time.Hour
+	sessions := make([]sessionSeed, 0, 4+weakSolvedPrefix)
+	if strongDimension != "" {
+		strongItems := catalog.byCategory[strongDimension]
+		strongBase := variant % len(strongItems)
+		sessions = append(sessions,
+			buildSuccessfulCoverageSession(strongDimension, strongBase, baseOffset+4*time.Hour, 50*time.Minute, variant, spec.Name),
+		)
+	}
+	for solvedIndex := 0; solvedIndex < weakSolvedPrefix; solvedIndex++ {
+		solvedOffsetHours := 12 + solvedIndex*8
+		if variant > 0 && solvedIndex == weakSolvedPrefix-1 {
+			// Break the wrong-submission streak without pulling all successful activity out of the week tail.
+			solvedOffsetHours = 33
+		}
+		sessions = append(sessions, buildSuccessfulCoverageSession(
+			weakDimension,
+			solvedIndex,
+			baseOffset+time.Duration(solvedOffsetHours)*time.Hour,
+			38*time.Minute,
+			variant+dimensionIndex*10+solvedIndex,
+			spec.Name,
+		))
+	}
+	sessions = append(sessions,
+		buildWeakCoverageSession(weakDimension, weakBase, baseOffset+22*time.Hour, 65*time.Minute, false, variant),
+		buildWeakCoverageSession(weakDimension, (weakBase+1)%len(weakItems), baseOffset+43*time.Hour, 70*time.Minute, variant%2 == 1, variant+1),
+	)
+	if steadyDimension != "" {
+		steadyItems := catalog.byCategory[steadyDimension]
+		steadyBase := (variant + dimensionIndex) % len(steadyItems)
+		sessions = append(sessions, buildSuccessfulCoverageSession(steadyDimension, steadyBase, baseOffset+65*time.Hour, 45*time.Minute, variant+dimensionIndex, spec.Name))
+	}
+
+	return studentScenario{
+		Label:    fmt.Sprintf("扩展覆盖 / %s 弱项 / %s", weakDimension, labelSuffix),
+		User:     spec,
+		Profiles: buildCoverageProfiles(weakDimension, strongDimension, steadyDimension, variant),
+		Sessions: sessions,
+	}
+}
+
+func nextCoverageDimension(catalog *challengeCatalog, startIndex int, exclude ...string) string {
+	if catalog == nil || len(model.AllDimensions) == 0 {
+		return ""
+	}
+
+	excluded := make(map[string]struct{}, len(exclude))
+	for _, dimension := range exclude {
+		if dimension == "" {
+			continue
+		}
+		excluded[dimension] = struct{}{}
+	}
+
+	for offset := 0; offset < len(model.AllDimensions); offset++ {
+		dimension := model.AllDimensions[(startIndex+offset)%len(model.AllDimensions)]
+		if _, skip := excluded[dimension]; skip {
+			continue
+		}
+		if len(catalog.byCategory[dimension]) == 0 {
+			continue
+		}
+		return dimension
+	}
+	return ""
+}
+
+func coverageWeakSolvedPrefixCount(challengeCount int, variant int) int {
+	if challengeCount <= 2 || variant <= 0 {
+		return 0
+	}
+	maxPrefix := challengeCount - 2
+	if variant > maxPrefix {
+		return maxPrefix
+	}
+	return variant
+}
+
+func coverageWeakAttemptBase(challengeCount int, solvedPrefix int) int {
+	if challengeCount <= 1 {
+		return 0
+	}
+	base := solvedPrefix * 2
+	if base+1 < challengeCount {
+		return base
+	}
+	if solvedPrefix < challengeCount-1 {
+		return solvedPrefix
+	}
+	return challengeCount - 2
+}
+
+func buildCoverageProfiles(
+	weakDimension string,
+	strongDimension string,
+	steadyDimension string,
+	variant int,
+) map[string]float64 {
+	profiles := make(map[string]float64, len(model.AllDimensions))
+	for index, dimension := range model.AllDimensions {
+		profiles[dimension] = 0.48 + float64((index+variant)%3)*0.04
+	}
+	profiles[weakDimension] = 0.18 + float64(variant%3)*0.06
+	if strongDimension != "" && strongDimension != weakDimension {
+		profiles[strongDimension] = 0.78 - float64(variant%3)*0.03
+	}
+	if steadyDimension != "" && steadyDimension != weakDimension && steadyDimension != strongDimension {
+		profiles[steadyDimension] = 0.64 - float64(variant%2)*0.04
+	}
+	return profiles
+}
+
+func buildSuccessfulCoverageSession(
+	category string,
+	index int,
+	startOffset time.Duration,
+	duration time.Duration,
+	variant int,
+	studentName string,
+) sessionSeed {
+	return sessionSeed{
+		ChallengeCategory: category,
+		ChallengeIndex:    index,
+		StartOffset:       startOffset,
+		Duration:          duration,
+		Access:            true,
+		ProxyRequests: []proxySeed{
+			{Offset: 5 * time.Minute, Method: "GET", Path: "/", Status: 200},
+			{Offset: 18 * time.Minute, Method: "POST", Path: "/solve", Status: 200, PayloadPreview: fmt.Sprintf("variant=%d", variant)},
+		},
+		Submissions: []submissionSeed{
+			{Offset: 32 * time.Minute, Flag: fmt.Sprintf("flag{%s-success-%d}", category, variant), Correct: true},
+		},
+		Writeup: &writeupSeed{
+			Offset:      40 * time.Minute,
+			Title:       fmt.Sprintf("%s 维度训练记录", strings.TrimSpace(studentName)),
+			Content:     fmt.Sprintf("围绕 %s 维度完成一次可复盘的成功训练，保留了关键入口、利用路径和提交结论。", category),
+			Published:   true,
+			Recommended: variant%3 == 0,
+		},
+	}
+}
+
+func buildWeakCoverageSession(
+	category string,
+	index int,
+	startOffset time.Duration,
+	duration time.Duration,
+	finishWithSuccess bool,
+	variant int,
+) sessionSeed {
+	submissions := []submissionSeed{
+		{Offset: 21 * time.Minute, Flag: fmt.Sprintf("flag{%s-miss-%d-a}", category, variant), Correct: false},
+		{Offset: 39 * time.Minute, Flag: fmt.Sprintf("flag{%s-miss-%d-b}", category, variant), Correct: false},
+	}
+	if finishWithSuccess {
+		submissions = append(submissions, submissionSeed{
+			Offset:  56 * time.Minute,
+			Flag:    fmt.Sprintf("flag{%s-hit-%d}", category, variant),
+			Correct: true,
+		})
+	}
+	return sessionSeed{
+		ChallengeCategory: category,
+		ChallengeIndex:    index,
+		StartOffset:       startOffset,
+		Duration:          duration,
+		Access:            true,
+		ProxyRequests: []proxySeed{
+			{Offset: 6 * time.Minute, Method: "GET", Path: "/", Status: 200},
+			{Offset: 15 * time.Minute, Method: "GET", Path: "/hint", Status: 200},
+			{Offset: 30 * time.Minute, Method: "POST", Path: "/attempt", Status: 400, PayloadPreview: fmt.Sprintf("dimension=%s", category)},
+		},
+		Submissions: submissions,
+	}
+}
+
+func buildBaseStudentScenarios() []studentScenario {
 	return []studentScenario{
 		{
 			Label: "稳定闭环 + AWD 迁移",
@@ -864,34 +1163,73 @@ func ensureUserRole(tx *gorm.DB, userID int64, roleCode string) error {
 }
 
 func resetSeededData(tx *gorm.DB, userIDs []int64, teacherID int64) error {
-	if len(userIDs) == 0 {
+	_ = teacherID
+	seedUserIDs, extraUserIDs, err := collectSeedUserIDs(tx, userIDs)
+	if err != nil {
+		return err
+	}
+	if len(seedUserIDs) == 0 {
 		return nil
 	}
 	if err := resetSeededAWDData(tx); err != nil {
 		return err
 	}
-	if err := tx.Where("user_id IN ?", userIDs).Delete(&model.AuditLog{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.AuditLog{}).Error; err != nil {
 		return fmt.Errorf("delete audit logs: %w", err)
 	}
-	if err := tx.Where("user_id IN ?", userIDs).Delete(&model.SubmissionWriteup{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.SubmissionWriteup{}).Error; err != nil {
 		return fmt.Errorf("delete submission writeups: %w", err)
 	}
-	if err := tx.Where("user_id IN ? AND contest_id IS NULL", userIDs).Delete(&model.Submission{}).Error; err != nil {
+	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&model.Submission{}).Error; err != nil {
 		return fmt.Errorf("delete submissions: %w", err)
 	}
-	if err := tx.Where("user_id IN ? AND contest_id IS NULL", userIDs).Delete(&model.Instance{}).Error; err != nil {
+	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&model.Instance{}).Error; err != nil {
 		return fmt.Errorf("delete instances: %w", err)
 	}
-	if err := tx.Where("user_id IN ?", userIDs).Delete(&model.SkillProfile{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.SkillProfile{}).Error; err != nil {
 		return fmt.Errorf("delete skill profiles: %w", err)
 	}
-	if err := tx.Where("class_name = ? OR user_id IN ?", seedClassName, userIDs).Delete(&model.Report{}).Error; err != nil {
+	if err := tx.Where("class_name = ? OR user_id IN ?", seedClassName, seedUserIDs).Delete(&model.Report{}).Error; err != nil {
 		return fmt.Errorf("delete reports: %w", err)
 	}
-	if err := tx.Where("user_id = ?", teacherID).Delete(&model.UserRole{}).Error; err != nil {
-		return fmt.Errorf("reset teacher role: %w", err)
+	if len(extraUserIDs) > 0 {
+		if err := tx.Where("user_id IN ?", extraUserIDs).Delete(&model.UserRole{}).Error; err != nil {
+			return fmt.Errorf("delete stale user roles: %w", err)
+		}
+		if err := tx.Unscoped().Where("id IN ?", extraUserIDs).Delete(&model.User{}).Error; err != nil {
+			return fmt.Errorf("delete stale seed users: %w", err)
+		}
 	}
-	return ensureUserRole(tx, teacherID, model.RoleTeacher)
+	return nil
+}
+
+func collectSeedUserIDs(tx *gorm.DB, currentUserIDs []int64) ([]int64, []int64, error) {
+	var seedUsers []model.User
+	if err := tx.Unscoped().
+		Where("class_name = ? OR username = ?", seedClassName, seedTeacherUsername).
+		Find(&seedUsers).Error; err != nil {
+		return nil, nil, fmt.Errorf("find seed users: %w", err)
+	}
+
+	if len(seedUsers) == 0 {
+		return nil, nil, nil
+	}
+
+	keepSet := make(map[int64]struct{}, len(currentUserIDs))
+	for _, userID := range currentUserIDs {
+		keepSet[userID] = struct{}{}
+	}
+
+	seedUserIDs := make([]int64, 0, len(seedUsers))
+	extraUserIDs := make([]int64, 0, len(seedUsers))
+	for _, user := range seedUsers {
+		seedUserIDs = append(seedUserIDs, user.ID)
+		if _, ok := keepSet[user.ID]; ok {
+			continue
+		}
+		extraUserIDs = append(extraUserIDs, user.ID)
+	}
+	return seedUserIDs, extraUserIDs, nil
 }
 
 func resetSeededAWDData(tx *gorm.DB) error {
@@ -1206,6 +1544,17 @@ func (c *challengeCatalog) pick(category string, index int) (challengeRef, error
 	return items[index], nil
 }
 
+func (c *challengeCatalog) totalCount() int {
+	if c == nil {
+		return 0
+	}
+	total := 0
+	for _, items := range c.byCategory {
+		total += len(items)
+	}
+	return total
+}
+
 func (c *awdChallengeCatalog) pick(category string, index int) (awdChallengeRef, error) {
 	normalized := strings.ToLower(strings.TrimSpace(category))
 	items := c.byCategory[normalized]
@@ -1220,6 +1569,59 @@ func countAWDAttacks(scenario *awdScenario) int {
 		return 0
 	}
 	return len(scenario.Attacks)
+}
+
+func buildSeedCoverageSummary(
+	catalog *challengeCatalog,
+	scenarios []studentScenario,
+	results []seededStudentResult,
+) seedCoverageSummary {
+	summary := seedCoverageSummary{
+		ByCategory: make(map[string]categoryCoverage, len(model.AllDimensions)),
+	}
+	if catalog == nil {
+		return summary
+	}
+
+	usedByCategory := make(map[string]map[int64]struct{}, len(model.AllDimensions))
+	usedPracticeChallenges := make(map[int64]struct{})
+	for _, dimension := range model.AllDimensions {
+		items := catalog.byCategory[dimension]
+		summary.PublishedChallenges += len(items)
+		summary.ByCategory[dimension] = categoryCoverage{Published: len(items)}
+		usedByCategory[dimension] = make(map[int64]struct{})
+	}
+
+	for _, scenario := range scenarios {
+		for _, session := range scenario.Sessions {
+			challenge, err := catalog.pick(session.ChallengeCategory, session.ChallengeIndex)
+			if err != nil {
+				continue
+			}
+			usedPracticeChallenges[challenge.ID] = struct{}{}
+			usedByCategory[challenge.Category][challenge.ID] = struct{}{}
+		}
+	}
+	summary.UsedPracticeChallenges = len(usedPracticeChallenges)
+
+	uniqueTopRecommendations := make(map[int64]struct{})
+	for _, result := range results {
+		if len(result.Recommendations.Challenges) == 0 {
+			continue
+		}
+		summary.StudentsWithRecommendations++
+		top := result.Recommendations.Challenges[0]
+		uniqueTopRecommendations[top.ChallengeID] = struct{}{}
+	}
+	summary.UniqueTopRecommendationCount = len(uniqueTopRecommendations)
+
+	for _, dimension := range model.AllDimensions {
+		entry := summary.ByCategory[dimension]
+		entry.Used = len(usedByCategory[dimension])
+		summary.ByCategory[dimension] = entry
+	}
+
+	return summary
 }
 
 func proxyDetailJSON(method, path, query string, status int, payloadPreview string) string {
@@ -1256,6 +1658,21 @@ func printSeedSummary(result *seedResult) {
 	fmt.Printf("教学复盘样本数据已写入班级 %s\n", result.ClassName)
 	fmt.Printf("教师账号: %s / %s (%s)\n", result.Teacher.Username, defaultPassword, result.Teacher.Name)
 	fmt.Printf("样本规模: %d 名学生，%d 个练习会话，%d 条 AWD 攻击记录\n", len(result.Students), result.PracticeSessionCount, result.AWDAttackCount)
+	fmt.Printf(
+		"题库覆盖: published=%d, practice_used=%d, recommendation_ready=%d, unique_top_recommendations=%d\n",
+		result.Coverage.PublishedChallenges,
+		result.Coverage.UsedPracticeChallenges,
+		result.Coverage.StudentsWithRecommendations,
+		result.Coverage.UniqueTopRecommendationCount,
+	)
+	fmt.Println("分类覆盖:")
+	for _, dimension := range model.AllDimensions {
+		coverage, ok := result.Coverage.ByCategory[dimension]
+		if !ok {
+			continue
+		}
+		fmt.Printf("  - %s: published=%d, used=%d\n", dimension, coverage.Published, coverage.Used)
+	}
 	fmt.Println()
 	fmt.Println("班级复盘结论:")
 	for _, item := range result.ClassReview.Items {
