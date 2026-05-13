@@ -4,13 +4,21 @@
     "component",
     "hook",
     "service",
+    "handler",
+    "repository",
+    "port",
+    "job",
+    "mapper",
+    "readmodel",
+    "composition",
     "store",
     "api",
     "form",
     "table",
     "modal",
     "layout",
-    "schema"
+    "schema",
+    "migration"
   ],
   "must_search_before_create": [
     "code/frontend/src/views",
@@ -20,14 +28,21 @@
     "code/frontend/src/composables",
     "code/frontend/src/api",
     "code/frontend/src/stores",
-    "code/backend/internal"
+    "code/backend/internal/module",
+    "code/backend/internal/app/composition",
+    "code/backend/internal/model",
+    "code/backend/migrations"
   ],
   "blocked_patterns": [
     "create a new page from scratch",
     "implement a new component without checking existing ones",
     "duplicate fetch logic",
     "duplicate form validation",
-    "duplicate table/list/detail page patterns"
+    "duplicate table/list/detail page patterns",
+    "duplicate backend handler/usecase/repository/port patterns",
+    "create a backend repository without checking existing module ports and infrastructure adapters",
+    "create a backend handler without checking existing api handlers and contracts",
+    "create a backend job or worker without checking existing application jobs, locking, context, and idempotency patterns"
   ],
   "required_decision": [
     "reuse_existing",

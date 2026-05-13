@@ -63,8 +63,8 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please reference the similar hooks in .harness/reuse-decision.md before creating another one-off hook. "
-            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
+            "Please reference the similar hooks in a task-scoped reuse decision file under .harness/reuse-decisions/ before creating another one-off hook. "
+            "If this is a reusable pattern, also update harness/reuse/index.yaml after the task.",
             file=sys.stderr,
         )
 

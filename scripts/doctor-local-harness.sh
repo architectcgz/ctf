@@ -39,7 +39,8 @@ check "node is available" command -v node
 check "npm is available" command -v npm
 
 echo "[doctor] reuse-first assets"
-check ".harness/reuse-decision.md exists" test -f ".harness/reuse-decision.md"
+check ".harness/reuse-decisions exists" test -d ".harness/reuse-decisions"
+check "legacy .harness/reuse-decision.md is absent" test ! -f ".harness/reuse-decision.md"
 
 if [[ -d "code/frontend/node_modules" ]]; then
   echo "  $(green PASS) — code/frontend/node_modules exists"

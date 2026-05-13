@@ -35,6 +35,8 @@
 
 ## 当前中间方案
 
+- `backend-module-boundary-target.md`
+  - 说明：`Draft`。后端模块边界目标设计稿，区分当前事实、目标 owner、依赖方向、对外暴露规则和迁移债务；迁移完成后应回收到 `docs/architecture/backend/07-modular-monolith-refactor.md`，再同步论文。
 - `AWD题目配置面板方案.md`
   - 说明：`Draft`。后台 AWD service 配置面板的中间设计稿，仍包含方案比较和待落地交互。
 - `AWD能力画像回流方案.md`

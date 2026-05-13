@@ -218,7 +218,7 @@ def main() -> int:
         "docs/architecture/README.md",
         "docs/architecture/features/专题架构索引.md",
         "docs/design/README.md",
-        "prompts/AGENTS.md",
+        "harness/prompts/AGENTS.md",
     ]:
         check_backtick_refs(path)
 

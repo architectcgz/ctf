@@ -34,7 +34,7 @@
 - `practice/` 只写实验记录、迁移过程、历史计划索引和实践说明。
 - `feedback/` 只写 agent 工作流、review、prompt、policy、协作方式的踩坑与修正。
 - `works/` 只写可复用输出，例如地图、模板、教程、good practices。
-- `prompts/` 只放已经验证过的提示词和工作流。
+- `harness/prompts/` 只放已经验证过、会复用的项目级 agent 工作流 prompt。
 - `references/` 只放外部资料索引和研究入口。
 
 如果内容是“当前产品怎么工作”，优先回到 `docs/` 事实源，而不是塞进 harness 目录。
@@ -62,7 +62,7 @@
 - `docs/improvements/` -> `feedback/`
 - `docs/superpowers/` 的历史计划/过程 -> `practice/`
 - `docs/refs/` -> `references/`
-- `docs/skills/` -> `prompts/`
+- `docs/skills/` -> 全局 skill；只有仍需作为项目 prompt 复用的内容才进入 `harness/prompts/`
 
 后续如果再把同类内容写回旧目录，会同时制造两个入口，review 和后续 agent 都会误判。
 

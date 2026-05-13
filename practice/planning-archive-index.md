@@ -25,4 +25,4 @@
 
 ## Harness 结论
 
-历史 planning 归档的价值是实践记忆，不是事实源。后续如果某个阶段经验会重复影响 agent 行为，应提炼到 `feedback/`、`concepts/`、`prompts/` 或 `scripts/check-consistency.sh`。
+历史 planning 归档的价值是实践记忆，不是事实源。后续如果某个阶段经验会重复影响 agent 行为，应提炼到 `feedback/`、`concepts/`、`harness/prompts/` 或 `scripts/check-consistency.sh`。

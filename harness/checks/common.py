@@ -11,10 +11,11 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-REUSE_DECISION_PATH = ROOT / ".harness" / "reuse-decision.md"
-REUSE_HISTORY_PATH = ROOT / ".harness" / "reuse-history.md"
-REUSE_INDEX_PATH = ROOT / ".harness" / "reuse-index.yaml"
+REUSE_DECISIONS_DIR = ROOT / ".harness" / "reuse-decisions"
+REUSE_HISTORY_PATH = ROOT / "harness" / "reuse" / "history.md"
+REUSE_INDEX_PATH = ROOT / "harness" / "reuse" / "index.yaml"
 POLICY_DIR = ROOT / "harness" / "policies"
+TASK_SCOPED_REUSE_DECISION_HINT = ".harness/reuse-decisions/<task-slug>.md"
 
 SEARCH_ROOTS = [
     "code/frontend/src/views",
@@ -24,7 +25,10 @@ SEARCH_ROOTS = [
     "code/frontend/src/composables",
     "code/frontend/src/api",
     "code/frontend/src/stores",
-    "code/backend/internal",
+    "code/backend/internal/module",
+    "code/backend/internal/app/composition",
+    "code/backend/internal/model",
+    "code/backend/migrations",
 ]
 
 PROTECTED_PATTERNS = {
@@ -45,6 +49,33 @@ PROTECTED_PATTERNS = {
     "service": [
         "code/backend/internal/**/*service*.go",
         "code/frontend/src/features/**/model/**/*Service*.ts",
+    ],
+    "handler": [
+        "code/backend/internal/module/**/api/**/*.go",
+        "code/backend/internal/handler/**/*.go",
+    ],
+    "repository": [
+        "code/backend/internal/module/**/infrastructure/**/*repository*.go",
+        "code/backend/internal/module/**/infrastructure/repository.go",
+    ],
+    "port": [
+        "code/backend/internal/module/**/ports/**/*.go",
+    ],
+    "job": [
+        "code/backend/internal/module/**/application/**/*job*.go",
+        "code/backend/internal/module/**/application/jobs/**/*.go",
+        "code/backend/internal/module/**/application/**/*worker*.go",
+    ],
+    "mapper": [
+        "code/backend/internal/module/**/*mapper*.go",
+        "code/backend/internal/shared/mapper*/**/*.go",
+    ],
+    "readmodel": [
+        "code/backend/internal/module/*_readmodel/**/*.go",
+    ],
+    "composition": [
+        "code/backend/internal/app/composition/**/*.go",
+        "code/backend/internal/module/**/runtime/module.go",
     ],
     "store": [
         "code/frontend/src/stores/**/*.ts",
@@ -75,6 +106,10 @@ PROTECTED_PATTERNS = {
         "code/backend/**/*schema*.go",
         "challenges/**/*.yml",
         "challenges/**/*.yaml",
+    ],
+    "migration": [
+        "code/backend/migrations/**/*.sql",
+        "code/backend/internal/module/**/migrations/**/*.sql",
     ],
 }
 
@@ -145,6 +180,12 @@ class ChangedFile:
         return self.status == "A"
 
 
+@dataclass(frozen=True)
+class ReuseDecisionDocument:
+    path: str
+    text: str
+
+
 def run_git(*args: str) -> str:
     result = subprocess.run(
         ["git", *args],
@@ -199,10 +240,25 @@ def classify_protected_changes(changed_files: list[ChangedFile]) -> dict[str, li
     return matches
 
 
+def load_reuse_decision_documents() -> list[ReuseDecisionDocument]:
+    documents: list[ReuseDecisionDocument] = []
+    if REUSE_DECISIONS_DIR.is_dir():
+        for path in sorted(REUSE_DECISIONS_DIR.glob("*.md")):
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8").strip()
+            if text:
+                documents.append(ReuseDecisionDocument(path=path.relative_to(ROOT).as_posix(), text=text))
+
+    return documents
+
+
 def load_reuse_decision_text() -> str:
-    if not REUSE_DECISION_PATH.is_file():
-        return ""
-    return REUSE_DECISION_PATH.read_text(encoding="utf-8")
+    return "\n\n".join(document.text for document in load_reuse_decision_documents())
+
+
+def reuse_decision_destination_hint() -> str:
+    return TASK_SCOPED_REUSE_DECISION_HINT
 
 
 def load_reuse_reference_text() -> str:
@@ -213,7 +269,7 @@ def load_reuse_reference_text() -> str:
     return "\n".join(part for part in parts if part)
 
 
-def validate_reuse_decision(text: str, protected_paths: list[str]) -> list[str]:
+def validate_reuse_decision(text: str, protected_paths: list[str] | None = None) -> list[str]:
     errors: list[str] = []
     required_sections = [
         "## Change type",
@@ -244,11 +300,16 @@ def validate_reuse_decision(text: str, protected_paths: list[str]) -> list[str]:
     ):
         errors.append("reuse decision does not contain a valid decision value")
 
-    for path in protected_paths:
-        if path not in text:
-            errors.append(f"reuse decision does not mention changed file: {path}")
+    if protected_paths is not None:
+        for path in protected_paths:
+            if path not in text:
+                errors.append(f"reuse decision does not mention changed file: {path}")
 
     return errors
+
+
+def mentioned_protected_paths(text: str, protected_paths: list[str]) -> list[str]:
+    return sorted(path for path in protected_paths if path in text)
 
 
 def repo_files(patterns: list[str], exclude: set[str] | None = None) -> list[str]:

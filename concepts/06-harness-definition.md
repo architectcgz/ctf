@@ -4,7 +4,7 @@
 
 ## 组件清单
 
-- Guides：`AGENTS.md`、`concepts/`、`prompts/`
+- Guides：`AGENTS.md`、`concepts/`、`harness/prompts/`
 - Sensors：`scripts/check-consistency.sh`、hook、review 记录
 - Memory：`feedback/`、`thinking/`、`references/`
 - Practice：`practice/`

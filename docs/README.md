@@ -22,7 +22,7 @@
 - `../practice/`：初始化和实验记录。
 - `../feedback/`：踩坑、修正和可复用经验。
 - `../works/`：可展示模板、报告和说明。
-- `../prompts/`：已验证提示词和工作流。
+- `../harness/prompts/`：已验证、会复用的项目级 agent 工作流 prompt。
 - `../references/`：外部文章、仓库和工具索引。
 - `../scripts/check-consistency.sh`：严格参考 harness 的一致性检查。
 <!-- END HARNESS ENGINEERING: docs-navigation -->

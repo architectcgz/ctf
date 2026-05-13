@@ -13,4 +13,7 @@ fi
 if [[ -x scripts/check-architecture.sh ]]; then
   bash scripts/check-architecture.sh --quick
 fi
+if [[ -x scripts/check-skill-sync-reminder.sh ]]; then
+  bash scripts/check-skill-sync-reminder.sh --staged
+fi
 # END HARNESS ENGINEERING: pre-commit

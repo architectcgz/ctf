@@ -64,5 +64,97 @@
       "code/frontend/src/api/request.ts",
       "code/frontend/src/api/contracts.ts"
     ]
+  },
+  "backend_module_usecase": {
+    "description": "Backend use cases live under internal/module/<module>/application and should reuse domain rules, ports, contracts, context propagation, and existing module service shapes before adding a new flow.",
+    "examples": [
+      "code/backend/internal/module/challenge/application",
+      "code/backend/internal/module/contest/application",
+      "code/backend/internal/module/practice/application"
+    ],
+    "must_reuse": [
+      "code/backend/internal/module/*/domain",
+      "code/backend/internal/module/*/ports",
+      "code/backend/internal/module/*/contracts"
+    ]
+  },
+  "backend_repository_port": {
+    "description": "Repository work must start from the consumer-side port and existing infrastructure adapter. Split or extend the smallest capability port instead of adding parallel repository interfaces.",
+    "examples": [
+      "code/backend/internal/module/challenge/ports/ports.go",
+      "code/backend/internal/module/challenge/infrastructure/repository.go",
+      "code/backend/internal/module/contest/infrastructure/contest_repository.go"
+    ],
+    "must_reuse": [
+      "code/backend/internal/module/*/ports",
+      "code/backend/internal/module/*/infrastructure",
+      "code/backend/internal/module/*/testsupport"
+    ]
+  },
+  "backend_api_handler": {
+    "description": "Backend API handlers should reuse module api handler structure, contracts, auth/context extraction, validation, error mapping, and application use cases before creating new transport glue.",
+    "examples": [
+      "code/backend/internal/module/challenge/api",
+      "code/backend/internal/module/contest/api",
+      "code/backend/internal/module/ops/api"
+    ],
+    "must_reuse": [
+      "code/backend/internal/module/*/api",
+      "code/backend/internal/module/*/contracts",
+      "code/backend/internal/authctx",
+      "code/backend/internal/validation"
+    ]
+  },
+  "backend_readmodel_query": {
+    "description": "Cross-module read/query work should reuse existing readmodel modules or owner contracts instead of adding direct cross-module repository reads.",
+    "examples": [
+      "code/backend/internal/module/practice_readmodel",
+      "code/backend/internal/module/teaching_readmodel"
+    ],
+    "must_reuse": [
+      "code/backend/internal/module/*_readmodel/ports",
+      "code/backend/internal/module/*_readmodel/infrastructure",
+      "code/backend/internal/module/*/contracts"
+    ]
+  },
+  "backend_job_worker": {
+    "description": "Background jobs, workers, runners, and scheduled flows must reuse existing context, lock, idempotency, timeout, and runtime patterns before adding a new worker path.",
+    "examples": [
+      "code/backend/internal/module/contest/application/jobs",
+      "code/backend/internal/pkg/redislock",
+      "code/backend/internal/module/runtime"
+    ],
+    "must_reuse": [
+      "code/backend/internal/module/*/application/jobs",
+      "code/backend/internal/pkg/redislock",
+      "code/backend/internal/module/*/runtime"
+    ]
+  },
+  "backend_mapper_contract": {
+    "description": "DTO/model/domain mapping should reuse generated mapper conventions, shared mapper helpers, and existing contracts before adding hand-written structural copying.",
+    "examples": [
+      "code/backend/internal/module/challenge/domain/response_mapper_goverter.go",
+      "code/backend/internal/module/challenge/domain/response_mapper_goverter_gen.go",
+      "code/backend/internal/shared/mapperhelper",
+      "code/backend/internal/shared/mapperutil"
+    ],
+    "must_reuse": [
+      "code/backend/internal/shared/mapperhelper",
+      "code/backend/internal/shared/mapperutil",
+      "code/backend/internal/module/*/contracts"
+    ]
+  },
+  "backend_migration_schema": {
+    "description": "Schema changes must reuse existing migration style, UTC timestamp contract, model conventions, repository tests, and API contract documentation before adding a new database shape.",
+    "examples": [
+      "code/backend/migrations",
+      "code/backend/internal/model",
+      "code/backend/internal/module/*/infrastructure"
+    ],
+    "must_reuse": [
+      "code/backend/migrations",
+      "code/backend/internal/model",
+      "docs/contracts"
+    ]
   }
 }

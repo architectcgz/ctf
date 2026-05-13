@@ -78,8 +78,8 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please cite the existing API wrappers in .harness/reuse-decision.md and explain why they cannot be extended. "
-            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
+            "Please cite the existing API wrappers in a task-scoped reuse decision file under .harness/reuse-decisions/ and explain why they cannot be extended. "
+            "If this is a reusable pattern, also update harness/reuse/index.yaml after the task.",
             file=sys.stderr,
         )
 

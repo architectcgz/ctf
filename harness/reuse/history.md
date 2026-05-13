@@ -1,6 +1,6 @@
 # Reuse History
 
-This file is append-only. Keep `.harness/reuse-decision.md` focused on the current task, then append a short durable summary here when the task creates a reusable decision.
+This file is append-only. Keep current task evidence in `.harness/reuse-decisions/`, then append a short durable summary here when the task creates a reusable decision.
 
 ## 2026-05-11 challenge attachment native download
 

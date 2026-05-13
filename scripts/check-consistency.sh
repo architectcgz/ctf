@@ -38,7 +38,7 @@ check_contains() {
 }
 
 echo "[C1] strict harness directories exist"
-for dir in concepts thinking practice feedback works prompts references; do
+for dir in concepts thinking practice feedback works references; do
   check_dir "$dir"
   check_file "$dir/AGENTS.md"
 done
@@ -49,7 +49,7 @@ check_contains "AGENTS.md" 'thinking/' "AGENTS references thinking"
 check_contains "AGENTS.md" 'practice/' "AGENTS references practice"
 check_contains "AGENTS.md" 'feedback/' "AGENTS references feedback"
 check_contains "AGENTS.md" 'works/' "AGENTS references works"
-check_contains "AGENTS.md" 'prompts/' "AGENTS references prompts"
+check_contains "AGENTS.md" 'harness/prompts/' "AGENTS references harness prompts"
 check_contains "AGENTS.md" 'references/' "AGENTS references references"
 
 echo "[C3] articles.md numbering is contiguous 1..N"
@@ -91,9 +91,6 @@ check_file "feedback/improvements-index.md"
 check_file "practice/superpowers-plan-index.md"
 check_file "practice/planning-archive-index.md"
 check_file "harness/prompts/AGENTS.md"
-check_file "harness/prompts/ctf-ui-theme-system-skill.md"
-check_file "harness/prompts/harness-router.md"
-check_file "harness/prompts/experience-extraction-closeout.md"
 check_file "harness/prompts/architecture-diagram-generation.md"
 check_file "references/ctf-instance-lifecycle-research.md"
 check_file "works/harness-migration-map.md"
@@ -102,9 +99,7 @@ echo "[C7] migrated indexes are discoverable from directory AGENTS"
 check_contains "feedback/AGENTS.md" 'improvements-index\.md' "feedback AGENTS references migrated improvements"
 check_contains "practice/AGENTS.md" 'superpowers-plan-index\.md' "practice AGENTS references superpowers index"
 check_contains "practice/AGENTS.md" 'planning-archive-index\.md' "practice AGENTS references planning archive"
-check_contains "prompts/AGENTS.md" 'harness/prompts/ctf-ui-theme-system-skill\.md' "prompts AGENTS points to UI theme skill"
-check_contains "prompts/AGENTS.md" 'harness/prompts/harness-router\.md' "prompts AGENTS points to harness router"
-check_contains "prompts/AGENTS.md" 'harness/prompts/architecture-diagram-generation\.md' "prompts AGENTS points to architecture diagram prompt"
+check_contains "harness/prompts/AGENTS.md" 'architecture-diagram-generation\.md' "harness prompts AGENTS references architecture diagram prompt"
 check_contains "harness/prompts/AGENTS.md" 'coding-agent-system-prompt\.md' "harness prompts AGENTS references reuse-first prompt"
 check_contains "references/AGENTS.md" 'ctf-instance-lifecycle-research\.md' "references AGENTS references lifecycle research"
 check_contains "works/AGENTS.md" 'harness-migration-map\.md' "works AGENTS references migration map"
@@ -113,6 +108,10 @@ echo "[C8] AGENTS captures file placement rules"
 check_file "docs/文档规范.md"
 check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentation guide"
 check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
+check_contains "docs/文档规范.md" '文档修改前置读取协议' "documentation guide defines pre-edit reading protocol"
+check_contains "docs/文档规范.md" '新增路径登记协议' "documentation guide defines new path registration protocol"
+check_contains "AGENTS.md" '文档修改前置读取协议' "AGENTS references document pre-edit protocol"
+check_contains "AGENTS.md" '新增路径登记协议' "AGENTS references new path registration protocol"
 check_contains "AGENTS.md" '架构文档规范化流程' "AGENTS references architecture docs normalization workflow"
 check_contains "docs/文档规范.md" '架构文档规范化流程' "documentation guide defines architecture docs normalization workflow"
 check_contains "AGENTS.md" '架构图生成规范' "AGENTS references architecture diagram generation workflow"
@@ -144,21 +143,26 @@ check_contains "works/AGENTS.md" 'harness-good-practices\.md' "works AGENTS refe
 echo "[C10] local architecture guardrails are wired"
 check_file "scripts/check-architecture.sh"
 check_file "scripts/check-reuse-first.sh"
+check_file "scripts/check-skill-sync-reminder.sh"
 check_file "scripts/doctor-local-harness.sh"
 check_contains ".githooks/pre-commit" 'scripts/check-architecture\.sh --quick' "pre-commit runs quick architecture checks"
 check_contains ".githooks/pre-commit" 'scripts/check-reuse-first\.sh --staged' "pre-commit runs reuse-first checks"
+check_contains ".githooks/pre-commit" 'scripts/check-skill-sync-reminder\.sh --staged' "pre-commit runs skill sync reminder"
 check_contains ".githooks/README.md" 'scripts/check-architecture\.sh --quick' "hook docs mention architecture checks"
 check_contains ".githooks/README.md" 'scripts/check-reuse-first\.sh --staged' "hook docs mention reuse-first checks"
+check_contains ".githooks/README.md" 'scripts/check-skill-sync-reminder\.sh --staged' "hook docs mention skill sync reminder"
 check_contains "docs/architecture/README.md" 'scripts/check-architecture\.sh --full' "architecture README maps full architecture checks"
 check_contains "docs/architecture/README.md" 'code/backend/internal/module/architecture_test\.go' "architecture README references backend guardrail test"
 check_contains "docs/architecture/README.md" 'code/frontend/src/__tests__/architectureBoundaries\.test\.ts' "architecture README references frontend guardrail test"
 
 echo "[C11] reuse-first harness is wired"
 check_dir ".harness"
-check_file ".harness/reuse-decision.md"
-check_file ".harness/reuse-index.yaml"
-check_file ".harness/reuse-history.md"
+check_dir ".harness/reuse-decisions"
+check_file ".harness/reuse-decisions/.gitkeep"
 check_dir "harness"
+check_dir "harness/reuse"
+check_file "harness/reuse/index.yaml"
+check_file "harness/reuse/history.md"
 check_file "harness/policies/reuse-first.yaml"
 check_file "harness/policies/project-patterns.yaml"
 check_file "harness/templates/reuse-decision.md"
@@ -169,12 +173,42 @@ check_file "harness/checks/check-reuse-decision.py"
 check_file "harness/checks/check-similar-pages.py"
 check_file "harness/checks/check-duplicate-hooks.py"
 check_file "harness/checks/check-api-wrapper-duplication.py"
+check_file "harness/checks/check-backend-reuse.py"
+check_contains "scripts/check-reuse-first.sh" 'harness/checks/check-backend-reuse\.py' "reuse-first runs backend reuse check"
 check_contains "AGENTS.md" 'reuse-first harness' "AGENTS declares reuse-first harness"
 check_contains "AGENTS.md" 'harness/policies/project-patterns\.yaml' "AGENTS references project patterns index"
-check_contains "AGENTS.md" '\.harness/reuse-decision\.md' "AGENTS references reuse decision file"
-check_contains "AGENTS.md" '\.harness/reuse-index\.yaml' "AGENTS references durable reuse index"
-check_contains "AGENTS.md" '\.harness/reuse-history\.md' "AGENTS references append-only reuse history"
+check_contains "AGENTS.md" '\.harness/reuse-decisions/' "AGENTS references task-scoped reuse decision directory"
+check_contains "AGENTS.md" 'harness/reuse/index\.yaml' "AGENTS references durable reuse index"
+check_contains "AGENTS.md" 'harness/reuse/history\.md' "AGENTS references append-only reuse history"
+if [[ -f ".harness/reuse-index.yaml" || -f ".harness/reuse-history.md" ]]; then
+  echo "  $(red FAIL) — durable reuse index/history must live under harness/reuse/, not .harness/"
+  fail=1
+else
+  echo "  $(green PASS) — .harness does not contain durable reuse index/history"
+fi
+if [[ -f ".harness/reuse-decision.md" ]]; then
+  echo "  $(red FAIL) — legacy .harness/reuse-decision.md is forbidden; move the task evidence into .harness/reuse-decisions/"
+  fail=1
+else
+  echo "  $(green PASS) — no legacy single-file reuse decision present"
+fi
 check_contains "AGENTS.md" '本地 workflow 是 reuse-first harness 的权威入口' "AGENTS marks local workflow as authoritative"
+
+echo "[C12] changed feedback records declare sedimentation status"
+feedback_changed="$(
+  {
+    git diff --name-only --diff-filter=ACMR HEAD -- 'feedback/*.md' 2>/dev/null || true
+    git ls-files --others --exclude-standard -- 'feedback/*.md' 2>/dev/null || true
+  } | sort -u
+)"
+if [[ -z "${feedback_changed// }" ]]; then
+  echo "  $(green PASS) — no changed feedback records"
+else
+  while IFS= read -r file; do
+    [[ -z "$file" || "$file" == "feedback/AGENTS.md" || "$file" == "feedback/improvements-index.md" ]] && continue
+    check_contains "$file" '^## 沉淀状态$' "$file declares sedimentation status"
+  done <<< "$feedback_changed"
+fi
 
 if [[ "$fail" -eq 0 ]]; then
   echo "$(green '✓ all harness consistency checks passed')"

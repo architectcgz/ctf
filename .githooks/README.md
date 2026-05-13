@@ -19,6 +19,7 @@ bash scripts/install-githooks.sh
 - `pre-commit`：运行 `scripts/check-consistency.sh`，检查严格参考 harness 的顶层目录、导航和资料计数。
 - `pre-commit`：运行 `scripts/check-reuse-first.sh --staged`，要求受保护页面、组件、hook、API wrapper、store、表单、表格和 schema 变更先完成复用决策。
 - `pre-commit`：运行 `scripts/check-architecture.sh --quick`，检查后端模块依赖方向和前端分层边界。
+- `pre-commit`：运行 `scripts/check-skill-sync-reminder.sh --staged`，当 `feedback/`、`harness/reuse/history.md`、`harness/reuse/index.yaml` 或 `harness/prompts|policies|templates/` 变更时，非阻塞提醒是否需要同步到全局 skill。
 - 原有 API 合同同步逻辑继续保留。
 
 ## 本地工作流优先
@@ -28,5 +29,6 @@ bash scripts/install-githooks.sh
   1. `scripts/check-consistency.sh`
   2. `scripts/check-reuse-first.sh --staged`
   3. `scripts/check-architecture.sh --quick`
+  4. `scripts/check-skill-sync-reminder.sh --staged`
 - 若需要在提交前手工自检，可直接运行 `bash scripts/check-reuse-first.sh --staged`。
 <!-- END HARNESS ENGINEERING: hook-docs -->

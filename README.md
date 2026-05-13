@@ -112,7 +112,7 @@ Docker 编排规范见：`docs/docker-compose-rules.md`。
 - `docs/architecture/`：当前架构、页面设计和专题设计入口
 - `docs/contracts/`：接口、事件和题包格式等契约
 - `challenges/`：题目、题包、题面、源码、writeup 和防守说明
-- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`prompts/`、`references/`：项目在开发过程中沉淀的规则、实验、资料和可复用说明
+- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/`：项目在开发过程中沉淀的规则、实验、资料和可复用说明；项目级 prompt 资产位于 `harness/prompts/`
 
 <!-- BEGIN HARNESS ENGINEERING: readme-harness -->
 ## Harness Engineering
@@ -124,7 +124,7 @@ Docker 编排规范见：`docs/docker-compose-rules.md`。
 - `practice/`：实践记录
 - `feedback/`：反馈闭环
 - `works/`：作品输出
-- `prompts/`：提示词积累
+- `harness/prompts/`：已验证的项目级 agent 工作流 prompt
 - `references/`：外部资料
 
 一致性检查：

@@ -74,9 +74,9 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please update .harness/reuse-decision.md to reference these files and explain "
+            "Please update a task-scoped reuse decision file under .harness/reuse-decisions/ to reference these files and explain "
             "why you are reusing, extending, refactoring, or creating a new page. "
-            "If this is a reusable pattern, also update .harness/reuse-index.yaml after the task.",
+            "If this is a reusable pattern, also update harness/reuse/index.yaml after the task.",
             file=sys.stderr,
         )
 
