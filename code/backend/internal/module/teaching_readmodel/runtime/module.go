@@ -25,8 +25,7 @@ type Deps struct {
 
 type moduleDeps struct {
 	input Deps
-	// repo            readmodelports.Repository
-	repo interface {
+	repo  interface {
 		readmodelports.TeachingUserLookupRepository
 		readmodelports.TeachingClassQueryRepository
 		readmodelports.TeachingStudentDirectoryRepository
@@ -43,7 +42,12 @@ func Build(deps Deps) *Module {
 	service := buildQueryService(internalDeps)
 
 	return &Module{
-		Handler: teachinghttp.NewHandler(service, buildOverviewService(internalDeps)),
+		Handler: teachinghttp.NewHandler(
+			service,
+			buildOverviewService(internalDeps),
+			buildClassInsightService(internalDeps),
+			buildStudentReviewService(internalDeps),
+		),
 	}
 }
 
@@ -57,15 +61,27 @@ func newModuleDeps(deps Deps) moduleDeps {
 
 func buildQueryService(deps moduleDeps) readmodelqueries.Service {
 	cfg := deps.input.Config
-	log := deps.input.Logger
 	return readmodelqueries.NewQueryService(
 		deps.repo,
-		deps.recommendations,
 		cfg.Pagination,
-		log.Named("teaching_readmodel_query_service"),
 	)
 }
 
 func buildOverviewService(deps moduleDeps) readmodelqueries.OverviewService {
 	return readmodelqueries.NewOverviewService(deps.repo)
+}
+
+func buildClassInsightService(deps moduleDeps) readmodelqueries.ClassInsightService {
+	return readmodelqueries.NewClassInsightService(
+		deps.repo,
+		deps.recommendations,
+		deps.input.Logger.Named("teaching_readmodel_class_insight_service"),
+	)
+}
+
+func buildStudentReviewService(deps moduleDeps) readmodelqueries.StudentReviewService {
+	return readmodelqueries.NewStudentReviewService(
+		deps.repo,
+		deps.recommendations,
+	)
 }

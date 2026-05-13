@@ -12,12 +12,24 @@ import (
 )
 
 type Handler struct {
-	service         teachingreadmodelqueries.Service
-	overviewService teachingreadmodelqueries.OverviewService
+	service              teachingreadmodelqueries.Service
+	overviewService      teachingreadmodelqueries.OverviewService
+	classInsightService  teachingreadmodelqueries.ClassInsightService
+	studentReviewService teachingreadmodelqueries.StudentReviewService
 }
 
-func NewHandler(service teachingreadmodelqueries.Service, overviewService teachingreadmodelqueries.OverviewService) *Handler {
-	return &Handler{service: service, overviewService: overviewService}
+func NewHandler(
+	service teachingreadmodelqueries.Service,
+	overviewService teachingreadmodelqueries.OverviewService,
+	classInsightService teachingreadmodelqueries.ClassInsightService,
+	studentReviewService teachingreadmodelqueries.StudentReviewService,
+) *Handler {
+	return &Handler{
+		service:              service,
+		overviewService:      overviewService,
+		classInsightService:  classInsightService,
+		studentReviewService: studentReviewService,
+	}
 }
 
 func (h *Handler) ListClasses(c *gin.Context) {
@@ -86,7 +98,7 @@ func (h *Handler) GetOverview(c *gin.Context) {
 func (h *Handler) GetClassSummary(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 
-	summary, err := h.service.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	summary, err := h.classInsightService.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -98,7 +110,7 @@ func (h *Handler) GetClassSummary(c *gin.Context) {
 func (h *Handler) GetClassTrend(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 
-	trend, err := h.service.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	trend, err := h.classInsightService.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -110,7 +122,7 @@ func (h *Handler) GetClassTrend(c *gin.Context) {
 func (h *Handler) GetClassReview(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 
-	review, err := h.service.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	review, err := h.classInsightService.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -127,7 +139,7 @@ func (h *Handler) GetStudentProgress(c *gin.Context) {
 		return
 	}
 
-	progress, err := h.service.GetStudentProgress(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID)
+	progress, err := h.studentReviewService.GetStudentProgress(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -152,7 +164,7 @@ func (h *Handler) GetStudentRecommendations(c *gin.Context) {
 		return
 	}
 
-	recommendations, err := h.service.GetStudentRecommendations(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit)
+	recommendations, err := h.studentReviewService.GetStudentRecommendations(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -181,7 +193,7 @@ func (h *Handler) GetStudentTimeline(c *gin.Context) {
 		req.Limit = 100
 	}
 
-	timeline, err := h.service.GetStudentTimeline(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit, req.Offset)
+	timeline, err := h.studentReviewService.GetStudentTimeline(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit, req.Offset)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -204,7 +216,7 @@ func (h *Handler) GetStudentEvidence(c *gin.Context) {
 		return
 	}
 
-	evidence, err := h.service.GetStudentEvidence(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
+	evidence, err := h.studentReviewService.GetStudentEvidence(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -227,7 +239,7 @@ func (h *Handler) GetStudentAttackSessions(c *gin.Context) {
 		return
 	}
 
-	sessions, err := h.service.GetStudentAttackSessions(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
+	sessions, err := h.studentReviewService.GetStudentAttackSessions(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

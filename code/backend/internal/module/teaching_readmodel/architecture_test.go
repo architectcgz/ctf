@@ -124,10 +124,12 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
-		"repo            readmodelports.Repository",
+		"readmodelports.TeachingClassInsightRepository",
 		"recommendations assessmentcontracts.RecommendationProvider",
 		"buildQueryService(",
 		"buildOverviewService(",
+		"buildClassInsightService(",
+		"buildStudentReviewService(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -141,6 +143,61 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
 			t.Fatalf("teaching_readmodel runtime should not keep wide query export marker %s", marker)
+		}
+	}
+}
+
+func TestContractsSplitStudentReviewOwner(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("application", "queries", "contracts.go"))
+	if err != nil {
+		t.Fatalf("read teaching_readmodel contracts: %v", err)
+	}
+
+	source := string(content)
+	studentReviewBlock := extractInterfaceBlock(t, source, "StudentReviewService")
+	expectedStudentReviewMethods := []string{
+		"GetStudentProgress(",
+		"GetStudentRecommendations(",
+		"GetStudentTimeline(",
+		"GetStudentEvidence(",
+		"GetStudentAttackSessions(",
+	}
+	for _, marker := range expectedStudentReviewMethods {
+		if !strings.Contains(studentReviewBlock, marker) {
+			t.Fatalf("StudentReviewService must declare %s", marker)
+		}
+	}
+
+	serviceBlock := extractInterfaceBlock(t, source, "Service")
+	for _, marker := range expectedStudentReviewMethods {
+		if strings.Contains(serviceBlock, marker) {
+			t.Fatalf("directory Service must not keep student review method %s", marker)
+		}
+	}
+}
+
+func TestDirectoryQueryServiceDoesNotOwnStudentReviewMethods(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("application", "queries", "service.go"))
+	if err != nil {
+		t.Fatalf("read teaching_readmodel query service: %v", err)
+	}
+
+	source := string(content)
+	blocked := []string{
+		"func (s *QueryService) GetStudentProgress(",
+		"func (s *QueryService) GetStudentRecommendations(",
+		"func (s *QueryService) GetStudentTimeline(",
+		"func (s *QueryService) GetStudentEvidence(",
+		"func (s *QueryService) GetStudentAttackSessions(",
+		"func (s *QueryService) getAccessibleStudent(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("directory query service must not keep student review marker %s", marker)
 		}
 	}
 }
@@ -185,4 +242,22 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 			t.Fatalf("%s must not import %s", filePath, blockedImport)
 		}
 	}
+}
+
+func extractInterfaceBlock(t *testing.T, source, name string) string {
+	t.Helper()
+
+	marker := "type " + name + " interface {"
+	start := strings.Index(source, marker)
+	if start == -1 {
+		t.Fatalf("interface %s not found", name)
+	}
+
+	rest := source[start:]
+	end := strings.Index(rest, "\n}")
+	if end == -1 {
+		t.Fatalf("interface %s closing brace not found", name)
+	}
+
+	return rest[:end+2]
 }

@@ -296,14 +296,18 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		cfg.Report,
 		zap.NewNop(),
 	)
-	readmodelService := readmodelqueries.NewQueryService(
-		readmodelinfra.NewRepository(db),
+	readmodelRepo := readmodelinfra.NewRepository(db)
+	classInsightService := readmodelqueries.NewClassInsightService(
+		readmodelRepo,
 		recommendationService,
-		cfg.Pagination,
 		zap.NewNop(),
 	)
+	studentReviewService := readmodelqueries.NewStudentReviewService(
+		readmodelRepo,
+		recommendationService,
+	)
 
-	classReview, err := readmodelService.GetClassReview(ctx, teacher.ID, model.RoleTeacher, seedClassName)
+	classReview, err := classInsightService.GetClassReview(ctx, teacher.ID, model.RoleTeacher, seedClassName)
 	if err != nil {
 		return nil, fmt.Errorf("load class review: %w", err)
 	}
@@ -319,7 +323,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		if student == nil {
 			continue
 		}
-		recommendations, recErr := readmodelService.GetStudentRecommendations(ctx, teacher.ID, model.RoleTeacher, student.ID, 3)
+		recommendations, recErr := studentReviewService.GetStudentRecommendations(ctx, teacher.ID, model.RoleTeacher, student.ID, 3)
 		if recErr != nil {
 			return nil, fmt.Errorf("load recommendations for %s: %w", student.Username, recErr)
 		}

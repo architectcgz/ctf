@@ -40,6 +40,8 @@
 - 2026-05-12 的 teacher overview aggregate 新增 `GET /api/v1/teacher/overview`；该接口由 `teaching_readmodel` 输出 summary-scope 聚合结果，服务 `/academy/overview`，不再让前端通过默认班级去拼 `classes/:name/*` 的 detail DTO。
 - 2026-05-12 的 practice readmodel phase 4 / slice 1 没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/users/me/progress` 与 `GET /api/v1/users/me/timeline` 保持原路径与响应结构，内部 owner 从独立 `practice_readmodel` 收口回 `practice/api/http` 与 `practice/application/queries`。
 - 2026-05-12 的 teaching readmodel overview query surface phase 4 / slice 2 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/teacher/overview` 保持原路径与响应结构，内部 owner 从宽 `teaching_readmodel/application/queries.Service` 收口到独立 `OverviewService`，handler 也改为分别依赖 overview 与其余教师查询。
+- 2026-05-12 的 teaching readmodel class insight query surface phase 4 / slice 3 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/teacher/classes/:name/{summary,trend,review}` 保持原路径与响应结构，内部 owner 从剩余宽 `teaching_readmodel/application/queries.Service` 收口到独立 `ClassInsightService`，handler 也改为分别依赖目录/学生查询、overview 和 class insight。
+- 2026-05-13 的 teaching readmodel student review query surface phase 4 / slice 4 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/teacher/students/:id/{progress,recommendations,timeline,evidence,attack-sessions}` 保持原路径、响应结构和权限口径不变，内部 owner 从剩余宽 `teaching_readmodel/application/queries.Service` 收口到独立 `StudentReviewService`，handler 改为分别依赖目录查询、overview、class insight 和 student review 四类 query owner。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail

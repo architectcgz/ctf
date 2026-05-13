@@ -10,16 +10,22 @@ type OverviewService interface {
 	GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*dto.TeacherOverviewResp, error)
 }
 
-type Service interface {
-	ListClasses(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherClassQuery) ([]dto.TeacherClassItem, int64, int, int, error)
-	ListStudents(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherStudentDirectoryQuery) ([]dto.TeacherStudentItem, int64, int, int, error)
-	ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error)
+type ClassInsightService interface {
 	GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error)
 	GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error)
 	GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error)
+}
+
+type StudentReviewService interface {
 	GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.TeacherProgressResp, error)
 	GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*dto.TeacherRecommendationResp, error)
 	GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error)
 	GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error)
 	GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherAttackSessionQuery) (*dto.TeacherAttackSessionResp, error)
+}
+
+type Service interface {
+	ListClasses(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherClassQuery) ([]dto.TeacherClassItem, int64, int, int, error)
+	ListStudents(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherStudentDirectoryQuery) ([]dto.TeacherStudentItem, int64, int, int, error)
+	ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error)
 }

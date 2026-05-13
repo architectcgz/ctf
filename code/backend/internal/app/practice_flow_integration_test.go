@@ -926,9 +926,16 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService, practiceProgressTimelineService)
 	teachingReadmodelRepo := teachingreadmodelinfra.NewRepository(db)
-	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, nil, cfg.Pagination, logger)
+	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, cfg.Pagination)
 	teachingReadmodelOverviewService := teachingreadmodelqueries.NewOverviewService(teachingReadmodelRepo)
-	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(teachingReadmodelService, teachingReadmodelOverviewService)
+	teachingReadmodelClassInsightService := teachingreadmodelqueries.NewClassInsightService(teachingReadmodelRepo, nil, logger)
+	teachingReadmodelStudentReviewService := teachingreadmodelqueries.NewStudentReviewService(teachingReadmodelRepo, nil)
+	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(
+		teachingReadmodelService,
+		teachingReadmodelOverviewService,
+		teachingReadmodelClassInsightService,
+		teachingReadmodelStudentReviewService,
+	)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{}, nil)
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
