@@ -195,6 +195,15 @@ func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
 	if !reflect.DeepEqual(gotTitles, wantTitles) {
 		t.Fatalf("unexpected recommendation titles: got=%v want=%v", gotTitles, wantTitles)
 	}
+	if len(items) != 2 {
+		t.Fatalf("expected 2 recommendation items, got %+v", items)
+	}
+	if items[0].RecommendationDimension != "pwn" {
+		t.Fatalf("expected direct category match to expose pwn recommendation dimension, got %+v", items[0])
+	}
+	if items[1].RecommendationDimension != "pwn" {
+		t.Fatalf("expected tagged recommendation dimension pwn, got %+v", items[1])
+	}
 }
 
 func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {

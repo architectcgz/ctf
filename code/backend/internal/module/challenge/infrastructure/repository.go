@@ -434,6 +434,29 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 
 	var challenges []*model.Challenge
 	query := r.dbWithContext(ctx).Model(&model.Challenge{}).
+		Select(
+			`challenges.*,
+			COALESCE(
+				CASE
+					WHEN LOWER(challenges.category) IN ? THEN LOWER(challenges.category)
+					ELSE NULL
+				END,
+				(
+					SELECT LOWER(tags.name)
+					FROM challenge_tags
+					JOIN tags ON tags.id = challenge_tags.tag_id
+					WHERE challenge_tags.challenge_id = challenges.id
+						AND tags.type = ?
+						AND LOWER(tags.name) IN ?
+					ORDER BY LOWER(tags.name) ASC
+					LIMIT 1
+				),
+				LOWER(challenges.category)
+			) AS recommendation_dimension`,
+			normalized,
+			model.TagTypeKnowledge,
+			normalized,
+		).
 		Where("challenges.status = ?", model.ChallengeStatusPublished).
 		Where(
 			`(

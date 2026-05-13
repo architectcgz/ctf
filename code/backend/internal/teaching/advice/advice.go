@@ -109,6 +109,7 @@ type ChallengeCandidate struct {
 	ID         int64
 	Title      string
 	Category   string
+	Dimension  string
 	Difficulty string
 	Points     int
 }
@@ -167,6 +168,9 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 
 	if len(recommendationTargets) == 0 {
 		for _, item := range dimensions {
+			if item.Severity == SeverityGood {
+				continue
+			}
 			if item.EvidenceCount > 0 || item.AttemptCount > 0 {
 				recommendationTargets = append(recommendationTargets, item)
 				break
@@ -192,16 +196,14 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 	if len(weakDimensions) > 0 {
 		severity = maxSeverity(severity, weakDimensions[0].Severity)
 	}
-	if snapshot.MaxWrongStreak >= 4 {
-		severity = maxSeverity(severity, SeverityDanger)
-	} else if snapshot.MaxWrongStreak >= 2 {
-		severity = maxSeverity(severity, SeverityWarning)
+	if submissionSeverity, ok := submissionStabilitySeverity(snapshot); ok {
+		severity = maxSeverity(severity, submissionSeverity)
 	}
 	if snapshot.CorrectSubmissionCount > 0 && snapshot.WriteupCount+snapshot.ApprovedReviewCount == 0 {
 		severity = maxSeverity(severity, SeverityAttention)
 	}
-	if snapshot.ActiveDays7d <= 1 && snapshot.RecentEventCount7d <= 2 {
-		severity = maxSeverity(severity, SeverityWarning)
+	if activitySeverity, ok := lowActivitySeverity(snapshot); ok {
+		severity = maxSeverity(severity, activitySeverity)
 	}
 
 	return StudentEvaluation{
@@ -234,11 +236,7 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 		items = append(items, observation)
 	}
 
-	if snapshot.MaxWrongStreak >= 2 || snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount {
-		severity := SeverityWarning
-		if snapshot.MaxWrongStreak >= 4 {
-			severity = SeverityDanger
-		}
+	if severity, ok := submissionStabilitySeverity(snapshot); ok {
 		items = append(items, ReviewArchiveObservation{
 			Code:     "submission_stability",
 			Label:    "提交稳定性",
@@ -256,6 +254,10 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 			Evidence: fmt.Sprintf("正确提交 %d 次，错误提交 %d 次。", snapshot.CorrectSubmissionCount, snapshot.WrongSubmissionCount),
 			Action:   "继续保持先验证思路、再提交结果的节奏。",
 		})
+	}
+
+	if observation, ok := buildLowActivityObservation(snapshot); ok {
+		items = append(items, observation)
 	}
 
 	if snapshot.HandsOnEventCount+snapshot.AWDSuccessCount > 0 {
@@ -359,24 +361,28 @@ func BuildClassReview(
 	activitySeverity := SeverityGood
 	activitySummary := fmt.Sprintf("%s 最近一周的训练节奏整体稳定。", className)
 	activityAction := "继续保持当前训练节奏，优先把注意力放在明确薄弱项和复盘闭环上。"
-	if summary.ActiveRate < 50 || len(lowActivityStudents)*2 >= len(snapshots) {
+	lowActivityRatio := float64(len(lowActivityStudents)) / float64(len(snapshots))
+	if summary.ActiveRate < 50 || lowActivityRatio >= 0.5 {
 		activitySeverity = SeverityDanger
 		activitySummary = fmt.Sprintf("%s 最近一周的训练活跃度明显下滑。", className)
 		activityAction = "先联系低活跃学生确认卡点，再安排一次短时补练把班级节奏拉回来。"
-	} else if summary.ActiveRate < 75 || len(lowActivityStudents) > 0 {
+	} else if summary.ActiveRate < 75 || lowActivityRatio >= 0.25 {
 		activitySeverity = SeverityWarning
 		activitySummary = fmt.Sprintf("%s 最近一周的训练节奏开始变松。", className)
 		activityAction = "本周优先跟进低活跃学生，避免节奏进一步松散。"
+	} else if len(lowActivityStudents) > 0 {
+		activitySeverity = SeverityAttention
+		activitySummary = fmt.Sprintf("%s 整体训练还在推进，但有少数学生近期节奏偏慢。", className)
+		activityAction = "点名跟进名单中的学生，优先确认是否存在卡题或掉队风险。"
 	}
 	items = append(items, ClassReviewItem{
-		Code:                    "activity_risk",
-		Severity:                activitySeverity,
-		Summary:                 activitySummary,
-		Evidence:                fmt.Sprintf("近 7 天活跃率 %.0f%%，低活跃学生 %d/%d，训练事件 %d 次。", summary.ActiveRate, len(lowActivityStudents), len(snapshots), summary.RecentEventCount),
-		Action:                  activityAction,
-		ReasonCodes:             []string{"activity_rate", "recent_event_count"},
-		StudentIDs:              studentIDs(lowActivityStudents, 3),
-		RecommendationStudentID: firstStudentID(lowActivityStudents),
+		Code:        "activity_risk",
+		Severity:    activitySeverity,
+		Summary:     activitySummary,
+		Evidence:    fmt.Sprintf("近 7 天活跃率 %.0f%%，低活跃学生 %d/%d，训练事件 %d 次。", summary.ActiveRate, len(lowActivityStudents), len(snapshots), summary.RecentEventCount),
+		Action:      activityAction,
+		ReasonCodes: []string{"activity_rate", "recent_event_count"},
+		StudentIDs:  studentIDs(lowActivityStudents, 3),
 	})
 
 	if dimension, students := selectTopWeakDimension(weakDimensionCounts, weakDimensionStudents); dimension != "" {
@@ -395,27 +401,25 @@ func BuildClassReview(
 
 	if len(closureGapStudents) > 0 {
 		items = append(items, ClassReviewItem{
-			Code:                    "training_closure_gap",
-			Severity:                SeverityWarning,
-			Summary:                 "部分学生已经能解题，但训练闭环还没有形成。",
-			Evidence:                fmt.Sprintf("共有 %d 名学生出现“有正确提交但缺少 writeup 或通过评阅记录”的情况。", len(closureGapStudents)),
-			Action:                  "把复盘材料或课堂讲解记录列为本周交付物，优先跟进名单中的学生。",
-			ReasonCodes:             []string{"closure_gap", "missing_review_output"},
-			StudentIDs:              studentIDs(closureGapStudents, 3),
-			RecommendationStudentID: firstStudentID(closureGapStudents),
+			Code:        "training_closure_gap",
+			Severity:    SeverityWarning,
+			Summary:     "部分学生已经能解题，但训练闭环还没有形成。",
+			Evidence:    fmt.Sprintf("共有 %d 名学生出现“有正确提交但缺少 writeup 或通过评阅记录”的情况。", len(closureGapStudents)),
+			Action:      "把复盘材料或课堂讲解记录列为本周交付物，优先跟进名单中的学生。",
+			ReasonCodes: []string{"closure_gap", "missing_review_output"},
+			StudentIDs:  studentIDs(closureGapStudents, 3),
 		})
 	}
 
 	if len(retryRiskStudents) > 0 {
 		items = append(items, ClassReviewItem{
-			Code:                    "retry_cost_high",
-			Severity:                SeverityWarning,
-			Summary:                 "部分学生的试错成本已经偏高，需要先收紧提交流程。",
-			Evidence:                fmt.Sprintf("共有 %d 名学生出现连续错误提交 >= 3 次或错误提交显著高于正确提交。", len(retryRiskStudents)),
-			Action:                  "先回放利用链路，再要求学生按“验证思路 -> 再提交”的节奏继续训练。",
-			ReasonCodes:             []string{"wrong_streak", "retry_cost"},
-			StudentIDs:              studentIDs(retryRiskStudents, 3),
-			RecommendationStudentID: firstStudentID(retryRiskStudents),
+			Code:        "retry_cost_high",
+			Severity:    SeverityWarning,
+			Summary:     "部分学生的试错成本已经偏高，需要先收紧提交流程。",
+			Evidence:    fmt.Sprintf("共有 %d 名学生出现连续错误提交 >= 3 次或错误提交显著高于正确提交。", len(retryRiskStudents)),
+			Action:      "先回放利用链路，再要求学生按“验证思路 -> 再提交”的节奏继续训练。",
+			ReasonCodes: []string{"wrong_streak", "retry_cost"},
+			StudentIDs:  studentIDs(retryRiskStudents, 3),
 		})
 	}
 
@@ -444,19 +448,15 @@ func BuildClassReview(
 func BuildRecommendationPlan(snapshot StudentFactSnapshot, evaluation StudentEvaluation, challenges []ChallengeCandidate) RecommendationPlan {
 	reasons := make([]RecommendationReason, 0, len(challenges))
 	for _, challenge := range challenges {
-		target := pickRecommendationTarget(challenge.Category, evaluation)
+		target := pickRecommendationTarget(recommendationTargetDimension(challenge), evaluation)
 		if target.Dimension == "" {
 			continue
 		}
+		actualDifficulty := normalizedDifficultyLabel(challenge.Difficulty)
 		reasonCodes := append([]string(nil), target.ReasonCodes...)
 		reasonCodes = append(reasonCodes, "difficulty_band_"+string(evaluation.RecommendedDifficultyBand))
 
-		summary := fmt.Sprintf("%s 维度当前更适合先做 %s 难度训练，这道题可以作为下一步补强。", dimensionLabel(target.Dimension), evaluation.RecommendedDifficultyBand)
-		if target.IsWeak {
-			summary = fmt.Sprintf("%s 维度已经出现高置信度薄弱信号，这道题适合先补 %s 难度基础。", dimensionLabel(target.Dimension), evaluation.RecommendedDifficultyBand)
-		} else if target.EvidenceCount < 2 {
-			summary = fmt.Sprintf("%s 维度的训练证据还不够，这道题适合先补一条可靠样本。", dimensionLabel(target.Dimension))
-		}
+		summary := recommendationReasonSummary(target, evaluation.RecommendedDifficultyBand, actualDifficulty)
 
 		reasons = append(reasons, RecommendationReason{
 			Dimension:      target.Dimension,
@@ -474,6 +474,58 @@ func BuildRecommendationPlan(snapshot StudentFactSnapshot, evaluation StudentEva
 		Reasons:        reasons,
 		DifficultyBand: evaluation.RecommendedDifficultyBand,
 	}
+}
+
+func recommendationReasonSummary(
+	target DimensionAdvice,
+	preferred DifficultyBand,
+	actualDifficulty string,
+) string {
+	label := dimensionLabel(target.Dimension)
+	preferredDifficulty := string(preferred)
+	actualMatchesPreferred := actualDifficulty == "" || strings.EqualFold(actualDifficulty, preferredDifficulty)
+
+	if target.IsWeak {
+		if actualMatchesPreferred {
+			displayDifficulty := preferredDifficulty
+			if actualDifficulty != "" {
+				displayDifficulty = actualDifficulty
+			}
+			return fmt.Sprintf("%s 维度已经出现高置信度薄弱信号，这道 %s 难度题适合先补基础。", label, displayDifficulty)
+		}
+		return fmt.Sprintf("%s 维度已经出现高置信度薄弱信号，当前更适合先补 %s 难度；题库里这道 %s 难度题是最接近的候选。", label, preferredDifficulty, actualDifficulty)
+	}
+
+	if target.EvidenceCount < 2 {
+		if actualMatchesPreferred {
+			if actualDifficulty == "" {
+				return fmt.Sprintf("%s 维度的训练证据还不够，这道题适合先补一条可靠样本。", label)
+			}
+			return fmt.Sprintf("%s 维度的训练证据还不够，这道 %s 难度题适合先补一条可靠样本。", label, actualDifficulty)
+		}
+		return fmt.Sprintf("%s 维度的训练证据还不够，当前更适合先补 %s 难度；题库里这道 %s 难度题可以先作为最接近的样本。", label, preferredDifficulty, actualDifficulty)
+	}
+
+	if actualMatchesPreferred {
+		displayDifficulty := preferredDifficulty
+		if actualDifficulty != "" {
+			displayDifficulty = actualDifficulty
+		}
+		return fmt.Sprintf("%s 维度当前更适合先做 %s 难度训练，这道题可以作为下一步补强。", label, displayDifficulty)
+	}
+	return fmt.Sprintf("%s 维度当前更适合先做 %s 难度训练；题库里这道 %s 难度题可以作为最接近的补强候选。", label, preferredDifficulty, actualDifficulty)
+}
+
+func normalizedDifficultyLabel(difficulty string) string {
+	return strings.ToLower(strings.TrimSpace(difficulty))
+}
+
+func recommendationTargetDimension(challenge ChallengeCandidate) string {
+	dimension := strings.ToLower(strings.TrimSpace(challenge.Dimension))
+	if dimension != "" {
+		return dimension
+	}
+	return strings.ToLower(strings.TrimSpace(challenge.Category))
 }
 
 func evaluateDimension(fact DimensionFact) DimensionAdvice {
@@ -628,6 +680,47 @@ func classDifficultyBand(
 		}
 	}
 	return best
+}
+
+func submissionStabilitySeverity(snapshot StudentFactSnapshot) (Severity, bool) {
+	if snapshot.MaxWrongStreak >= 4 || (snapshot.WrongSubmissionCount >= 5 && snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount*2) {
+		return SeverityDanger, true
+	}
+	if snapshot.MaxWrongStreak >= 2 || (snapshot.WrongSubmissionCount >= 3 && snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount) {
+		return SeverityWarning, true
+	}
+	return "", false
+}
+
+func buildLowActivityObservation(snapshot StudentFactSnapshot) (ReviewArchiveObservation, bool) {
+	severity, ok := lowActivitySeverity(snapshot)
+	if !ok {
+		return ReviewArchiveObservation{}, false
+	}
+
+	observation := ReviewArchiveObservation{
+		Code:     "low_activity",
+		Label:    "近期活跃度",
+		Severity: severity,
+		Summary:  "最近一周训练节奏偏慢，需要尽快恢复稳定投入。",
+		Evidence: fmt.Sprintf("近 7 天活跃 %d 天，训练事件 %d 次，正确提交 %d 次。", snapshot.ActiveDays7d, snapshot.RecentEventCount7d, snapshot.CorrectSubmissionCount),
+		Action:   "先确认当前卡点，再安排 1 个可完成的小目标，把训练节奏拉回来。",
+	}
+	if severity == SeverityWarning {
+		observation.Summary = "最近一周训练投入明显不足，已经有掉队风险。"
+		observation.Action = "优先确认是否卡题或脱节，并安排一次短时补练恢复训练节奏。"
+	}
+	return observation, true
+}
+
+func lowActivitySeverity(snapshot StudentFactSnapshot) (Severity, bool) {
+	if !isLowActivity(snapshot) {
+		return "", false
+	}
+	if snapshot.ActiveDays7d <= 1 && snapshot.RecentEventCount7d <= 2 {
+		return SeverityWarning, true
+	}
+	return SeverityAttention, true
 }
 
 func isLowActivity(snapshot StudentFactSnapshot) bool {

@@ -90,7 +90,7 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 	}
 }
 
-func TestClassInsightQueryServiceGetClassReviewAttachesRecommendation(t *testing.T) {
+func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecommendation(t *testing.T) {
 	t.Parallel()
 
 	nameAlice := "Alice"
@@ -164,15 +164,24 @@ func TestClassInsightQueryServiceGetClassReviewAttachesRecommendation(t *testing
 	}
 	recommendations := &classInsightRecommendationStub{
 		recommendFn: func(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
-			if userID != 1 || limit != 1 {
+			if userID != 1 || limit != 6 {
 				return nil, nil
 			}
 			return &dto.RecommendationResp{
 				Challenges: []*dto.ChallengeRecommendation{
 					{
+						ID:         99,
+						Title:      "crypto-001",
+						Category:   "crypto",
+						Dimension:  "crypto",
+						Difficulty: "easy",
+						Summary:    "不应该挂到 web 聚焦建议上",
+					},
+					{
 						ID:         101,
 						Title:      "web-101",
 						Category:   "web",
+						Dimension:  "web",
 						Difficulty: "easy",
 						Summary:    "先补基础命中率",
 					},
@@ -194,21 +203,25 @@ func TestClassInsightQueryServiceGetClassReviewAttachesRecommendation(t *testing
 		t.Fatalf("Items = %+v, want multiple class review items", review.Items)
 	}
 
-	foundRecommendation := false
+	foundWeakDimensionRecommendation := false
 	for _, item := range review.Items {
-		if item.Code != "activity_risk" {
-			continue
+		switch item.Code {
+		case "activity_risk":
+			if len(item.Students) == 0 || item.Students[0].Username != "alice" {
+				t.Fatalf("activity_risk students = %+v, want alice first", item.Students)
+			}
+			if item.Recommendation != nil {
+				t.Fatalf("activity_risk recommendation = %+v, want no recommendation", item.Recommendation)
+			}
+		case "weak_dimension_cluster":
+			if item.Recommendation == nil || item.Recommendation.Title != "web-101" {
+				t.Fatalf("weak_dimension_cluster recommendation = %+v, want dimension-matched recommendation", item.Recommendation)
+			}
+			foundWeakDimensionRecommendation = true
 		}
-		if len(item.Students) == 0 || item.Students[0].Username != "alice" {
-			t.Fatalf("activity_risk students = %+v, want alice first", item.Students)
-		}
-		if item.Recommendation == nil || item.Recommendation.Title != "web-101" {
-			t.Fatalf("activity_risk recommendation = %+v, want mapped recommendation", item.Recommendation)
-		}
-		foundRecommendation = true
 	}
 
-	if !foundRecommendation {
-		t.Fatalf("review items = %+v, want activity_risk recommendation", review.Items)
+	if !foundWeakDimensionRecommendation {
+		t.Fatalf("review items = %+v, want weak_dimension_cluster recommendation", review.Items)
 	}
 }

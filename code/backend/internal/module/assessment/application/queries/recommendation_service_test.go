@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -187,6 +188,78 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 }
 
+func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimension(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now()
+
+	if err := db.Create(&model.User{
+		ID:       8,
+		Username: "student-8",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&model.SkillProfile{
+		UserID:    8,
+		Dimension: model.DimensionPwn,
+		Score:     0.18,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         801,
+		Title:      "pwn-primer",
+		Category:   model.DimensionPwn,
+		Difficulty: model.ChallengeDifficultyBeginner,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+	}).Error; err != nil {
+		t.Fatalf("seed practice challenge: %v", err)
+	}
+	for index := 0; index < 3; index++ {
+		if err := db.Create(&model.Submission{
+			UserID:      8,
+			ChallengeID: 801,
+			IsCorrect:   false,
+			SubmittedAt: now.Add(time.Duration(index) * time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed submission %d: %v", index, err)
+		}
+	}
+
+	stubRepo := &stubChallengeRecommendationRepo{
+		challenges: []*model.Challenge{
+			{
+				ID:                      401,
+				Title:                   "tagged-web-for-pwn",
+				Category:                model.DimensionWeb,
+				RecommendationDimension: model.DimensionPwn,
+				Difficulty:              model.ChallengeDifficultyEasy,
+				Points:                  120,
+			},
+		},
+	}
+	service := newRecommendationTestService(db, stubRepo, nil)
+
+	items, err := service.RecommendChallenges(context.Background(), 8, 3)
+	if err != nil {
+		t.Fatalf("RecommendChallenges() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 recommendation, got %+v", items)
+	}
+	if items[0].Dimension != model.DimensionPwn {
+		t.Fatalf("expected recommendation dimension pwn, got %+v", items[0])
+	}
+	if items[0].Category != model.DimensionWeb {
+		t.Fatalf("expected original challenge category preserved, got %+v", items[0])
+	}
+	if items[0].Summary == "" || !strings.Contains(items[0].Summary, "Pwn") {
+		t.Fatalf("expected summary to follow matched recommendation dimension, got %+v", items[0])
+	}
+}
+
 func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
@@ -211,6 +284,61 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testin
 	}
 	if stubRepo.calls != 0 {
 		t.Fatalf("expected no challenge query when no weak dimension, got %d", stubRepo.calls)
+	}
+}
+
+func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now()
+
+	if err := db.Create(&model.User{
+		ID:       10,
+		Username: "student-10",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&model.SkillProfile{
+		UserID:    10,
+		Dimension: model.DimensionWeb,
+		Score:     0.82,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         901,
+		Title:      "healthy-web-sample",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+	for index := 0; index < 3; index++ {
+		if err := db.Create(&model.Submission{
+			UserID:      10,
+			ChallengeID: 901,
+			IsCorrect:   index < 2,
+			SubmittedAt: now.Add(time.Duration(index) * time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed submission %d: %v", index, err)
+		}
+	}
+
+	stubRepo := &stubChallengeRecommendationRepo{}
+	service := newRecommendationTestService(db, stubRepo, nil)
+
+	resp, err := service.Recommend(context.Background(), 10, 3)
+	if err != nil {
+		t.Fatalf("Recommend() error = %v", err)
+	}
+	if len(resp.WeakDimensions) != 0 || len(resp.Challenges) != 0 {
+		t.Fatalf("expected empty recommendation response for healthy evidence-backed student, got %+v", resp)
+	}
+	if stubRepo.calls != 0 {
+		t.Fatalf("expected no challenge query when only healthy evidence exists, got %d", stubRepo.calls)
 	}
 }
 

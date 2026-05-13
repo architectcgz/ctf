@@ -22,6 +22,7 @@ const router = useRouter()
 const {
   candidates,
   getRecommendation,
+  hasRecommendationError,
   isRecommendationLoading,
   getCandidateClass,
   getCandidatePriorityLabel,
@@ -131,6 +132,19 @@ function weakDimensionCategory(value?: string | null) {
           </div>
 
           <div
+            v-else-if="hasRecommendationError(item.student.id)"
+            class="intervention-item__recommendation intervention-item__recommendation--error"
+          >
+            <div class="intervention-item__recommendation-heading">
+              <div class="intervention-item__recommendation-label">建议训练题</div>
+              <div class="intervention-item__recommendation-kicker">稍后重试</div>
+            </div>
+            <div class="intervention-item__recommendation-copy">
+              推荐题暂时没有加载成功，请稍后再试。
+            </div>
+          </div>
+
+          <div
             v-else-if="getRecommendation(item.student.id)"
             class="intervention-item__recommendation intervention-item__recommendation--premium"
           >
@@ -159,6 +173,19 @@ function weakDimensionCategory(value?: string | null) {
               class="intervention-item__recommendation-evidence"
             >
               {{ getRecommendation(item.student.id)?.evidence }}
+            </div>
+          </div>
+
+          <div
+            v-else
+            class="intervention-item__recommendation intervention-item__recommendation--empty"
+          >
+            <div class="intervention-item__recommendation-heading">
+              <div class="intervention-item__recommendation-label">建议训练题</div>
+              <div class="intervention-item__recommendation-kicker">暂未生成</div>
+            </div>
+            <div class="intervention-item__recommendation-copy">
+              当前暂无直接匹配的推荐题，可先跟进这名学生最近的训练卡点。
             </div>
           </div>
         </div>
@@ -329,6 +356,15 @@ function weakDimensionCategory(value?: string | null) {
   padding: var(--space-3) var(--space-4);
 }
 
+.intervention-item__recommendation--empty,
+.intervention-item__recommendation--error {
+  margin-top: var(--space-3);
+  border: 1px dashed color-mix(in srgb, var(--panel-border) 90%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-surface-subtle) 82%, transparent);
+  padding: var(--space-3) var(--space-4);
+}
+
 .intervention-item__recommendation--loading {
   margin-top: var(--space-3);
   padding: var(--space-2-5) var(--space-3);
@@ -355,6 +391,13 @@ function weakDimensionCategory(value?: string | null) {
 
 .intervention-item__recommendation-kicker {
   font-size: var(--font-size-12);
+  color: var(--panel-muted);
+}
+
+.intervention-item__recommendation-copy {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-13);
+  line-height: 1.6;
   color: var(--panel-muted);
 }
 

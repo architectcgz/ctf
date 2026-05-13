@@ -742,6 +742,7 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 		[]*dto.SkillDimension{
 			{Dimension: "pwn", Score: 0.3},
 		},
+		nil,
 		evidence,
 		nil,
 		nil,
@@ -767,6 +768,7 @@ func TestBuildReviewArchiveTeachingFactSnapshotOnlyMarksDimensionWithRealEvidenc
 			{Dimension: "web", Score: 0.28},
 			{Dimension: "pwn", Score: 0.24},
 		},
+		nil,
 		[]assessmentdomain.ReviewArchiveEvidenceEvent{
 			{
 				Type:        "challenge_submission",
@@ -802,6 +804,93 @@ func TestBuildReviewArchiveTeachingFactSnapshotOnlyMarksDimensionWithRealEvidenc
 		if item.Dimension == "pwn" {
 			t.Fatalf("expected pwn to stay out of recommendation targets without archive evidence, got %+v", evaluation.RecommendationTargets)
 		}
+	}
+}
+
+func TestRecentReviewArchiveActivityStatsUsesEvidenceAndWriteupsWithinSevenDays(t *testing.T) {
+	t.Parallel()
+
+	referenceTime := time.Date(2026, 5, 13, 12, 0, 0, 0, time.UTC)
+	publishedAt := referenceTime.Add(-2 * time.Hour)
+
+	recentEventCount, activeDays := recentReviewArchiveActivityStats(
+		referenceTime,
+		[]assessmentdomain.ReviewArchiveTimelineEvent{
+			{
+				Type:      "challenge_submission",
+				Timestamp: referenceTime.Add(-24 * time.Hour),
+			},
+		},
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:      "instance_proxy_request",
+				Timestamp: referenceTime.Add(-3 * time.Hour),
+			},
+			{
+				Type:      "challenge_submission",
+				Timestamp: referenceTime.AddDate(0, 0, -10),
+			},
+		},
+		[]assessmentdomain.ReviewArchiveWriteupItem{
+			{
+				PublishedAt: &publishedAt,
+			},
+		},
+		nil,
+	)
+
+	if recentEventCount != 2 {
+		t.Fatalf("expected 2 recent events from evidence/writeup within 7 days, got %d", recentEventCount)
+	}
+	if activeDays != 1 {
+		t.Fatalf("expected 1 active day, got %d", activeDays)
+	}
+}
+
+func TestBuildReviewArchiveTeachingFactSnapshotCountsRecentManualReviewsAsActivity(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	manualReviews := []assessmentdomain.ReviewArchiveManualReviewItem{
+		{SubmittedAt: now.Add(-12 * time.Hour), Category: "web"},
+		{SubmittedAt: now.Add(-48 * time.Hour), Category: "web"},
+		{SubmittedAt: now.Add(-96 * time.Hour), Category: "web"},
+	}
+
+	snapshot := buildReviewArchiveTeachingFactSnapshot(
+		assessmentdomain.ReviewArchiveSummary{
+			LastActivityAt: &now,
+		},
+		[]*dto.SkillDimension{
+			{Dimension: "web", Score: 0.42},
+		},
+		nil,
+		nil,
+		nil,
+		manualReviews,
+	)
+
+	if snapshot.RecentEventCount7d != 3 {
+		t.Fatalf("expected recent manual reviews to count as 3 recent events, got %+v", snapshot)
+	}
+	if snapshot.ActiveDays7d != 3 {
+		t.Fatalf("expected recent manual reviews to span 3 active days, got %+v", snapshot)
+	}
+
+	observations := buildReviewArchiveObservations(
+		assessmentdomain.ReviewArchiveSummary{
+			LastActivityAt: &now,
+		},
+		[]*dto.SkillDimension{
+			{Dimension: "web", Score: 0.42},
+		},
+		nil,
+		nil,
+		nil,
+		manualReviews,
+	)
+	if observation := findObservation(observations.Items, "low_activity"); observation != nil {
+		t.Fatalf("expected no low_activity observation when recent manual reviews keep the student active, got %+v", observation)
 	}
 }
 

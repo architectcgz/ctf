@@ -19,6 +19,7 @@ export function useTeacherInterventionRecommendations(
 ) {
   const recommendationMap = ref<Record<string, RecommendationItem | null>>({})
   const recommendationLoadingMap = ref<Record<string, boolean>>({})
+  const recommendationErrorMap = ref<Record<string, boolean>>({})
 
   const candidates = computed<InterventionCandidate[]>(() =>
     options.students.value
@@ -96,6 +97,10 @@ export function useTeacherInterventionRecommendations(
     return recommendationLoadingMap.value[studentId] ?? false
   }
 
+  function hasRecommendationError(studentId: string): boolean {
+    return recommendationErrorMap.value[studentId] ?? false
+  }
+
   function getCandidateClass(accent: InterventionCandidate['accent']): string {
     if (accent === 'danger') return 'intervention-item intervention-item--danger'
     if (accent === 'warning') return 'intervention-item intervention-item--warning'
@@ -121,6 +126,7 @@ export function useTeacherInterventionRecommendations(
         targetIds.map((id) => [id, recommendationMap.value[id] ?? null])
       )
       recommendationLoadingMap.value = Object.fromEntries(targetIds.map((id) => [id, true]))
+      recommendationErrorMap.value = Object.fromEntries(targetIds.map((id) => [id, false]))
 
       if (targetIds.length === 0) {
         return
@@ -136,11 +142,19 @@ export function useTeacherInterventionRecommendations(
               ...recommendationMap.value,
               [studentId]: recommendation,
             }
+            recommendationErrorMap.value = {
+              ...recommendationErrorMap.value,
+              [studentId]: false,
+            }
           } catch {
             if (cancelled) return
             recommendationMap.value = {
               ...recommendationMap.value,
               [studentId]: null,
+            }
+            recommendationErrorMap.value = {
+              ...recommendationErrorMap.value,
+              [studentId]: true,
             }
           } finally {
             if (cancelled) return
@@ -160,6 +174,7 @@ export function useTeacherInterventionRecommendations(
     getCandidateClass,
     getCandidatePriorityLabel,
     getRecommendation,
+    hasRecommendationError,
     isRecommendationLoading,
   }
 }

@@ -140,7 +140,8 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 			Students:    reviewStudentRefsByIDs(studentRefs, adviceItem.StudentIDs),
 		}
 		if adviceItem.RecommendationStudentID != nil {
-			if recommendation := s.firstStudentRecommendation(ctx, []int64{*adviceItem.RecommendationStudentID}, 1); recommendation != nil {
+			candidateIDs := prioritizedStudentIDs(*adviceItem.RecommendationStudentID, adviceItem.StudentIDs)
+			if recommendation := s.matchingStudentRecommendation(ctx, candidateIDs, adviceItem.Dimension, 6); recommendation != nil {
 				item.Recommendation = recommendation
 			}
 		}
@@ -165,8 +166,17 @@ func buildClassTrendSnapshot(trend *readmodelports.ClassTrend) *teachingadvice.C
 	}
 }
 
-func (s *ClassInsightQueryService) firstStudentRecommendation(ctx context.Context, studentIDs []int64, limit int) *dto.TeacherRecommendationItem {
+func (s *ClassInsightQueryService) matchingStudentRecommendation(
+	ctx context.Context,
+	studentIDs []int64,
+	dimension string,
+	limit int,
+) *dto.TeacherRecommendationItem {
 	if s.recommendationService == nil {
+		return nil
+	}
+	targetDimension := strings.ToLower(strings.TrimSpace(dimension))
+	if targetDimension == "" {
 		return nil
 	}
 	for _, studentID := range studentIDs {
@@ -175,12 +185,48 @@ func (s *ClassInsightQueryService) firstStudentRecommendation(ctx context.Contex
 			s.logger.Warn("recommend_student_for_class_review_failed", zap.Int64("student_id", studentID), zap.Error(err))
 			continue
 		}
-		if result == nil || len(result.Challenges) == 0 || result.Challenges[0] == nil {
+		if result == nil || len(result.Challenges) == 0 {
 			continue
 		}
-		return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(result.Challenges[0])
+		for _, challenge := range result.Challenges {
+			if challenge == nil || !recommendationMatchesDimension(challenge, targetDimension) {
+				continue
+			}
+			return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(challenge)
+		}
 	}
 	return nil
+}
+
+func recommendationMatchesDimension(challenge *dto.ChallengeRecommendation, dimension string) bool {
+	if challenge == nil {
+		return false
+	}
+	if strings.EqualFold(strings.TrimSpace(challenge.Dimension), dimension) {
+		return true
+	}
+	return strings.EqualFold(strings.TrimSpace(challenge.Category), dimension)
+}
+
+func prioritizedStudentIDs(primary int64, studentIDs []int64) []int64 {
+	ids := make([]int64, 0, len(studentIDs)+1)
+	seen := make(map[int64]struct{}, len(studentIDs)+1)
+	appendID := func(id int64) {
+		if id <= 0 {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+
+	appendID(primary)
+	for _, studentID := range studentIDs {
+		appendID(studentID)
+	}
+	return ids
 }
 
 func reviewStudentRefsByIDs(

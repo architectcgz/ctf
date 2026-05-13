@@ -239,6 +239,80 @@ describe('TeacherClassStudents', () => {
     })
   })
 
+  it('没有推荐题时应在教师复盘与介入卡片中展示友好提示', async () => {
+    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+      weak_dimensions: [],
+      challenges: [],
+    })
+    teacherApiMocks.getClassReview.mockResolvedValue({
+      class_name: 'Class A',
+      items: [
+        {
+          code: 'activity_risk',
+          severity: 'warning',
+          summary: '班级活跃度需要补强',
+          evidence: 'Class A 近 7 天活跃率为 50%，需要尽快补回训练节奏。',
+          action: '本周先联系低活跃学生，确认是否存在卡点。',
+        },
+        {
+          code: 'retry_cost_high',
+          severity: 'warning',
+          summary: '部分学生试错成本偏高',
+          evidence: 'alice 最近连续错误提交偏多，需要先回放关键利用链路。',
+          action: '按验证思路再提交的节奏继续训练。',
+          students: [{ id: 'stu-1', username: 'alice' }],
+        },
+      ],
+    })
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('当前暂无直接匹配的推荐题，可先跟进这名学生最近的训练卡点。')
+    expect(wrapper.text()).toContain('当前没有直接匹配的推荐题，可先按本条结论安排训练。')
+    expect(wrapper.text()).not.toContain('crypto-lab')
+  })
+
+  it('推荐题加载失败时不应把教师介入卡片伪装成空推荐', async () => {
+    teacherApiMocks.getStudentRecommendations.mockRejectedValue(new Error('boom'))
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('推荐题暂时没有加载成功，请稍后再试。')
+    expect(wrapper.text()).not.toContain(
+      '当前暂无直接匹配的推荐题，可先跟进这名学生最近的训练卡点。'
+    )
+  })
+
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
     expect(teacherClassStudentsSource).toContain('useTeacherClassStudentsPage')
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
@@ -265,7 +339,9 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('WorkspaceDataTable')
     expect(classStudentsPageSource).toContain('class="teacher-topbar class-overview-topbar"')
     expect(classStudentsPageSource).toContain('class="teacher-summary class-overview-summary"')
-    expect(classStudentsPageSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"')
+    expect(classStudentsPageSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
     expect(classStudentsPageSource).toContain('class="progress-card metric-panel-card"')
     expect(classStudentsPageSource).toMatch(
       /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
@@ -285,16 +361,16 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).not.toContain('class="teacher-section-head"')
     expect(classStudentsPageSource).not.toContain('切换班级')
     expect(classStudentsPageSource).not.toContain("emit('selectClass'")
-    expect(classStudentsPageSource).toContain('class="teacher-directory-shell workspace-directory-list"')
+    expect(classStudentsPageSource).toContain(
+      'class="teacher-directory-shell workspace-directory-list"'
+    )
     expect(classStudentsPageSource).toContain('class="teacher-student-directory-table"')
     expect(classStudentsPageSource).toContain("label: '做题数 / 得分数'")
     expect(classStudentsPageSource).not.toContain('class="teacher-directory-row-metrics"')
     expect(classStudentsPageSource).not.toMatch(/\.teacher-directory-row-metrics\s*\{/)
     expect(classStudentsPageSource).toContain('当前班级学生总数')
     expect(classStudentsPageSource).toContain('当前班级人均完成题目数')
-    expect(classStudentsPageSource).toMatch(
-      /\.class-overview-topbar\s*\{[^}]*border-bottom:\s*0;/s
-    )
+    expect(classStudentsPageSource).toMatch(/\.class-overview-topbar\s*\{[^}]*border-bottom:\s*0;/s)
     expect(classStudentsPageSource).toMatch(
       /\.class-overview-summary\s*\{[^}]*padding:\s*0;[^}]*border-bottom:\s*0;/s
     )

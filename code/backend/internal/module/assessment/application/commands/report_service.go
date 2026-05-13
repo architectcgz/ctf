@@ -792,7 +792,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 		Evidence:            evidence,
 		Writeups:            writeups,
 		ManualReviews:       manualReviews,
-		TeacherObservations: buildReviewArchiveObservations(summary, skillProfile, evidence, writeups, manualReviews),
+		TeacherObservations: buildReviewArchiveObservations(summary, skillProfile, timeline, evidence, writeups, manualReviews),
 	}, nil
 }
 
@@ -882,11 +882,12 @@ func latestReviewArchiveActivity(
 func buildReviewArchiveObservations(
 	summary assessmentdomain.ReviewArchiveSummary,
 	skillProfile []*dto.SkillDimension,
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 	writeups []assessmentdomain.ReviewArchiveWriteupItem,
 	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
 ) assessmentdomain.ReviewArchiveTeacherObservations {
-	snapshot := buildReviewArchiveTeachingFactSnapshot(summary, skillProfile, evidence, writeups, manualReviews)
+	snapshot := buildReviewArchiveTeachingFactSnapshot(summary, skillProfile, timeline, evidence, writeups, manualReviews)
 	evaluation := teachingadvice.EvaluateStudent(snapshot)
 	adviceItems := teachingadvice.BuildReviewArchiveObservations(snapshot, evaluation)
 
@@ -908,11 +909,16 @@ func buildReviewArchiveObservations(
 func buildReviewArchiveTeachingFactSnapshot(
 	summary assessmentdomain.ReviewArchiveSummary,
 	skillProfile []*dto.SkillDimension,
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 	writeups []assessmentdomain.ReviewArchiveWriteupItem,
 	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
 ) teachingadvice.StudentFactSnapshot {
+	recentEventCount, activeDays := recentReviewArchiveActivityStats(time.Now().UTC(), timeline, evidence, writeups, manualReviews)
 	snapshot := teachingadvice.StudentFactSnapshot{
+		ActiveDays7d:           activeDays,
+		RecentEventCount7d:     recentEventCount,
+		LastActivityAt:         summary.LastActivityAt,
 		CorrectSubmissionCount: summary.CorrectSubmissionCount,
 		WrongSubmissionCount:   max(summary.TotalAttempts-summary.CorrectSubmissionCount, 0),
 		WriteupCount:           summary.WriteupCount,
@@ -1013,6 +1019,53 @@ func buildReviewArchiveTeachingFactSnapshot(
 	}
 
 	return snapshot
+}
+
+func recentReviewArchiveActivityStats(
+	referenceTime time.Time,
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+	writeups []assessmentdomain.ReviewArchiveWriteupItem,
+	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
+) (int, int) {
+	if referenceTime.IsZero() {
+		referenceTime = time.Now().UTC()
+	}
+	cutoff := referenceTime.AddDate(0, 0, -7)
+	activeDays := make(map[string]struct{})
+	recentEventCount := 0
+
+	record := func(timestamp time.Time) {
+		if timestamp.IsZero() || timestamp.Before(cutoff) {
+			return
+		}
+		recentEventCount++
+		activeDays[timestamp.UTC().Format("2006-01-02")] = struct{}{}
+	}
+
+	if len(evidence) > 0 {
+		for _, item := range evidence {
+			record(item.Timestamp)
+		}
+	} else {
+		for _, item := range timeline {
+			record(item.Timestamp)
+		}
+	}
+
+	for _, item := range writeups {
+		if item.PublishedAt != nil {
+			record(item.PublishedAt.UTC())
+			continue
+		}
+		record(item.UpdatedAt)
+	}
+
+	for _, item := range manualReviews {
+		record(item.SubmittedAt)
+	}
+
+	return recentEventCount, len(activeDays)
 }
 
 func ensureReviewArchiveDimensionFact(

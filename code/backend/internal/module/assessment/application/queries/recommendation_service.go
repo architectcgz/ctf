@@ -171,6 +171,7 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 			ID:         challenge.ID,
 			Title:      challenge.Title,
 			Category:   challenge.Category,
+			Dimension:  challenge.RecommendationDimension,
 			Difficulty: challenge.Difficulty,
 			Points:     challenge.Points,
 		})

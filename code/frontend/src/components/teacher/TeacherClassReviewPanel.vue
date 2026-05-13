@@ -35,6 +35,10 @@ function severityLabel(severity: AdviceSeverity): string {
   if (severity === 'attention') return '建议跟进'
   return '表现稳定'
 }
+
+function shouldShowRecommendationFallback(item: TeacherClassReviewItemData): boolean {
+  return item.severity !== 'good' && !item.recommendation
+}
 </script>
 
 <template>
@@ -113,6 +117,16 @@ function severityLabel(severity: AdviceSeverity): string {
           </div>
           <div v-if="item.recommendation.evidence" class="review-item__recommendation-evidence">
             {{ item.recommendation.evidence }}
+          </div>
+        </div>
+
+        <div
+          v-else-if="shouldShowRecommendationFallback(item)"
+          class="review-item__recommendation review-item__recommendation--empty"
+        >
+          <div class="review-item__recommendation-label">推荐训练题</div>
+          <div class="review-item__recommendation-copy">
+            当前没有直接匹配的推荐题，可先按本条结论安排训练。
           </div>
         </div>
       </article>
@@ -239,6 +253,12 @@ function severityLabel(severity: AdviceSeverity): string {
   padding-top: var(--space-4);
 }
 
+.review-item__recommendation--empty {
+  margin-top: var(--space-5);
+  border-top: 1px dashed color-mix(in srgb, var(--panel-divider) 88%, transparent);
+  padding-top: var(--space-4);
+}
+
 .review-item__recommendation-body {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
@@ -252,6 +272,13 @@ function severityLabel(severity: AdviceSeverity): string {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--review-accent) 76%, var(--panel-muted));
+}
+
+.review-item__recommendation-copy {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-14);
+  line-height: 1.7;
+  color: var(--panel-muted);
 }
 
 .review-item__recommendation-title {

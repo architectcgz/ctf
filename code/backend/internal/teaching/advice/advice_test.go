@@ -1,6 +1,9 @@
 package advice
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestEvaluateStudentOnlyMarksWeakDimensionsWhenEvidenceIsSufficient(t *testing.T) {
 	t.Parallel()
@@ -38,6 +41,8 @@ func TestBuildReviewArchiveObservationsKeepsProcessSignalsAndDimensionFocusSepar
 
 	snapshot := StudentFactSnapshot{
 		UserID:                 11,
+		ActiveDays7d:           4,
+		RecentEventCount7d:     6,
 		CorrectSubmissionCount: 2,
 		WrongSubmissionCount:   5,
 		MaxWrongStreak:         4,
@@ -83,6 +88,48 @@ func TestBuildReviewArchiveObservationsKeepsProcessSignalsAndDimensionFocusSepar
 	}
 }
 
+func TestBuildReviewArchiveObservationsAddsLowActivitySignal(t *testing.T) {
+	t.Parallel()
+
+	snapshot := StudentFactSnapshot{
+		UserID:                 13,
+		ActiveDays7d:           1,
+		RecentEventCount7d:     1,
+		CorrectSubmissionCount: 0,
+	}
+
+	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
+	for _, item := range items {
+		if item.Code != "low_activity" {
+			continue
+		}
+		if item.Severity != SeverityWarning {
+			t.Fatalf("expected low_activity warning, got %+v", item)
+		}
+		return
+	}
+	t.Fatalf("expected low_activity observation, got %+v", items)
+}
+
+func TestBuildReviewArchiveObservationsDoesNotWarnForSingleWrongSubmission(t *testing.T) {
+	t.Parallel()
+
+	snapshot := StudentFactSnapshot{
+		UserID:               14,
+		ActiveDays7d:         3,
+		RecentEventCount7d:   4,
+		WrongSubmissionCount: 1,
+		MaxWrongStreak:       1,
+	}
+
+	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
+	for _, item := range items {
+		if item.Code == "submission_stability" {
+			t.Fatalf("expected no submission stability warning for single wrong submission, got %+v", item)
+		}
+	}
+}
+
 func TestEvaluateStudentTreatsStableRecentSuccessAsFoundationInsteadOfExplicitWeakness(t *testing.T) {
 	t.Parallel()
 
@@ -104,6 +151,44 @@ func TestEvaluateStudentTreatsStableRecentSuccessAsFoundationInsteadOfExplicitWe
 	}
 	if evaluation.RecommendationTargets[0].Summary == "" {
 		t.Fatalf("expected structured summary for stable coverage gap")
+	}
+}
+
+func TestEvaluateStudentDoesNotRecommendHealthyDimensionWithOnlyGoodEvidence(t *testing.T) {
+	t.Parallel()
+
+	evaluation := EvaluateStudent(StudentFactSnapshot{
+		UserID: 19,
+		Dimensions: []DimensionFact{
+			{Dimension: "web", ProfileScore: 0.82, AttemptCount: 3, SuccessCount: 2, EvidenceCount: 8},
+		},
+	})
+
+	if len(evaluation.WeakDimensions) != 0 {
+		t.Fatalf("expected no weak dimensions for healthy evidence-backed student, got %+v", evaluation.WeakDimensions)
+	}
+	if len(evaluation.RecommendationTargets) != 0 {
+		t.Fatalf("expected no recommendation targets for healthy evidence-backed student, got %+v", evaluation.RecommendationTargets)
+	}
+
+	items := BuildReviewArchiveObservations(
+		StudentFactSnapshot{
+			UserID:                 19,
+			ActiveDays7d:           4,
+			RecentEventCount7d:     8,
+			CorrectSubmissionCount: 2,
+			WriteupCount:           1,
+			HandsOnEventCount:      5,
+			Dimensions: []DimensionFact{
+				{Dimension: "web", ProfileScore: 0.82, AttemptCount: 3, SuccessCount: 2, EvidenceCount: 8},
+			},
+		},
+		evaluation,
+	)
+	for _, item := range items {
+		if item.Code == "dimension_focus" {
+			t.Fatalf("expected no dimension_focus observation for healthy evidence-backed student, got %+v", item)
+		}
 	}
 }
 
@@ -191,7 +276,79 @@ func TestBuildClassReviewAggregatesWeakDimensionAndRiskSignals(t *testing.T) {
 	}
 }
 
-func TestBuildRecommendationPlanUsesDimensionEvidenceInReason(t *testing.T) {
+func TestBuildClassReviewKeepsHealthyClassAsAttentionWhenOnlyFewStudentsSlowDown(t *testing.T) {
+	t.Parallel()
+
+	students := []StudentFactSnapshot{
+		{
+			UserID:             1,
+			Username:           "alice",
+			ActiveDays7d:       1,
+			RecentEventCount7d: 1,
+		},
+		{
+			UserID:                 2,
+			Username:               "bob",
+			ActiveDays7d:           4,
+			RecentEventCount7d:     6,
+			CorrectSubmissionCount: 1,
+		},
+		{
+			UserID:                 3,
+			Username:               "carol",
+			ActiveDays7d:           5,
+			RecentEventCount7d:     8,
+			CorrectSubmissionCount: 2,
+		},
+		{
+			UserID:                 4,
+			Username:               "dave",
+			ActiveDays7d:           4,
+			RecentEventCount7d:     5,
+			CorrectSubmissionCount: 1,
+		},
+		{
+			UserID:                 5,
+			Username:               "eve",
+			ActiveDays7d:           3,
+			RecentEventCount7d:     4,
+			CorrectSubmissionCount: 1,
+		},
+		{
+			UserID:                 6,
+			Username:               "frank",
+			ActiveDays7d:           5,
+			RecentEventCount7d:     7,
+			CorrectSubmissionCount: 2,
+		},
+	}
+
+	evaluations := make(map[int64]StudentEvaluation, len(students))
+	for _, student := range students {
+		evaluations[student.UserID] = EvaluateStudent(student)
+	}
+
+	items := BuildClassReview(
+		"信安2401",
+		ClassSummarySnapshot{ClassName: "信安2401", StudentCount: len(students), ActiveRate: 96, RecentEventCount: 60},
+		&ClassTrendSnapshot{EventDelta: 3, SolveDelta: 1},
+		students,
+		evaluations,
+	)
+
+	for _, item := range items {
+		if item.Code != "activity_risk" {
+			continue
+		}
+		if item.Severity != SeverityAttention {
+			t.Fatalf("expected activity risk attention for mostly healthy class, got %+v", item)
+		}
+		return
+	}
+	t.Fatalf("expected activity_risk item, got %+v", items)
+}
+
+func TestBuildRecommendationPlanExplainsCandidateDifficultyFallbackInReason(t *testing.T) {
 	t.Parallel()
 
 	snapshot := StudentFactSnapshot{
@@ -213,5 +370,11 @@ func TestBuildRecommendationPlanUsesDimensionEvidenceInReason(t *testing.T) {
 	}
 	if plan.Reasons[0].Evidence == "" || plan.Reasons[0].Summary == "" {
 		t.Fatalf("expected structured recommendation reason text, got %+v", plan.Reasons[0])
+	}
+	if !strings.Contains(plan.Reasons[0].Summary, "easy 难度题") {
+		t.Fatalf("expected summary to mention actual challenge difficulty, got %+v", plan.Reasons[0])
+	}
+	if !strings.Contains(plan.Reasons[0].Summary, "beginner 难度") {
+		t.Fatalf("expected summary to retain preferred training band, got %+v", plan.Reasons[0])
 	}
 }
