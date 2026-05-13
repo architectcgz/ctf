@@ -5,10 +5,9 @@ import (
 
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
-func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, records []model.AWDTeamService, statusFields map[string]any) error {
+func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, records []model.AWDTeamService, statusEntries []contestports.AWDServiceStatusEntry) error {
 	if len(records) > 0 {
 		if err := u.repo.WithinRoundServiceWritebackTransaction(ctx, func(txRepo contestports.AWDRoundServiceWritebackTxRepository) error {
 			if err := txRepo.UpsertTeamServices(ctx, records); err != nil {
@@ -25,14 +24,8 @@ func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest
 		return err
 	}
 
-	if u.redis != nil && shouldSyncLiveStatusCache {
-		pipe := u.redis.TxPipeline()
-		statusKey := rediskeys.AWDServiceStatusKey(contest.ID)
-		pipe.Del(ctx, statusKey)
-		if len(statusFields) > 0 {
-			pipe.HSet(ctx, statusKey, statusFields)
-		}
-		if _, err := pipe.Exec(ctx); err != nil {
+	if u.stateStore != nil && shouldSyncLiveStatusCache {
+		if err := u.stateStore.ReplaceAWDServiceStatus(ctx, contest.ID, statusEntries); err != nil {
 			return err
 		}
 	}

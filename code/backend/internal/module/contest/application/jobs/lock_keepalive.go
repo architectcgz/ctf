@@ -14,7 +14,7 @@ type redisLockKeepaliveConfig struct {
 	TTL  time.Duration
 }
 
-func startRedisLockKeepalive(ctx context.Context, log *zap.Logger, lock contestports.ContestStatusUpdateLockLease, cfg redisLockKeepaliveConfig) (context.Context, func()) {
+func startRedisLockKeepalive(ctx context.Context, log *zap.Logger, lock contestports.ContestSchedulerLockLease, cfg redisLockKeepaliveConfig) (context.Context, func()) {
 	if log == nil {
 		log = zap.NewNop()
 	}

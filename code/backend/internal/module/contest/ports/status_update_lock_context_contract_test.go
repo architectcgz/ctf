@@ -7,23 +7,23 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-type ctxOnlyContestStatusUpdateLockLease struct{}
+type ctxOnlyContestSchedulerLockLease struct{}
 
-func (ctxOnlyContestStatusUpdateLockLease) Key() string { return "" }
+func (ctxOnlyContestSchedulerLockLease) Key() string { return "" }
 
-func (ctxOnlyContestStatusUpdateLockLease) Refresh(context.Context, time.Duration) (bool, error) {
+func (ctxOnlyContestSchedulerLockLease) Refresh(context.Context, time.Duration) (bool, error) {
 	return true, nil
 }
 
-func (ctxOnlyContestStatusUpdateLockLease) Release(context.Context) (bool, error) {
+func (ctxOnlyContestSchedulerLockLease) Release(context.Context) (bool, error) {
 	return true, nil
 }
 
 type ctxOnlyContestStatusUpdateLockStore struct{}
 
-func (ctxOnlyContestStatusUpdateLockStore) AcquireStatusUpdateLock(context.Context, time.Duration) (contestports.ContestStatusUpdateLockLease, bool, error) {
-	return ctxOnlyContestStatusUpdateLockLease{}, true, nil
+func (ctxOnlyContestStatusUpdateLockStore) AcquireStatusUpdateLock(context.Context, time.Duration) (contestports.ContestSchedulerLockLease, bool, error) {
+	return ctxOnlyContestSchedulerLockLease{}, true, nil
 }
 
-var _ contestports.ContestStatusUpdateLockLease = (*ctxOnlyContestStatusUpdateLockLease)(nil)
+var _ contestports.ContestSchedulerLockLease = (*ctxOnlyContestSchedulerLockLease)(nil)
 var _ contestports.ContestStatusUpdateLockStore = (*ctxOnlyContestStatusUpdateLockStore)(nil)

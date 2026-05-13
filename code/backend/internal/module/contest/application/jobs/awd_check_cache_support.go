@@ -3,18 +3,13 @@ package jobs
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
-
-	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, contestID int64, round *model.AWDRound) (bool, error) {
-	if u.redis == nil || u.repo == nil || contestID <= 0 || round == nil {
+	if u.stateStore == nil || u.repo == nil || contestID <= 0 || round == nil {
 		return false, nil
 	}
 
@@ -23,14 +18,7 @@ func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, 
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, err
 		}
-		currentRoundNumber, redisErr := u.redis.Get(ctx, rediskeys.AWDCurrentRoundKey(contestID)).Result()
-		if redisErr == nil {
-			return strings.TrimSpace(currentRoundNumber) == fmt.Sprintf("%d", round.RoundNumber), nil
-		}
-		if !errors.Is(redisErr, redislib.Nil) {
-			return false, redisErr
-		}
-		return false, nil
+		return u.stateStore.IsAWDCurrentRound(ctx, contestID, round.RoundNumber)
 	}
 	return currentRound.ID == round.ID, nil
 }

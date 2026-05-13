@@ -196,12 +196,14 @@ flowchart LR
 
 ### 阶段 4：复核 readmodel
 
-当前状态（2026-05-12，phase 4 / slice 2）：
+当前状态（2026-05-13，phase 4 / slice 4）：
 
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已并回 `practice/application/queries` 与 `practice/api/http`。
 - `internal/module/practice_readmodel/` 已删除，因为这两条查询只读取 `practice` 自有事实，不构成跨 owner readmodel。
 - 当前 readmodel 只保留 `teaching_readmodel` 这类真实跨 owner 聚合入口。
 - 教师总览 `GetOverview` 已从宽 `teaching_readmodel/application/queries.Service` 中拆到独立 `OverviewService`；`teaching_readmodel/api/http.Handler` 不再通过单个大一统 query 接口承接 overview。
+- 班级详情 `GetClassSummary`、`GetClassTrend`、`GetClassReview` 已继续从剩余宽 `Service` 中拆到独立 `ClassInsightService`；`teaching_readmodel/api/http.Handler` 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService`。
+- 学生复盘 `GetStudentProgress`、`GetStudentRecommendations`、`GetStudentTimeline`、`GetStudentEvidence`、`GetStudentAttackSessions` 已从剩余宽 `Service` 中拆到独立 `StudentReviewService`；`teaching_readmodel/api/http.Handler` 现在分别依赖目录 `Service`、`OverviewService`、`ClassInsightService`、`StudentReviewService`。
 
 目标：
 
@@ -212,18 +214,19 @@ flowchart LR
 
 1. 逐个查询标注数据来源和 UI consumer。
 2. 纯 practice 查询继续留在 `practice/application/queries`。
-3. 跨 owner 查询保留 `teaching_readmodel`，并继续把 class insight / student review 从剩余宽 query surface 里拆开。
+3. 跨 owner 查询保留 `teaching_readmodel`，并继续评估目录查询是否还要进一步显式命名为更窄 owner，但不再把学生复盘回挂到目录 query surface。
 
 ### 阶段 5：收窄 application concrete allowlist
 
-当前状态（2026-05-12，phase 5 / slices 1-4）：
+当前状态（2026-05-13，phase 5 / slices 1-5）：
 
 - `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
 - `contest/application/commands/challenge_service.go` 里未使用的 Redis 注入链已删除，不再把无效 cache client 传入 contest challenge command service。
 - `contest/application/statusmachine/side_effects.go` 现在只负责编排冻结榜快照创建、解冻快照清理和比赛结束缓存清理，具体 Redis key / client 细节已通过 `contest/ports.ContestStatusSideEffectStore` 下沉到模块内 infrastructure adapter。
 - `contest/application/commands/contest_service.go` 不再为状态迁移副作用链持有 Redis client；`contest/application/jobs/status_updater.go` 的状态调度锁也已通过 `contest/ports.ContestStatusUpdateLockStore` 下沉到 infrastructure adapter，application/jobs 只保留持锁编排与 keepalive 语义。
-- `contest/application/jobs/awd_round_scheduler_runtime.go` 目前仍保留自己的 Redis 调度锁实现，这条链还没有并入本次切片。
+- `contest/application/jobs/AWDRoundUpdater` 当前通过 `contest/ports.AWDRoundStateStore` 与 `contest/infrastructure/awd_round_state_store.go` 承接 scheduler lock、round lock、current round pointer、round flags 和 live service status cache；application/jobs 不再直接知道 Redis key、`redis.Nil`、pipeline 或 `redislock.Acquire(...)`。
+- `scoreboard_admin_service`、`scoreboard_service`、`AWDService` 等其他 contest Redis 依赖仍在 phase 5 后续范围内，本轮没有顺手扩成更大切片。
 
 目标：
 

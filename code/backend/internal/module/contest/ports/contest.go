@@ -166,12 +166,29 @@ type ContestStatusSideEffectStore interface {
 	ClearEndedContestRuntimeState(ctx context.Context, contestID int64) error
 }
 
-type ContestStatusUpdateLockLease interface {
+type ContestSchedulerLockLease interface {
 	Key() string
 	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
 	Release(ctx context.Context) (bool, error)
 }
 
 type ContestStatusUpdateLockStore interface {
-	AcquireStatusUpdateLock(ctx context.Context, ttl time.Duration) (ContestStatusUpdateLockLease, bool, error)
+	AcquireStatusUpdateLock(ctx context.Context, ttl time.Duration) (ContestSchedulerLockLease, bool, error)
+}
+
+type AWDServiceStatusEntry struct {
+	TeamID    int64
+	ServiceID int64
+	Status    string
+}
+
+type AWDRoundStateStore interface {
+	AcquireAWDSchedulerLock(ctx context.Context, ttl time.Duration) (ContestSchedulerLockLease, bool, error)
+	TryAcquireAWDRoundLock(ctx context.Context, contestID int64, roundNumber int, ttl time.Duration) (bool, error)
+	IsAWDCurrentRound(ctx context.Context, contestID int64, roundNumber int) (bool, error)
+	LoadAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64) (string, bool, error)
+	SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *model.AWDRound, assignments []AWDFlagAssignment, ttl time.Duration) error
+	ClearAWDCurrentRoundState(ctx context.Context, contestID int64) error
+	ReplaceAWDServiceStatus(ctx context.Context, contestID int64, entries []AWDServiceStatusEntry) error
+	ClearAWDServiceStatus(ctx context.Context, contestID int64) error
 }

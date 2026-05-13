@@ -30,7 +30,7 @@ func TestAWDRoundUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {
 	})
 
 	updater := &AWDRoundUpdater{
-		redis: redisClient,
+		stateStore: contestinfra.NewAWDRoundStateStore(redisClient),
 		cfg: config.ContestAWDConfig{
 			SchedulerLockTTL: 60 * time.Millisecond,
 		},

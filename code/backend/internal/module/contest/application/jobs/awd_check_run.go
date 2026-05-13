@@ -6,7 +6,6 @@ import (
 
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error {
@@ -35,7 +34,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 
 	now := time.Now().UTC()
 	records := make([]model.AWDTeamService, 0, len(teams)*len(definitions))
-	statusFields := make(map[string]any, len(teams)*len(definitions))
+	statusEntries := make([]contestports.AWDServiceStatusEntry, 0, len(teams)*len(definitions))
 	for _, team := range teams {
 		for _, definition := range definitions {
 			key := awdServiceTargetKey{teamID: team.ID, serviceID: definition.ServiceID}
@@ -57,9 +56,13 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 				CreatedAt:      now,
 				UpdatedAt:      now,
 			})
-			statusFields[rediskeys.AWDRoundFlagServiceField(team.ID, definition.ServiceID)] = outcome.serviceStatus
+			statusEntries = append(statusEntries, contestports.AWDServiceStatusEntry{
+				TeamID:    team.ID,
+				ServiceID: definition.ServiceID,
+				Status:    outcome.serviceStatus,
+			})
 		}
 	}
 
-	return u.persistRoundServiceChecks(ctx, contest, round, records, statusFields)
+	return u.persistRoundServiceChecks(ctx, contest, round, records, statusEntries)
 }

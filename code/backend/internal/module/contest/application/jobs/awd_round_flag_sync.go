@@ -7,15 +7,14 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *model.Contest, activeRound int, now time.Time) error {
-	if contest == nil || u.redis == nil {
+	if contest == nil || u.stateStore == nil {
 		return nil
 	}
 	if activeRound <= 0 {
-		return u.redis.Del(ctx, rediskeys.AWDCurrentRoundKey(contest.ID)).Err()
+		return u.stateStore.ClearAWDCurrentRoundState(ctx, contest.ID)
 	}
 	if u.flagSecret == "" {
 		u.log.Warn("skip_awd_flag_rotation_due_to_empty_secret", zap.Int64("contest_id", contest.ID))
@@ -30,24 +29,7 @@ func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *model.Con
 	if err != nil {
 		return err
 	}
-	if len(assignments) == 0 {
-		return u.redis.Set(ctx, rediskeys.AWDCurrentRoundKey(contest.ID), round.RoundNumber, 0).Err()
-	}
-
-	fields := make(map[string]any, len(assignments))
-	for _, item := range assignments {
-		fields[rediskeys.AWDRoundFlagServiceField(item.TeamID, item.ServiceID)] = item.Flag
-	}
-
-	pipe := u.redis.TxPipeline()
-	pipe.Set(ctx, rediskeys.AWDCurrentRoundKey(contest.ID), round.RoundNumber, 0)
-	roundKey := rediskeys.AWDRoundFlagsKey(contest.ID, round.ID)
-	pipe.Del(ctx, roundKey)
-	pipe.HSet(ctx, roundKey, fields)
-	if ttl := u.currentRoundTTL(contest, round, now); ttl > 0 {
-		pipe.Expire(ctx, roundKey, ttl)
-	}
-	if _, err := pipe.Exec(ctx); err != nil {
+	if err := u.stateStore.SyncAWDCurrentRoundState(ctx, contest.ID, round, assignments, u.currentRoundTTL(contest, round, now)); err != nil {
 		return err
 	}
 

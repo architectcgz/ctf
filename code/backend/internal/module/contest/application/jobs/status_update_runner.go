@@ -122,7 +122,7 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 	}
 }
 
-func (u *StatusUpdater) acquireStatusUpdateLock(ctx context.Context) (contestports.ContestStatusUpdateLockLease, bool, error) {
+func (u *StatusUpdater) acquireStatusUpdateLock(ctx context.Context) (contestports.ContestSchedulerLockLease, bool, error) {
 	if u == nil || u.lockStore == nil || u.lockTTL <= 0 {
 		return nil, true, nil
 	}

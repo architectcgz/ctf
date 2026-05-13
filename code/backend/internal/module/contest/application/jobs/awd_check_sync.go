@@ -5,7 +5,6 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func (u *AWDRoundUpdater) syncRoundServiceChecks(ctx context.Context, contest *model.Contest, activeRound int) error {
@@ -13,10 +12,10 @@ func (u *AWDRoundUpdater) syncRoundServiceChecks(ctx context.Context, contest *m
 		return nil
 	}
 	if activeRound <= 0 {
-		if u.redis == nil {
+		if u.stateStore == nil {
 			return nil
 		}
-		return u.redis.Del(ctx, rediskeys.AWDServiceStatusKey(contest.ID)).Err()
+		return u.stateStore.ClearAWDServiceStatus(ctx, contest.ID)
 	}
 
 	round, err := u.findRoundByNumber(ctx, contest.ID, activeRound)

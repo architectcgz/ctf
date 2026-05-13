@@ -24,7 +24,7 @@ func NewContestStatusUpdateLockStore(cache *redislib.Client) *ContestStatusUpdat
 	return &ContestStatusUpdateLockStore{cache: cache}
 }
 
-func (s *ContestStatusUpdateLockStore) AcquireStatusUpdateLock(ctx context.Context, ttl time.Duration) (contestports.ContestStatusUpdateLockLease, bool, error) {
+func (s *ContestStatusUpdateLockStore) AcquireStatusUpdateLock(ctx context.Context, ttl time.Duration) (contestports.ContestSchedulerLockLease, bool, error) {
 	if s == nil || s.cache == nil || ttl <= 0 {
 		return nil, true, nil
 	}

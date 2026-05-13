@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -21,7 +20,7 @@ const (
 
 type AWDRoundUpdater struct {
 	repo            awdRoundUpdaterRepository
-	redis           *redislib.Client
+	stateStore      contestports.AWDRoundStateStore
 	scoreboardCache contestports.ScoreboardCacheWriter
 	cfg             config.ContestAWDConfig
 	flagSecret      string
@@ -65,7 +64,7 @@ func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model
 
 func NewAWDRoundUpdater(
 	repo awdRoundUpdaterRepository,
-	redis *redislib.Client,
+	stateStore contestports.AWDRoundStateStore,
 	cfg config.ContestAWDConfig,
 	flagSecret string,
 	injector contestports.AWDFlagInjector,
@@ -84,7 +83,7 @@ func NewAWDRoundUpdater(
 	}
 	return &AWDRoundUpdater{
 		repo:            repo,
-		redis:           redis,
+		stateStore:      stateStore,
 		scoreboardCache: scoreboardCache,
 		cfg:             cfg,
 		flagSecret:      flagSecret,

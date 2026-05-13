@@ -162,10 +162,11 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	cache := deps.input.Cache
 	db := deps.input.DB
 	scoreboardCache := contestinfra.NewScoreboardCache(db, cache)
+	awdRoundStateStore := contestinfra.NewAWDRoundStateStore(cache)
 
 	awdUpdater := contestjobs.NewAWDRoundUpdater(
 		deps.awdRepo,
-		cache,
+		awdRoundStateStore,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
 		contestinfra.NewDockerAWDFlagInjector(db, deps.containerFiles, log.Named("awd_flag_injector")),
