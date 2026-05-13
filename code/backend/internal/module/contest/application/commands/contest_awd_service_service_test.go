@@ -33,8 +33,20 @@ func newContestAWDServiceForTestWithRedis(t *testing.T, redisClient *redis.Clien
 	contestRepo := contestinfra.NewRepository(db)
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
+	awdChallengeRepo := challengeinfra.NewAWDChallengeRepository(challengeRepo)
 
-	return NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)), challengeRepo, contestRepo, contestChallengeRepo, awdRepo
+	return NewContestAWDServiceService(
+			contestinfra.NewAWDCommandRepository(awdRepo),
+			contestRepo,
+			contestChallengeRepo,
+			contestinfra.NewContestChallengeLookupAdapter(challengeRepo),
+			contestinfra.NewContestAWDChallengeLookupAdapter(awdChallengeRepo),
+			contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
+		),
+		challengeRepo,
+		contestRepo,
+		contestChallengeRepo,
+		awdRepo
 }
 
 func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {

@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -59,7 +57,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 
 	awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, req.AWDChallengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDChallengeNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -141,7 +139,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 
 	stored, err := s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDServiceNotFound) {
 			return errcode.ErrNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
@@ -178,7 +176,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	if req.AWDChallengeID != nil {
 		awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, *req.AWDChallengeID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, contestports.ErrContestAWDChallengeNotFound) {
 				return errcode.ErrNotFound
 			}
 			return errcode.ErrInternal.WithCause(err)
@@ -264,7 +262,7 @@ func (s *ContestAWDServiceService) DeleteContestAWDService(ctx context.Context, 
 
 	_, err = s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDServiceNotFound) {
 			return errcode.ErrNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
@@ -327,7 +325,7 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 	if !exists {
 		challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, contestports.ErrContestChallengeEntityNotFound) {
 				return errcode.ErrChallengeNotFound
 			}
 			return errcode.ErrInternal.WithCause(err)

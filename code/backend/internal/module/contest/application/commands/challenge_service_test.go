@@ -15,16 +15,19 @@ func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challe
 	t.Helper()
 
 	db := contesttestsupport.SetupContestTestDB(t)
+	rawChallengeRepo := challengeinfra.NewRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
-			contestinfra.NewChallengeRepository(db),
-			challengeinfra.NewRepository(db),
-			contestinfra.NewRepository(db),
+			contestChallengeRepo,
+			contestinfra.NewContestChallengeLookupAdapter(rawChallengeRepo),
+			contestRepo,
 			awdRepo,
 		),
-		challengeinfra.NewRepository(db),
-		contestinfra.NewRepository(db),
-		contestinfra.NewChallengeRepository(db),
+		rawChallengeRepo,
+		contestRepo,
+		contestChallengeRepo,
 		awdRepo
 }
 

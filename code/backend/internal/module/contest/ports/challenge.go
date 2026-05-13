@@ -2,8 +2,13 @@ package ports
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/model"
+)
+
+var (
+	ErrContestChallengeEntityNotFound = errors.New("contest challenge entity not found")
 )
 
 type ContestChallengeWriteRepository interface {
