@@ -13,6 +13,7 @@ var (
 	ErrAWDCheckerPreviewTokenStoreUnavailable = errors.New("awd checker preview token store unavailable")
 	ErrContestAWDPreviewChallengeNotFound     = errors.New("contest awd preview challenge not found")
 	ErrContestAWDPreviewImageNotFound         = errors.New("contest awd preview image not found")
+	ErrContestAWDRoundNotFound                = errors.New("contest awd round not found")
 )
 
 type AWDServiceCheckTxRepository interface {

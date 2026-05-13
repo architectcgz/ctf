@@ -53,6 +53,10 @@
   - 负责：由 image query service 继续承接镜像详情查询、分页查询和 errcode 映射；`challenge/ports.ErrChallengeImageNotFound` 与 `challenge/infrastructure/image_query_repository.go` 统一承接 raw image repository 的 not-found contract，`challenge/runtime/module.go` 负责把 adapter 注入 image query service
   - 不负责：让 image query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw image repository 的 not-found 语义
 
+- `code/backend/internal/module/challenge/application/commands/image_service.go`、`code/backend/internal/module/challenge/infrastructure/image_command_repository.go`
+  - 负责：由 image command service 继续承接镜像创建、更新、删除和 errcode 映射；`challenge/ports.ErrChallengeImageNotFound` 与 `challenge/infrastructure/image_command_repository.go` 统一承接 raw image repository 的 command lookup not-found contract，`challenge/runtime/module.go` 负责只把该 adapter 注入 image command wiring
+  - 不负责：让 image command surface 继续直接知道 `gorm.ErrRecordNotFound`，或把 adapted lookup 语义扩散到 image build / image query 之外的 raw repo 调用方
+
 - `code/backend/internal/module/challenge/application/commands/flag_service.go`、`code/backend/internal/module/challenge/application/queries/flag_service.go`、`code/backend/internal/module/challenge/infrastructure/flag_repository.go`
   - 负责：由 flag command/query service 继续承接 Flag 配置修改、动态 Flag 生成/校验和 errcode 映射；`challenge/ports.ErrChallengeFlagChallengeNotFound` 与 `challenge/infrastructure/flag_repository.go` 统一承接 raw challenge repository 的 not-found contract，`challenge/runtime/module.go` 负责把 adapter 注入 flag command/query service
   - 不负责：让 flag application surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw challenge repository 的 not-found 语义
@@ -108,6 +112,10 @@
 - `code/backend/internal/module/contest/application/queries/team_info_query.go`、`code/backend/internal/module/contest/application/queries/team_list_query.go`、`code/backend/internal/module/contest/infrastructure/team_query_adapter.go`
   - 负责：由 team query service 继续承接队伍详情、我的队伍 fallback、成员拼装和 errcode 映射；`contest/ports.ErrContestTeamNotFound` 与 `contest/ports.ErrContestUserTeamNotFound` 统一表达 team detail、user team lookup 的 not-found contract，`contest/infrastructure/team_query_adapter.go` 负责把 raw team repository 的 `FindByID` / `FindUserTeamInContest` not-found 收口成模块内 sentinel，`contest/runtime/module.go` 只把该 adapter 注入 query `TeamService`
   - 不负责：让 team query surface 继续直接知道 `gorm.ErrRecordNotFound`，或把 team command / membership write 一起混进同一个 query adapter
+
+- `code/backend/internal/module/contest/application/queries/awd_support.go`、`code/backend/internal/module/contest/application/queries/awd_workspace_query.go`、`code/backend/internal/module/contest/infrastructure/awd_query_repository.go`
+  - 负责：由 AWD query service 继续承接 round summary、readiness 与 workspace 空状态/当前轮次 fallback 的业务编排；`contest/ports.ErrContestAWDRoundNotFound` 与 `contest/ports.ErrContestUserTeamNotFound` 统一表达 round/team lookup 的 not-found contract，`contest/infrastructure/awd_query_repository.go` 负责把 raw AWD repository 的 `FindRoundByContestAndID` / `FindRunningRound` / `FindContestTeamByMember` not-found 收口成模块内 sentinel，`contest/runtime/module.go` 只把该 adapter 注入 query `AWDService`
+  - 不负责：让 AWD query surface 继续直接知道 `gorm.ErrRecordNotFound`，或把同一套 adapter 扩散到 AWD command / jobs 路径
 
 - `code/backend/internal/module/contest/application/commands/team_*.go`、`code/backend/internal/module/contest/infrastructure/team_command_adapter.go`
   - 负责：由 team command service 继续承接建队、入队、退队、解散、踢人和 errcode 映射；`contest/ports.ErrContestTeamNotFound`、`contest/ports.ErrContestUserTeamNotFound` 与 `contest/ports.ErrContestParticipationRegistrationNotFound` 统一表达队伍 lookup、当前队伍 lookup 与报名 lookup 的 not-found contract，`contest/infrastructure/team_command_adapter.go` 负责把 raw team repository 的 `FindByID` / `FindUserTeamInContest` / `FindContestRegistration` 和 `CreateWithMember` / `AddMemberWithLock` 里的 registration binding not-found 收口成模块内 sentinel，`contest/runtime/module.go` 负责把该 adapter 注入 command `TeamService`

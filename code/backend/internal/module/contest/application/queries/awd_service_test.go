@@ -19,7 +19,7 @@ func newAWDQueryServiceForTest(t *testing.T) (*AWDService, *gorm.DB) {
 
 	db := contesttestsupport.SetupAWDTestDB(t)
 	return NewAWDService(
-		contestinfra.NewAWDRepository(db),
+		contestinfra.NewAWDQueryRepository(contestinfra.NewAWDRepository(db)),
 		contestinfra.NewRepository(db),
 	), db
 }

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -59,7 +58,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
 	}
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, challengeports.ErrChallengeImageNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -90,7 +89,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*
 func (s *ImageService) UpdateImage(ctx context.Context, id int64, req UpdateImageInput) error {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
 			return errcode.ErrImageNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
@@ -122,7 +121,7 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req UpdateImag
 func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
 			return errcode.ErrImageNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)

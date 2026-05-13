@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
@@ -175,5 +176,72 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 	}
 	if removeCalls.Load() != 1 {
 		t.Fatalf("expected one image removal call, got %d", removeCalls.Load())
+	}
+}
+
+func TestImageServiceCreateImageAllowsModuleNotFoundLookup(t *testing.T) {
+	t.Parallel()
+
+	created := false
+	service := NewImageService(
+		&imageCommandContextRepoStub{
+			findByNameTagFn: func(context.Context, string, string) (*model.Image, error) {
+				return nil, challengeports.ErrChallengeImageNotFound
+			},
+			createFn: func(ctx context.Context, image *model.Image) error {
+				created = true
+				return nil
+			},
+		},
+		&imageUsageContextStub{},
+		nil,
+		nil,
+	)
+
+	if _, err := service.CreateImage(context.Background(), CreateImageInput{Name: "web", Tag: "latest"}); err != nil {
+		t.Fatalf("CreateImage() error = %v", err)
+	}
+	if !created {
+		t.Fatal("expected CreateImage to persist new image when lookup is module not-found")
+	}
+}
+
+func TestImageServiceUpdateImageReturnsNotFoundForModuleSentinel(t *testing.T) {
+	t.Parallel()
+
+	service := NewImageService(
+		&imageCommandContextRepoStub{
+			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+				return nil, challengeports.ErrChallengeImageNotFound
+			},
+		},
+		&imageUsageContextStub{},
+		nil,
+		nil,
+	)
+
+	err := service.UpdateImage(context.Background(), 9, UpdateImageInput{})
+	if err == nil || err.Error() != errcode.ErrImageNotFound.Error() {
+		t.Fatalf("expected image not found error, got %v", err)
+	}
+}
+
+func TestImageServiceDeleteImageReturnsNotFoundForModuleSentinel(t *testing.T) {
+	t.Parallel()
+
+	service := NewImageService(
+		&imageCommandContextRepoStub{
+			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+				return nil, challengeports.ErrChallengeImageNotFound
+			},
+		},
+		&imageUsageContextStub{},
+		nil,
+		nil,
+	)
+
+	err := service.DeleteImage(context.Background(), 9)
+	if err == nil || err.Error() != errcode.ErrImageNotFound.Error() {
+		t.Fatalf("expected image not found error, got %v", err)
 	}
 }

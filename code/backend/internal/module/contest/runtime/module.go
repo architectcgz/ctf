@@ -59,6 +59,7 @@ type moduleDeps struct {
 	contestAdmin          contestports.ContestScoreboardAdminRepository
 	contestStatus         contestports.ContestStatusRepository
 	awdRepo               *contestinfra.AWDRepository
+	awdQuery              *contestinfra.AWDQueryRepository
 	challengeRepo         *contestinfra.ChallengeRepository
 	teamRepo              *contestinfra.TeamRepository
 	teamFinder            contestports.ContestTeamFinder
@@ -124,6 +125,7 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		contestAdmin:          contestRepo,
 		contestStatus:         contestRepo,
 		awdRepo:               awdRepo,
+		awdQuery:              contestinfra.NewAWDQueryRepository(awdRepo),
 		challengeRepo:         challengeRepo,
 		teamRepo:              teamRepo,
 		teamFinder:            teamFinder,
@@ -157,7 +159,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))
 	contestCommands.SetStatusSideEffectStore(statusSideEffects)
 	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
-	readinessQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
+	readinessQueries := contestqry.NewAWDService(deps.awdQuery, deps.contestLookup)
 	statusUpdater := contestjobs.NewStatusUpdater(
 		deps.contestStatus,
 		cfg.Contest.StatusUpdateInterval,
@@ -210,7 +212,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		scoreboardCache,
 	)
 	awdCommands.SetEventBus(deps.input.Events)
-	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
+	awdQueries := contestqry.NewAWDService(deps.awdQuery, deps.contestLookup)
 	awdServiceCommands := contestcmd.NewContestAWDServiceService(
 		deps.awdRepo,
 		deps.contestLookup,

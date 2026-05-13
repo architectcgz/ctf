@@ -244,8 +244,9 @@ func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.I
 }
 
 func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengehttp.ImageHandler) {
+	imageCommandRepo := challengeinfra.NewImageCommandRepository(deps.imageRepo)
 	imageCommandService := challengecmd.NewImageService(
-		deps.imageRepo,
+		imageCommandRepo,
 		deps.imageUsageRepo,
 		deps.imageRuntime,
 		deps.input.Logger.Named("image_service"),

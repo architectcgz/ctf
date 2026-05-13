@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -31,7 +29,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	}
 
 	currentRound, err := s.repo.FindRunningRound(ctx, contestID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if currentRound != nil {
@@ -50,7 +48,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	}
 
 	myTeam, err := s.repo.FindContestTeamByMember(ctx, contestID, userID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if myTeam == nil {
