@@ -43,4 +43,8 @@ func (ctxOnlyPracticeProgressCache) StoreUserProgress(context.Context, int64, *d
 	return nil
 }
 
+func (ctxOnlyPracticeProgressCache) DeleteUserProgress(context.Context, int64) error {
+	return nil
+}
+
 var _ practiceports.PracticeUserProgressCache = (*ctxOnlyPracticeProgressCache)(nil)

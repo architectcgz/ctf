@@ -241,6 +241,7 @@ type PracticeTimelineQueryRepository interface {
 type PracticeUserProgressCache interface {
 	GetUserProgress(ctx context.Context, userID int64) (*dto.ProgressResp, bool, error)
 	StoreUserProgress(ctx context.Context, userID int64, resp *dto.ProgressResp, ttl time.Duration) error
+	DeleteUserProgress(ctx context.Context, userID int64) error
 }
 
 type PracticeChallengeScoreRepository interface {

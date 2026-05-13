@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -102,10 +101,6 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	}
 
 	if submission.IsCorrect && !alreadySolved {
-		cacheKey := constants.UserProgressKey(userID)
-		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
-			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
-		}
 		s.publishWeakEvent(ctx, platformevents.Event{
 			Name: practicecontracts.EventFlagAccepted,
 			Payload: practicecontracts.FlagAcceptedEvent{

@@ -60,3 +60,13 @@ func (c *ProgressCache) StoreUserProgress(ctx context.Context, userID int64, res
 	}
 	return nil
 }
+
+func (c *ProgressCache) DeleteUserProgress(ctx context.Context, userID int64) error {
+	if c == nil || c.client == nil || userID <= 0 {
+		return nil
+	}
+	if err := c.client.Del(ctx, constants.UserProgressKey(userID)).Err(); err != nil {
+		return fmt.Errorf("delete user progress cache: %w", err)
+	}
+	return nil
+}

@@ -3,8 +3,12 @@ package queries
 import (
 	"context"
 	"testing"
+	"time"
 
+	"ctf-platform/internal/dto"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type stubPracticeProgressTimelineRepository struct {
@@ -99,5 +103,50 @@ func TestGetTimelineDoesNotCreateBackgroundContext(t *testing.T) {
 
 	if _, err := service.GetTimeline(nil, 7, 20, 0); err != nil {
 		t.Fatalf("GetTimeline() error = %v", err)
+	}
+}
+
+type stubPracticeProgressCache struct {
+	deleteUserProgressFn func(ctx context.Context, userID int64) error
+}
+
+func (s *stubPracticeProgressCache) GetUserProgress(context.Context, int64) (*dto.ProgressResp, bool, error) {
+	return nil, false, nil
+}
+
+func (s *stubPracticeProgressCache) StoreUserProgress(context.Context, int64, *dto.ProgressResp, time.Duration) error {
+	return nil
+}
+
+func (s *stubPracticeProgressCache) DeleteUserProgress(ctx context.Context, userID int64) error {
+	if s.deleteUserProgressFn != nil {
+		return s.deleteUserProgressFn(ctx, userID)
+	}
+	return nil
+}
+
+func TestHandleFlagAcceptedEventDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	cache := &stubPracticeProgressCache{
+		deleteUserProgressFn: func(ctx context.Context, userID int64) error {
+			if ctx != nil {
+				t.Fatalf("expected delete cache ctx to stay nil, got %v", ctx)
+			}
+			if userID != 7 {
+				t.Fatalf("unexpected user id %d", userID)
+			}
+			return nil
+		},
+	}
+	service := NewProgressTimelineService(&stubPracticeProgressTimelineRepository{}, cache, 0, nil)
+
+	if err := service.handleFlagAcceptedEvent(nil, platformevents.Event{
+		Name: practicecontracts.EventFlagAccepted,
+		Payload: practicecontracts.FlagAcceptedEvent{
+			UserID: 7,
+		},
+	}); err != nil {
+		t.Fatalf("handleFlagAcceptedEvent() error = %v", err)
 	}
 }

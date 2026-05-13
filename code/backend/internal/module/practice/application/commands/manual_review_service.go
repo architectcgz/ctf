@@ -6,10 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -79,11 +77,6 @@ func (s *Service) ReviewManualReviewSubmission(
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
-		if s.redis != nil {
-			if err := s.redis.Del(ctx, constants.UserProgressKey(item.UserID)).Err(); err != nil {
-				s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", item.UserID), zap.Error(err))
-			}
-		}
 		s.publishWeakEvent(ctx, platformevents.Event{
 			Name: practicecontracts.EventFlagAccepted,
 			Payload: practicecontracts.FlagAcceptedEvent{

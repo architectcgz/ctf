@@ -114,6 +114,7 @@ func Build(deps Deps) *Module {
 	service, rankingService, progressTimelineService := buildHandler(internalDeps)
 	service.StartBackgroundTasks(deps.AppContext)
 	service.SetEventBus(deps.Events)
+	progressTimelineService.RegisterPracticeEventConsumers(deps.Events)
 
 	return &Module{
 		BackgroundJobs: []BackgroundJob{
