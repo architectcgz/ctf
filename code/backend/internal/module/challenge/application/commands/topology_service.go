@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
@@ -44,7 +42,7 @@ func NewTopologyService(repo topologyCommandRepository, templateRepo topologyTem
 func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req SaveChallengeTopologyInput) (*dto.ChallengeTopologyResp, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -65,7 +63,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 	existing, err = s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	switch {
 	case err == nil:
-	case errors.Is(err, gorm.ErrRecordNotFound):
+	case errors.Is(err, challengeports.ErrChallengeTopologyNotFound):
 		existing = nil
 	default:
 		return nil, err
@@ -132,7 +130,7 @@ func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string
 
 func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challengeID int64) error {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
@@ -163,7 +161,7 @@ func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironm
 func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error) {
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
@@ -188,7 +186,7 @@ func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req Upse
 
 func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
 	if _, err := s.templateRepo.FindByID(ctx, id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
 			return errcode.ErrNotFound
 		}
 		return err
@@ -200,7 +198,7 @@ func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req SaveCh
 	if req.TemplateID != nil {
 		item, findErr := s.templateRepo.FindByID(ctx, *req.TemplateID)
 		if findErr != nil {
-			if errors.Is(findErr, gorm.ErrRecordNotFound) {
+			if errors.Is(findErr, challengeports.ErrChallengeTopologyTemplateNotFound) {
 				return "", "", nil, errcode.ErrNotFound.WithCause(errors.New("环境模板不存在"))
 			}
 			return "", "", nil, findErr
@@ -230,7 +228,7 @@ func (s *TopologyService) ensureTopologyImagesExist(ctx context.Context, rawSpec
 		}
 		seen[node.ImageID] = struct{}{}
 		if _, findErr := s.imageRepo.FindByID(ctx, node.ImageID); findErr != nil {
-			if errors.Is(findErr, gorm.ErrRecordNotFound) {
+			if errors.Is(findErr, challengeports.ErrChallengeImageNotFound) {
 				return errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 			}
 			return findErr

@@ -45,6 +45,10 @@
   - 负责：由 image build service 继续承接 external image 引用校验、平台镜像构建和镜像状态写入的业务编排；`challenge/ports.RegistryVerifier` 与 `challenge/infrastructure/registry_client.go` 统一承接 registry manifest URL、认证头、accept header 和 digest 提取的 HTTP 细节，`challenge/runtime/module.go` 负责把该 verifier 注入 image build service
   - 不负责：让 challenge application surface 继续直接知道 `net/http` client、manifest request 构造或 registry auth header 细节
 
+- `code/backend/internal/module/challenge/application/queries/challenge_service.go`、`code/backend/internal/module/challenge/infrastructure/challenge_query_repository.go`
+  - 负责：由 challenge query service 继续承接题目详情、题目列表、已发布题目详情与 errcode 映射；`challenge/ports.ErrChallengeQueryChallengeNotFound` 与 `challenge/infrastructure/challenge_query_repository.go` 统一承接 raw challenge repository 的 not-found contract，`challenge/runtime/module.go` 负责把该 adapter 注入 challenge query wiring
+  - 不负责：让 challenge query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw challenge repository 的 not-found 语义
+
 - `code/backend/internal/module/challenge/application/queries/image_service.go`、`code/backend/internal/module/challenge/infrastructure/image_query_repository.go`
   - 负责：由 image query service 继续承接镜像详情查询、分页查询和 errcode 映射；`challenge/ports.ErrChallengeImageNotFound` 与 `challenge/infrastructure/image_query_repository.go` 统一承接 raw image repository 的 not-found contract，`challenge/runtime/module.go` 负责把 adapter 注入 image query service
   - 不负责：让 image query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw image repository 的 not-found 语义
@@ -56,6 +60,10 @@
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_service.go`、`code/backend/internal/module/challenge/application/queries/awd_challenge_service.go`、`code/backend/internal/module/challenge/infrastructure/awd_challenge_repository.go`
   - 负责：由 AWD challenge command/query service 继续承接 AWD 题目详情、更新/删除和 errcode 映射；`challenge/ports.ErrAWDChallengeNotFound` 与 `challenge/infrastructure/awd_challenge_repository.go` 统一承接 raw AWD challenge repository 的 not-found contract，`challenge/runtime/module.go` 负责把 adapter 注入 AWD command/query service
   - 不负责：让 AWD challenge application surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw AWD challenge repository 的 not-found 语义
+
+- `code/backend/internal/module/challenge/application/commands/topology_service.go`、`code/backend/internal/module/challenge/application/queries/topology_service.go`、`code/backend/internal/module/challenge/infrastructure/topology_service_repository.go`
+  - 负责：由 topology command/query service 继续承接拓扑保存、查询、模板管理和 package revision fallback 的业务编排；`challenge/ports.ErrChallengeTopologyChallengeNotFound`、`ErrChallengeTopologyNotFound`、`ErrChallengeTopologyTemplateNotFound` 与 `ErrChallengeTopologyPackageRevisionNotFound` 统一表达 challenge / topology / template / package revision lookup 的 not-found contract，`challenge/infrastructure/topology_service_repository.go` 负责把 raw challenge / topology / template / package revision repository 的 `gorm.ErrRecordNotFound` 收口成模块内 sentinel，`challenge/runtime/module.go` 负责把这些 adapter 注入 topology wiring
+  - 不负责：让 topology command/query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw repository 的 not-found 语义
 
 - `code/backend/internal/module/practice/application/commands/score_service.go`、`code/backend/internal/module/practice/application/queries/score_service.go`、`code/backend/internal/module/practice/infrastructure/score_state_store.go`、`code/backend/internal/module/practice/infrastructure/score_query_repository.go`
   - 负责：由 practice score command/query 继续承接题目得分计算、缓存优先读取、零分 fallback 和用户名补全的业务编排；`practice/ports.PracticeScoreStateStore` 与 `practice/infrastructure/score_state_store.go` 统一承接用户计分锁、用户得分缓存和排行榜 sorted-set 细节；`practice/ports.ErrPracticeUserScoreNotFound` 与 `practice/infrastructure/score_query_repository.go` 统一承接用户得分 read-model 的 not-found contract；`practice/runtime/module.go` 负责把 state store 和 score query adapter 注入 score command/query wiring
@@ -89,6 +97,10 @@
   - 负责：由 submission application 继续承接错误提交限流的读取、写入和中断提交编排；`contest/ports.ContestSubmissionRateLimitStore` 与 `contest/infrastructure/submission_rate_limit_store.go` 统一承接 configured prefix、默认 prefix 回退和 Redis `Exists/Set` 细节
   - 不负责：让 submission application 继续直接持有 Redis client，或在 application 层拼接错误提交限流 key
 
+- `code/backend/internal/module/contest/application/commands/submission_submit_validation.go`、`code/backend/internal/module/contest/infrastructure/submission_registration_repository.go`
+  - 负责：由 submission validation 继续承接 challenge 是否入赛、challenge 实体存在性校验和 errcode 映射；`contest/ports.ErrContestSubmissionChallengeNotFound` 与 `ErrContestSubmissionChallengeEntityNotFound` 统一表达 contest challenge lookup 与 challenge entity lookup 的 not-found contract，`contest/infrastructure/submission_registration_repository.go` 负责把 raw contest challenge / challenge repository 的 `gorm.ErrRecordNotFound` 收口成模块内 sentinel，`contest/runtime/module.go` 负责把该 adapter 注入 submission wiring
+  - 不负责：让 submission validation surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw repository 的 not-found 语义
+
 - `code/backend/internal/module/contest/application/commands/participation_register_commands.go`、`code/backend/internal/module/contest/application/commands/participation_review_commands.go`、`code/backend/internal/module/contest/application/commands/submission_validation.go`、`code/backend/internal/module/contest/application/queries/participation_progress_query.go`、`code/backend/internal/module/contest/infrastructure/participation_registration_repository.go`、`code/backend/internal/module/contest/infrastructure/submission_registration_repository.go`、`code/backend/internal/module/contest/infrastructure/team_finder_repository.go`
   - 负责：由 participation / submission application 继续承接报名创建、报名审核、报名状态判定、我的进度查询和 errcode 映射；`contest/ports.ErrContestParticipationRegistrationNotFound` 与 `contest/ports.ErrContestUserTeamNotFound` 统一表达报名 lookup、用户队伍 lookup 的 not-found contract，三个 infrastructure adapter 负责把 raw participation / submission / team repository 的 `gorm.ErrRecordNotFound` 收口成模块内 sentinel，`contest/runtime/module.go` 负责把这些 adapter 注入 participation / submission wiring
   - 不负责：让 participation / submission application surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw repository 的 not-found 语义
@@ -100,6 +112,10 @@
 - `code/backend/internal/module/contest/application/commands/team_*.go`、`code/backend/internal/module/contest/infrastructure/team_command_adapter.go`
   - 负责：由 team command service 继续承接建队、入队、退队、解散、踢人和 errcode 映射；`contest/ports.ErrContestTeamNotFound`、`contest/ports.ErrContestUserTeamNotFound` 与 `contest/ports.ErrContestParticipationRegistrationNotFound` 统一表达队伍 lookup、当前队伍 lookup 与报名 lookup 的 not-found contract，`contest/infrastructure/team_command_adapter.go` 负责把 raw team repository 的 `FindByID` / `FindUserTeamInContest` / `FindContestRegistration` 和 `CreateWithMember` / `AddMemberWithLock` 里的 registration binding not-found 收口成模块内 sentinel，`contest/runtime/module.go` 负责把该 adapter 注入 command `TeamService`
   - 不负责：让 team command surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw team repository / registration binding 的 not-found 语义
+
+- `code/backend/internal/module/contest/application/commands/awd_preview_runtime_support.go`、`code/backend/internal/module/contest/infrastructure/awd_preview_runtime_lookup_repository.go`
+  - 负责：由 AWD preview runtime support 继续承接 preview challenge、preview image 与 runtime definition lookup 的 errcode 映射；`contest/ports.ErrContestAWDPreviewChallengeNotFound` 与 `contest/ports.ErrContestAWDPreviewImageNotFound` 统一承接 raw AWD challenge / image repository 的 not-found contract，`contest/infrastructure/awd_preview_runtime_lookup_repository.go` 负责把对应 `gorm.ErrRecordNotFound` 收口成模块内 sentinel，`contest/runtime/module.go` 负责把该 adapter 注入 AWD preview wiring
+  - 不负责：让 AWD preview runtime surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw AWD challenge / image repository 的 not-found 语义
 
 - `code/backend/internal/module/contest/application/commands/awd_*.go`、`code/backend/internal/module/contest/application/commands/contest_awd_service_*.go`、`code/backend/internal/module/contest/infrastructure/awd_round_state_store.go`、`code/backend/internal/module/contest/infrastructure/awd_checker_preview_token_store.go`
   - 负责：由 AWD application 继续承接 current round fallback、round flag 解析、service status 更新与 checker preview validation 编排；`contest/ports.AWDRoundStateStore` 统一承接 current round number、round flag 和 service status runtime state，`contest/ports.AWDCheckerPreviewTokenStore` 统一承接 preview token 的持久化、加载与删除

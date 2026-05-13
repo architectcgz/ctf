@@ -3,10 +3,13 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type topologyCommandRepoStub struct {
@@ -256,6 +259,131 @@ func TestTopologyServiceDeleteChallengeTopologyPropagatesContextToRepository(t *
 	}
 	if !findCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v delete=%v", findCalled, deleteCalled)
+	}
+}
+
+func TestTopologyServiceSaveChallengeTopologyTreatsChallengeNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(&topologyCommandRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeTopologyChallengeNotFound
+		},
+	}, &topologyTemplateRepoStub{}, &topologyImageRepoStub{})
+
+	_, err := service.SaveChallengeTopology(context.Background(), 404, SaveChallengeTopologyInput{})
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	if err.Error() != errcode.ErrChallengeNotFound.Error() {
+		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	}
+}
+
+func TestTopologyServiceSaveChallengeTopologyTreatsMissingTopologyAsCreate(t *testing.T) {
+	t.Parallel()
+
+	templateID := int64(3)
+	spec, err := json.Marshal(model.TopologySpec{Nodes: []model.TopologyNode{{Key: "web", Name: "Web"}}})
+	if err != nil {
+		t.Fatalf("marshal topology spec: %v", err)
+	}
+	var saved *model.ChallengeTopology
+	repo := &topologyCommandRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: 9}, nil
+		},
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			if saved == nil {
+				return nil, challengeports.ErrChallengeTopologyNotFound
+			}
+			return saved, nil
+		},
+		upsertChallengeTopologyFn: func(_ context.Context, topology *model.ChallengeTopology) error {
+			copied := *topology
+			saved = &copied
+			return nil
+		},
+	}
+	service := NewTopologyService(repo, &topologyTemplateRepoStub{
+		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+			return &model.EnvironmentTemplate{ID: templateID, EntryNodeKey: "web", Spec: string(spec)}, nil
+		},
+	}, &topologyImageRepoStub{})
+
+	resp, err := service.SaveChallengeTopology(context.Background(), 9, SaveChallengeTopologyInput{TemplateID: &templateID})
+	if err != nil {
+		t.Fatalf("SaveChallengeTopology() error = %v", err)
+	}
+	if saved == nil {
+		t.Fatal("expected topology to be upserted")
+	}
+	if resp == nil || resp.EntryNodeKey != "web" {
+		t.Fatalf("unexpected topology resp: %+v", resp)
+	}
+}
+
+func TestTopologyServiceSaveChallengeTopologyTreatsTemplateNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	templateID := int64(7)
+	service := NewTopologyService(&topologyCommandRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: 5}, nil
+		},
+	}, &topologyTemplateRepoStub{
+		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+			return nil, challengeports.ErrChallengeTopologyTemplateNotFound
+		},
+	}, &topologyImageRepoStub{})
+
+	_, err := service.SaveChallengeTopology(context.Background(), 5, SaveChallengeTopologyInput{TemplateID: &templateID})
+	if err == nil {
+		t.Fatal("expected template not found")
+	}
+	if err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	}
+}
+
+func TestTopologyServiceCreateTemplateTreatsChallengeImageNotFoundAsInvalidParams(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(&topologyCommandRepoStub{}, &topologyTemplateRepoStub{}, &topologyImageRepoStub{
+		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+			return nil, challengeports.ErrChallengeImageNotFound
+		},
+	})
+
+	_, err := service.CreateTemplate(context.Background(), UpsertEnvironmentTemplateInput{
+		Name:         "Base Web",
+		EntryNodeKey: "web",
+		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 11}},
+	})
+	if err == nil {
+		t.Fatal("expected invalid params")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected errcode.ErrInvalidParams, got %v", err)
+	}
+}
+
+func TestTopologyServiceDeleteTemplateTreatsTemplateNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(&topologyCommandRepoStub{}, &topologyTemplateRepoStub{
+		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+			return nil, challengeports.ErrChallengeTopologyTemplateNotFound
+		},
+	}, &topologyImageRepoStub{})
+
+	err := service.DeleteTemplate(context.Background(), 7)
+	if err == nil {
+		t.Fatal("expected template not found")
+	}
+	if err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }
 

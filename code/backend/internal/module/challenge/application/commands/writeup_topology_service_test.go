@@ -87,7 +87,11 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	templateRepo := challengeinfra.NewTemplateRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewTopologyService(repo, templateRepo, imageRepo)
+	service := NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(repo),
+		challengeinfra.NewTopologyTemplateRepository(templateRepo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+	)
 
 	templateResp, err := service.CreateTemplate(context.Background(), UpsertEnvironmentTemplateInput{
 		Name:         "双节点模板",
@@ -132,7 +136,10 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 		t.Fatalf("unexpected node network keys: %+v", saved.Nodes[0])
 	}
 
-	queryService := challengeqry.NewTopologyService(repo, templateRepo)
+	queryService := challengeqry.NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(repo),
+		challengeinfra.NewTopologyTemplateRepository(templateRepo),
+	)
 	loadedTemplate, err := queryService.GetTemplate(context.Background(), templateResp.ID)
 	if err != nil {
 		t.Fatalf("GetTemplate() error = %v", err)
@@ -166,7 +173,11 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
+	service := NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(challengeinfra.NewRepository(db)),
+		challengeinfra.NewTopologyTemplateRepository(challengeinfra.NewTemplateRepository(db)),
+		challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(db)),
+	)
 	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, SaveChallengeTopologyInput{
 		EntryNodeKey: "web",
 		Networks: []dto.TopologyNetworkReq{
@@ -203,7 +214,11 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
+	service := NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(challengeinfra.NewRepository(db)),
+		challengeinfra.NewTopologyTemplateRepository(challengeinfra.NewTemplateRepository(db)),
+		challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(db)),
+	)
 	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, SaveChallengeTopologyInput{
 		EntryNodeKey: "web",
 		Nodes: []dto.TopologyNodeReq{
@@ -225,7 +240,11 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 		t.Fatalf("create image: %v", err)
 	}
 
-	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
+	service := NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(challengeinfra.NewRepository(db)),
+		challengeinfra.NewTopologyTemplateRepository(challengeinfra.NewTemplateRepository(db)),
+		challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(db)),
+	)
 	saved, err := service.CreateTemplate(context.Background(), UpsertEnvironmentTemplateInput{
 		Name:         "细粒度策略模板",
 		EntryNodeKey: "web",
@@ -287,7 +306,11 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 		t.Fatalf("create template: %v", err)
 	}
 
-	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
+	service := NewTopologyService(
+		challengeinfra.NewTopologyServiceRepository(challengeinfra.NewRepository(db)),
+		challengeinfra.NewTopologyTemplateRepository(challengeinfra.NewTemplateRepository(db)),
+		challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(db)),
+	)
 	saved, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, SaveChallengeTopologyInput{
 		TemplateID: &template.ID,
 	})

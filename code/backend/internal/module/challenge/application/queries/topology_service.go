@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -44,14 +42,14 @@ func NewTopologyService(
 
 func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	item, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
@@ -76,7 +74,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 		}
 		if item.PackageRevisionID != nil && *item.PackageRevisionID > 0 {
 			revision, findErr := s.packageRevisionRepo.FindChallengePackageRevisionByID(ctx, *item.PackageRevisionID)
-			if findErr != nil && !errors.Is(findErr, gorm.ErrRecordNotFound) {
+			if findErr != nil && !errors.Is(findErr, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
 				return nil, findErr
 			}
 			if findErr == nil {
@@ -93,7 +91,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err

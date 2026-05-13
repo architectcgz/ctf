@@ -2,10 +2,14 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/model"
 )
+
+var ErrContestSubmissionChallengeNotFound = errors.New("contest submission challenge not found")
+var ErrContestSubmissionChallengeEntityNotFound = errors.New("contest submission challenge entity not found")
 
 type ContestSubmissionScoringTxRepository interface {
 	LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)

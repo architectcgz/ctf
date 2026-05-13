@@ -44,11 +44,19 @@ func (r *SubmissionRegistrationRepository) FindRegistration(ctx context.Context,
 }
 
 func (r *SubmissionRegistrationRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
-	return r.source.FindContestChallenge(ctx, contestID, challengeID)
+	item, err := r.source.FindContestChallenge(ctx, contestID, challengeID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, contestports.ErrContestSubmissionChallengeNotFound
+	}
+	return item, err
 }
 
 func (r *SubmissionRegistrationRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	return r.source.FindChallengeByID(ctx, challengeID)
+	item, err := r.source.FindChallengeByID(ctx, challengeID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, contestports.ErrContestSubmissionChallengeEntityNotFound
+	}
+	return item, err
 }
 
 func (r *SubmissionRegistrationRepository) CreateSubmission(ctx context.Context, submission *model.Submission) error {

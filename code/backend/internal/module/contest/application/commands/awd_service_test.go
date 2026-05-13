@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
@@ -146,11 +147,15 @@ func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg confi
 	)
 }
 
+func newAWDPreviewRuntimeLookupsForTest(db *gorm.DB) (challengecontracts.ImageStore, challengeports.AWDChallengeQueryRepository) {
+	return contestinfra.NewAWDPreviewRuntimeImageRepository(challengeinfra.NewImageRepository(db)),
+		contestinfra.NewAWDPreviewRuntimeChallengeRepository(challengeinfra.NewRepository(db))
+}
+
 func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret string, cfg config.ContestAWDConfig) *awdServiceForTest {
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	awdChallengeRepo := challengeinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	return &awdServiceForTest{
@@ -1072,8 +1077,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	awdChallengeRepo := challengeinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
@@ -1194,8 +1198,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	awdChallengeRepo := challengeinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
@@ -1320,8 +1323,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	awdChallengeRepo := challengeinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
@@ -1529,8 +1531,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	}
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	awdChallengeRepo := challengeinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
@@ -1631,6 +1632,7 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(nil)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -1640,8 +1642,8 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 		config.ContestAWDConfig{CheckerTimeout: time.Second},
 		zap.NewNop(),
 		roundManager,
-		challengeinfra.NewImageRepository(db),
-		challengeinfra.NewRepository(db),
+		imageRepo,
+		awdChallengeRepo,
 		nil,
 	)
 

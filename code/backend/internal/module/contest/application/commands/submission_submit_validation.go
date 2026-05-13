@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -37,7 +36,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 
 	contestChallenge, err := s.repo.FindContestChallenge(ctx, contestID, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestSubmissionChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotInContest
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -45,7 +44,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 
 	challengeItem, err := s.repo.FindChallengeByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestSubmissionChallengeEntityNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

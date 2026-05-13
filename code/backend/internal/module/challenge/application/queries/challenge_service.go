@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -43,7 +42,7 @@ func NewChallengeService(repo challengeQueryRepository, solvedCountCache challen
 func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -140,7 +139,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err

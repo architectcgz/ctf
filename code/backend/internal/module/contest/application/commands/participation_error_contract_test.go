@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -97,7 +98,9 @@ func (s participationTeamFinderStub) FindUserTeamInContest(ctx context.Context, 
 }
 
 type submissionRepositoryStub struct {
-	findRegistrationFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findContestChallengeFn func(context.Context, int64, int64) (*model.ContestChallenge, error)
+	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
 }
 
 func (s submissionRepositoryStub) WithinScoringTransaction(ctx context.Context, fn func(repo contestports.ContestSubmissionScoringTxRepository) error) error {
@@ -111,11 +114,17 @@ func (s submissionRepositoryStub) FindRegistration(ctx context.Context, contestI
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
-func (s submissionRepositoryStub) FindContestChallenge(context.Context, int64, int64) (*model.ContestChallenge, error) {
+func (s submissionRepositoryStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+	if s.findContestChallengeFn != nil {
+		return s.findContestChallengeFn(ctx, contestID, challengeID)
+	}
 	return nil, errors.New("unexpected FindContestChallenge call")
 }
 
-func (s submissionRepositoryStub) FindChallengeByID(context.Context, int64) (*model.Challenge, error) {
+func (s submissionRepositoryStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+	if s.findChallengeByIDFn != nil {
+		return s.findChallengeByIDFn(ctx, challengeID)
+	}
 	return nil, errors.New("unexpected FindChallengeByID call")
 }
 
@@ -208,5 +217,88 @@ func TestSubmissionServiceResolveTeamIDTreatsMissingRegistrationAndTeamAsNotRegi
 	}
 	if teamID != nil {
 		t.Fatalf("expected nil team id, got %v", *teamID)
+	}
+}
+
+func TestSubmissionServiceValidateContestSubmissionTreatsContestChallengeNotFoundAsChallengeNotInContest(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	service := NewSubmissionService(
+		participationContestLookupStub{
+			findByIDFn: func(context.Context, int64) (*model.Contest, error) {
+				return &model.Contest{
+					ID:        10,
+					Status:    model.ContestStatusRunning,
+					StartTime: now.Add(-time.Hour),
+					EndTime:   now.Add(time.Hour),
+				}, nil
+			},
+		},
+		submissionRepositoryStub{
+			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+				return &model.ContestRegistration{
+					ContestID: 10,
+					UserID:    1001,
+					Status:    model.ContestRegistrationStatusApproved,
+				}, nil
+			},
+			findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+				return nil, contestports.ErrContestSubmissionChallengeNotFound
+			},
+		},
+		nil,
+		nil,
+		participationTeamFinderStub{},
+		nil,
+		nil,
+	)
+
+	_, err := service.validateContestSubmission(context.Background(), 1001, 10, 20, "flag{irrelevant}")
+	if !errors.Is(err, errcode.ErrChallengeNotInContest) {
+		t.Fatalf("expected ErrChallengeNotInContest, got %v", err)
+	}
+}
+
+func TestSubmissionServiceValidateContestSubmissionTreatsChallengeEntityNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	service := NewSubmissionService(
+		participationContestLookupStub{
+			findByIDFn: func(context.Context, int64) (*model.Contest, error) {
+				return &model.Contest{
+					ID:        10,
+					Status:    model.ContestStatusRunning,
+					StartTime: now.Add(-time.Hour),
+					EndTime:   now.Add(time.Hour),
+				}, nil
+			},
+		},
+		submissionRepositoryStub{
+			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+				return &model.ContestRegistration{
+					ContestID: 10,
+					UserID:    1001,
+					Status:    model.ContestRegistrationStatusApproved,
+				}, nil
+			},
+			findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+				return &model.ContestChallenge{ContestID: 10, ChallengeID: 20}, nil
+			},
+			findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+				return nil, contestports.ErrContestSubmissionChallengeEntityNotFound
+			},
+		},
+		nil,
+		nil,
+		participationTeamFinderStub{},
+		nil,
+		nil,
+	)
+
+	_, err := service.validateContestSubmission(context.Background(), 1001, 10, 20, "flag{irrelevant}")
+	if !errors.Is(err, errcode.ErrChallengeNotFound) {
+		t.Fatalf("expected ErrChallengeNotFound, got %v", err)
 	}
 }

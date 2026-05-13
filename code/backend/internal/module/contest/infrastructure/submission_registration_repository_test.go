@@ -12,7 +12,9 @@ import (
 )
 
 type submissionRegistrationSourceStub struct {
-	findRegistrationFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findContestChallengeFn func(context.Context, int64, int64) (*model.ContestChallenge, error)
+	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
 }
 
 func (s submissionRegistrationSourceStub) WithinScoringTransaction(context.Context, func(contestports.ContestSubmissionScoringTxRepository) error) error {
@@ -26,11 +28,17 @@ func (s submissionRegistrationSourceStub) FindRegistration(ctx context.Context, 
 	return &model.ContestRegistration{}, nil
 }
 
-func (s submissionRegistrationSourceStub) FindContestChallenge(context.Context, int64, int64) (*model.ContestChallenge, error) {
+func (s submissionRegistrationSourceStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+	if s.findContestChallengeFn != nil {
+		return s.findContestChallengeFn(ctx, contestID, challengeID)
+	}
 	return &model.ContestChallenge{}, nil
 }
 
-func (s submissionRegistrationSourceStub) FindChallengeByID(context.Context, int64) (*model.Challenge, error) {
+func (s submissionRegistrationSourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+	if s.findChallengeByIDFn != nil {
+		return s.findChallengeByIDFn(ctx, challengeID)
+	}
 	return &model.Challenge{}, nil
 }
 
@@ -49,5 +57,33 @@ func TestSubmissionRegistrationRepositoryMapsNotFoundErrors(t *testing.T) {
 
 	if _, err := repo.FindRegistration(context.Background(), 1, 2); !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 		t.Fatalf("error = %v, want %v", err, contestports.ErrContestParticipationRegistrationNotFound)
+	}
+}
+
+func TestSubmissionRegistrationRepositoryMapsContestChallengeNotFoundErrors(t *testing.T) {
+	t.Parallel()
+
+	repo := NewSubmissionRegistrationRepository(submissionRegistrationSourceStub{
+		findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	})
+
+	if _, err := repo.FindContestChallenge(context.Background(), 1, 2); !errors.Is(err, contestports.ErrContestSubmissionChallengeNotFound) {
+		t.Fatalf("error = %v, want %v", err, contestports.ErrContestSubmissionChallengeNotFound)
+	}
+}
+
+func TestSubmissionRegistrationRepositoryMapsChallengeEntityNotFoundErrors(t *testing.T) {
+	t.Parallel()
+
+	repo := NewSubmissionRegistrationRepository(submissionRegistrationSourceStub{
+		findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	})
+
+	if _, err := repo.FindChallengeByID(context.Background(), 2); !errors.Is(err, contestports.ErrContestSubmissionChallengeEntityNotFound) {
+		t.Fatalf("error = %v, want %v", err, contestports.ErrContestSubmissionChallengeEntityNotFound)
 	}
 }

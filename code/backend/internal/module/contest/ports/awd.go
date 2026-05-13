@@ -9,7 +9,11 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-var ErrAWDCheckerPreviewTokenStoreUnavailable = errors.New("awd checker preview token store unavailable")
+var (
+	ErrAWDCheckerPreviewTokenStoreUnavailable = errors.New("awd checker preview token store unavailable")
+	ErrContestAWDPreviewChallengeNotFound     = errors.New("contest awd preview challenge not found")
+	ErrContestAWDPreviewImageNotFound         = errors.New("contest awd preview image not found")
+)
 
 type AWDServiceCheckTxRepository interface {
 	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)

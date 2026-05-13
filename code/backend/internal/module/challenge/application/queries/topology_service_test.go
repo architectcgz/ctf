@@ -3,9 +3,12 @@ package queries
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeTopologyRepository struct {
@@ -96,6 +99,41 @@ func (s *stubEnvironmentTemplateRepository) IncrementUsage(ctx context.Context, 
 
 type challengeTopologyContextKey string
 
+type stubChallengePackageRevisionRepository struct {
+	createFn     func(context.Context, *model.ChallengePackageRevision) error
+	findByIDFn   func(context.Context, int64) (*model.ChallengePackageRevision, error)
+	findLatestFn func(context.Context, int64) (*model.ChallengePackageRevision, error)
+	listFn       func(context.Context, int64) ([]*model.ChallengePackageRevision, error)
+}
+
+func (s *stubChallengePackageRevisionRepository) CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+	if s.createFn != nil {
+		return s.createFn(ctx, revision)
+	}
+	return nil
+}
+
+func (s *stubChallengePackageRevisionRepository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (s *stubChallengePackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error) {
+	if s.findLatestFn != nil {
+		return s.findLatestFn(ctx, challengeID)
+	}
+	return nil, nil
+}
+
+func (s *stubChallengePackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, challengeID)
+	}
+	return nil, nil
+}
+
 func TestTopologyServiceGetChallengeTopologyWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
@@ -140,6 +178,91 @@ func TestTopologyServiceGetChallengeTopologyWithContextPropagatesContextToReposi
 	}
 }
 
+func TestTopologyServiceGetChallengeTopologyTreatsChallengeNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(&stubChallengeTopologyRepository{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeTopologyChallengeNotFound
+		},
+	}, nil)
+
+	_, err := service.GetChallengeTopology(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	if err.Error() != errcode.ErrChallengeNotFound.Error() {
+		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	}
+}
+
+func TestTopologyServiceGetChallengeTopologyTreatsTopologyNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(&stubChallengeTopologyRepository{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: 9}, nil
+		},
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			return nil, challengeports.ErrChallengeTopologyNotFound
+		},
+	}, nil)
+
+	_, err := service.GetChallengeTopology(context.Background(), 9)
+	if err == nil {
+		t.Fatal("expected topology not found")
+	}
+	if err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	}
+}
+
+func TestTopologyServiceGetChallengeTopologyIgnoresMissingPackageRevision(t *testing.T) {
+	t.Parallel()
+
+	spec, err := json.Marshal(model.TopologySpec{
+		Nodes: []model.TopologyNode{{Key: "web", Name: "Web"}},
+	})
+	if err != nil {
+		t.Fatalf("marshal topology spec: %v", err)
+	}
+	revisionID := int64(33)
+	service := NewTopologyService(&stubChallengeTopologyRepository{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: 9}, nil
+		},
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			return &model.ChallengeTopology{
+				ChallengeID:       9,
+				EntryNodeKey:      "web",
+				Spec:              string(spec),
+				PackageRevisionID: &revisionID,
+			}, nil
+		},
+	}, nil, &stubChallengePackageRevisionRepository{
+		listFn: func(context.Context, int64) ([]*model.ChallengePackageRevision, error) {
+			return []*model.ChallengePackageRevision{{ID: revisionID, ChallengeID: 9, RevisionNo: 1}}, nil
+		},
+		findByIDFn: func(context.Context, int64) (*model.ChallengePackageRevision, error) {
+			return nil, challengeports.ErrChallengeTopologyPackageRevisionNotFound
+		},
+	})
+
+	resp, err := service.GetChallengeTopology(context.Background(), 9)
+	if err != nil {
+		t.Fatalf("GetChallengeTopology() error = %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected topology response")
+	}
+	if len(resp.PackageRevisions) != 1 {
+		t.Fatalf("expected package revisions, got %+v", resp.PackageRevisions)
+	}
+	if resp.PackageFiles != nil {
+		t.Fatalf("expected package files to be omitted, got %+v", resp.PackageFiles)
+	}
+}
+
 func TestTopologyServiceGetTemplateWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
@@ -167,6 +290,25 @@ func TestTopologyServiceGetTemplateWithContextPropagatesContextToRepository(t *t
 	}
 	if resp == nil || resp.ID != 21 || resp.Name != "Base Web" || resp.EntryNodeKey != "web" {
 		t.Fatalf("unexpected template resp: %+v", resp)
+	}
+}
+
+func TestTopologyServiceGetTemplateTreatsTemplateNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewTopologyService(nil, &stubEnvironmentTemplateRepository{
+		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+			return nil, challengeports.ErrChallengeTopologyTemplateNotFound
+		},
+	})
+
+	_, err := service.GetTemplate(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected template not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }
 

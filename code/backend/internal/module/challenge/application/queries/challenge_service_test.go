@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -12,9 +13,93 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
 )
+
+type challengeQueryRepositoryStub struct {
+	findByIDFn             func(context.Context, int64) (*model.Challenge, error)
+	listFn                 func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listPublishedFn        func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listHintsByChallengeID func(context.Context, int64) ([]*model.ChallengeHint, error)
+	getSolvedStatusFn      func(context.Context, int64, int64) (bool, error)
+	getSolvedCountFn       func(context.Context, int64) (int64, error)
+	getTotalAttemptsFn     func(context.Context, int64) (int64, error)
+	batchSolvedStatusFn    func(context.Context, int64, []int64) (map[int64]bool, error)
+	batchSolvedCountFn     func(context.Context, []int64) (map[int64]int64, error)
+	batchTotalAttemptsFn   func(context.Context, []int64) (map[int64]int64, error)
+}
+
+func (s *challengeQueryRepositoryStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (s *challengeQueryRepositoryStub) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, query)
+	}
+	return nil, 0, nil
+}
+
+func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+	if s.listPublishedFn != nil {
+		return s.listPublishedFn(ctx, query)
+	}
+	return nil, 0, nil
+}
+
+func (s *challengeQueryRepositoryStub) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
+	if s.listHintsByChallengeID != nil {
+		return s.listHintsByChallengeID(ctx, challengeID)
+	}
+	return nil, nil
+}
+
+func (s *challengeQueryRepositoryStub) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
+	if s.getSolvedStatusFn != nil {
+		return s.getSolvedStatusFn(ctx, userID, challengeID)
+	}
+	return false, nil
+}
+
+func (s *challengeQueryRepositoryStub) GetSolvedCount(ctx context.Context, challengeID int64) (int64, error) {
+	if s.getSolvedCountFn != nil {
+		return s.getSolvedCountFn(ctx, challengeID)
+	}
+	return 0, nil
+}
+
+func (s *challengeQueryRepositoryStub) GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error) {
+	if s.getTotalAttemptsFn != nil {
+		return s.getTotalAttemptsFn(ctx, challengeID)
+	}
+	return 0, nil
+}
+
+func (s *challengeQueryRepositoryStub) BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
+	if s.batchSolvedStatusFn != nil {
+		return s.batchSolvedStatusFn(ctx, userID, challengeIDs)
+	}
+	return map[int64]bool{}, nil
+}
+
+func (s *challengeQueryRepositoryStub) BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+	if s.batchSolvedCountFn != nil {
+		return s.batchSolvedCountFn(ctx, challengeIDs)
+	}
+	return map[int64]int64{}, nil
+}
+
+func (s *challengeQueryRepositoryStub) BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+	if s.batchTotalAttemptsFn != nil {
+		return s.batchTotalAttemptsFn(ctx, challengeIDs)
+	}
+	return map[int64]int64{}, nil
+}
 
 func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
@@ -28,6 +113,44 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected not published error, got %v", err)
+	}
+}
+
+func TestChallengeServiceGetChallengeTreatsChallengeQueryNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewChallengeService(&challengeQueryRepositoryStub{
+		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeQueryChallengeNotFound
+		},
+	}, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+
+	_, err := service.GetChallenge(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	}
+}
+
+func TestChallengeServiceGetPublishedChallengeTreatsChallengeQueryNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewChallengeService(&challengeQueryRepositoryStub{
+		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeQueryChallengeNotFound
+		},
+	}, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+
+	_, err := service.GetPublishedChallenge(context.Background(), 7, 404)
+	if err == nil {
+		t.Fatal("expected published challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }
 

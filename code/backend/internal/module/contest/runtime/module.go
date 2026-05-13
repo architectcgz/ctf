@@ -68,7 +68,9 @@ type moduleDeps struct {
 	submissionLookup      *contestinfra.SubmissionRegistrationRepository
 	challengeCatalog      challengecontracts.ContestChallengeContract
 	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
+	previewChallengeRepo  challengeports.AWDChallengeQueryRepository
 	imageRepo             challengecontracts.ImageStore
+	previewImageRepo      challengecontracts.ImageStore
 	flagValidator         challengecontracts.FlagValidator
 	containerFiles        contestports.AWDContainerFileWriter
 	runtimeProbe          challengeports.ChallengeRuntimeProbe
@@ -110,6 +112,8 @@ func newModuleDeps(deps Deps) *moduleDeps {
 	teamQuery := contestinfra.NewTeamQueryAdapter(teamRepo)
 	participationLookup := contestinfra.NewParticipationRegistrationRepository(participationRepo)
 	submissionLookup := contestinfra.NewSubmissionRegistrationRepository(submissionRepo)
+	previewRuntimeChallengeLookup := contestinfra.NewAWDPreviewRuntimeChallengeRepository(deps.AWDChallengeQueryRepo)
+	previewRuntimeImageLookup := contestinfra.NewAWDPreviewRuntimeImageRepository(deps.ImageRepo)
 
 	return &moduleDeps{
 		input:                 deps,
@@ -129,7 +133,9 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		submissionLookup:      submissionLookup,
 		challengeCatalog:      deps.ChallengeCatalog,
 		awdChallengeQueryRepo: deps.AWDChallengeQueryRepo,
+		previewChallengeRepo:  previewRuntimeChallengeLookup,
 		imageRepo:             deps.ImageRepo,
+		previewImageRepo:      previewRuntimeImageLookup,
 		flagValidator:         deps.FlagValidator,
 		containerFiles:        deps.ContainerFiles,
 		runtimeProbe:          deps.RuntimeProbe,
@@ -198,8 +204,8 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
 		awdUpdater,
-		deps.imageRepo,
-		deps.awdChallengeQueryRepo,
+		deps.previewImageRepo,
+		deps.previewChallengeRepo,
 		deps.runtimeProbe,
 		scoreboardCache,
 	)

@@ -10,9 +10,14 @@ import (
 )
 
 var (
-	ErrChallengeImageNotFound         = errors.New("challenge image not found")
-	ErrChallengeFlagChallengeNotFound = errors.New("challenge flag challenge not found")
-	ErrAWDChallengeNotFound           = errors.New("awd challenge not found")
+	ErrChallengeQueryChallengeNotFound          = errors.New("challenge query challenge not found")
+	ErrChallengeImageNotFound                   = errors.New("challenge image not found")
+	ErrChallengeFlagChallengeNotFound           = errors.New("challenge flag challenge not found")
+	ErrAWDChallengeNotFound                     = errors.New("awd challenge not found")
+	ErrChallengeTopologyChallengeNotFound       = errors.New("challenge topology challenge not found")
+	ErrChallengeTopologyNotFound                = errors.New("challenge topology not found")
+	ErrChallengeTopologyTemplateNotFound        = errors.New("challenge topology template not found")
+	ErrChallengeTopologyPackageRevisionNotFound = errors.New("challenge topology package revision not found")
 
 	ErrChallengeWriteupChallengeNotFound         = errors.New("challenge writeup challenge not found")
 	ErrChallengeWriteupRequesterNotFound         = errors.New("challenge writeup requester not found")

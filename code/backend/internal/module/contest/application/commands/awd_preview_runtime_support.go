@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -127,7 +127,7 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 
 	challenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, previewChallengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDPreviewChallengeNotFound) {
 			return "", nil, errcode.ErrNotFound
 		}
 		return "", nil, errcode.ErrInternal.WithCause(err)
@@ -194,7 +194,7 @@ func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int
 	}
 	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDPreviewImageNotFound) {
 			return "", errcode.ErrNotFound
 		}
 		return "", errcode.ErrInternal.WithCause(err)

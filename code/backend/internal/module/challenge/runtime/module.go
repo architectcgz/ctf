@@ -274,7 +274,8 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	)
 	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeCommandService.SetEventBus(deps.input.Events)
-	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
+	challengeQueryRepo := challengeinfra.NewChallengeQueryRepository(deps.challengeQueryRepo)
+	challengeQueryService := challengeqry.NewChallengeService(challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))
 	return challengeCommandService, challengehttp.NewHandler(challengeCommandService, challengeQueryService)
@@ -293,8 +294,11 @@ func buildFlagHandler(deps moduleDeps) (*challengehttp.FlagHandler, challengecon
 }
 
 func buildTopologyHandler(deps moduleDeps) *challengehttp.TopologyHandler {
-	topologyCommandService := challengecmd.NewTopologyService(deps.topologyRepo, deps.templateRepo, deps.imageRepo)
-	topologyQueryService := challengeqry.NewTopologyService(deps.topologyRepo, deps.templateRepo)
+	topologyRepo := challengeinfra.NewTopologyServiceRepository(deps.topologyRepo)
+	templateRepo := challengeinfra.NewTopologyTemplateRepository(deps.templateRepo)
+	imageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
+	topologyCommandService := challengecmd.NewTopologyService(topologyRepo, templateRepo, imageRepo)
+	topologyQueryService := challengeqry.NewTopologyService(topologyRepo, templateRepo)
 	return challengehttp.NewTopologyHandler(topologyCommandService, topologyQueryService)
 }
 
