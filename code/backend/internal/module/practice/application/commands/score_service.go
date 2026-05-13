@@ -2,12 +2,9 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -15,14 +12,13 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/internal/pkg/cache"
 )
 
 type ScoreService struct {
-	repo   practiceScoreRepository
-	redis  *redis.Client
-	logger *zap.Logger
-	config *config.ScoreConfig
+	repo       practiceScoreRepository
+	stateStore practiceports.PracticeScoreStateStore
+	logger     *zap.Logger
+	config     *config.ScoreConfig
 }
 
 type practiceScoreRepository interface {
@@ -31,15 +27,18 @@ type practiceScoreRepository interface {
 	practiceports.PracticeUserScoreWriteRepository
 }
 
-func NewScoreService(repo practiceScoreRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+func NewScoreService(repo practiceScoreRepository, stateStore practiceports.PracticeScoreStateStore, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
+	if cfg == nil {
+		cfg = &config.ScoreConfig{}
+	}
 	return &ScoreService{
-		repo:   repo,
-		redis:  redis,
-		logger: logger,
-		config: cfg,
+		repo:       repo,
+		stateStore: stateStore,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -54,38 +53,35 @@ func (s *ScoreService) CalculateScore(ctx context.Context, challengeID int64) in
 }
 
 func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error {
-	lockKey := cache.ScoreLockKey(userID)
-	lockToken := uuid.New().String()
-	lock, err := s.redis.SetNX(ctx, lockKey, lockToken, s.config.LockTimeout).Result()
-	if err != nil {
-		s.logger.Error("获取计分锁失败", zap.Int64("userID", userID), zap.Error(err))
-		return fmt.Errorf("获取分布式锁失败: %w", err)
-	}
-	if !lock {
-		s.logger.Warn("计分锁已被占用", zap.Int64("userID", userID))
-		return fmt.Errorf("用户 %d 正在计分中，请稍后重试", userID)
+	var lock practiceports.PracticeScoreLockLease
+	if s.stateStore != nil {
+		acquiredLock, acquired, err := s.stateStore.AcquireUserScoreUpdateLock(ctx, userID, s.lockTimeout())
+		if err != nil {
+			s.logger.Error("获取计分锁失败", zap.Int64("userID", userID), zap.Error(err))
+			return fmt.Errorf("获取分布式锁失败: %w", err)
+		}
+		if !acquired {
+			s.logger.Warn("计分锁已被占用", zap.Int64("userID", userID))
+			return fmt.Errorf("用户 %d 正在计分中，请稍后重试", userID)
+		}
+		lock = acquiredLock
 	}
 
-	defer func() {
-		script := `
-			if redis.call("get", KEYS[1]) == ARGV[1] then
-				return redis.call("del", KEYS[1])
-			else
-				return 0
-			end
-		`
-		result, err := s.redis.Eval(ctx, script, []string{lockKey}, lockToken).Result()
-		if err != nil {
-			s.logger.Error("释放分布式锁失败",
-				zap.Int64("userID", userID),
-				zap.String("lockKey", lockKey),
-				zap.Error(err))
-		} else if result == int64(0) {
-			s.logger.Warn("锁已被其他协程占用或已过期",
-				zap.Int64("userID", userID),
-				zap.String("lockToken", lockToken))
-		}
-	}()
+	if lock != nil {
+		defer func() {
+			released, err := lock.Release(ctx)
+			if err != nil {
+				s.logger.Error("释放分布式锁失败",
+					zap.Int64("userID", userID),
+					zap.String("lockKey", lock.Key()),
+					zap.Error(err))
+			} else if !released {
+				s.logger.Warn("锁已被其他协程占用或已过期",
+					zap.Int64("userID", userID),
+					zap.String("lockKey", lock.Key()))
+			}
+		}()
+	}
 
 	challengeIDs, err := s.repo.ListSolvedChallengeIDs(ctx, userID)
 	if err != nil {
@@ -114,25 +110,16 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 
 	s.logger.Info("更新用户得分", zap.Int64("userID", userID), zap.Int("totalScore", totalScore), zap.Int("solvedCount", len(challengeIDs)))
 
-	pipe := s.redis.Pipeline()
-	cacheKey := cache.UserScoreKey(userID)
-
 	info := &dto.UserScoreInfo{
 		UserID:      userID,
 		TotalScore:  totalScore,
 		SolvedCount: len(challengeIDs),
 	}
-	data, _ := json.Marshal(info)
-	pipe.Set(ctx, cacheKey, data, s.config.CacheTTL)
-
-	pipe.ZAdd(ctx, cache.RankingKey(), redis.Z{
-		Score:  float64(totalScore),
-		Member: userID,
-	})
-
-	if _, err := pipe.Exec(ctx); err != nil {
-		s.logger.Error("批量更新缓存失败", zap.Int64("userID", userID), zap.Error(err))
-		return fmt.Errorf("更新得分成功但缓存同步失败: %w", err)
+	if s.stateStore != nil {
+		if err := s.stateStore.SyncUserScoreState(ctx, info, s.cacheTTL()); err != nil {
+			s.logger.Error("批量更新缓存失败", zap.Int64("userID", userID), zap.Error(err))
+			return fmt.Errorf("更新得分成功但缓存同步失败: %w", err)
+		}
 	}
 
 	return nil
@@ -143,4 +130,11 @@ func (s *ScoreService) lockTimeout() time.Duration {
 		return 0
 	}
 	return s.config.LockTimeout
+}
+
+func (s *ScoreService) cacheTTL() time.Duration {
+	if s.config == nil || s.config.CacheTTL <= 0 {
+		return 0
+	}
+	return s.config.CacheTTL
 }

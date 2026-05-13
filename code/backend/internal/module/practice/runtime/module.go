@@ -145,8 +145,9 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	cache := deps.input.Cache
+	scoreStateStore := practiceinfra.NewScoreStateStore(cache)
 
-	scoreService := practicecmd.NewScoreService(deps.scoreRepo, cache, log.Named("score_service"), &cfg.Score)
+	scoreService := practicecmd.NewScoreService(deps.scoreRepo, scoreStateStore, log.Named("score_service"), &cfg.Score)
 	progressTimelineService := practiceqry.NewProgressTimelineService(
 		deps.queryRepo,
 		deps.progressCache,
@@ -164,7 +165,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		cfg,
 		log.Named("practice_service"))
 
-	rankingService := practiceqry.NewScoreService(deps.rankingRepo, cache, log.Named("practice_score_query_service"), &cfg.Score)
+	rankingService := practiceqry.NewScoreService(deps.rankingRepo, scoreStateStore, log.Named("practice_score_query_service"), &cfg.Score)
 
 	return service, rankingService, progressTimelineService
 }

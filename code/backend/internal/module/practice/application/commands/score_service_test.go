@@ -20,7 +20,7 @@ import (
 )
 
 func newTestScoreCommandService(db *gorm.DB, redisClient *redis.Client) *practicecmd.ScoreService {
-	return practicecmd.NewScoreService(practiceinfra.NewRepository(db), redisClient, zap.NewNop(), &config.ScoreConfig{
+	return practicecmd.NewScoreService(practiceinfra.NewRepository(db), practiceinfra.NewScoreStateStore(redisClient), zap.NewNop(), &config.ScoreConfig{
 		CacheTTL:        time.Minute,
 		LockTimeout:     5 * time.Second,
 		MaxRankingLimit: 100,

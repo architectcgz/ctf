@@ -269,6 +269,18 @@ type PracticeUserDirectoryRepository interface {
 	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error)
 }
 
+type PracticeScoreLockLease interface {
+	Key() string
+	Release(ctx context.Context) (bool, error)
+}
+
+type PracticeScoreStateStore interface {
+	AcquireUserScoreUpdateLock(ctx context.Context, userID int64, ttl time.Duration) (PracticeScoreLockLease, bool, error)
+	LoadUserScoreCache(ctx context.Context, userID int64) (*dto.UserScoreInfo, bool, error)
+	StoreUserScoreCache(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error
+	SyncUserScoreState(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error
+}
+
 type PracticeInstanceLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)

@@ -62,10 +62,8 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"practice/application/commands/contest_instance_scope.go -> gorm.io/gorm":                     {},
 	"practice/application/commands/instance_provisioning.go -> net/http":                          {},
 	"practice/application/commands/manual_review_service.go -> gorm.io/gorm":                      {},
-	"practice/application/commands/score_service.go -> github.com/redis/go-redis/v9":              {},
 	"practice/application/commands/service.go -> github.com/redis/go-redis/v9":                    {},
 	"practice/application/commands/submission_service.go -> gorm.io/gorm":                         {},
-	"practice/application/queries/score_service.go -> github.com/redis/go-redis/v9":               {},
 	"practice/application/queries/score_service.go -> gorm.io/gorm":                               {},
 }
 

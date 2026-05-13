@@ -2,24 +2,22 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"time"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/internal/pkg/cache"
 )
 
 type ScoreService struct {
-	repo   practiceRankingRepository
-	redis  *redis.Client
-	logger *zap.Logger
-	config *config.ScoreConfig
+	repo       practiceRankingRepository
+	stateStore practiceports.PracticeScoreStateStore
+	logger     *zap.Logger
+	config     *config.ScoreConfig
 }
 
 type practiceRankingRepository interface {
@@ -28,7 +26,7 @@ type practiceRankingRepository interface {
 	practiceports.PracticeUserDirectoryRepository
 }
 
-func NewScoreService(repo practiceRankingRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+func NewScoreService(repo practiceRankingRepository, stateStore practiceports.PracticeScoreStateStore, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -39,20 +37,24 @@ func NewScoreService(repo practiceRankingRepository, redis *redis.Client, logger
 		cfg.MaxRankingLimit = 100
 	}
 	return &ScoreService{
-		repo:   repo,
-		redis:  redis,
-		logger: logger,
-		config: cfg,
+		repo:       repo,
+		stateStore: stateStore,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
 func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.UserScoreInfo, error) {
-	cacheKey := cache.UserScoreKey(userID)
-	cached, err := s.redis.Get(ctx, cacheKey).Result()
-	if err == nil {
-		var info dto.UserScoreInfo
-		if json.Unmarshal([]byte(cached), &info) == nil {
-			return &info, nil
+	if s.stateStore != nil {
+		cached, hit, err := s.stateStore.LoadUserScoreCache(ctx, userID)
+		if err == nil && hit {
+			return cached, nil
+		}
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+			s.logger.Warn("读取用户得分缓存失败", zap.Int64("userID", userID), zap.Error(err))
 		}
 	}
 
@@ -77,8 +79,11 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 	info := practiceQueryResponseMapperInst.ToUserScoreInfoBasePtr(userScore)
 	info.Username = userProfiles[userID].Username
 
-	data, _ := json.Marshal(info)
-	s.redis.Set(ctx, cacheKey, data, s.config.CacheTTL)
+	if s.stateStore != nil {
+		if err := s.stateStore.StoreUserScoreCache(ctx, info, s.cacheTTL()); err != nil && ctx.Err() == nil {
+			s.logger.Warn("回填用户得分缓存失败", zap.Int64("userID", userID), zap.Error(err))
+		}
+	}
 
 	return info, nil
 }
@@ -145,4 +150,11 @@ func (s *ScoreService) getUserProfiles(ctx context.Context, userIDs []int64) (ma
 	}
 
 	return result, nil
+}
+
+func (s *ScoreService) cacheTTL() time.Duration {
+	if s.config == nil || s.config.CacheTTL <= 0 {
+		return 0
+	}
+	return s.config.CacheTTL
 }
