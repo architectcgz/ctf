@@ -183,6 +183,37 @@
   outline-offset: 2px;
 }
 
+.journal-soft-surface .journal-soft-panel-shell {
+  border: 1px solid var(--journal-shell-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  padding: var(--journal-soft-panel-shell-padding, var(--space-4) var(--space-4-5));
+}
+
+.journal-soft-surface .journal-soft-panel-item {
+  border: 1px solid var(--journal-soft-panel-item-border, var(--journal-soft-border));
+  border-radius: var(--journal-soft-panel-item-radius, 18px);
+  background: var(
+    --journal-soft-panel-item-background,
+    color-mix(in srgb, var(--journal-surface-subtle) 72%, transparent)
+  );
+  padding: var(--journal-soft-panel-item-padding, var(--space-3) var(--space-3-5));
+}
+
+.journal-soft-surface .journal-soft-panel-item--accent {
+  --journal-soft-panel-item-border: color-mix(
+    in srgb,
+    var(--journal-accent) 20%,
+    var(--journal-soft-border)
+  );
+  --journal-soft-panel-item-background: color-mix(
+    in srgb,
+    var(--journal-accent) 6%,
+    var(--journal-surface-subtle)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--journal-accent) 12%, transparent);
+}
+
 .journal-soft-surface .journal-soft-empty-state {
   border: 1px dashed var(--journal-shell-border);
   border-radius: 22px;

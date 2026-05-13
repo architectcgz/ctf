@@ -27,6 +27,9 @@ describe('student and user surface alignment', () => {
     expect(journalSoftSurfacesSource).toContain('--journal-shell-border: color-mix')
     expect(journalSoftSurfacesSource).toContain('--journal-soft-border: color-mix')
     expect(journalSoftSurfacesSource).toContain('--journal-divider: color-mix')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-shell')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item--accent')
     expect(studentOverviewSource).toMatch(
       /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
     )
@@ -35,6 +38,8 @@ describe('student and user surface alignment', () => {
     expect(studentOverviewSource).not.toMatch(/border:\s*1px solid var\(--journal-border\);/)
 
     expect(studentDifficultySource).toContain('journal-soft-surface')
+    expect(studentDifficultySource).toContain('journal-soft-panel-shell')
+    expect(studentDifficultySource).toContain('journal-soft-panel-item')
     expect(studentDifficultySource).toContain('.difficulty-note')
     expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
@@ -56,6 +61,8 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('bg-emerald-50')
 
     expect(studentCategoryProgressSource).toContain('journal-soft-surface')
+    expect(studentCategoryProgressSource).toContain('journal-soft-panel-shell')
+    expect(studentCategoryProgressSource).toContain('journal-soft-panel-item')
     expect(studentCategoryProgressSource).toMatch(
       /\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s
     )

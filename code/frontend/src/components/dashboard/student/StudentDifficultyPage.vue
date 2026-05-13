@@ -188,13 +188,15 @@ function difficultyPillValue(difficulty: string) {
             当前还没有难度统计数据，先完成几道题再回来查看。
           </div>
 
-          <div v-else class="difficulty-action-list mt-5">
+          <div v-else class="difficulty-action-list journal-soft-panel-shell mt-5">
             <article
               v-for="(item, index) in orderedStats"
               :key="item.difficulty"
-              class="difficulty-action-item"
+              class="difficulty-action-item journal-soft-panel-item"
               :class="{
                 'difficulty-action-item--primary':
+                  primaryDifficulty?.difficulty === item.difficulty,
+                'journal-soft-panel-item--accent':
                   primaryDifficulty?.difficulty === item.difficulty,
               }"
               :data-test="`difficulty-action-${item.difficulty}`"
@@ -245,7 +247,7 @@ function difficultyPillValue(difficulty: string) {
         </section>
 
         <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
-          <div class="difficulty-note">
+          <div class="difficulty-note journal-soft-panel-shell">
             <Flame class="difficulty-note__icon h-4 w-4" />
             <p class="difficulty-note__copy">
               {{
@@ -305,26 +307,15 @@ function difficultyPillValue(difficulty: string) {
 
 .difficulty-action-list,
 .difficulty-note {
-  border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: var(--space-4) var(--space-4-5);
+  --journal-soft-panel-shell-padding: var(--space-4) var(--space-4-5);
 }
 
 .difficulty-action-item + .difficulty-action-item {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--journal-divider);
+  margin-top: var(--space-3);
 }
 
 .difficulty-action-item {
-  border-radius: 18px;
-  padding: var(--space-2) var(--space-2-5);
-}
-
-.difficulty-action-item--primary {
-  background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --journal-soft-panel-item-padding: var(--space-2) var(--space-2-5);
 }
 
 .difficulty-action-item__body {
@@ -428,11 +419,6 @@ function difficultyPillValue(difficulty: string) {
   overflow: hidden;
   border-radius: 999px;
   background: var(--journal-track);
-}
-
-:global([data-theme='dark']) .difficulty-action-list,
-:global([data-theme='dark']) .difficulty-note {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
 @media (max-width: 900px) {

@@ -193,12 +193,15 @@ function categoryPillValue(category: string) {
 
           <div
             v-else
-            class="category-action-list mt-5"
+            class="category-action-list journal-soft-panel-shell mt-5"
           >
             <article
               v-for="(item, index) in rankedCategories"
               :key="item.category"
-              class="category-action-item"
+              class="category-action-item journal-soft-panel-item"
+              :class="{
+                'journal-soft-panel-item--accent': primaryCategory?.category === item.category,
+              }"
               :data-test="`category-action-${item.category}`"
             >
               <div class="category-action-item__body">
@@ -296,20 +299,16 @@ function categoryPillValue(category: string) {
 }
 
 .category-action-list {
-  border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: var(--space-4) var(--space-4-5);
+  --journal-soft-panel-shell-padding: var(--space-4) var(--space-4-5);
 }
 
 .category-action-item + .category-action-item {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--journal-divider);
+  margin-top: var(--space-3);
 }
 
 .category-action-item__body {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
   align-items: flex-start;
   gap: var(--space-4);
 }
@@ -367,10 +366,6 @@ function categoryPillValue(category: string) {
   background: color-mix(in srgb, var(--journal-accent) 68%, var(--color-primary-hover));
 }
 
-:global([data-theme='dark']) .category-action-list {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-}
-
 :global([data-theme='dark']) .journal-soft-surface {
   --journal-soft-button-outline-background: color-mix(
     in srgb,
@@ -385,7 +380,12 @@ function categoryPillValue(category: string) {
   }
 
   .category-action-item__body {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .category-action-rank {
+    width: 2rem;
   }
 
   .category-action-item__cta {
