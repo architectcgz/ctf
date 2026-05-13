@@ -218,7 +218,7 @@ flowchart LR
 
 ### 阶段 5：收窄 application concrete allowlist
 
-当前状态（2026-05-13，phase 5 / slices 1-9）：
+当前状态（2026-05-13，phase 5 / slices 1-10）：
 
 - `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
@@ -231,7 +231,8 @@ flowchart LR
 - `AWDService` 与 `contest_awd_service_service` 现在通过 `contest/ports.AWDRoundStateStore` 和 `contest/ports.AWDCheckerPreviewTokenStore` 读取 current round / round flag / service status runtime state，并承接 checker preview token 的存取；`contest/infrastructure/awd_round_state_store.go` 与 `contest/infrastructure/awd_checker_preview_token_store.go` 统一落地 Redis 细节，`contest/runtime/module.go` 也不再把 Redis client 直接注回 AWD application surface。
 - 当前 `contest` application surface 的 Redis concrete allowlist 已收口完成；phase 5 后续如果继续推进，重点转到 `practice`、`challenge` 等其他模块。
 - `practice/application/commands/score_service.go` 与 `practice/application/queries/score_service.go` 现在通过 `practice/ports.PracticeScoreStateStore` 读取和写入用户得分相关 Redis 状态；`practice/infrastructure/score_state_store.go` 统一承接用户计分锁、用户得分缓存和排行榜 sorted-set 细节，`practice/runtime/module.go` 也不再把 Redis client 直接注回 practice score command/query surface。
-- `practice/application/commands/service.go` 里的 flag submit 限流 Redis 依赖仍在 phase 5 后续范围内，本轮没有把 submission rate-limit 也混进 practice score 这一刀。
+- `practice/application/commands/service.go` 与 `practice/application/commands/submission_service.go` 现在通过 `practice/ports.PracticeFlagSubmitRateLimitStore` 读取和更新 flag submit 限流状态；`practice/infrastructure/submission_rate_limit_store.go` 统一承接 prefix fallback、计数 key、`Incr` 和首次窗口 `Expire` 细节，`practice/runtime/module.go` 也不再把 Redis client 直接注回 practice command service。
+- 当前 `practice` application surface 的 Redis concrete allowlist 已收口完成；phase 5 后续如果继续推进，重点转到 `assessment`、`ops` 等剩余 Redis surface，以及其他模块里尚未收口的 GORM concrete surface。
 
 目标：
 

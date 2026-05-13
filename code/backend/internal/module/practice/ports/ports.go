@@ -281,6 +281,10 @@ type PracticeScoreStateStore interface {
 	SyncUserScoreState(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error
 }
 
+type PracticeFlagSubmitRateLimitStore interface {
+	AllowFlagSubmit(ctx context.Context, userID, challengeID int64, limit int, window time.Duration) (bool, error)
+}
+
 type PracticeInstanceLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)

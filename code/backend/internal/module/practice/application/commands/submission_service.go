@@ -43,17 +43,15 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		return nil, errcode.ErrAlreadySolved
 	}
 
-	rateLimitKey := fmt.Sprintf("%s:submit:%d:%d", s.config.RateLimit.RedisKeyPrefix, userID, challengeID)
-	count, err := s.redis.Incr(ctx, rateLimitKey).Result()
-	if err != nil {
-		s.logger.Error("提交限流失败", zap.String("key", rateLimitKey), zap.Error(err))
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if count == 1 {
-		_ = s.redis.Expire(ctx, rateLimitKey, s.config.RateLimit.FlagSubmit.Window).Err()
-	}
-	if count > int64(s.config.RateLimit.FlagSubmit.Limit) {
-		return nil, errcode.ErrSubmitTooFrequent
+	if s.rateLimitStore != nil {
+		allowed, err := s.rateLimitStore.AllowFlagSubmit(ctx, userID, challengeID, s.config.RateLimit.FlagSubmit.Limit, s.config.RateLimit.FlagSubmit.Window)
+		if err != nil {
+			s.logger.Error("提交限流失败", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeID), zap.Error(err))
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		if !allowed {
+			return nil, errcode.ErrSubmitTooFrequent
+		}
 	}
 
 	submission := &model.Submission{

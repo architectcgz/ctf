@@ -24,6 +24,10 @@ import (
 	"time"
 )
 
+func newPracticeFlagSubmitRateLimitStoreForTest(redisClient *redis.Client) practiceports.PracticeFlagSubmitRateLimitStore {
+	return practiceinfra.NewFlagSubmitRateLimitStore(redisClient, "practice:test")
+}
+
 func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	t.Parallel()
 
@@ -50,7 +54,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -102,7 +106,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -198,7 +202,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				return nil
 			},
 		},
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -288,7 +292,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -363,7 +367,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -425,7 +429,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -524,7 +528,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		runtimeinfrarepo.NewRepository(db),
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -677,7 +681,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		&stubPracticeInstanceStore{},
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -747,7 +751,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -1430,7 +1434,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		instanceStore,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",
@@ -1507,7 +1511,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		instanceStore,
 		nil,
 		nil,
-		redisClient,
+		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
 		&config.Config{
 			RateLimit: config.RateLimitConfig{
 				RedisKeyPrefix: "practice:test",

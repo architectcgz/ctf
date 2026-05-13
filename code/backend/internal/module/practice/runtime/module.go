@@ -146,6 +146,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 	log := deps.input.Logger
 	cache := deps.input.Cache
 	scoreStateStore := practiceinfra.NewScoreStateStore(cache)
+	flagSubmitRateLimitStore := practiceinfra.NewFlagSubmitRateLimitStore(cache, cfg.RateLimit.RedisKeyPrefix)
 
 	scoreService := practicecmd.NewScoreService(deps.scoreRepo, scoreStateStore, log.Named("score_service"), &cfg.Score)
 	progressTimelineService := practiceqry.NewProgressTimelineService(
@@ -161,7 +162,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		deps.instanceRepo,
 		deps.runtimeService,
 		scoreService,
-		cache,
+		flagSubmitRateLimitStore,
 		cfg,
 		log.Named("practice_service"))
 

@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -59,7 +58,7 @@ type Service struct {
 	instanceRepo   instanceRepository
 	runtimeService practiceports.RuntimeInstanceService
 	scoreService   ScoreUpdater
-	redis          *redis.Client
+	rateLimitStore practiceports.PracticeFlagSubmitRateLimitStore
 	config         *config.Config
 	logger         *zap.Logger
 	eventBus       platformevents.Bus
@@ -83,7 +82,7 @@ func NewService(
 	instanceRepo instanceRepository,
 	runtimeService practiceports.RuntimeInstanceService,
 	scoreService ScoreUpdater,
-	redis *redis.Client,
+	rateLimitStore practiceports.PracticeFlagSubmitRateLimitStore,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *Service {
@@ -100,7 +99,7 @@ func NewService(
 		instanceRepo:   instanceRepo,
 		runtimeService: runtimeService,
 		scoreService:   scoreService,
-		redis:          redis,
+		rateLimitStore: rateLimitStore,
 		config:         cfg,
 		logger:         logger,
 	}

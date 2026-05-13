@@ -41,6 +41,10 @@
   - 负责：由 practice score command/query 继续承接题目得分计算、缓存优先读取和用户名补全的业务编排；`practice/ports.PracticeScoreStateStore` 与 `practice/infrastructure/score_state_store.go` 统一承接用户计分锁、用户得分缓存和排行榜 sorted-set 细节，`practice/runtime/module.go` 负责把同一个 state store 注入 score command/query wiring
   - 不负责：让 practice score application surface 继续直接知道 Redis key、Lua compare-and-del、JSON 缓存格式或 `ZAdd` 细节
 
+- `code/backend/internal/module/practice/application/commands/service.go`、`code/backend/internal/module/practice/application/commands/submission_service.go`、`code/backend/internal/module/practice/infrastructure/submission_rate_limit_store.go`
+  - 负责：由 practice command service 继续承接 flag submit 限流的业务编排；`practice/ports.PracticeFlagSubmitRateLimitStore` 与 `practice/infrastructure/submission_rate_limit_store.go` 统一承接 prefix fallback、计数 key、`Incr` 和首次窗口 `Expire` 细节
+  - 不负责：让 practice command service 继续直接持有 Redis client，或在 application 层拼接 flag submit rate-limit key
+
 - `code/backend/internal/module/contest/application/queries/scoreboard_*.go`、`code/backend/internal/module/contest/application/commands/scoreboard_admin_*.go`、`code/backend/internal/module/contest/infrastructure/scoreboard_state_store.go`
   - 负责：由 scoreboard query/admin 继续承接排行榜读取、改分和重建的业务编排；`contest/ports.ContestScoreboardStateStore` 与 `contest/infrastructure/scoreboard_state_store.go` 统一承接 Redis sorted-set、frozen snapshot、team rank 和 rebuild 细节，`contest/runtime/module.go` 负责把同一个 state store 注入 query、command 和状态副作用 wiring
   - 不负责：让 application scoreboard surface 继续直接知道 Redis key、`redis.Z`、`ZIncrBy`、pipeline 或 frozen snapshot copy 细节
