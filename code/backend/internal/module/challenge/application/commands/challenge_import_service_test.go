@@ -18,7 +18,6 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -116,7 +115,7 @@ func TestPreviewChallengeImportReturnsPlatformBuildImageDelivery(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
@@ -151,7 +150,7 @@ func TestPreviewChallengeImportWarnsWhenPlatformBuildServiceUnavailable(t *testi
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -190,7 +189,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
@@ -259,7 +258,7 @@ func TestCommitChallengeImportReturnsServiceUnavailableWhenPlatformBuildServiceM
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -287,7 +286,7 @@ func TestCommitChallengeImportReturnsServiceUnavailableWhenExternalImageVerifica
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	packageDir := writeExternalRefChallengePackage(t, tempDir, "web-external-ref", "registry.example.edu/ctf/web-external-ref:v1")
 	preview, err := service.PreviewChallengeImport(
@@ -317,7 +316,7 @@ func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *t
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
@@ -371,7 +370,7 @@ func TestCommitChallengeImportRejectsSoftDeletedDuplicateSlug(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -473,7 +472,7 @@ func TestCommitChallengeImportPersistsRuntimeServiceTarget(t *testing.T) {
 		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
 	)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := filepath.Join(tempDir, "package")
@@ -557,7 +556,7 @@ func TestCommitChallengeImportRejectsDuplicateSlugWithoutClearingPublishCheckJob
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -663,7 +662,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "bank-portal")
@@ -757,7 +756,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 	service.SetImageBuildService(imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "exportable-bank")

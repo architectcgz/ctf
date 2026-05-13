@@ -11,6 +11,8 @@ import (
 
 var (
 	ErrChallengeQueryChallengeNotFound          = errors.New("challenge query challenge not found")
+	ErrChallengeCommandChallengeNotFound        = errors.New("challenge command challenge not found")
+	ErrChallengePublishCheckJobNotFound         = errors.New("challenge publish check job not found")
 	ErrChallengeImageNotFound                   = errors.New("challenge image not found")
 	ErrChallengeFlagChallengeNotFound           = errors.New("challenge flag challenge not found")
 	ErrAWDChallengeNotFound                     = errors.New("awd challenge not found")

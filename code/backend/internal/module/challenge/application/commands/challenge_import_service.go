@@ -23,6 +23,8 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -36,6 +38,61 @@ const (
 	maxChallengeImportArchiveFileSize      = 16 << 20
 	maxChallengeImportArchiveTotalSize     = 64 << 20
 )
+
+type SelfCheckConfig struct {
+	RuntimeCreateTimeout     time.Duration
+	FlagGlobalSecret         string
+	PublishCheckPollInterval time.Duration
+	PublishCheckBatchSize    int
+}
+
+type ChallengeService struct {
+	db           *gorm.DB
+	repo         challengeCommandRepository
+	imageRepo    challengeports.ImageQueryRepository
+	topologyRepo challengeports.ChallengeTopologyReadRepository
+	packageRepo  challengeports.ChallengePackageRevisionRepository
+	runtimeProbe challengeports.ChallengeRuntimeProbe
+	imageBuild   *ImageBuildService
+	eventBus     platformevents.Bus
+	selfCheckCfg SelfCheckConfig
+	logger       *zap.Logger
+}
+
+func NewChallengeService(
+	db *gorm.DB,
+	repo challengeCommandRepository,
+	imageRepo challengeports.ImageQueryRepository,
+	topologyRepo challengeports.ChallengeTopologyReadRepository,
+	packageRepo challengeports.ChallengePackageRevisionRepository,
+	runtimeProbe challengeports.ChallengeRuntimeProbe,
+	cfg SelfCheckConfig,
+	logger *zap.Logger,
+) *ChallengeService {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
+	if cfg.RuntimeCreateTimeout <= 0 {
+		cfg.RuntimeCreateTimeout = 60 * time.Second
+	}
+	if cfg.PublishCheckPollInterval <= 0 {
+		cfg.PublishCheckPollInterval = 2 * time.Second
+	}
+	if cfg.PublishCheckBatchSize <= 0 {
+		cfg.PublishCheckBatchSize = 1
+	}
+	service := &ChallengeService{
+		db:           db,
+		repo:         repo,
+		imageRepo:    imageRepo,
+		topologyRepo: topologyRepo,
+		packageRepo:  packageRepo,
+		runtimeProbe: runtimeProbe,
+		selfCheckCfg: cfg,
+		logger:       logger,
+	}
+	return service
+}
 
 type storedChallengeImportPreview struct {
 	ID        string                         `json:"id"`

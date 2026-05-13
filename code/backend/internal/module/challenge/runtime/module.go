@@ -258,11 +258,14 @@ func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengeh
 
 func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengecmd.ChallengeService, *challengehttp.Handler) {
 	cfg := deps.input.Config
+	challengeCommandRepo := challengeinfra.NewChallengeCommandRepository(deps.challengeCommandRepo)
+	challengeCommandImageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
+	challengeCommandTopologyRepo := challengeinfra.NewTopologyServiceRepository(deps.topologyRepo)
 	challengeCommandService := challengecmd.NewChallengeService(
 		deps.input.DB,
-		deps.challengeCommandRepo,
-		deps.imageRepo,
-		deps.topologyRepo,
+		challengeCommandRepo,
+		challengeCommandImageRepo,
+		challengeCommandTopologyRepo,
 		deps.challengeCommandRepo,
 		deps.runtimeProbe,
 		challengecmd.SelfCheckConfig{

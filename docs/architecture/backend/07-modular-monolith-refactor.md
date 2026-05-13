@@ -49,6 +49,10 @@
   - 负责：由 challenge query service 继续承接题目详情、题目列表、已发布题目详情与 errcode 映射；`challenge/ports.ErrChallengeQueryChallengeNotFound` 与 `challenge/infrastructure/challenge_query_repository.go` 统一承接 raw challenge repository 的 not-found contract，`challenge/runtime/module.go` 负责把该 adapter 注入 challenge query wiring
   - 不负责：让 challenge query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw challenge repository 的 not-found 语义
 
+- `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/infrastructure/challenge_command_repository.go`
+  - 负责：由 core challenge command service 继续承接题目创建、更新、删除、发布自检与 errcode 映射；`challenge/ports.ErrChallengeCommandChallengeNotFound`、`ErrChallengePublishCheckJobNotFound`、`ErrChallengeImageNotFound` 与 `ErrChallengeTopologyNotFound` 统一表达题目、发布自检任务、镜像与拓扑 lookup 的 not-found contract，`challenge/infrastructure/challenge_command_repository.go` 与现有 image/topology adapter 负责把 raw challenge repository / image repository / topology repository 的 `gorm.ErrRecordNotFound` 收口成模块内 sentinel，`challenge/runtime/module.go` 负责只把这些 adapter 注入 core challenge command wiring
+  - 不负责：让 core challenge command surface 继续直接知道 `gorm.ErrRecordNotFound`，或强行让 challenge import / package revision 这类仍需 `gorm.DB` 事务面的 use case 跟着一起改 raw repository 合约
+
 - `code/backend/internal/module/challenge/application/queries/image_service.go`、`code/backend/internal/module/challenge/infrastructure/image_query_repository.go`
   - 负责：由 image query service 继续承接镜像详情查询、分页查询和 errcode 映射；`challenge/ports.ErrChallengeImageNotFound` 与 `challenge/infrastructure/image_query_repository.go` 统一承接 raw image repository 的 not-found contract，`challenge/runtime/module.go` 负责把 adapter 注入 image query service
   - 不负责：让 image query surface 继续直接知道 `gorm.ErrRecordNotFound`，或直接依赖 raw image repository 的 not-found 语义

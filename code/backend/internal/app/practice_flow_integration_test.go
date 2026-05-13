@@ -862,9 +862,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	challengeCommandService := challengecmd.NewChallengeService(
 		db,
-		challengeRepo,
-		imageRepo,
-		challengeRepo,
+		challengeinfra.NewChallengeCommandRepository(challengeRepo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(challengeRepo),
 		challengeRepo,
 		nil,
 		challengecmd.SelfCheckConfig{

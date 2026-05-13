@@ -16,10 +16,39 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func newTestService(repo challengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
-	return NewChallengeService(nil, repo, imageRepo, nil, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	return NewChallengeService(
+		nil,
+		challengeinfra.NewChallengeCommandRepository(repo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		nil,
+		nil,
+		nil,
+		SelfCheckConfig{},
+		zap.NewNop(),
+	)
+}
+
+func newDBBackedChallengeService(
+	db *gorm.DB,
+	repo *challengeinfra.Repository,
+	imageRepo *challengeinfra.ImageRepository,
+	runtimeProbe challengeports.ChallengeRuntimeProbe,
+	cfg SelfCheckConfig,
+) *ChallengeService {
+	return NewChallengeService(
+		db,
+		challengeinfra.NewChallengeCommandRepository(repo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(repo),
+		repo,
+		runtimeProbe,
+		cfg,
+		zap.NewNop(),
+	)
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {
@@ -165,7 +194,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(nil, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(nil, repo, imageRepo, nil, SelfCheckConfig{})
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
 		InstanceSharing: model.InstanceSharingShared,
@@ -262,9 +291,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
+	service := newDBBackedChallengeService(db, repo, imageRepo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop())
+	})
 	var publishedEvents []platformevents.Event
 	service.SetEventBus(&challengeCommandEventBusStub{
 		publishFn: func(ctx context.Context, evt platformevents.Event) error {
@@ -348,9 +377,9 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
+	service := newDBBackedChallengeService(db, repo, imageRepo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop())
+	})
 	var publishedEvents []platformevents.Event
 	service.SetEventBus(&challengeCommandEventBusStub{
 		publishFn: func(ctx context.Context, evt platformevents.Event) error {
@@ -429,9 +458,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, probe, SelfCheckConfig{
+	service := newDBBackedChallengeService(db, repo, imageRepo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
-	}, zap.NewNop())
+	})
 	var publishedEvents []platformevents.Event
 	service.SetEventBus(&challengeCommandEventBusStub{
 		publishFn: func(ctx context.Context, evt platformevents.Event) error {
@@ -514,7 +543,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := NewChallengeService(db, repo, imageRepo, repo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {

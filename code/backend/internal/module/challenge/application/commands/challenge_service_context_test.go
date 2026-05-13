@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -383,7 +382,7 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find active job ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return nil, gorm.ErrRecordNotFound
+			return nil, challengeports.ErrChallengePublishCheckJobNotFound
 		},
 		createPublishCheckJobFn: func(ctx context.Context, job *model.ChallengePublishCheckJob) error {
 			createCalled = true
@@ -484,7 +483,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return nil, gorm.ErrRecordNotFound
+			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}
 	probe := &challengeCommandRuntimeProbeStub{
@@ -604,7 +603,7 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return nil, gorm.ErrRecordNotFound
+			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, topologyRepo, nil, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())

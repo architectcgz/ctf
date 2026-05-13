@@ -92,7 +92,16 @@ func newChallengeImportServiceForAppTest(db *gorm.DB) *challengecmd.ChallengeSer
 		challengecmd.WithImageBuildDockerBuilder(appChallengeImportDockerBuilder{}),
 		challengecmd.WithImageBuildRegistryVerifier(appChallengeImportRegistryVerifier{}),
 	)
-	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	service := challengecmd.NewChallengeService(
+		db,
+		challengeinfra.NewChallengeCommandRepository(repo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(repo),
+		repo,
+		nil,
+		challengecmd.SelfCheckConfig{},
+		zap.NewNop(),
+	)
 	service.SetImageBuildService(imageBuildService)
 	return service
 }

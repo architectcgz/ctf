@@ -218,7 +218,7 @@ flowchart LR
 
 ### 阶段 5：收窄 application concrete allowlist
 
-当前状态（2026-05-13，phase 5 / slices 1-34）：
+当前状态（2026-05-13，phase 5 / slices 1-35）：
 
 - `auth/application/commands/cas_service.go` 现在通过 `auth/ports.CASTicketValidator` 校验 CAS ticket；`auth/infrastructure/cas_ticket_validator.go` 统一承接 CAS validate request、XML principal 解析、用户名校验和 invalid ticket sentinel，`auth/runtime/module.go` 也不再把 `net/http` concrete 留在 auth command service。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `auth/application/commands/cas_service.go -> net/http` 这条例外。
@@ -226,6 +226,8 @@ flowchart LR
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
 - `challenge/application/queries/challenge_service.go` 现在通过 `challenge/ports.ErrChallengeQueryChallengeNotFound` 识别 challenge lookup not-found 语义；`challenge/infrastructure/challenge_query_repository.go` 统一承接 raw challenge repository 的 `gorm.ErrRecordNotFound` 到模块内 sentinel 的映射，challenge query surface 不再直接 import GORM sentinel。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> gorm.io/gorm` 这条例外。
+- `challenge/application/commands/challenge_service.go` 现在通过 `challenge/ports.ErrChallengeCommandChallengeNotFound`、`ErrChallengePublishCheckJobNotFound`、`ErrChallengeImageNotFound` 与 `ErrChallengeTopologyNotFound` 识别题目、发布自检任务、镜像与拓扑 lookup 的 not-found 语义；`challenge/infrastructure/challenge_command_repository.go` 统一承接 raw challenge repository 的 `FindByID` / publish-check lookup `gorm.ErrRecordNotFound` 到模块内 sentinel 的映射，`challenge/runtime/module.go` 只把 challenge command adapter、image query adapter 与 topology service adapter 注入 core command service，`challenge_service.go` 不再直接 import GORM sentinel。
+- `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/commands/challenge_service.go -> gorm.io/gorm` 这条例外。
 - `challenge/application/commands/image_build_service.go` 现在通过 `challengeports.RegistryVerifier` 校验 external image manifest；`challenge/infrastructure/registry_client.go` 统一承接 registry URL、认证头、accept header 和 digest 提取的 HTTP 细节，`challenge/runtime/module.go` 也不再从 application 包构造 registry verifier。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/commands/registry_client.go -> net/http` 这条例外。
 - `challenge/application/queries/image_service.go` 现在通过 `challenge/ports.ErrChallengeImageNotFound` 识别镜像 not-found 语义；`challenge/infrastructure/image_query_repository.go` 统一承接 raw image repository 的 `gorm.ErrRecordNotFound` 到模块内 sentinel 的映射，image query surface 不再直接 import GORM sentinel。
@@ -270,7 +272,7 @@ flowchart LR
 - `assessment/application/commands/report_service.go` 现在通过 `assessment/ports.ErrAssessmentReportNotFound` 和 `assessment/ports.ErrAssessmentContestNotFound` 识别 repo not-found 语义；`assessment/infrastructure/report_repository.go` 统一承接 `gorm.ErrRecordNotFound` 到模块内错误契约的映射，report service 不再直接 import GORM sentinel。
 - 当前 `assessment` application surface 的 concrete allowlist 已收口完成；phase 5 这一轮 `application` 层的 Redis / GORM concrete 例外已经全部清空，后续如果继续推进，重点转到其他模块里尚未收口的 GORM / HTTP concrete surface。
 - 当前 `auth` application surface 已清空 HTTP concrete allowlist。
-- 当前 `challenge` application surface 已清空 Redis / HTTP concrete allowlist，并继续删掉了 challenge query、image query、image command、flag command/query、AWD challenge command/query、writeup command/query 与 topology command/query 这十一条 GORM concrete 例外。
+- 当前 `challenge` application surface 已清空 Redis / HTTP concrete allowlist，并继续删掉了 challenge query、challenge core command、image query、image command、flag command/query、AWD challenge command/query、writeup command/query 与 topology command/query 这十二条 GORM concrete 例外。
 
 目标：
 
