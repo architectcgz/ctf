@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -203,7 +204,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
 	}
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -225,7 +226,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 	} else {
 		topology, findErr := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 		if findErr != nil {
-			if errors.Is(findErr, gorm.ErrRecordNotFound) {
+			if errors.Is(findErr, gorm.ErrRecordNotFound) || errors.Is(findErr, challengeports.ErrChallengeTopologyNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
 			}
 			return nil, findErr

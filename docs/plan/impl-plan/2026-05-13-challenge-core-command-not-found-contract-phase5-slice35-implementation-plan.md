@@ -4,7 +4,7 @@
 
 **Goal:** 移除 `challenge/application/commands/challenge_service.go` 对 `gorm.ErrRecordNotFound` 的直接依赖，同时保持题目创建、更新、删除、发布自检和自测的既有业务语义不变。
 
-**Architecture:** 新增一层窄 `ChallengeCommandRepository` adapter，把 raw challenge repository 的 challenge / publish-check lookup not-found 收口成 `challenge/ports` sentinel；core challenge command service 只消费模块 sentinel；runtime 只给 core command path 注入 adapted command/image/topology repo，package revision 继续保留 raw repo；仍需 `gorm.DB` 的构造与 struct 留在 `challenge_import_service.go`。
+**Architecture:** 新增一层窄 `ChallengeCommandRepository` adapter，把 raw challenge repository 的 challenge / publish-check lookup not-found 收口成 `challenge/ports` sentinel；共享 `ChallengeService` 上的 core challenge command 与 package export path 一起消费 challenge/topology sentinel；runtime 给这个共享 service 注入 adapted command/image/topology repo，package revision repository 自身仍保留 raw repo；仍需 `gorm.DB` 的构造与 struct 留在 `challenge_import_service.go`。
 
 **Tech Stack:** Go, GORM, modular monolith ports/infrastructure, repository adapter tests
 
@@ -17,19 +17,21 @@
 - 保持 `UpdateChallenge` / `DeleteChallenge` / `PublishChallenge` / `SelfCheckChallenge` 的 challenge not-found 仍映射成既有 errcode
 - 保持 `RequestPublishCheck` 在“没有 active job”时继续创建新 job
 - 保持 `GetLatestPublishCheck` 的 stale / missing job 分支语义不变
+- 保持 `GetChallengePackageExport` 的缺失题目 / 缺失拓扑仍映射成既有 404 语义
 
 ## Non-goals
 
-- 不修改 `challenge/application/commands/challenge_package_revision_service.go`
 - 不修改 `challenge/application/commands/image_build_service.go`
 - 不修改 `challenge/application/commands/awd_challenge_import_service.go`
 - 不改变 raw `challengeinfra.Repository` 的全局 not-found 语义
+- 不把 package revision repository lookup 一并改成新的 adapter 合约
 - 不处理 contest / practice / assessment / ops 模块
 
 ## Inputs
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_package_revision_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_error_contract_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_context_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_test.go`
@@ -50,9 +52,12 @@
 - `challenge/application/commands/challenge_import_service.go`
   - 负责：保留 import / export 事务面需要的 `gorm.DB` 构造入口
   - 不负责：让 core challenge command surface 继续直接 import GORM
+- `challenge/application/commands/challenge_package_revision_service.go`
+  - 负责：让共享 `ChallengeService` 上的 package export path 继续把 challenge/topology 缺失映射成既有 404 语义
+  - 不负责：把 package revision repository lookup 扩成新的 sentinel adapter
 - `challenge/runtime/module.go`
-  - 负责：只给 core command service 注入 adapted command/image/topology repo
-  - 不负责：把 adapted 语义扩散到 import / package revision 等其他 use case
+  - 负责：给共享 `ChallengeService` 注入 adapted command/image/topology repo
+  - 不负责：把 adapted 语义扩散到 package revision repository lookup 或 image build 等其他 use case
 
 ## Change Surface
 
@@ -63,6 +68,7 @@
 - Add: `code/backend/internal/module/challenge/application/commands/challenge_error_contract_test.go`
 - Modify: `code/backend/internal/module/challenge/application/commands/challenge_service.go`
 - Modify: `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- Modify: `code/backend/internal/module/challenge/application/commands/challenge_package_revision_service.go`
 - Modify: `code/backend/internal/module/challenge/application/commands/challenge_service_context_test.go`
 - Modify: `code/backend/internal/module/challenge/application/commands/challenge_service_test.go`
 - Modify: `code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
@@ -94,6 +100,7 @@
 **Files:**
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_package_revision_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_context_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
@@ -105,6 +112,7 @@
 - [x] 新增 `ChallengeCommandRepository` adapter，把 challenge / publish-check lookup not-found 映射成模块 sentinel
 - [x] 让 `challenge_service.go` 只消费模块 sentinel，不再 import GORM
 - [x] 把 `ChallengeService` struct / `NewChallengeService` / `SelfCheckConfig` 挪到仍允许依赖 GORM 的 `challenge_import_service.go`
+- [x] 让 `challenge_package_revision_service.go` 的 challenge/topology lookup 同时接受 raw GORM not-found 与新的 challenge/topology sentinel，保持 package export 404 语义
 - [x] 修正 stub 与 DB-based 构造点，统一注入 adapted command/image/topology repo
 - [x] 保持 package revision repo 继续走 raw repo，不扩大这刀范围
 
@@ -133,6 +141,7 @@
 - `RequestPublishCheck` 的 missing active job 语义是“允许创建”，不能被误映射成对外 not-found
 - `GetLatestPublishCheck` 仍要区分 challenge 更新时间与历史 job 的 stale 语义，不能因为 adapter 化把 stale job 误当最新有效结果
 - `ChallengeService` 构造挪位后，import / export 事务面仍要保留 `gorm.DB` 注入，不要被这刀误删
+- `ChallengeService` 被 handler 复用给 package export 路径，challenge/topology sentinel 如果只在 core command use case 处理，会把原来的 404 映射退化成 500
 - DB-based 测试如果继续走 raw repo，会把旧的 `gorm.ErrRecordNotFound` 重新带回 command service
 
 ## Verification Plan

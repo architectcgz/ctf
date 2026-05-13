@@ -857,6 +857,51 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	}
 }
 
+func TestGetChallengePackageExportMapsMissingChallengeToChallengeNotFound(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+
+	_, err := service.GetChallengePackageExport(context.Background(), 404, nil)
+	if err == nil {
+		t.Fatal("expected missing challenge error")
+	}
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+		t.Fatalf("expected challenge not found app error, got %v", err)
+	}
+}
+
+func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+
+	challenge := &model.Challenge{
+		Title:      "no-topology",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusDraft,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	_, err := service.GetChallengePackageExport(context.Background(), challenge.ID, nil)
+	if err == nil {
+		t.Fatal("expected missing topology error")
+	}
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected not found app error, got %v", err)
+	}
+}
+
 func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record storedChallengeImportPreview) {
 	t.Helper()
 

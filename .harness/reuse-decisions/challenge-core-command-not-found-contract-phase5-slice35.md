@@ -39,6 +39,7 @@ refactor_existing
 - `challenge_service.go` 只消费模块 sentinel；镜像与拓扑 lookup 继续复用已经存在的 `ImageQueryRepository` / `TopologyServiceRepository` adapter
 - `challenge/runtime/module.go` 只给 core challenge command service 注入 adapted command/image/topology repo，package revision 仍保留 raw repo
 - 为了真正删掉 `challenge_service.go -> gorm.io/gorm`，把仍需 `gorm.DB` 的 `ChallengeService` struct / `NewChallengeService` / `SelfCheckConfig` 放回已经允许依赖 `gorm` 的 `challenge_import_service.go`
+- 因为 HTTP handler 复用同一个 `ChallengeService` 实例，`challenge_package_revision_service.go` 的 challenge/topology lookup 也要同时接受新的 challenge/topology sentinel；但 revision repo lookup 仍保留 raw repo 语义，不扩成新的 package revision adapter
 
 这样可以把范围收在 core challenge command path，同时不改变 challenge import、package revision 和 image build 这些后续 slice 的 owner 与事务边界。
 
@@ -46,6 +47,7 @@ refactor_existing
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_package_revision_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_error_contract_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_context_test.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
@@ -65,4 +67,4 @@ refactor_existing
 ## After implementation
 
 - `challenge/application/commands/challenge_service.go -> gorm.io/gorm` 这条 application concrete allowlist 已删除
-- core challenge command path 统一走模块 sentinel + query-only adapter；challenge import / package revision / image build 仍保留在后续独立 slice 收口
+- 共享 `ChallengeService` 上的 core command 与 package export path 都已接受 challenge/topology sentinel；challenge import、package revision repo lookup 与 image build 仍保留在后续独立 slice 收口
