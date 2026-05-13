@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -23,7 +21,7 @@ func NewAWDChallengeQueryService(repo challengeports.AWDChallengeQueryRepository
 func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error) {
 	item, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

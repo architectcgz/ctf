@@ -5,10 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -28,14 +27,14 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err == nil && team != nil && team.ID > 0 {
 		teamID = &team.ID
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	} else if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now()
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		registration = &model.ContestRegistration{

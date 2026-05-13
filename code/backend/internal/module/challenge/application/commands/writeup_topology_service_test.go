@@ -35,7 +35,8 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	}
 
 	repo := challengeinfra.NewRepository(db)
-	service := NewWriteupService(repo)
+	writeupRepo := challengeinfra.NewWriteupServiceRepository(repo)
+	service := NewWriteupService(writeupRepo)
 
 	saved, err := service.Upsert(context.Background(), challengeItem.ID, 99, UpsertOfficialWriteupInput{
 		Title:      "官方题解",
@@ -49,7 +50,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 		t.Fatalf("unexpected writeup title: %+v", saved)
 	}
 
-	queryService := challengeqry.NewWriteupService(repo)
+	queryService := challengeqry.NewWriteupService(writeupRepo)
 	published, err := queryService.GetPublished(context.Background(), 1001, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetPublished() error = %v", err)

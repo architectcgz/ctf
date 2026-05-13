@@ -906,18 +906,26 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
+	scoreStateStore := practiceinfra.NewScoreStateStore(cache)
+	flagSubmitRateLimitStore := practiceinfra.NewFlagSubmitRateLimitStore(cache, cfg.RateLimit.RedisKeyPrefix)
+	practiceScoreCommandService := practicecmd.NewScoreService(practiceRepo, scoreStateStore, logger, &cfg.Score)
 	practiceService := practicecmd.NewService(
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
 		instanceModule.PracticeInstanceRepository,
 		instanceModule.PracticeRuntimeService,
-		nil,
-		cache,
+		practiceScoreCommandService,
+		flagSubmitRateLimitStore,
 		cfg,
-		logger)
+		logger).
+		SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(practiceRepo)).
+		SetManualReviewRepository(practiceinfra.NewManualReviewRepository(practiceRepo)).
+		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(practiceRepo)).
+		SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
-	practiceScoreQueryService := practiceqry.NewScoreService(practiceRepo, cache, logger, &cfg.Score)
+	practiceScoreQueryService := practiceqry.NewScoreService(practiceinfra.NewScoreQueryRepository(practiceRepo), scoreStateStore, logger, &cfg.Score)
 	practiceProgressTimelineService := practiceqry.NewProgressTimelineService(
 		practiceRepo,
 		practiceinfra.NewProgressCache(cache),

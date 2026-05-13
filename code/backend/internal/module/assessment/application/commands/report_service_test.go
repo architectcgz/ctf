@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
@@ -44,7 +45,7 @@ func (r *testReportRepository) Create(ctx context.Context, report *model.Report)
 }
 
 func (r *testReportRepository) FindByID(context.Context, int64) (*model.Report, error) {
-	return nil, gorm.ErrRecordNotFound
+	return nil, assessmentports.ErrAssessmentReportNotFound
 }
 
 func (r *testReportRepository) MarkReady(context.Context, int64, string, time.Time) error {
@@ -59,12 +60,12 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 	if r != nil && r.users != nil {
 		user, ok := r.users[userID]
 		if !ok {
-			return nil, gorm.ErrRecordNotFound
+			return nil, assessmentports.ErrAssessmentReportNotFound
 		}
 		return user, nil
 	}
 	if r == nil || r.db == nil {
-		return nil, gorm.ErrRecordNotFound
+		return nil, assessmentports.ErrAssessmentReportNotFound
 	}
 
 	var user assessmentdomain.ReportUser
@@ -76,7 +77,7 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 		return nil, err
 	}
 	if user.ID == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, assessmentports.ErrAssessmentReportNotFound
 	}
 	return &user, nil
 }
@@ -85,11 +86,11 @@ func (r *testReportRepository) FindContestByID(ctx context.Context, contestID in
 	if r != nil && r.contests != nil {
 		contest, ok := r.contests[contestID]
 		if !ok {
-			return nil, gorm.ErrRecordNotFound
+			return nil, assessmentports.ErrAssessmentContestNotFound
 		}
 		return contest, nil
 	}
-	return nil, gorm.ErrRecordNotFound
+	return nil, assessmentports.ErrAssessmentContestNotFound
 }
 
 func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*assessmentdomain.PersonalReportStats, error) {

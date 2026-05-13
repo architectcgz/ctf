@@ -62,8 +62,10 @@ type moduleDeps struct {
 	challengeRepo         *contestinfra.ChallengeRepository
 	teamRepo              *contestinfra.TeamRepository
 	teamFinder            contestports.ContestTeamFinder
-	participationRepo     *contestinfra.ParticipationRepository
-	submissionRepo        *contestinfra.SubmissionRepository
+	teamCommand           *contestinfra.TeamCommandAdapter
+	teamQuery             *contestinfra.TeamQueryAdapter
+	participationLookup   *contestinfra.ParticipationRegistrationRepository
+	submissionLookup      *contestinfra.SubmissionRegistrationRepository
 	challengeCatalog      challengecontracts.ContestChallengeContract
 	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
 	imageRepo             challengecontracts.ImageStore
@@ -103,6 +105,11 @@ func newModuleDeps(deps Deps) *moduleDeps {
 	teamRepo := contestinfra.NewTeamRepository(deps.DB)
 	participationRepo := contestinfra.NewParticipationRepository(deps.DB)
 	submissionRepo := contestinfra.NewSubmissionRepository(deps.DB)
+	teamFinder := contestinfra.NewTeamFinderRepository(teamRepo)
+	teamCommand := contestinfra.NewTeamCommandAdapter(teamRepo)
+	teamQuery := contestinfra.NewTeamQueryAdapter(teamRepo)
+	participationLookup := contestinfra.NewParticipationRegistrationRepository(participationRepo)
+	submissionLookup := contestinfra.NewSubmissionRegistrationRepository(submissionRepo)
 
 	return &moduleDeps{
 		input:                 deps,
@@ -115,9 +122,11 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		awdRepo:               awdRepo,
 		challengeRepo:         challengeRepo,
 		teamRepo:              teamRepo,
-		teamFinder:            teamRepo,
-		participationRepo:     participationRepo,
-		submissionRepo:        submissionRepo,
+		teamFinder:            teamFinder,
+		teamCommand:           teamCommand,
+		teamQuery:             teamQuery,
+		participationLookup:   participationLookup,
+		submissionLookup:      submissionLookup,
 		challengeCatalog:      deps.ChallengeCatalog,
 		awdChallengeQueryRepo: deps.AWDChallengeQueryRepo,
 		imageRepo:             deps.ImageRepo,
@@ -216,15 +225,15 @@ func buildChallengeHandler(deps *moduleDeps) *contesthttp.ChallengeHandler {
 }
 
 func buildParticipationHandler(deps *moduleDeps) *contesthttp.ParticipationHandler {
-	participationCommands := contestcmd.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
+	participationCommands := contestcmd.NewParticipationService(deps.contestLookup, deps.participationLookup, deps.teamFinder)
 	participationCommands.SetEventBus(deps.input.Events)
-	participationQueries := contestqry.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
+	participationQueries := contestqry.NewParticipationService(deps.contestLookup, deps.participationLookup, deps.teamFinder)
 	return contesthttp.NewParticipationHandler(participationCommands, participationQueries)
 }
 
 func buildTeamHandler(deps *moduleDeps) *contesthttp.TeamHandler {
-	teamCommands := contestcmd.NewTeamService(deps.teamRepo, deps.contestLookup)
-	teamQueries := contestqry.NewTeamService(deps.teamRepo, deps.contestLookup)
+	teamCommands := contestcmd.NewTeamService(deps.teamCommand, deps.contestLookup)
+	teamQueries := contestqry.NewTeamService(deps.teamQuery, deps.contestLookup)
 	return contesthttp.NewTeamHandler(teamCommands, teamQueries)
 }
 
@@ -234,7 +243,7 @@ func buildSubmissionHandler(deps *moduleDeps, scoreboardCommands *contestcmd.Sco
 
 	submissionService := contestcmd.NewSubmissionService(
 		deps.contestLookup,
-		deps.submissionRepo,
+		deps.submissionLookup,
 		rateLimitStore,
 		deps.flagValidator,
 		deps.teamFinder,

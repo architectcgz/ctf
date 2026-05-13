@@ -4,11 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -19,14 +16,13 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authports "ctf-platform/internal/module/auth/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
 )
 
 const (
-	defaultCASValidatePath    = "/serviceValidate"
-	defaultCASValidateTimeout = 5 * time.Second
+	defaultCASValidatePath = "/serviceValidate"
 )
 
 type CASService interface {
@@ -38,7 +34,7 @@ type casService struct {
 	users        casUserRepository
 	tokenService authcontracts.TokenService
 	log          *zap.Logger
-	httpClient   *http.Client
+	validator    authports.CASTicketValidator
 }
 
 type casUserRepository interface {
@@ -47,46 +43,9 @@ type casUserRepository interface {
 	identitycontracts.UserProfileRepository
 }
 
-type casValidateResponse struct {
-	XMLName               xml.Name                  `xml:"serviceResponse"`
-	AuthenticationSuccess *casAuthenticationSuccess `xml:"authenticationSuccess"`
-	AuthenticationFailure *casAuthenticationFailure `xml:"authenticationFailure"`
-}
-
-type casAuthenticationSuccess struct {
-	User       string        `xml:"user"`
-	Attributes casAttributes `xml:"attributes"`
-}
-
-type casAuthenticationFailure struct {
-	Code    string `xml:"code,attr"`
-	Message string `xml:",chardata"`
-}
-
-type casAttributes struct {
-	Entries []casAttributeEntry `xml:",any"`
-}
-
-type casAttributeEntry struct {
-	XMLName xml.Name
-	Value   string `xml:",chardata"`
-}
-
-type casPrincipal struct {
-	Username  string
-	Name      string
-	Email     string
-	ClassName string
-	StudentNo string
-	TeacherNo string
-}
-
-func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASService {
+func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService authcontracts.TokenService, log *zap.Logger, validator authports.CASTicketValidator) CASService {
 	if log == nil {
 		log = zap.NewNop()
-	}
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: defaultCASValidateTimeout}
 	}
 
 	return &casService{
@@ -94,7 +53,7 @@ func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService a
 		users:        users,
 		tokenService: tokenService,
 		log:          log,
-		httpClient:   httpClient,
+		validator:    validator,
 	}
 }
 
@@ -105,7 +64,7 @@ func (s *casService) Authenticate(ctx context.Context, ticket string) (*dto.Logi
 	if !s.isConfigured() {
 		return nil, nil, errcode.ErrCASNotConfigured
 	}
-	if s.users == nil || s.tokenService == nil {
+	if s.users == nil || s.tokenService == nil || s.validator == nil {
 		return nil, nil, errcode.ErrCASNotImplemented
 	}
 
@@ -122,67 +81,23 @@ func (s *casService) Authenticate(ctx context.Context, ticket string) (*dto.Logi
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *casService) validateTicket(ctx context.Context, ticket string) (*casPrincipal, error) {
+func (s *casService) validateTicket(ctx context.Context, ticket string) (*authports.CASPrincipal, error) {
 	validateURL, err := s.buildValidateURL(ticket)
 	if err != nil {
 		return nil, errcode.ErrCASNotConfigured.WithCause(err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, validateURL, nil)
+	principal, err := s.validator.ValidateTicket(ctx, validateURL)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		s.log.Warn("auth_cas_validate_request_failed", zap.String("ticket", ticket), zap.Error(err))
+		if errors.Is(err, authports.ErrCASTicketInvalid) {
+			return nil, errcode.ErrCASTicketInvalid
+		}
 		return nil, errcode.ErrServiceUnavailable.WithCause(err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("cas validate status %d", resp.StatusCode)
-		s.log.Warn("auth_cas_validate_http_error", zap.Int("status", resp.StatusCode), zap.ByteString("body", body))
-		return nil, errcode.ErrServiceUnavailable.WithCause(err)
-	}
-
-	var result casValidateResponse
-	if err := xml.Unmarshal(body, &result); err != nil {
-		s.log.Warn("auth_cas_validate_decode_failed", zap.Error(err), zap.ByteString("body", body))
-		return nil, errcode.ErrServiceUnavailable.WithCause(err)
-	}
-	if result.AuthenticationFailure != nil {
-		s.log.Info(
-			"auth_cas_validate_rejected",
-			zap.String("code", strings.TrimSpace(result.AuthenticationFailure.Code)),
-			zap.String("message", strings.TrimSpace(result.AuthenticationFailure.Message)),
-		)
-		return nil, errcode.ErrCASTicketInvalid
-	}
-	if result.AuthenticationSuccess == nil {
-		return nil, errcode.ErrCASTicketInvalid
-	}
-
-	principal := &casPrincipal{
-		Username:  strings.TrimSpace(result.AuthenticationSuccess.User),
-		Name:      result.AuthenticationSuccess.Attributes.pick("name", "displayName", "realName", "cn"),
-		Email:     result.AuthenticationSuccess.Attributes.pick("email", "mail"),
-		ClassName: result.AuthenticationSuccess.Attributes.pick("class_name", "className", "class"),
-		StudentNo: result.AuthenticationSuccess.Attributes.pick("student_no", "studentNo", "studentId", "studentNumber"),
-		TeacherNo: result.AuthenticationSuccess.Attributes.pick("teacher_no", "teacherNo", "teacherId", "teacherNumber"),
-	}
-	if principal.Username == "" || !validation.IsValidUsername(principal.Username) {
-		s.log.Warn("auth_cas_invalid_username", zap.String("username", principal.Username))
-		return nil, errcode.ErrCASTicketInvalid
 	}
 	return principal, nil
 }
 
-func (s *casService) syncUser(ctx context.Context, principal *casPrincipal) (*model.User, error) {
+func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrincipal) (*model.User, error) {
 	user, err := s.users.FindByUsername(ctx, principal.Username)
 	if err != nil {
 		if !errors.Is(err, identitycontracts.ErrUserNotFound) {
@@ -236,7 +151,7 @@ func (s *casService) syncUser(ctx context.Context, principal *casPrincipal) (*mo
 	return user, nil
 }
 
-func (s *casService) mergePrincipal(user *model.User, principal *casPrincipal) bool {
+func (s *casService) mergePrincipal(user *model.User, principal *authports.CASPrincipal) bool {
 	changed := false
 	if principal.Name != "" && user.Name != principal.Name {
 		user.Name = principal.Name
@@ -314,26 +229,6 @@ func (s *casService) buildCASURL(pathValue, ticket string) (string, error) {
 	}
 	base.RawQuery = query.Encode()
 	return base.String(), nil
-}
-
-func (a casAttributes) pick(names ...string) string {
-	for _, entry := range a.Entries {
-		key := normalizeCASAttributeName(entry.XMLName.Local)
-		for _, candidate := range names {
-			if key == normalizeCASAttributeName(candidate) {
-				value := strings.TrimSpace(entry.Value)
-				if value != "" {
-					return value
-				}
-			}
-		}
-	}
-	return ""
-}
-
-func normalizeCASAttributeName(value string) string {
-	replacer := strings.NewReplacer("_", "", "-", "", ":", "", ".", "")
-	return strings.ToLower(replacer.Replace(strings.TrimSpace(value)))
 }
 
 func randomPassword() string {

@@ -5,14 +5,15 @@ import (
 	"errors"
 	"fmt"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
+	if s.contestScope == nil {
+		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
 	scope, err := s.resolveContestBaseInstanceScope(ctx, userID, contestID)
 	if err != nil {
 		return practiceports.InstanceScope{}, err
@@ -22,9 +23,9 @@ func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, user
 			errors.New("awd 赛事实例启动必须使用 service_id 入口"),
 		)
 	}
-	contestChallenge, err := s.repo.FindContestChallenge(ctx, contestID, challengeID)
+	contestChallenge, err := s.contestScope.FindContestChallenge(ctx, contestID, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestChallengeNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -36,13 +37,16 @@ func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, user
 }
 
 func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, userID, contestID, serviceID int64) (int64, practiceports.InstanceScope, error) {
+	if s.contestScope == nil {
+		return 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
 	scope, err := s.resolveContestBaseInstanceScope(ctx, userID, contestID)
 	if err != nil {
 		return 0, practiceports.InstanceScope{}, err
 	}
-	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
+	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
 		return 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -56,9 +60,12 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 }
 
 func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
-	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if s.contestScope == nil {
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+	contest, err := s.contestScope.FindContestByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotFound
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -75,9 +82,9 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotRunning
 	}
 
-	team, err := s.repo.FindContestTeam(ctx, contestID, teamID)
+	team, err := s.contestScope.FindContestTeam(ctx, contestID, teamID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrTeamNotFound
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -86,9 +93,9 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(errors.New("队伍缺少队长用户"))
 	}
 
-	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
+	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -116,15 +123,18 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
 	}
 
-	chal, err := s.challengeRepo.FindByID(ctx, challengeID)
+	if s.runtimeSubject == nil {
+		return nil, nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice runtime subject repository is nil"))
+	}
+	chal, err := s.runtimeSubject.FindByID(ctx, challengeID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
 			return nil, nil, errcode.ErrChallengeNotFound
 		}
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
-	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(ctx, chal.ID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	topology, err := s.runtimeSubject.FindChallengeTopologyByChallengeID(ctx, chal.ID)
+	if err != nil && !errors.Is(err, practiceports.ErrPracticeChallengeTopologyNotFound) {
 		return nil, nil, errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 	return chal, topology, nil
@@ -138,9 +148,12 @@ func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *m
 }
 
 func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*model.Challenge, *model.ChallengeTopology, error) {
-	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
+	if s.contestScope == nil {
+		return nil, nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return nil, nil, errcode.ErrChallengeNotInContest
 		}
 		return nil, nil, errcode.ErrInternal.WithCause(err)
@@ -158,13 +171,13 @@ func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, conte
 }
 
 func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, contestID int64) (practiceports.InstanceScope, error) {
-	if s.repo == nil {
-		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
+	if s.contestScope == nil {
+		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
 
-	contest, err := s.repo.FindContestByID(ctx, contestID)
+	contest, err := s.contestScope.FindContestByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrContestNotFound
 		}
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
@@ -178,9 +191,9 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		return practiceports.InstanceScope{}, errcode.ErrContestNotRunning
 	}
 
-	registration, err := s.repo.FindContestRegistration(ctx, contestID, userID)
+	registration, err := s.contestScope.FindContestRegistration(ctx, contestID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestRegistrationNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrNotRegistered
 		}
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)

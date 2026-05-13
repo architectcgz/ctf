@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -46,7 +45,7 @@ func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, use
 func (s *ParticipationService) resolveUserTeamID(ctx context.Context, contestID, userID int64) (*int64, error) {
 	if registration, err := s.repo.FindRegistration(ctx, contestID, userID); err == nil {
 		return registration.TeamID, nil
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	} else if err != nil && !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -54,7 +53,7 @@ func (s *ParticipationService) resolveUserTeamID(ctx context.Context, contestID,
 	if err == nil && team != nil && team.ID > 0 {
 		return &team.ID, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 

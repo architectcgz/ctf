@@ -2,9 +2,13 @@ package ports
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/model"
 )
+
+var ErrContestUserTeamNotFound = errors.New("contest user team not found")
+var ErrContestTeamNotFound = errors.New("contest team not found")
 
 type ContestTeamFinder interface {
 	FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error)

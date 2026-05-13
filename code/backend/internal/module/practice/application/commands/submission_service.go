@@ -8,21 +8,24 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
-	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
+	if s.runtimeSubject == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
+	}
+	challengeItem, err := s.runtimeSubject.FindByID(ctx, challengeID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		s.logger.Error("查询靶场失败", zap.Int64("challenge_id", challengeID), zap.Error(err))
@@ -33,10 +36,14 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
+	if s.solvedSubmission == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice solved submission repository is nil"))
+	}
+
 	alreadySolved := false
-	if _, err := s.repo.FindCorrectSubmission(ctx, userID, challengeID); err == nil {
+	if _, err := s.solvedSubmission.FindCorrectSubmission(ctx, userID, challengeID); err == nil {
 		alreadySolved = true
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if alreadySolved && challengeItem.FlagType == model.FlagTypeManualReview {
@@ -214,9 +221,6 @@ func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, chall
 
 	instance, err := s.instanceRepo.FindByUserAndChallenge(ctx, userID, challengeItem.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, nil
-		}
 		return false, errcode.ErrInternal.WithCause(err)
 	}
 	if instance == nil || instance.Nonce == "" || s.config.Container.FlagGlobalSecret == "" {

@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
@@ -41,9 +42,16 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 }
 
 func newAssessmentTestService(db *gorm.DB, redisClient *redis.Client) *assessmentcmd.Service {
+	var lockStore assessmentports.AssessmentProfileLockStore
+	if redisClient != nil {
+		lockStore = assessmentinfra.NewProfileLockStore(redisClient, config.AssessmentConfig{
+			RedisKeyPrefix: "assessment:test",
+			LockTTL:        time.Minute,
+		})
+	}
 	return assessmentcmd.NewProfileService(
 		assessmentinfra.NewRepository(db),
-		redisClient,
+		lockStore,
 		config.AssessmentConfig{
 			RedisKeyPrefix: "assessment:test",
 			LockTTL:        time.Minute,

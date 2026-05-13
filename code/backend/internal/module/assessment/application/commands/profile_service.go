@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -23,10 +22,10 @@ import (
 )
 
 type Service struct {
-	repo   profileCommandRepository
-	redis  *redis.Client
-	config config.AssessmentConfig
-	logger *zap.Logger
+	repo      profileCommandRepository
+	lockStore assessmentports.AssessmentProfileLockStore
+	config    config.AssessmentConfig
+	logger    *zap.Logger
 }
 
 type profileCommandRepository interface {
@@ -39,15 +38,15 @@ type profileCommandRepository interface {
 
 var _ assessmentcontracts.ProfileService = (*Service)(nil)
 
-func NewProfileService(repo profileCommandRepository, redis *redis.Client, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
+func NewProfileService(repo profileCommandRepository, lockStore assessmentports.AssessmentProfileLockStore, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &Service{
-		repo:   repo,
-		redis:  redis,
-		config: assessmentdomain.NormalizeAssessmentConfig(cfg),
-		logger: logger,
+		repo:      repo,
+		lockStore: lockStore,
+		config:    assessmentdomain.NormalizeAssessmentConfig(cfg),
+		logger:    logger,
 	}
 }
 
@@ -112,8 +111,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 	}
 
 	// 使用分布式锁避免并发重复计算
-	lockKey := fmt.Sprintf("%s:lock:%d:%s", s.config.RedisKeyPrefix, userID, dimension)
-	locked, err := s.tryLock(ctx, lockKey)
+	lock, locked, err := s.tryDimensionUpdateLock(ctx, userID, dimension)
 	if err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return err
@@ -125,7 +123,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 		s.logger.Debug("维度画像正在计算中，跳过", zap.Int64("userID", userID), zap.String("dimension", dimension))
 		return nil
 	}
-	defer s.unlock(ctx, lockKey)
+	defer s.releaseLock(ctx, lock)
 
 	// 查询该维度得分
 	score, err := s.repo.GetDimensionScore(ctx, userID, dimension)
@@ -157,8 +155,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*d
 	}()
 
 	// 使用分布式锁避免并发重复计算
-	lockKey := fmt.Sprintf("%s:lock:%d", s.config.RedisKeyPrefix, userID)
-	locked, err := s.tryLock(ctx, lockKey)
+	lock, locked, err := s.tryFullProfileRebuildLock(ctx, userID)
 	if err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return nil, err
@@ -171,7 +168,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*d
 		s.logger.Debug("画像正在计算中，跳过", zap.Int64("userID", userID))
 		return s.getExistingProfile(ctx, userID)
 	}
-	defer s.unlock(ctx, lockKey)
+	defer s.releaseLock(ctx, lock)
 
 	// 调用 Repository 查询维度得分
 	scores, err := s.repo.GetDimensionScores(ctx, userID)
@@ -290,18 +287,25 @@ func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64,
 	return s.GetSkillProfile(ctx, studentID)
 }
 
-func (s *Service) tryLock(ctx context.Context, key string) (bool, error) {
-	if s.redis == nil {
-		return true, nil
+func (s *Service) tryDimensionUpdateLock(ctx context.Context, userID int64, dimension string) (assessmentports.AssessmentProfileLockLease, bool, error) {
+	if s.lockStore == nil {
+		return nil, true, nil
 	}
-	return s.redis.SetNX(ctx, key, 1, s.config.LockTTL).Result()
+	return s.lockStore.AcquireDimensionUpdateLock(ctx, userID, dimension, s.config.LockTTL)
 }
 
-func (s *Service) unlock(ctx context.Context, key string) {
-	if s.redis == nil {
+func (s *Service) tryFullProfileRebuildLock(ctx context.Context, userID int64) (assessmentports.AssessmentProfileLockLease, bool, error) {
+	if s.lockStore == nil {
+		return nil, true, nil
+	}
+	return s.lockStore.AcquireFullProfileRebuildLock(ctx, userID, s.config.LockTTL)
+}
+
+func (s *Service) releaseLock(ctx context.Context, lock assessmentports.AssessmentProfileLockLease) {
+	if lock == nil {
 		return
 	}
-	if err := s.redis.Del(ctx, key).Err(); err != nil && !errors.Is(err, context.Canceled) {
-		s.logger.Warn("释放画像锁失败", zap.String("key", key), zap.Error(err))
+	if _, err := lock.Release(ctx); err != nil && !errors.Is(err, context.Canceled) {
+		s.logger.Warn("释放画像锁失败", zap.Error(err))
 	}
 }

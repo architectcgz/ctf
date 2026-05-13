@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeWriteupRepository struct {
@@ -437,5 +438,74 @@ func TestWriteupServiceListCommunitySolutionsPropagatesContextToRepository(t *te
 	}
 	if resp == nil || resp.Total != 1 || resp.Page != 1 || resp.Size != 20 {
 		t.Fatalf("unexpected community resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceGetPublishedTreatsReleasedWriteupNotFoundSentinelAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewWriteupService(&stubChallengeWriteupRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+		},
+		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+			return nil, challengeports.ErrChallengeReleasedWriteupNotFound
+		},
+	})
+
+	_, err := service.GetPublished(context.Background(), 7, 11)
+	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected not found, got %v", err)
+	}
+}
+
+func TestWriteupServiceGetMySubmissionTreatsSubmissionNotFoundSentinelAsNilFallback(t *testing.T) {
+	t.Parallel()
+
+	service := NewWriteupService(&stubChallengeWriteupRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+		},
+		findSubmissionWriteupByUserChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+			return nil, challengeports.ErrChallengeSubmissionWriteupNotFound
+		},
+	})
+
+	resp, err := service.GetMySubmission(context.Background(), 7, 11)
+	if err != nil {
+		t.Fatalf("GetMySubmission() error = %v", err)
+	}
+	if resp != nil {
+		t.Fatalf("expected nil fallback, got %+v", resp)
+	}
+}
+
+func TestWriteupServiceGetTeacherSubmissionTreatsTeacherSubmissionNotFoundSentinelAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewWriteupService(&stubChallengeWriteupRepository{
+		getTeacherSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+			return nil, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound
+		},
+	})
+
+	_, err := service.GetTeacherSubmission(context.Background(), 91, 1001, model.RoleTeacher)
+	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected not found, got %v", err)
+	}
+}
+
+func TestWriteupServiceListTeacherSubmissionsTreatsRequesterNotFoundSentinelAsUnauthorized(t *testing.T) {
+	t.Parallel()
+
+	service := NewWriteupService(&stubChallengeWriteupRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return nil, challengeports.ErrChallengeWriteupRequesterNotFound
+		},
+	})
+
+	_, err := service.ListTeacherSubmissions(context.Background(), 1001, model.RoleTeacher, &dto.TeacherSubmissionWriteupQuery{})
+	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
+		t.Fatalf("expected unauthorized, got %v", err)
 	}
 }

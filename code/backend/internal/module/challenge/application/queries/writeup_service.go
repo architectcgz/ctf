@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
@@ -35,14 +33,14 @@ func NewWriteupService(repo writeupQueryRepository) *WriteupService {
 
 func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	item, err := s.repo.FindWriteupByChallengeID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeOfficialWriteupNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
@@ -53,7 +51,7 @@ func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.
 func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -64,7 +62,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 
 	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeReleasedWriteupNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
@@ -83,7 +81,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -93,7 +91,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 	}
 	item, err := s.repo.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeSubmissionWriteupNotFound) {
 			return nil, nil
 		}
 		return nil, err
@@ -189,7 +187,7 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
 	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
@@ -220,7 +218,7 @@ func normalizeTeacherSubmissionQuery(
 
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupRequesterNotFound) {
 			return nil, errcode.ErrUnauthorized
 		}
 		return nil, err
@@ -247,7 +245,7 @@ func ensureTeacherCanAccessQueryRecord(
 	}
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupRequesterNotFound) {
 			return errcode.ErrUnauthorized
 		}
 		return err
@@ -261,7 +259,7 @@ func ensureTeacherCanAccessQueryRecord(
 func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userID, challengeID int64) error {
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err

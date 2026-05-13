@@ -133,7 +133,7 @@ var (
 		})
 	}
 	imageBuildRegistryVerifierFactory = func(registry config.ContainerRegistryConfig) challengeports.RegistryVerifier {
-		return challengecmd.NewRegistryClient(challengecmd.RegistryClientConfig{
+		return challengeinfra.NewRegistryClient(challengeinfra.RegistryClientConfig{
 			Scheme:        registry.Scheme,
 			Server:        registry.Server,
 			Username:      registry.Username,
@@ -182,6 +182,9 @@ func Build(deps Deps) (*Module, error) {
 func newModuleDeps(deps Deps) moduleDeps {
 	challengeRepo := challengeinfra.NewRepository(deps.DB)
 	imageRepo := challengeinfra.NewImageRepository(deps.DB)
+	flagRepo := challengeinfra.NewFlagRepository(challengeRepo)
+	awdChallengeRepo := challengeinfra.NewAWDChallengeRepository(challengeRepo)
+	writeupRepo := challengeinfra.NewWriteupServiceRepository(challengeRepo)
 
 	return moduleDeps{
 		input:                   deps,
@@ -190,12 +193,12 @@ func newModuleDeps(deps Deps) moduleDeps {
 		imageRepo:               imageRepo,
 		challengeCommandRepo:    challengeRepo,
 		challengeQueryRepo:      challengeRepo,
-		awdChallengeCommandRepo: challengeRepo,
-		awdChallengeQueryRepo:   challengeRepo,
-		flagRepo:                challengeRepo,
+		awdChallengeCommandRepo: awdChallengeRepo,
+		awdChallengeQueryRepo:   awdChallengeRepo,
+		flagRepo:                flagRepo,
 		imageUsageRepo:          challengeRepo,
 		topologyRepo:            challengeRepo,
-		writeupRepo:             challengeRepo,
+		writeupRepo:             writeupRepo,
 		templateRepo:            challengeinfra.NewTemplateRepository(deps.DB),
 		imageRuntime:            deps.ImageRuntime,
 		runtimeProbe:            deps.RuntimeProbe,
@@ -248,7 +251,7 @@ func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengeh
 		deps.input.Logger.Named("image_service"),
 	)
 	imageCommandService.StartBackgroundTasks(deps.input.AppContext)
-	imageQueryService := challengeqry.NewImageService(deps.imageRepo, deps.input.Config)
+	imageQueryService := challengeqry.NewImageService(challengeinfra.NewImageQueryRepository(deps.imageRepo), deps.input.Config)
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }
 

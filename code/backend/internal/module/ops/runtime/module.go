@@ -55,6 +55,7 @@ type moduleDeps struct {
 		opsports.NotificationCommandRepository
 		opsports.NotificationQueryRepository
 	}
+	dashboardState   opsports.DashboardStateStore
 	runtimeQuery     opsports.RuntimeQuery
 	runtimeStats     opsports.RuntimeStatsProvider
 	webSocketManager *websocketpkg.Manager
@@ -95,6 +96,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		auditRepo:        opsinfra.NewAuditRepository(deps.DB),
 		riskRepo:         opsinfra.NewRiskRepository(deps.DB),
 		notificationRepo: opsinfra.NewNotificationRepository(deps.DB),
+		dashboardState:   opsinfra.NewDashboardStateStore(deps.Cache, deps.Config, log.Named("dashboard_state_store")),
 		runtimeQuery:     deps.RuntimeQuery,
 		runtimeStats:     deps.RuntimeStats,
 		webSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
@@ -117,7 +119,7 @@ func buildDashboardHandler(deps moduleDeps) *opshttp.DashboardHandler {
 	dashboardService := opsqry.NewDashboardService(
 		deps.runtimeQuery,
 		deps.runtimeStats,
-		deps.input.Cache,
+		deps.dashboardState,
 		cfg,
 		log.Named("dashboard_service"),
 	)

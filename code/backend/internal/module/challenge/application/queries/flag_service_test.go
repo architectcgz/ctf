@@ -2,9 +2,12 @@ package queries
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeFlagRepository struct {
@@ -99,5 +102,27 @@ func TestFlagServiceGenerateDynamicFlagPropagatesContextToRepository(t *testing.
 	}
 	if flag == "" {
 		t.Fatal("expected generated flag")
+	}
+}
+
+func TestFlagServiceTreatsChallengeFlagChallengeNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service, err := NewFlagService(&stubChallengeFlagRepository{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeFlagChallengeNotFound
+		},
+	}, "12345678901234567890123456789012")
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	_, err = service.GetFlagConfig(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }

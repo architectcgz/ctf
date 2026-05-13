@@ -36,35 +36,40 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	defer redisClient.Close()
 
 	repo := &stubPracticeRepository{}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:        id,
-					Category:  model.DimensionWeb,
-					Points:    80,
-					Status:    model.ChallengeStatusPublished,
-					FlagType:  model.FlagTypeRegex,
-					FlagRegex: `^flag\{regex-[0-9]{2}\}$`,
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:        id,
+				Category:  model.DimensionWeb,
+				Points:    80,
+				Status:    model.ChallengeStatusPublished,
+				FlagType:  model.FlagTypeRegex,
+				FlagRegex: `^flag\{regex-[0-9]{2}\}$`,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	resp, err := service.SubmitFlag(context.Background(), 9, 19, "flag{regex-42}")
 	if err != nil {
@@ -89,34 +94,39 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 			return nil
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   120,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeManualReview,
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   120,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeManualReview,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	resp, err := service.SubmitFlag(context.Background(), 8, 18, "answer with reasoning")
 	if err != nil {
@@ -177,45 +187,50 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 			return &model.User{ID: userID, Username: "teacher", Role: model.RoleTeacher, ClassName: "Class 1"}, nil
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   120,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeManualReview,
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   120,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeManualReview,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		&stubScoreUpdater{
-			updateFn: func(ctx context.Context, userID int64) error {
-				if userID != studentID {
-					t.Fatalf("unexpected score update user: %d", userID)
-				}
-				scoreUpdateCalls.Add(1)
-				return nil
-			},
-		},
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			&stubScoreUpdater{
+				updateFn: func(ctx context.Context, userID int64) error {
+					if userID != studentID {
+						t.Fatalf("unexpected score update user: %d", userID)
+					}
+					scoreUpdateCalls.Add(1)
+					return nil
 				},
 			},
-			Cache: config.CacheConfig{
-				ProgressTTL: time.Minute,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
+				},
+				Cache: config.CacheConfig{
+					ProgressTTL: time.Minute,
+				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	service.StartBackgroundTasks(context.Background())
 
@@ -273,39 +288,44 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 			return db.Create(submission).Error
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   100,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeStatic,
-					FlagSalt: flagSalt,
-					FlagHash: flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   100,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeStatic,
+				FlagSalt: flagSalt,
+				FlagHash: flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
+				},
+				Cache: config.CacheConfig{
+					ProgressTTL: time.Minute,
 				},
 			},
-			Cache: config.CacheConfig{
-				ProgressTTL: time.Minute,
-			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	service.SetEventBus(bus)
 
@@ -347,37 +367,43 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:              id,
-					Category:        model.DimensionWeb,
-					Points:          100,
-					Status:          model.ChallengeStatusPublished,
-					FlagType:        model.FlagTypeStatic,
-					FlagSalt:        flagSalt,
-					FlagHash:        flagcrypto.HashStaticFlag("flag{shared-static}", flagSalt),
-					InstanceSharing: model.InstanceSharingShared,
-				}, nil
-			},
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:              id,
+				Category:        model.DimensionWeb,
+				Points:          100,
+				Status:          model.ChallengeStatusPublished,
+				FlagType:        model.FlagTypeStatic,
+				FlagSalt:        flagSalt,
+				FlagHash:        flagcrypto.HashStaticFlag("flag{shared-static}", flagSalt),
+				InstanceSharing: model.InstanceSharingShared,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{shared-static}")
 	if err != nil {
@@ -410,36 +436,42 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   100,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeStatic,
-					FlagSalt: flagSalt,
-					FlagHash: flagcrypto.HashStaticFlag("flag{repeatable}", flagSalt),
-				}, nil
-			},
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   100,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeStatic,
+				FlagSalt: flagSalt,
+				FlagHash: flagcrypto.HashStaticFlag("flag{repeatable}", flagSalt),
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	first, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
@@ -508,40 +540,46 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:              id,
-					Category:        model.DimensionWeb,
-					Points:          100,
-					Status:          model.ChallengeStatusPublished,
-					FlagType:        model.FlagTypeStatic,
-					FlagSalt:        flagSalt,
-					FlagHash:        flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
-					InstanceSharing: model.InstanceSharingPerUser,
-				}, nil
-			},
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:              id,
+				Category:        model.DimensionWeb,
+				Points:          100,
+				Status:          model.ChallengeStatusPublished,
+				FlagType:        model.FlagTypeStatic,
+				FlagSalt:        flagSalt,
+				FlagHash:        flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
+				InstanceSharing: model.InstanceSharingPerUser,
+			}, nil
 		},
-		nil,
-		runtimeinfrarepo.NewRepository(db),
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			runtimeinfrarepo.NewRepository(db),
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
+				},
+				Container: config.ContainerConfig{
+					SolveGracePeriod: 10 * time.Minute,
 				},
 			},
-			Container: config.ContainerConfig{
-				SolveGracePeriod: 10 * time.Minute,
-			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	beforeSubmit := time.Now()
 	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
@@ -580,59 +618,64 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	service := NewService(
-		&stubPracticeRepository{
-			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
-				if userID != 7 || challengeID != 11 {
-					t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
-				}
-				if limit <= 0 {
-					t.Fatalf("expected positive limit, got %d", limit)
-				}
-				return []model.Submission{
-					{
-						ID:           3,
-						UserID:       7,
-						ChallengeID:  11,
-						IsCorrect:    true,
-						ReviewStatus: model.SubmissionReviewStatusNotRequired,
-						SubmittedAt:  now.Add(-time.Minute),
-					},
-					{
-						ID:           2,
-						UserID:       7,
-						ChallengeID:  11,
-						IsCorrect:    false,
-						ReviewStatus: model.SubmissionReviewStatusPending,
-						Flag:         "answer with reasoning",
-						SubmittedAt:  now.Add(-2 * time.Minute),
-					},
-					{
-						ID:           1,
-						UserID:       7,
-						ChallengeID:  11,
-						IsCorrect:    false,
-						ReviewStatus: model.SubmissionReviewStatusNotRequired,
-						SubmittedAt:  now.Add(-3 * time.Minute),
-					},
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:     id,
+				Status: model.ChallengeStatusPublished,
+			}, nil
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:     id,
-					Status: model.ChallengeStatusPublished,
-				}, nil
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			&stubPracticeRepository{
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+					if userID != 7 || challengeID != 11 {
+						t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
+					}
+					if limit <= 0 {
+						t.Fatalf("expected positive limit, got %d", limit)
+					}
+					return []model.Submission{
+						{
+							ID:           3,
+							UserID:       7,
+							ChallengeID:  11,
+							IsCorrect:    true,
+							ReviewStatus: model.SubmissionReviewStatusNotRequired,
+							SubmittedAt:  now.Add(-time.Minute),
+						},
+						{
+							ID:           2,
+							UserID:       7,
+							ChallengeID:  11,
+							IsCorrect:    false,
+							ReviewStatus: model.SubmissionReviewStatusPending,
+							Flag:         "answer with reasoning",
+							SubmittedAt:  now.Add(-2 * time.Minute),
+						},
+						{
+							ID:           1,
+							UserID:       7,
+							ChallengeID:  11,
+							IsCorrect:    false,
+							ReviewStatus: model.SubmissionReviewStatusNotRequired,
+							SubmittedAt:  now.Add(-3 * time.Minute),
+						},
+					}, nil
+				},
 			},
-		},
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil),
 		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		&config.Config{},
-		nil)
+		challengeRepo,
+	)
 
 	items, err := service.ListMyChallengeSubmissions(context.Background(), 7, 11)
 	if err != nil {
@@ -664,34 +707,40 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   100,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: "shared_proof",
-				}, nil
-			},
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   100,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: "shared_proof",
+			}, nil
 		},
-		nil,
-		&stubPracticeInstanceStore{},
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			&stubPracticeInstanceStore{},
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{legacy}")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -728,40 +777,45 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				challengeLookupCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   100,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeStatic,
-					FlagSalt: flagSalt,
-					FlagHash: flagcrypto.HashStaticFlag("flag{ctx-submit}", flagSalt),
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			challengeLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   100,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeStatic,
+				FlagSalt: flagSalt,
+				FlagHash: flagcrypto.HashStaticFlag("flag{ctx-submit}", flagSalt),
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
@@ -775,6 +829,100 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	}
 	if !createSubmissionCalled {
 		t.Fatal("expected create submission repository to be called")
+	}
+}
+
+func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	rawChallengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, errors.New("raw challenge repo should not be called")
+		},
+	}
+	runtimeSubjectSource := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	}
+
+	service := wirePracticeSubmissionAdapters(
+		NewService(&stubPracticeRepository{}, rawChallengeRepo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		nil,
+		runtimeSubjectSource,
+	)
+
+	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{missing}")
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+		t.Fatalf("expected challenge not found error, got %v", err)
+	}
+}
+
+func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T) {
+	t.Parallel()
+
+	flagSalt := "submission-sentinel-salt"
+	rawChallengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, errors.New("raw challenge repo should not be called")
+		},
+	}
+	runtimeSubjectSource := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   100,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeStatic,
+				FlagSalt: flagSalt,
+				FlagHash: flagcrypto.HashStaticFlag("flag{sentinel-correct}", flagSalt),
+			}, nil
+		},
+	}
+
+	createCalled := false
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			&stubPracticeRepository{
+				findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+					return nil, errors.New("raw solved submission repo should not be called")
+				},
+				createSubmissionFn: func(context.Context, *model.Submission) error {
+					createCalled = true
+					return nil
+				},
+			},
+			rawChallengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil,
+		),
+		&stubPracticeRepository{
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+		},
+		runtimeSubjectSource,
+	)
+
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{sentinel-correct}")
+	if err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct submission, got %+v", resp)
+	}
+	if !createCalled {
+		t.Fatal("expected submission to be created")
 	}
 }
 
@@ -825,30 +973,35 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			return nil
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				challengeLookupCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   120,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeManualReview,
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			challengeLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   120,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeManualReview,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		&config.Config{},
-		nil)
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.ReviewManualReviewSubmission(
@@ -898,7 +1051,11 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 			return []practiceports.TeacherManualReviewSubmissionRecord{}, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
@@ -922,7 +1079,11 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 
 	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
 	if err == nil {
@@ -947,7 +1108,11 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -977,7 +1142,11 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -1007,7 +1176,11 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 	studentID := int64(0)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
@@ -1116,7 +1289,11 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
@@ -1304,26 +1481,31 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 			return nil
 		},
 	}
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Category: model.DimensionWeb,
-					Points:   120,
-					Status:   model.ChallengeStatusPublished,
-					FlagType: model.FlagTypeManualReview,
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Category: model.DimensionWeb,
+				Points:   120,
+				Status:   model.ChallengeStatusPublished,
+				FlagType: model.FlagTypeManualReview,
+			}, nil
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		&config.Config{},
-		nil)
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1341,6 +1523,54 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	}
 }
 
+func TestGetTeacherManualReviewSubmissionTreatsPracticeManualReviewSubmissionNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(context.Context, int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			return nil, practiceports.ErrPracticeManualReviewSubmissionNotFound
+		},
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		repo,
+		nil,
+	)
+
+	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleTeacher)
+	if err == nil {
+		t.Fatal("expected manual review detail lookup to fail")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected not found error, got %v", err)
+	}
+}
+
+func TestListMyChallengeSubmissionsTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(&stubPracticeRepository{}, challengeRepo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		nil,
+		challengeRepo,
+	)
+
+	_, err := service.ListMyChallengeSubmissions(context.Background(), 7, 11)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+		t.Fatalf("expected challenge not found error, got %v", err)
+	}
+}
+
 func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
@@ -1348,32 +1578,37 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	expectedCtxValue := "ctx-list-submissions"
 	challengeLookupCalled := false
 	listCalled := false
-	service := NewService(
-		&stubPracticeRepository{
-			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
-				listCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return []model.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			challengeLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				challengeLookupCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+	}
+	service := wirePracticeManualReviewAdapters(
+		NewService(
+			&stubPracticeRepository{
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+					listCalled = true
+					if got := ctx.Value(ctxKey); got != expectedCtxValue {
+						t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
+					}
+					return []model.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
+				},
 			},
-		},
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil),
 		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		&config.Config{},
-		nil)
+		challengeRepo,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	items, err := service.ListMyChallengeSubmissions(ctx, 7, 11)
@@ -1409,40 +1644,46 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 			return &model.Instance{ID: 301, UserID: userID, ChallengeID: challengeID, Nonce: "nonce-301"}, nil
 		},
 	}
-	service := NewService(
-		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
-				return nil, gorm.ErrRecordNotFound
-			},
-			createSubmissionFn: func(context.Context, *model.Submission) error {
-				return nil
-			},
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+			return nil, gorm.ErrRecordNotFound
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:         id,
-					Category:   model.DimensionWeb,
-					Points:     100,
-					Status:     model.ChallengeStatusPublished,
-					FlagType:   model.FlagTypeDynamic,
-					FlagPrefix: "flag",
-				}, nil
-			},
+		createSubmissionFn: func(context.Context, *model.Submission) error {
+			return nil
 		},
-		nil,
-		instanceStore,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
-			},
-			Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:         id,
+				Category:   model.DimensionWeb,
+				Points:     100,
+				Status:     model.ChallengeStatusPublished,
+				FlagType:   model.FlagTypeDynamic,
+				FlagPrefix: "flag",
+			}, nil
 		},
-		nil)
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			instanceStore,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+				},
+				Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
+			},
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	flag := flagcrypto.GenerateDynamicFlag(7, 11, "12345678901234567890123456789012", "nonce-301", "flag")
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
@@ -1484,42 +1725,48 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		},
 	}
 	flagSalt := "solve-grace-ctx"
-	service := NewService(
-		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
-				return nil, gorm.ErrRecordNotFound
-			},
-			createSubmissionFn: func(context.Context, *model.Submission) error {
-				return nil
-			},
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+			return nil, gorm.ErrRecordNotFound
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:              id,
-					Category:        model.DimensionWeb,
-					Points:          100,
-					Status:          model.ChallengeStatusPublished,
-					FlagType:        model.FlagTypeStatic,
-					FlagSalt:        flagSalt,
-					FlagHash:        flagcrypto.HashStaticFlag("flag{solve-grace-ctx}", flagSalt),
-					InstanceSharing: model.InstanceSharingPerUser,
-				}, nil
-			},
+		createSubmissionFn: func(context.Context, *model.Submission) error {
+			return nil
 		},
-		nil,
-		instanceStore,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
-			},
-			Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:              id,
+				Category:        model.DimensionWeb,
+				Points:          100,
+				Status:          model.ChallengeStatusPublished,
+				FlagType:        model.FlagTypeStatic,
+				FlagSalt:        flagSalt,
+				FlagHash:        flagcrypto.HashStaticFlag("flag{solve-grace-ctx}", flagSalt),
+				InstanceSharing: model.InstanceSharingPerUser,
+			}, nil
 		},
-		nil)
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			instanceStore,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+				},
+				Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
+			},
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {

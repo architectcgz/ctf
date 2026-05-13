@@ -2,10 +2,13 @@ package ports
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/model"
 	ctfws "ctf-platform/pkg/websocket"
 )
+
+var ErrNotificationNotFound = errors.New("ops notification not found")
 
 type NotificationListFilter struct {
 	UserID int64

@@ -28,6 +28,7 @@ import (
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
@@ -686,7 +687,8 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	}, zap.NewNop())
 	profileCommandService := identitycmd.NewProfileService(authRepo, zap.NewNop())
 	profileQueryService := identityqry.NewProfileService(authRepo)
-	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
+	casValidator := authinfra.NewCASTicketValidator(zap.NewNop(), nil)
+	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), casValidator)
 	casQueryService := authqry.NewCASService(authCfg.CAS)
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditCommandService := opscmd.NewAuditService(auditRepo, zap.NewNop())

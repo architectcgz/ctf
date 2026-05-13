@@ -54,24 +54,30 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  5,
-					Window: time.Minute,
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := challengeinfra.NewRepository(db)
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	if _, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}"); err != nil {
 		t.Fatalf("SubmitFlag() first error = %v", err)
@@ -125,24 +131,30 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewService(
-		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
-		nil,
-		nil,
-		nil,
-		nil,
-		newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
-		&config.Config{
-			RateLimit: config.RateLimitConfig{
-				RedisKeyPrefix: "practice:test",
-				FlagSubmit: config.RateLimitPolicyConfig{
-					Limit:  1,
-					Window: time.Minute,
+	repo := practiceinfra.NewRepository(db)
+	challengeRepo := challengeinfra.NewRepository(db)
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			challengeRepo,
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  1,
+						Window: time.Minute,
+					},
 				},
 			},
-		},
-		nil)
+			nil),
+		repo,
+		challengeRepo,
+	)
 
 	if _, err := service.SubmitFlag(context.Background(), 81, 12, "flag{wrong}"); err != nil {
 		t.Fatalf("SubmitFlag() first error = %v", err)

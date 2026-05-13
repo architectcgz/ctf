@@ -2,12 +2,25 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
+
+var ErrPracticeContestNotFound = errors.New("practice contest not found")
+var ErrPracticeContestChallengeNotFound = errors.New("practice contest challenge not found")
+var ErrPracticeContestAWDServiceNotFound = errors.New("practice contest awd service not found")
+var ErrPracticeContestTeamNotFound = errors.New("practice contest team not found")
+var ErrPracticeContestRegistrationNotFound = errors.New("practice contest registration not found")
+var ErrPracticeChallengeNotFound = errors.New("practice challenge not found")
+var ErrPracticeChallengeTopologyNotFound = errors.New("practice challenge topology not found")
+var ErrPracticeUserScoreNotFound = errors.New("practice user score not found")
+var ErrPracticeManualReviewSubmissionNotFound = errors.New("practice manual review submission not found")
+var ErrPracticeSolvedSubmissionNotFound = errors.New("practice solved submission not found")
+var ErrPracticeUserNotFound = errors.New("practice user not found")
 
 type InstanceScope struct {
 	ContestID     *int64
@@ -167,8 +180,25 @@ type PracticeContestRegistrationRepository interface {
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 }
 
+type PracticeContestScopeRepository interface {
+	PracticeContestLookupRepository
+	PracticeContestChallengeLookupRepository
+	PracticeContestAWDServiceRepository
+	PracticeContestTeamRepository
+	PracticeContestRegistrationRepository
+}
+
+type PracticeRuntimeSubjectRepository interface {
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+}
+
 type PracticeSubmissionWriteRepository interface {
 	CreateSubmission(ctx context.Context, submission *model.Submission) error
+	UpdateSubmission(ctx context.Context, submission *model.Submission) error
+}
+
+type PracticeSubmissionUpdateRepository interface {
 	UpdateSubmission(ctx context.Context, submission *model.Submission) error
 }
 
@@ -194,6 +224,14 @@ type PracticeManualReviewListRepository interface {
 
 type PracticeManualReviewLookupRepository interface {
 	GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*TeacherManualReviewSubmissionRecord, error)
+}
+
+type PracticeManualReviewRepository interface {
+	PracticeSubmissionUpdateRepository
+	PracticeSolvedSubmissionRepository
+	PracticeUserLookupRepository
+	PracticeManualReviewListRepository
+	PracticeManualReviewLookupRepository
 }
 
 type TeacherManualReviewSubmissionRecord struct {
@@ -283,6 +321,10 @@ type PracticeScoreStateStore interface {
 
 type PracticeFlagSubmitRateLimitStore interface {
 	AllowFlagSubmit(ctx context.Context, userID, challengeID int64, limit int, window time.Duration) (bool, error)
+}
+
+type PracticeInstanceReadinessProbe interface {
+	ProbeAccessURL(ctx context.Context, accessURL string, timeout time.Duration) error
 }
 
 type PracticeInstanceLookupRepository interface {

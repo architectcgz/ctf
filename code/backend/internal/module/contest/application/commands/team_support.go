@@ -7,17 +7,16 @@ import (
 	"errors"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) ensureApprovedRegistration(ctx context.Context, contestID, userID int64) error {
 	registration, err := s.teamRepo.FindContestRegistration(ctx, contestID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 			return errcode.ErrNotRegistered
 		}
 		return errcode.ErrInternal.WithCause(err)

@@ -2,11 +2,14 @@ package queries
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestAWDChallengeQueryServiceListChallenges(t *testing.T) {
@@ -87,5 +90,24 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 	}
 	if item.RuntimeConfig["image_id"] != float64(9901) {
 		t.Fatalf("unexpected runtime_config: %+v", item.RuntimeConfig)
+	}
+}
+
+func TestAWDChallengeQueryServiceTreatsAWDChallengeNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewAWDChallengeQueryService(&awdChallengeQueryContextRepoStub{
+		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+			return nil, challengeports.ErrAWDChallengeNotFound
+		},
+	})
+
+	_, err := service.GetChallenge(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }

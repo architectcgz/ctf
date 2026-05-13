@@ -3,6 +3,8 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/platform/events"
 	"errors"
@@ -18,6 +20,54 @@ import (
 	"testing"
 	"time"
 )
+
+func wirePracticeScopeAdapters(
+	service *Service,
+	repo practiceports.PracticeContestScopeRepository,
+	challengeRepo challengecontracts.PracticeChallengeContract,
+) *Service {
+	if service == nil {
+		return nil
+	}
+	return service.
+		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(repo)).
+		SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo))
+}
+
+func wirePracticeManualReviewAdapters(
+	service *Service,
+	repo practiceports.PracticeManualReviewRepository,
+	challengeRepo challengecontracts.PracticeChallengeContract,
+) *Service {
+	if service == nil {
+		return nil
+	}
+	if repo != nil {
+		service = service.SetManualReviewRepository(practiceinfra.NewManualReviewRepository(repo))
+		service = service.SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(repo))
+	}
+	if challengeRepo != nil {
+		service = service.SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo))
+	}
+	return service
+}
+
+func wirePracticeSubmissionAdapters(
+	service *Service,
+	repo practiceports.PracticeSolvedSubmissionRepository,
+	challengeRepo challengecontracts.PracticeChallengeContract,
+) *Service {
+	if service == nil {
+		return nil
+	}
+	if repo != nil {
+		service = service.SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(repo))
+	}
+	if challengeRepo != nil {
+		service = service.SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo))
+	}
+	return service
+}
 
 type stubPracticeRuntimeService struct {
 	cleanupRuntimeFn          func(ctx context.Context, instance *model.Instance) error

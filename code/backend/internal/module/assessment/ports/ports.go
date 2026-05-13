@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/dto"
@@ -10,6 +11,9 @@ import (
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
+
+var ErrAssessmentReportNotFound = errors.New("assessment report not found")
+var ErrAssessmentContestNotFound = errors.New("assessment contest not found")
 
 type AssessmentProfileLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
@@ -33,6 +37,15 @@ type AssessmentDimensionScoreRepository interface {
 	GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error)
 }
 
+type AssessmentProfileLockLease interface {
+	Release(ctx context.Context) (bool, error)
+}
+
+type AssessmentProfileLockStore interface {
+	AcquireDimensionUpdateLock(ctx context.Context, userID int64, dimension string, ttl time.Duration) (AssessmentProfileLockLease, bool, error)
+	AcquireFullProfileRebuildLock(ctx context.Context, userID int64, ttl time.Duration) (AssessmentProfileLockLease, bool, error)
+}
+
 type RecommendationProfileRepository interface {
 	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
 }
@@ -47,6 +60,12 @@ type RecommendationSolvedChallengeRepository interface {
 
 type RecommendationChallengeRepository interface {
 	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
+}
+
+type AssessmentRecommendationCacheStore interface {
+	LoadRecommendations(ctx context.Context, userID int64) ([]*dto.ChallengeRecommendation, bool, error)
+	StoreRecommendations(ctx context.Context, userID int64, recommendations []*dto.ChallengeRecommendation, ttl time.Duration) error
+	DeleteRecommendations(ctx context.Context, userID int64) error
 }
 
 type ProfileRepository interface {

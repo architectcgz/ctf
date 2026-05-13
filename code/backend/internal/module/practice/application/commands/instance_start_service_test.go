@@ -48,7 +48,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	}
 
 	var createCalls atomic.Int32
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -79,7 +79,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 				},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
@@ -149,22 +149,23 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 		},
 	}
 
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				if id != 2104 {
-					t.Fatalf("unexpected challenge lookup: %d", id)
-				}
-				return &model.Challenge{
-					ID:       id,
-					Status:   model.ChallengeStatusPublished,
-					ImageID:  104,
-					FlagType: model.FlagTypeStatic,
-					FlagHash: "flag{awd-static}",
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			if id != 2104 {
+				t.Fatalf("unexpected challenge lookup: %d", id)
+			}
+			return &model.Challenge{
+				ID:       id,
+				Status:   model.ChallengeStatusPublished,
+				ImageID:  104,
+				FlagType: model.FlagTypeStatic,
+				FlagHash: "flag{awd-static}",
+			}, nil
 		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		challengeRepo,
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -181,7 +182,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				},
 			},
 		},
-		nil)
+		nil), repo, challengeRepo)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5104, 3104, 7104)
 	if err != nil {
@@ -244,19 +245,20 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 		},
 	}
 
-	service := NewService(
-		repo,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{
-					ID:       id,
-					Status:   model.ChallengeStatusPublished,
-					ImageID:  105,
-					FlagType: model.FlagTypeStatic,
-					FlagHash: "flag{awd-static}",
-				}, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Status:   model.ChallengeStatusPublished,
+				ImageID:  105,
+				FlagType: model.FlagTypeStatic,
+				FlagHash: "flag{awd-static}",
+			}, nil
 		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		challengeRepo,
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -271,7 +273,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 				},
 			},
 		},
-		nil)
+		nil), repo, challengeRepo)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5105, 3105, 7105)
 	if err != nil {
@@ -369,7 +371,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 		},
 	}
 
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		repo,
 		&stubPracticeChallengeContract{},
 		nil,
@@ -394,7 +396,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 				},
 			},
 		},
-		nil)
+		nil), repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -540,7 +542,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	}
 
 	var createTopologyCalls atomic.Int32
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -586,7 +588,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -743,7 +745,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}
 
 	var createTopologyCalls atomic.Int32
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -818,7 +820,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -895,7 +897,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		t.Fatalf("create expired instance: %v", err)
 	}
 
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -921,7 +923,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 				},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
@@ -951,49 +953,51 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 	lockCalled := false
 	findExistingCalled := false
 	refreshCalled := false
-	service := NewService(
-		&stubPracticeRepository{
-			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
-				lockCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return nil
-			},
-			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
-				findExistingCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return &model.Instance{ID: 901, UserID: 7, ChallengeID: challengeID, ShareScope: model.InstanceSharingShared, Status: model.InstanceStatusRunning, ExpiresAt: time.Now().Add(5 * time.Minute), MaxExtends: 2}, nil
-			},
-			refreshInstanceExpiryFn: func(instanceID int64, expiresAt time.Time) error {
-				t.Fatalf("expected context-aware expiry refresh, got legacy call")
-				return nil
-			},
-			refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
-				refreshCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected refresh ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return nil
-			},
+	repo := &stubPracticeRepository{
+		lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+			lockCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
-			},
-			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
-				return nil, nil
-			},
+		findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			findExistingCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: 901, UserID: 7, ChallengeID: challengeID, ShareScope: model.InstanceSharingShared, Status: model.InstanceStatusRunning, ExpiresAt: time.Now().Add(5 * time.Minute), MaxExtends: 2}, nil
 		},
+		refreshInstanceExpiryFn: func(instanceID int64, expiresAt time.Time) error {
+			t.Fatalf("expected context-aware expiry refresh, got legacy call")
+			return nil
+		},
+		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+			refreshCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected refresh ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
+		},
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			return nil, nil
+		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		challengeRepo,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3}},
-		nil)
+		nil), repo, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)
@@ -1017,68 +1021,70 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 	reserveCalled := false
 	createCalled := false
 	bindCalled := false
-	service := NewService(
-		&stubPracticeRepository{
-			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return nil
-			},
-			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return nil, nil
-			},
-			countScopedRunningInstancesFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
-				countCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected count ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return 0, nil
-			},
-			reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
-				reserveCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected reserve-port ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return 30007, nil
-			},
-			createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
-				createCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected create-instance ctx value %v, got %v", expectedCtxValue, got)
-				}
-				instance.ID = 902
-				return nil
-			},
-			bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
-				bindCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected bind-port ctx value %v, got %v", expectedCtxValue, got)
-				}
-				if port != 30007 || instanceID != 902 {
-					t.Fatalf("unexpected bind args port=%d instanceID=%d", port, instanceID)
-				}
-				return nil
-			},
+	repo := &stubPracticeRepository{
+		lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
 		},
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
-			},
-			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
-				return nil, nil
-			},
+		findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, nil
 		},
+		countScopedRunningInstancesFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
+			countCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected count ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return 0, nil
+		},
+		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+			reserveCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected reserve-port ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return 30007, nil
+		},
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+			createCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected create-instance ctx value %v, got %v", expectedCtxValue, got)
+			}
+			instance.ID = 902
+			return nil
+		},
+		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+			bindCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected bind-port ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if port != 30007 || instanceID != 902 {
+				t.Fatalf("unexpected bind args port=%d instanceID=%d", port, instanceID)
+			}
+			return nil
+		},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
+		},
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			return nil, nil
+		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		challengeRepo,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3, MaxExtends: 2, Scheduler: config.ContainerSchedulerConfig{Enabled: true}}},
-		nil)
+		nil), repo, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)

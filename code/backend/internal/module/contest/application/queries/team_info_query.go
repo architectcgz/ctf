@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*TeamResult, []*TeamMemberResult, error) {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestTeamNotFound) {
 			return nil, nil, errcode.ErrTeamNotFound
 		}
 		return nil, nil, err

@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -61,7 +60,7 @@ func mapCreateTeamError(err error, s *TeamService) (retry bool, mapped error) {
 	if s.teamRepo.IsUniqueViolation(err, "uk_team_members_contest_user") {
 		return false, errcode.ErrAlreadyInTeam
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 		return false, errcode.ErrNotRegistered
 	}
 	if isUniqueConflict(err) {

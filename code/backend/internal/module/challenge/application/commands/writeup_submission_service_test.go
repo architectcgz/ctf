@@ -61,8 +61,9 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	}
 
 	repo := challengeinfra.NewRepository(db)
-	service := NewWriteupService(repo)
-	queryService := challengeqry.NewWriteupService(repo)
+	writeupRepo := challengeinfra.NewWriteupServiceRepository(repo)
+	service := NewWriteupService(writeupRepo)
+	queryService := challengeqry.NewWriteupService(writeupRepo)
 
 	emptyMine, err := queryService.GetMySubmission(context.Background(), student.ID, challengeItem.ID)
 	if err != nil {
@@ -198,7 +199,8 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	}
 
 	repo := challengeinfra.NewRepository(db)
-	service := NewWriteupService(repo)
+	writeupRepo := challengeinfra.NewWriteupServiceRepository(repo)
+	service := NewWriteupService(writeupRepo)
 
 	if _, err := service.Upsert(context.Background(), challengeItem.ID, admin.ID, UpsertOfficialWriteupInput{
 		Title:      "Official",

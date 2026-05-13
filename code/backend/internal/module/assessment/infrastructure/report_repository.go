@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -52,7 +53,7 @@ func (r *ReportRepository) FindByID(ctx context.Context, reportID int64) (*model
 	var report model.Report
 	if err := r.db.WithContext(ctx).First(&report, reportID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errcodeReportNotFound()
+			return nil, assessmentports.ErrAssessmentReportNotFound
 		}
 		return nil, err
 	}
@@ -99,6 +100,9 @@ func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*ass
 func (r *ReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
 	var contest model.Contest
 	if err := r.db.WithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, assessmentports.ErrAssessmentContestNotFound
+		}
 		return nil, err
 	}
 	return &contest, nil
@@ -794,10 +798,6 @@ func (r *ReportRepository) ListStudentManualReviews(ctx context.Context, userID 
 		ORDER BY s.updated_at DESC, s.id DESC
 	`, userID, model.FlagTypeManualReview).Scan(&rows).Error
 	return rows, err
-}
-
-func errcodeReportNotFound() error {
-	return gorm.ErrRecordNotFound
 }
 
 func parseAggregateTime(raw string) *time.Time {

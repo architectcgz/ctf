@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -28,23 +26,30 @@ func (s *Service) ReviewManualReviewSubmission(
 	if err := ensureManualReviewDecisionStatus(req); err != nil {
 		return nil, err
 	}
-	record, err := s.repo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
+	if s.manualReviewRepo == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+	}
+	if s.runtimeSubject == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
+	}
+
+	record, err := s.manualReviewRepo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeManualReviewSubmissionNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.repo, reviewerID, reviewerRole, record); err != nil {
+	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.manualReviewRepo, reviewerID, reviewerRole, record); err != nil {
 		return nil, err
 	}
 	if record.Submission.ReviewStatus != model.SubmissionReviewStatusPending {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
 	}
 
-	challengeItem, err := s.challengeRepo.FindByID(ctx, record.Submission.ChallengeID)
+	challengeItem, err := s.runtimeSubject.FindByID(ctx, record.Submission.ChallengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -61,9 +66,9 @@ func (s *Service) ReviewManualReviewSubmission(
 	item.ReviewedAt = &now
 	item.UpdatedAt = now
 	if req.ReviewStatus == model.SubmissionReviewStatusApproved {
-		if _, err := s.repo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
+		if _, err := s.manualReviewRepo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
 			return nil, errcode.ErrAlreadySolved
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		item.IsCorrect = true
@@ -73,7 +78,7 @@ func (s *Service) ReviewManualReviewSubmission(
 		item.Score = 0
 	}
 
-	if err := s.repo.UpdateSubmission(ctx, &item); err != nil {
+	if err := s.manualReviewRepo.UpdateSubmission(ctx, &item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
@@ -107,12 +112,18 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	if query == nil {
 		query = &dto.TeacherManualReviewSubmissionQuery{}
 	}
-	normalized, err := normalizeTeacherManualReviewQuery(ctx, s.repo, requesterID, requesterRole, query)
+	if err := ensureManualReviewQuery(query); err != nil {
+		return nil, err
+	}
+	if s.manualReviewRepo == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+	}
+	normalized, err := normalizeTeacherManualReviewQuery(ctx, s.manualReviewRepo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherManualReviewSubmissions(ctx, normalized)
+	items, total, err := s.manualReviewRepo.ListTeacherManualReviewSubmissions(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -138,23 +149,29 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
-	record, err := s.repo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
+	if s.manualReviewRepo == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+	}
+	record, err := s.manualReviewRepo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeManualReviewSubmissionNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.manualReviewRepo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
 }
 
 func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
-	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
+	if s.runtimeSubject == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
+	}
+	challengeItem, err := s.runtimeSubject.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -190,7 +207,7 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	}
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeUserNotFound) {
 			return errcode.ErrUnauthorized
 		}
 		return err
@@ -227,7 +244,7 @@ func normalizeTeacherManualReviewQuery(
 
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeUserNotFound) {
 			return nil, errcode.ErrUnauthorized
 		}
 		return nil, err

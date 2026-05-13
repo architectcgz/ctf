@@ -2,8 +2,7 @@ package queries
 
 import (
 	"context"
-
-	"gorm.io/gorm"
+	"errors"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -27,7 +26,7 @@ func NewImageService(repo challengeports.ImageQueryRepository, config *config.Co
 func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
 			return nil, errcode.ErrImageNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

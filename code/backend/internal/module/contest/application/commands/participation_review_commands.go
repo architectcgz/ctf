@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -23,7 +22,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 
 	registration, err := s.repo.FindRegistrationByID(ctx, contestID, registrationID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 			return nil, errcode.ErrContestRegistrationNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

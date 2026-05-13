@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -43,7 +42,7 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*TeamRe
 func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (*MyTeamResult, error) {
 	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestUserTeamNotFound) {
 			return nil, nil
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

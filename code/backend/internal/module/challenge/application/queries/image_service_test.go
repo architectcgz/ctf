@@ -6,6 +6,9 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
+	"errors"
 )
 
 type stubChallengeImageRepository struct {
@@ -88,6 +91,25 @@ func TestImageServiceGetImagePropagatesContextToRepository(t *testing.T) {
 	}
 	if resp == nil || resp.ID != 42 || resp.Name != "ctf/web" || resp.Tag != "v1" {
 		t.Fatalf("unexpected image resp: %+v", resp)
+	}
+}
+
+func TestImageServiceTreatsChallengeImageNotFoundAsImageNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewImageService(&stubChallengeImageRepository{
+		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+			return nil, challengeports.ErrChallengeImageNotFound
+		},
+	}, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
+
+	_, err := service.GetImage(context.Background(), 42)
+	if err == nil {
+		t.Fatal("expected image not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrImageNotFound.Code {
+		t.Fatalf("expected image not found error, got %v", err)
 	}
 }
 

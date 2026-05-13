@@ -2,8 +2,10 @@ package commands
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/dto"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -16,7 +18,11 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 	}
 
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(ctx, captainID, contestID)
-	if err == nil && existingTeam.ID > 0 {
+	if err != nil {
+		if !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+	} else if existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
 	}
 

@@ -2,10 +2,8 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -15,7 +13,6 @@ import (
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
@@ -23,7 +20,7 @@ import (
 type RecommendationService struct {
 	repo          recommendationRepository
 	challengeRepo assessmentports.RecommendationChallengeRepository
-	redis         *redis.Client
+	cache         assessmentports.AssessmentRecommendationCacheStore
 	logger        *zap.Logger
 	config        config.RecommendationConfig
 }
@@ -35,14 +32,14 @@ type recommendationRepository interface {
 
 var _ assessmentcontracts.RecommendationProvider = (*RecommendationService)(nil)
 
-func NewRecommendationService(repo recommendationRepository, challengeRepo assessmentports.RecommendationChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
+func NewRecommendationService(repo recommendationRepository, challengeRepo assessmentports.RecommendationChallengeRepository, cache assessmentports.AssessmentRecommendationCacheStore, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &RecommendationService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
-		redis:         redis,
+		cache:         cache,
 		logger:        logger,
 		config:        assessmentdomain.NormalizeRecommendationConfig(cfg),
 	}
@@ -63,7 +60,7 @@ func (s *RecommendationService) RegisterContestEventConsumers(bus platformevents
 }
 
 func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
-	if s.redis == nil {
+	if s.cache == nil {
 		return nil
 	}
 
@@ -77,11 +74,11 @@ func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Cont
 	if userID <= 0 {
 		return nil
 	}
-	return s.redis.Del(ctx, rediskeys.RecommendationKey(userID)).Err()
+	return s.cache.DeleteRecommendations(ctx, userID)
 }
 
 func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
-	if s.redis == nil {
+	if s.cache == nil {
 		return nil
 	}
 
@@ -92,7 +89,7 @@ func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Conte
 	if payload.UserID <= 0 {
 		return nil
 	}
-	return s.redis.Del(ctx, rediskeys.RecommendationKey(payload.UserID)).Err()
+	return s.cache.DeleteRecommendations(ctx, payload.UserID)
 }
 
 func (s *RecommendationService) Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
@@ -134,16 +131,14 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		limit = s.config.MaxLimit
 	}
 
-	cacheKey := rediskeys.RecommendationKey(userID)
 	useCache := limit == s.config.DefaultLimit
-	if useCache && s.redis != nil {
-		cached, err := s.redis.Get(ctx, cacheKey).Result()
-		if err == nil {
-			var recommendations []*dto.ChallengeRecommendation
-			if err := json.Unmarshal([]byte(cached), &recommendations); err == nil {
-				return recommendations, nil
-			}
-			s.logger.Warn("推荐缓存反序列化失败", zap.String("cache_key", cacheKey), zap.Error(err))
+	if useCache && s.cache != nil {
+		recommendations, found, err := s.cache.LoadRecommendations(ctx, userID)
+		if err == nil && found {
+			return recommendations, nil
+		}
+		if err != nil {
+			s.logger.Warn("推荐缓存读取失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 	}
 
@@ -211,13 +206,9 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		})
 	}
 
-	if useCache && s.redis != nil {
-		if data, err := json.Marshal(recommendations); err == nil {
-			if err := s.redis.Set(ctx, cacheKey, data, s.config.CacheTTL).Err(); err != nil {
-				s.logger.Warn("推荐缓存写入失败", zap.String("cache_key", cacheKey), zap.Error(err))
-			}
-		} else {
-			s.logger.Error("推荐结果序列化失败", zap.Error(err))
+	if useCache && s.cache != nil {
+		if err := s.cache.StoreRecommendations(ctx, userID, recommendations, s.config.CacheTTL); err != nil {
+			s.logger.Warn("推荐缓存写入失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 	}
 

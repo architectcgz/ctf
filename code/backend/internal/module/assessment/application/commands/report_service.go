@@ -15,7 +15,6 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -228,7 +227,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 
 func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*dto.ReportExportData, error) {
 	if _, err := s.contestRepo.FindContestByID(ctx, contestID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -414,7 +413,7 @@ func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.Rep
 func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID int64) (*model.Contest, error) {
 	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -428,7 +427,7 @@ func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID i
 func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error) {
 	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, assessmentports.ErrAssessmentReportNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -486,7 +485,7 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error) {
 	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, assessmentports.ErrAssessmentReportNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -700,7 +699,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 func (s *ReportService) buildContestExportData(ctx context.Context, contestID int64) (*contestExportData, error) {
 	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

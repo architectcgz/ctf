@@ -638,31 +638,32 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 	expectedCtxValue := "ctx-runtime-subject"
 	challengeLookupCalled := false
 	topologyLookupCalled := false
-	service := NewService(
-		nil,
-		&stubPracticeChallengeContract{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				challengeLookupCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
-			},
-			findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-				topologyLookupCalled = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
-				}
-				return nil, nil
-			},
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			challengeLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+			topologyLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, nil
+		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		nil,
+		challengeRepo,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{},
-		nil)
+		nil), nil, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	challenge, topology, err := service.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, 42)

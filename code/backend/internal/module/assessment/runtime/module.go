@@ -49,12 +49,14 @@ type Deps struct {
 }
 
 type moduleDeps struct {
-	input              Deps
-	profileRepo        assessmentports.ProfileRepository
-	recommendationRepo assessmentports.RecommendationRepository
-	reportRepo         assessmentports.ReportRepository
-	awdReviewRepo      assessmentports.TeacherAWDReviewRepository
-	challengeRepo      assessmentports.ChallengeRepository
+	input               Deps
+	profileRepo         assessmentports.ProfileRepository
+	recommendationRepo  assessmentports.RecommendationRepository
+	reportRepo          assessmentports.ReportRepository
+	awdReviewRepo       assessmentports.TeacherAWDReviewRepository
+	challengeRepo       assessmentports.ChallengeRepository
+	profileLockStore    assessmentports.AssessmentProfileLockStore
+	recommendationCache assessmentports.AssessmentRecommendationCacheStore
 }
 
 func Build(deps Deps) *Module {
@@ -94,19 +96,21 @@ func Build(deps Deps) *Module {
 func newModuleDeps(deps Deps) moduleDeps {
 	repo := assessmentinfra.NewRepository(deps.DB)
 	return moduleDeps{
-		input:              deps,
-		profileRepo:        repo,
-		recommendationRepo: repo,
-		reportRepo:         assessmentinfra.NewReportRepository(deps.DB),
-		awdReviewRepo:      assessmentinfra.NewTeacherAWDReviewRepository(deps.DB),
-		challengeRepo:      deps.ChallengeRepo,
+		input:               deps,
+		profileRepo:         repo,
+		recommendationRepo:  repo,
+		reportRepo:          assessmentinfra.NewReportRepository(deps.DB),
+		awdReviewRepo:       assessmentinfra.NewTeacherAWDReviewRepository(deps.DB),
+		challengeRepo:       deps.ChallengeRepo,
+		profileLockStore:    assessmentinfra.NewProfileLockStore(deps.Cache, deps.Config.Assessment),
+		recommendationCache: assessmentinfra.NewRecommendationCacheStore(deps.Cache),
 	}
 }
 
 func buildProfileHandler(deps moduleDeps) (*assessmentcmd.Service, *assessmentqry.ProfileService) {
 	profileCommandService := assessmentcmd.NewProfileService(
 		deps.profileRepo,
-		deps.input.Cache,
+		deps.profileLockStore,
 		deps.input.Config.Assessment,
 		deps.input.Logger.Named("assessment_service"),
 	)
@@ -118,7 +122,7 @@ func buildRecommendationHandler(deps moduleDeps) *assessmentqry.RecommendationSe
 	return assessmentqry.NewRecommendationService(
 		deps.recommendationRepo,
 		deps.challengeRepo,
-		deps.input.Cache,
+		deps.recommendationCache,
 		deps.input.Config.Recommendation,
 		deps.input.Logger.Named("recommendation_service"),
 	)

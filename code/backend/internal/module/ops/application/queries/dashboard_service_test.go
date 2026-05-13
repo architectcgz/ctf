@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -55,23 +56,28 @@ func setupDashboardTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
+func newDashboardTestConfig() *config.Config {
+	return &config.Config{
+		Auth: config.AuthConfig{
+			SessionKeyPrefix: "ctf:auth:session",
+		},
+		Dashboard: config.DashboardConfig{
+			CacheTTL:       time.Minute,
+			AlertThreshold: 80,
+			RedisKeyPrefix: "dashboard:test",
+		},
+	}
+}
+
 func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) *DashboardService {
 	t.Helper()
 
+	cfg := newDashboardTestConfig()
 	return NewDashboardService(
 		runtimeqry.NewCountRunningService(runtimeinfrarepo.NewRepository(db)),
 		nil,
-		redis,
-		&config.Config{
-			Auth: config.AuthConfig{
-				SessionKeyPrefix: "ctf:auth:session",
-			},
-			Dashboard: config.DashboardConfig{
-				CacheTTL:       time.Minute,
-				AlertThreshold: 80,
-				RedisKeyPrefix: "dashboard:test",
-			},
-		},
+		opsinfra.NewDashboardStateStore(redis, cfg, zap.NewNop()),
+		cfg,
 		zap.NewNop(),
 	)
 }
@@ -112,11 +118,7 @@ func TestDashboardServiceGetDashboardStatsUsesCache(t *testing.T) {
 			{ContainerID: "abc123", Type: "cpu", Value: 71.5, Threshold: 70, Message: "cached"},
 		},
 	}
-	payload, err := json.Marshal(expected)
-	if err != nil {
-		t.Fatalf("marshal cache payload: %v", err)
-	}
-	if err := redis.Set(context.Background(), service.getCacheKey(), payload, time.Minute).Err(); err != nil {
+	if err := service.state.SaveDashboardStats(context.Background(), dashboardSnapshotFromStats(&expected)); err != nil {
 		t.Fatalf("seed cache: %v", err)
 	}
 
@@ -169,13 +171,12 @@ func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T)
 		t.Fatalf("expected empty docker stats when client is nil, got %+v", got)
 	}
 
-	cached, err := redis.Get(context.Background(), service.getCacheKey()).Bytes()
+	cachedStats, err := service.getFromCache(context.Background())
 	if err != nil {
 		t.Fatalf("expected stats cached, get error = %v", err)
 	}
-	var cachedStats dto.DashboardStats
-	if err := json.Unmarshal(cached, &cachedStats); err != nil {
-		t.Fatalf("unmarshal cached stats: %v", err)
+	if cachedStats == nil {
+		t.Fatal("expected cached stats, got nil")
 	}
 	if cachedStats.OnlineUsers != 2 || cachedStats.ActiveContainers != 2 {
 		t.Fatalf("unexpected cached stats: %+v", cachedStats)
@@ -223,7 +224,7 @@ func TestDashboardServiceCheckAlertsReturnsCPUAndMemoryAlerts(t *testing.T) {
 }
 
 func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
-	var newDashboardService func(opsports.RuntimeQuery, opsports.RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+	var newDashboardService func(opsports.RuntimeQuery, opsports.RuntimeStatsProvider, opsports.DashboardStateStore, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
 
 	service := newDashboardService(
 		&stubDashboardRuntimeQuery{
@@ -271,7 +272,7 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 func TestDashboardServicePropagatesContextToRuntimeQuery(t *testing.T) {
 	type ctxKey string
 
-	var newDashboardService func(opsports.RuntimeQuery, opsports.RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+	var newDashboardService func(opsports.RuntimeQuery, opsports.RuntimeStatsProvider, opsports.DashboardStateStore, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
 	expectedKey := ctxKey("runtime-query")
 	expectedValue := "ctx-dashboard-runtime-query"
 	called := false

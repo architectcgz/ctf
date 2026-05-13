@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
@@ -45,7 +43,7 @@ func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID i
 func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
 	challenge, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -84,7 +82,7 @@ func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req
 
 func (s *AWDChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
 	if _, err := s.repo.FindAWDChallengeByID(ctx, id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
 			return errcode.ErrNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)

@@ -2,10 +2,25 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+)
+
+var (
+	ErrChallengeImageNotFound         = errors.New("challenge image not found")
+	ErrChallengeFlagChallengeNotFound = errors.New("challenge flag challenge not found")
+	ErrAWDChallengeNotFound           = errors.New("awd challenge not found")
+
+	ErrChallengeWriteupChallengeNotFound         = errors.New("challenge writeup challenge not found")
+	ErrChallengeWriteupRequesterNotFound         = errors.New("challenge writeup requester not found")
+	ErrChallengeOfficialWriteupNotFound          = errors.New("challenge official writeup not found")
+	ErrChallengeReleasedWriteupNotFound          = errors.New("challenge released writeup not found")
+	ErrChallengeSubmissionWriteupNotFound        = errors.New("challenge submission writeup not found")
+	ErrChallengeSubmissionWriteupDetailNotFound  = errors.New("challenge submission writeup detail not found")
+	ErrChallengeTeacherSubmissionWriteupNotFound = errors.New("challenge teacher submission writeup not found")
 )
 
 type ChallengeWriteRepository interface {

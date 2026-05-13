@@ -2,11 +2,11 @@ package queries
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -59,7 +59,7 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 	}
 
 	userScore, err := s.repo.FindUserScore(ctx, userID)
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, practiceports.ErrPracticeUserScoreNotFound) {
 		return &dto.UserScoreInfo{
 			UserID:      userID,
 			TotalScore:  0,

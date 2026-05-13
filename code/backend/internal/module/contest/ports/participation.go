@@ -2,10 +2,13 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/model"
 )
+
+var ErrContestParticipationRegistrationNotFound = errors.New("contest participation registration not found")
 
 type ContestParticipationRegistrationLookupRepository interface {
 	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)

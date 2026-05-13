@@ -479,7 +479,10 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 				CreateTimeout:        time.Second,
 			},
 		},
-		zap.NewNop())
+		zap.NewNop()).
+		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(practiceinfra.NewRepository(db))).
+		SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 }
 

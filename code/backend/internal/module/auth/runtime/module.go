@@ -6,6 +6,7 @@ import (
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"go.uber.org/zap"
 
@@ -57,7 +58,8 @@ func buildHandler(deps moduleDeps) *http.Handler {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	authService := authcmd.NewService(deps.users, deps.tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, deps.users, deps.tokenService, log.Named("cas_command_service"), nil)
+	casValidator := authinfra.NewCASTicketValidator(log.Named("cas_ticket_validator"), nil)
+	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, deps.users, deps.tokenService, log.Named("cas_command_service"), casValidator)
 	casQueryService := authqry.NewCASService(cfg.Auth.CAS)
 
 	return http.NewHandler(

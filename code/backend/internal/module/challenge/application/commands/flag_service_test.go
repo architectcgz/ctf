@@ -2,16 +2,24 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"gorm.io/gorm"
+
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
 )
+
+func newChallengeFlagRepository(db *gorm.DB) challengeports.ChallengeFlagRepository {
+	return challengeinfra.NewFlagRepository(challengeinfra.NewRepository(db))
+}
 
 func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
@@ -26,7 +34,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("s", 32))
+	service, err := NewFlagService(newChallengeFlagRepository(db), strings.Repeat("s", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -35,7 +43,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatalf("ConfigureStaticFlag() error = %v", err)
 	}
 
-	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("s", 32))
+	queryService, err := challengeqry.NewFlagService(newChallengeFlagRepository(db), strings.Repeat("s", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
@@ -70,7 +78,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("d", 32))
+	service, err := NewFlagService(newChallengeFlagRepository(db), strings.Repeat("d", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -79,7 +87,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("ConfigureDynamicFlag() error = %v", err)
 	}
 
-	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("d", 32))
+	queryService, err := challengeqry.NewFlagService(newChallengeFlagRepository(db), strings.Repeat("d", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
@@ -115,7 +123,7 @@ func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("d", 32))
+	service, err := NewFlagService(newChallengeFlagRepository(db), strings.Repeat("d", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -139,7 +147,7 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("r", 32))
+	service, err := NewFlagService(newChallengeFlagRepository(db), strings.Repeat("r", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -148,7 +156,7 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 		t.Fatalf("ConfigureRegexFlag() error = %v", err)
 	}
 
-	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("r", 32))
+	queryService, err := challengeqry.NewFlagService(newChallengeFlagRepository(db), strings.Repeat("r", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
@@ -183,7 +191,7 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("m", 32))
+	service, err := NewFlagService(newChallengeFlagRepository(db), strings.Repeat("m", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -192,7 +200,7 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 		t.Fatalf("ConfigureManualReviewFlag() error = %v", err)
 	}
 
-	cfg, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("m", 32))
+	cfg, err := challengeqry.NewFlagService(newChallengeFlagRepository(db), strings.Repeat("m", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
@@ -220,7 +228,7 @@ func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("u", 32))
+	queryService, err := challengeqry.NewFlagService(newChallengeFlagRepository(db), strings.Repeat("u", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
@@ -228,5 +236,27 @@ func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
 	_, err = queryService.ValidateFlag(context.Background(), 10, 5, "flag{legacy}", "")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
+	}
+}
+
+func TestFlagServiceTreatsChallengeFlagChallengeNotFoundAsNotFound(t *testing.T) {
+	t.Parallel()
+
+	service, err := NewFlagService(&flagCommandContextRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeFlagChallengeNotFound
+		},
+	}, strings.Repeat("n", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	err = service.ConfigureManualReviewFlag(context.Background(), 404)
+	if err == nil {
+		t.Fatal("expected challenge not found")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
 	}
 }

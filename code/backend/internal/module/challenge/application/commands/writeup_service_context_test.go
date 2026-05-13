@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/errcode"
 )
 
 type writeupCommandContextStub struct {
@@ -333,6 +334,91 @@ func TestWriteupServiceRecommendOfficialPropagatesContextToRepository(t *testing
 	}
 	if resp == nil || !resp.IsRecommended || resp.ID != 41 {
 		t.Fatalf("unexpected recommend official resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceUpsertTreatsChallengeNotFoundSentinelAsChallengeNotFound(t *testing.T) {
+	t.Parallel()
+
+	service := NewWriteupService(&writeupCommandContextStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return nil, challengeports.ErrChallengeWriteupChallengeNotFound
+		},
+	})
+
+	_, err := service.Upsert(context.Background(), 11, 7, UpsertOfficialWriteupInput{
+		Title:      "Official",
+		Content:    "Walkthrough",
+		Visibility: model.WriteupVisibilityPublic,
+	})
+	if err == nil || err.Error() != errcode.ErrChallengeNotFound.Error() {
+		t.Fatalf("expected challenge not found, got %v", err)
+	}
+}
+
+func TestWriteupServiceUpsertTreatsOfficialWriteupNotFoundSentinelAsCreateFlow(t *testing.T) {
+	t.Parallel()
+
+	upsertCalled := false
+	service := NewWriteupService(&writeupCommandContextStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{ID: id}, nil
+		},
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+			if upsertCalled {
+				return &model.ChallengeWriteup{
+					ID:          21,
+					ChallengeID: challengeID,
+					Title:       "Official",
+					Content:     "Walkthrough",
+					Visibility:  model.WriteupVisibilityPublic,
+				}, nil
+			}
+			return nil, challengeports.ErrChallengeOfficialWriteupNotFound
+		},
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+			upsertCalled = true
+			return nil
+		},
+	})
+
+	resp, err := service.Upsert(context.Background(), 11, 7, UpsertOfficialWriteupInput{
+		Title:      "Official",
+		Content:    "Walkthrough",
+		Visibility: model.WriteupVisibilityPublic,
+	})
+	if err != nil {
+		t.Fatalf("Upsert() error = %v", err)
+	}
+	if !upsertCalled {
+		t.Fatal("expected upsert to be called")
+	}
+	if resp == nil || resp.ID != 21 || resp.ChallengeID != 11 {
+		t.Fatalf("unexpected upsert resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceRecommendCommunityTreatsRequesterNotFoundSentinelAsUnauthorized(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	service := NewWriteupService(&writeupCommandContextStub{
+		getTeacherSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+			return &challengeports.TeacherSubmissionWriteupRecord{
+				Submission:      model.SubmissionWriteup{ID: id, ChallengeID: 11, UserID: 88, CreatedAt: now, UpdatedAt: now},
+				ClassName:       "Class A",
+				StudentUsername: "student",
+				ChallengeTitle:  "challenge",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return nil, challengeports.ErrChallengeWriteupRequesterNotFound
+		},
+	})
+
+	_, err := service.RecommendCommunity(context.Background(), 91, 1001, model.RoleTeacher)
+	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
+		t.Fatalf("expected unauthorized, got %v", err)
 	}
 }
 

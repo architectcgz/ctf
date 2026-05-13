@@ -3,10 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -74,12 +70,15 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 	if strings.TrimSpace(accessURL) == "" {
 		return fmt.Errorf("instance access url is empty")
 	}
+	if s.readinessProbe == nil {
+		return fmt.Errorf("instance readiness probe is not configured")
+	}
 
 	attempts := s.startProbeAttempts()
-	client := &http.Client{Timeout: s.startProbeTimeout()}
+	timeout := s.startProbeTimeout()
 	var lastErr error
 	for attempt := 0; attempt < attempts; attempt++ {
-		lastErr = s.probeInstanceAccessURL(ctx, client, accessURL)
+		lastErr = s.readinessProbe.ProbeAccessURL(ctx, accessURL, timeout)
 		if lastErr == nil {
 			return nil
 		}
@@ -99,46 +98,6 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 		}
 	}
 	return lastErr
-}
-
-func (s *Service) probeInstanceAccessURL(ctx context.Context, client *http.Client, accessURL string) error {
-	parsed, err := url.Parse(accessURL)
-	if err != nil {
-		return err
-	}
-	if strings.EqualFold(parsed.Scheme, model.ChallengeTargetProtocolTCP) {
-		return probeTCPAccessURL(ctx, parsed, s.startProbeTimeout())
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, accessURL, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 512))
-	return nil
-}
-
-func probeTCPAccessURL(ctx context.Context, parsed *url.URL, timeout time.Duration) error {
-	host := parsed.Host
-	if strings.TrimSpace(host) == "" {
-		return fmt.Errorf("tcp access url missing host")
-	}
-	if timeout <= 0 {
-		timeout = 2 * time.Second
-	}
-	dialer := net.Dialer{Timeout: timeout}
-	conn, err := dialer.DialContext(ctx, "tcp", host)
-	if err != nil {
-		return err
-	}
-	return conn.Close()
 }
 
 func (s *Service) buildProvisioningFlag(instance *model.Instance, chal *model.Challenge) (string, error) {

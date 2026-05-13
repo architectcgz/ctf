@@ -60,7 +60,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -90,7 +90,8 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 				},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	service.StartBackgroundTasks(context.Background())
 
@@ -188,7 +189,8 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 				StartProbeAttempts: 2,
 			},
 		},
-		nil)
+		nil).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{static}")
 	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
@@ -249,7 +251,8 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 1}},
-		nil)
+		nil).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -335,7 +338,8 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 2}},
-		nil)
+		nil).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	instance := &model.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: model.InstanceStatusCreating}
 	challenge := &model.Challenge{
@@ -534,7 +538,8 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 				StartProbeAttempts: 1,
 			},
 		},
-		nil)
+		nil).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	instance := &model.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: model.InstanceStatusCreating}
 	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
@@ -589,7 +594,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 	started := make(chan int, 2)
 	release := make(chan struct{})
-	service := NewService(
+	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
 		challengeinfra.NewRepository(db),
 		challengeinfra.NewImageRepository(db),
@@ -621,7 +626,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 				},
 			},
 		},
-		nil)
+		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	service.StartBackgroundTasks(context.Background())
 

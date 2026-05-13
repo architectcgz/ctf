@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/crypto"
@@ -125,7 +123,7 @@ func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
 func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, ports.ErrChallengeFlagChallengeNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err

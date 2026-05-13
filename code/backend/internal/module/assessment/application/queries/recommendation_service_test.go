@@ -54,10 +54,14 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 }
 
 func newRecommendationTestService(db *gorm.DB, challengeRepo assessmentports.RecommendationChallengeRepository, redisClient *redis.Client) *assessmentqry.RecommendationService {
+	var cacheStore assessmentports.AssessmentRecommendationCacheStore
+	if redisClient != nil {
+		cacheStore = assessmentinfra.NewRecommendationCacheStore(redisClient)
+	}
 	return assessmentqry.NewRecommendationService(
 		assessmentinfra.NewRepository(db),
 		challengeRepo,
-		redisClient,
+		cacheStore,
 		config.RecommendationConfig{
 			WeakThreshold: 0.4,
 			CacheTTL:      time.Hour,

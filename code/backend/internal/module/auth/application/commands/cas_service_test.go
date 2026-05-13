@@ -2,9 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -13,35 +10,13 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authports "ctf-platform/internal/module/auth/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 	t.Parallel()
-
-	casServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if got := r.URL.Query().Get("ticket"); got != "ST-1" {
-			t.Fatalf("unexpected ticket: %s", got)
-		}
-		if got := r.URL.Query().Get("service"); got != "https://ctf.example.edu/api/v1/auth/cas/callback" {
-			t.Fatalf("unexpected service: %s", got)
-		}
-		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
-<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
-  <cas:authenticationSuccess>
-    <cas:user>cas_user_1</cas:user>
-    <cas:attributes>
-      <cas:displayName>CAS User</cas:displayName>
-      <cas:mail>cas_user_1@example.edu</cas:mail>
-      <cas:className>CTF-1</cas:className>
-      <cas:studentNo>20260001</cas:studentNo>
-    </cas:attributes>
-  </cas:authenticationSuccess>
-</cas:serviceResponse>`)
-	}))
-	defer casServer.Close()
 
 	repo := &mockRepository{
 		findByUsernameFn: func(context.Context, string) (*model.User, error) {
@@ -82,12 +57,28 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 		},
 	}
 
+	validator := &mockCASTicketValidator{
+		validateTicketFn: func(_ context.Context, validateURL string) (*authports.CASPrincipal, error) {
+			expected := "https://cas.example.edu/cas/serviceValidate?service=https%3A%2F%2Fctf.example.edu%2Fapi%2Fv1%2Fauth%2Fcas%2Fcallback&ticket=ST-1"
+			if validateURL != expected {
+				t.Fatalf("unexpected validate url: %s", validateURL)
+			}
+			return &authports.CASPrincipal{
+				Username:  "cas_user_1",
+				Name:      "CAS User",
+				Email:     "cas_user_1@example.edu",
+				ClassName: "CTF-1",
+				StudentNo: "20260001",
+			}, nil
+		},
+	}
+
 	service := NewCASService(config.CASConfig{
 		Enabled:       true,
-		BaseURL:       casServer.URL,
+		BaseURL:       "https://cas.example.edu/cas",
 		ServiceURL:    "https://ctf.example.edu/api/v1/auth/cas/callback",
 		AutoProvision: true,
-	}, repo, tokenService, zap.NewNop(), casServer.Client())
+	}, repo, tokenService, zap.NewNop(), validator)
 
 	resp, tokens, err := service.Authenticate(context.Background(), "ST-1")
 	if err != nil {
@@ -103,25 +94,6 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 
 func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *testing.T) {
 	t.Parallel()
-
-	casServer := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-	}))
-	casServer.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
-<serviceResponse>
-  <authenticationSuccess>
-    <user>cas_user_2</user>
-    <attributes>
-      <name>Updated Name</name>
-      <email>cas_user_2@example.edu</email>
-      <class_name>CTF-2</class_name>
-      <student_no>20260002</student_no>
-    </attributes>
-  </authenticationSuccess>
-</serviceResponse>`)
-	})
-	defer casServer.Close()
 
 	expired := time.Now().Add(-time.Minute)
 	user := &model.User{
@@ -168,11 +140,23 @@ func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *test
 		},
 	}
 
+	validator := &mockCASTicketValidator{
+		validateTicketFn: func(context.Context, string) (*authports.CASPrincipal, error) {
+			return &authports.CASPrincipal{
+				Username:  "cas_user_2",
+				Name:      "Updated Name",
+				Email:     "cas_user_2@example.edu",
+				ClassName: "CTF-2",
+				StudentNo: "20260002",
+			}, nil
+		},
+	}
+
 	service := NewCASService(config.CASConfig{
 		Enabled:    true,
-		BaseURL:    casServer.URL,
+		BaseURL:    "https://cas.example.edu/cas",
 		ServiceURL: "https://ctf.example.edu/api/v1/auth/cas/callback",
-	}, repo, tokenService, zap.NewNop(), casServer.Client())
+	}, repo, tokenService, zap.NewNop(), validator)
 
 	resp, _, err := service.Authenticate(context.Background(), "ST-2")
 	if err != nil {
@@ -186,27 +170,20 @@ func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *test
 func TestCASServiceAuthenticateRejectsUserWhenAutoProvisionDisabled(t *testing.T) {
 	t.Parallel()
 
-	casServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
-<serviceResponse>
-  <authenticationSuccess>
-    <user>cas_user_3</user>
-  </authenticationSuccess>
-</serviceResponse>`)
-	}))
-	defer casServer.Close()
-
 	service := NewCASService(config.CASConfig{
 		Enabled:       true,
-		BaseURL:       casServer.URL,
+		BaseURL:       "https://cas.example.edu/cas",
 		ServiceURL:    "https://ctf.example.edu/api/v1/auth/cas/callback",
 		AutoProvision: false,
 	}, &mockRepository{
 		findByUsernameFn: func(context.Context, string) (*model.User, error) {
 			return nil, identitycontracts.ErrUserNotFound
 		},
-	}, &mockTokenService{}, zap.NewNop(), casServer.Client())
+	}, &mockTokenService{}, zap.NewNop(), &mockCASTicketValidator{
+		validateTicketFn: func(context.Context, string) (*authports.CASPrincipal, error) {
+			return &authports.CASPrincipal{Username: "cas_user_3"}, nil
+		},
+	})
 
 	_, _, err := service.Authenticate(context.Background(), "ST-3")
 	if err != errcode.ErrCASUserNotProvisioned {
@@ -217,23 +194,29 @@ func TestCASServiceAuthenticateRejectsUserWhenAutoProvisionDisabled(t *testing.T
 func TestCASServiceAuthenticateRejectsInvalidTicket(t *testing.T) {
 	t.Parallel()
 
-	casServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/xml")
-		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
-<serviceResponse>
-  <authenticationFailure code="INVALID_TICKET">ticket not recognized</authenticationFailure>
-</serviceResponse>`)
-	}))
-	defer casServer.Close()
-
 	service := NewCASService(config.CASConfig{
 		Enabled:    true,
-		BaseURL:    casServer.URL,
+		BaseURL:    "https://cas.example.edu/cas",
 		ServiceURL: "https://ctf.example.edu/api/v1/auth/cas/callback",
-	}, &mockRepository{}, &mockTokenService{}, zap.NewNop(), casServer.Client())
+	}, &mockRepository{}, &mockTokenService{}, zap.NewNop(), &mockCASTicketValidator{
+		validateTicketFn: func(context.Context, string) (*authports.CASPrincipal, error) {
+			return nil, authports.ErrCASTicketInvalid
+		},
+	})
 
 	_, _, err := service.Authenticate(context.Background(), "ST-invalid")
 	if err != errcode.ErrCASTicketInvalid {
 		t.Fatalf("expected ErrCASTicketInvalid, got %v", err)
 	}
+}
+
+type mockCASTicketValidator struct {
+	validateTicketFn func(ctx context.Context, validateURL string) (*authports.CASPrincipal, error)
+}
+
+func (m *mockCASTicketValidator) ValidateTicket(ctx context.Context, validateURL string) (*authports.CASPrincipal, error) {
+	if m != nil && m.validateTicketFn != nil {
+		return m.validateTicketFn(ctx, validateURL)
+	}
+	return nil, nil
 }

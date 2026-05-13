@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -188,7 +187,7 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 
 func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificationID int64) error {
 	notification, err := s.repo.FindByID(ctx, notificationID, userID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, opsports.ErrNotificationNotFound) {
 		return errcode.ErrNotificationNotFound
 	}
 	if err != nil {

@@ -164,9 +164,14 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		scoreService,
 		flagSubmitRateLimitStore,
 		cfg,
-		log.Named("practice_service"))
+		log.Named("practice_service")).
+		SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(deps.commandRepo)).
+		SetManualReviewRepository(practiceinfra.NewManualReviewRepository(deps.commandRepo)).
+		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(deps.commandRepo)).
+		SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(deps.challengeRepo)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
-	rankingService := practiceqry.NewScoreService(deps.rankingRepo, scoreStateStore, log.Named("practice_score_query_service"), &cfg.Score)
+	rankingService := practiceqry.NewScoreService(practiceinfra.NewScoreQueryRepository(deps.rankingRepo), scoreStateStore, log.Named("practice_score_query_service"), &cfg.Score)
 
 	return service, rankingService, progressTimelineService
 }

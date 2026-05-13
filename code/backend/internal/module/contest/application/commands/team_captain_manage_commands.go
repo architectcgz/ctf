@@ -4,15 +4,14 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) DismissTeam(ctx context.Context, contestID, captainID, teamID int64) error {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestTeamNotFound) {
 			return errcode.ErrTeamNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
@@ -29,7 +28,7 @@ func (s *TeamService) DismissTeam(ctx context.Context, contestID, captainID, tea
 func (s *TeamService) KickMember(ctx context.Context, contestID, captainID, teamID, memberUserID int64) error {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestTeamNotFound) {
 			return errcode.ErrTeamNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)

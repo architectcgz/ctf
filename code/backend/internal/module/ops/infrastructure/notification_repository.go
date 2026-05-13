@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 
@@ -59,6 +60,9 @@ func (r *NotificationRepository) FindByID(ctx context.Context, notificationID, u
 	if err := r.db.WithContext(ctx).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		First(&notification).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, opsports.ErrNotificationNotFound
+		}
 		return nil, err
 	}
 	return &notification, nil

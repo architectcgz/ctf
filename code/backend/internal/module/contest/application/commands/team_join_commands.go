@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -21,7 +20,7 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestTeamNotFound) {
 			return nil, errcode.ErrTeamNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -31,7 +30,11 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 	}
 
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(ctx, userID, team.ContestID)
-	if err == nil && existingTeam.ID > 0 {
+	if err != nil {
+		if !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+	} else if existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
 	}
 
@@ -46,7 +49,7 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		if s.teamRepo.IsUniqueViolation(err, "uk_team_members_contest_user") {
 			return nil, errcode.ErrAlreadyInTeam
 		}
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 			return nil, errcode.ErrNotRegistered
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

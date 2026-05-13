@@ -2,10 +2,8 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -16,19 +14,15 @@ import (
 type DashboardService struct {
 	runtimeQuery opsports.RuntimeQuery
 	runtime      opsports.RuntimeStatsProvider
-	redis        *redislib.Client
+	state        opsports.DashboardStateStore
 	config       *config.Config
 	logger       *zap.Logger
-}
-
-type dashboardSessionRecord struct {
-	UserID int64 `json:"user_id"`
 }
 
 func NewDashboardService(
 	runtimeQuery opsports.RuntimeQuery,
 	runtimeStats opsports.RuntimeStatsProvider,
-	redis *redislib.Client,
+	state opsports.DashboardStateStore,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *DashboardService {
@@ -38,14 +32,10 @@ func NewDashboardService(
 	return &DashboardService{
 		runtimeQuery: runtimeQuery,
 		runtime:      runtimeStats,
-		redis:        redis,
+		state:        state,
 		config:       cfg,
 		logger:       logger,
 	}
-}
-
-func (s *DashboardService) getCacheKey() string {
-	return fmt.Sprintf("%s:stats", s.config.Dashboard.RedisKeyPrefix)
 }
 
 func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.DashboardStats, error) {
@@ -53,7 +43,7 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 	if err == nil && cached != nil {
 		return cached, nil
 	}
-	if err != nil && err != redislib.Nil {
+	if err != nil {
 		s.logger.Error("读取仪表盘缓存失败，降级到实时查询", zap.Error(err))
 	}
 
@@ -97,11 +87,6 @@ func (s *DashboardService) getContainerStats(ctx context.Context) ([]dto.Contain
 	}
 	stats, err := s.runtime.ListManagedContainerStats(ctx)
 	if err != nil {
-		if err == redislib.Nil {
-			s.logger.Debug("仪表盘缓存未命中")
-			return nil, err
-		}
-		s.logger.Warn("读取仪表盘缓存失败", zap.Error(err))
 		return nil, err
 	}
 
@@ -158,78 +143,109 @@ func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.Resource
 }
 
 func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) {
-	if s.redis == nil {
+	if s.state == nil {
 		return 0, nil
 	}
-	sessionPrefix := s.config.Auth.SessionKeyPrefix
-	if sessionPrefix == "" {
-		sessionPrefix = "ctf:auth:session"
-	}
-	pattern := sessionPrefix + ":*"
-	var cursor uint64
-	onlineUserIDs := make(map[int64]struct{})
-	for {
-		keys, nextCursor, err := s.redis.Scan(ctx, cursor, pattern, 100).Result()
-		if err != nil {
-			return 0, err
-		}
-		if len(keys) > 0 {
-			values, err := s.redis.MGet(ctx, keys...).Result()
-			if err != nil {
-				return 0, err
-			}
-			for index, value := range values {
-				if value == nil {
-					continue
-				}
-				payload, ok := value.(string)
-				if !ok {
-					s.logger.Warn("忽略无法识别的在线会话记录", zap.String("key", keys[index]))
-					continue
-				}
-				var session dashboardSessionRecord
-				if err := json.Unmarshal([]byte(payload), &session); err != nil || session.UserID <= 0 {
-					s.logger.Warn("忽略无效的在线会话记录", zap.String("key", keys[index]), zap.Error(err))
-					continue
-				}
-				onlineUserIDs[session.UserID] = struct{}{}
-			}
-		}
-		cursor = nextCursor
-		if cursor == 0 {
-			break
-		}
-	}
-	return int64(len(onlineUserIDs)), nil
+	return s.state.CountOnlineUsers(ctx)
 }
 
 func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStats, error) {
-	if s.redis == nil {
-		return nil, redislib.Nil
+	if s.state == nil {
+		return nil, nil
 	}
-	data, err := s.redis.Get(ctx, s.getCacheKey()).Bytes()
+	snapshot, err := s.state.LoadDashboardStats(ctx)
 	if err != nil {
 		return nil, err
 	}
-	var stats dto.DashboardStats
-	if err := json.Unmarshal(data, &stats); err != nil {
-		return nil, err
+	if snapshot == nil {
+		return nil, nil
 	}
-	return &stats, nil
+	return dashboardStatsFromSnapshot(snapshot), nil
 }
 
 func (s *DashboardService) saveToCache(ctx context.Context, stats *dto.DashboardStats) {
-	if s.redis == nil {
+	if s.state == nil || stats == nil {
 		return
 	}
-	data, err := json.Marshal(stats)
-	if err != nil {
-		s.logger.Error("序列化统计数据失败", zap.Error(err))
-		return
-	}
-	if err := s.redis.Set(ctx, s.getCacheKey(), data, s.config.Dashboard.CacheTTL).Err(); err != nil {
+	if err := s.state.SaveDashboardStats(ctx, dashboardSnapshotFromStats(stats)); err != nil {
 		s.logger.Error("缓存统计数据失败", zap.Error(err))
 		return
 	}
 	s.logger.Debug("仪表盘缓存已更新")
+}
+
+func dashboardStatsFromSnapshot(snapshot *opsports.DashboardStatsSnapshot) *dto.DashboardStats {
+	if snapshot == nil {
+		return nil
+	}
+
+	containerStats := make([]dto.ContainerStat, 0, len(snapshot.ContainerStats))
+	for _, item := range snapshot.ContainerStats {
+		containerStats = append(containerStats, dto.ContainerStat{
+			ContainerID:   item.ContainerID,
+			ContainerName: item.ContainerName,
+			CPUPercent:    item.CPUPercent,
+			MemoryPercent: item.MemoryPercent,
+			MemoryUsage:   item.MemoryUsage,
+			MemoryLimit:   item.MemoryLimit,
+		})
+	}
+
+	alerts := make([]dto.ResourceAlert, 0, len(snapshot.Alerts))
+	for _, item := range snapshot.Alerts {
+		alerts = append(alerts, dto.ResourceAlert{
+			ContainerID: item.ContainerID,
+			Type:        item.Type,
+			Value:       item.Value,
+			Threshold:   item.Threshold,
+			Message:     item.Message,
+		})
+	}
+
+	return &dto.DashboardStats{
+		OnlineUsers:      snapshot.OnlineUsers,
+		ActiveContainers: snapshot.ActiveContainers,
+		CPUUsage:         snapshot.CPUUsage,
+		MemoryUsage:      snapshot.MemoryUsage,
+		ContainerStats:   containerStats,
+		Alerts:           alerts,
+	}
+}
+
+func dashboardSnapshotFromStats(stats *dto.DashboardStats) *opsports.DashboardStatsSnapshot {
+	if stats == nil {
+		return nil
+	}
+
+	containerStats := make([]opsports.DashboardContainerStat, 0, len(stats.ContainerStats))
+	for _, item := range stats.ContainerStats {
+		containerStats = append(containerStats, opsports.DashboardContainerStat{
+			ContainerID:   item.ContainerID,
+			ContainerName: item.ContainerName,
+			CPUPercent:    item.CPUPercent,
+			MemoryPercent: item.MemoryPercent,
+			MemoryUsage:   item.MemoryUsage,
+			MemoryLimit:   item.MemoryLimit,
+		})
+	}
+
+	alerts := make([]opsports.DashboardResourceAlert, 0, len(stats.Alerts))
+	for _, item := range stats.Alerts {
+		alerts = append(alerts, opsports.DashboardResourceAlert{
+			ContainerID: item.ContainerID,
+			Type:        item.Type,
+			Value:       item.Value,
+			Threshold:   item.Threshold,
+			Message:     item.Message,
+		})
+	}
+
+	return &opsports.DashboardStatsSnapshot{
+		OnlineUsers:      stats.OnlineUsers,
+		ActiveContainers: stats.ActiveContainers,
+		CPUUsage:         stats.CPUUsage,
+		MemoryUsage:      stats.MemoryUsage,
+		ContainerStats:   containerStats,
+		Alerts:           alerts,
+	}
 }

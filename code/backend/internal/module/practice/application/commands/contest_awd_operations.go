@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -88,9 +87,12 @@ func restartCleanupRuntimeView(instance *model.Instance) *model.Instance {
 }
 
 func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error) {
-	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if s.contestScope == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+	contest, err := s.contestScope.FindContestByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

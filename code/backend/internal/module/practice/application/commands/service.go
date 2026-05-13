@@ -52,19 +52,24 @@ type instanceRepository interface {
 }
 
 type Service struct {
-	repo           practiceCommandRepository
-	challengeRepo  challengecontracts.PracticeChallengeContract
-	imageRepo      challengecontracts.ImageStore
-	instanceRepo   instanceRepository
-	runtimeService practiceports.RuntimeInstanceService
-	scoreService   ScoreUpdater
-	rateLimitStore practiceports.PracticeFlagSubmitRateLimitStore
-	config         *config.Config
-	logger         *zap.Logger
-	eventBus       platformevents.Bus
-	baseCtx        context.Context
-	cancel         context.CancelFunc
-	tasks          sync.WaitGroup
+	repo             practiceCommandRepository
+	challengeRepo    challengecontracts.PracticeChallengeContract
+	contestScope     practiceports.PracticeContestScopeRepository
+	imageRepo        challengecontracts.ImageStore
+	instanceRepo     instanceRepository
+	manualReviewRepo practiceports.PracticeManualReviewRepository
+	solvedSubmission practiceports.PracticeSolvedSubmissionRepository
+	readinessProbe   practiceports.PracticeInstanceReadinessProbe
+	runtimeSubject   practiceports.PracticeRuntimeSubjectRepository
+	runtimeService   practiceports.RuntimeInstanceService
+	scoreService     ScoreUpdater
+	rateLimitStore   practiceports.PracticeFlagSubmitRateLimitStore
+	config           *config.Config
+	logger           *zap.Logger
+	eventBus         platformevents.Bus
+	baseCtx          context.Context
+	cancel           context.CancelFunc
+	tasks            sync.WaitGroup
 }
 
 func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
@@ -72,6 +77,46 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 		return nil
 	}
 	s.eventBus = bus
+	return s
+}
+
+func (s *Service) SetInstanceReadinessProbe(probe practiceports.PracticeInstanceReadinessProbe) *Service {
+	if s == nil {
+		return nil
+	}
+	s.readinessProbe = probe
+	return s
+}
+
+func (s *Service) SetContestScopeRepository(repo practiceports.PracticeContestScopeRepository) *Service {
+	if s == nil {
+		return nil
+	}
+	s.contestScope = repo
+	return s
+}
+
+func (s *Service) SetRuntimeSubjectRepository(repo practiceports.PracticeRuntimeSubjectRepository) *Service {
+	if s == nil {
+		return nil
+	}
+	s.runtimeSubject = repo
+	return s
+}
+
+func (s *Service) SetManualReviewRepository(repo practiceports.PracticeManualReviewRepository) *Service {
+	if s == nil {
+		return nil
+	}
+	s.manualReviewRepo = repo
+	return s
+}
+
+func (s *Service) SetSolvedSubmissionRepository(repo practiceports.PracticeSolvedSubmissionRepository) *Service {
+	if s == nil {
+		return nil
+	}
+	s.solvedSubmission = repo
 	return s
 }
 

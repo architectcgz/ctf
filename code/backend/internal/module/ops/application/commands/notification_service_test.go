@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -222,7 +221,7 @@ func TestNotificationServiceRegisterChallengeEventConsumers(t *testing.T) {
 func TestNotificationServiceMarkAsReadReturnsNotificationNotFound(t *testing.T) {
 	service := NewNotificationService(&stubNotificationRepository{
 		findByIDFn: func(_ context.Context, _, _ int64) (*model.Notification, error) {
-			return nil, gorm.ErrRecordNotFound
+			return nil, opsports.ErrNotificationNotFound
 		},
 	}, config.PaginationConfig{
 		DefaultPageSize: 20,

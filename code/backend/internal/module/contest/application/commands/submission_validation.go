@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -17,7 +16,7 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 			return nil, err
 		}
 		return registration.TeamID, nil
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	} else if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -25,7 +24,7 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 	if err == nil && team.ID > 0 {
 		return &team.ID, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
