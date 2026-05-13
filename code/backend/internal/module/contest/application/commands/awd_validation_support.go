@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -32,7 +31,7 @@ func (s *AWDService) ensureAWDRound(ctx context.Context, contestID, roundID int6
 
 	round, err := s.repo.FindRoundByContestAndID(ctx, contestID, roundID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

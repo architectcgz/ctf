@@ -197,15 +197,17 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	} else {
 		log.Named("awd_round_updater").Warn("checker_sandbox_runner_unavailable", zap.Error(err))
 	}
+	awdCommandRepo := contestinfra.NewAWDCommandRepository(deps.awdRepo)
+	awdCommandRoundManager := contestinfra.NewAWDRoundManagerAdapter(awdUpdater)
 	awdCommands := contestcmd.NewAWDService(
-		deps.awdRepo,
+		awdCommandRepo,
 		deps.contestLookup,
 		awdRoundStateStore,
 		previewTokenStore,
 		cfg.Container.FlagGlobalSecret,
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
-		awdUpdater,
+		awdCommandRoundManager,
 		deps.previewImageRepo,
 		deps.previewChallengeRepo,
 		deps.runtimeProbe,

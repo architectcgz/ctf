@@ -8,9 +8,9 @@ import (
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
-	"gorm.io/gorm"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
@@ -68,7 +68,7 @@ func (s *AWDService) createAttackLog(
 		ScoreGained:       scoreGained,
 	}
 	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDAttackLogTransactionNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err

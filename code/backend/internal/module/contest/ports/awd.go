@@ -14,6 +14,9 @@ var (
 	ErrContestAWDPreviewChallengeNotFound     = errors.New("contest awd preview challenge not found")
 	ErrContestAWDPreviewImageNotFound         = errors.New("contest awd preview image not found")
 	ErrContestAWDRoundNotFound                = errors.New("contest awd round not found")
+	ErrContestAWDChallengeNotFound            = errors.New("contest awd challenge not found")
+	ErrContestAWDServiceNotFound              = errors.New("contest awd service not found")
+	ErrContestAWDAttackLogTransactionNotFound = errors.New("contest awd attack log transaction not found")
 )
 
 type AWDServiceCheckTxRepository interface {
