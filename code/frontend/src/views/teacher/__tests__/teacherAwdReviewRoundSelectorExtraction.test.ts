@@ -14,7 +14,13 @@ describe('Teacher AWD review round selector extraction', () => {
     expect(awdReviewDetailSource).not.toContain('默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。')
 
     expect(teacherAwdReviewWorkspaceSource).toContain('<TeacherAWDReviewRoundSelector')
+    expect(teacherAwdReviewRoundSelectorSource).toContain(
+      'class="awd-review-round-shell workspace-directory-list"'
+    )
     expect(teacherAwdReviewRoundSelectorSource).toContain('class="awd-review-round-list custom-scrollbar"')
+    expect(teacherAwdReviewRoundSelectorSource).toContain(
+      'class="workspace-directory-chip awd-review-round-chip"'
+    )
     expect(teacherAwdReviewRoundSelectorSource).toContain('默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。')
   })
 })

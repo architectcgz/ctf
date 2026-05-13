@@ -16,44 +16,67 @@ const emit = defineEmits<{
 
 <template>
   <section class="workspace-directory-section teacher-directory-section awd-review-round-section">
-    <header class="list-heading">
-      <div>
-        <div class="journal-note-label">
-          Review Scope
+    <div class="awd-review-round-shell workspace-directory-list">
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">
+            Review Scope
+          </div>
+          <h3 class="list-heading__title">
+            轮次切换
+          </h3>
         </div>
-        <h3 class="list-heading__title">
-          轮次切换
-        </h3>
-      </div>
-      <div class="teacher-directory-meta">
-        默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。
-      </div>
-    </header>
+        <div class="teacher-directory-meta">
+          默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。
+        </div>
+      </header>
 
-    <div class="awd-review-round-list custom-scrollbar">
-      <button
-        type="button"
-        class="teacher-directory-chip awd-review-round-chip"
-        :class="{ 'awd-review-round-chip--active': !selectedRoundNumber }"
-        @click="emit('setRound', undefined)"
-      >
-        整场总览
-      </button>
-      <button
-        v-for="round in rounds"
-        :key="round.id"
-        type="button"
-        class="teacher-directory-chip awd-review-round-chip"
-        :class="{ 'awd-review-round-chip--active': selectedRoundNumber === round.round_number }"
-        @click="emit('setRound', round.round_number)"
-      >
-        R{{ round.round_number }}
-      </button>
+      <div class="awd-review-round-list custom-scrollbar">
+        <button
+          type="button"
+          class="workspace-directory-chip awd-review-round-chip"
+          :class="{ 'awd-review-round-chip--active': !selectedRoundNumber }"
+          @click="emit('setRound', undefined)"
+        >
+          整场总览
+        </button>
+        <button
+          v-for="round in rounds"
+          :key="round.id"
+          type="button"
+          class="workspace-directory-chip awd-review-round-chip"
+          :class="{ 'awd-review-round-chip--active': selectedRoundNumber === round.round_number }"
+          @click="emit('setRound', round.round_number)"
+        >
+          R{{ round.round_number }}
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.awd-review-round-shell {
+  --workspace-directory-shell-padding: var(--space-4) var(--space-5);
+  --workspace-directory-shell-border: color-mix(
+    in srgb,
+    var(--awd-review-line-strong) 92%,
+    transparent
+  );
+  --workspace-directory-shell-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--awd-review-surface) 98%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--awd-review-surface-subtle) 82%,
+        var(--color-bg-base)
+      )
+    );
+  display: grid;
+  gap: var(--space-4);
+}
+
 .awd-review-round-list {
   display: flex;
   flex-wrap: nowrap;
@@ -62,9 +85,18 @@ const emit = defineEmits<{
 }
 
 .awd-review-round-chip {
+  flex: 0 0 auto;
   border: 1px solid var(--awd-review-line);
   background: color-mix(in srgb, var(--awd-review-surface-subtle) 92%, transparent);
   color: var(--awd-review-muted);
+}
+
+.awd-review-round-chip:hover,
+.awd-review-round-chip:focus-visible {
+  border-color: color-mix(in srgb, var(--awd-review-primary) 24%, var(--awd-review-line));
+  background: color-mix(in srgb, var(--awd-review-primary) 8%, var(--awd-review-surface));
+  color: var(--awd-review-text);
+  outline: none;
 }
 
 .awd-review-round-chip--active {

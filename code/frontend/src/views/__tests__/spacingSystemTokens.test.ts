@@ -16,6 +16,10 @@ const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
   'utf-8'
 )
+const teacherAwdReviewSurfaceShellSource = readFileSync(
+  `${process.cwd()}/src/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue`,
+  'utf-8'
+)
 
 describe('spacing system tokens', () => {
   it('should define global spacing scale and semantic spacing tokens', () => {
@@ -52,5 +56,14 @@ describe('spacing system tokens', () => {
     expect(teacherSurfaceSource).toContain('var(--space-5)')
 
     expect(journalNotesSource).toContain('var(--space-divider-gap')
+    expect(teacherAwdReviewSurfaceShellSource).toContain(
+      'var(--workspace-content-start-padding-top, var(--space-workspace-content-start-padding-top))'
+    )
+    expect(teacherAwdReviewSurfaceShellSource).toContain(
+      'var(--workspace-side-padding, var(--space-workspace-side-padding))'
+    )
+    expect(teacherAwdReviewSurfaceShellSource).toContain(
+      'var(--workspace-content-padding, var(--space-workspace-content-padding))'
+    )
   })
 })
