@@ -159,12 +159,16 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 			AWDChallengeID: preview.PreviewContext.AWDChallengeID,
 		},
 	}
-	if s.redis == nil {
+	if s.previewTokenStore == nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", errcode.ErrAWDCheckerPreviewUnavailable)
 		return nil, errcode.ErrAWDCheckerPreviewUnavailable
 	}
-	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.redis, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, checkerTokenEnv, resp)
+	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.previewTokenStore, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, checkerTokenEnv, resp)
 	if err != nil {
+		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
+			s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", errcode.ErrAWDCheckerPreviewUnavailable)
+			return nil, errcode.ErrAWDCheckerPreviewUnavailable
+		}
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果保存失败。", err)
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

@@ -3,24 +3,17 @@ package commands
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
-
-	rediskeys "ctf-platform/internal/pkg/redis"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func syncAWDServiceStatusField(
 	ctx context.Context,
-	redis *redislib.Client,
+	store contestports.AWDRoundStateStore,
 	contestID, roundID, currentRoundID, teamID, serviceID int64,
 	serviceStatus string,
 ) error {
-	if redis == nil || contestID <= 0 || roundID <= 0 || currentRoundID <= 0 || roundID != currentRoundID {
+	if store == nil || contestID <= 0 || roundID <= 0 || currentRoundID <= 0 || roundID != currentRoundID {
 		return nil
 	}
-	return redis.HSet(
-		ctx,
-		rediskeys.AWDServiceStatusKey(contestID),
-		rediskeys.AWDRoundFlagServiceField(teamID, serviceID),
-		serviceStatus,
-	).Err()
+	return store.SetAWDServiceStatus(ctx, contestID, teamID, serviceID, serviceStatus)
 }

@@ -26,20 +26,14 @@ func (s *ContestStatusSideEffectStore) CreateFrozenScoreboardSnapshot(ctx contex
 	if s == nil || s.cache == nil || contestID <= 0 {
 		return nil
 	}
-
-	srcKey := rediskeys.RankContestTeamKey(contestID)
-	dstKey := rediskeys.RankContestFrozenKey(contestID)
-	return s.cache.ZUnionStore(ctx, dstKey, &redislib.ZStore{
-		Keys:    []string{srcKey},
-		Weights: []float64{1},
-	}).Err()
+	return createFrozenScoreboardSnapshot(ctx, s.cache, contestID)
 }
 
 func (s *ContestStatusSideEffectStore) ClearFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error {
 	if s == nil || s.cache == nil || contestID <= 0 {
 		return nil
 	}
-	return s.cache.Del(ctx, rediskeys.RankContestFrozenKey(contestID)).Err()
+	return clearFrozenScoreboardSnapshot(ctx, s.cache, contestID)
 }
 
 func (s *ContestStatusSideEffectStore) ClearEndedContestRuntimeState(ctx context.Context, contestID int64) error {

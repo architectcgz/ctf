@@ -34,7 +34,7 @@ func newContestAWDServiceForTestWithRedis(t *testing.T, redisClient *redis.Clien
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
 
-	return NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, redisClient), challengeRepo, contestRepo, contestChallengeRepo, awdRepo
+	return NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)), challengeRepo, contestRepo, contestChallengeRepo, awdRepo
 }
 
 func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
@@ -596,7 +596,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}
 	token, err := storeAWDCheckerPreviewToken(
 		context.Background(),
-		redisClient,
+		contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
 		806,
 		0,
 		1006,
@@ -802,7 +802,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}
 	token, err := storeAWDCheckerPreviewToken(
 		context.Background(),
-		redisClient,
+		contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
 		807,
 		resp.ID,
 		1007,
@@ -997,7 +997,7 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 	}
 	token, err := storeAWDCheckerPreviewToken(
 		context.Background(),
-		redisClient,
+		contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
 		2806,
 		0,
 		2106,

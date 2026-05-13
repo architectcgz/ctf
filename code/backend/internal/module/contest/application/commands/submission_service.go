@@ -3,8 +3,6 @@ package commands
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -26,7 +24,7 @@ type submissionRepository interface {
 type SubmissionService struct {
 	contestRepo       contestports.ContestLookupRepository
 	repo              submissionRepository
-	redis             *redislib.Client
+	rateLimitStore    contestports.ContestSubmissionRateLimitStore
 	flagValidator     challengecontracts.FlagValidator
 	teamRepo          contestports.ContestTeamFinder
 	scoreboardService scoreboardUpdater
@@ -34,11 +32,11 @@ type SubmissionService struct {
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo submissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo submissionRepository, rateLimitStore contestports.ContestSubmissionRateLimitStore, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,
-		redis:             redis,
+		rateLimitStore:    rateLimitStore,
 		flagValidator:     flagValidator,
 		teamRepo:          teamRepo,
 		scoreboardService: scoreboardService,

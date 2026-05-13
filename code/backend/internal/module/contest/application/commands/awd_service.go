@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -14,18 +13,19 @@ import (
 )
 
 type AWDService struct {
-	repo             awdCommandRepository
-	roundManager     contestports.AWDRoundManager
-	redis            *redislib.Client
-	scoreboardCache  contestports.ScoreboardCacheWriter
-	contestRepo      contestports.ContestLookupRepository
-	flagSecret       string
-	awdConfig        config.ContestAWDConfig
-	log              *zap.Logger
-	eventBus         platformevents.Bus
-	imageRepo        challengecontracts.ImageStore
-	awdChallengeRepo challengeports.AWDChallengeQueryRepository
-	runtimeProbe     challengeports.ChallengeRuntimeProbe
+	repo              awdCommandRepository
+	roundManager      contestports.AWDRoundManager
+	stateStore        contestports.AWDRoundStateStore
+	previewTokenStore contestports.AWDCheckerPreviewTokenStore
+	scoreboardCache   contestports.ScoreboardCacheWriter
+	contestRepo       contestports.ContestLookupRepository
+	flagSecret        string
+	awdConfig         config.ContestAWDConfig
+	log               *zap.Logger
+	eventBus          platformevents.Bus
+	imageRepo         challengecontracts.ImageStore
+	awdChallengeRepo  challengeports.AWDChallengeQueryRepository
+	runtimeProbe      challengeports.ChallengeRuntimeProbe
 }
 
 type awdCommandRepository interface {
@@ -43,7 +43,8 @@ type awdCommandRepository interface {
 func NewAWDService(
 	repo awdCommandRepository,
 	contestRepo contestports.ContestLookupRepository,
-	redis *redislib.Client,
+	stateStore contestports.AWDRoundStateStore,
+	previewTokenStore contestports.AWDCheckerPreviewTokenStore,
 	flagSecret string,
 	awdConfig config.ContestAWDConfig,
 	log *zap.Logger,
@@ -61,17 +62,18 @@ func NewAWDService(
 		scoreboardCache = scoreboardCaches[0]
 	}
 	return &AWDService{
-		repo:             repo,
-		roundManager:     roundManager,
-		redis:            redis,
-		scoreboardCache:  scoreboardCache,
-		contestRepo:      contestRepo,
-		flagSecret:       flagSecret,
-		awdConfig:        awdConfig,
-		log:              log,
-		imageRepo:        imageRepo,
-		awdChallengeRepo: awdChallengeRepo,
-		runtimeProbe:     runtimeProbe,
+		repo:              repo,
+		roundManager:      roundManager,
+		stateStore:        stateStore,
+		previewTokenStore: previewTokenStore,
+		scoreboardCache:   scoreboardCache,
+		contestRepo:       contestRepo,
+		flagSecret:        flagSecret,
+		awdConfig:         awdConfig,
+		log:               log,
+		imageRepo:         imageRepo,
+		awdChallengeRepo:  awdChallengeRepo,
+		runtimeProbe:      runtimeProbe,
 	}
 }
 

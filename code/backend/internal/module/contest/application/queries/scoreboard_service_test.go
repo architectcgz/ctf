@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
@@ -39,7 +40,7 @@ func TestScoreboardServiceGetScoreboardReturnsContestNotFound(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewScoreboardService(&scoreboardRepoStub{}, redisClient, &config.ContestConfig{}, nil)
+	service := NewScoreboardService(&scoreboardRepoStub{}, contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, nil)
 
 	_, err := service.GetScoreboard(context.Background(), 42, 1, 20)
 	if err != errcode.ErrContestNotFound {
@@ -119,7 +120,7 @@ func TestScoreboardServiceGetScoreboardSkipsInvalidRedisMembers(t *testing.T) {
 			11: {SolvedCount: 5},
 			12: {SolvedCount: 4},
 		},
-	}, redisClient, &config.ContestConfig{}, zap.NewNop())
+	}, contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, zap.NewNop())
 
 	resp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -179,7 +180,7 @@ func TestScoreboardServiceGetScoreboardSkipsMissingTeams(t *testing.T) {
 			11: {SolvedCount: 5},
 			12: {SolvedCount: 4},
 		},
-	}, redisClient, &config.ContestConfig{}, zap.NewNop())
+	}, contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, zap.NewNop())
 
 	resp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -238,7 +239,7 @@ func TestScoreboardServiceGetScoreboardPaginatesAfterFilteringInvisibleTeams(t *
 			11: {SolvedCount: 6},
 			13: {SolvedCount: 4},
 		},
-	}, redisClient, &config.ContestConfig{}, zap.NewNop())
+	}, contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, zap.NewNop())
 
 	resp, err := service.GetScoreboard(context.Background(), contestID, 2, 1)
 	if err != nil {

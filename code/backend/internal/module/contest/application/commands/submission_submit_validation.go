@@ -22,7 +22,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	submittedAt := time.Now()
+	submittedAt := time.Now().UTC()
 	if !submittedAt.Before(contest.EndTime) {
 		return nil, errcode.ErrContestEnded
 	}
@@ -54,12 +54,14 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("人工审核题暂不支持竞赛提交"))
 	}
 
-	rateLimitKey := contestSubmissionRateLimitKey(s.cfg.RateLimit.RedisKeyPrefix, userID, contestID, challengeID)
-	exists, err := s.redis.Exists(ctx, rateLimitKey).Result()
+	if s.rateLimitStore == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("contest submission rate limit store is nil"))
+	}
+	exists, err := s.rateLimitStore.HasIncorrectSubmissionRateLimit(ctx, userID, contestID, challengeID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if exists > 0 {
+	if exists {
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
@@ -75,7 +77,6 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 	return &validatedContestSubmission{
 		contestChallenge: contestChallenge,
 		teamID:           teamID,
-		rateLimitKey:     rateLimitKey,
 		submittedAt:      submittedAt,
 		isCorrect:        isCorrect,
 	}, nil

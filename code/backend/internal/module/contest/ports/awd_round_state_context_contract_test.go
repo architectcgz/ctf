@@ -22,6 +22,10 @@ func (ctxOnlyAWDRoundStateStore) IsAWDCurrentRound(context.Context, int64, int) 
 	return false, nil
 }
 
+func (ctxOnlyAWDRoundStateStore) LoadAWDCurrentRoundNumber(context.Context, int64) (int, bool, error) {
+	return 0, false, nil
+}
+
 func (ctxOnlyAWDRoundStateStore) LoadAWDRoundFlag(context.Context, int64, int64, int64, int64, int64) (string, bool, error) {
 	return "", false, nil
 }
@@ -31,6 +35,10 @@ func (ctxOnlyAWDRoundStateStore) SyncAWDCurrentRoundState(context.Context, int64
 }
 
 func (ctxOnlyAWDRoundStateStore) ClearAWDCurrentRoundState(context.Context, int64) error {
+	return nil
+}
+
+func (ctxOnlyAWDRoundStateStore) SetAWDServiceStatus(context.Context, int64, int64, int64, string) error {
 	return nil
 }
 

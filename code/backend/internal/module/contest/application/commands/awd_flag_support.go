@@ -6,12 +6,10 @@ import (
 	"strings"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -63,14 +61,12 @@ func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, roun
 	if round == nil || awdChallengeID <= 0 {
 		return "", errcode.ErrAWDFlagUnavailable
 	}
-	if s.redis != nil {
-		flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagServiceField(victimTeamID, serviceID)).Result()
-		if err == nil && strings.TrimSpace(flag) != "" {
-			return flag, nil
-		}
-		if err != nil && !errors.Is(err, redislib.Nil) {
-			return "", errcode.ErrInternal.WithCause(err)
-		}
+	flag, ok, err := s.stateStore.LoadAWDRoundFlag(ctx, contestID, round.ID, victimTeamID, serviceID)
+	if err != nil {
+		return "", errcode.ErrInternal.WithCause(err)
+	}
+	if ok {
+		return flag, nil
 	}
 	if strings.TrimSpace(s.flagSecret) == "" {
 		return "", errcode.ErrAWDFlagUnavailable

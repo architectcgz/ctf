@@ -155,6 +155,32 @@ type ContestScoreboardAdminRepository interface {
 	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
 }
 
+type ScoreboardMemberScore struct {
+	Member string
+	Score  float64
+}
+
+type ScoreboardTeamScoreEntry struct {
+	TeamID int64
+	Score  float64
+}
+
+type ScoreboardTeamRank struct {
+	Rank  int
+	Score float64
+}
+
+type ContestScoreboardStateStore interface {
+	HasFrozenScoreboardSnapshot(ctx context.Context, contestID int64) (bool, error)
+	CreateFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
+	ClearFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
+	ListLiveScoreboard(ctx context.Context, contestID int64) ([]ScoreboardMemberScore, error)
+	ListFrozenScoreboard(ctx context.Context, contestID int64) ([]ScoreboardMemberScore, error)
+	GetLiveTeamRank(ctx context.Context, contestID, teamID int64) (ScoreboardTeamRank, bool, error)
+	IncrementLiveTeamScore(ctx context.Context, contestID, teamID int64, points float64) error
+	ReplaceLiveScoreboard(ctx context.Context, contestID int64, entries []ScoreboardTeamScoreEntry) error
+}
+
 type ContestStatusRepository interface {
 	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
 	ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
@@ -186,9 +212,11 @@ type AWDRoundStateStore interface {
 	AcquireAWDSchedulerLock(ctx context.Context, ttl time.Duration) (ContestSchedulerLockLease, bool, error)
 	TryAcquireAWDRoundLock(ctx context.Context, contestID int64, roundNumber int, ttl time.Duration) (bool, error)
 	IsAWDCurrentRound(ctx context.Context, contestID int64, roundNumber int) (bool, error)
+	LoadAWDCurrentRoundNumber(ctx context.Context, contestID int64) (int, bool, error)
 	LoadAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64) (string, bool, error)
 	SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *model.AWDRound, assignments []AWDFlagAssignment, ttl time.Duration) error
 	ClearAWDCurrentRoundState(ctx context.Context, contestID int64) error
+	SetAWDServiceStatus(ctx context.Context, contestID, teamID, serviceID int64, status string) error
 	ReplaceAWDServiceStatus(ctx context.Context, contestID int64, entries []AWDServiceStatusEntry) error
 	ClearAWDServiceStatus(ctx context.Context, contestID int64) error
 }

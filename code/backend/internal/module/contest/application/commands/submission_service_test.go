@@ -523,7 +523,7 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 			Decay:     0.9,
 		},
 	}
-	service := contestcmd.NewScoreboardAdminService(contestinfra.NewRepository(db), redisClient, &cfg.Contest)
+	service := contestcmd.NewScoreboardAdminService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), &cfg.Contest)
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
 	if err := redisClient.ZAdd(context.Background(), scoreboardKey, redis.Z{Score: 999, Member: contestdomain.TeamIDToMember(99)}).Err(); err != nil {
 		t.Fatalf("seed redis scoreboard: %v", err)
@@ -640,7 +640,7 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 			Decay:     0.9,
 		},
 	}
-	service := contestqry.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
+	service := contestqry.NewScoreboardService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), &cfg.Contest, zap.NewNop())
 
 	resp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -719,7 +719,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 			Decay:     0.9,
 		},
 	}
-	service := contestqry.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
+	service := contestqry.NewScoreboardService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), &cfg.Contest, zap.NewNop())
 
 	publicResp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -816,11 +816,12 @@ func newContestSubmissionServiceForTest(t *testing.T, db *gorm.DB, redisClient *
 	}
 
 	contestRepo := contestinfra.NewRepository(db)
-	scoreboardService := contestcmd.NewScoreboardAdminService(contestRepo, redisClient, &cfg.Contest)
+	scoreboardService := contestcmd.NewScoreboardAdminService(contestRepo, contestinfra.NewContestScoreboardStateStore(redisClient), &cfg.Contest)
+	rateLimitStore := contestinfra.NewContestSubmissionRateLimitStore(redisClient, cfg.RateLimit.RedisKeyPrefix)
 	return contestcmd.NewSubmissionService(
 		contestRepo,
 		contestinfra.NewSubmissionRepository(db),
-		redisClient,
+		rateLimitStore,
 		flagValidator,
 		contestinfra.NewTeamRepository(db),
 		scoreboardService,

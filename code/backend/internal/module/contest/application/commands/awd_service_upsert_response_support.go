@@ -27,7 +27,7 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 	}
 	if err := syncAWDServiceStatusField(
 		ctx,
-		s.redis,
+		s.stateStore,
 		contestID,
 		roundID,
 		currentRoundID,

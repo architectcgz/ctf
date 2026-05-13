@@ -39,7 +39,7 @@ func TestScoreboardAdminServiceFreezeScoreboardReturnsContestNotFound(t *testing
 		_ = redisClient.Close()
 	})
 
-	service := NewScoreboardAdminService(&scoreboardAdminRepoStub{}, redisClient, nil)
+	service := NewScoreboardAdminService(&scoreboardAdminRepoStub{}, contestinfra.NewContestScoreboardStateStore(redisClient), nil)
 
 	err := service.FreezeScoreboard(context.Background(), 42, 30)
 	if err != errcode.ErrContestNotFound {
@@ -164,7 +164,7 @@ func newScoreboardAdminServiceForTest(t *testing.T) (*ScoreboardAdminService, *g
 	t.Cleanup(func() {
 		_ = redisClient.Close()
 	})
-	service := NewScoreboardAdminService(contestinfra.NewRepository(db), redisClient, nil)
+	service := NewScoreboardAdminService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), nil)
 	service.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	return service, db, redisClient, mini
 }

@@ -35,14 +35,9 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		pageSize = 100
 	}
 
-	frozen, key, err := s.resolveScoreboardKey(ctx, contest, contestID, live, time.Now())
+	frozen, results, err := s.resolveScoreboardMembers(ctx, contest, contestID, live, time.Now().UTC())
 	if err != nil {
 		return nil, err
-	}
-
-	results, err := s.redis.ZRevRangeWithScores(ctx, key, 0, -1).Result()
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	results, teamIDs := filterScoreboardResults(s.logger, contestID, results)
 

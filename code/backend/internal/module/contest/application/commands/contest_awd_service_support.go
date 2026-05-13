@@ -6,10 +6,9 @@ import (
 	"strings"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -201,7 +200,7 @@ func parseContestAWDServiceScore(scoreConfig string, key string) (int, bool) {
 
 func buildContestAWDServiceValidationUpdate(
 	ctx context.Context,
-	redisClient *redislib.Client,
+	previewTokenStore contestports.AWDCheckerPreviewTokenStore,
 	current *model.ContestAWDService,
 	contestID int64,
 	nextCheckerType model.AWDCheckerType,
@@ -215,7 +214,7 @@ func buildContestAWDServiceValidationUpdate(
 
 	state, previewAt, previewResult, err := consumeCheckerPreviewValidationState(
 		ctx,
-		redisClient,
+		previewTokenStore,
 		contestID,
 		current.ID,
 		current.AWDChallengeID,

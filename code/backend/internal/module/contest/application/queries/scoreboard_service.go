@@ -1,7 +1,6 @@
 package queries
 
 import (
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
@@ -9,20 +8,20 @@ import (
 )
 
 type ScoreboardService struct {
-	repo   contestports.ContestScoreboardRepository
-	redis  *redislib.Client
-	logger *zap.Logger
-	config *config.ContestConfig
+	repo       contestports.ContestScoreboardRepository
+	stateStore contestports.ContestScoreboardStateStore
+	logger     *zap.Logger
+	config     *config.ContestConfig
 }
 
-func NewScoreboardService(repo contestports.ContestScoreboardRepository, redis *redislib.Client, cfg *config.ContestConfig, logger *zap.Logger) *ScoreboardService {
+func NewScoreboardService(repo contestports.ContestScoreboardRepository, stateStore contestports.ContestScoreboardStateStore, cfg *config.ContestConfig, logger *zap.Logger) *ScoreboardService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &ScoreboardService{
-		repo:   repo,
-		redis:  redis,
-		logger: logger,
-		config: cfg,
+		repo:       repo,
+		stateStore: stateStore,
+		logger:     logger,
+		config:     cfg,
 	}
 }

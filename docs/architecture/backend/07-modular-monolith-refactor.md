@@ -37,6 +37,18 @@
   - 负责：`practice` 负责训练 owner 与用户态 progress / timeline query；`teaching_readmodel` 承担教师视角和复盘聚合查询，把跨 owner 只读拼装集中到 readmodel 层
   - 不负责：把只读取 practice 自有事实的 query 再拆成独立 readmodel，或拥有练习、竞赛、题目、评估的写侧状态
 
+- `code/backend/internal/module/contest/application/queries/scoreboard_*.go`、`code/backend/internal/module/contest/application/commands/scoreboard_admin_*.go`、`code/backend/internal/module/contest/infrastructure/scoreboard_state_store.go`
+  - 负责：由 scoreboard query/admin 继续承接排行榜读取、改分和重建的业务编排；`contest/ports.ContestScoreboardStateStore` 与 `contest/infrastructure/scoreboard_state_store.go` 统一承接 Redis sorted-set、frozen snapshot、team rank 和 rebuild 细节，`contest/runtime/module.go` 负责把同一个 state store 注入 query、command 和状态副作用 wiring
+  - 不负责：让 application scoreboard surface 继续直接知道 Redis key、`redis.Z`、`ZIncrBy`、pipeline 或 frozen snapshot copy 细节
+
+- `code/backend/internal/module/contest/application/commands/submission_*.go`、`code/backend/internal/module/contest/infrastructure/submission_rate_limit_store.go`
+  - 负责：由 submission application 继续承接错误提交限流的读取、写入和中断提交编排；`contest/ports.ContestSubmissionRateLimitStore` 与 `contest/infrastructure/submission_rate_limit_store.go` 统一承接 configured prefix、默认 prefix 回退和 Redis `Exists/Set` 细节
+  - 不负责：让 submission application 继续直接持有 Redis client，或在 application 层拼接错误提交限流 key
+
+- `code/backend/internal/module/contest/application/commands/awd_*.go`、`code/backend/internal/module/contest/application/commands/contest_awd_service_*.go`、`code/backend/internal/module/contest/infrastructure/awd_round_state_store.go`、`code/backend/internal/module/contest/infrastructure/awd_checker_preview_token_store.go`
+  - 负责：由 AWD application 继续承接 current round fallback、round flag 解析、service status 更新与 checker preview validation 编排；`contest/ports.AWDRoundStateStore` 统一承接 current round number、round flag 和 service status runtime state，`contest/ports.AWDCheckerPreviewTokenStore` 统一承接 preview token 的持久化、加载与删除
+  - 不负责：让 `AWDService` 或 `ContestAWDServiceService` 继续直接知道 Redis key、`redis.Nil`、JSON token 编码或 `Get/HGet/Set/Del` 细节
+
 - `code/backend/internal/platform/events/bus.go`
   - 负责：提供进程内事件总线给异步通知和非关键路径联动使用
   - 不负责：替代强一致性的同步模块调用，或成为跨进程消息中间件抽象

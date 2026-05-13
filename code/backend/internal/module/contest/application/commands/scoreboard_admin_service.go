@@ -1,8 +1,6 @@
 package commands
 
 import (
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/contest/application/statusmachine"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -13,12 +11,12 @@ type ScoreboardAdminService struct {
 	repo        contestports.ContestScoreboardAdminRepository
 	transition  contestCommandStatusTransitionRepository
 	sideEffects *statusmachine.SideEffectRunner
-	redis       *redislib.Client
+	stateStore  contestports.ContestScoreboardStateStore
 	cfg         *config.ContestConfig
 	eventBus    platformevents.Bus
 }
 
-func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepository, redis *redislib.Client, cfg *config.ContestConfig) *ScoreboardAdminService {
+func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepository, stateStore contestports.ContestScoreboardStateStore, cfg *config.ContestConfig) *ScoreboardAdminService {
 	var transitionRepo contestCommandStatusTransitionRepository
 	if typedRepo, ok := any(repo).(contestCommandStatusTransitionRepository); ok {
 		transitionRepo = typedRepo
@@ -27,7 +25,7 @@ func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepositor
 		repo:        repo,
 		transition:  transitionRepo,
 		sideEffects: statusmachine.NewSideEffectRunner(nil),
-		redis:       redis,
+		stateStore:  stateStore,
 		cfg:         cfg,
 	}
 }

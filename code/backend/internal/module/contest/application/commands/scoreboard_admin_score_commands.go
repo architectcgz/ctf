@@ -3,16 +3,16 @@ package commands
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *ScoreboardAdminService) UpdateScore(ctx context.Context, contestID, teamID int64, points float64) error {
-	key := rediskeys.RankContestTeamKey(contestID)
-	return s.redis.ZIncrBy(ctx, key, points, domain.TeamIDToMember(teamID)).Err()
+	if err := s.stateStore.IncrementLiveTeamScore(ctx, contestID, teamID, points); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
 }
 
 func (s *ScoreboardAdminService) RebuildScoreboard(ctx context.Context, contestID int64) error {
@@ -21,24 +21,17 @@ func (s *ScoreboardAdminService) RebuildScoreboard(ctx context.Context, contestI
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	key := rediskeys.RankContestTeamKey(contestID)
-	pipe := s.redis.TxPipeline()
-	pipe.Del(ctx, key)
-
-	entries := make([]redislib.Z, 0, len(teams))
+	entries := make([]contestports.ScoreboardTeamScoreEntry, 0, len(teams))
 	for _, team := range teams {
 		if team == nil || team.TotalScore <= 0 {
 			continue
 		}
-		entries = append(entries, redislib.Z{
+		entries = append(entries, contestports.ScoreboardTeamScoreEntry{
+			TeamID: team.ID,
 			Score:  float64(team.TotalScore),
-			Member: domain.TeamIDToMember(team.ID),
 		})
 	}
-	if len(entries) > 0 {
-		pipe.ZAdd(ctx, key, entries...)
-	}
-	if _, err := pipe.Exec(ctx); err != nil {
+	if err := s.stateStore.ReplaceLiveScoreboard(ctx, contestID, entries); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil

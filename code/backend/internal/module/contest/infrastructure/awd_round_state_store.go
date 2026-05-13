@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,6 +55,24 @@ func (s *AWDRoundStateStore) IsAWDCurrentRound(ctx context.Context, contestID in
 		return false, nil
 	}
 	return false, err
+}
+
+func (s *AWDRoundStateStore) LoadAWDCurrentRoundNumber(ctx context.Context, contestID int64) (int, bool, error) {
+	if s == nil || s.cache == nil {
+		return 0, false, nil
+	}
+	currentRound, err := s.cache.Get(ctx, rediskeys.AWDCurrentRoundKey(contestID)).Result()
+	if err == nil {
+		roundNumber, convErr := strconv.Atoi(strings.TrimSpace(currentRound))
+		if convErr != nil || roundNumber <= 0 {
+			return 0, false, nil
+		}
+		return roundNumber, true, nil
+	}
+	if errors.Is(err, redislib.Nil) {
+		return 0, false, nil
+	}
+	return 0, false, err
 }
 
 func (s *AWDRoundStateStore) LoadAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64) (string, bool, error) {
@@ -107,6 +126,18 @@ func (s *AWDRoundStateStore) ClearAWDCurrentRoundState(ctx context.Context, cont
 		return nil
 	}
 	return s.cache.Del(ctx, rediskeys.AWDCurrentRoundKey(contestID)).Err()
+}
+
+func (s *AWDRoundStateStore) SetAWDServiceStatus(ctx context.Context, contestID, teamID, serviceID int64, status string) error {
+	if s == nil || s.cache == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
+		return nil
+	}
+	return s.cache.HSet(
+		ctx,
+		rediskeys.AWDServiceStatusKey(contestID),
+		rediskeys.AWDRoundFlagServiceField(teamID, serviceID),
+		status,
+	).Err()
 }
 
 func (s *AWDRoundStateStore) ReplaceAWDServiceStatus(ctx context.Context, contestID int64, entries []contestports.AWDServiceStatusEntry) error {

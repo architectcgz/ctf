@@ -14,7 +14,7 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 
 	submission := buildContestSubmission(userID, contestID, challengeID, flag, attempt.teamID, attempt.submittedAt)
 	if !attempt.isCorrect {
-		return s.handleIncorrectSubmission(ctx, submission, attempt.rateLimitKey)
+		return s.handleIncorrectSubmission(ctx, submission)
 	}
 
 	finalScore, err := s.handleCorrectSubmission(ctx, submission, attempt.contestChallenge, attempt.teamID)

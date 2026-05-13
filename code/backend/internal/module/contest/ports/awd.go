@@ -2,10 +2,14 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
+
+var ErrAWDCheckerPreviewTokenStoreUnavailable = errors.New("awd checker preview token store unavailable")
 
 type AWDServiceCheckTxRepository interface {
 	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
@@ -210,6 +214,23 @@ type AWDCheckerPreviewContext struct {
 	RoundNumber    int
 	TeamID         int64
 	AWDChallengeID int64
+}
+
+type AWDCheckerPreviewTokenRecord struct {
+	ContestID       int64
+	ServiceID       int64
+	AWDChallengeID  int64
+	CheckerType     model.AWDCheckerType
+	CheckerConfig   string
+	CheckerTokenEnv string
+	Result          contestdomain.AWDCheckerPreviewResult
+	CreatedAt       time.Time
+}
+
+type AWDCheckerPreviewTokenStore interface {
+	StoreAWDCheckerPreviewToken(ctx context.Context, record AWDCheckerPreviewTokenRecord, ttl time.Duration) (string, error)
+	LoadAWDCheckerPreviewToken(ctx context.Context, contestID int64, token string) (*AWDCheckerPreviewTokenRecord, bool, error)
+	DeleteAWDCheckerPreviewToken(ctx context.Context, contestID int64, token string) error
 }
 
 type AWDServicePreviewRequest struct {

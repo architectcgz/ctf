@@ -26,7 +26,7 @@ func (s *AWDService) buildAttackLogResponse(
 	}
 	if err := syncAWDServiceStatusField(
 		ctx,
-		s.redis,
+		s.stateStore,
 		contestID,
 		roundID,
 		currentRoundID,

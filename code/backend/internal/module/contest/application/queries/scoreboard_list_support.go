@@ -4,34 +4,39 @@ import (
 	"context"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ScoreboardService) resolveScoreboardKey(ctx context.Context, contest *model.Contest, contestID int64, live bool, now time.Time) (bool, string, error) {
+func (s *ScoreboardService) resolveScoreboardMembers(ctx context.Context, contest *model.Contest, contestID int64, live bool, now time.Time) (bool, []contestports.ScoreboardMemberScore, error) {
 	frozen := !live && contestdomain.IsFrozenContest(contest, now)
-	key := rediskeys.RankContestTeamKey(contestID)
 	if !frozen {
-		return false, key, nil
+		results, err := s.stateStore.ListLiveScoreboard(ctx, contestID)
+		if err != nil {
+			return false, nil, errcode.ErrInternal.WithCause(err)
+		}
+		return false, results, nil
 	}
 
-	key = rediskeys.RankContestFrozenKey(contestID)
-	exists, err := s.redis.Exists(ctx, key).Result()
+	exists, err := s.stateStore.HasFrozenScoreboardSnapshot(ctx, contestID)
 	if err != nil {
-		return false, "", errcode.ErrInternal.WithCause(err)
+		return false, nil, errcode.ErrInternal.WithCause(err)
 	}
-	if exists == 0 {
-		if snapshotErr := s.createSnapshotFromLive(ctx, contestID); snapshotErr != nil {
-			return false, "", snapshotErr
+	if !exists {
+		if snapshotErr := s.stateStore.CreateFrozenScoreboardSnapshot(ctx, contestID); snapshotErr != nil {
+			return false, nil, errcode.ErrInternal.WithCause(snapshotErr)
 		}
 	}
-	return true, key, nil
+
+	results, err := s.stateStore.ListFrozenScoreboard(ctx, contestID)
+	if err != nil {
+		return false, nil, errcode.ErrInternal.WithCause(err)
+	}
+	return true, results, nil
 }
 
 func scoreboardPageBounds(page, pageSize int) (int64, int64) {
@@ -40,8 +45,8 @@ func scoreboardPageBounds(page, pageSize int) (int64, int64) {
 	return start, stop
 }
 
-func filterScoreboardResults(logger *zap.Logger, contestID int64, results []redislib.Z) ([]redislib.Z, []int64) {
-	filtered := make([]redislib.Z, 0, len(results))
+func filterScoreboardResults(logger *zap.Logger, contestID int64, results []contestports.ScoreboardMemberScore) ([]contestports.ScoreboardMemberScore, []int64) {
+	filtered := make([]contestports.ScoreboardMemberScore, 0, len(results))
 	teamIDs := make([]int64, 0, len(results))
 	for _, item := range results {
 		teamID, ok := contestdomain.ParseMemberToTeamID(item.Member)
@@ -63,7 +68,7 @@ func buildScoreboardItems(
 	logger *zap.Logger,
 	contestID int64,
 	start int64,
-	results []redislib.Z,
+	results []contestports.ScoreboardMemberScore,
 	teamIDs []int64,
 	teams []*model.Team,
 	statsMap map[int64]contestports.ScoreboardTeamStats,

@@ -133,11 +133,12 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	cache := deps.input.Cache
 	statusSideEffects := contestinfra.NewContestStatusSideEffectStore(cache)
 	statusUpdateLockStore := contestinfra.NewContestStatusUpdateLockStore(cache)
+	scoreboardStateStore := contestinfra.NewContestScoreboardStateStore(cache)
 
-	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, cache, &cfg.Contest)
+	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, scoreboardStateStore, &cfg.Contest)
 	scoreboardCommands.SetStatusSideEffectStore(statusSideEffects)
 	scoreboardCommands.SetEventBus(deps.input.Events)
-	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
+	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, scoreboardStateStore, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))
 	contestCommands.SetStatusSideEffectStore(statusSideEffects)
 	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
@@ -163,6 +164,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	db := deps.input.DB
 	scoreboardCache := contestinfra.NewScoreboardCache(db, cache)
 	awdRoundStateStore := contestinfra.NewAWDRoundStateStore(cache)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(cache)
 
 	awdUpdater := contestjobs.NewAWDRoundUpdater(
 		deps.awdRepo,
@@ -181,7 +183,8 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	awdCommands := contestcmd.NewAWDService(
 		deps.awdRepo,
 		deps.contestLookup,
-		cache,
+		awdRoundStateStore,
+		previewTokenStore,
 		cfg.Container.FlagGlobalSecret,
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
@@ -199,7 +202,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		deps.challengeRepo,
 		deps.challengeCatalog,
 		deps.awdChallengeQueryRepo,
-		deps.input.Cache,
+		previewTokenStore,
 	)
 	awdServiceQueries := contestqry.NewContestAWDServiceQueryService(deps.awdRepo, deps.contestLookup)
 
@@ -227,11 +230,12 @@ func buildTeamHandler(deps *moduleDeps) *contesthttp.TeamHandler {
 
 func buildSubmissionHandler(deps *moduleDeps, scoreboardCommands *contestcmd.ScoreboardAdminService) *contesthttp.SubmissionHandler {
 	cfg := deps.input.Config
+	rateLimitStore := contestinfra.NewContestSubmissionRateLimitStore(deps.input.Cache, cfg.RateLimit.RedisKeyPrefix)
 
 	submissionService := contestcmd.NewSubmissionService(
 		deps.contestLookup,
 		deps.submissionRepo,
-		deps.input.Cache,
+		rateLimitStore,
 		deps.flagValidator,
 		deps.teamFinder,
 		scoreboardCommands,

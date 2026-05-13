@@ -151,11 +151,14 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	awdChallengeRepo := challengeinfra.NewRepository(db)
+	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	return &awdServiceForTest{
 		commands: contestcmd.NewAWDService(
 			awdRepo,
 			contestRepo,
-			redisClient,
+			stateStore,
+			previewTokenStore,
 			flagSecret,
 			cfg,
 			zap.NewNop(),
@@ -884,7 +887,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 	contestRepo := contestinfra.NewRepository(db)
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
-	contestService := contestcmd.NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, redisClient)
+	contestService := contestcmd.NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, contestinfra.NewAWDCheckerPreviewTokenStore(redisClient))
 	created, err := contestService.CreateContestAWDService(context.Background(), contestID, contestcmd.CreateContestAWDServiceInput{
 		AWDChallengeID:         awdChallengeID,
 		Points:                 100,
@@ -1071,10 +1074,13 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	awdChallengeRepo := challengeinfra.NewRepository(db)
+	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
-		redisClient,
+		stateStore,
+		previewTokenStore,
 		"",
 		config.ContestAWDConfig{},
 		zap.NewNop(),
@@ -1190,10 +1196,13 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	awdChallengeRepo := challengeinfra.NewRepository(db)
+	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
-		redisClient,
+		stateStore,
+		previewTokenStore,
 		"",
 		config.ContestAWDConfig{},
 		zap.NewNop(),
@@ -1313,10 +1322,13 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	awdChallengeRepo := challengeinfra.NewRepository(db)
+	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
-		redisClient,
+		stateStore,
+		previewTokenStore,
 		"",
 		config.ContestAWDConfig{},
 		zap.NewNop(),
@@ -1519,10 +1531,13 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	awdChallengeRepo := challengeinfra.NewRepository(db)
+	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
-		redisClient,
+		stateStore,
+		previewTokenStore,
 		previewSecret,
 		config.ContestAWDConfig{
 			CheckerTimeout:    time.Second,
@@ -1615,10 +1630,12 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 	roundManager := &fakeAWDPreviewRoundManager{}
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(nil)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
 		nil,
+		previewTokenStore,
 		"",
 		config.ContestAWDConfig{CheckerTimeout: time.Second},
 		zap.NewNop(),
@@ -1816,7 +1833,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	assertContestRedisScore(t, redisClient, 3, 312, 9)
 	assertContestRedisScore(t, redisClient, 3, 313, 33)
 
-	scoreboardService := contestqry.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &config.ContestConfig{}, zap.NewNop())
+	scoreboardService := contestqry.NewScoreboardService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, zap.NewNop())
 	scoreboard, err := scoreboardService.GetLiveScoreboard(context.Background(), 3, 1, 10)
 	if err != nil {
 		t.Fatalf("GetLiveScoreboard() error = %v", err)

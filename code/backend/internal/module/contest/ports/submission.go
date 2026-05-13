@@ -33,3 +33,8 @@ type ContestSubmissionChallengeLookupRepository interface {
 type ContestSubmissionWriteRepository interface {
 	CreateSubmission(ctx context.Context, submission *model.Submission) error
 }
+
+type ContestSubmissionRateLimitStore interface {
+	HasIncorrectSubmissionRateLimit(ctx context.Context, userID, contestID, challengeID int64) (bool, error)
+	SetIncorrectSubmissionRateLimit(ctx context.Context, userID, contestID, challengeID int64, ttl time.Duration) error
+}

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
@@ -24,7 +23,7 @@ type ContestAWDServiceService struct {
 	contestChallengeRepo contestChallengeRelationRepository
 	challengeRepo        challengecontracts.ContestChallengeContract
 	awdChallengeRepo     challengeports.AWDChallengeQueryRepository
-	redis                *redislib.Client
+	previewTokenStore    contestports.AWDCheckerPreviewTokenStore
 }
 
 type contestChallengeRelationRepository interface {
@@ -37,7 +36,7 @@ func NewContestAWDServiceService(
 	contestChallengeRepo contestChallengeRelationRepository,
 	challengeRepo challengecontracts.ContestChallengeContract,
 	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
-	redis *redislib.Client,
+	previewTokenStore contestports.AWDCheckerPreviewTokenStore,
 ) *ContestAWDServiceService {
 	return &ContestAWDServiceService{
 		repo:                 repo,
@@ -45,7 +44,7 @@ func NewContestAWDServiceService(
 		contestChallengeRepo: contestChallengeRepo,
 		challengeRepo:        challengeRepo,
 		awdChallengeRepo:     awdChallengeRepo,
-		redis:                redis,
+		previewTokenStore:    previewTokenStore,
 	}
 }
 
@@ -91,7 +90,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	checkerTokenEnv := strings.TrimSpace(readStringFromAny(parseContestAWDServiceJSONMap(awdChallenge.RuntimeConfig)["checker_token_env"]))
 	validationState, lastPreviewAt, lastPreviewResult, err := consumeCheckerPreviewValidationState(
 		ctx,
-		s.redis,
+		s.previewTokenStore,
 		contestID,
 		0,
 		awdChallenge.ID,
@@ -230,7 +229,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 	validationState, lastPreviewAt, lastPreviewResult, validationChanged, err := buildContestAWDServiceValidationUpdate(
 		ctx,
-		s.redis,
+		s.previewTokenStore,
 		stored,
 		contestID,
 		checkerType,
@@ -308,8 +307,8 @@ func (s *ContestAWDServiceService) ensureContestChallengeRelation(ctx context.Co
 		Points:      points,
 		Order:       order,
 		IsVisible:   isVisible,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 	if err := s.contestChallengeRepo.AddChallenge(ctx, relation); err != nil {
 		return false, errcode.ErrInternal.WithCause(err)

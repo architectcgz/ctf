@@ -3,14 +3,10 @@ package commands
 import (
 	"context"
 	"errors"
-	"strconv"
-	"strings"
 
-	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,20 +31,11 @@ func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, conte
 }
 
 func (s *AWDService) findCurrentRoundFromRedis(ctx context.Context, contestID int64) (*model.AWDRound, error) {
-	if s.redis == nil {
-		return nil, nil
-	}
-
-	roundNumberStr, err := s.redis.Get(ctx, rediskeys.AWDCurrentRoundKey(contestID)).Result()
+	roundNumber, ok, err := s.stateStore.LoadAWDCurrentRoundNumber(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, redislib.Nil) {
-			return nil, nil
-		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-
-	roundNumber, convErr := strconv.Atoi(strings.TrimSpace(roundNumberStr))
-	if convErr != nil || roundNumber <= 0 {
+	if !ok {
 		return nil, nil
 	}
 

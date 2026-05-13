@@ -218,7 +218,7 @@ flowchart LR
 
 ### 阶段 5：收窄 application concrete allowlist
 
-当前状态（2026-05-13，phase 5 / slices 1-5）：
+当前状态（2026-05-13，phase 5 / slices 1-8）：
 
 - `challenge/application/queries/challenge_service.go` 里的 solved-count 缓存已通过 `challenge/ports.ChallengeSolvedCountCache` 下沉到模块内 infrastructure Redis adapter。
 - `code/backend/internal/module/architecture_allowlist_test.go` 已删除 `challenge/application/queries/challenge_service.go -> github.com/redis/go-redis/v9` 这条例外。
@@ -226,7 +226,10 @@ flowchart LR
 - `contest/application/statusmachine/side_effects.go` 现在只负责编排冻结榜快照创建、解冻快照清理和比赛结束缓存清理，具体 Redis key / client 细节已通过 `contest/ports.ContestStatusSideEffectStore` 下沉到模块内 infrastructure adapter。
 - `contest/application/commands/contest_service.go` 不再为状态迁移副作用链持有 Redis client；`contest/application/jobs/status_updater.go` 的状态调度锁也已通过 `contest/ports.ContestStatusUpdateLockStore` 下沉到 infrastructure adapter，application/jobs 只保留持锁编排与 keepalive 语义。
 - `contest/application/jobs/AWDRoundUpdater` 当前通过 `contest/ports.AWDRoundStateStore` 与 `contest/infrastructure/awd_round_state_store.go` 承接 scheduler lock、round lock、current round pointer、round flags 和 live service status cache；application/jobs 不再直接知道 Redis key、`redis.Nil`、pipeline 或 `redislock.Acquire(...)`。
-- `scoreboard_admin_service`、`scoreboard_service`、`AWDService` 等其他 contest Redis 依赖仍在 phase 5 后续范围内，本轮没有顺手扩成更大切片。
+- `contest/application/queries/scoreboard_service.go` 与 `contest/application/commands/scoreboard_admin_service.go` 现在通过 `contest/ports.ContestScoreboardStateStore` 读取和更新排行榜状态；`contest/infrastructure/scoreboard_state_store.go` 统一承接 live/frozen scoreboard 列表、frozen snapshot create/clear、team rank、分数增量和全量 rebuild 的 Redis sorted-set 细节，`contest/runtime/module.go` 也不再把 Redis client 直接注回 scoreboard application surface。
+- `contest/application/commands/submission_service.go` 现在通过 `contest/ports.ContestSubmissionRateLimitStore` 读取和写入错误提交限流状态；`contest/infrastructure/submission_rate_limit_store.go` 统一承接 configured prefix、默认 prefix 回退和 Redis `Exists/Set` 细节，`contest/runtime/module.go` 也不再把 Redis client 直接注回 submission application surface。
+- `AWDService` 与 `contest_awd_service_service` 现在通过 `contest/ports.AWDRoundStateStore` 和 `contest/ports.AWDCheckerPreviewTokenStore` 读取 current round / round flag / service status runtime state，并承接 checker preview token 的存取；`contest/infrastructure/awd_round_state_store.go` 与 `contest/infrastructure/awd_checker_preview_token_store.go` 统一落地 Redis 细节，`contest/runtime/module.go` 也不再把 Redis client 直接注回 AWD application surface。
+- 当前 `contest` application surface 的 Redis concrete allowlist 已收口完成；phase 5 后续如果继续推进，重点转到 `practice`、`challenge` 等其他模块。
 
 目标：
 

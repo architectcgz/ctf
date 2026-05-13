@@ -2,14 +2,21 @@ package commands
 
 import (
 	"context"
+	"fmt"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *model.Submission, rateLimitKey string) (*dto.SubmissionResp, error) {
-	if err := s.redis.Set(ctx, rateLimitKey, "1", s.cfg.Contest.SubmissionRateLimitTTL).Err(); err != nil {
+func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *model.Submission) (*dto.SubmissionResp, error) {
+	if submission == nil || submission.ContestID == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("contest submission is incomplete"))
+	}
+	if s.rateLimitStore == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("contest submission rate limit store is nil"))
+	}
+	if err := s.rateLimitStore.SetIncorrectSubmissionRateLimit(ctx, submission.UserID, *submission.ContestID, submission.ChallengeID, s.cfg.Contest.SubmissionRateLimitTTL); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if err := s.repo.CreateSubmission(ctx, submission); err != nil {

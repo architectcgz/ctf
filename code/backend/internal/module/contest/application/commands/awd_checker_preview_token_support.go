@@ -2,48 +2,35 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	redislib "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
 
-type storedAWDCheckerPreviewToken struct {
-	ContestID       int64                                 `json:"contest_id"`
-	ServiceID       int64                                 `json:"service_id"`
-	AWDChallengeID  int64                                 `json:"awd_challenge_id"`
-	CheckerType     model.AWDCheckerType                  `json:"checker_type"`
-	CheckerConfig   string                                `json:"checker_config"`
-	CheckerTokenEnv string                                `json:"checker_token_env,omitempty"`
-	Result          contestdomain.AWDCheckerPreviewResult `json:"result"`
-	CreatedAt       time.Time                             `json:"created_at"`
-}
-
 func storeAWDCheckerPreviewToken(
 	ctx context.Context,
-	redisClient *redislib.Client,
+	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	result *dto.AWDCheckerPreviewResp,
 ) (string, error) {
-	if redisClient == nil || result == nil {
+	if result == nil {
 		return "", nil
 	}
+	if store == nil {
+		return "", contestports.ErrAWDCheckerPreviewTokenStoreUnavailable
+	}
 
-	token := uuid.NewString()
-	record := storedAWDCheckerPreviewToken{
+	record := contestports.AWDCheckerPreviewTokenRecord{
 		ContestID:       contestID,
 		ServiceID:       serviceID,
 		AWDChallengeID:  awdChallengeID,
@@ -53,29 +40,22 @@ func storeAWDCheckerPreviewToken(
 		Result:          *awdPreviewResultMapper.ToDomainPtr(result),
 		CreatedAt:       time.Now().UTC(),
 	}
-	raw, err := json.Marshal(record)
-	if err != nil {
-		return "", err
-	}
-	if err := redisClient.Set(ctx, rediskeys.AWDCheckerPreviewTokenKey(contestID, token), raw, awdCheckerPreviewTokenTTL).Err(); err != nil {
-		return "", err
-	}
-	return token, nil
+	return store.StoreAWDCheckerPreviewToken(ctx, record, awdCheckerPreviewTokenTTL)
 }
 
 func consumeCheckerPreviewValidationState(
 	ctx context.Context,
-	redisClient *redislib.Client,
+	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	previewToken string,
 ) (model.AWDCheckerValidationState, *time.Time, string, error) {
-	if strings.TrimSpace(previewToken) != "" && redisClient == nil {
+	if strings.TrimSpace(previewToken) != "" && store == nil {
 		return model.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
 	}
-	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv, previewToken)
+	record, err := consumeAWDCheckerPreviewToken(ctx, store, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv, previewToken)
 	if err != nil {
 		return model.AWDCheckerValidationStatePending, nil, "", err
 	}
@@ -103,56 +83,59 @@ func consumeCheckerPreviewValidationState(
 
 func consumeAWDCheckerPreviewToken(
 	ctx context.Context,
-	redisClient *redislib.Client,
+	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	previewToken string,
-) (*storedAWDCheckerPreviewToken, error) {
-	if redisClient == nil || strings.TrimSpace(previewToken) == "" {
+) (*contestports.AWDCheckerPreviewTokenRecord, error) {
+	if store == nil || strings.TrimSpace(previewToken) == "" {
 		return nil, nil
 	}
-
-	key := rediskeys.AWDCheckerPreviewTokenKey(contestID, previewToken)
-	raw, err := redisClient.Get(ctx, key).Result()
+	record, found, err := store.LoadAWDCheckerPreviewToken(ctx, contestID, previewToken)
 	if err != nil {
-		if err == redislib.Nil {
-			return nil, nil
+		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
+			return nil, errcode.ErrAWDCheckerPreviewUnavailable
 		}
 		return nil, err
 	}
-
-	var record storedAWDCheckerPreviewToken
-	if err := json.Unmarshal([]byte(raw), &record); err != nil {
-		return nil, err
-	}
-	if !record.matches(contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv) {
+	if !found || record == nil {
 		return nil, nil
 	}
-	if err := redisClient.Del(ctx, key).Err(); err != nil {
+	if !matchesAWDCheckerPreviewTokenRecord(record, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv) {
+		return nil, nil
+	}
+	if err := store.DeleteAWDCheckerPreviewToken(ctx, contestID, previewToken); err != nil {
+		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
+			return nil, errcode.ErrAWDCheckerPreviewUnavailable
+		}
 		return nil, err
 	}
-	return &record, nil
+	return record, nil
 }
 
-func (r storedAWDCheckerPreviewToken) matches(
+func matchesAWDCheckerPreviewTokenRecord(
+	record *contestports.AWDCheckerPreviewTokenRecord,
 	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 ) bool {
-	if r.ContestID != contestID ||
-		r.CheckerType != checkerType ||
-		r.CheckerConfig != checkerConfig ||
-		strings.TrimSpace(r.CheckerTokenEnv) != strings.TrimSpace(checkerTokenEnv) {
+	if record == nil {
 		return false
 	}
-	if serviceID > 0 || r.ServiceID > 0 {
-		return r.ServiceID == serviceID && r.AWDChallengeID == awdChallengeID
+	if record.ContestID != contestID ||
+		record.CheckerType != checkerType ||
+		record.CheckerConfig != checkerConfig ||
+		strings.TrimSpace(record.CheckerTokenEnv) != strings.TrimSpace(checkerTokenEnv) {
+		return false
 	}
-	return r.ContestID == contestID &&
-		r.ServiceID == serviceID &&
-		r.AWDChallengeID == awdChallengeID &&
-		r.ServiceID == 0
+	if serviceID > 0 || record.ServiceID > 0 {
+		return record.ServiceID == serviceID && record.AWDChallengeID == awdChallengeID
+	}
+	return record.ContestID == contestID &&
+		record.ServiceID == serviceID &&
+		record.AWDChallengeID == awdChallengeID &&
+		record.ServiceID == 0
 }
