@@ -415,7 +415,7 @@ func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinit
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 154}, &model.AWDRound{ID: 15401, ContestID: 154, RoundNumber: 1}, awdCheckSourceManualCurrent); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -609,7 +609,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 103}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -707,7 +707,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -794,7 +794,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "http-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 141}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -902,7 +902,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "service-first-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 144}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -1081,7 +1081,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "http-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 142}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -1172,7 +1172,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "http-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 143}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -1242,7 +1242,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 105}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -1321,7 +1321,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 108}, &model.AWDRound{ID: 10801, ContestID: 108, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -1408,7 +1408,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 109}, &model.AWDRound{ID: 10902, ContestID: 109, RoundNumber: 2}, awdCheckSourceManualCurrent); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -1481,7 +1481,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 110}, &model.AWDRound{ID: 11001, ContestID: 110, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -1557,7 +1557,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(healthyServer.Client())
+	setAWDHTTPRuntimeForTest(updater, healthyServer.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 107}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
@@ -1744,7 +1744,7 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.SetHTTPClient(server.Client())
+	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
 	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 106}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)

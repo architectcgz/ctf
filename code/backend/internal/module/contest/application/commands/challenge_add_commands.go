@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -18,7 +17,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 
 	challenge, err := s.challengeRepo.FindByID(ctx, req.ChallengeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestChallengeEntityNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

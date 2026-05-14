@@ -68,7 +68,9 @@ type moduleDeps struct {
 	participationLookup   *contestinfra.ParticipationRegistrationRepository
 	submissionLookup      *contestinfra.SubmissionRegistrationRepository
 	challengeCatalog      challengecontracts.ContestChallengeContract
+	challengeCatalogCmd   challengecontracts.ContestChallengeContract
 	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
+	awdChallengeQueryCmd  challengeports.AWDChallengeQueryRepository
 	previewChallengeRepo  challengeports.AWDChallengeQueryRepository
 	imageRepo             challengecontracts.ImageStore
 	previewImageRepo      challengecontracts.ImageStore
@@ -115,6 +117,8 @@ func newModuleDeps(deps Deps) *moduleDeps {
 	submissionLookup := contestinfra.NewSubmissionRegistrationRepository(submissionRepo)
 	previewRuntimeChallengeLookup := contestinfra.NewAWDPreviewRuntimeChallengeRepository(deps.AWDChallengeQueryRepo)
 	previewRuntimeImageLookup := contestinfra.NewAWDPreviewRuntimeImageRepository(deps.ImageRepo)
+	challengeCatalogCmd := contestinfra.NewContestChallengeLookupAdapter(deps.ChallengeCatalog)
+	awdChallengeQueryCmd := contestinfra.NewContestAWDChallengeLookupAdapter(deps.AWDChallengeQueryRepo)
 
 	return &moduleDeps{
 		input:                 deps,
@@ -134,7 +138,9 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		participationLookup:   participationLookup,
 		submissionLookup:      submissionLookup,
 		challengeCatalog:      deps.ChallengeCatalog,
+		challengeCatalogCmd:   challengeCatalogCmd,
 		awdChallengeQueryRepo: deps.AWDChallengeQueryRepo,
+		awdChallengeQueryCmd:  awdChallengeQueryCmd,
 		previewChallengeRepo:  previewRuntimeChallengeLookup,
 		imageRepo:             deps.ImageRepo,
 		previewImageRepo:      previewRuntimeImageLookup,
@@ -182,9 +188,10 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	scoreboardCache := contestinfra.NewScoreboardCache(db, cache)
 	awdRoundStateStore := contestinfra.NewAWDRoundStateStore(cache)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(cache)
+	awdJobRepo := contestinfra.NewAWDJobRepository(deps.awdRepo)
 
 	awdUpdater := contestjobs.NewAWDRoundUpdater(
-		deps.awdRepo,
+		awdJobRepo,
 		awdRoundStateStore,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
@@ -192,20 +199,23 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		log.Named("awd_round_updater"),
 		scoreboardCache,
 	)
+	awdUpdater.SetHTTPRuntime(contestinfra.NewAWDHTTPRuntimeAdapter(nil, cfg.Contest.AWD.CheckerTimeout))
 	if checkerRunner, err := contestinfra.NewDockerCheckerRunner(cfg.Contest.AWD.CheckerSandbox); err == nil {
 		awdUpdater.SetCheckerRunner(checkerRunner)
 	} else {
 		log.Named("awd_round_updater").Warn("checker_sandbox_runner_unavailable", zap.Error(err))
 	}
+	awdCommandRepo := contestinfra.NewAWDCommandRepository(deps.awdRepo)
+	awdCommandRoundManager := contestinfra.NewAWDRoundManagerAdapter(awdUpdater)
 	awdCommands := contestcmd.NewAWDService(
-		deps.awdRepo,
+		awdCommandRepo,
 		deps.contestLookup,
 		awdRoundStateStore,
 		previewTokenStore,
 		cfg.Container.FlagGlobalSecret,
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
-		awdUpdater,
+		awdCommandRoundManager,
 		deps.previewImageRepo,
 		deps.previewChallengeRepo,
 		deps.runtimeProbe,
@@ -214,11 +224,11 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	awdCommands.SetEventBus(deps.input.Events)
 	awdQueries := contestqry.NewAWDService(deps.awdQuery, deps.contestLookup)
 	awdServiceCommands := contestcmd.NewContestAWDServiceService(
-		deps.awdRepo,
+		awdCommandRepo,
 		deps.contestLookup,
 		deps.challengeRepo,
-		deps.challengeCatalog,
-		deps.awdChallengeQueryRepo,
+		deps.challengeCatalogCmd,
+		deps.awdChallengeQueryCmd,
 		previewTokenStore,
 	)
 	awdServiceQueries := contestqry.NewContestAWDServiceQueryService(deps.awdRepo, deps.contestLookup)
@@ -227,7 +237,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 }
 
 func buildChallengeHandler(deps *moduleDeps) *contesthttp.ChallengeHandler {
-	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.awdRepo)
+	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalogCmd, deps.contestLookup, deps.awdRepo)
 	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.awdRepo)
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }

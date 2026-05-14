@@ -237,7 +237,8 @@ func buildImageBuildService(deps moduleDeps) *challengecmd.ImageBuildService {
 }
 
 func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) *challengehttp.AWDChallengeHandler {
-	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.input.DB, deps.awdChallengeCommandRepo, imageBuildService)
+	importService := challengecmd.NewAWDChallengeImportService(deps.input.DB, deps.awdChallengeCommandRepo, imageBuildService)
+	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.awdChallengeCommandRepo, importService)
 	commandService.SetImportLogger(deps.input.Logger.Named("awd_challenge_import_service"))
 	queryService := challengeqry.NewAWDChallengeQueryService(deps.awdChallengeQueryRepo)
 	return challengehttp.NewAWDChallengeHandler(commandService, queryService)

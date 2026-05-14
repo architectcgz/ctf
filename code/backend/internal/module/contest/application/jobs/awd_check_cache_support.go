@@ -3,9 +3,9 @@ package jobs
 import (
 	"context"
 	"errors"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, contestID int64, round *model.AWDRound) (bool, error) {
@@ -15,7 +15,7 @@ func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, 
 
 	currentRound, err := u.repo.FindRunningRound(ctx, contestID)
 	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
 			return false, err
 		}
 		return u.stateStore.IsAWDCurrentRound(ctx, contestID, round.RoundNumber)

@@ -6,10 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,7 +34,7 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 
 	previousRound, err := s.findRoundByNumber(ctx, contestID, round.RoundNumber-1)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
 			return flags, nil
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

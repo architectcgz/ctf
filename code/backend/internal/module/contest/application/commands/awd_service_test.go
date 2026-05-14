@@ -152,8 +152,20 @@ func newAWDPreviewRuntimeLookupsForTest(db *gorm.DB) (challengecontracts.ImageSt
 		contestinfra.NewAWDPreviewRuntimeChallengeRepository(challengeinfra.NewRepository(db))
 }
 
+func newAWDCommandRepositoryForTest(db *gorm.DB) *contestinfra.AWDCommandRepository {
+	return contestinfra.NewAWDCommandRepository(contestinfra.NewAWDRepository(db))
+}
+
+func newAWDQueryRepositoryForTest(db *gorm.DB) *contestinfra.AWDQueryRepository {
+	return contestinfra.NewAWDQueryRepository(contestinfra.NewAWDRepository(db))
+}
+
+func newAWDCommandRoundManagerForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) contestports.AWDRoundManager {
+	return contestinfra.NewAWDRoundManagerAdapter(newAWDRoundUpdaterForTest(db, redisClient, cfg, flagSecret, injector, log))
+}
+
 func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret string, cfg config.ContestAWDConfig) *awdServiceForTest {
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
@@ -167,13 +179,13 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 			flagSecret,
 			cfg,
 			zap.NewNop(),
-			newAWDRoundUpdaterForTest(db, redisClient, cfg, flagSecret, nil, zap.NewNop()),
+			newAWDCommandRoundManagerForTest(db, redisClient, cfg, flagSecret, nil, zap.NewNop()),
 			imageRepo,
 			awdChallengeRepo,
 			nil,
 			contestinfra.NewScoreboardCache(db, redisClient),
 		),
-		queries: contestqry.NewAWDService(awdRepo, contestRepo),
+		queries: contestqry.NewAWDService(newAWDQueryRepositoryForTest(db), contestRepo),
 	}
 }
 
@@ -1075,7 +1087,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 		},
 	}
 
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
@@ -1196,7 +1208,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 		return nil
 	})
 
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
@@ -1321,7 +1333,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 		},
 	}
 
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
@@ -1529,7 +1541,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 			Containers: []model.InstanceRuntimeContainer{{ContainerID: "preview-container"}},
 		},
 	}
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
@@ -1545,7 +1557,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 			CheckerHealthPath: "/healthz",
 		},
 		zap.NewNop(),
-		newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
+		newAWDCommandRoundManagerForTest(db, redisClient, config.ContestAWDConfig{
 			CheckerTimeout:    time.Second,
 			CheckerHealthPath: "/healthz",
 		}, previewSecret, nil, zap.NewNop()),
@@ -1629,7 +1641,7 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 	}
 
 	roundManager := &fakeAWDPreviewRoundManager{}
-	awdRepo := contestinfra.NewAWDRepository(db)
+	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(nil)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)

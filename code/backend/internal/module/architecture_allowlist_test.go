@@ -1,29 +1,11 @@
 package module
 
 var allowedApplicationConcreteImports = map[string]struct{}{
-	"challenge/application/commands/awd_challenge_command_facade.go -> gorm.io/gorm":              {},
 	"challenge/application/commands/awd_challenge_import_service.go -> gorm.io/gorm":              {},
 	"challenge/application/commands/challenge_import_service.go -> gorm.io/gorm":                  {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":        {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm/clause": {},
 	"challenge/application/commands/image_build_service.go -> gorm.io/gorm":                       {},
-	"contest/application/commands/awd_attack_log_commands.go -> gorm.io/gorm":                     {},
-	"contest/application/commands/awd_current_round_active_support.go -> gorm.io/gorm":            {},
-	"contest/application/commands/awd_current_round_fallback_support.go -> gorm.io/gorm":          {},
-	"contest/application/commands/awd_flag_support.go -> gorm.io/gorm":                            {},
-	"contest/application/commands/awd_resource_validation_support.go -> gorm.io/gorm":             {},
-	"contest/application/commands/awd_team_validation_support.go -> gorm.io/gorm":                 {},
-	"contest/application/commands/awd_validation_support.go -> gorm.io/gorm":                      {},
-	"contest/application/commands/challenge_add_commands.go -> gorm.io/gorm":                      {},
-	"contest/application/commands/contest_awd_service_service.go -> gorm.io/gorm":                 {},
-	"contest/application/jobs/awd_check_cache_support.go -> gorm.io/gorm":                         {},
-	"contest/application/jobs/awd_http_checker_request.go -> net/http":                            {},
-	"contest/application/jobs/awd_http_target_client.go -> net/http":                              {},
-	"contest/application/jobs/awd_probe_runtime.go -> net/http":                                   {},
-	"contest/application/jobs/awd_round_flag_lookup_support.go -> gorm.io/gorm":                   {},
-	"contest/application/jobs/awd_round_runtime.go -> gorm.io/gorm":                               {},
-	"contest/application/jobs/awd_round_runtime_bridge.go -> net/http":                            {},
-	"contest/application/jobs/awd_round_updater.go -> net/http":                                   {},
 }
 
 var allowedCrossModulePrivateImports = map[string]struct{}{

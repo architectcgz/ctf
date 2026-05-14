@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *model.Contest, now time.Time) {
@@ -62,7 +62,7 @@ func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *model.
 func (u *AWDRoundUpdater) EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
 	activeRound, totalRounds, ok := u.calculateRoundPlan(contest, now)
 	if !ok || activeRound <= 0 {
-		return gorm.ErrRecordNotFound
+		return contestports.ErrContestAWDRoundNotFound
 	}
 	if err := u.reconcileRounds(ctx, contest, activeRound, totalRounds); err != nil {
 		return err
