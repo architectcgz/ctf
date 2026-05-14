@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -22,17 +21,6 @@ type Repository struct {
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
-}
-
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
-	if err := r.db.WithContext(ctx).First(&user, userID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("find user by id: %w", err)
-	}
-	return &user, nil
 }
 
 func (r *Repository) CountStudentsByClass(ctx context.Context, className string) (int64, error) {

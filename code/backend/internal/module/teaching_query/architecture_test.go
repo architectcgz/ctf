@@ -124,6 +124,7 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
+		"users queryports.TeachingUserLookupRepository",
 		"queryports.TeachingClassInsightRepository",
 		"recommendations assessmentcontracts.RecommendationProvider",
 		"buildQueryService(",

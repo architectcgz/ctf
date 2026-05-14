@@ -15,11 +15,11 @@ import (
 )
 
 type classInsightQueryRepository interface {
-	classAccessRepository
 	queryports.TeachingClassInsightRepository
 }
 
 type ClassInsightQueryService struct {
+	users                 queryports.TeachingUserLookupRepository
 	repo                  classInsightQueryRepository
 	recommendationService assessmentcontracts.RecommendationProvider
 	logger                *zap.Logger
@@ -28,6 +28,7 @@ type ClassInsightQueryService struct {
 var _ ClassInsightService = (*ClassInsightQueryService)(nil)
 
 func NewClassInsightService(
+	users queryports.TeachingUserLookupRepository,
 	repo classInsightQueryRepository,
 	recommendationService assessmentcontracts.RecommendationProvider,
 	logger *zap.Logger,
@@ -36,6 +37,7 @@ func NewClassInsightService(
 		logger = zap.NewNop()
 	}
 	return &ClassInsightQueryService{
+		users:                 users,
 		repo:                  repo,
 		recommendationService: recommendationService,
 		logger:                logger,
@@ -47,7 +49,7 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
 	}
-	if err := ensureClassAccess(ctx, s.repo, requesterID, requesterRole, normalized); err != nil {
+	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
 	}
 
@@ -63,7 +65,7 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
 	}
-	if err := ensureClassAccess(ctx, s.repo, requesterID, requesterRole, normalized); err != nil {
+	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +83,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
 	}
-	if err := ensureClassAccess(ctx, s.repo, requesterID, requesterRole, normalized); err != nil {
+	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
 	}
 

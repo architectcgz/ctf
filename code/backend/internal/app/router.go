@@ -149,7 +149,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
-	teachingQueryModule := buildTeachingQueryModule(root, assessmentModule)
+	teachingQueryModule := buildTeachingQueryModule(root, assessmentModule, identityModule)
 	contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 	contestRealtimeHandler := contesthttp.NewRealtimeHandler(
 		tokenService,

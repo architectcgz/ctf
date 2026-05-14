@@ -512,12 +512,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "assessment")
 		return originalBuildAssessmentModule(root, challenge)
 	}
-	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingQueryModule {
-		if root == nil || assessment == nil {
-			t.Fatal("expected root and assessment for teaching query module builder")
+	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule, identity *composition.IdentityModule) *composition.TeachingQueryModule {
+		if root == nil || assessment == nil || identity == nil {
+			t.Fatal("expected root, assessment and identity for teaching query module builder")
 		}
 		calls = append(calls, "teaching_query")
-		return originalBuildTeachingQueryModule(root, assessment)
+		return originalBuildTeachingQueryModule(root, assessment, identity)
 	}
 	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.ContainerRuntimeModule) *composition.ContestModule {
 		if root == nil || challenge == nil || runtime == nil {

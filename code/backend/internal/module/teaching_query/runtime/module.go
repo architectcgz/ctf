@@ -20,13 +20,14 @@ type Deps struct {
 	Config          *config.Config
 	Logger          *zap.Logger
 	DB              *gorm.DB
+	Users           queryports.TeachingUserLookupRepository
 	Recommendations assessmentcontracts.RecommendationProvider
 }
 
 type moduleDeps struct {
 	input Deps
+	users queryports.TeachingUserLookupRepository
 	repo  interface {
-		queryports.TeachingUserLookupRepository
 		queryports.TeachingClassQueryRepository
 		queryports.TeachingStudentDirectoryRepository
 		queryports.TeachingStudentProfileRepository
@@ -54,6 +55,7 @@ func Build(deps Deps) *Module {
 func newModuleDeps(deps Deps) moduleDeps {
 	return moduleDeps{
 		input:           deps,
+		users:           deps.Users,
 		repo:            queryinfra.NewRepository(deps.DB),
 		recommendations: deps.Recommendations,
 	}
@@ -62,17 +64,19 @@ func newModuleDeps(deps Deps) moduleDeps {
 func buildQueryService(deps moduleDeps) teachingqueries.Service {
 	cfg := deps.input.Config
 	return teachingqueries.NewQueryService(
+		deps.users,
 		deps.repo,
 		cfg.Pagination,
 	)
 }
 
 func buildOverviewService(deps moduleDeps) teachingqueries.OverviewService {
-	return teachingqueries.NewOverviewService(deps.repo)
+	return teachingqueries.NewOverviewService(deps.users, deps.repo)
 }
 
 func buildClassInsightService(deps moduleDeps) teachingqueries.ClassInsightService {
 	return teachingqueries.NewClassInsightService(
+		deps.users,
 		deps.repo,
 		deps.recommendations,
 		deps.input.Logger.Named("teaching_query_class_insight_service"),
@@ -81,6 +85,7 @@ func buildClassInsightService(deps moduleDeps) teachingqueries.ClassInsightServi
 
 func buildStudentReviewService(deps moduleDeps) teachingqueries.StudentReviewService {
 	return teachingqueries.NewStudentReviewService(
+		deps.users,
 		deps.repo,
 		deps.recommendations,
 	)

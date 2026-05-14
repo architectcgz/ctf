@@ -23,6 +23,8 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -79,6 +81,21 @@ type userSeed struct {
 	ClassName string
 	StudentNo string
 	TeacherNo string
+}
+
+type teachingQueryUserLookupAdapter struct {
+	users identitycontracts.UserLookupRepository
+}
+
+func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+	user, err := a.users.FindByID(ctx, userID)
+	if errors.Is(err, identitycontracts.ErrUserNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 type challengeRef struct {
@@ -391,12 +408,15 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		zap.NewNop(),
 	)
 	queryRepo := queryinfra.NewRepository(db)
+	userLookupRepo := teachingQueryUserLookupAdapter{users: identityinfra.NewRepository(db)}
 	classInsightService := teachingqueries.NewClassInsightService(
+		userLookupRepo,
 		queryRepo,
 		recommendationService,
 		zap.NewNop(),
 	)
 	studentReviewService := teachingqueries.NewStudentReviewService(
+		userLookupRepo,
 		queryRepo,
 		recommendationService,
 	)

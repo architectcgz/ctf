@@ -1061,6 +1061,7 @@ func TestTeachingQueryModuleUsesTypedDeps(t *testing.T) {
 		"type TeachingQueryModule = teachingqueryruntime.Module",
 		"teachingqueryruntime.Build(",
 		"teachingqueryruntime.Deps{",
+		"Users:           teachingQueryUserLookupAdapter{users: identity.Users},",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

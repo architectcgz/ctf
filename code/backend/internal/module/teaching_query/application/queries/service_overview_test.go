@@ -210,7 +210,7 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 		},
 	}
 
-	service := NewOverviewService(repo)
+	service := NewOverviewService(repo, repo)
 
 	overview, err := service.GetOverview(context.Background(), 11, model.RoleTeacher)
 	if err != nil {
@@ -255,7 +255,7 @@ func TestOverviewQueryServiceGetOverviewWithoutAccessibleClassReturnsEmptyScope(
 		},
 	}
 
-	service := NewOverviewService(repo)
+	service := NewOverviewService(repo, repo)
 
 	overview, err := service.GetOverview(context.Background(), 22, model.RoleTeacher)
 	if err != nil {

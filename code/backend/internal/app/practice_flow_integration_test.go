@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -36,6 +37,7 @@ import (
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
@@ -79,6 +81,21 @@ type flowLoginResponse struct {
 		Username string `json:"username"`
 		Role     string `json:"role"`
 	} `json:"user"`
+}
+
+type teachingQueryIdentityLookupAdapter struct {
+	users identitycontracts.UserLookupRepository
+}
+
+func (a teachingQueryIdentityLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+	user, err := a.users.FindByID(ctx, userID)
+	if errors.Is(err, identitycontracts.ErrUserNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 type flowChallengeResponse struct {
@@ -936,10 +953,11 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService, practiceProgressTimelineService)
 	teachingQueryRepo := teachingqueryinfra.NewRepository(db)
-	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryRepo, cfg.Pagination)
-	teachingQueryOverviewService := teachingqueryqueries.NewOverviewService(teachingQueryRepo)
-	teachingQueryClassInsightService := teachingqueryqueries.NewClassInsightService(teachingQueryRepo, nil, logger)
-	teachingQueryStudentReviewService := teachingqueryqueries.NewStudentReviewService(teachingQueryRepo, nil)
+	teachingQueryUsers := teachingQueryIdentityLookupAdapter{users: authRepo}
+	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryUsers, teachingQueryRepo, cfg.Pagination)
+	teachingQueryOverviewService := teachingqueryqueries.NewOverviewService(teachingQueryUsers, teachingQueryRepo)
+	teachingQueryClassInsightService := teachingqueryqueries.NewClassInsightService(teachingQueryUsers, teachingQueryRepo, nil, logger)
+	teachingQueryStudentReviewService := teachingqueryqueries.NewStudentReviewService(teachingQueryUsers, teachingQueryRepo, nil)
 	teachingQueryHandler := teachingqueryhttp.NewHandler(
 		teachingQueryService,
 		teachingQueryOverviewService,

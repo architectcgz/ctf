@@ -17,12 +17,12 @@ import (
 )
 
 type studentReviewQueryRepository interface {
-	classAccessRepository
 	queryports.TeachingStudentProfileRepository
 	queryports.TeachingStudentActivityRepository
 }
 
 type StudentReviewQueryService struct {
+	users                 queryports.TeachingUserLookupRepository
 	repo                  studentReviewQueryRepository
 	recommendationService assessmentcontracts.RecommendationProvider
 }
@@ -30,17 +30,19 @@ type StudentReviewQueryService struct {
 var _ StudentReviewService = (*StudentReviewQueryService)(nil)
 
 func NewStudentReviewService(
+	users queryports.TeachingUserLookupRepository,
 	repo studentReviewQueryRepository,
 	recommendationService assessmentcontracts.RecommendationProvider,
 ) *StudentReviewQueryService {
 	return &StudentReviewQueryService{
+		users:                 users,
 		repo:                  repo,
 		recommendationService: recommendationService,
 	}
 }
 
 func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.TeacherProgressResp, error) {
-	student, err := getAccessibleStudent(ctx, s.repo, requesterID, requesterRole, studentID)
+	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +76,7 @@ func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requ
 }
 
 func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*dto.TeacherRecommendationResp, error) {
-	student, err := getAccessibleStudent(ctx, s.repo, requesterID, requesterRole, studentID)
+	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +102,7 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 }
 
 func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error) {
-	student, err := getAccessibleStudent(ctx, s.repo, requesterID, requesterRole, studentID)
+	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +116,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 }
 
 func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
-	student, err := getAccessibleStudent(ctx, s.repo, requesterID, requesterRole, studentID)
+	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +163,7 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 }
 
 func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherAttackSessionQuery) (*dto.TeacherAttackSessionResp, error) {
-	student, err := getAccessibleStudent(ctx, s.repo, requesterID, requesterRole, studentID)
+	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}

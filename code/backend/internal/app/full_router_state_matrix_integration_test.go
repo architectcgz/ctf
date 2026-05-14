@@ -45,8 +45,8 @@ func TestTeacherRoutesAreServedByTeachingQuery(t *testing.T) {
 	})
 
 	called := false
-	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingQueryModule {
-		module := originalBuildTeachingQueryModule(root, assessment)
+	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule, identity *composition.IdentityModule) *composition.TeachingQueryModule {
+		module := originalBuildTeachingQueryModule(root, assessment, identity)
 		called = true
 		if module == nil || module.Handler == nil {
 			t.Fatal("expected teaching query module handler")

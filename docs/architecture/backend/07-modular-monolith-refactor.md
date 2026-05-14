@@ -38,7 +38,7 @@
   - 不负责：承载实例业务规则实现，或把 runtime adapter 便利方法反向塞回 instance owner contract
 
 - `code/backend/internal/module/practice`、`code/backend/internal/module/teaching_query`
-  - 负责：`practice` 负责训练 owner 与用户态 progress / timeline query；`teaching_query` 承担教师视角、班级洞察和复盘场景的查询聚合，把跨 owner 只读拼装集中到查询聚合边界
+  - 负责：`practice` 负责训练 owner 与用户态 progress / timeline query；`teaching_query` 承担教师视角、班级洞察和复盘场景的查询聚合，把跨 owner 只读拼装集中到查询聚合边界，并在 app 层复用 `identity` 暴露的基础用户 lookup
   - 不负责：把只读取 practice 自有事实的 query 再拆成独立查询模块，或拥有练习、竞赛、题目、评估的写侧状态
 
 - `code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`
@@ -229,6 +229,7 @@ flowchart TB
     API --> Teaching
 
     Auth --> Identity
+    Teaching -->|basic user lookup| Identity
     Challenge --> Runtime
     Instance --> Runtime
     Practice --> Instance
@@ -325,7 +326,7 @@ flowchart TB
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
 | `assessment` | 业务 owner | 评估任务、技能画像、报告导出、评估归档 | 画像查询、报告导出、归档能力 |
 | `ops` | 业务 owner / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台支撑 | 审计服务、通知 handler、运行时统计查询 |
-| `teaching_query` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | 教师端查询 handler 与 query service |
+| `teaching_query` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | 教师端查询 handler 与 query service；通过 app 层复用 `identity` 基础用户 lookup |
 
 补充说明：
 
@@ -441,6 +442,7 @@ flowchart LR
     end
 
     Identity -->|users / profile services| Auth
+    Identity -->|basic user lookup| Teaching
     Ops -.audit recorder 注入.-> Auth
     Auth -.token service 注入.-> Ops
 
@@ -521,12 +523,12 @@ flowchart LR
 | `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
 | `runtime` | `challenge`、`contest`、`ops`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops 暴露 consumer-side ports，对 instance 复用 ticket / metrics shape；practice-facing glue 已上移到 `composition.InstanceModule` |
-| `teaching_query` | `assessment` | `assessment/contracts` | 当前只直接复用 `assessment.RecommendationProvider`；overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
+| `teaching_query` | `assessment` | `assessment/contracts` | 当前直接 import 只落在 `assessment.RecommendationProvider`；基础用户 lookup 通过 app/composition 注入 `identity.Users` 适配器复用，因此不形成 `teaching_query -> identity` 的物理模块 import。overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
 
 补充说明：
 
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已在 2026-05-12 phase 4 / slice 1 并回 `practice/application/queries` 与 `practice/api/http`，因为它们只读取 practice 自有事实，不再保留独立 `practice_readmodel` 模块。
-- `teaching_query` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中 `GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
+- `teaching_query` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中基础用户存在性与班级归属校验已改为复用 `identity.Users`，`GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
 - `runtime -> instance` 这条代码级依赖当前主要落在 `runtime/ports/http.go`、`runtime/ports/metrics.go` 对 `instance/ports` shape 的复用，以及测试继续校验旧能力是否已迁到 `instance` owner。
 - `runtime -> practice` 这条代码级依赖已在 2026-05-12 phase 2 / slice 14 删除；`PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `runtimeinfra.Repository`、`RuntimeCleanupService`、`ProvisioningService` 和显式 capability fields 后暴露给 `practice`。
 - `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis。`contest/application/jobs/status_updater.go` 的调度锁则通过 `contest/ports.ContestStatusUpdateLockStore` 配合 `contest/infrastructure/status_update_lock_store.go` 落到 Redis；`contest/application/jobs/AWDRoundUpdater` 的 scheduler lock、round lock、current round、round flags 和 live service status cache 则通过 `contest/ports.AWDRoundStateStore` 配合 `contest/infrastructure/awd_round_state_store.go` 落到 Redis。

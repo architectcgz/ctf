@@ -14,12 +14,12 @@ import (
 )
 
 type QueryService struct {
+	users      queryports.TeachingUserLookupRepository
 	repo       teachingQueryRepository
 	pagination config.PaginationConfig
 }
 
 type teachingQueryRepository interface {
-	queryports.TeachingUserLookupRepository
 	queryports.TeachingClassQueryRepository
 	queryports.TeachingStudentDirectoryRepository
 }
@@ -27,10 +27,12 @@ type teachingQueryRepository interface {
 var _ Service = (*QueryService)(nil)
 
 func NewQueryService(
+	users queryports.TeachingUserLookupRepository,
 	repo teachingQueryRepository,
 	pagination config.PaginationConfig,
 ) *QueryService {
 	return &QueryService{
+		users:      users,
 		repo:       repo,
 		pagination: pagination,
 	}
@@ -44,7 +46,7 @@ func (s *QueryService) ListClasses(
 ) ([]dto.TeacherClassItem, int64, int, int, error) {
 	page, size := s.normalizeClassPagination(query)
 
-	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	requester, err := s.users.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
@@ -122,7 +124,7 @@ func (s *QueryService) ListStudents(
 	var requester *model.User
 	if requesterRole != model.RoleAdmin {
 		var err error
-		requester, err = s.repo.FindUserByID(ctx, requesterID)
+		requester, err = s.users.FindUserByID(ctx, requesterID)
 		if err != nil {
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
@@ -198,7 +200,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
 	}
 
-	if err := ensureClassAccess(ctx, s.repo, requesterID, requesterRole, normalized); err != nil {
+	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
 	}
 

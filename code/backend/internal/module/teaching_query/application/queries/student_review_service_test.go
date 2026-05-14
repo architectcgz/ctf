@@ -109,7 +109,7 @@ func TestStudentReviewQueryServiceGetStudentProgressUsesAccessibleStudent(t *tes
 		},
 	}
 
-	service := NewStudentReviewService(repo, nil)
+	service := NewStudentReviewService(repo, repo, nil)
 
 	progress, err := service.GetStudentProgress(context.Background(), 11, model.RoleTeacher, 101)
 	if err != nil {
@@ -157,7 +157,7 @@ func TestStudentReviewQueryServiceGetStudentRecommendationsMapsResult(t *testing
 		},
 	}
 
-	service := NewStudentReviewService(repo, recommendations)
+	service := NewStudentReviewService(repo, repo, recommendations)
 
 	resp, err := service.GetStudentRecommendations(context.Background(), 11, model.RoleTeacher, 101, 3)
 	if err != nil {
@@ -198,7 +198,7 @@ func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testi
 		},
 	}
 
-	service := NewStudentReviewService(repo, nil)
+	service := NewStudentReviewService(repo, repo, nil)
 
 	resp, err := service.GetStudentAttackSessions(context.Background(), 11, model.RoleTeacher, 101, &dto.TeacherAttackSessionQuery{
 		WithEvents: &withEvents,

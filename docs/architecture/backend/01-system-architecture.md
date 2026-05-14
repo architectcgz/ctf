@@ -15,7 +15,7 @@
   - 不负责：跨模块直接依赖对方 `infrastructure`，也不在 `api` 层写业务规则
 
 - `code/backend/internal/module/practice`、`code/backend/internal/module/teaching_query`
-  - 负责：`practice` 负责训练写路径以及用户态 `GET /api/v1/users/me/progress`、`GET /api/v1/users/me/timeline` 查询；`teaching_query` 负责教师视角、班级洞察和复盘场景的跨 owner 查询聚合
+  - 负责：`practice` 负责训练写路径以及用户态 `GET /api/v1/users/me/progress`、`GET /api/v1/users/me/timeline` 查询；`teaching_query` 负责教师视角、班级洞察和复盘场景的跨 owner 查询聚合，并在 app 层复用 `identity` 暴露的基础用户 lookup
   - 不负责：把只读取 practice 自有事实的用户态查询继续拆成独立查询模块，或作为业务 owner 模块修改练习、竞赛、评估等业务状态
 
 - `code/backend/internal/module/runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
@@ -178,6 +178,7 @@ flowchart TD
     CR -->|container files / probe| Contest
 
     Identity -->|users / profile services| Auth
+    Identity -->|basic user lookup| Teaching
     Ops -.audit recorder 注入.-> Auth
     Auth -.token service 注入.-> Ops
 
@@ -223,6 +224,7 @@ flowchart LR
     end
 
     Identity -->|users / profile services| Auth
+    Identity -->|basic user lookup| Teaching
     Ops -.audit capability.-> Auth
     Auth -.token service.-> Ops
 
@@ -256,7 +258,7 @@ flowchart LR
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`（装配），`auth`、`runtime`（代码）；公告、榜单刷新和 AWD 预览进度通过 `contest` 事件交给 `ops` relay |
 | `assessment` | 业务 owner | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
 | `ops` | 业务 owner / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`challenge`、`contest`、`practice`（代码）；其中 challenge / practice 通知与 contest realtime relay 都由事件消费者处理 |
-| `teaching_query` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | `assessment`（装配 + 代码），其余聚合查询由本模块 repository 完成 |
+| `teaching_query` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | `identity`（装配注入基础用户 lookup）、`assessment`（装配 + 代码），其余聚合查询由本模块 repository 完成 |
 
 边界说明：
 
@@ -583,7 +585,7 @@ identityModule, err := buildIdentityModule(root)
 authModule, err := buildAuthModule(root, opsModule, identityModule)
 challengeModule, err := buildChallengeModule(root, containerRuntimeModule, opsModule)
 assessmentModule := buildAssessmentModule(root, challengeModule)
-teachingReadmodelModule := buildTeachingQueryModule(root, assessmentModule)
+teachingQueryModule := buildTeachingQueryModule(root, assessmentModule, identityModule)
 contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
 instanceModule.BuildHandler(root, opsModule)

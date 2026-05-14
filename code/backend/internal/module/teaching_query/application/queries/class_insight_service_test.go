@@ -76,7 +76,7 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 		},
 	}
 
-	service := NewClassInsightService(repo, nil, nil)
+	service := NewClassInsightService(repo, repo, nil, nil)
 
 	summary, err := service.GetClassSummary(context.Background(), 11, model.RoleTeacher, "Class A")
 	if err != nil {
@@ -190,7 +190,7 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 		},
 	}
 
-	service := NewClassInsightService(repo, recommendations, nil)
+	service := NewClassInsightService(repo, repo, recommendations, nil)
 
 	review, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A")
 	if err != nil {

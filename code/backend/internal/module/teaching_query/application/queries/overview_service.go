@@ -14,7 +14,6 @@ import (
 )
 
 type overviewQueryRepository interface {
-	queryports.TeachingUserLookupRepository
 	queryports.TeachingClassQueryRepository
 	queryports.TeachingStudentDirectoryRepository
 	queryports.TeachingClassInsightRepository
@@ -22,13 +21,20 @@ type overviewQueryRepository interface {
 }
 
 type OverviewQueryService struct {
-	repo overviewQueryRepository
+	users queryports.TeachingUserLookupRepository
+	repo  overviewQueryRepository
 }
 
 var _ OverviewService = (*OverviewQueryService)(nil)
 
-func NewOverviewService(repo overviewQueryRepository) *OverviewQueryService {
-	return &OverviewQueryService{repo: repo}
+func NewOverviewService(
+	users queryports.TeachingUserLookupRepository,
+	repo overviewQueryRepository,
+) *OverviewQueryService {
+	return &OverviewQueryService{
+		users: users,
+		repo:  repo,
+	}
 }
 
 func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*dto.TeacherOverviewResp, error) {
@@ -102,7 +108,7 @@ func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, req
 		return items, nil
 	}
 
-	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	requester, err := s.users.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
