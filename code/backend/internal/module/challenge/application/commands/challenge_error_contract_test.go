@@ -16,7 +16,6 @@ func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t
 	t.Parallel()
 
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{},
 		&challengeCommandImageRepoStub{
 			findByIDFn: func(context.Context, int64) (*model.Image, error) {
@@ -40,7 +39,6 @@ func TestChallengeServiceUpdateChallengeTreatsModuleChallengeNotFoundAsErrChalle
 	t.Parallel()
 
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return nil, challengeports.ErrChallengeCommandChallengeNotFound
@@ -65,7 +63,6 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 
 	updated := false
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return &model.Challenge{
@@ -105,7 +102,6 @@ func TestChallengeServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoAc
 	t.Parallel()
 
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: 9, Status: model.ChallengeStatusDraft}, nil
@@ -141,7 +137,6 @@ func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFo
 	t.Parallel()
 
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
@@ -168,7 +163,6 @@ func TestChallengeServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrCha
 	t.Parallel()
 
 	service := NewChallengeService(
-		nil,
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return nil, challengeports.ErrChallengeCommandChallengeNotFound

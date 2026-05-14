@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -37,18 +36,17 @@ type storedAWDChallengeImportPreview struct {
 }
 
 type AWDChallengeImportService struct {
-	db         *gorm.DB
 	repo       challengeports.AWDChallengeCommandRepository
+	txRunner   challengeports.AWDChallengeImportTxRunner
 	imageBuild *ImageBuildService
 	logger     *zap.Logger
 }
 
 func NewAWDChallengeImportService(
-	db *gorm.DB,
 	repo challengeports.AWDChallengeCommandRepository,
 	imageBuild ...*ImageBuildService,
 ) *AWDChallengeImportService {
-	service := &AWDChallengeImportService{db: db, repo: repo, logger: zap.NewNop()}
+	service := &AWDChallengeImportService{repo: repo, logger: zap.NewNop()}
 	if len(imageBuild) > 0 {
 		service.imageBuild = imageBuild[0]
 	}
@@ -59,6 +57,14 @@ func (s *AWDChallengeImportService) SetLogger(logger *zap.Logger) {
 	if s != nil && logger != nil {
 		s.logger = logger
 	}
+}
+
+func (s *AWDChallengeImportService) SetTxRunner(runner challengeports.AWDChallengeImportTxRunner) *AWDChallengeImportService {
+	if s == nil {
+		return nil
+	}
+	s.txRunner = runner
+	return s
 }
 
 func (s *AWDChallengeImportService) PreviewImport(
@@ -97,7 +103,7 @@ func (s *AWDChallengeImportService) PreviewImport(
 		return nil, err
 	}
 
-	preview := s.buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now())
+	preview := s.buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now().UTC())
 	record := storedAWDChallengeImportPreview{
 		ID:        previewID,
 		FileName:  fileName,
@@ -180,12 +186,15 @@ func (s *AWDChallengeImportService) CommitImport(
 	}
 
 	var challenge *model.AWDChallenge
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := rejectImportedAWDChallengeSlugConflict(tx, parsed.Slug); err != nil {
+	if s.txRunner == nil {
+		return nil, fmt.Errorf("awd challenge import tx runner is not configured")
+	}
+	if err := s.txRunner.WithinAWDChallengeImportTransaction(ctx, func(store challengeports.AWDChallengeImportTxStore) error {
+		if err := store.RejectImportedAWDChallengeSlugConflict(ctx, parsed.Slug); err != nil {
 			return err
 		}
 
-		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, tx, actorUserID, parsed, buildSource)
+		resolvedImageID, resolvedImageRef, err := s.resolveAWDImportedImageForCommit(ctx, store, actorUserID, parsed, buildSource)
 		if err != nil {
 			return err
 		}
@@ -198,7 +207,7 @@ func (s *AWDChallengeImportService) CommitImport(
 			runtimeConfig["image_id"] = resolvedImageID
 		}
 
-		now := time.Now()
+		now := time.Now().UTC()
 		var current model.AWDChallenge
 		checkerConfigWithArtifact, err := persistAWDCheckerArtifact(parsed)
 		if err != nil {
@@ -242,7 +251,7 @@ func (s *AWDChallengeImportService) CommitImport(
 			CreatedAt:        now,
 			UpdatedAt:        now,
 		}
-		if err := tx.Create(&current).Error; err != nil {
+		if err := store.CreateImportedAWDChallenge(ctx, &current); err != nil {
 			return fmt.Errorf("create imported awd challenge %s: %w", parsed.Slug, err)
 		}
 
@@ -316,7 +325,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 
 func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	ctx context.Context,
-	tx *gorm.DB,
+	store challengeports.AWDChallengeImportTxStore,
 	actorUserID int64,
 	parsed *domain.ParsedAWDChallengePackage,
 	buildSource *importedImageBuildSource,
@@ -332,15 +341,18 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 			warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
 			return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 		}
-		result, err := imageBuild.VerifyExternalImageRefInTx(ctx, newImageBuildTxStore(tx), parsed.Slug, parsed.RuntimeImageRef)
+		result, err := store.ResolveExternalImage(ctx, parsed.Slug, parsed.RuntimeImageRef)
+		if err != nil {
+			return 0, "", err
+		}
+		return result.ImageID, result.ImageRef, nil
+	}
+	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
+		result, err := store.ResolveExistingImageRef(ctx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
 			return 0, "", err
 		}
 		return result.ImageID, parsed.RuntimeImageRef, nil
-	}
-	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
-		imageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
-		return imageID, parsed.RuntimeImageRef, err
 	}
 	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
 		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
@@ -354,7 +366,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, newImageBuildTxStore(tx), CreatePlatformBuildJobRequest{
+	result, err := store.ResolvePlatformBuildImage(ctx, challengeports.ImportedPlatformBuildImageRequest{
 		ChallengeMode:  domain.ChallengePackageModeAWD,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
@@ -366,29 +378,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	if err != nil {
 		return 0, "", err
 	}
-	return result.ImageID, result.TargetRef, nil
-}
-
-func rejectImportedAWDChallengeSlugConflict(tx *gorm.DB, slug string) error {
-	normalizedSlug := strings.TrimSpace(slug)
-	if normalizedSlug == "" {
-		return nil
-	}
-
-	var existing model.AWDChallenge
-	err := tx.Unscoped().
-		Select("id", "slug", "name").
-		Where("slug = ?", normalizedSlug).
-		First(&existing).Error
-	switch {
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		return nil
-	case err != nil:
-		return fmt.Errorf("check imported awd challenge slug %s: %w", normalizedSlug, err)
-	default:
-		message := fmt.Sprintf("AWD 题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", normalizedSlug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
-	}
+	return result.ImageID, result.ImageRef, nil
 }
 
 func marshalAWDChallengeConfig(value map[string]any) (string, error) {

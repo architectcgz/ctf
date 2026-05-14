@@ -33,6 +33,7 @@ import (
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
@@ -861,11 +862,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	challengeCommandService := challengecmd.NewChallengeService(
-		db,
 		challengeinfra.NewChallengeCommandRepository(challengeRepo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		challengeinfra.NewTopologyServiceRepository(challengeRepo),
-		challengeRepo,
+		challengeinfra.NewTopologyPackageRevisionRepository(challengeRepo),
 		nil,
 		challengecmd.SelfCheckConfig{
 			RuntimeCreateTimeout: cfg.Container.CreateTimeout,
@@ -873,6 +873,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		},
 		logger,
 	)
+	challengeCommandService.SetChallengeImportTxRunner(challengeruntime.NewChallengeImportTxRunner(challengeRepo, nil))
+	challengeCommandService.SetChallengePackageExportTxRunner(challengeruntime.NewChallengePackageExportTxRunner(challengeRepo))
 	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, challengeinfra.NewSolvedCountCache(cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)

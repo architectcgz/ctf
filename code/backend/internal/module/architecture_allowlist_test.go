@@ -1,11 +1,6 @@
 package module
 
-var allowedApplicationConcreteImports = map[string]struct{}{
-	"challenge/application/commands/awd_challenge_import_service.go -> gorm.io/gorm":              {},
-	"challenge/application/commands/challenge_import_service.go -> gorm.io/gorm":                  {},
-	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":        {},
-	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm/clause": {},
-}
+var allowedApplicationConcreteImports = map[string]struct{}{}
 
 var allowedCrossModulePrivateImports = map[string]struct{}{
 	"contest/infrastructure/docker_checker_runner.go -> ctf-platform/internal/module/runtime/domain":                {},
@@ -71,20 +66,17 @@ var allowedModuleDependencies = map[string]struct{}{
 }
 
 var allowedTransactionFiles = map[string]struct{}{
-	"challenge/application/commands/awd_challenge_import_service.go":       {},
-	"challenge/application/commands/challenge_import_service.go":           {},
-	"challenge/application/commands/challenge_package_revision_service.go": {},
-	"challenge/infrastructure/repository.go":                               {},
-	"challenge/infrastructure/tag_repository.go":                           {},
-	"contest/infrastructure/awd_repository.go":                             {},
-	"contest/infrastructure/contest_status_update_repository.go":           {},
-	"contest/infrastructure/submission_repository.go":                      {},
-	"contest/infrastructure/team_membership_lifecycle_repository.go":       {},
-	"contest/infrastructure/team_membership_repository.go":                 {},
-	"identity/infrastructure/repository.go":                                {},
-	"ops/infrastructure/notification_repository.go":                        {},
-	"practice/infrastructure/repository.go":                                {},
-	"runtime/infrastructure/repository.go":                                 {},
+	"challenge/infrastructure/repository.go":                         {},
+	"challenge/infrastructure/tag_repository.go":                     {},
+	"contest/infrastructure/awd_repository.go":                       {},
+	"contest/infrastructure/contest_status_update_repository.go":     {},
+	"contest/infrastructure/submission_repository.go":                {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go": {},
+	"contest/infrastructure/team_membership_repository.go":           {},
+	"identity/infrastructure/repository.go":                          {},
+	"ops/infrastructure/notification_repository.go":                  {},
+	"practice/infrastructure/repository.go":                          {},
+	"runtime/infrastructure/repository.go":                           {},
 }
 
 var allowedOversizedRuntimeModules = map[string]struct{}{

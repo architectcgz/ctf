@@ -27,7 +27,11 @@ func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repos
 		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
 	)
-	return NewAWDChallengeImportService(db, repo, imageBuildService)
+	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService {
+		return service.imageBuild
+	}))
+	return service
 }
 
 func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
@@ -103,7 +107,8 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewAWDChallengeImportService(db, repo, imageBuildService)
+	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -135,7 +140,8 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 func TestAWDChallengeImportPreviewWarnsWhenPlatformBuildServiceUnavailable(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := NewAWDChallengeImportService(repo)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -172,7 +178,8 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewAWDChallengeImportService(db, repo, imageBuildService)
+	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -235,7 +242,8 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenPlatformBuildServiceMissing(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := NewAWDChallengeImportService(repo)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
@@ -261,7 +269,8 @@ func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenPlatformBuildServi
 func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenExternalImageVerificationServiceMissing(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(db, repo)
+	service := NewAWDChallengeImportService(repo)
+	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)

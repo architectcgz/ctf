@@ -21,7 +21,6 @@ import (
 
 func newTestService(repo challengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
 	return NewChallengeService(
-		nil,
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		nil,
@@ -39,16 +38,20 @@ func newDBBackedChallengeService(
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
 	cfg SelfCheckConfig,
 ) *ChallengeService {
-	return NewChallengeService(
-		db,
+	service := NewChallengeService(
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		challengeinfra.NewTopologyServiceRepository(repo),
-		repo,
+		challengeinfra.NewTopologyPackageRevisionRepository(repo),
 		runtimeProbe,
 		cfg,
 		zap.NewNop(),
 	)
+	service.SetChallengeImportTxRunner(newTestChallengeImportTxRunner(repo, func() *ImageBuildService {
+		return service.imageBuild
+	}))
+	service.SetChallengePackageExportTxRunner(newTestChallengePackageExportTxRunner(repo))
+	return service
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {

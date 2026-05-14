@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -24,7 +22,8 @@ import (
 )
 
 func (s *ChallengeService) createImportedPackageRevision(
-	tx *gorm.DB,
+	ctx context.Context,
+	store challengeports.ChallengeImportTxStore,
 	actorUserID int64,
 	challenge *model.Challenge,
 	record storedChallengeImportPreview,
@@ -34,7 +33,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("缺少题目或题包信息"))
 	}
 
-	revisionNo, err := nextChallengePackageRevisionNo(tx, challenge.ID)
+	revisionNo, err := store.NextChallengePackageRevisionNo(ctx, challenge.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +52,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 		}
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	revision := &model.ChallengePackageRevision{
 		ChallengeID:        challenge.ID,
 		RevisionNo:         revisionNo,
@@ -68,7 +67,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	}
-	if err := tx.Create(revision).Error; err != nil {
+	if err := store.CreateImportedPackageRevision(ctx, revision); err != nil {
 		return nil, err
 	}
 	return revision, nil
@@ -81,18 +80,21 @@ func (s *ChallengeService) ExportChallengePackage(
 ) (*dto.ChallengePackageExportResp, error) {
 	var response *dto.ChallengePackageExportResp
 	cleanupPaths := make([]string, 0, 2)
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		challenge, err := findChallengeByIDTx(tx, challengeID)
+	if s.packageExportTxRunner == nil {
+		return nil, fmt.Errorf("challenge package export tx runner is not configured")
+	}
+	if err := s.packageExportTxRunner.WithinChallengePackageExportTransaction(ctx, func(store challengeports.ChallengePackageExportTxStore) error {
+		challenge, err := store.FindChallenge(ctx, challengeID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 				return errcode.ErrChallengeNotFound
 			}
 			return err
 		}
 
-		topology, err := findChallengeTopologyByChallengeIDTx(tx, challengeID)
+		topology, err := store.FindTopology(ctx, challengeID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, challengeports.ErrChallengeTopologyNotFound) {
 				return errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
 			}
 			return err
@@ -101,9 +103,9 @@ func (s *ChallengeService) ExportChallengePackage(
 			return errcode.ErrConflict.WithCause(errors.New("当前题目没有可导出的题包基线"))
 		}
 
-		baseRevision, err := findChallengePackageRevisionByIDTx(tx, *topology.PackageRevisionID)
+		baseRevision, err := store.FindPackageRevisionByID(ctx, *topology.PackageRevisionID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
 				return errcode.ErrConflict.WithCause(errors.New("题包基线修订不存在"))
 			}
 			return err
@@ -112,7 +114,7 @@ func (s *ChallengeService) ExportChallengePackage(
 			return errcode.ErrConflict.WithCause(errors.New("题包基线源码目录缺失"))
 		}
 
-		revisionNo, err := nextChallengePackageRevisionNo(tx, challengeID)
+		revisionNo, err := store.NextPackageRevisionNo(ctx, challengeID)
 		if err != nil {
 			return err
 		}
@@ -123,15 +125,15 @@ func (s *ChallengeService) ExportChallengePackage(
 		}
 		cleanupPaths = append(cleanupPaths, sourceDir)
 
-		hints, err := listChallengeHints(tx, challengeID)
+		hints, err := store.ListChallengeHints(ctx, challengeID)
 		if err != nil {
 			return err
 		}
-		manifestRaw, err := rewriteChallengeManifestSnapshot(tx, sourceDir, challenge, topology, hints, baseRevision)
+		manifestRaw, err := rewriteChallengeManifestSnapshot(ctx, store, sourceDir, challenge, topology, hints, baseRevision)
 		if err != nil {
 			return err
 		}
-		topologyRaw, err := rewriteChallengeTopologySnapshot(tx, sourceDir, topology, baseRevision)
+		topologyRaw, err := rewriteChallengeTopologySnapshot(ctx, store, sourceDir, topology, baseRevision)
 		if err != nil {
 			return err
 		}
@@ -143,7 +145,7 @@ func (s *ChallengeService) ExportChallengePackage(
 		}
 		cleanupPaths = append(cleanupPaths, archivePath)
 
-		now := time.Now()
+		now := time.Now().UTC()
 		parentRevisionID := baseRevision.ID
 		revision := &model.ChallengePackageRevision{
 			ChallengeID:        challengeID,
@@ -160,20 +162,12 @@ func (s *ChallengeService) ExportChallengePackage(
 			CreatedAt:          now,
 			UpdatedAt:          now,
 		}
-		if err := tx.Create(revision).Error; err != nil {
+		if err := store.CreateExportRevision(ctx, revision); err != nil {
 			return err
 		}
 
 		revisionID := revision.ID
-		if err := tx.Model(&model.ChallengeTopology{}).
-			Where("id = ?", topology.ID).
-			Updates(map[string]any{
-				"package_revision_id":     revisionID,
-				"package_baseline_spec":   topology.Spec,
-				"sync_status":             model.ChallengeTopologySyncStatusClean,
-				"last_export_revision_id": revisionID,
-				"updated_at":              now,
-			}).Error; err != nil {
+		if err := store.MarkTopologyExported(ctx, topology.ID, revisionID, topology.Spec, now); err != nil {
 			return err
 		}
 
@@ -204,7 +198,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
 	}
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
+		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
@@ -215,7 +209,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 	if revisionID != nil && *revisionID > 0 {
 		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *revisionID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))
 			}
 			return nil, err
@@ -226,7 +220,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 	} else {
 		topology, findErr := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 		if findErr != nil {
-			if errors.Is(findErr, gorm.ErrRecordNotFound) || errors.Is(findErr, challengeports.ErrChallengeTopologyNotFound) {
+			if errors.Is(findErr, challengeports.ErrChallengeTopologyNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
 			}
 			return nil, findErr
@@ -240,7 +234,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		}
 		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *selectedRevisionID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))
 			}
 			return nil, err
@@ -263,64 +257,9 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 	return resp, nil
 }
 
-func nextChallengePackageRevisionNo(tx *gorm.DB, challengeID int64) (int, error) {
-	var latest model.ChallengePackageRevision
-	err := tx.Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
-	switch {
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		return 1, nil
-	case err != nil:
-		return 0, err
-	default:
-		return latest.RevisionNo + 1, nil
-	}
-}
-
-func findChallengeByIDTx(tx *gorm.DB, challengeID int64) (*model.Challenge, error) {
-	var challenge model.Challenge
-	if err := tx.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
-		return nil, err
-	}
-	return &challenge, nil
-}
-
-func findChallengeTopologyByChallengeIDTx(tx *gorm.DB, challengeID int64) (*model.ChallengeTopology, error) {
-	var topology model.ChallengeTopology
-	if err := tx.Where("challenge_id = ?", challengeID).First(&topology).Error; err != nil {
-		return nil, err
-	}
-	return &topology, nil
-}
-
-func findChallengePackageRevisionByIDTx(tx *gorm.DB, revisionID int64) (*model.ChallengePackageRevision, error) {
-	var revision model.ChallengePackageRevision
-	if err := tx.Where("id = ?", revisionID).First(&revision).Error; err != nil {
-		return nil, err
-	}
-	return &revision, nil
-}
-
-func upsertChallengeTopologyTx(tx *gorm.DB, topology *model.ChallengeTopology) error {
-	return tx.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "challenge_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"template_id",
-			"entry_node_key",
-			"spec",
-			"source_type",
-			"source_path",
-			"package_revision_id",
-			"package_baseline_spec",
-			"sync_status",
-			"last_export_revision_id",
-			"updated_at",
-			"deleted_at",
-		}),
-	}).Create(topology).Error
-}
-
 func rewriteChallengeManifestSnapshot(
-	tx *gorm.DB,
+	ctx context.Context,
+	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	challenge *model.Challenge,
 	topology *model.ChallengeTopology,
@@ -356,7 +295,7 @@ func rewriteChallengeManifestSnapshot(
 		manifest.Flag.Value = ""
 	}
 	if challenge.ImageID > 0 {
-		ref, err := findImageRefByID(tx, challenge.ImageID)
+		ref, err := store.FindImageRefByID(ctx, challenge.ImageID)
 		if err != nil {
 			return "", err
 		}
@@ -407,7 +346,8 @@ func rewriteChallengeManifestSnapshot(
 }
 
 func rewriteChallengeTopologySnapshot(
-	tx *gorm.DB,
+	ctx context.Context,
+	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	topology *model.ChallengeTopology,
 	revision *model.ChallengePackageRevision,
@@ -451,7 +391,7 @@ func rewriteChallengeTopologySnapshot(
 	for _, node := range spec.Nodes {
 		image := baselineNodeImages[node.Key]
 		if node.ImageID > 0 {
-			ref, err := findImageRefByID(tx, node.ImageID)
+			ref, err := store.FindImageRefByID(ctx, node.ImageID)
 			if err != nil {
 				return "", err
 			}
@@ -546,31 +486,6 @@ func resolveRevisionTopologySourcePath(topology *model.ChallengeTopology, revisi
 		return strings.TrimSpace(revision.TopologySourcePath)
 	}
 	return "docker/topology.yml"
-}
-
-func listChallengeHints(tx *gorm.DB, challengeID int64) ([]model.ChallengeHint, error) {
-	var hints []model.ChallengeHint
-	if err := tx.Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error; err != nil {
-		return nil, err
-	}
-	return hints, nil
-}
-
-func findImageRefByID(tx *gorm.DB, imageID int64) (string, error) {
-	var image model.Image
-	if err := tx.Where("id = ?", imageID).First(&image).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
-		}
-		return "", err
-	}
-	if strings.TrimSpace(image.Name) == "" {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("镜像记录缺少名称"))
-	}
-	if strings.TrimSpace(image.Tag) == "" || strings.TrimSpace(image.Tag) == "latest" {
-		return strings.TrimSpace(image.Name), nil
-	}
-	return fmt.Sprintf("%s:%s", strings.TrimSpace(image.Name), strings.TrimSpace(image.Tag)), nil
 }
 
 func copyDirectoryTree(sourceDir string, targetDir string) error {

@@ -205,7 +205,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
 		},
 	}
-	service := NewChallengeService(nil, repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.CreateChallenge(ctx, 1001, CreateChallengeInput{
@@ -278,7 +278,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 			return &model.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: rawSpec}, nil
 		},
 	}
-	service := NewChallengeService(nil, repo, imageRepo, topologyRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, imageRepo, topologyRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
@@ -322,7 +322,7 @@ func TestChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing
 			return nil
 		},
 	}
-	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.DeleteChallenge(ctx, 12); err != nil {
@@ -393,7 +393,7 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 			return nil
 		},
 	}
-	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
@@ -433,7 +433,7 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 			return &model.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: model.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
 		},
 	}
-	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.GetLatestPublishCheck(ctx, 9)
@@ -502,7 +502,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 			return nil
 		},
 	}
-	service := NewChallengeService(nil, repo, imageRepo, topologyRepo, nil, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
+	service := NewChallengeService(repo, imageRepo, topologyRepo, nil, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.SelfCheckChallenge(ctx, 9)
@@ -544,7 +544,7 @@ func TestChallengeServicePublishChallengePropagatesContextToRepository(t *testin
 			return nil
 		},
 	}
-	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.PublishChallenge(ctx, 15); err != nil {
@@ -606,7 +606,7 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}
-	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, topologyRepo, nil, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, topologyRepo, nil, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	service.processPublishCheckJob(ctx, 51)

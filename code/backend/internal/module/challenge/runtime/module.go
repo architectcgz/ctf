@@ -57,6 +57,7 @@ type moduleDeps struct {
 	input      Deps
 	catalog    challengecontracts.ChallengeContract
 	imageStore challengecontracts.ImageStore
+	rawRepo    *challengeinfra.Repository
 	// imageRepo               challengeports.ImageRepository
 	imageRepo interface {
 		challengeports.ImageCommandRepository
@@ -190,6 +191,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		input:                   deps,
 		catalog:                 challengeRepo,
 		imageStore:              imageRepo,
+		rawRepo:                 challengeRepo,
 		imageRepo:               imageRepo,
 		challengeCommandRepo:    challengeRepo,
 		challengeQueryRepo:      challengeRepo,
@@ -237,7 +239,8 @@ func buildImageBuildService(deps moduleDeps) *challengecmd.ImageBuildService {
 }
 
 func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) *challengehttp.AWDChallengeHandler {
-	importService := challengecmd.NewAWDChallengeImportService(deps.input.DB, deps.awdChallengeCommandRepo, imageBuildService)
+	importService := challengecmd.NewAWDChallengeImportService(deps.awdChallengeCommandRepo, imageBuildService)
+	importService.SetTxRunner(NewAWDChallengeImportTxRunner(deps.rawRepo, imageBuildService))
 	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.awdChallengeCommandRepo, importService)
 	commandService.SetImportLogger(deps.input.Logger.Named("awd_challenge_import_service"))
 	queryService := challengeqry.NewAWDChallengeQueryService(deps.awdChallengeQueryRepo)
@@ -263,11 +266,10 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	challengeCommandImageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
 	challengeCommandTopologyRepo := challengeinfra.NewTopologyServiceRepository(deps.topologyRepo)
 	challengeCommandService := challengecmd.NewChallengeService(
-		deps.input.DB,
 		challengeCommandRepo,
 		challengeCommandImageRepo,
 		challengeCommandTopologyRepo,
-		deps.challengeCommandRepo,
+		challengeinfra.NewTopologyPackageRevisionRepository(deps.challengeCommandRepo),
 		deps.runtimeProbe,
 		challengecmd.SelfCheckConfig{
 			RuntimeCreateTimeout:     cfg.Container.CreateTimeout,
@@ -277,6 +279,8 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 		},
 		deps.input.Logger.Named("challenge_command_service"),
 	)
+	challengeCommandService.SetChallengeImportTxRunner(NewChallengeImportTxRunner(deps.rawRepo, imageBuildService))
+	challengeCommandService.SetChallengePackageExportTxRunner(NewChallengePackageExportTxRunner(deps.rawRepo))
 	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeCommandService.SetEventBus(deps.input.Events)
 	challengeQueryRepo := challengeinfra.NewChallengeQueryRepository(deps.challengeQueryRepo)

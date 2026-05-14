@@ -48,9 +48,19 @@ refactor_existing
 - `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_package_revision_service.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_service_test.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_service_context_test.go`
+- `code/backend/internal/module/challenge/application/commands/challenge_error_contract_test.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service_test.go`
+- `code/backend/internal/module/challenge/application/commands/tx_runner_test.go`
 - `code/backend/internal/module/challenge/ports/ports.go`
+- `code/backend/internal/module/challenge/infrastructure/repository.go`
 - `code/backend/internal/module/challenge/runtime/module.go`
+- `code/backend/internal/app/challenge_import_integration_test.go`
+- `code/backend/internal/app/practice_flow_integration_test.go`
 - `code/backend/internal/module/architecture_allowlist_test.go`
+- `docs/architecture/backend/07-modular-monolith-refactor.md`
+- `docs/reviews/backend/2026-05-14-challenge-phase5-tx-runner-remaining-review.md`
 - `docs/plan/impl-plan/2026-05-14-challenge-tx-runner-phase5-remaining-implementation-plan.md`
 
 ## Candidate new files

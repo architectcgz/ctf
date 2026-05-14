@@ -186,6 +186,70 @@ type ChallengePackageRevisionRepository interface {
 	ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error)
 }
 
+type ImportedPlatformBuildImageRequest struct {
+	ChallengeMode  string
+	PackageSlug    string
+	SuggestedTag   string
+	SourceDir      string
+	DockerfilePath string
+	ContextPath    string
+	CreatedBy      int64
+}
+
+type ImportedImageResolution struct {
+	ImageID  int64
+	ImageRef string
+}
+
+type ChallengeImportedImageTxStore interface {
+	ResolvePlatformBuildImage(ctx context.Context, req ImportedPlatformBuildImageRequest) (*ImportedImageResolution, error)
+	ResolveExternalImage(ctx context.Context, packageSlug string, imageRef string) (*ImportedImageResolution, error)
+	ResolveExistingImageRef(ctx context.Context, packageSlug string, imageRef string) (*ImportedImageResolution, error)
+}
+
+type ChallengeImportTxStore interface {
+	ChallengeImportedImageTxStore
+	RejectImportedChallengeSlugConflict(ctx context.Context, packageSlug string) error
+	FindLegacyChallengeForImportedPackageCreate(ctx context.Context, title string, category string) (*model.Challenge, bool, error)
+	CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error
+	UpdateImportedChallenge(ctx context.Context, challenge *model.Challenge, updates map[string]any) error
+	ClearPublishCheckJobs(ctx context.Context, challengeID int64) error
+	ReplaceImportedHints(ctx context.Context, challengeID int64, hints []model.ChallengeHint) error
+	ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error
+	NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
+	CreateImportedPackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
+	UpsertImportedTopology(ctx context.Context, topology *model.ChallengeTopology) error
+}
+
+type ChallengeImportTxRunner interface {
+	WithinChallengeImportTransaction(ctx context.Context, fn func(store ChallengeImportTxStore) error) error
+}
+
+type AWDChallengeImportTxStore interface {
+	ChallengeImportedImageTxStore
+	RejectImportedAWDChallengeSlugConflict(ctx context.Context, slug string) error
+	CreateImportedAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
+}
+
+type AWDChallengeImportTxRunner interface {
+	WithinAWDChallengeImportTransaction(ctx context.Context, fn func(store AWDChallengeImportTxStore) error) error
+}
+
+type ChallengePackageExportTxStore interface {
+	FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*model.ChallengePackageRevision, error)
+	NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
+	ListChallengeHints(ctx context.Context, challengeID int64) ([]model.ChallengeHint, error)
+	FindImageRefByID(ctx context.Context, imageID int64) (string, error)
+	CreateExportRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
+	MarkTopologyExported(ctx context.Context, topologyID int64, revisionID int64, baselineSpec string, updatedAt time.Time) error
+}
+
+type ChallengePackageExportTxRunner interface {
+	WithinChallengePackageExportTransaction(ctx context.Context, fn func(store ChallengePackageExportTxStore) error) error
+}
+
 type ImageCommandRepository interface {
 	Create(ctx context.Context, image *model.Image) error
 	FindByID(ctx context.Context, id int64) (*model.Image, error)

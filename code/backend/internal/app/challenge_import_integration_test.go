@@ -24,6 +24,7 @@ import (
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	"ctf-platform/internal/module/challenge/testsupport"
 )
 
@@ -93,15 +94,16 @@ func newChallengeImportServiceForAppTest(db *gorm.DB) *challengecmd.ChallengeSer
 		challengecmd.WithImageBuildRegistryVerifier(appChallengeImportRegistryVerifier{}),
 	)
 	service := challengecmd.NewChallengeService(
-		db,
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		challengeinfra.NewTopologyServiceRepository(repo),
-		repo,
+		challengeinfra.NewTopologyPackageRevisionRepository(repo),
 		nil,
 		challengecmd.SelfCheckConfig{},
 		zap.NewNop(),
 	)
+	service.SetChallengeImportTxRunner(challengeruntime.NewChallengeImportTxRunner(repo, imageBuildService))
+	service.SetChallengePackageExportTxRunner(challengeruntime.NewChallengePackageExportTxRunner(repo))
 	service.SetImageBuildService(imageBuildService)
 	return service
 }

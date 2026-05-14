@@ -23,6 +23,13 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
+func (r *Repository) DB() *gorm.DB {
+	if r == nil {
+		return nil
+	}
+	return r.db
+}
+
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }

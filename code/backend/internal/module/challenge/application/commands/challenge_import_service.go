@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -47,20 +46,20 @@ type SelfCheckConfig struct {
 }
 
 type ChallengeService struct {
-	db           *gorm.DB
-	repo         challengeCommandRepository
-	imageRepo    challengeports.ImageQueryRepository
-	topologyRepo challengeports.ChallengeTopologyReadRepository
-	packageRepo  challengeports.ChallengePackageRevisionRepository
-	runtimeProbe challengeports.ChallengeRuntimeProbe
-	imageBuild   *ImageBuildService
-	eventBus     platformevents.Bus
-	selfCheckCfg SelfCheckConfig
-	logger       *zap.Logger
+	repo                  challengeCommandRepository
+	imageRepo             challengeports.ImageQueryRepository
+	topologyRepo          challengeports.ChallengeTopologyReadRepository
+	packageRepo           challengeports.ChallengePackageRevisionRepository
+	runtimeProbe          challengeports.ChallengeRuntimeProbe
+	importTxRunner        challengeports.ChallengeImportTxRunner
+	packageExportTxRunner challengeports.ChallengePackageExportTxRunner
+	imageBuild            *ImageBuildService
+	eventBus              platformevents.Bus
+	selfCheckCfg          SelfCheckConfig
+	logger                *zap.Logger
 }
 
 func NewChallengeService(
-	db *gorm.DB,
 	repo challengeCommandRepository,
 	imageRepo challengeports.ImageQueryRepository,
 	topologyRepo challengeports.ChallengeTopologyReadRepository,
@@ -82,7 +81,6 @@ func NewChallengeService(
 		cfg.PublishCheckBatchSize = 1
 	}
 	service := &ChallengeService{
-		db:           db,
 		repo:         repo,
 		imageRepo:    imageRepo,
 		topologyRepo: topologyRepo,
@@ -101,55 +99,6 @@ type storedChallengeImportPreview struct {
 	CreatedBy int64                          `json:"created_by"`
 	CreatedAt time.Time                      `json:"created_at"`
 	Preview   dto.ChallengeImportPreviewResp `json:"preview"`
-}
-
-type gormImageBuildTxStore struct {
-	tx *gorm.DB
-}
-
-func newImageBuildTxStore(tx *gorm.DB) *gormImageBuildTxStore {
-	if tx == nil {
-		return nil
-	}
-	return &gormImageBuildTxStore{tx: tx}
-}
-
-func (s *gormImageBuildTxStore) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
-	if s == nil || s.tx == nil {
-		return nil, fmt.Errorf("image build transaction is not configured")
-	}
-	var image model.Image
-	err := s.tx.WithContext(ctx).Unscoped().
-		Where("name = ? AND tag = ?", name, tag).
-		First(&image).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, challengeports.ErrChallengeImageNotFound
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &image, nil
-}
-
-func (s *gormImageBuildTxStore) CreateImage(ctx context.Context, image *model.Image) error {
-	if s == nil || s.tx == nil {
-		return fmt.Errorf("image build transaction is not configured")
-	}
-	return s.tx.WithContext(ctx).Create(image).Error
-}
-
-func (s *gormImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
-	if s == nil || s.tx == nil {
-		return fmt.Errorf("image build transaction is not configured")
-	}
-	return s.tx.WithContext(ctx).Create(job).Error
-}
-
-func (s *gormImageBuildTxStore) UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error {
-	if s == nil || s.tx == nil {
-		return fmt.Errorf("image build transaction is not configured")
-	}
-	return s.tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error
 }
 
 func (s *ChallengeService) PreviewChallengeImport(
@@ -189,7 +138,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 		return nil, err
 	}
 
-	preview := s.buildChallengeImportPreview(previewID, fileName, parsed, time.Now())
+	preview := s.buildChallengeImportPreview(previewID, fileName, parsed, time.Now().UTC())
 	record := storedChallengeImportPreview{
 		ID:        previewID,
 		FileName:  fileName,
@@ -237,6 +186,22 @@ func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID
 	return previews, nil
 }
 
+func (s *ChallengeService) SetChallengeImportTxRunner(runner challengeports.ChallengeImportTxRunner) *ChallengeService {
+	if s == nil {
+		return nil
+	}
+	s.importTxRunner = runner
+	return s
+}
+
+func (s *ChallengeService) SetChallengePackageExportTxRunner(runner challengeports.ChallengePackageExportTxRunner) *ChallengeService {
+	if s == nil {
+		return nil
+	}
+	s.packageExportTxRunner = runner
+	return s
+}
+
 func (s *ChallengeService) CommitChallengeImport(
 	ctx context.Context,
 	actorUserID int64,
@@ -277,22 +242,27 @@ func (s *ChallengeService) CommitChallengeImport(
 
 	var challenge *model.Challenge
 	cleanupPaths := make([]string, 0, 2)
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := rejectImportedChallengeSlugConflict(tx, parsed.Slug); err != nil {
+	if s.importTxRunner == nil {
+		return nil, fmt.Errorf("challenge import tx runner is not configured")
+	}
+	if err := s.importTxRunner.WithinChallengeImportTransaction(ctx, func(store challengeports.ChallengeImportTxStore) error {
+		if err := store.RejectImportedChallengeSlugConflict(ctx, parsed.Slug); err != nil {
 			return err
 		}
 
-		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, tx, actorUserID, parsed, buildSource)
+		resolvedImageID, err := s.resolveImportedImageIDForCommit(ctx, store, actorUserID, parsed, buildSource)
 		if err != nil {
 			return err
 		}
 
-		now := time.Now()
+		now := time.Now().UTC()
 		var current model.Challenge
-		findErr := findLegacyChallengeForImportedPackageCreate(tx, parsed.Title, parsed.Category, &current)
+		existing, found, findErr := store.FindLegacyChallengeForImportedPackageCreate(ctx, parsed.Title, parsed.Category)
 
 		switch {
-		case errors.Is(findErr, gorm.ErrRecordNotFound):
+		case findErr != nil:
+			return findErr
+		case !found:
 			current = model.Challenge{
 				PackageSlug:    stringPointer(parsed.Slug),
 				Title:          parsed.Title,
@@ -310,12 +280,11 @@ func (s *ChallengeService) CommitChallengeImport(
 				CreatedAt:      now,
 				UpdatedAt:      now,
 			}
-			if err := tx.Create(&current).Error; err != nil {
+			if err := store.CreateImportedChallenge(ctx, &current); err != nil {
 				return fmt.Errorf("create imported challenge %s: %w", parsed.Slug, err)
 			}
-		case findErr != nil:
-			return fmt.Errorf("find imported challenge %s: %w", parsed.Slug, findErr)
 		default:
+			current = *existing
 			updates := map[string]any{
 				"package_slug":    parsed.Slug,
 				"title":           parsed.Title,
@@ -331,23 +300,27 @@ func (s *ChallengeService) CommitChallengeImport(
 				"deleted_at":      nil,
 				"updated_at":      now,
 			}
-			if err := tx.Unscoped().Model(&current).Updates(updates).Error; err != nil {
+			if err := store.UpdateImportedChallenge(ctx, &current, updates); err != nil {
 				return fmt.Errorf("update imported challenge %s: %w", parsed.Slug, err)
 			}
 		}
 
-		if err := tx.Where("challenge_id = ?", current.ID).Delete(&model.ChallengePublishCheckJob{}).Error; err != nil {
+		if err := store.ClearPublishCheckJobs(ctx, current.ID); err != nil {
 			return fmt.Errorf("clear imported challenge publish check jobs %s: %w", parsed.Slug, err)
 		}
 
-		if err := syncImportedChallengeHints(tx, current.ID, parsed.Hints); err != nil {
+		if err := store.ReplaceImportedHints(ctx, current.ID, buildImportedChallengeHints(current.ID, parsed.Hints, time.Now().UTC())); err != nil {
 			return err
 		}
-		if err := configureImportedFlag(tx, current.ID, parsed.FlagType, parsed.FlagPrefix, parsed.FlagValue); err != nil {
+		flagUpdates, err := buildImportedFlagUpdates(parsed.FlagType, parsed.FlagPrefix, parsed.FlagValue, time.Now().UTC())
+		if err != nil {
+			return err
+		}
+		if err := store.ApplyImportedFlagUpdates(ctx, current.ID, flagUpdates); err != nil {
 			return err
 		}
 		if parsed.Topology != nil {
-			revision, revisionErr := s.createImportedPackageRevision(tx, actorUserID, &current, *record, parsed)
+			revision, revisionErr := s.createImportedPackageRevision(ctx, store, actorUserID, &current, *record, parsed)
 			if revisionErr != nil {
 				return revisionErr
 			}
@@ -362,13 +335,13 @@ func (s *ChallengeService) CommitChallengeImport(
 					if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && resolvedImageID > 0 {
 						return resolvedImageID, nil
 					}
-					return s.resolveExternalImageRefForCommit(ctx, tx, parsed.Slug, imageRef)
+					return s.resolveExternalImageRefForCommit(ctx, store, parsed.Slug, imageRef)
 				},
 			)
 			if topologyErr != nil {
 				return topologyErr
 			}
-			now = time.Now()
+			now = time.Now().UTC()
 			revisionID := revision.ID
 			item := &model.ChallengeTopology{
 				ChallengeID:          current.ID,
@@ -382,7 +355,7 @@ func (s *ChallengeService) CommitChallengeImport(
 				LastExportRevisionID: nil,
 				UpdatedAt:            now,
 			}
-			if err := upsertChallengeTopologyTx(tx, item); err != nil {
+			if err := store.UpsertImportedTopology(ctx, item); err != nil {
 				return err
 			}
 		}
@@ -489,16 +462,20 @@ func (s *ChallengeService) buildChallengeImportPreview(
 
 func (s *ChallengeService) resolveImportedImageIDForCommit(
 	ctx context.Context,
-	tx *gorm.DB,
+	store challengeports.ChallengeImportTxStore,
 	actorUserID int64,
 	parsed *domain.ParsedChallengePackage,
 	buildSource *importedImageBuildSource,
 ) (int64, error) {
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
-		return s.resolveExternalImageRefForCommit(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
+		return s.resolveExternalImageRefForCommit(ctx, store, parsed.Slug, parsed.RuntimeImageRef)
 	}
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
-		return resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
+		resolution, err := store.ResolveExistingImageRef(ctx, parsed.Slug, parsed.RuntimeImageRef)
+		if err != nil {
+			return 0, err
+		}
+		return resolution.ImageID, nil
 	}
 	var imageBuild *ImageBuildService
 	var logger *zap.Logger
@@ -518,7 +495,7 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, newImageBuildTxStore(tx), CreatePlatformBuildJobRequest{
+	result, err := store.ResolvePlatformBuildImage(ctx, challengeports.ImportedPlatformBuildImageRequest{
 		ChallengeMode:  domain.ChallengePackageModeJeopardy,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
@@ -535,7 +512,7 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 
 func (s *ChallengeService) resolveExternalImageRefForCommit(
 	ctx context.Context,
-	tx *gorm.DB,
+	store challengeports.ChallengeImportTxStore,
 	packageSlug string,
 	imageRef string,
 ) (int64, error) {
@@ -552,7 +529,7 @@ func (s *ChallengeService) resolveExternalImageRefForCommit(
 		warnChallengeImportImageBuildServiceUnavailable(logger, packageSlug, domain.ImageSourceTypeExternalRef, "commit")
 		return 0, challengeImportImageBuildServiceUnavailableError(domain.ImageSourceTypeExternalRef)
 	}
-	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, newImageBuildTxStore(tx), packageSlug, imageRef)
+	result, err := store.ResolveExternalImage(ctx, packageSlug, imageRef)
 	if err != nil {
 		return 0, err
 	}
@@ -701,43 +678,6 @@ func resolveExtractedChallengeImportRoot(extractDir string) (string, error) {
 		return "", errcode.ErrInvalidParams.WithCause(errors.New("未找到 challenge.yml"))
 	}
 	return rootDir, nil
-}
-
-func findLegacyChallengeForImportedPackageCreate(
-	tx *gorm.DB,
-	title string,
-	category string,
-	challenge *model.Challenge,
-) error {
-	if challenge == nil {
-		return fmt.Errorf("challenge target is nil")
-	}
-
-	return tx.Unscoped().
-		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
-		First(challenge).Error
-}
-
-func rejectImportedChallengeSlugConflict(tx *gorm.DB, packageSlug string) error {
-	slug := strings.TrimSpace(packageSlug)
-	if slug == "" {
-		return nil
-	}
-
-	var existing model.Challenge
-	err := tx.Unscoped().
-		Select("id", "title", "package_slug").
-		Where("package_slug = ?", slug).
-		First(&existing).Error
-	switch {
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		return nil
-	case err != nil:
-		return fmt.Errorf("check imported challenge slug %s: %w", slug, err)
-	default:
-		message := fmt.Sprintf("题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", slug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
-	}
 }
 
 func saveChallengeImportPreviewRecord(previewDir string, record *storedChallengeImportPreview) error {
@@ -908,100 +848,87 @@ func sanitizeImportedAttachmentName(name, fallback string) string {
 	return candidate
 }
 
-func configureImportedFlag(
-	tx *gorm.DB,
-	challengeID int64,
+func buildImportedFlagUpdates(
 	flagType string,
 	prefix string,
 	value string,
-) error {
+	updatedAt time.Time,
+) (map[string]any, error) {
 	switch flagType {
 	case model.FlagTypeStatic:
-		return configureImportedStaticFlag(tx, challengeID, prefix, value)
+		return buildImportedStaticFlagUpdates(prefix, value, updatedAt)
 	case model.FlagTypeDynamic:
-		return configureImportedDynamicFlag(tx, challengeID, prefix)
+		return buildImportedDynamicFlagUpdates(prefix, updatedAt), nil
 	case model.FlagTypeRegex:
-		return configureImportedRegexFlag(tx, challengeID, prefix, value)
+		return buildImportedRegexFlagUpdates(prefix, value, updatedAt)
 	case model.FlagTypeManualReview:
-		return configureImportedManualReviewFlag(tx, challengeID, prefix)
+		return buildImportedManualReviewFlagUpdates(prefix, updatedAt), nil
 	default:
-		return errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
 	}
 }
 
-func configureImportedStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
+func buildImportedStaticFlagUpdates(prefix string, value string, updatedAt time.Time) (map[string]any, error) {
 	salt, err := crypto.GenerateSalt()
 	if err != nil {
-		return fmt.Errorf("generate salt for challenge %d: %w", challengeID, err)
+		return nil, fmt.Errorf("generate salt for imported challenge: %w", err)
 	}
-	return tx.Model(&model.Challenge{}).
-		Where("id = ?", challengeID).
-		Updates(map[string]any{
-			"flag_type":   model.FlagTypeStatic,
-			"flag_salt":   salt,
-			"flag_hash":   crypto.HashStaticFlag(value, salt),
-			"flag_regex":  "",
-			"flag_prefix": prefix,
-			"updated_at":  time.Now(),
-		}).Error
+	return map[string]any{
+		"flag_type":   model.FlagTypeStatic,
+		"flag_salt":   salt,
+		"flag_hash":   crypto.HashStaticFlag(value, salt),
+		"flag_regex":  "",
+		"flag_prefix": prefix,
+		"updated_at":  updatedAt,
+	}, nil
 }
 
-func configureImportedDynamicFlag(tx *gorm.DB, challengeID int64, prefix string) error {
-	return tx.Model(&model.Challenge{}).
-		Where("id = ?", challengeID).
-		Updates(map[string]any{
-			"flag_type":   model.FlagTypeDynamic,
-			"flag_salt":   "",
-			"flag_hash":   "",
-			"flag_regex":  "",
-			"flag_prefix": prefix,
-			"updated_at":  time.Now(),
-		}).Error
+func buildImportedDynamicFlagUpdates(prefix string, updatedAt time.Time) map[string]any {
+	return map[string]any{
+		"flag_type":   model.FlagTypeDynamic,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  "",
+		"flag_prefix": prefix,
+		"updated_at":  updatedAt,
+	}
 }
 
-func configureImportedRegexFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
+func buildImportedRegexFlagUpdates(prefix string, value string, updatedAt time.Time) (map[string]any, error) {
 	compiled, err := regexp.Compile(strings.TrimSpace(value))
 	if err != nil {
-		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
+		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
 	}
-	return tx.Model(&model.Challenge{}).
-		Where("id = ?", challengeID).
-		Updates(map[string]any{
-			"flag_type":   model.FlagTypeRegex,
-			"flag_salt":   "",
-			"flag_hash":   "",
-			"flag_regex":  compiled.String(),
-			"flag_prefix": prefix,
-			"updated_at":  time.Now(),
-		}).Error
+	return map[string]any{
+		"flag_type":   model.FlagTypeRegex,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  compiled.String(),
+		"flag_prefix": prefix,
+		"updated_at":  updatedAt,
+	}, nil
 }
 
-func configureImportedManualReviewFlag(tx *gorm.DB, challengeID int64, prefix string) error {
-	return tx.Model(&model.Challenge{}).
-		Where("id = ?", challengeID).
-		Updates(map[string]any{
-			"flag_type":   model.FlagTypeManualReview,
-			"flag_salt":   "",
-			"flag_hash":   "",
-			"flag_regex":  "",
-			"flag_prefix": prefix,
-			"updated_at":  time.Now(),
-		}).Error
+func buildImportedManualReviewFlagUpdates(prefix string, updatedAt time.Time) map[string]any {
+	return map[string]any{
+		"flag_type":   model.FlagTypeManualReview,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  "",
+		"flag_prefix": prefix,
+		"updated_at":  updatedAt,
+	}
 }
 
-func syncImportedChallengeHints(
-	tx *gorm.DB,
+func buildImportedChallengeHints(
 	challengeID int64,
 	hints []domain.ParsedChallengePackageHint,
-) error {
-	if err := tx.Where("challenge_id = ?", challengeID).Delete(&model.ChallengeHint{}).Error; err != nil {
-		return fmt.Errorf("delete hints for challenge %d: %w", challengeID, err)
-	}
+	now time.Time,
+) []model.ChallengeHint {
 	if len(hints) == 0 {
 		return nil
 	}
 
-	now := time.Now()
 	records := make([]model.ChallengeHint, 0, len(hints))
 	for _, hint := range hints {
 		records = append(records, model.ChallengeHint{
@@ -1013,67 +940,7 @@ func syncImportedChallengeHints(
 			UpdatedAt:   now,
 		})
 	}
-	return tx.Create(&records).Error
-}
-
-func resolveImportedImageID(tx *gorm.DB, slug, imageRef string) (int64, error) {
-	ref := strings.TrimSpace(imageRef)
-	if ref == "" {
-		return 0, nil
-	}
-	name, tag, err := splitImportedImageRef(ref)
-	if err != nil {
-		return 0, fmt.Errorf("invalid image ref for %s: %w", slug, err)
-	}
-
-	var image model.Image
-	findErr := tx.Unscoped().
-		Where("name = ? AND tag = ?", name, tag).
-		First(&image).Error
-	switch {
-	case errors.Is(findErr, gorm.ErrRecordNotFound):
-		image = model.Image{
-			Name:        name,
-			Tag:         tag,
-			Description: fmt.Sprintf("Imported from challenge pack %s", slug),
-			Status:      model.ImageStatusAvailable,
-			Size:        0,
-		}
-		if err := tx.Create(&image).Error; err != nil {
-			return 0, fmt.Errorf("create image %s:%s for %s: %w", name, tag, slug, err)
-		}
-		return image.ID, nil
-	case findErr != nil:
-		return 0, fmt.Errorf("find image %s:%s for %s: %w", name, tag, slug, findErr)
-	default:
-		if err := tx.Model(&image).Updates(map[string]any{
-			"status":     model.ImageStatusAvailable,
-			"deleted_at": nil,
-			"updated_at": time.Now(),
-		}).Error; err != nil {
-			return 0, fmt.Errorf("update image %s:%s for %s: %w", name, tag, slug, err)
-		}
-		return image.ID, nil
-	}
-}
-
-func splitImportedImageRef(imageRef string) (string, string, error) {
-	trimmed := strings.TrimSpace(imageRef)
-	if trimmed == "" {
-		return "", "", fmt.Errorf("empty image ref")
-	}
-
-	lastSlash := strings.LastIndex(trimmed, "/")
-	lastColon := strings.LastIndex(trimmed, ":")
-	if lastColon > lastSlash {
-		name := strings.TrimSpace(trimmed[:lastColon])
-		tag := strings.TrimSpace(trimmed[lastColon+1:])
-		if name == "" || tag == "" {
-			return "", "", fmt.Errorf("invalid image ref %q", imageRef)
-		}
-		return name, tag, nil
-	}
-	return trimmed, "latest", nil
+	return records
 }
 
 func challengeImportPreviewRoot() string {
