@@ -226,7 +226,7 @@ func buildImageBuildService(deps moduleDeps) *challengecmd.ImageBuildService {
 	}
 
 	return challengecmd.NewImageBuildService(
-		deps.imageRepo,
+		challengeinfra.NewImageBuildRepository(deps.imageRepo),
 		challengecmd.ImageBuildConfig{
 			Registry:         registry.Server,
 			BuildTimeout:     registry.BuildTimeout,

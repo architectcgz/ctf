@@ -332,7 +332,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 			warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
 			return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 		}
-		result, err := imageBuild.VerifyExternalImageRefInTx(ctx, tx, parsed.Slug, parsed.RuntimeImageRef)
+		result, err := imageBuild.VerifyExternalImageRefInTx(ctx, newImageBuildTxStore(tx), parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
 			return 0, "", err
 		}
@@ -354,7 +354,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, newImageBuildTxStore(tx), CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeAWD,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,

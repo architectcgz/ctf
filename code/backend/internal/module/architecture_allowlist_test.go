@@ -5,7 +5,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"challenge/application/commands/challenge_import_service.go -> gorm.io/gorm":                  {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":        {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm/clause": {},
-	"challenge/application/commands/image_build_service.go -> gorm.io/gorm":                       {},
 }
 
 var allowedCrossModulePrivateImports = map[string]struct{}{

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
@@ -50,6 +49,13 @@ type VerifyExternalImageRefResult struct {
 type imageBuildRepository interface {
 	challengeports.ImageCommandRepository
 	challengeports.ImageBuildJobRepository
+}
+
+type imageBuildTxStore interface {
+	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
+	CreateImage(ctx context.Context, image *model.Image) error
+	CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
+	UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error
 }
 
 type ImageBuildService struct {
@@ -173,13 +179,13 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 
 func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 	ctx context.Context,
-	tx *gorm.DB,
+	txStore imageBuildTxStore,
 	req CreatePlatformBuildJobRequest,
 ) (*CreatePlatformBuildJobResult, error) {
 	if s == nil {
 		return nil, fmt.Errorf("image build service is not configured")
 	}
-	if tx == nil {
+	if txStore == nil {
 		return nil, fmt.Errorf("image build transaction is not configured")
 	}
 
@@ -196,7 +202,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 		return nil, err
 	}
 
-	image, err := findOrCreatePendingPlatformBuildImageTx(ctx, tx, name, imageTag, req.PackageSlug)
+	image, err := findOrCreatePendingPlatformBuildImageTx(ctx, txStore, name, imageTag, req.PackageSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +221,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 	if createdBy > 0 {
 		job.CreatedBy = &createdBy
 	}
-	if err := tx.WithContext(ctx).Create(job).Error; err != nil {
+	if err := txStore.CreateImageBuildJob(ctx, job); err != nil {
 		return nil, err
 	}
 
@@ -229,9 +235,15 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 		"deleted_at":   nil,
 		"updated_at":   time.Now(),
 	}
-	if err := tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error; err != nil {
+	if err := txStore.UpdateImage(ctx, image, updates); err != nil {
 		return nil, err
 	}
+	image.Status = model.ImageStatusPending
+	image.SourceType = model.ImageSourceTypePlatformBuild
+	image.BuildJobID = &job.ID
+	image.LastError = ""
+	image.Digest = ""
+	image.VerifiedAt = nil
 
 	return &CreatePlatformBuildJobResult{
 		ImageID:   image.ID,
@@ -253,7 +265,7 @@ func (s *ImageBuildService) BuildPlatformTargetRef(mode, slug, suggestedTag stri
 
 func (s *ImageBuildService) VerifyExternalImageRefInTx(
 	ctx context.Context,
-	tx *gorm.DB,
+	txStore imageBuildTxStore,
 	packageSlug string,
 	imageRef string,
 ) (*VerifyExternalImageRefResult, error) {
@@ -266,7 +278,7 @@ func (s *ImageBuildService) VerifyExternalImageRefInTx(
 	if s.verifier == nil {
 		return nil, fmt.Errorf("registry verifier is not configured")
 	}
-	if tx == nil {
+	if txStore == nil {
 		return nil, fmt.Errorf("image verify transaction is not configured")
 	}
 
@@ -274,11 +286,11 @@ func (s *ImageBuildService) VerifyExternalImageRefInTx(
 	if err != nil {
 		return nil, fmt.Errorf("invalid image ref for %s: %w", packageSlug, err)
 	}
-	image, err := findOrCreateExternalImageTx(ctx, tx, name, tag, packageSlug)
+	image, err := findOrCreateExternalImageTx(ctx, txStore, name, tag, packageSlug)
 	if err != nil {
 		return nil, err
 	}
-	if err := updateExternalImageTx(ctx, tx, image, model.ImageStatusVerifying, "", 0, ""); err != nil {
+	if err := updateExternalImageTx(ctx, txStore, image, model.ImageStatusVerifying, "", 0, ""); err != nil {
 		return nil, err
 	}
 
@@ -287,19 +299,19 @@ func (s *ImageBuildService) VerifyExternalImageRefInTx(
 
 	digest, err := s.verifier.CheckManifest(verifyCtx, imageRef)
 	if err != nil {
-		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
 	if err := s.builder.Pull(verifyCtx, imageRef); err != nil {
-		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
 	inspect, err := s.builder.Inspect(verifyCtx, imageRef)
 	if err != nil {
-		_ = updateExternalImageTx(ctx, tx, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
-	if err := updateExternalImageTx(ctx, tx, image, model.ImageStatusAvailable, digest, inspect.Size, ""); err != nil {
+	if err := updateExternalImageTx(ctx, txStore, image, model.ImageStatusAvailable, digest, inspect.Size, ""); err != nil {
 		return nil, err
 	}
 	return &VerifyExternalImageRefResult{
@@ -533,7 +545,7 @@ func (s *ImageBuildService) findOrCreatePendingPlatformBuildImage(
 	switch {
 	case err == nil:
 		return image, nil
-	case errors.Is(err, gorm.ErrRecordNotFound):
+	case errors.Is(err, challengeports.ErrChallengeImageNotFound):
 		image = &model.Image{
 			Name:        name,
 			Tag:         tag,
@@ -552,30 +564,27 @@ func (s *ImageBuildService) findOrCreatePendingPlatformBuildImage(
 
 func findOrCreatePendingPlatformBuildImageTx(
 	ctx context.Context,
-	tx *gorm.DB,
+	txStore imageBuildTxStore,
 	name string,
 	tag string,
 	packageSlug string,
 ) (*model.Image, error) {
-	var image model.Image
-	findErr := tx.WithContext(ctx).Unscoped().
-		Where("name = ? AND tag = ?", name, tag).
-		First(&image).Error
+	image, findErr := txStore.FindByNameTag(ctx, name, tag)
 	switch {
 	case findErr == nil:
-		return &image, nil
-	case errors.Is(findErr, gorm.ErrRecordNotFound):
-		image = model.Image{
+		return image, nil
+	case errors.Is(findErr, challengeports.ErrChallengeImageNotFound):
+		image = &model.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Built from challenge pack %s", packageSlug),
 			Status:      model.ImageStatusPending,
 			SourceType:  model.ImageSourceTypePlatformBuild,
 		}
-		if err := tx.WithContext(ctx).Create(&image).Error; err != nil {
+		if err := txStore.CreateImage(ctx, image); err != nil {
 			return nil, err
 		}
-		return &image, nil
+		return image, nil
 	default:
 		return nil, findErr
 	}
@@ -583,30 +592,27 @@ func findOrCreatePendingPlatformBuildImageTx(
 
 func findOrCreateExternalImageTx(
 	ctx context.Context,
-	tx *gorm.DB,
+	txStore imageBuildTxStore,
 	name string,
 	tag string,
 	packageSlug string,
 ) (*model.Image, error) {
-	var image model.Image
-	findErr := tx.WithContext(ctx).Unscoped().
-		Where("name = ? AND tag = ?", name, tag).
-		First(&image).Error
+	image, findErr := txStore.FindByNameTag(ctx, name, tag)
 	switch {
 	case findErr == nil:
-		return &image, nil
-	case errors.Is(findErr, gorm.ErrRecordNotFound):
-		image = model.Image{
+		return image, nil
+	case errors.Is(findErr, challengeports.ErrChallengeImageNotFound):
+		image = &model.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Verified external image from challenge pack %s", packageSlug),
 			Status:      model.ImageStatusVerifying,
 			SourceType:  model.ImageSourceTypeExternalRef,
 		}
-		if err := tx.WithContext(ctx).Create(&image).Error; err != nil {
+		if err := txStore.CreateImage(ctx, image); err != nil {
 			return nil, err
 		}
-		return &image, nil
+		return image, nil
 	default:
 		return nil, findErr
 	}
@@ -614,7 +620,7 @@ func findOrCreateExternalImageTx(
 
 func updateExternalImageTx(
 	ctx context.Context,
-	tx *gorm.DB,
+	txStore imageBuildTxStore,
 	image *model.Image,
 	status string,
 	digest string,
@@ -637,7 +643,7 @@ func updateExternalImageTx(
 	} else {
 		updates["verified_at"] = nil
 	}
-	if err := tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error; err != nil {
+	if err := txStore.UpdateImage(ctx, image, updates); err != nil {
 		return err
 	}
 	image.Status = status

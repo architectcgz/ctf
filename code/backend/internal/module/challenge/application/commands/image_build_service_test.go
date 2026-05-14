@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -57,10 +58,105 @@ func (v fakeRegistryVerifier) CheckManifest(ctx context.Context, imageRef string
 	return v.digest, nil
 }
 
+type imageBuildRepoStub struct{}
+
+func (imageBuildRepoStub) Create(context.Context, *model.Image) error {
+	return nil
+}
+
+func (imageBuildRepoStub) FindByID(context.Context, int64) (*model.Image, error) {
+	return nil, nil
+}
+
+func (imageBuildRepoStub) FindByNameTag(context.Context, string, string) (*model.Image, error) {
+	return nil, nil
+}
+
+func (imageBuildRepoStub) Update(context.Context, *model.Image) error {
+	return nil
+}
+
+func (imageBuildRepoStub) Delete(context.Context, int64) error {
+	return nil
+}
+
+func (imageBuildRepoStub) CreateImageBuildJob(context.Context, *model.ImageBuildJob) error {
+	return nil
+}
+
+func (imageBuildRepoStub) FindImageBuildJobByID(context.Context, int64) (*model.ImageBuildJob, error) {
+	return nil, nil
+}
+
+func (imageBuildRepoStub) ListPendingImageBuildJobs(context.Context, int) ([]*model.ImageBuildJob, error) {
+	return nil, nil
+}
+
+func (imageBuildRepoStub) TryStartImageBuildJob(context.Context, int64, time.Time) (bool, error) {
+	return false, nil
+}
+
+func (imageBuildRepoStub) UpdateImageBuildJob(context.Context, *model.ImageBuildJob) error {
+	return nil
+}
+
+type fakeImageBuildTxStore struct {
+	findByNameTagResult *model.Image
+	findByNameTagErr    error
+	createdImage        *model.Image
+	createdJob          *model.ImageBuildJob
+	updatedImage        *model.Image
+}
+
+func (s *fakeImageBuildTxStore) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+	return s.findByNameTagResult, s.findByNameTagErr
+}
+
+func (s *fakeImageBuildTxStore) CreateImage(ctx context.Context, image *model.Image) error {
+	s.createdImage = image
+	image.ID = 41
+	return nil
+}
+
+func (s *fakeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+	s.createdJob = job
+	job.ID = 99
+	return nil
+}
+
+func (s *fakeImageBuildTxStore) UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error {
+	s.updatedImage = image
+	return nil
+}
+
+func TestImageBuildServiceCreatePlatformBuildJobInTxUsesTxStore(t *testing.T) {
+	service := NewImageBuildService(imageBuildRepoStub{}, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	store := &fakeImageBuildTxStore{findByNameTagErr: challengeports.ErrChallengeImageNotFound}
+
+	result, err := service.CreatePlatformBuildJobInTx(context.Background(), store, CreatePlatformBuildJobRequest{
+		ChallengeMode:  "jeopardy",
+		PackageSlug:    "web-demo",
+		SuggestedTag:   "v1",
+		SourceDir:      "/tmp/web-demo",
+		DockerfilePath: "/tmp/web-demo/docker/Dockerfile",
+		ContextPath:    "/tmp/web-demo/docker",
+		CreatedBy:      1001,
+	})
+	if err != nil {
+		t.Fatalf("CreatePlatformBuildJobInTx() error = %v", err)
+	}
+	if result.ImageID != 41 || result.JobID != 99 {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	if store.createdImage == nil || store.createdJob == nil || store.updatedImage == nil {
+		t.Fatalf("tx store did not receive expected writes: %+v", store)
+	}
+}
+
 func TestImageBuildServiceCreatePlatformBuildJobCreatesPendingImageAndJob(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewImageRepository(db)
-	service := NewImageBuildService(repo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewImageBuildService(challengeinfra.NewImageBuildRepository(repo), ImageBuildConfig{Registry: "127.0.0.1:5000"})
 
 	result, err := service.CreatePlatformBuildJob(context.Background(), CreatePlatformBuildJobRequest{
 		ChallengeMode:  "jeopardy",
@@ -121,7 +217,7 @@ func TestImageBuildServiceCreatePlatformBuildJobReusesExistingImage(t *testing.T
 		t.Fatalf("create existing image: %v", err)
 	}
 
-	service := NewImageBuildService(repo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
+	service := NewImageBuildService(challengeinfra.NewImageBuildRepository(repo), ImageBuildConfig{Registry: "127.0.0.1:5000"})
 	result, err := service.CreatePlatformBuildJob(context.Background(), CreatePlatformBuildJobRequest{
 		ChallengeMode:  "jeopardy",
 		PackageSlug:    "web-demo",
@@ -151,7 +247,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksImageAvailable(t *testing.T) 
 	repo := challengeinfra.NewImageRepository(db)
 	builder := &fakeDockerImageBuilder{}
 	service := NewImageBuildService(
-		repo,
+		challengeinfra.NewImageBuildRepository(repo),
 		ImageBuildConfig{Registry: "127.0.0.1:5000", BuildTimeout: 0},
 		WithImageBuildDockerBuilder(builder),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:demo"}),
@@ -243,7 +339,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksFailures(t *testing.T) {
 			db := testsupport.SetupTestDB(t)
 			repo := challengeinfra.NewImageRepository(db)
 			service := NewImageBuildService(
-				repo,
+				challengeinfra.NewImageBuildRepository(repo),
 				ImageBuildConfig{Registry: "127.0.0.1:5000"},
 				WithImageBuildDockerBuilder(tc.builder),
 				WithImageBuildRegistryVerifier(tc.verifier),
@@ -289,7 +385,7 @@ func TestImageBuildServiceVerifyExternalImageRefInTxMarksImageAvailable(t *testi
 	repo := challengeinfra.NewImageRepository(db)
 	builder := &fakeDockerImageBuilder{}
 	service := NewImageBuildService(
-		repo,
+		challengeinfra.NewImageBuildRepository(repo),
 		ImageBuildConfig{Registry: "127.0.0.1:5000"},
 		WithImageBuildDockerBuilder(builder),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:external"}),
@@ -300,7 +396,7 @@ func TestImageBuildServiceVerifyExternalImageRefInTxMarksImageAvailable(t *testi
 		var err error
 		result, err = service.VerifyExternalImageRefInTx(
 			context.Background(),
-			tx,
+			newImageBuildTxStore(tx),
 			"web-external",
 			"registry.example.edu/team/web-demo:v1",
 		)
@@ -341,7 +437,7 @@ func TestImageBuildServiceVerifyExternalImageRefInTxReturnsErrorOnManifestFailur
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewImageRepository(db)
 	service := NewImageBuildService(
-		repo,
+		challengeinfra.NewImageBuildRepository(repo),
 		ImageBuildConfig{Registry: "127.0.0.1:5000"},
 		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{err: errors.New("manifest failed")}),
@@ -350,7 +446,7 @@ func TestImageBuildServiceVerifyExternalImageRefInTxReturnsErrorOnManifestFailur
 	err := db.Transaction(func(tx *gorm.DB) error {
 		_, err := service.VerifyExternalImageRefInTx(
 			context.Background(),
-			tx,
+			newImageBuildTxStore(tx),
 			"web-external",
 			"registry.example.edu/team/web-demo:v1",
 		)

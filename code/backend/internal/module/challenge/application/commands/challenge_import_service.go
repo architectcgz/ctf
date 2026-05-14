@@ -103,6 +103,55 @@ type storedChallengeImportPreview struct {
 	Preview   dto.ChallengeImportPreviewResp `json:"preview"`
 }
 
+type gormImageBuildTxStore struct {
+	tx *gorm.DB
+}
+
+func newImageBuildTxStore(tx *gorm.DB) *gormImageBuildTxStore {
+	if tx == nil {
+		return nil
+	}
+	return &gormImageBuildTxStore{tx: tx}
+}
+
+func (s *gormImageBuildTxStore) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+	if s == nil || s.tx == nil {
+		return nil, fmt.Errorf("image build transaction is not configured")
+	}
+	var image model.Image
+	err := s.tx.WithContext(ctx).Unscoped().
+		Where("name = ? AND tag = ?", name, tag).
+		First(&image).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, challengeports.ErrChallengeImageNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &image, nil
+}
+
+func (s *gormImageBuildTxStore) CreateImage(ctx context.Context, image *model.Image) error {
+	if s == nil || s.tx == nil {
+		return fmt.Errorf("image build transaction is not configured")
+	}
+	return s.tx.WithContext(ctx).Create(image).Error
+}
+
+func (s *gormImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+	if s == nil || s.tx == nil {
+		return fmt.Errorf("image build transaction is not configured")
+	}
+	return s.tx.WithContext(ctx).Create(job).Error
+}
+
+func (s *gormImageBuildTxStore) UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error {
+	if s == nil || s.tx == nil {
+		return fmt.Errorf("image build transaction is not configured")
+	}
+	return s.tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error
+}
+
 func (s *ChallengeService) PreviewChallengeImport(
 	ctx context.Context,
 	actorUserID int64,
@@ -469,7 +518,7 @@ func (s *ChallengeService) resolveImportedImageIDForCommit(
 		dockerfilePath = buildSource.DockerfilePath
 		contextPath = buildSource.ContextPath
 	}
-	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, tx, CreatePlatformBuildJobRequest{
+	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, newImageBuildTxStore(tx), CreatePlatformBuildJobRequest{
 		ChallengeMode:  domain.ChallengePackageModeJeopardy,
 		PackageSlug:    parsed.Slug,
 		SuggestedTag:   parsed.SuggestedImageTag,
@@ -503,7 +552,7 @@ func (s *ChallengeService) resolveExternalImageRefForCommit(
 		warnChallengeImportImageBuildServiceUnavailable(logger, packageSlug, domain.ImageSourceTypeExternalRef, "commit")
 		return 0, challengeImportImageBuildServiceUnavailableError(domain.ImageSourceTypeExternalRef)
 	}
-	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, tx, packageSlug, imageRef)
+	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, newImageBuildTxStore(tx), packageSlug, imageRef)
 	if err != nil {
 		return 0, err
 	}
