@@ -8,6 +8,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -826,21 +827,20 @@ func countCorrectSubmissions(
 	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 ) int {
-	count := 0
-	for _, item := range timeline {
-		if isCorrectTimelineSubmission(item) {
-			count++
+	if stats, ok := reviewArchiveSubmissionStatsFromEvidence(evidence); ok {
+		if !stats.HasChallengeEvidence {
+			challengeSuccessCount := countCorrectTimelineChallengeSubmissions(timeline)
+			stats.ChallengeSuccessCount += challengeSuccessCount
+			stats.SuccessCount += challengeSuccessCount
 		}
-	}
-	if count > 0 {
-		return count
-	}
-	for _, item := range evidence {
-		if isCorrectEvidenceSubmission(item) {
-			count++
+		if !stats.HasAWDEvidence {
+			awdSuccessCount := countCorrectTimelineAWDSubmissions(timeline)
+			stats.AWDSuccessCount += awdSuccessCount
+			stats.SuccessCount += awdSuccessCount
 		}
+		return stats.SuccessCount
 	}
-	return count
+	return countCorrectTimelineChallengeSubmissions(timeline) + countCorrectTimelineAWDSubmissions(timeline)
 }
 
 func latestReviewArchiveActivity(
@@ -915,12 +915,16 @@ func buildReviewArchiveTeachingFactSnapshot(
 	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
 ) teachingadvice.StudentFactSnapshot {
 	recentEventCount, activeDays := recentReviewArchiveActivityStats(time.Now().UTC(), timeline, evidence, writeups, manualReviews)
+	submissionStats := buildReviewArchiveSubmissionStats(summary, timeline, evidence)
 	snapshot := teachingadvice.StudentFactSnapshot{
 		ActiveDays7d:           activeDays,
 		RecentEventCount7d:     recentEventCount,
 		LastActivityAt:         summary.LastActivityAt,
-		CorrectSubmissionCount: summary.CorrectSubmissionCount,
-		WrongSubmissionCount:   max(summary.TotalAttempts-summary.CorrectSubmissionCount, 0),
+		CorrectSubmissionCount: submissionStats.SuccessCount,
+		WrongSubmissionCount:   submissionStats.FailureCount,
+		ChallengeSuccessCount:  submissionStats.ChallengeSuccessCount,
+		SubmissionSuccessCount: submissionStats.SuccessCount,
+		SubmissionFailureCount: submissionStats.FailureCount,
 		WriteupCount:           summary.WriteupCount,
 		ApprovedReviewCount:    countApprovedManualReviews(manualReviews),
 		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(model.AllDimensions)),
@@ -932,36 +936,16 @@ func buildReviewArchiveTeachingFactSnapshot(
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
 
-	maxWrongStreak := 0
-	currentWrongStreak := 0
 	handsOnCount := 0
-	awdSuccessCount := 0
 	for _, item := range evidence {
-		isCorrect, tracked := extractEvidenceSubmissionResult(item)
-		if tracked {
-			if isCorrect {
-				currentWrongStreak = 0
-			} else {
-				currentWrongStreak++
-				if currentWrongStreak > maxWrongStreak {
-					maxWrongStreak = currentWrongStreak
-				}
-			}
-		}
-
 		switch item.Type {
 		case "instance_access", "instance_proxy_request", "awd_attack_submission", "awd_traffic":
 			handsOnCount++
 		}
-		if item.Type == "awd_attack_submission" {
-			if success, ok := item.Meta["is_success"].(bool); ok && success {
-				awdSuccessCount++
-			}
-		}
 	}
-	snapshot.MaxWrongStreak = maxWrongStreak
+	snapshot.MaxWrongStreak = submissionStats.MaxWrongStreak
 	snapshot.HandsOnEventCount = handsOnCount
-	snapshot.AWDSuccessCount = awdSuccessCount
+	snapshot.AWDSuccessCount = submissionStats.AWDSuccessCount
 
 	for _, dimension := range skillProfile {
 		if dimension == nil {
@@ -1162,6 +1146,125 @@ func extractEvidenceSubmissionResult(item assessmentdomain.ReviewArchiveEvidence
 	default:
 		return false, false
 	}
+}
+
+type reviewArchiveSubmissionStats struct {
+	ChallengeSuccessCount int
+	SuccessCount          int
+	FailureCount          int
+	AWDSuccessCount       int
+	MaxWrongStreak        int
+	HasChallengeEvidence  bool
+	HasAWDEvidence        bool
+}
+
+func buildReviewArchiveSubmissionStats(
+	summary assessmentdomain.ReviewArchiveSummary,
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) reviewArchiveSubmissionStats {
+	if stats, ok := reviewArchiveSubmissionStatsFromEvidence(evidence); ok {
+		if !stats.HasChallengeEvidence {
+			challengeSuccessCount := countCorrectTimelineChallengeSubmissions(timeline)
+			stats.ChallengeSuccessCount += challengeSuccessCount
+			stats.SuccessCount += challengeSuccessCount
+			stats.FailureCount += max(summary.TotalAttempts-stats.ChallengeSuccessCount, 0)
+		}
+		if !stats.HasAWDEvidence {
+			awdSuccessCount := countCorrectTimelineAWDSubmissions(timeline)
+			stats.AWDSuccessCount += awdSuccessCount
+			stats.SuccessCount += awdSuccessCount
+		}
+		return stats
+	}
+
+	stats := reviewArchiveSubmissionStats{}
+	stats.ChallengeSuccessCount = countCorrectTimelineChallengeSubmissions(timeline)
+	stats.AWDSuccessCount = countCorrectTimelineAWDSubmissions(timeline)
+	stats.SuccessCount = stats.ChallengeSuccessCount + stats.AWDSuccessCount
+	stats.FailureCount = max(summary.TotalAttempts-stats.ChallengeSuccessCount, 0)
+	return stats
+}
+
+func reviewArchiveSubmissionStatsFromEvidence(
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) (reviewArchiveSubmissionStats, bool) {
+	type trackedEvent struct {
+		timestamp time.Time
+		success   bool
+	}
+
+	stats := reviewArchiveSubmissionStats{}
+	trackedEvents := make([]trackedEvent, 0, len(evidence))
+	trackedCount := 0
+
+	for _, item := range evidence {
+		isCorrect, tracked := extractEvidenceSubmissionResult(item)
+		if !tracked {
+			continue
+		}
+		trackedCount++
+		trackedEvents = append(trackedEvents, trackedEvent{timestamp: item.Timestamp, success: isCorrect})
+		if item.Type == "challenge_submission" {
+			stats.HasChallengeEvidence = true
+		}
+		if item.Type == "awd_attack_submission" {
+			stats.HasAWDEvidence = true
+		}
+		if isCorrect {
+			stats.SuccessCount++
+			if item.Type == "challenge_submission" {
+				stats.ChallengeSuccessCount++
+			}
+			if item.Type == "awd_attack_submission" {
+				stats.AWDSuccessCount++
+			}
+			continue
+		}
+		stats.FailureCount++
+	}
+
+	if trackedCount == 0 {
+		return reviewArchiveSubmissionStats{}, false
+	}
+
+	sort.Slice(trackedEvents, func(i, j int) bool {
+		return trackedEvents[i].timestamp.Before(trackedEvents[j].timestamp)
+	})
+
+	currentWrongStreak := 0
+	for _, event := range trackedEvents {
+		if event.success {
+			currentWrongStreak = 0
+			continue
+		}
+		currentWrongStreak++
+		if currentWrongStreak > stats.MaxWrongStreak {
+			stats.MaxWrongStreak = currentWrongStreak
+		}
+	}
+
+	return stats, true
+}
+
+func countCorrectTimelineChallengeSubmissions(timeline []assessmentdomain.ReviewArchiveTimelineEvent) int {
+	count := 0
+	for _, item := range timeline {
+		if item.Type == "flag_submit" && item.IsCorrect != nil && *item.IsCorrect {
+			count++
+		}
+	}
+	return count
+}
+
+func countCorrectTimelineAWDSubmissions(timeline []assessmentdomain.ReviewArchiveTimelineEvent) int {
+	count := 0
+	for _, item := range timeline {
+		if item.Type == "awd_attack_submit" && item.IsCorrect != nil && *item.IsCorrect {
+			count++
+		}
+	}
+	return count
 }
 
 func (s *ReportService) renderReport(filePath, format string, data any) error {

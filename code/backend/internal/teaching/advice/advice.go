@@ -33,6 +33,9 @@ type StudentFactSnapshot struct {
 	LastActivityAt         *time.Time
 	CorrectSubmissionCount int
 	WrongSubmissionCount   int
+	ChallengeSuccessCount  int
+	SubmissionSuccessCount int
+	SubmissionFailureCount int
 	MaxWrongStreak         int
 	WriteupCount           int
 	ApprovedReviewCount    int
@@ -199,7 +202,7 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 	if submissionSeverity, ok := submissionStabilitySeverity(snapshot); ok {
 		severity = maxSeverity(severity, submissionSeverity)
 	}
-	if snapshot.CorrectSubmissionCount > 0 && snapshot.WriteupCount+snapshot.ApprovedReviewCount == 0 {
+	if challengeSuccessCount(snapshot) > 0 && snapshot.WriteupCount+snapshot.ApprovedReviewCount == 0 {
 		severity = maxSeverity(severity, SeverityAttention)
 	}
 	if activitySeverity, ok := lowActivitySeverity(snapshot); ok {
@@ -217,41 +220,55 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 
 func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation StudentEvaluation) []ReviewArchiveObservation {
 	items := make([]ReviewArchiveObservation, 0, 5)
+	challengeSuccessCount := challengeSuccessCount(snapshot)
+	submissionSuccessCount := submissionSuccessCount(snapshot)
+	submissionFailureCount := submissionFailureCount(snapshot)
 
-	if snapshot.CorrectSubmissionCount > 0 {
+	if challengeSuccessCount > 0 {
 		outputCount := snapshot.WriteupCount + snapshot.ApprovedReviewCount
 		observation := ReviewArchiveObservation{
 			Code:     "training_closure",
 			Label:    "训练闭环",
 			Severity: SeverityAttention,
-			Summary:  "已经完成解题，但复盘输出还不稳定。",
-			Evidence: fmt.Sprintf("正确提交 %d 次，writeup %d 份，通过评阅 %d 条。", snapshot.CorrectSubmissionCount, snapshot.WriteupCount, snapshot.ApprovedReviewCount),
+			Summary:  "已经拿到训练结果，但复盘输出还没有稳定跟上。",
+			Evidence: buildTrainingClosureEvidence(challengeSuccessCount, submissionSuccessCount, snapshot.AWDSuccessCount, snapshot.WriteupCount, snapshot.ApprovedReviewCount),
 			Action:   "补 1 份复盘材料或课堂讲解记录，把成功经验沉淀下来。",
 		}
-		if outputCount > 0 {
+		if outputCount >= challengeSuccessCount {
 			observation.Severity = SeverityGood
 			observation.Summary = "已经形成从解题到复盘输出的训练闭环。"
 			observation.Action = "继续保持输出质量，把高质量复盘沉淀成可复用材料。"
+		} else if outputCount > 0 {
+			observation.Summary = "已经开始补复盘输出，但还没有覆盖到多数成功样本。"
+			observation.Action = "优先把最近一次成功过程写透，再逐步补齐其他关键样本。"
 		}
 		items = append(items, observation)
 	}
 
 	if severity, ok := submissionStabilitySeverity(snapshot); ok {
+		summary := "连续失败事件偏多，当前还没有形成稳定命中。"
+		if submissionSuccessCount > 0 {
+			summary = "已经有成功结果，但重复失败仍在抬高试错成本。"
+		}
 		items = append(items, ReviewArchiveObservation{
 			Code:     "submission_stability",
 			Label:    "提交稳定性",
 			Severity: severity,
-			Summary:  "连续错误提交偏多，试错成本已经开始抬高。",
-			Evidence: fmt.Sprintf("错误提交 %d 次，最长连续错误 %d 次。", snapshot.WrongSubmissionCount, snapshot.MaxWrongStreak),
+			Summary:  summary,
+			Evidence: fmt.Sprintf("成功事件 %d 次，失败事件 %d 次，最长连续失败 %d 次。", submissionSuccessCount, submissionFailureCount, snapshot.MaxWrongStreak),
 			Action:   "先回看关键一步的利用思路，再继续提交，避免把时间消耗在重复试错上。",
 		})
-	} else if snapshot.CorrectSubmissionCount > 0 {
+	} else if submissionSuccessCount > 0 {
+		summary := "提交节奏整体稳定，归档里没有明显的失败积累。"
+		if submissionFailureCount > 0 {
+			summary = "有少量试错，但整体还能稳定收敛到结果。"
+		}
 		items = append(items, ReviewArchiveObservation{
 			Code:     "submission_stability",
 			Label:    "提交稳定性",
 			Severity: SeverityGood,
-			Summary:  "提交节奏整体稳定，没有出现明显的连续误判。",
-			Evidence: fmt.Sprintf("正确提交 %d 次，错误提交 %d 次。", snapshot.CorrectSubmissionCount, snapshot.WrongSubmissionCount),
+			Summary:  summary,
+			Evidence: fmt.Sprintf("成功事件 %d 次，失败事件 %d 次。", submissionSuccessCount, submissionFailureCount),
 			Action:   "继续保持先验证思路、再提交结果的节奏。",
 		})
 	}
@@ -262,9 +279,17 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 
 	if snapshot.HandsOnEventCount+snapshot.AWDSuccessCount > 0 {
 		severity := SeverityGood
-		summary := "实操交互证据比较充分，训练过程可复盘。"
-		if snapshot.HandsOnEventCount == 0 && snapshot.AWDSuccessCount > 0 {
+		summary := "已经开始留下实操过程证据，后续要继续把过程收束成结果。"
+		switch {
+		case snapshot.HandsOnEventCount > 0 && snapshot.AWDSuccessCount > 0:
+			summary = "实操过程证据比较完整，而且已经拿到 AWD 实战结果。"
+		case snapshot.HandsOnEventCount == 0 && snapshot.AWDSuccessCount > 0:
 			summary = "已有 AWD 实战结果，说明能够把技能迁移到攻防场景。"
+		case snapshot.HandsOnEventCount >= 3:
+			summary = "实操交互证据比较充分，训练过程可复盘。"
+		}
+		if submissionSuccessCount == 0 && snapshot.AWDSuccessCount == 0 {
+			severity = SeverityAttention
 		}
 		items = append(items, ReviewArchiveObservation{
 			Code:     "hands_on_depth",
@@ -284,7 +309,7 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 			Label:     "维度聚焦",
 			Severity:  top.Severity,
 			Dimension: &dimension,
-			Summary:   fmt.Sprintf("%s 维度已经形成高置信度薄弱信号。", dimensionLabel(top.Dimension)),
+			Summary:   buildWeakDimensionObservationSummary(top),
 			Evidence:  top.Evidence,
 			Action:    fmt.Sprintf("接下来优先补 %s 维度的 %s 难度题。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
 		})
@@ -296,7 +321,7 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 			Label:     "维度聚焦",
 			Severity:  SeverityAttention,
 			Dimension: &dimension,
-			Summary:   fmt.Sprintf("%s 维度的训练证据还不够，暂时不宜下明确弱项结论。", dimensionLabel(top.Dimension)),
+			Summary:   buildCoverageGapObservationSummary(top),
 			Evidence:  top.Evidence,
 			Action:    fmt.Sprintf("先补 1 道 %s 维度的 %s 难度题，把训练样本补齐。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
 		})
@@ -342,7 +367,9 @@ func BuildClassReview(
 		if snapshot.CorrectSubmissionCount > 0 && snapshot.WriteupCount+snapshot.ApprovedReviewCount == 0 {
 			closureGapStudents = append(closureGapStudents, snapshot)
 		}
-		if snapshot.MaxWrongStreak >= 3 || (snapshot.WrongSubmissionCount >= 5 && snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount*2) {
+		failureCount := submissionFailureCount(snapshot)
+		successCount := submissionSuccessCount(snapshot)
+		if snapshot.MaxWrongStreak >= 3 || (failureCount >= 5 && failureCount > successCount*2) {
 			retryRiskStudents = append(retryRiskStudents, snapshot)
 		}
 
@@ -385,7 +412,7 @@ func BuildClassReview(
 		StudentIDs:  studentIDs(lowActivityStudents, 3),
 	})
 
-	if dimension, students := selectTopWeakDimension(weakDimensionCounts, weakDimensionStudents); dimension != "" {
+	if dimension, students := selectTopWeakDimension(weakDimensionCounts, weakDimensionStudents, len(snapshots)); dimension != "" {
 		items = append(items, ClassReviewItem{
 			Code:                    "weak_dimension_cluster",
 			Severity:                weakDimensionSeverities[dimension],
@@ -535,38 +562,44 @@ func evaluateDimension(fact DimensionFact) DimensionAdvice {
 	}
 
 	profileScore := clampScore(fact.ProfileScore)
+	attemptCount := maxInt(fact.AttemptCount, fact.SuccessCount)
+	successCount := minInt(fact.SuccessCount, attemptCount)
 	evidenceCount := fact.EvidenceCount
-	if evidenceCount < fact.AttemptCount+fact.SuccessCount {
-		evidenceCount = fact.AttemptCount + fact.SuccessCount
+	if evidenceCount < attemptCount {
+		evidenceCount = attemptCount
 	}
 
 	advice := DimensionAdvice{
 		Dimension:     dimension,
 		ProfileScore:  profileScore,
-		AttemptCount:  fact.AttemptCount,
-		SuccessCount:  fact.SuccessCount,
+		AttemptCount:  attemptCount,
+		SuccessCount:  successCount,
 		EvidenceCount: evidenceCount,
 	}
 
 	successRate := 0.0
-	if fact.AttemptCount > 0 {
-		successRate = float64(fact.SuccessCount) / float64(fact.AttemptCount)
+	if attemptCount > 0 {
+		successRate = float64(successCount) / float64(attemptCount)
 	}
-	stableProgress := fact.AttemptCount >= 2 && fact.SuccessCount >= 2 && successRate >= 0.8
+	stableProgress := attemptCount >= 2 && successCount >= 2 && successRate >= 0.8
 
 	reasonCodes := make([]string, 0, 3)
-	if evidenceCount >= 3 && profileScore < 0.35 && !stableProgress {
+	if evidenceCount >= 4 && attemptCount >= 4 && profileScore < 0.35 && successCount == 0 {
 		advice.IsWeak = true
 		advice.Severity = SeverityDanger
 		reasonCodes = append(reasonCodes, "score_critical", "evidence_sufficient")
-	} else if evidenceCount >= 2 && profileScore < 0.5 && successRate < 0.6 {
+	} else if evidenceCount >= 3 && attemptCount >= 3 && profileScore < 0.5 && successRate < 0.5 && !stableProgress {
 		advice.IsWeak = true
 		advice.Severity = SeverityWarning
 		reasonCodes = append(reasonCodes, "score_low", "evidence_sufficient")
-	} else if (evidenceCount > 0 || fact.AttemptCount > 0) && profileScore < 0.6 {
+	} else if (evidenceCount > 0 || attemptCount > 0) && profileScore < 0.6 {
 		advice.Severity = SeverityAttention
 		if stableProgress {
 			reasonCodes = append(reasonCodes, "coverage_gap", "recent_progress_stable")
+		} else if successCount > 0 {
+			reasonCodes = append(reasonCodes, "coverage_gap", "early_success_seen")
+		} else if attemptCount >= 2 {
+			reasonCodes = append(reasonCodes, "evidence_in_progress", "needs_foundation")
 		} else {
 			reasonCodes = append(reasonCodes, "evidence_insufficient", "needs_foundation")
 		}
@@ -575,7 +608,7 @@ func evaluateDimension(fact DimensionFact) DimensionAdvice {
 		reasonCodes = append(reasonCodes, "progress_stable")
 	}
 
-	if fact.AttemptCount >= 3 && fact.SuccessCount == 0 && advice.IsWeak {
+	if attemptCount >= 4 && successCount == 0 && advice.IsWeak {
 		advice.Severity = maxSeverity(advice.Severity, SeverityDanger)
 		reasonCodes = append(reasonCodes, "repeated_failures")
 	}
@@ -584,13 +617,13 @@ func evaluateDimension(fact DimensionFact) DimensionAdvice {
 	if advice.IsWeak {
 		confidence += 0.2
 	}
-	if fact.SuccessCount > 0 {
+	if successCount > 0 {
 		confidence += 0.05
 	}
 	advice.Confidence = roundConfidence(confidence)
 	advice.ReasonCodes = uniqueStrings(reasonCodes)
 	advice.Summary = buildDimensionSummary(advice)
-	advice.Evidence = fmt.Sprintf("%s 维度画像 %.0f%%，尝试 %d 次，成功 %d 次，相关证据 %d 条。", dimensionLabel(dimension), profileScore*100, fact.AttemptCount, fact.SuccessCount, evidenceCount)
+	advice.Evidence = fmt.Sprintf("%s 维度画像 %.0f%%，尝试 %d 次，成功 %d 次，相关证据 %d 条。", dimensionLabel(dimension), profileScore*100, attemptCount, successCount, evidenceCount)
 	return advice
 }
 
@@ -599,9 +632,13 @@ func buildDimensionSummary(advice DimensionAdvice) string {
 	case advice.IsWeak && advice.Severity == SeverityDanger:
 		return fmt.Sprintf("%s 维度得分偏低，而且已经有足够训练证据支撑弱项判断。", dimensionLabel(advice.Dimension))
 	case advice.IsWeak:
-		return fmt.Sprintf("%s 维度当前更像真实薄弱项，而不是暂时没有做题。", dimensionLabel(advice.Dimension))
+		return fmt.Sprintf("%s 维度经过多次训练后仍然偏弱，已经接近真实薄弱项。", dimensionLabel(advice.Dimension))
 	case containsReasonCode(advice.ReasonCodes, "recent_progress_stable"):
 		return fmt.Sprintf("%s 维度已经开始出现稳定进展，但覆盖率还不够，建议继续补样本。", dimensionLabel(advice.Dimension))
+	case containsReasonCode(advice.ReasonCodes, "early_success_seen"):
+		return fmt.Sprintf("%s 维度已经出现成功样本，但覆盖率还不够，暂时更像补样本而不是明确弱项。", dimensionLabel(advice.Dimension))
+	case containsReasonCode(advice.ReasonCodes, "evidence_in_progress"):
+		return fmt.Sprintf("%s 维度已经出现几次训练样本，但结果还不稳定，建议先补基础再判断。", dimensionLabel(advice.Dimension))
 	case advice.Severity == SeverityAttention:
 		return fmt.Sprintf("%s 维度暂时还缺少足够训练样本，建议先补基础证据。", dimensionLabel(advice.Dimension))
 	default:
@@ -625,6 +662,7 @@ func pickRecommendationTarget(category string, evaluation StudentEvaluation) Dim
 func selectTopWeakDimension(
 	counts map[string]int,
 	grouped map[string][]StudentFactSnapshot,
+	totalStudents int,
 ) (string, []StudentFactSnapshot) {
 	bestDimension := ""
 	bestCount := 0
@@ -635,6 +673,10 @@ func selectTopWeakDimension(
 		}
 	}
 	if bestDimension == "" {
+		return "", nil
+	}
+	minClusterCount := maxInt(2, (totalStudents+3)/4)
+	if bestCount < minClusterCount {
 		return "", nil
 	}
 
@@ -683,10 +725,12 @@ func classDifficultyBand(
 }
 
 func submissionStabilitySeverity(snapshot StudentFactSnapshot) (Severity, bool) {
-	if snapshot.MaxWrongStreak >= 4 || (snapshot.WrongSubmissionCount >= 5 && snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount*2) {
+	wrongCount := submissionFailureCount(snapshot)
+	successCount := submissionSuccessCount(snapshot)
+	if snapshot.MaxWrongStreak >= 4 || (wrongCount >= 5 && wrongCount > successCount*2) {
 		return SeverityDanger, true
 	}
-	if snapshot.MaxWrongStreak >= 2 || (snapshot.WrongSubmissionCount >= 3 && snapshot.WrongSubmissionCount > snapshot.CorrectSubmissionCount) {
+	if snapshot.MaxWrongStreak >= 2 || (wrongCount >= 3 && wrongCount > successCount) {
 		return SeverityWarning, true
 	}
 	return "", false
@@ -703,7 +747,7 @@ func buildLowActivityObservation(snapshot StudentFactSnapshot) (ReviewArchiveObs
 		Label:    "近期活跃度",
 		Severity: severity,
 		Summary:  "最近一周训练节奏偏慢，需要尽快恢复稳定投入。",
-		Evidence: fmt.Sprintf("近 7 天活跃 %d 天，训练事件 %d 次，正确提交 %d 次。", snapshot.ActiveDays7d, snapshot.RecentEventCount7d, snapshot.CorrectSubmissionCount),
+		Evidence: fmt.Sprintf("近 7 天活跃 %d 天，训练事件 %d 次，成功事件 %d 次。", snapshot.ActiveDays7d, snapshot.RecentEventCount7d, submissionSuccessCount(snapshot)),
 		Action:   "先确认当前卡点，再安排 1 个可完成的小目标，把训练节奏拉回来。",
 	}
 	if severity == SeverityWarning {
@@ -727,10 +771,80 @@ func isLowActivity(snapshot StudentFactSnapshot) bool {
 	if snapshot.ActiveDays7d <= 1 {
 		return true
 	}
-	if snapshot.RecentEventCount7d <= 2 && snapshot.CorrectSubmissionCount == 0 {
+	if snapshot.RecentEventCount7d <= 2 && submissionSuccessCount(snapshot) == 0 {
 		return true
 	}
 	return false
+}
+
+func buildTrainingClosureEvidence(
+	challengeSuccessCount int,
+	submissionSuccessCount int,
+	awdSuccessCount int,
+	writeupCount int,
+	approvedReviewCount int,
+) string {
+	parts := []string{
+		fmt.Sprintf("完成题目 %d 道", challengeSuccessCount),
+		fmt.Sprintf("writeup %d 份", writeupCount),
+		fmt.Sprintf("通过评阅 %d 条", approvedReviewCount),
+	}
+	if awdSuccessCount > 0 {
+		parts = append(parts, fmt.Sprintf("AWD 成功 %d 次", awdSuccessCount))
+	}
+	if submissionSuccessCount > challengeSuccessCount && awdSuccessCount == 0 {
+		parts = append(parts, fmt.Sprintf("归档成功事件 %d 次", submissionSuccessCount))
+	}
+	return strings.Join(parts, "，") + "。"
+}
+
+func buildWeakDimensionObservationSummary(advice DimensionAdvice) string {
+	if advice.Severity == SeverityDanger {
+		return fmt.Sprintf("%s 维度已经形成高置信度薄弱信号。", dimensionLabel(advice.Dimension))
+	}
+	if advice.SuccessCount > 0 {
+		return fmt.Sprintf("%s 维度已经有过成功样本，但多次训练后结果仍不稳定，开始接近真实薄弱项。", dimensionLabel(advice.Dimension))
+	}
+	return fmt.Sprintf("%s 维度经过多次训练后仍然偏弱，已经形成明确补强优先级。", dimensionLabel(advice.Dimension))
+}
+
+func buildCoverageGapObservationSummary(advice DimensionAdvice) string {
+	switch {
+	case advice.SuccessCount > 0:
+		return fmt.Sprintf("%s 维度已经出现成功样本，但覆盖率还不够，暂时不宜下明确弱项结论。", dimensionLabel(advice.Dimension))
+	case advice.AttemptCount >= 2:
+		return fmt.Sprintf("%s 维度已经出现少量训练样本，但结果还不稳定，暂时不宜下明确弱项结论。", dimensionLabel(advice.Dimension))
+	default:
+		return fmt.Sprintf("%s 维度的训练证据还不够，暂时不宜下明确弱项结论。", dimensionLabel(advice.Dimension))
+	}
+}
+
+func challengeSuccessCount(snapshot StudentFactSnapshot) int {
+	if snapshot.ChallengeSuccessCount > 0 {
+		return snapshot.ChallengeSuccessCount
+	}
+	if hasExplicitSubmissionCounts(snapshot) {
+		return maxInt(snapshot.SubmissionSuccessCount-snapshot.AWDSuccessCount, 0)
+	}
+	return snapshot.CorrectSubmissionCount
+}
+
+func submissionSuccessCount(snapshot StudentFactSnapshot) int {
+	if hasExplicitSubmissionCounts(snapshot) {
+		return snapshot.SubmissionSuccessCount
+	}
+	return snapshot.CorrectSubmissionCount
+}
+
+func submissionFailureCount(snapshot StudentFactSnapshot) int {
+	if hasExplicitSubmissionCounts(snapshot) {
+		return snapshot.SubmissionFailureCount
+	}
+	return snapshot.WrongSubmissionCount
+}
+
+func hasExplicitSubmissionCounts(snapshot StudentFactSnapshot) bool {
+	return snapshot.ChallengeSuccessCount > 0 || snapshot.SubmissionSuccessCount > 0 || snapshot.SubmissionFailureCount > 0
 }
 
 func studentIDs(students []StudentFactSnapshot, limit int) []int64 {
@@ -842,6 +956,13 @@ func clampScore(value float64) float64 {
 
 func minInt(left, right int) int {
 	if left < right {
+		return left
+	}
+	return right
+}
+
+func maxInt(left, right int) int {
+	if left > right {
 		return left
 	}
 	return right

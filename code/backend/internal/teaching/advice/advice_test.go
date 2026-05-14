@@ -154,6 +154,31 @@ func TestEvaluateStudentTreatsStableRecentSuccessAsFoundationInsteadOfExplicitWe
 	}
 }
 
+func TestEvaluateStudentTreatsSingleSuccessfulSampleAsCoverageGapInsteadOfExplicitWeakness(t *testing.T) {
+	t.Parallel()
+
+	evaluation := EvaluateStudent(StudentFactSnapshot{
+		UserID: 21,
+		Dimensions: []DimensionFact{
+			{Dimension: "web", ProfileScore: 0.33, AttemptCount: 1, SuccessCount: 1, EvidenceCount: 3},
+		},
+	})
+
+	if len(evaluation.WeakDimensions) != 0 {
+		t.Fatalf("expected no explicit weak dimension for early successful sample, got %+v", evaluation.WeakDimensions)
+	}
+	if len(evaluation.RecommendationTargets) != 1 {
+		t.Fatalf("expected one recommendation target, got %+v", evaluation.RecommendationTargets)
+	}
+	target := evaluation.RecommendationTargets[0]
+	if target.Dimension != "web" || target.Severity != SeverityAttention {
+		t.Fatalf("expected web attention target, got %+v", target)
+	}
+	if !strings.Contains(target.Summary, "成功样本") {
+		t.Fatalf("expected coverage-gap summary to mention successful sample, got %+v", target)
+	}
+}
+
 func TestEvaluateStudentDoesNotRecommendHealthyDimensionWithOnlyGoodEvidence(t *testing.T) {
 	t.Parallel()
 
@@ -190,6 +215,41 @@ func TestEvaluateStudentDoesNotRecommendHealthyDimensionWithOnlyGoodEvidence(t *
 			t.Fatalf("expected no dimension_focus observation for healthy evidence-backed student, got %+v", item)
 		}
 	}
+}
+
+func TestBuildReviewArchiveObservationsUsesCoverageGapCopyForEarlySuccess(t *testing.T) {
+	t.Parallel()
+
+	snapshot := StudentFactSnapshot{
+		UserID:                 22,
+		ActiveDays7d:           3,
+		RecentEventCount7d:     4,
+		CorrectSubmissionCount: 1,
+		ChallengeSuccessCount:  1,
+		SubmissionSuccessCount: 1,
+		WriteupCount:           0,
+		Dimensions: []DimensionFact{
+			{Dimension: "web", ProfileScore: 0.33, AttemptCount: 1, SuccessCount: 1, EvidenceCount: 3},
+		},
+	}
+
+	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
+	for _, item := range items {
+		if item.Code != "dimension_focus" {
+			continue
+		}
+		if item.Severity != SeverityAttention {
+			t.Fatalf("expected attention severity for early-success coverage gap, got %+v", item)
+		}
+		if strings.Contains(item.Summary, "高置信度薄弱") {
+			t.Fatalf("expected dimension focus to avoid explicit weak-signal copy, got %+v", item)
+		}
+		if !strings.Contains(item.Summary, "成功样本") {
+			t.Fatalf("expected dimension focus summary to mention early successful sample, got %+v", item)
+		}
+		return
+	}
+	t.Fatalf("expected dimension_focus observation, got %+v", items)
 }
 
 func TestBuildClassReviewAggregatesWeakDimensionAndRiskSignals(t *testing.T) {
@@ -348,13 +408,106 @@ func TestBuildClassReviewKeepsHealthyClassAsAttentionWhenOnlyFewStudentsSlowDown
 	t.Fatalf("expected activity_risk item, got %+v", items)
 }
 
+func TestBuildClassReviewRequiresClusterBeforeEmittingWeakDimensionCluster(t *testing.T) {
+	t.Parallel()
+
+	students := []StudentFactSnapshot{
+		{
+			UserID:             1,
+			Username:           "alice",
+			ActiveDays7d:       3,
+			RecentEventCount7d: 4,
+			Dimensions: []DimensionFact{
+				{Dimension: "web", ProfileScore: 0.22, AttemptCount: 4, SuccessCount: 0, EvidenceCount: 4},
+			},
+		},
+		{
+			UserID:                 2,
+			Username:               "bob",
+			ActiveDays7d:           4,
+			RecentEventCount7d:     5,
+			CorrectSubmissionCount: 1,
+			Dimensions: []DimensionFact{
+				{Dimension: "crypto", ProfileScore: 0.76, AttemptCount: 2, SuccessCount: 1, EvidenceCount: 3},
+			},
+		},
+		{
+			UserID:                 3,
+			Username:               "carol",
+			ActiveDays7d:           5,
+			RecentEventCount7d:     7,
+			CorrectSubmissionCount: 2,
+			Dimensions: []DimensionFact{
+				{Dimension: "pwn", ProfileScore: 0.81, AttemptCount: 3, SuccessCount: 2, EvidenceCount: 5},
+			},
+		},
+		{
+			UserID:                 4,
+			Username:               "dave",
+			ActiveDays7d:           4,
+			RecentEventCount7d:     6,
+			CorrectSubmissionCount: 1,
+			Dimensions: []DimensionFact{
+				{Dimension: "reverse", ProfileScore: 0.72, AttemptCount: 2, SuccessCount: 1, EvidenceCount: 3},
+			},
+		},
+	}
+
+	evaluations := make(map[int64]StudentEvaluation, len(students))
+	for _, student := range students {
+		evaluations[student.UserID] = EvaluateStudent(student)
+	}
+
+	items := BuildClassReview(
+		"信安2402",
+		ClassSummarySnapshot{ClassName: "信安2402", StudentCount: len(students), ActiveRate: 90, RecentEventCount: 22},
+		nil,
+		students,
+		evaluations,
+	)
+
+	for _, item := range items {
+		if item.Code == "weak_dimension_cluster" {
+			t.Fatalf("expected no weak_dimension_cluster when only one student is weak, got %+v", item)
+		}
+	}
+}
+
+func TestBuildReviewArchiveObservationsHighlightsHandsOnResultWhenProcessAndOutcomeBothExist(t *testing.T) {
+	t.Parallel()
+
+	snapshot := StudentFactSnapshot{
+		UserID:                 23,
+		ActiveDays7d:           4,
+		RecentEventCount7d:     7,
+		CorrectSubmissionCount: 2,
+		ChallengeSuccessCount:  1,
+		SubmissionSuccessCount: 3,
+		SubmissionFailureCount: 1,
+		HandsOnEventCount:      4,
+		AWDSuccessCount:        2,
+	}
+
+	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
+	for _, item := range items {
+		if item.Code != "hands_on_depth" {
+			continue
+		}
+		if !strings.Contains(item.Summary, "实战结果") {
+			t.Fatalf("expected hands_on_depth summary to mention real outcome, got %+v", item)
+		}
+		return
+	}
+	t.Fatalf("expected hands_on_depth observation, got %+v", items)
+}
+
 func TestBuildRecommendationPlanExplainsCandidateDifficultyFallbackInReason(t *testing.T) {
 	t.Parallel()
 
 	snapshot := StudentFactSnapshot{
 		UserID: 18,
 		Dimensions: []DimensionFact{
-			{Dimension: "reverse", ProfileScore: 0.34, AttemptCount: 3, SuccessCount: 0, EvidenceCount: 3},
+			{Dimension: "reverse", ProfileScore: 0.34, AttemptCount: 4, SuccessCount: 0, EvidenceCount: 4},
 		},
 	}
 	evaluation := EvaluateStudent(snapshot)

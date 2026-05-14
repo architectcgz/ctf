@@ -709,6 +709,46 @@ func TestBuildReviewArchiveSummaryCountsAWDAttackEvents(t *testing.T) {
 	}
 }
 
+func TestBuildReviewArchiveSummaryCombinesTimelineAndEvidenceSuccessesWhenSourcesAreSplit(t *testing.T) {
+	t.Parallel()
+
+	success := true
+	now := time.Date(2026, 4, 13, 15, 0, 0, 0, time.UTC)
+
+	summary := buildReviewArchiveSummary(
+		6,
+		&assessmentdomain.PersonalReportStats{
+			TotalScore:    150,
+			TotalSolved:   1,
+			TotalAttempts: 2,
+			Rank:          1,
+		},
+		[]assessmentdomain.ReviewArchiveTimelineEvent{
+			{
+				Type:        "flag_submit",
+				ChallengeID: 11,
+				Title:       "web-flag",
+				Timestamp:   now,
+				IsCorrect:   &success,
+			},
+		},
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:      "awd_attack_submission",
+				Category:  "web",
+				Timestamp: now.Add(time.Minute),
+				Meta:      map[string]any{"is_success": true},
+			},
+		},
+		nil,
+		nil,
+	)
+
+	if summary.CorrectSubmissionCount != 2 {
+		t.Fatalf("expected timeline and evidence successes to both count, got %+v", summary)
+	}
+}
+
 func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *testing.T) {
 	t.Parallel()
 
@@ -794,16 +834,77 @@ func TestBuildReviewArchiveTeachingFactSnapshotOnlyMarksDimensionWithRealEvidenc
 	)
 
 	evaluation := teachingadvice.EvaluateStudent(snapshot)
-	if len(evaluation.WeakDimensions) != 1 {
-		t.Fatalf("expected exactly one weak dimension, got %+v", evaluation.WeakDimensions)
+	if len(evaluation.WeakDimensions) != 0 {
+		t.Fatalf("expected no explicit weak dimensions for sparse archive evidence, got %+v", evaluation.WeakDimensions)
 	}
-	if evaluation.WeakDimensions[0].Dimension != "web" {
-		t.Fatalf("expected web to remain the only weak dimension, got %+v", evaluation.WeakDimensions)
+	if len(evaluation.RecommendationTargets) == 0 || evaluation.RecommendationTargets[0].Dimension != "web" {
+		t.Fatalf("expected web to remain the primary recommendation target, got %+v", evaluation.RecommendationTargets)
 	}
 	for _, item := range evaluation.RecommendationTargets {
 		if item.Dimension == "pwn" {
 			t.Fatalf("expected pwn to stay out of recommendation targets without archive evidence, got %+v", evaluation.RecommendationTargets)
 		}
+	}
+}
+
+func TestBuildReviewArchiveTeachingFactSnapshotUsesExplicitTrackedSubmissionCounts(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 5, 14, 10, 0, 0, 0, time.UTC)
+	snapshot := buildReviewArchiveTeachingFactSnapshot(
+		assessmentdomain.ReviewArchiveSummary{
+			TotalAttempts:          2,
+			CorrectSubmissionCount: 2,
+			LastActivityAt:         &now,
+		},
+		[]*dto.SkillDimension{
+			{Dimension: "web", Score: 0.42},
+		},
+		nil,
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:      "challenge_submission",
+				Category:  "web",
+				Timestamp: now.Add(-4 * time.Minute),
+				Meta:      map[string]any{"is_correct": false},
+			},
+			{
+				Type:      "challenge_submission",
+				Category:  "web",
+				Timestamp: now.Add(-3 * time.Minute),
+				Meta:      map[string]any{"is_correct": true},
+			},
+			{
+				Type:      "awd_attack_submission",
+				Category:  "web",
+				Timestamp: now.Add(-2 * time.Minute),
+				Meta:      map[string]any{"is_success": false},
+			},
+			{
+				Type:      "awd_attack_submission",
+				Category:  "web",
+				Timestamp: now.Add(-1 * time.Minute),
+				Meta:      map[string]any{"is_success": true},
+			},
+		},
+		nil,
+		nil,
+	)
+
+	if snapshot.CorrectSubmissionCount != 2 {
+		t.Fatalf("expected 2 successful archive events, got %+v", snapshot)
+	}
+	if snapshot.WrongSubmissionCount != 2 {
+		t.Fatalf("expected explicit tracked failures to be counted, got %+v", snapshot)
+	}
+	if snapshot.ChallengeSuccessCount != 1 {
+		t.Fatalf("expected 1 challenge success, got %+v", snapshot)
+	}
+	if snapshot.SubmissionSuccessCount != 2 || snapshot.SubmissionFailureCount != 2 {
+		t.Fatalf("expected explicit success/failure breakdown, got %+v", snapshot)
+	}
+	if snapshot.AWDSuccessCount != 1 {
+		t.Fatalf("expected 1 awd success, got %+v", snapshot)
 	}
 }
 

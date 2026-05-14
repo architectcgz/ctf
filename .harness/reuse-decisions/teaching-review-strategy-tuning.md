@@ -28,17 +28,13 @@ service
 extend_existing
 
 ## Reason
-这次不是新增新的教学建议模块，而是继续修正现有链路里的几类明确策略问题：班级建议挂题语义错配、活跃风险阈值过敏、个人复盘低活跃观察缺失/误报、单次错误提交流程误报，以及 knowledge tag 命中的推荐维度错绑。继续扩展 `internal/teaching/advice`、`report_service.go`、`recommendation_service.go` 与现有 challenge 查询 owner，同时同步更新既有专题架构文档，符合最小改动，也能保持“建议层唯一 owner”不被打散。
+这次不是新增新的教学建议模块，而是继续在现有链路里收紧几类已经影响教师判断质量的规则：个人复盘弱项阈值过松、归档提交统计口径混杂、观察结论文案过于模板化，以及班级维度聚类过早放大。继续扩展 `internal/teaching/advice` 与 `report_service.go` 两个既有 owner，并同步更新现有设计 / 架构文档，符合最小改动，也能保持“建议层唯一 owner”不被打散。
 
 ## Files to modify
 - `code/backend/internal/teaching/advice/advice.go`
 - `code/backend/internal/teaching/advice/advice_test.go`
 - `code/backend/internal/module/assessment/application/commands/report_service.go`
 - `code/backend/internal/module/assessment/application/commands/report_service_test.go`
-- `code/backend/internal/module/assessment/application/queries/recommendation_service.go`
-- `code/backend/internal/module/assessment/application/queries/recommendation_service_test.go`
-- `code/backend/internal/model/challenge.go`
-- `code/backend/internal/module/challenge/infrastructure/repository.go`
-- `code/backend/internal/module/challenge/infrastructure/repository_test.go`
+- `docs/design/教学复盘建议优化方案.md`
 - `docs/architecture/features/教学复盘建议生成架构.md`
 - `docs/plan/impl-plan/2026-05-13-teaching-review-strategy-tuning-implementation-plan.md`

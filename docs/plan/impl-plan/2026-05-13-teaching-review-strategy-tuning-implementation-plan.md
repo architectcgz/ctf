@@ -9,6 +9,9 @@
 - 推荐理由里的难度描述不再把实际 `easy` 题写成 `beginner`
 - 个人复盘里的 `submission_stability` 不再把单次错误提交误报成高试错
 - 个人复盘里的 `low_activity` 不再基于缺失的 7 天活跃事实全面误报
+- 个人复盘里的 `dimension_focus` 不再把“样本少但已经成功”的维度误报成高置信度薄弱项
+- 复盘归档里的 `correct / wrong submission` 不再混用 `solved / attempts / AWD success` 三套语义
+- 个人复盘观察结论不再固定套用同一模板，而是按“已出结果但覆盖不足 / 已动手但结果不稳 / 过程完整且有迁移结果”等状态分支输出
 - knowledge tag 命中的推荐题不再用题目原始 `category` 错绑推荐维度
 - 健康、证据稳定的学生不再被系统为了“始终给题”而强行制造推荐题或 `dimension_focus`
 
@@ -46,6 +49,10 @@
 - 个人复盘侧 `low_activity` 原本没有独立观察项；补观察项后又暴露出 review archive 事实快照没有近 7 天活跃统计
 - challenge 推荐查询允许通过 knowledge tag 命中候选，但推荐理由仍可能退回题目原始 `category` 解释维度
 - 现有 seed 输出已经证明：这些规则会在真实样本下产出不自然的教师建议
+- 个人复盘里的弱项判定与观察文案仍然过于激进：
+  - `evidence_count >= 3 && profile_score < 0.35` 仍可能把“1 次尝试、1 次成功”的维度打成 `danger`
+  - `WrongSubmissionCount` 仍通过 `TotalAttempts - CorrectSubmissionCount` 反推，导致 practice / AWD / solved 口径混在一起
+  - `training_closure / submission_stability / hands_on_depth / dimension_focus` 仍大量复用同一套固定文案，教师很难从文字上区分“覆盖不足”和“真实薄弱项”
 
 ## Chosen Direction
 
@@ -68,6 +75,10 @@
   - 推荐理由的 `summary` 不能伪装题目实际难度
   - 个人低活跃观察依赖真实近 7 天活跃事实
   - 健康、证据稳定的学生允许没有推荐题
+10. 继续收紧个人复盘策略：
+  - 弱项维度必须同时满足“低画像 + 足够样本 + 没有稳定成功基础”
+  - review archive 的成功 / 失败提交改为显式统计，不再用总尝试反推
+  - 观察文案根据训练阶段分支生成，减少模板化结论
 
 ## Ownership Boundary
 
@@ -83,6 +94,8 @@
 - `challenge/infrastructure/repository.go`
   - 负责：在现有候选题查询结果里补充实际命中的推荐维度
   - 不负责：生成推荐理由或改变候选排序策略
+- `docs/design/教学复盘建议优化方案.md`
+  - 负责：沉淀本轮“阈值收紧 / 口径收口 / 文案分支”背后的中间设计取舍
 - `docs/architecture/features/教学复盘建议生成架构.md`
   - 负责：记录新的 class-level 策略边界与当前实现口径
 
@@ -101,6 +114,7 @@
 - Modify: `code/backend/internal/module/challenge/infrastructure/repository_test.go`
 - Modify: `code/backend/internal/module/teaching_readmodel/application/queries/class_insight_service.go`
 - Modify: `code/backend/internal/module/teaching_readmodel/application/queries/class_insight_service_test.go`
+- Modify: `docs/design/教学复盘建议优化方案.md`
 - Modify: `docs/architecture/features/教学复盘建议生成架构.md`
 
 ## Task Slices
@@ -185,6 +199,26 @@ Review focus:
 
 - 文档是否清楚写明“负责 / 不负责”和策略证据来源
 - 是否避免把计划性表述写成当前事实
+
+### Slice 6: 收紧复盘判定阈值与统一统计口径
+
+目标：
+
+- 弱项维度必须同时满足“低画像 + 足够样本 + 没有稳定成功基础”，避免把少量成功样本误报成高置信度弱项
+- review archive 的成功 / 失败提交改为显式统计，不再用 `TotalAttempts - CorrectSubmissionCount` 反推
+- 观察文案按训练状态分支输出，减少“不同学生看起来像同一条模板”的结论
+
+Validation:
+
+- `cd code/backend && go test ./internal/teaching/advice -run 'TestEvaluateStudent|TestBuildReviewArchiveObservations|TestBuildClassReview' -count=1 -timeout 120s`
+- `cd code/backend && go test ./internal/module/assessment/application/commands -run 'TestBuildReviewArchive|TestRecentReviewArchive|TestBuildStudentReviewArchiveData' -count=1 -timeout 120s`
+- `cd code/backend && go run ./cmd/seed-teaching-review-data`
+
+Review focus:
+
+- 是否真正区分了“覆盖不足”和“高置信度薄弱项”
+- 归档摘要与观察证据是否不再读起来互相冲突
+- 观察文案是否能反映不同训练状态，而不是继续套同一模板
 
 ## Verification Plan
 
