@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -17,17 +16,12 @@ type AWDChallengeCommandFacade struct {
 }
 
 func NewAWDChallengeCommandFacade(
-	db *gorm.DB,
 	repo challengeports.AWDChallengeCommandRepository,
-	imageBuild ...*ImageBuildService,
+	importService *AWDChallengeImportService,
 ) *AWDChallengeCommandFacade {
-	var buildService *ImageBuildService
-	if len(imageBuild) > 0 {
-		buildService = imageBuild[0]
-	}
 	return &AWDChallengeCommandFacade{
 		core:    NewAWDChallengeService(repo),
-		imports: NewAWDChallengeImportService(db, repo, buildService),
+		imports: importService,
 	}
 }
 

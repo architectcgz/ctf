@@ -1,7 +1,6 @@
 package module
 
 var allowedApplicationConcreteImports = map[string]struct{}{
-	"challenge/application/commands/awd_challenge_command_facade.go -> gorm.io/gorm":              {},
 	"challenge/application/commands/awd_challenge_import_service.go -> gorm.io/gorm":              {},
 	"challenge/application/commands/challenge_import_service.go -> gorm.io/gorm":                  {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":        {},
