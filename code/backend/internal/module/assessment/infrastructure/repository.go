@@ -400,6 +400,35 @@ func (r *Repository) fillStudentDimensionFacts(
 			fact.EvidenceCount += row.AttemptCount
 		}
 
+		type solvedDifficultyRow struct {
+			Dimension   string `gorm:"column:dimension"`
+			Difficulty  string `gorm:"column:difficulty"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}
+		solvedDifficultyRows := make([]solvedDifficultyRow, 0)
+		if err := r.dbWithContext(ctx).Raw(`
+			SELECT
+				c.category AS dimension,
+				c.difficulty AS difficulty,
+				COUNT(DISTINCT s.challenge_id) AS solved_count
+			FROM submissions s
+			JOIN challenges c ON c.id = s.challenge_id
+			WHERE s.user_id = ?
+				AND s.contest_id IS NULL
+				AND s.is_correct = TRUE
+				AND c.status = ?
+			GROUP BY c.category, c.difficulty
+		`, userID, model.ChallengeStatusPublished).Scan(&solvedDifficultyRows).Error; err != nil {
+			return fmt.Errorf("get student dimension solved difficulty facts: %w", err)
+		}
+		for _, row := range solvedDifficultyRows {
+			fact := ensureDimensionFact(factMap, row.Dimension)
+			if fact.SolvedDifficultyCounts == nil {
+				fact.SolvedDifficultyCounts = make(map[string]int)
+			}
+			fact.SolvedDifficultyCounts[row.Difficulty] = row.SolvedCount
+		}
+
 		if r.db.Migrator().HasTable("audit_logs") && r.db.Migrator().HasTable("instances") {
 			type evidenceRow struct {
 				Dimension string `gorm:"column:dimension"`

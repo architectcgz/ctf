@@ -20,23 +20,26 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
 type stubChallengeRecommendationRepo struct {
-	challenges []*model.Challenge
-	calls      int
-	lastLimit  int
-	lastDims   []string
-	lastSolved []int64
+	challenges     []*model.Challenge
+	calls          int
+	lastLimit      int
+	lastDims       []string
+	lastDifficulty string
+	lastSolved     []int64
 }
 
-func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(_ context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(_ context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error) {
 	s.calls++
 	s.lastLimit = limit
 	s.lastDims = append([]string(nil), dimensions...)
+	s.lastDifficulty = preferredDifficulty
 	s.lastSolved = append([]int64(nil), excludeSolved...)
 	return s.challenges, nil
 }
@@ -48,7 +51,15 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.SkillProfile{}, &model.Submission{}, &model.AWDAttackLog{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.User{},
+		&model.Challenge{},
+		&model.SkillProfile{},
+		&model.Submission{},
+		&model.AWDAttackLog{},
+		&model.Tag{},
+		&model.ChallengeTag{},
+	); err != nil {
 		t.Fatalf("migrate recommendation tables: %v", err)
 	}
 	return db
@@ -260,6 +271,87 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	}
 }
 
+func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandidates(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now()
+
+	if err := db.Create(&model.User{
+		ID:       18,
+		Username: "student-18",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&model.SkillProfile{
+		UserID:    18,
+		Dimension: model.DimensionPwn,
+		Score:     0.5,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         1801,
+		Title:      "training-pwn-sample",
+		Category:   model.DimensionPwn,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     80,
+		Status:     model.ChallengeStatusPublished,
+	}).Error; err != nil {
+		t.Fatalf("seed practice sample challenge: %v", err)
+	}
+	for index := 0; index < 2; index++ {
+		if err := db.Create(&model.Submission{
+			UserID:      18,
+			ChallengeID: 1801,
+			IsCorrect:   false,
+			SubmittedAt: now.Add(time.Duration(index) * time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed submission %d: %v", index, err)
+		}
+	}
+
+	candidates := []model.Challenge{
+		{
+			ID:         1802,
+			Title:      "pwn-beginner",
+			Category:   model.DimensionPwn,
+			Difficulty: model.ChallengeDifficultyBeginner,
+			Points:     90,
+			Status:     model.ChallengeStatusPublished,
+		},
+		{
+			ID:         1803,
+			Title:      "pwn-easy",
+			Category:   model.DimensionPwn,
+			Difficulty: model.ChallengeDifficultyEasy,
+			Points:     120,
+			Status:     model.ChallengeStatusPublished,
+		},
+	}
+	for _, challenge := range candidates {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed candidate %s: %v", challenge.Title, err)
+		}
+	}
+
+	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+
+	items, err := service.RecommendChallenges(context.Background(), 18, 2)
+	if err != nil {
+		t.Fatalf("RecommendChallenges() error = %v", err)
+	}
+	if len(items) != 2 {
+		t.Fatalf("expected 2 recommendations, got %+v", items)
+	}
+	if items[0].DifficultyBand != model.ChallengeDifficultyEasy {
+		t.Fatalf("expected preferred difficulty band easy, got %+v", items[0])
+	}
+	if items[0].Difficulty != model.ChallengeDifficultyEasy {
+		t.Fatalf("expected easy candidate to rank first when preferred difficulty is easy, got %+v", items)
+	}
+}
+
 func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
@@ -339,6 +431,69 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	}
 	if stubRepo.calls != 0 {
 		t.Fatalf("expected no challenge query when only healthy evidence exists, got %d", stubRepo.calls)
+	}
+}
+
+func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForStableHealthyDimension(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now()
+
+	if err := db.Create(&model.User{
+		ID:       30,
+		Username: "student-30",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&model.SkillProfile{
+		UserID:    30,
+		Dimension: model.DimensionWeb,
+		Score:     0.92,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
+
+	solvedChallenges := []model.Challenge{
+		{ID: 3001, Title: "web-easy-a", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished},
+		{ID: 3002, Title: "web-easy-b", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 120, Status: model.ChallengeStatusPublished},
+		{ID: 3003, Title: "web-medium-a", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 150, Status: model.ChallengeStatusPublished},
+		{ID: 3004, Title: "web-medium-b", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 180, Status: model.ChallengeStatusPublished},
+	}
+	candidateChallenges := []model.Challenge{
+		{ID: 3005, Title: "web-medium-next", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 160, Status: model.ChallengeStatusPublished},
+		{ID: 3006, Title: "web-hard-next", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyHard, Points: 220, Status: model.ChallengeStatusPublished},
+	}
+	for _, challenge := range append(solvedChallenges, candidateChallenges...) {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed challenge %s: %v", challenge.Title, err)
+		}
+	}
+	for _, challenge := range solvedChallenges {
+		if err := db.Create(&model.Submission{
+			UserID:      30,
+			ChallengeID: challenge.ID,
+			IsCorrect:   true,
+			SubmittedAt: now,
+		}).Error; err != nil {
+			t.Fatalf("seed solved submission for %s: %v", challenge.Title, err)
+		}
+	}
+
+	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+
+	resp, err := service.Recommend(context.Background(), 30, 3)
+	if err != nil {
+		t.Fatalf("Recommend() error = %v", err)
+	}
+	if len(resp.Challenges) == 0 {
+		t.Fatalf("expected progression recommendation for stable healthy dimension, got %+v", resp)
+	}
+	if resp.Challenges[0].DifficultyBand != model.ChallengeDifficultyHard {
+		t.Fatalf("expected progression difficulty band hard, got %+v", resp.Challenges[0])
+	}
+	if resp.Challenges[0].Difficulty != model.ChallengeDifficultyHard {
+		t.Fatalf("expected hard challenge to rank first for progression recommendation, got %+v", resp.Challenges)
 	}
 }
 

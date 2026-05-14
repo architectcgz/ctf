@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -417,7 +418,16 @@ func (r *Repository) BatchGetTotalAttempts(ctx context.Context, challengeIDs []i
 	return countMap, err
 }
 
-func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+const challengeDifficultyOrderSQL = `CASE challenges.difficulty
+	WHEN 'beginner' THEN 1
+	WHEN 'easy' THEN 2
+	WHEN 'medium' THEN 3
+	WHEN 'hard' THEN 4
+	WHEN 'insane' THEN 5
+	ELSE 99
+END`
+
+func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error) {
 	if len(dimensions) == 0 || limit <= 0 {
 		return []*model.Challenge{}, nil
 	}
@@ -486,20 +496,33 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 		query = query.Where("challenges.id NOT IN ?", excludeSolved)
 	}
 
+	difficultyRank, hasPreferredDifficulty := normalizedChallengeDifficultyRank(preferredDifficulty)
+	if hasPreferredDifficulty {
+		query = query.Order(fmt.Sprintf("ABS((%s) - %d) ASC", challengeDifficultyOrderSQL, difficultyRank))
+	}
+
 	err := query.
-		Order(`
-			CASE challenges.difficulty
-				WHEN 'beginner' THEN 1
-				WHEN 'easy' THEN 2
-				WHEN 'medium' THEN 3
-				WHEN 'hard' THEN 4
-				WHEN 'insane' THEN 5
-				ELSE 6
-			END ASC
-		`).
+		Order(challengeDifficultyOrderSQL + " ASC").
 		Order("challenges.points ASC").
 		Order("challenges.created_at DESC").
 		Limit(limit).
 		Find(&challenges).Error
 	return challenges, err
+}
+
+func normalizedChallengeDifficultyRank(value string) (int, bool) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case model.ChallengeDifficultyBeginner:
+		return 1, true
+	case model.ChallengeDifficultyEasy:
+		return 2, true
+	case model.ChallengeDifficultyMedium:
+		return 3, true
+	case model.ChallengeDifficultyHard:
+		return 4, true
+	case model.ChallengeDifficultyInsane:
+		return 5, true
+	default:
+		return 0, false
+	}
 }

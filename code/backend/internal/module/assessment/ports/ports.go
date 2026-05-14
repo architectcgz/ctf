@@ -59,7 +59,7 @@ type RecommendationSolvedChallengeRepository interface {
 }
 
 type RecommendationChallengeRepository interface {
-	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
+	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error)
 }
 
 type AssessmentRecommendationCacheStore interface {

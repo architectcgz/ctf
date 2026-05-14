@@ -153,7 +153,13 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		return nil, err
 	}
 
-	challenges, err := s.challengeRepo.FindPublishedForRecommendation(ctx, limit, targetDimensions, solvedIDs)
+	challenges, err := s.challengeRepo.FindPublishedForRecommendation(
+		ctx,
+		limit,
+		targetDimensions,
+		string(evaluation.RecommendedDifficultyBand),
+		solvedIDs,
+	)
 	if err != nil {
 		s.logger.Error("查询推荐靶场失败", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err

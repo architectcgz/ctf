@@ -217,6 +217,59 @@ func TestEvaluateStudentDoesNotRecommendHealthyDimensionWithOnlyGoodEvidence(t *
 	}
 }
 
+func TestEvaluateStudentCreatesProgressionTargetForStableHealthyDimension(t *testing.T) {
+	t.Parallel()
+
+	snapshot := StudentFactSnapshot{
+		UserID:                 31,
+		ActiveDays7d:           5,
+		RecentEventCount7d:     8,
+		CorrectSubmissionCount: 4,
+		ChallengeSuccessCount:  4,
+		SubmissionSuccessCount: 4,
+		WriteupCount:           1,
+		HandsOnEventCount:      4,
+		Dimensions: []DimensionFact{
+			{
+				Dimension:     "web",
+				ProfileScore:  0.92,
+				AttemptCount:  4,
+				SuccessCount:  4,
+				EvidenceCount: 6,
+				SolvedDifficultyCounts: map[string]int{
+					"easy":   2,
+					"medium": 2,
+				},
+			},
+		},
+	}
+
+	evaluation := EvaluateStudent(snapshot)
+	if len(evaluation.WeakDimensions) != 0 {
+		t.Fatalf("expected no weak dimensions for stable healthy student, got %+v", evaluation.WeakDimensions)
+	}
+	if len(evaluation.RecommendationTargets) != 1 {
+		t.Fatalf("expected one progression recommendation target, got %+v", evaluation.RecommendationTargets)
+	}
+	if evaluation.RecommendedDifficultyBand != DifficultyBand("hard") {
+		t.Fatalf("expected hard progression band, got %s", evaluation.RecommendedDifficultyBand)
+	}
+	target := evaluation.RecommendationTargets[0]
+	if target.Dimension != "web" {
+		t.Fatalf("expected progression target web, got %+v", target)
+	}
+	if !containsReasonCode(target.ReasonCodes, "progression_ready") {
+		t.Fatalf("expected progression_ready reason code, got %+v", target)
+	}
+
+	items := BuildReviewArchiveObservations(snapshot, evaluation)
+	for _, item := range items {
+		if item.Code == "dimension_focus" {
+			t.Fatalf("expected progression-ready target not to render as dimension_focus issue, got %+v", item)
+		}
+	}
+}
+
 func TestBuildReviewArchiveObservationsUsesCoverageGapCopyForEarlySuccess(t *testing.T) {
 	t.Parallel()
 

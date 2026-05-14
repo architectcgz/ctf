@@ -181,7 +181,7 @@ func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
 		t.Fatalf("create challenge tag: %v", err)
 	}
 
-	items, err := repo.FindPublishedForRecommendation(context.Background(), 5, []string{"pwn"}, []int64{solved.ID})
+	items, err := repo.FindPublishedForRecommendation(context.Background(), 5, []string{"pwn"}, "", []int64{solved.ID})
 	if err != nil {
 		t.Fatalf("FindPublishedForRecommendation() error = %v", err)
 	}
@@ -203,6 +203,59 @@ func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
 	}
 	if items[1].RecommendationDimension != "pwn" {
 		t.Fatalf("expected tagged recommendation dimension pwn, got %+v", items[1])
+	}
+}
+
+func TestRepositoryFindPublishedForRecommendationPrefersClosestDifficultyMatch(t *testing.T) {
+	db := testsupport.SetupTagTestDB(t)
+	repo := NewRepository(db)
+
+	beginner := &model.Challenge{
+		Title:      "Pwn Beginner",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyBeginner,
+		Points:     90,
+		Status:     model.ChallengeStatusPublished,
+	}
+	easy := &model.Challenge{
+		Title:      "Pwn Easy",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     120,
+		Status:     model.ChallengeStatusPublished,
+	}
+	medium := &model.Challenge{
+		Title:      "Pwn Medium",
+		Category:   "pwn",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     150,
+		Status:     model.ChallengeStatusPublished,
+	}
+	for _, challenge := range []*model.Challenge{beginner, easy, medium} {
+		if err := db.Create(challenge).Error; err != nil {
+			t.Fatalf("create challenge %s: %v", challenge.Title, err)
+		}
+	}
+
+	items, err := repo.FindPublishedForRecommendation(
+		context.Background(),
+		5,
+		[]string{"pwn"},
+		model.ChallengeDifficultyEasy,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("FindPublishedForRecommendation() error = %v", err)
+	}
+
+	gotTitles := make([]string, 0, len(items))
+	for _, item := range items {
+		gotTitles = append(gotTitles, item.Title)
+	}
+
+	wantTitles := []string{"Pwn Easy", "Pwn Beginner", "Pwn Medium"}
+	if !reflect.DeepEqual(gotTitles, wantTitles) {
+		t.Fatalf("unexpected recommendation titles: got=%v want=%v", gotTitles, wantTitles)
 	}
 }
 

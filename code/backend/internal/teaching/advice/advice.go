@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"ctf-platform/internal/model"
 )
 
 type Severity string
@@ -22,6 +24,8 @@ const (
 	DifficultyBandBeginner DifficultyBand = "beginner"
 	DifficultyBandEasy     DifficultyBand = "easy"
 	DifficultyBandMedium   DifficultyBand = "medium"
+	DifficultyBandHard     DifficultyBand = "hard"
+	DifficultyBandInsane   DifficultyBand = "insane"
 )
 
 type StudentFactSnapshot struct {
@@ -45,11 +49,12 @@ type StudentFactSnapshot struct {
 }
 
 type DimensionFact struct {
-	Dimension     string
-	ProfileScore  float64
-	AttemptCount  int
-	SuccessCount  int
-	EvidenceCount int
+	Dimension              string
+	ProfileScore           float64
+	AttemptCount           int
+	SuccessCount           int
+	EvidenceCount          int
+	SolvedDifficultyCounts map[string]int
 }
 
 type DimensionAdvice struct {
@@ -181,6 +186,14 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 		}
 	}
 
+	progressionBand := DifficultyBand("")
+	if len(recommendationTargets) == 0 {
+		if target, band := selectProgressionTarget(snapshot.Dimensions, dimensions); target.Dimension != "" {
+			recommendationTargets = append(recommendationTargets, target)
+			progressionBand = band
+		}
+	}
+
 	difficultyBand := DifficultyBandMedium
 	switch {
 	case len(weakDimensions) > 0 && weakDimensions[0].Severity == SeverityDanger:
@@ -193,6 +206,9 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 		difficultyBand = DifficultyBandEasy
 	case len(recommendationTargets) > 0:
 		difficultyBand = DifficultyBandEasy
+	}
+	if progressionBand != "" {
+		difficultyBand = progressionBand
 	}
 
 	severity := SeverityGood
@@ -315,16 +331,18 @@ func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation Stu
 		})
 	} else if len(evaluation.RecommendationTargets) > 0 {
 		top := evaluation.RecommendationTargets[0]
-		dimension := top.Dimension
-		items = append(items, ReviewArchiveObservation{
-			Code:      "dimension_focus",
-			Label:     "维度聚焦",
-			Severity:  SeverityAttention,
-			Dimension: &dimension,
-			Summary:   buildCoverageGapObservationSummary(top),
-			Evidence:  top.Evidence,
-			Action:    fmt.Sprintf("先补 1 道 %s 维度的 %s 难度题，把训练样本补齐。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
-		})
+		if !containsReasonCode(top.ReasonCodes, "progression_ready") {
+			dimension := top.Dimension
+			items = append(items, ReviewArchiveObservation{
+				Code:      "dimension_focus",
+				Label:     "维度聚焦",
+				Severity:  SeverityAttention,
+				Dimension: &dimension,
+				Summary:   buildCoverageGapObservationSummary(top),
+				Evidence:  top.Evidence,
+				Action:    fmt.Sprintf("先补 1 道 %s 维度的 %s 难度题，把训练样本补齐。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
+			})
+		}
 	}
 
 	if snapshot.AWDSuccessCount > 0 {
@@ -523,6 +541,17 @@ func recommendationReasonSummary(
 		return fmt.Sprintf("%s 维度已经出现高置信度薄弱信号，当前更适合先补 %s 难度；题库里这道 %s 难度题是最接近的候选。", label, preferredDifficulty, actualDifficulty)
 	}
 
+	if containsReasonCode(target.ReasonCodes, "progression_ready") {
+		if actualMatchesPreferred {
+			displayDifficulty := preferredDifficulty
+			if actualDifficulty != "" {
+				displayDifficulty = actualDifficulty
+			}
+			return fmt.Sprintf("%s 维度的基础已经比较稳定，这道 %s 难度题可以作为下一步进阶训练。", label, displayDifficulty)
+		}
+		return fmt.Sprintf("%s 维度的基础已经比较稳定，当前可以开始 %s 难度训练；题库里这道 %s 难度题是最接近的进阶候选。", label, preferredDifficulty, actualDifficulty)
+	}
+
 	if target.EvidenceCount < 2 {
 		if actualMatchesPreferred {
 			if actualDifficulty == "" {
@@ -633,6 +662,8 @@ func buildDimensionSummary(advice DimensionAdvice) string {
 		return fmt.Sprintf("%s 维度得分偏低，而且已经有足够训练证据支撑弱项判断。", dimensionLabel(advice.Dimension))
 	case advice.IsWeak:
 		return fmt.Sprintf("%s 维度经过多次训练后仍然偏弱，已经接近真实薄弱项。", dimensionLabel(advice.Dimension))
+	case containsReasonCode(advice.ReasonCodes, "progression_ready"):
+		return fmt.Sprintf("%s 维度当前基础比较稳定，可以开始做更高一档的进阶训练。", dimensionLabel(advice.Dimension))
 	case containsReasonCode(advice.ReasonCodes, "recent_progress_stable"):
 		return fmt.Sprintf("%s 维度已经开始出现稳定进展，但覆盖率还不够，建议继续补样本。", dimensionLabel(advice.Dimension))
 	case containsReasonCode(advice.ReasonCodes, "early_success_seen"):
@@ -657,6 +688,99 @@ func pickRecommendationTarget(category string, evaluation StudentEvaluation) Dim
 		return evaluation.RecommendationTargets[0]
 	}
 	return DimensionAdvice{}
+}
+
+func selectProgressionTarget(facts []DimensionFact, dimensions []DimensionAdvice) (DimensionAdvice, DifficultyBand) {
+	type candidate struct {
+		advice DimensionAdvice
+		band   DifficultyBand
+	}
+
+	adviceByDimension := make(map[string]DimensionAdvice, len(dimensions))
+	for _, item := range dimensions {
+		adviceByDimension[item.Dimension] = item
+	}
+
+	candidates := make([]candidate, 0, len(facts))
+	for _, fact := range facts {
+		dimension := strings.ToLower(strings.TrimSpace(fact.Dimension))
+		if dimension == "" {
+			continue
+		}
+		advice, ok := adviceByDimension[dimension]
+		if !ok {
+			continue
+		}
+		band, ready := progressionBandForFact(advice, fact)
+		if !ready {
+			continue
+		}
+		advice.ReasonCodes = uniqueStrings(append(append([]string(nil), advice.ReasonCodes...), "progression_ready"))
+		advice.Summary = buildDimensionSummary(advice)
+		candidates = append(candidates, candidate{advice: advice, band: band})
+	}
+
+	if len(candidates) == 0 {
+		return DimensionAdvice{}, ""
+	}
+
+	sort.Slice(candidates, func(i, j int) bool {
+		if difficultyBandRank(candidates[i].band) != difficultyBandRank(candidates[j].band) {
+			return difficultyBandRank(candidates[i].band) > difficultyBandRank(candidates[j].band)
+		}
+		if candidates[i].advice.ProfileScore != candidates[j].advice.ProfileScore {
+			return candidates[i].advice.ProfileScore > candidates[j].advice.ProfileScore
+		}
+		if candidates[i].advice.SuccessCount != candidates[j].advice.SuccessCount {
+			return candidates[i].advice.SuccessCount > candidates[j].advice.SuccessCount
+		}
+		return candidates[i].advice.Dimension < candidates[j].advice.Dimension
+	})
+
+	return candidates[0].advice, candidates[0].band
+}
+
+func progressionBandForFact(advice DimensionAdvice, fact DimensionFact) (DifficultyBand, bool) {
+	if advice.Severity != SeverityGood {
+		return "", false
+	}
+	if advice.ProfileScore < 0.75 || advice.SuccessCount < 2 || advice.EvidenceCount < 4 {
+		return "", false
+	}
+	solved := fact.SolvedDifficultyCounts
+	if len(solved) == 0 {
+		return "", false
+	}
+
+	switch {
+	case solved[model.ChallengeDifficultyHard] > 0 && solved[model.ChallengeDifficultyMedium] > 0:
+		return DifficultyBandInsane, true
+	case solved[model.ChallengeDifficultyMedium] > 0 && solved[model.ChallengeDifficultyEasy] > 0:
+		return DifficultyBandHard, true
+	case solved[model.ChallengeDifficultyEasy] > 0:
+		return DifficultyBandMedium, true
+	case solved[model.ChallengeDifficultyBeginner] > 0:
+		return DifficultyBandEasy, true
+	default:
+		return "", false
+	}
+}
+
+func difficultyBandRank(band DifficultyBand) int {
+	switch band {
+	case DifficultyBandBeginner:
+		return 1
+	case DifficultyBandEasy:
+		return 2
+	case DifficultyBandMedium:
+		return 3
+	case DifficultyBandHard:
+		return 4
+	case DifficultyBandInsane:
+		return 5
+	default:
+		return 0
+	}
 }
 
 func selectTopWeakDimension(
