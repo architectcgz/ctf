@@ -1,13 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	"gorm.io/gorm"
 )
 
 func TestBuildCoverageStudentScenariosSkipsSmallCatalog(t *testing.T) {
@@ -213,6 +219,178 @@ func TestBuildSeedCoverageSummaryReportsPublishedUsedAndRecommendationReach(t *t
 	}
 }
 
+func TestBuildBaseStudentScenariosIncludeRichAWDReviewData(t *testing.T) {
+	t.Parallel()
+
+	var awd *awdScenario
+	for _, scenario := range buildBaseStudentScenarios() {
+		if scenario.AWD == nil {
+			continue
+		}
+		awd = scenario.AWD
+		break
+	}
+	if awd == nil {
+		t.Fatal("expected at least one base awd scenario")
+	}
+	if len(awd.Teams) != 3 {
+		t.Fatalf("expected 3 awd teams, got %d", len(awd.Teams))
+	}
+	if len(awd.Rounds) != 3 {
+		t.Fatalf("expected 3 awd rounds, got %d", len(awd.Rounds))
+	}
+
+	totalServices := 0
+	totalTraffic := 0
+	for _, round := range awd.Rounds {
+		if len(round.Services) != 3 {
+			t.Fatalf("expected 3 services per round, got %d in round %d", len(round.Services), round.RoundNumber)
+		}
+		if len(round.Traffic) != 3 {
+			t.Fatalf("expected 3 traffic events per round, got %d in round %d", len(round.Traffic), round.RoundNumber)
+		}
+		if len(round.Attacks) == 0 {
+			t.Fatalf("expected attacks in round %d", round.RoundNumber)
+		}
+		totalServices += len(round.Services)
+		totalTraffic += len(round.Traffic)
+	}
+	if totalServices != 9 {
+		t.Fatalf("expected 9 awd services in total, got %d", totalServices)
+	}
+	if totalTraffic != 9 {
+		t.Fatalf("expected 9 awd traffic events in total, got %d", totalTraffic)
+	}
+	if countAWDAttacks(awd) != 7 {
+		t.Fatalf("expected 7 awd attacks in total, got %d", countAWDAttacks(awd))
+	}
+}
+
+func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) {
+	t.Parallel()
+
+	db := contesttestsupport.SetupAWDTestDB(t)
+	now := time.Date(2026, 5, 14, 10, 0, 0, 0, time.UTC)
+	teacher := createSeedReviewUser(t, db, 5101, seedTeacherUsername, "赵晓峰", model.RoleTeacher, now)
+	student := createSeedReviewUser(t, db, 5102, "linchenxi", "林宸熙", model.RoleStudent, now)
+
+	if err := db.Create(&model.AWDChallenge{
+		ID:             91001,
+		Name:           "awd-web-seed",
+		Slug:           "awd-web-seed",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}).Error; err != nil {
+		t.Fatalf("create awd challenge: %v", err)
+	}
+
+	awdCatalog, err := loadAWDChallengeCatalog(context.Background(), db)
+	if err != nil {
+		t.Fatalf("load awd catalog: %v", err)
+	}
+
+	var awdSeed *awdScenario
+	for _, scenario := range buildBaseStudentScenarios() {
+		if scenario.User.Username != student.Username || scenario.AWD == nil {
+			continue
+		}
+		awdSeed = scenario.AWD
+		break
+	}
+	if awdSeed == nil {
+		t.Fatal("expected base awd seed for linchenxi")
+	}
+
+	if err := seedStudentAWDScenario(db, teacher, student, awdSeed, awdCatalog, now); err != nil {
+		t.Fatalf("seed awd scenario: %v", err)
+	}
+
+	var contest model.Contest
+	if err := db.Where("mode = ? AND title LIKE ?", model.ContestModeAWD, seedAWDContestTitle+"%").First(&contest).Error; err != nil {
+		t.Fatalf("load seeded awd contest: %v", err)
+	}
+
+	var memberCount int64
+	if err := db.Model(&model.TeamMember{}).Where("contest_id = ?", contest.ID).Count(&memberCount).Error; err != nil {
+		t.Fatalf("count team members: %v", err)
+	}
+	if memberCount != 7 {
+		t.Fatalf("expected 7 team members, got %d", memberCount)
+	}
+
+	var serviceCount int64
+	if err := db.Model(&model.AWDTeamService{}).Joins("JOIN awd_rounds ON awd_rounds.id = awd_team_services.round_id").Where("awd_rounds.contest_id = ?", contest.ID).Count(&serviceCount).Error; err != nil {
+		t.Fatalf("count awd team services: %v", err)
+	}
+	if serviceCount != 9 {
+		t.Fatalf("expected 9 awd team services, got %d", serviceCount)
+	}
+
+	var trafficCount int64
+	if err := db.Model(&model.AWDTrafficEvent{}).Where("contest_id = ?", contest.ID).Count(&trafficCount).Error; err != nil {
+		t.Fatalf("count awd traffic events: %v", err)
+	}
+	if trafficCount != 9 {
+		t.Fatalf("expected 9 awd traffic events, got %d", trafficCount)
+	}
+
+	service := assessmentqry.NewTeacherAWDReviewService(
+		assessmentinfra.NewTeacherAWDReviewRepository(db),
+		config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100},
+	)
+	roundNumber := 2
+	resp, err := service.GetContestArchive(context.Background(), teacher.ID, contest.ID, assessmentqry.GetTeacherAWDReviewArchiveInput{
+		RoundNumber: &roundNumber,
+	})
+	if err != nil {
+		t.Fatalf("GetContestArchive() error = %v", err)
+	}
+	if resp.Scope.SnapshotType != "final" {
+		t.Fatalf("expected final snapshot, got %+v", resp.Scope)
+	}
+	if resp.Overview == nil {
+		t.Fatalf("expected archive overview, got %+v", resp)
+	}
+	if resp.Overview.RoundCount != 3 || resp.Overview.TeamCount != 3 {
+		t.Fatalf("unexpected overview counts: %+v", resp.Overview)
+	}
+	if resp.Overview.ServiceCount != 9 || resp.Overview.AttackCount != 7 || resp.Overview.TrafficCount != 9 {
+		t.Fatalf("unexpected evidence counts: %+v", resp.Overview)
+	}
+	if resp.Contest.LatestEvidenceAt == nil {
+		t.Fatalf("expected latest evidence timestamp, got %+v", resp.Contest)
+	}
+	if len(resp.Rounds) != 3 {
+		t.Fatalf("expected 3 rounds, got %+v", resp.Rounds)
+	}
+	if resp.SelectedRound == nil || resp.SelectedRound.Round.RoundNumber != 2 {
+		t.Fatalf("expected selected round 2, got %+v", resp.SelectedRound)
+	}
+	if len(resp.SelectedRound.Teams) != 3 {
+		t.Fatalf("expected 3 teams in selected round, got %+v", resp.SelectedRound.Teams)
+	}
+	for _, team := range resp.SelectedRound.Teams {
+		if team.MemberCount == 0 {
+			t.Fatalf("expected member count for team %+v", team)
+		}
+	}
+	if len(resp.SelectedRound.Services) != 3 || resp.SelectedRound.Round.ServiceCount != 3 {
+		t.Fatalf("expected 3 selected-round services, got %+v", resp.SelectedRound.Services)
+	}
+	if len(resp.SelectedRound.Attacks) != 3 || resp.SelectedRound.Round.AttackCount != 3 {
+		t.Fatalf("expected 3 selected-round attacks, got %+v", resp.SelectedRound.Attacks)
+	}
+	if len(resp.SelectedRound.Traffic) != 3 || resp.SelectedRound.Round.TrafficCount != 3 {
+		t.Fatalf("expected 3 selected-round traffic events, got %+v", resp.SelectedRound.Traffic)
+	}
+}
+
 func newSyntheticChallengeCatalog(t *testing.T, perCategory int) *challengeCatalog {
 	t.Helper()
 	if perCategory <= 0 {
@@ -367,4 +545,30 @@ func syntheticMaxWrongStreak(scenario studentScenario) int {
 		}
 	}
 	return maxStreak
+}
+
+func createSeedReviewUser(t *testing.T, db *gorm.DB, id int64, username, name, role string, now time.Time) *model.User {
+	t.Helper()
+
+	user := &model.User{
+		ID:        id,
+		Username:  username,
+		Name:      name,
+		Email:     fmt.Sprintf("%s@example.edu.cn", username),
+		Role:      role,
+		Status:    model.UserStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	switch role {
+	case model.RoleTeacher:
+		user.TeacherNo = fmt.Sprintf("T%d", id)
+	default:
+		user.ClassName = seedClassName
+		user.StudentNo = fmt.Sprintf("S%d", id)
+	}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatalf("create user %s: %v", username, err)
+	}
+	return user
 }

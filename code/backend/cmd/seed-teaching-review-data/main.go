@@ -38,6 +38,12 @@ const (
 	coverageMaxStudentsPerCategory = 4
 )
 
+const (
+	seedAWDCaptainStudent   = "student"
+	seedAWDCaptainTeacher   = "teacher"
+	seedAWDCaptainSynthetic = "synthetic"
+)
+
 var coverageStudentSeeds = []userSeed{
 	{Username: "guhaoran", Name: "顾浩然"},
 	{Username: "xushiyu", Name: "徐诗雨"},
@@ -122,18 +128,63 @@ type writeupSeed struct {
 	Recommended bool
 }
 
+type awdTeamSeed struct {
+	Name        string
+	CaptainRole string
+	MemberCount int
+}
+
+type awdServiceSeed struct {
+	TeamIndex      int
+	ServiceStatus  string
+	AttackReceived int
+	SLAScore       int
+	DefenseScore   int
+	AttackScore    int
+	CheckerType    model.AWDCheckerType
+	CheckResult    string
+	UpdatedOffset  time.Duration
+}
+
 type awdAttackSeed struct {
-	Offset        time.Duration
-	SubmittedFlag string
-	IsSuccess     bool
-	ScoreGained   int
+	Offset             time.Duration
+	AttackerTeamIndex  int
+	VictimTeamIndex    int
+	SubmittedFlag      string
+	AttackType         string
+	Source             string
+	SubmittedByStudent bool
+	IsSuccess          bool
+	ScoreGained        int
+}
+
+type awdTrafficSeed struct {
+	Offset            time.Duration
+	AttackerTeamIndex int
+	VictimTeamIndex   int
+	Method            string
+	Path              string
+	StatusCode        int
+	Source            string
+}
+
+type awdRoundSeed struct {
+	RoundNumber  int
+	StartOffset  time.Duration
+	Duration     time.Duration
+	AttackScore  int
+	DefenseScore int
+	Services     []awdServiceSeed
+	Attacks      []awdAttackSeed
+	Traffic      []awdTrafficSeed
 }
 
 type awdScenario struct {
 	ChallengeCategory string
 	ChallengeIndex    int
 	StartOffset       time.Duration
-	Attacks           []awdAttackSeed
+	Teams             []awdTeamSeed
+	Rounds            []awdRoundSeed
 }
 
 type sessionSeed struct {
@@ -792,9 +843,76 @@ func buildBaseStudentScenarios() []studentScenario {
 				ChallengeCategory: "web",
 				ChallengeIndex:    0,
 				StartOffset:       -1*24*time.Hour + 6*time.Hour,
-				Attacks: []awdAttackSeed{
-					{Offset: 12 * time.Minute, SubmittedFlag: "awd{web-replay-miss}", IsSuccess: false, ScoreGained: 0},
-					{Offset: 34 * time.Minute, SubmittedFlag: "awd{web-replay-hit}", IsSuccess: true, ScoreGained: 120},
+				Teams: []awdTeamSeed{
+					{Name: "林宸熙攻防组", CaptainRole: seedAWDCaptainStudent, MemberCount: 2},
+					{Name: "教学靶场防守组", CaptainRole: seedAWDCaptainTeacher, MemberCount: 2},
+					{Name: "旁路渗透样本队", CaptainRole: seedAWDCaptainSynthetic, MemberCount: 3},
+				},
+				Rounds: []awdRoundSeed{
+					{
+						RoundNumber:  1,
+						StartOffset:  0,
+						Duration:     32 * time.Minute,
+						AttackScore:  80,
+						DefenseScore: 50,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 15, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":78}`, UpdatedOffset: 25 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 25, DefenseScore: 28, AttackScore: 20, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":181}`, UpdatedOffset: 26 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 28, DefenseScore: 35, AttackScore: 18, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":96}`, UpdatedOffset: 27 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-miss}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
+							{Offset: 19 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: model.AWDAttackTypeServiceExploit, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 90},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 8 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/health", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 14 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/api/replay", StatusCode: 403, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 20 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/debug", StatusCode: 200, Source: model.AWDAttackSourceManual},
+						},
+					},
+					{
+						RoundNumber:  2,
+						StartOffset:  40 * time.Minute,
+						Duration:     34 * time.Minute,
+						AttackScore:  90,
+						DefenseScore: 45,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 35, DefenseScore: 45, AttackScore: 32, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":72}`, UpdatedOffset: 28 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 12, AttackScore: 5, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"timeout"}`, UpdatedOffset: 30 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 22, DefenseScore: 26, AttackScore: 18, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":204}`, UpdatedOffset: 31 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 9 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-hit}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 120},
+							{Offset: 17 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 2, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
+							{Offset: 24 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: model.AWDAttackTypeServiceExploit, Source: model.AWDAttackSourceLegacy, IsSuccess: true, ScoreGained: 60},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 6 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/flag", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 10 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/exploit", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 25 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/backup", StatusCode: 302, Source: model.AWDTrafficSourceRuntimeProxy},
+						},
+					},
+					{
+						RoundNumber:  3,
+						StartOffset:  82 * time.Minute,
+						Duration:     30 * time.Minute,
+						AttackScore:  70,
+						DefenseScore: 60,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 0, SLAScore: 40, DefenseScore: 48, AttackScore: 28, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":69}`, UpdatedOffset: 23 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 34, DefenseScore: 40, AttackScore: 16, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":87}`, UpdatedOffset: 24 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 2, SLAScore: 8, DefenseScore: 10, AttackScore: 6, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"container_exit"}`, UpdatedOffset: 25 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 11 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, SubmittedFlag: "awd{web-lateral-sync}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 100},
+							{Offset: 18 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 7 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "GET", Path: "/metrics", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "POST", Path: "/sync", StatusCode: 201, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 19 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Method: "GET", Path: "/health", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+						},
+					},
 				},
 			},
 		},
@@ -1252,6 +1370,9 @@ func resetSeededAWDData(tx *gorm.DB) error {
 		return fmt.Errorf("delete awd traffic events: %w", err)
 	}
 	if len(roundIDs) > 0 {
+		if err := tx.Where("round_id IN ?", roundIDs).Delete(&model.AWDTeamService{}).Error; err != nil {
+			return fmt.Errorf("delete awd team services: %w", err)
+		}
 		if err := tx.Where("round_id IN ?", roundIDs).Delete(&model.AWDAttackLog{}).Error; err != nil {
 			return fmt.Errorf("delete awd attack logs: %w", err)
 		}
@@ -1449,13 +1570,19 @@ func seedStudentAWDScenario(
 	if scenario == nil {
 		return nil
 	}
+	if len(scenario.Teams) == 0 {
+		return errors.New("awd scenario requires teams")
+	}
+	if len(scenario.Rounds) == 0 {
+		return errors.New("awd scenario requires rounds")
+	}
 	challenge, err := catalog.pick(scenario.ChallengeCategory, scenario.ChallengeIndex)
 	if err != nil {
 		return err
 	}
 
 	contestStart := base.Add(scenario.StartOffset)
-	contestEnd := contestStart.Add(2 * time.Hour)
+	contestEnd := seedAWDScenarioEndAt(contestStart, scenario.Rounds)
 	contest := &model.Contest{
 		Title:         fmt.Sprintf("%s - %s", seedAWDContestTitle, student.Username),
 		Description:   "用于教学复盘样本的 AWD 迁移演练数据。",
@@ -1471,68 +1598,219 @@ func seedStudentAWDScenario(
 		return fmt.Errorf("create seed awd contest for %s: %w", student.Username, err)
 	}
 
-	round := &model.AWDRound{
-		ContestID:    contest.ID,
-		RoundNumber:  1,
-		Status:       model.AWDRoundStatusFinished,
-		StartedAt:    timePtr(contestStart),
-		EndedAt:      timePtr(contestEnd),
-		AttackScore:  80,
-		DefenseScore: 50,
-		CreatedAt:    contestStart.Add(-10 * time.Minute),
-		UpdatedAt:    contestEnd,
-	}
-	if err := tx.Create(round).Error; err != nil {
-		return fmt.Errorf("create seed awd round for %s: %w", student.Username, err)
+	serviceID := 7000 + challenge.ID
+	teams := make([]*model.Team, 0, len(scenario.Teams))
+	teamScores := make(map[int64]int, len(scenario.Teams))
+	teamLastSolveAt := make(map[int64]time.Time, len(scenario.Teams))
+
+	for teamIndex, teamSeed := range scenario.Teams {
+		memberCount := teamSeed.MemberCount
+		if memberCount < 1 {
+			memberCount = 1
+		}
+		team := &model.Team{
+			ContestID:  contest.ID,
+			Name:       teamSeed.Name,
+			CaptainID:  resolveSeedAWDCaptainID(teamSeed.CaptainRole, teacher, student, contest.ID, teamIndex),
+			InviteCode: fmt.Sprintf("A%04d%d", student.ID%10000, teamIndex),
+			MaxMembers: max(memberCount, 4),
+			CreatedAt:  contestStart.Add(-20 * time.Minute),
+			UpdatedAt:  contestEnd,
+		}
+		if err := tx.Create(team).Error; err != nil {
+			return fmt.Errorf("create awd team %d for %s: %w", teamIndex, student.Username, err)
+		}
+		teams = append(teams, team)
+
+		for memberIndex := 0; memberIndex < memberCount; memberIndex++ {
+			memberID := seedAWDTeamMemberID(contest.ID, teamIndex, memberIndex)
+			if memberIndex == 0 {
+				memberID = team.CaptainID
+			}
+			if err := tx.Create(&model.TeamMember{
+				ContestID: contest.ID,
+				TeamID:    team.ID,
+				UserID:    memberID,
+				JoinedAt:  contestStart.Add(-18 * time.Minute),
+				CreatedAt: contestStart.Add(-18 * time.Minute),
+			}).Error; err != nil {
+				return fmt.Errorf("create awd team member %d for %s: %w", memberIndex, team.Name, err)
+			}
+		}
 	}
 
-	attackerTeam := &model.Team{
-		ContestID:  contest.ID,
-		Name:       fmt.Sprintf("%s-攻方队", student.Name),
-		CaptainID:  student.ID,
-		InviteCode: fmt.Sprintf("A%05d", student.ID%100000),
-		MaxMembers: 4,
-		CreatedAt:  contestStart.Add(-20 * time.Minute),
-		UpdatedAt:  contestEnd,
-	}
-	if err := tx.Create(attackerTeam).Error; err != nil {
-		return fmt.Errorf("create attacker team for %s: %w", student.Username, err)
+	for _, roundSeed := range scenario.Rounds {
+		roundStart := contestStart.Add(roundSeed.StartOffset)
+		roundEnd := roundStart.Add(roundSeed.Duration)
+		round := &model.AWDRound{
+			ContestID:    contest.ID,
+			RoundNumber:  roundSeed.RoundNumber,
+			Status:       model.AWDRoundStatusFinished,
+			StartedAt:    timePtr(roundStart),
+			EndedAt:      timePtr(roundEnd),
+			AttackScore:  roundSeed.AttackScore,
+			DefenseScore: roundSeed.DefenseScore,
+			CreatedAt:    roundStart.Add(-2 * time.Minute),
+			UpdatedAt:    roundEnd,
+		}
+		if err := tx.Create(round).Error; err != nil {
+			return fmt.Errorf("create awd round %d for %s: %w", roundSeed.RoundNumber, student.Username, err)
+		}
+
+		for serviceIndex, serviceSeed := range roundSeed.Services {
+			team, err := seedAWDTeamAt(teams, serviceSeed.TeamIndex)
+			if err != nil {
+				return fmt.Errorf("round %d service team: %w", roundSeed.RoundNumber, err)
+			}
+			updatedAt := roundStart.Add(serviceSeed.UpdatedOffset)
+			if serviceSeed.UpdatedOffset <= 0 {
+				updatedAt = roundEnd.Add(-time.Minute)
+			}
+			checkResult := strings.TrimSpace(serviceSeed.CheckResult)
+			if checkResult == "" {
+				checkResult = `{}`
+			}
+			if err := tx.Create(&model.AWDTeamService{
+				RoundID:        round.ID,
+				TeamID:         team.ID,
+				ServiceID:      serviceID,
+				AWDChallengeID: challenge.ID,
+				ServiceStatus:  serviceSeed.ServiceStatus,
+				CheckResult:    checkResult,
+				CheckerType:    serviceSeed.CheckerType,
+				AttackReceived: serviceSeed.AttackReceived,
+				SLAScore:       serviceSeed.SLAScore,
+				DefenseScore:   serviceSeed.DefenseScore,
+				AttackScore:    serviceSeed.AttackScore,
+				CreatedAt:      roundStart.Add(time.Duration(serviceIndex+1) * time.Minute),
+				UpdatedAt:      updatedAt,
+			}).Error; err != nil {
+				return fmt.Errorf("create awd team service for %s round %d: %w", team.Name, roundSeed.RoundNumber, err)
+			}
+			teamScores[team.ID] += serviceSeed.SLAScore + serviceSeed.DefenseScore + serviceSeed.AttackScore
+		}
+
+		for attackIndex, attackSeed := range roundSeed.Attacks {
+			attackerTeam, err := seedAWDTeamAt(teams, attackSeed.AttackerTeamIndex)
+			if err != nil {
+				return fmt.Errorf("round %d attack attacker team: %w", roundSeed.RoundNumber, err)
+			}
+			victimTeam, err := seedAWDTeamAt(teams, attackSeed.VictimTeamIndex)
+			if err != nil {
+				return fmt.Errorf("round %d attack victim team: %w", roundSeed.RoundNumber, err)
+			}
+			attackAt := roundStart.Add(attackSeed.Offset)
+			attackType := strings.TrimSpace(attackSeed.AttackType)
+			if attackType == "" {
+				attackType = model.AWDAttackTypeFlagCapture
+			}
+			source := strings.TrimSpace(attackSeed.Source)
+			if source == "" {
+				source = model.AWDAttackSourceManual
+			}
+			var submittedBy *int64
+			if attackSeed.SubmittedByStudent {
+				submittedBy = int64Ptr(student.ID)
+			}
+			if err := tx.Create(&model.AWDAttackLog{
+				RoundID:           round.ID,
+				AttackerTeamID:    attackerTeam.ID,
+				VictimTeamID:      victimTeam.ID,
+				ServiceID:         serviceID,
+				AWDChallengeID:    challenge.ID,
+				AttackType:        attackType,
+				Source:            source,
+				SubmittedFlag:     attackSeed.SubmittedFlag,
+				SubmittedByUserID: submittedBy,
+				IsSuccess:         attackSeed.IsSuccess,
+				ScoreGained:       attackSeed.ScoreGained,
+				CreatedAt:         attackAt.Add(time.Duration(attackIndex) * time.Second),
+			}).Error; err != nil {
+				return fmt.Errorf("create awd attack log for %s/%s: %w", attackerTeam.Name, challenge.Name, err)
+			}
+			if attackSeed.IsSuccess {
+				teamScores[attackerTeam.ID] += attackSeed.ScoreGained
+				if lastSolveAt, ok := teamLastSolveAt[attackerTeam.ID]; !ok || attackAt.After(lastSolveAt) {
+					teamLastSolveAt[attackerTeam.ID] = attackAt
+				}
+			}
+		}
+
+		for trafficIndex, trafficSeed := range roundSeed.Traffic {
+			attackerTeam, err := seedAWDTeamAt(teams, trafficSeed.AttackerTeamIndex)
+			if err != nil {
+				return fmt.Errorf("round %d traffic attacker team: %w", roundSeed.RoundNumber, err)
+			}
+			victimTeam, err := seedAWDTeamAt(teams, trafficSeed.VictimTeamIndex)
+			if err != nil {
+				return fmt.Errorf("round %d traffic victim team: %w", roundSeed.RoundNumber, err)
+			}
+			source := strings.TrimSpace(trafficSeed.Source)
+			if source == "" {
+				source = model.AWDTrafficSourceRuntimeProxy
+			}
+			if err := tx.Create(&model.AWDTrafficEvent{
+				ContestID:      contest.ID,
+				RoundID:        round.ID,
+				AttackerTeamID: attackerTeam.ID,
+				VictimTeamID:   victimTeam.ID,
+				ServiceID:      serviceID,
+				AWDChallengeID: challenge.ID,
+				Method:         trafficSeed.Method,
+				Path:           trafficSeed.Path,
+				StatusCode:     trafficSeed.StatusCode,
+				Source:         source,
+				CreatedAt:      roundStart.Add(trafficSeed.Offset).Add(time.Duration(trafficIndex) * time.Second),
+			}).Error; err != nil {
+				return fmt.Errorf("create awd traffic event for %s/%s: %w", attackerTeam.Name, challenge.Name, err)
+			}
+		}
 	}
 
-	victimTeam := &model.Team{
-		ContestID:  contest.ID,
-		Name:       "教学复盘样本靶队",
-		CaptainID:  teacher.ID,
-		InviteCode: fmt.Sprintf("V%05d", student.ID%100000),
-		MaxMembers: 4,
-		CreatedAt:  contestStart.Add(-20 * time.Minute),
-		UpdatedAt:  contestEnd,
-	}
-	if err := tx.Create(victimTeam).Error; err != nil {
-		return fmt.Errorf("create victim team for %s: %w", student.Username, err)
-	}
-
-	for idx, attack := range scenario.Attacks {
-		attackAt := contestStart.Add(attack.Offset)
-		if err := tx.Create(&model.AWDAttackLog{
-			RoundID:           round.ID,
-			AttackerTeamID:    attackerTeam.ID,
-			VictimTeamID:      victimTeam.ID,
-			ServiceID:         7000 + challenge.ID,
-			AWDChallengeID:    challenge.ID,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
-			SubmittedFlag:     attack.SubmittedFlag,
-			SubmittedByUserID: int64Ptr(student.ID),
-			IsSuccess:         attack.IsSuccess,
-			ScoreGained:       attack.ScoreGained,
-			CreatedAt:         attackAt.Add(time.Duration(idx) * time.Second),
-		}).Error; err != nil {
-			return fmt.Errorf("create awd attack log for %s/%s: %w", student.Username, challenge.Name, err)
+	for _, team := range teams {
+		team.TotalScore = teamScores[team.ID]
+		if lastSolveAt, ok := teamLastSolveAt[team.ID]; ok {
+			team.LastSolveAt = timePtr(lastSolveAt)
+		}
+		if err := tx.Save(team).Error; err != nil {
+			return fmt.Errorf("update awd team score for %s: %w", team.Name, err)
 		}
 	}
 
 	return nil
+}
+
+func seedAWDScenarioEndAt(contestStart time.Time, rounds []awdRoundSeed) time.Time {
+	contestEnd := contestStart.Add(2 * time.Hour)
+	for _, round := range rounds {
+		roundEnd := contestStart.Add(round.StartOffset).Add(round.Duration)
+		if roundEnd.After(contestEnd) {
+			contestEnd = roundEnd
+		}
+	}
+	return contestEnd
+}
+
+func resolveSeedAWDCaptainID(role string, teacher *model.User, student *model.User, contestID int64, teamIndex int) int64 {
+	switch strings.TrimSpace(role) {
+	case seedAWDCaptainTeacher:
+		return teacher.ID
+	case seedAWDCaptainStudent:
+		return student.ID
+	default:
+		return seedAWDTeamMemberID(contestID, teamIndex, 0)
+	}
+}
+
+func seedAWDTeamMemberID(contestID int64, teamIndex, memberIndex int) int64 {
+	return 9_000_000_000 + contestID*100 + int64(teamIndex*10+memberIndex)
+}
+
+func seedAWDTeamAt(teams []*model.Team, index int) (*model.Team, error) {
+	if index < 0 || index >= len(teams) {
+		return nil, fmt.Errorf("team index %d out of range", index)
+	}
+	return teams[index], nil
 }
 
 func (c *challengeCatalog) pick(category string, index int) (challengeRef, error) {
@@ -1568,7 +1846,11 @@ func countAWDAttacks(scenario *awdScenario) int {
 	if scenario == nil {
 		return 0
 	}
-	return len(scenario.Attacks)
+	total := 0
+	for _, round := range scenario.Rounds {
+		total += len(round.Attacks)
+	}
+	return total
 }
 
 func buildSeedCoverageSummary(
