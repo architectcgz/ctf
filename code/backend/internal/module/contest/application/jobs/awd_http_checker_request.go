@@ -1,12 +1,12 @@
 package jobs
 
 import (
-	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
+
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
@@ -58,52 +58,53 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
 	}
 
-	reqCtx, cancel := context.WithTimeout(ctx, normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout))
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(reqCtx, action.Method, targetURL, bytes.NewBufferString(bodyValue))
-	if err != nil {
+	if u.httpRuntime == nil {
 		summary.ErrorCode = "http_request_failed"
-		summary.Error = sanitizeAWDCheckError(err)
+		summary.Error = "http_runtime_unavailable"
 		return awdHTTPCheckerActionRuntimeResult{summary: summary}
 	}
+
+	headers := make(map[string]string, len(action.Headers))
 	for key, value := range action.Headers {
-		req.Header.Set(key, renderAWDHTTPCheckerTemplate(value, templateData))
+		headers[key] = renderAWDHTTPCheckerTemplate(value, templateData)
 	}
 
-	client := u.httpClientForAWDTarget(accessURL, runtimeDetails)
-
-	resp, err := client.Do(req)
+	response, err := u.httpRuntime.Execute(ctx, contestports.AWDHTTPRequest{
+		AccessURL:      accessURL,
+		RuntimeDetails: runtimeDetails,
+		URL:            targetURL,
+		Method:         action.Method,
+		Headers:        headers,
+		Body:           bodyValue,
+		ReadBody:       true,
+		Timeout:        normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout),
+	})
 	if err != nil {
+		summary.StatusCode = response.StatusCode
 		summary.ErrorCode = "http_request_failed"
+		var runtimeErr *contestports.AWDHTTPRuntimeError
+		if errors.As(err, &runtimeErr) && runtimeErr != nil && runtimeErr.Kind == contestports.AWDHTTPRuntimeErrorKindResponseRead {
+			summary.ErrorCode = "http_response_read_failed"
+		}
 		summary.Error = sanitizeAWDCheckError(err)
 		return awdHTTPCheckerActionRuntimeResult{summary: summary}
 	}
-	defer resp.Body.Close()
 
-	bodyBytes, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		summary.StatusCode = resp.StatusCode
-		summary.ErrorCode = "http_response_read_failed"
-		summary.Error = sanitizeAWDCheckError(readErr)
-		return awdHTTPCheckerActionRuntimeResult{summary: summary}
-	}
-
-	summary.StatusCode = resp.StatusCode
-	if resp.StatusCode != action.ExpectedStatus {
+	summary.StatusCode = response.StatusCode
+	if response.StatusCode != action.ExpectedStatus {
 		summary.ErrorCode = "unexpected_http_status"
-		summary.Error = fmt.Sprintf("unexpected_http_status:%d", resp.StatusCode)
-		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+		summary.Error = fmt.Sprintf("unexpected_http_status:%d", response.StatusCode)
+		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
 	}
 
-	if len(expectedSubstrings) > 0 && !containsAnyAWDExpectedSubstring(string(bodyBytes), expectedSubstrings) {
+	if len(expectedSubstrings) > 0 && !containsAnyAWDExpectedSubstring(response.Body, expectedSubstrings) {
 		summary.ErrorCode = "flag_mismatch"
 		summary.Error = "flag_mismatch"
-		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
 	}
 
 	summary.Healthy = true
-	return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+	return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
 }
 
 func containsAnyAWDExpectedSubstring(body string, expectedSubstrings []string) bool {

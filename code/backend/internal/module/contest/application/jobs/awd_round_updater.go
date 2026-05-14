@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"go.uber.org/zap"
@@ -26,7 +25,7 @@ type AWDRoundUpdater struct {
 	flagSecret      string
 	injector        contestports.AWDFlagInjector
 	checkerRunner   contestports.CheckerRunner
-	httpClient      *http.Client
+	httpRuntime     contestports.AWDHTTPRuntime
 	log             *zap.Logger
 }
 
@@ -88,7 +87,6 @@ func NewAWDRoundUpdater(
 		cfg:             cfg,
 		flagSecret:      flagSecret,
 		injector:        injector,
-		httpClient:      &http.Client{Timeout: normalizedAWDCheckerTimeout(cfg.CheckerTimeout)},
 		log:             log,
 	}
 }

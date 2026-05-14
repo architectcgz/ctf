@@ -199,6 +199,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		log.Named("awd_round_updater"),
 		scoreboardCache,
 	)
+	awdUpdater.SetHTTPRuntime(contestinfra.NewAWDHTTPRuntimeAdapter(nil, cfg.Contest.AWD.CheckerTimeout))
 	if checkerRunner, err := contestinfra.NewDockerCheckerRunner(cfg.Contest.AWD.CheckerSandbox); err == nil {
 		awdUpdater.SetCheckerRunner(checkerRunner)
 	} else {

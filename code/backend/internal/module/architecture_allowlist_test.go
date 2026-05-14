@@ -7,11 +7,6 @@ var allowedApplicationConcreteImports = map[string]struct{}{
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm":        {},
 	"challenge/application/commands/challenge_package_revision_service.go -> gorm.io/gorm/clause": {},
 	"challenge/application/commands/image_build_service.go -> gorm.io/gorm":                       {},
-	"contest/application/jobs/awd_http_checker_request.go -> net/http":                            {},
-	"contest/application/jobs/awd_http_target_client.go -> net/http":                              {},
-	"contest/application/jobs/awd_probe_runtime.go -> net/http":                                   {},
-	"contest/application/jobs/awd_round_runtime_bridge.go -> net/http":                            {},
-	"contest/application/jobs/awd_round_updater.go -> net/http":                                   {},
 }
 
 var allowedCrossModulePrivateImports = map[string]struct{}{

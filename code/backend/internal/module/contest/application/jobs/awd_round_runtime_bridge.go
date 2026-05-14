@@ -2,17 +2,16 @@ package jobs
 
 import (
 	"context"
-	"net/http"
 
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) SetHTTPClient(client *http.Client) {
-	if u == nil || client == nil {
+func (u *AWDRoundUpdater) SetHTTPRuntime(runtime contestports.AWDHTTPRuntime) {
+	if u == nil || runtime == nil {
 		return
 	}
-	u.httpClient = client
+	u.httpRuntime = runtime
 }
 
 func (u *AWDRoundUpdater) SetCheckerRunner(runner contestports.CheckerRunner) {

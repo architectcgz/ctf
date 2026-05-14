@@ -3,9 +3,9 @@ package jobs
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
+
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) probeServiceInstance(ctx context.Context, accessURL, runtimeDetails, healthPath string) awdInstanceProbeResult {
@@ -13,17 +13,19 @@ func (u *AWDRoundUpdater) probeServiceInstance(ctx context.Context, accessURL, r
 	attempts := make([]awdProbeAttemptResult, 0, 1)
 	targetURL, err := buildAWDHealthCheckURL(accessURL, healthPath)
 	if err == nil {
-		client := u.httpClientForAWDTarget(accessURL, runtimeDetails)
-		reqCtx, cancel := context.WithTimeout(ctx, normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout))
-		defer cancel()
-
-		req, reqErr := http.NewRequestWithContext(reqCtx, http.MethodGet, targetURL, nil)
-		if reqErr == nil {
-			resp, doErr := client.Do(req)
-			if doErr == nil {
-				_, _ = io.Copy(io.Discard, resp.Body)
-				_ = resp.Body.Close()
-				if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusBadRequest {
+		if u.httpRuntime == nil {
+			err = newAWDCheckError("http_request_failed", "http_runtime_unavailable")
+		} else {
+			response, execErr := u.httpRuntime.Execute(ctx, contestports.AWDHTTPRequest{
+				AccessURL:      accessURL,
+				RuntimeDetails: runtimeDetails,
+				URL:            targetURL,
+				Method:         "GET",
+				ReadBody:       false,
+				Timeout:        normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout),
+			})
+			if execErr == nil {
+				if response.StatusCode >= 200 && response.StatusCode < 400 {
 					attempts = append(attempts, awdProbeAttemptResult{
 						Probe:     "http",
 						Healthy:   true,
@@ -36,12 +38,10 @@ func (u *AWDRoundUpdater) probeServiceInstance(ctx context.Context, accessURL, r
 						attempts:  attempts,
 					}
 				}
-				err = newAWDCheckError("unexpected_http_status", fmt.Sprintf("unexpected_http_status:%d", resp.StatusCode))
+				err = newAWDCheckError("unexpected_http_status", fmt.Sprintf("unexpected_http_status:%d", response.StatusCode))
 			} else {
-				err = newAWDCheckError("http_request_failed", sanitizeAWDCheckError(doErr))
+				err = newAWDCheckError("http_request_failed", sanitizeAWDCheckError(execErr))
 			}
-		} else {
-			err = newAWDCheckError("http_request_failed", sanitizeAWDCheckError(reqErr))
 		}
 		errorCode, errorMessage := normalizeAWDCheckError(err, "http_request_failed")
 		attempts = append(attempts, awdProbeAttemptResult{
