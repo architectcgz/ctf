@@ -188,9 +188,10 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 	scoreboardCache := contestinfra.NewScoreboardCache(db, cache)
 	awdRoundStateStore := contestinfra.NewAWDRoundStateStore(cache)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(cache)
+	awdJobRepo := contestinfra.NewAWDJobRepository(deps.awdRepo)
 
 	awdUpdater := contestjobs.NewAWDRoundUpdater(
-		deps.awdRepo,
+		awdJobRepo,
 		awdRoundStateStore,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
