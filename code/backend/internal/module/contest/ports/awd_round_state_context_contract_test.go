@@ -26,7 +26,7 @@ func (ctxOnlyAWDRoundStateStore) LoadAWDCurrentRoundNumber(context.Context, int6
 	return 0, false, nil
 }
 
-func (ctxOnlyAWDRoundStateStore) LoadAWDRoundFlag(context.Context, int64, int64, int64, int64, int64) (string, bool, error) {
+func (ctxOnlyAWDRoundStateStore) LoadAWDRoundFlag(context.Context, int64, int64, int64, int64) (string, bool, error) {
 	return "", false, nil
 }
 
