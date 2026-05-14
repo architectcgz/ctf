@@ -157,6 +157,116 @@
   - 负责：提供进程内事件总线给异步通知和非关键路径联动使用
   - 不负责：替代强一致性的同步模块调用，或成为跨进程消息中间件抽象
 
+## 系统后端总体架构图
+
+下面的 Mermaid 图用于论文中“后端系统架构设计”章节，按分层视角抽象 `ctf后端` 的总体结构，只保留当前仓库已经落地的真实组件。图中仅保留当前仍有实际职责的教师侧只读聚合模块，不再单独绘制已经回收到 `practice` 内部查询层的 `practice_readmodel`。
+
+```mermaid
+flowchart TB
+    classDef layer fill:#f8fafc,stroke:#475569,stroke-width:1px,color:#0f172a;
+    classDef service fill:#eef4ff,stroke:#3b82f6,stroke-width:1px,color:#0f172a;
+    classDef store fill:#ecfdf5,stroke:#16a34a,stroke-width:1px,color:#0f172a;
+    classDef third fill:#fdf2f8,stroke:#db2777,stroke-width:1px,color:#0f172a;
+    classDef support fill:#fff7ed,stroke:#ea580c,stroke-width:1px,color:#0f172a;
+
+    subgraph L1["用户访问层"]
+        Browser["浏览器中的 Vue 3 前端<br/>学生 / 教师 / 管理员"]
+    end
+
+    subgraph L2["网关层"]
+        Gateway["Nginx 反向代理<br/>静态资源分发 / API 转发 / WebSocket 转发"]
+    end
+
+    subgraph L3["后端服务层（单体 Go API 进程）"]
+        API["Go API Server<br/>Gin / HTTP API / WebSocket"]
+        subgraph WriteModels["写模型与运行时模块"]
+            Auth["认证模块（auth）<br/>登录 / CAS / Session / WS Ticket"]
+            Identity["身份模块（identity）<br/>用户 / 角色 / 资料"]
+            Challenge["题目模块（challenge）<br/>题目 / 题包 / 附件 / 镜像"]
+            Instance["实例模块（instance）<br/>实例命令 / 访问入口 / 维护"]
+            Practice["训练模块（practice）<br/>开题 / Flag 提交 / 训练进度"]
+            Contest["竞赛模块（contest）<br/>赛事 / 榜单 / AWD"]
+            Assessment["评估模块（assessment）<br/>技能画像 / 报告"]
+            OpsSvc["运维支撑模块（ops）<br/>通知 / 审计 / WebSocket Relay"]
+            Runtime["运行时模块（runtime）<br/>容器能力 / 探针 / 文件访问"]
+        end
+        subgraph ReadModels["只读聚合模块"]
+            Teaching["教学分析与复盘查询模块<br/>教师复盘 / 教学分析 / 班级洞察"]
+        end
+    end
+
+    subgraph L4["数据访问层"]
+        Access["GORM Repository / Redis Store / LocalFS Adapter / 外部依赖 Adapter"]
+    end
+
+    subgraph L5["数据存储层"]
+        PG["PostgreSQL<br/>业务数据"]
+        Redis["Redis<br/>缓存 / 锁 / 排行榜 / 会话辅助"]
+        LocalFS["宿主机文件系统<br/>附件 / 导入预览 / 导出文件 / 构建日志"]
+    end
+
+    subgraph L6["第三方服务与外部运行时层"]
+        CAS["CAS 认证服务"]
+        Registry["私有镜像仓库"]
+        Docker["Docker Engine"]
+    end
+
+    subgraph L7["安全与运维支撑模块"]
+        Security["安全控制<br/>Session / Cookie 认证 / RBAC / 参数校验"]
+        Support["运维支撑<br/>后台任务 / 进程内事件总线 / WebSocket 管理 / Docker Compose 部署"]
+    end
+
+    Browser --> Gateway --> API
+
+    API --> Auth
+    API --> Identity
+    API --> Challenge
+    API --> Instance
+    API --> Practice
+    API --> Contest
+    API --> Assessment
+    API --> OpsSvc
+    API --> Teaching
+
+    Auth --> Identity
+    Challenge --> Runtime
+    Instance --> Runtime
+    Practice --> Instance
+    Contest --> Runtime
+    Teaching --> Assessment
+
+    Auth --> Access
+    Identity --> Access
+    Challenge --> Access
+    Instance --> Access
+    Practice --> Access
+    Contest --> Access
+    Assessment --> Access
+    OpsSvc --> Access
+    Teaching --> Access
+    Runtime --> Access
+
+    Access --> PG
+    Access --> Redis
+    Access --> LocalFS
+    Access --> CAS
+    Access --> Registry
+    Access --> Docker
+
+    Security -.统一鉴权与权限控制.-> API
+    Security -.访问控制.-> Gateway
+    Support -.后台任务与事件驱动.-> Practice
+    Support -.后台任务与事件驱动.-> Contest
+    Support -.通知与实时推送支撑.-> OpsSvc
+    Support -.运行与部署支撑.-> API
+
+    class Browser,Gateway,API,Access layer
+    class Auth,Identity,Challenge,Instance,Practice,Contest,Assessment,OpsSvc,Runtime,Teaching service
+    class PG,Redis,LocalFS store
+    class CAS,Registry,Docker third
+    class Security,Support support
+```
+
 ## 接口或数据影响
 
 - 模块对外稳定 contract 位于各自 `contracts` 目录，外部 HTTP / WebSocket 路由则经由 `code/backend/internal/app/router_routes.go` 暴露。
