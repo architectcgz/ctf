@@ -553,7 +553,12 @@ func (r *Repository) fillClassHandsOnStats(
 		}, 0)
 		if err := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
 			Select("al.submitted_by_user_id AS user_id, COUNT(*) AS count").
-			Where("al.submitted_by_user_id IN ? AND al.is_success = ?", userIDs, true).
+			Where(
+				"al.submitted_by_user_id IN ? AND al.is_success = ? AND al.source = ? AND al.score_gained > 0",
+				userIDs,
+				true,
+				model.AWDAttackSourceSubmission,
+			).
 			Group("al.submitted_by_user_id").
 			Scan(&rows).Error; err != nil {
 			return fmt.Errorf("count class awd success events: %w", err)
@@ -699,6 +704,91 @@ func (r *Repository) fillClassDimensionFacts(
 		for _, row := range reviewRows {
 			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
 			fact.EvidenceCount += row.Count
+		}
+	}
+
+	if r.db.Migrator().HasTable("awd_attack_logs") && r.db.Migrator().HasTable("awd_challenges") {
+		publishedRows := make([]struct {
+			Dimension  string `gorm:"column:dimension"`
+			TotalCount int    `gorm:"column:total_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				ac.category AS dimension,
+				COUNT(DISTINCT ac.id) AS total_count
+			FROM awd_challenges ac
+			WHERE ac.status = ?
+			GROUP BY ac.category
+		`, model.AWDChallengeStatusPublished).Scan(&publishedRows).Error; err != nil {
+			return fmt.Errorf("get class awd published dimension totals: %w", err)
+		}
+		awdTotals := make(map[string]int, len(publishedRows))
+		for _, row := range publishedRows {
+			awdTotals[row.Dimension] = row.TotalCount
+		}
+
+		successRows := make([]struct {
+			UserID      int64  `gorm:"column:user_id"`
+			Dimension   string `gorm:"column:dimension"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				al.submitted_by_user_id AS user_id,
+				ac.category AS dimension,
+				COUNT(DISTINCT al.awd_challenge_id) AS solved_count
+			FROM awd_attack_logs al
+			JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
+			WHERE al.submitted_by_user_id IN ?
+				AND al.source = ?
+				AND al.is_success = TRUE
+				AND al.score_gained > 0
+				AND ac.status = ?
+			GROUP BY al.submitted_by_user_id, ac.category
+		`, userIDs, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
+			return fmt.Errorf("get class awd success dimension facts: %w", err)
+		}
+		for _, row := range successRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			fact.SuccessCount += row.SolvedCount
+			fact.EvidenceCount += row.SolvedCount
+			if total := awdTotals[row.Dimension]; total > 0 {
+				coverage := float64(row.SolvedCount) / float64(total)
+				if coverage > fact.ProfileScore {
+					fact.ProfileScore = coverage
+				}
+			}
+		}
+
+		difficultyRows := make([]struct {
+			UserID      int64  `gorm:"column:user_id"`
+			Dimension   string `gorm:"column:dimension"`
+			Difficulty  string `gorm:"column:difficulty"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				al.submitted_by_user_id AS user_id,
+				ac.category AS dimension,
+				ac.difficulty AS difficulty,
+				COUNT(DISTINCT al.awd_challenge_id) AS solved_count
+			FROM awd_attack_logs al
+			JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
+			WHERE al.submitted_by_user_id IN ?
+				AND al.source = ?
+				AND al.is_success = TRUE
+				AND al.score_gained > 0
+				AND ac.status = ?
+			GROUP BY al.submitted_by_user_id, ac.category, ac.difficulty
+		`, userIDs, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
+			return fmt.Errorf("get class awd solved difficulty facts: %w", err)
+		}
+		for _, row := range difficultyRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			if fact.SolvedDifficultyCounts == nil {
+				fact.SolvedDifficultyCounts = make(map[string]int)
+			}
+			fact.SolvedDifficultyCounts[row.Difficulty] += row.SolvedCount
 		}
 	}
 

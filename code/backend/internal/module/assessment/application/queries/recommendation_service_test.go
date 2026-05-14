@@ -54,6 +54,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Challenge{},
+		&model.AWDChallenge{},
 		&model.SkillProfile{},
 		&model.Submission{},
 		&model.AWDAttackLog{},
@@ -494,6 +495,80 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	}
 	if resp.Challenges[0].Difficulty != model.ChallengeDifficultyHard {
 		t.Fatalf("expected hard challenge to rank first for progression recommendation, got %+v", resp.Challenges)
+	}
+}
+
+func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgressionTarget(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now().UTC()
+
+	if err := db.Create(&model.User{
+		ID:       31,
+		Username: "student-31",
+		Role:     model.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&model.SkillProfile{
+		UserID:    31,
+		Dimension: model.DimensionPwn,
+		Score:     0.12,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed low practice profile: %v", err)
+	}
+
+	awdChallenges := []model.AWDChallenge{
+		{ID: 3101, Name: "pwn-awd-easy-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3102, Name: "pwn-awd-easy-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3103, Name: "pwn-awd-medium-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3104, Name: "pwn-awd-medium-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	}
+	for _, challenge := range awdChallenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed awd challenge %s: %v", challenge.Name, err)
+		}
+	}
+
+	attackLogs := []model.AWDAttackLog{
+		{ID: 1, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6101, ServiceID: 7101, AWDChallengeID: 3101, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now},
+		{ID: 2, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6102, ServiceID: 7102, AWDChallengeID: 3102, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(1 * time.Minute)},
+		{ID: 3, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6103, ServiceID: 7103, AWDChallengeID: 3103, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(2 * time.Minute)},
+		{ID: 4, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6104, ServiceID: 7104, AWDChallengeID: 3104, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(3 * time.Minute)},
+	}
+	for _, log := range attackLogs {
+		if err := db.Create(&log).Error; err != nil {
+			t.Fatalf("seed awd attack log %d: %v", log.ID, err)
+		}
+	}
+
+	candidateChallenges := []model.Challenge{
+		{ID: 3111, Title: "pwn-medium-next", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Points: 180, Status: model.ChallengeStatusPublished},
+		{ID: 3112, Title: "pwn-hard-next", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyHard, Points: 240, Status: model.ChallengeStatusPublished},
+	}
+	for _, challenge := range candidateChallenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed candidate challenge %s: %v", challenge.Title, err)
+		}
+	}
+
+	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+
+	resp, err := service.Recommend(context.Background(), 31, 2)
+	if err != nil {
+		t.Fatalf("Recommend() error = %v", err)
+	}
+	if len(resp.WeakDimensions) != 0 {
+		t.Fatalf("expected awd-backed student not to be treated as weak, got %+v", resp.WeakDimensions)
+	}
+	if len(resp.Challenges) == 0 {
+		t.Fatalf("expected awd-backed progression recommendation, got %+v", resp)
+	}
+	if resp.Challenges[0].DifficultyBand != model.ChallengeDifficultyHard {
+		t.Fatalf("expected hard progression band from awd-backed snapshot, got %+v", resp.Challenges[0])
+	}
+	if resp.Challenges[0].Difficulty != model.ChallengeDifficultyHard {
+		t.Fatalf("expected hard challenge to rank first for awd-backed progression recommendation, got %+v", resp.Challenges)
 	}
 }
 

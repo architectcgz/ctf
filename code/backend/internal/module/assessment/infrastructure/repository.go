@@ -338,7 +338,12 @@ func (r *Repository) fillStudentHandsOnStats(
 	if r.db.Migrator().HasTable("awd_attack_logs") {
 		var awdSuccessCount int64
 		if err := r.dbWithContext(ctx).Table("awd_attack_logs").
-			Where("submitted_by_user_id = ? AND is_success = ?", userID, true).
+			Where(
+				"submitted_by_user_id = ? AND is_success = ? AND source = ? AND score_gained > 0",
+				userID,
+				true,
+				model.AWDAttackSourceSubmission,
+			).
 			Count(&awdSuccessCount).Error; err != nil {
 			return fmt.Errorf("count awd success events: %w", err)
 		}
@@ -500,6 +505,90 @@ func (r *Repository) fillStudentDimensionFacts(
 		for _, row := range reviewRows {
 			fact := ensureDimensionFact(factMap, row.Dimension)
 			fact.EvidenceCount += row.Count
+		}
+	}
+
+	if r.db.Migrator().HasTable("awd_attack_logs") && r.db.Migrator().HasTable("awd_challenges") {
+		type awdPublishedRow struct {
+			Dimension  string `gorm:"column:dimension"`
+			TotalCount int    `gorm:"column:total_count"`
+		}
+		publishedRows := make([]awdPublishedRow, 0)
+		if err := r.dbWithContext(ctx).Raw(`
+			SELECT
+				ac.category AS dimension,
+				COUNT(DISTINCT ac.id) AS total_count
+			FROM awd_challenges ac
+			WHERE ac.status = ?
+			GROUP BY ac.category
+		`, model.AWDChallengeStatusPublished).Scan(&publishedRows).Error; err != nil {
+			return fmt.Errorf("get awd published dimension totals: %w", err)
+		}
+		awdTotals := make(map[string]int, len(publishedRows))
+		for _, row := range publishedRows {
+			awdTotals[row.Dimension] = row.TotalCount
+		}
+
+		type awdSuccessRow struct {
+			Dimension   string `gorm:"column:dimension"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}
+		successRows := make([]awdSuccessRow, 0)
+		if err := r.dbWithContext(ctx).Raw(`
+			SELECT
+				ac.category AS dimension,
+				COUNT(DISTINCT al.awd_challenge_id) AS solved_count
+			FROM awd_attack_logs al
+			JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
+			WHERE al.submitted_by_user_id = ?
+				AND al.source = ?
+				AND al.is_success = TRUE
+				AND al.score_gained > 0
+				AND ac.status = ?
+			GROUP BY ac.category
+		`, userID, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
+			return fmt.Errorf("get awd success dimension facts: %w", err)
+		}
+		for _, row := range successRows {
+			fact := ensureDimensionFact(factMap, row.Dimension)
+			fact.SuccessCount += row.SolvedCount
+			fact.EvidenceCount += row.SolvedCount
+			if total := awdTotals[row.Dimension]; total > 0 {
+				coverage := float64(row.SolvedCount) / float64(total)
+				if coverage > fact.ProfileScore {
+					fact.ProfileScore = coverage
+				}
+			}
+		}
+
+		type awdDifficultyRow struct {
+			Dimension   string `gorm:"column:dimension"`
+			Difficulty  string `gorm:"column:difficulty"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}
+		difficultyRows := make([]awdDifficultyRow, 0)
+		if err := r.dbWithContext(ctx).Raw(`
+			SELECT
+				ac.category AS dimension,
+				ac.difficulty AS difficulty,
+				COUNT(DISTINCT al.awd_challenge_id) AS solved_count
+			FROM awd_attack_logs al
+			JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
+			WHERE al.submitted_by_user_id = ?
+				AND al.source = ?
+				AND al.is_success = TRUE
+				AND al.score_gained > 0
+				AND ac.status = ?
+			GROUP BY ac.category, ac.difficulty
+		`, userID, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
+			return fmt.Errorf("get awd solved difficulty facts: %w", err)
+		}
+		for _, row := range difficultyRows {
+			fact := ensureDimensionFact(factMap, row.Dimension)
+			if fact.SolvedDifficultyCounts == nil {
+				fact.SolvedDifficultyCounts = make(map[string]int)
+			}
+			fact.SolvedDifficultyCounts[row.Difficulty] += row.SolvedCount
 		}
 	}
 
