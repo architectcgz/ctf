@@ -78,7 +78,7 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 
 	service := NewClassInsightService(repo, repo, nil, nil)
 
-	summary, err := service.GetClassSummary(context.Background(), 11, model.RoleTeacher, "Class A")
+	summary, err := service.GetClassSummary(context.Background(), 11, model.RoleTeacher, "Class A", nil)
 	if err != nil {
 		t.Fatalf("GetClassSummary() error = %v", err)
 	}
@@ -192,7 +192,7 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 
 	service := NewClassInsightService(repo, repo, recommendations, nil)
 
-	review, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A")
+	review, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", nil)
 	if err != nil {
 		t.Fatalf("GetClassReview() error = %v", err)
 	}
@@ -223,5 +223,74 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 
 	if !foundWeakDimensionRecommendation {
 		t.Fatalf("review items = %+v, want weak_dimension_cluster recommendation", review.Items)
+	}
+}
+
+func TestClassInsightQueryServiceUsesSharedCustomWindow(t *testing.T) {
+	t.Parallel()
+
+	originalNow := queryNow
+	queryNow = func() time.Time {
+		return time.Date(2026, 5, 14, 9, 0, 0, 0, time.UTC)
+	}
+	defer func() {
+		queryNow = originalNow
+	}()
+
+	var summarySince time.Time
+	var trendSince time.Time
+	var trendDays int
+	var snapshotSince time.Time
+
+	repo := &classInsightRepoStub{
+		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
+			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		getClassSummaryFn: func(_ context.Context, _ string, since time.Time) (*queryports.ClassSummary, error) {
+			summarySince = since
+			return &queryports.ClassSummary{
+				ClassName:          "Class A",
+				StudentCount:       1,
+				AverageSolved:      1,
+				ActiveStudentCount: 1,
+				ActiveRate:         100,
+				RecentEventCount:   2,
+			}, nil
+		},
+		getClassTrendFn: func(_ context.Context, _ string, since time.Time, days int) (*queryports.ClassTrend, error) {
+			trendSince = since
+			trendDays = days
+			return &queryports.ClassTrend{
+				ClassName: "Class A",
+				Points: []queryports.ClassTrendPoint{
+					{Date: "2026-05-01", EventCount: 1, SolveCount: 0},
+					{Date: "2026-05-03", EventCount: 2, SolveCount: 1},
+				},
+			}, nil
+		},
+		listClassTeachingFactSnapshots: func(_ context.Context, _ string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
+			snapshotSince = since
+			return []teachingadvice.StudentFactSnapshot{}, nil
+		},
+	}
+
+	service := NewClassInsightService(repo, repo, nil, nil)
+	_, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", &dto.TeacherClassInsightQuery{
+		FromDate: "2026-05-01",
+		ToDate:   "2026-05-03",
+	})
+	if err != nil {
+		t.Fatalf("GetClassReview() error = %v", err)
+	}
+
+	expectedSince := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+	if !summarySince.Equal(expectedSince) {
+		t.Fatalf("summary since = %s, want %s", summarySince, expectedSince)
+	}
+	if !trendSince.Equal(expectedSince) || trendDays != 3 {
+		t.Fatalf("trend window = (%s, %d), want (%s, 3)", trendSince, trendDays, expectedSince)
+	}
+	if !snapshotSince.Equal(expectedSince) {
+		t.Fatalf("snapshot since = %s, want %s", snapshotSince, expectedSince)
 	}
 }

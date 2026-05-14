@@ -20,7 +20,9 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
+	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
@@ -31,6 +33,16 @@ type testReportRepository struct {
 	contests        map[int64]*model.Contest
 	personalStats   *assessmentdomain.PersonalReportStats
 	totalChallenges int64
+	classSummary    *queryports.ClassSummary
+	classTrend      *queryports.ClassTrend
+	classSnapshots  []teachingadvice.StudentFactSnapshot
+	categoryStats   []assessmentdomain.ClassDistributionStat
+	difficultyStats []assessmentdomain.ClassDistributionStat
+	contestSummary  *assessmentdomain.ClassContestMigrationSummary
+	lastSummarySince time.Time
+	lastTrendSince   time.Time
+	lastTrendDays    int
+	lastSnapshotSince time.Time
 	timeline        []assessmentdomain.ReviewArchiveTimelineEvent
 	evidence        []assessmentdomain.ReviewArchiveEvidenceEvent
 	writeups        []assessmentdomain.ReviewArchiveWriteupItem
@@ -118,6 +130,58 @@ func (r *testReportRepository) ListClassDimensionAverages(context.Context, strin
 
 func (r *testReportRepository) ListClassTopStudents(context.Context, string, int) ([]assessmentdomain.ClassTopStudent, error) {
 	return []assessmentdomain.ClassTopStudent{}, nil
+}
+
+func (r *testReportRepository) ListClassCategoryDistribution(context.Context, string) ([]assessmentdomain.ClassDistributionStat, error) {
+	if r != nil && r.categoryStats != nil {
+		return r.categoryStats, nil
+	}
+	return []assessmentdomain.ClassDistributionStat{}, nil
+}
+
+func (r *testReportRepository) ListClassDifficultyDistribution(context.Context, string) ([]assessmentdomain.ClassDistributionStat, error) {
+	if r != nil && r.difficultyStats != nil {
+		return r.difficultyStats, nil
+	}
+	return []assessmentdomain.ClassDistributionStat{}, nil
+}
+
+func (r *testReportRepository) GetClassContestMigrationSummary(context.Context, string) (*assessmentdomain.ClassContestMigrationSummary, error) {
+	if r != nil && r.contestSummary != nil {
+		return r.contestSummary, nil
+	}
+	return &assessmentdomain.ClassContestMigrationSummary{}, nil
+}
+
+func (r *testReportRepository) GetClassSummary(_ context.Context, _ string, since time.Time) (*queryports.ClassSummary, error) {
+	if r != nil {
+		r.lastSummarySince = since
+	}
+	if r != nil && r.classSummary != nil {
+		return r.classSummary, nil
+	}
+	return &queryports.ClassSummary{}, nil
+}
+
+func (r *testReportRepository) GetClassTrend(_ context.Context, _ string, since time.Time, days int) (*queryports.ClassTrend, error) {
+	if r != nil {
+		r.lastTrendSince = since
+		r.lastTrendDays = days
+	}
+	if r != nil && r.classTrend != nil {
+		return r.classTrend, nil
+	}
+	return &queryports.ClassTrend{}, nil
+}
+
+func (r *testReportRepository) ListClassTeachingFactSnapshots(_ context.Context, _ string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
+	if r != nil {
+		r.lastSnapshotSince = since
+	}
+	if r != nil && r.classSnapshots != nil {
+		return r.classSnapshots, nil
+	}
+	return []teachingadvice.StudentFactSnapshot{}, nil
 }
 
 func (r *testReportRepository) ListContestScoreboard(context.Context, int64) ([]assessmentdomain.ContestExportScoreboardItem, error) {
@@ -617,6 +681,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 		repo,
 		repo,
 		repo,
+		repo,
 		&testAssessmentProfileReader{
 			resp: &dto.SkillProfileResp{
 				UserID: 7,
@@ -1050,6 +1115,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		repo,
 		repo,
 		repo,
+		repo,
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -1127,6 +1193,7 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	}
 
 	service := NewReportService(
+		repo,
 		repo,
 		repo,
 		repo,
@@ -1233,6 +1300,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		&testReportRepository{db: db},
 		&testReportRepository{db: db},
 		&testReportRepository{db: db},
+		&testReportRepository{db: db},
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -1260,10 +1328,122 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	}
 }
 
+func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
+	t.Parallel()
+
+	start := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+	repo := &testReportRepository{
+		classSummary: &queryports.ClassSummary{
+			ClassName:          "class-a",
+			StudentCount:       2,
+			AverageSolved:      2,
+			ActiveStudentCount: 1,
+			ActiveRate:         50,
+			RecentEventCount:   6,
+		},
+		classTrend: &queryports.ClassTrend{
+			ClassName: "class-a",
+			Points: []queryports.ClassTrendPoint{
+				{Date: "2026-05-01", ActiveStudentCount: 1, EventCount: 2, SolveCount: 1},
+				{Date: "2026-05-03", ActiveStudentCount: 1, EventCount: 4, SolveCount: 2},
+			},
+		},
+		classSnapshots: []teachingadvice.StudentFactSnapshot{
+			{
+				UserID:                 1,
+				Username:               "alice",
+				ActiveDays7d:           1,
+				RecentEventCount7d:     1,
+				CorrectSubmissionCount: 0,
+				MaxWrongStreak:         4,
+				Dimensions: []teachingadvice.DimensionFact{
+					{Dimension: "web", ProfileScore: 0.2, AttemptCount: 4, SuccessCount: 0, EvidenceCount: 4},
+				},
+			},
+			{
+				UserID:                 2,
+				Username:               "bob",
+				ActiveDays7d:           2,
+				RecentEventCount7d:     2,
+				CorrectSubmissionCount: 1,
+				WriteupCount:           0,
+				Dimensions: []teachingadvice.DimensionFact{
+					{Dimension: "web", ProfileScore: 0.3, AttemptCount: 3, SuccessCount: 1, EvidenceCount: 3},
+				},
+			},
+		},
+		categoryStats: []assessmentdomain.ClassDistributionStat{
+			{Key: "web", TotalChallenges: 12, CoveredChallenges: 3, SolvedStudents: 2},
+		},
+		difficultyStats: []assessmentdomain.ClassDistributionStat{
+			{Key: model.ChallengeDifficultyEasy, TotalChallenges: 8, CoveredChallenges: 2, SolvedStudents: 2},
+		},
+		contestSummary: &assessmentdomain.ClassContestMigrationSummary{
+			ParticipatingStudents: 2,
+			SuccessfulStudents:    1,
+			AttackCount:           5,
+			SuccessCount:          2,
+			SuccessDimensions:     []string{"web"},
+		},
+	}
+
+	service := NewReportService(
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		repo,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	data, err := service.buildClassReportData(context.Background(), "class-a", classwindow.Range{
+		FromDate:   "2026-05-01",
+		ToDate:     "2026-05-03",
+		Days:       3,
+		Since:      start,
+		StartOfDay: start,
+	})
+	if err != nil {
+		t.Fatalf("buildClassReportData() error = %v", err)
+	}
+
+	if data.Window.FromDate != "2026-05-01" || data.Window.ToDate != "2026-05-03" || data.Window.Days != 3 {
+		t.Fatalf("unexpected window: %+v", data.Window)
+	}
+	if !repo.lastSummarySince.Equal(start) || !repo.lastTrendSince.Equal(start) || !repo.lastSnapshotSince.Equal(start) || repo.lastTrendDays != 3 {
+		t.Fatalf("unexpected class insight window propagation: summary=%s trend=%s days=%d snapshots=%s", repo.lastSummarySince, repo.lastTrendSince, repo.lastTrendDays, repo.lastSnapshotSince)
+	}
+	if data.Summary == nil || data.Trend == nil || data.Review == nil {
+		t.Fatalf("expected summary/trend/review to be populated, got %+v", data)
+	}
+	if len(data.Review.Items) == 0 {
+		t.Fatalf("expected review items, got %+v", data.Review)
+	}
+	if len(data.CategoryDistribution) != len(model.AllDimensions) {
+		t.Fatalf("expected filled category distribution, got %+v", data.CategoryDistribution)
+	}
+	if len(data.DifficultyDistribution) != len(assessmentdomain.ClassReportDifficultyOrder()) {
+		t.Fatalf("expected filled difficulty distribution, got %+v", data.DifficultyDistribution)
+	}
+	if data.ContestMigration.SuccessCount != 2 || len(data.ContestMigration.SuccessDimensions) != 1 {
+		t.Fatalf("unexpected contest migration summary: %+v", data.ContestMigration)
+	}
+}
+
 func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 	t.Parallel()
 
 	service := NewReportService(
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1319,6 +1499,7 @@ func TestReportServiceCloseRejectsNilContext(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: model.ReportFormatPDF,
@@ -1336,6 +1517,7 @@ func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
 	t.Parallel()
 
 	service := NewReportService(
+		&testReportRepository{},
 		&testReportRepository{},
 		&testReportRepository{},
 		&testReportRepository{},

@@ -1782,6 +1782,133 @@ components:
               type: array
               items: { $ref: "#/components/schemas/TeacherClassItem" }
 
+    TeacherClassSummaryData:
+      type: object
+      required:
+        [
+          class_name,
+          student_count,
+          average_solved,
+          active_student_count,
+          active_rate,
+          recent_event_count,
+        ]
+      properties:
+        class_name: { type: string }
+        student_count: { type: integer, minimum: 0 }
+        average_solved: { type: number, minimum: 0 }
+        active_student_count: { type: integer, minimum: 0 }
+        active_rate: { type: number, minimum: 0 }
+        recent_event_count: { type: integer, minimum: 0 }
+
+    ApiEnvelopeTeacherClassSummaryData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherClassSummaryData" }
+
+    TeacherClassTrendPoint:
+      type: object
+      required: [date, active_student_count, event_count, solve_count]
+      properties:
+        date: { type: string, format: date }
+        active_student_count: { type: integer, minimum: 0 }
+        event_count: { type: integer, minimum: 0 }
+        solve_count: { type: integer, minimum: 0 }
+
+    TeacherClassTrendData:
+      type: object
+      required: [class_name, points]
+      properties:
+        class_name: { type: string }
+        points:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherClassTrendPoint" }
+
+    ApiEnvelopeTeacherClassTrendData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherClassTrendData" }
+
+    TeacherReviewStudentRef:
+      type: object
+      required: [id, username]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        name: { type: string, nullable: true }
+
+    TeacherClassReviewRecommendationData:
+      type: object
+      required: [challenge_id, title, category, difficulty, summary]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        dimension: { type: string, nullable: true }
+        difficulty_band:
+          type: string
+          nullable: true
+          enum: [beginner, easy, medium, hard, insane]
+        severity:
+          type: string
+          nullable: true
+          enum: [good, attention, warning, danger]
+        reason_codes:
+          type: array
+          nullable: true
+          items: { type: string }
+        summary: { type: string }
+        evidence: { type: string, nullable: true }
+
+    TeacherClassReviewItemData:
+      type: object
+      required: [code, severity, summary]
+      properties:
+        code: { type: string }
+        severity:
+          type: string
+          enum: [good, attention, warning, danger]
+        summary: { type: string }
+        evidence: { type: string, nullable: true }
+        action: { type: string, nullable: true }
+        reason_codes:
+          type: array
+          nullable: true
+          items: { type: string }
+        dimension: { type: string, nullable: true }
+        students:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/TeacherReviewStudentRef" }
+        recommendation:
+          allOf:
+            - $ref: "#/components/schemas/TeacherClassReviewRecommendationData"
+          nullable: true
+
+    TeacherClassReviewData:
+      type: object
+      required: [class_name, items]
+      properties:
+        class_name: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherClassReviewItemData" }
+
+    ApiEnvelopeTeacherClassReviewData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherClassReviewData" }
+
     TeacherStudentItem:
       type: object
       required: [id, username]
@@ -3547,6 +3674,90 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherStudentListData" }
 
+  /teacher/classes/{name}/summary:
+    get:
+      tags: [Teacher]
+      summary: 班级训练概览
+      security:
+        - sessionCookieAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。"
+        - in: query
+          name: to_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherClassSummaryData" }
+
+  /teacher/classes/{name}/trend:
+    get:
+      tags: [Teacher]
+      summary: 班级训练趋势
+      security:
+        - sessionCookieAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。"
+        - in: query
+          name: to_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherClassTrendData" }
+
+  /teacher/classes/{name}/review:
+    get:
+      tags: [Teacher]
+      summary: 班级教学复盘
+      security:
+        - sessionCookieAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。"
+        - in: query
+          name: to_date
+          required: false
+          schema: { type: string, format: date }
+          description: "班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherClassReviewData" }
+
   /teacher/students/{id}/progress:
     get:
       tags: [Teacher]
@@ -3636,7 +3847,7 @@ paths:
   /reports/class:
     post:
       tags: [Reports]
-      summary: 导出班级报告（PDF）
+      summary: 导出班级报告（PDF / Excel）
       security:
         - sessionCookieAuth: []
       requestBody:
@@ -3645,7 +3856,21 @@ paths:
           application/json:
             schema:
               type: object
-              description: "请求体以实现为准；允许为空"
+              properties:
+                class_name:
+                  type: string
+                  description: "未传时后端会尝试回退到当前教师绑定班级。"
+                format:
+                  type: string
+                  enum: [pdf, excel]
+                from_date:
+                  type: string
+                  format: date
+                  description: "班级报告开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。"
+                to_date:
+                  type: string
+                  format: date
+                  description: "班级报告结束日期。与 from_date 必须同时传入；最大跨度 31 天。"
       responses:
         "200":
           description: OK

@@ -10,7 +10,8 @@ import (
 	"ctf-platform/internal/dto"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
-	teachingadvice "ctf-platform/internal/teaching/advice"
+	"ctf-platform/internal/teaching/classreview"
+	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -44,7 +45,7 @@ func NewClassInsightService(
 	}
 }
 
-func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error) {
+func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassSummaryResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -53,14 +54,19 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 		return nil, err
 	}
 
-	summary, err := s.repo.GetClassSummary(ctx, normalized, time.Now().AddDate(0, 0, -7))
+	window, err := s.parseWindow(query)
+	if err != nil {
+		return nil, err
+	}
+
+	summary, err := s.repo.GetClassSummary(ctx, normalized, window.Since)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return teachingQueryMapper.ToClassSummaryPtr(summary), nil
 }
 
-func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error) {
+func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassTrendResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -69,16 +75,19 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 		return nil, err
 	}
 
-	since := time.Now().AddDate(0, 0, -6)
-	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
-	trend, err := s.repo.GetClassTrend(ctx, normalized, startOfDay, 7)
+	window, err := s.parseWindow(query)
+	if err != nil {
+		return nil, err
+	}
+
+	trend, err := s.repo.GetClassTrend(ctx, normalized, window.StartOfDay, window.Days)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return teachingQueryMapper.ToClassTrendRespPtr(trend), nil
 }
 
-func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error) {
+func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassReviewResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -87,85 +96,54 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 		return nil, err
 	}
 
-	since := time.Now().AddDate(0, 0, -6)
-	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
+	window, err := s.parseWindow(query)
+	if err != nil {
+		return nil, err
+	}
 
-	summary, err := s.repo.GetClassSummary(ctx, normalized, time.Now().AddDate(0, 0, -7))
+	summary, err := s.repo.GetClassSummary(ctx, normalized, window.Since)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	trend, err := s.repo.GetClassTrend(ctx, normalized, startOfDay, 7)
+	trend, err := s.repo.GetClassTrend(ctx, normalized, window.StartOfDay, window.Days)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	snapshots, err := s.repo.ListClassTeachingFactSnapshots(ctx, normalized, time.Now().AddDate(0, 0, -7))
+	snapshots, err := s.repo.ListClassTeachingFactSnapshots(ctx, normalized, window.Since)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	summaryDTO := teachingQueryMapper.ToClassSummaryPtr(summary)
-	classTrend := buildClassTrendSnapshot(trend)
-	evaluations := make(map[int64]teachingadvice.StudentEvaluation, len(snapshots))
-	studentRefs := make(map[int64]dto.TeacherReviewStudentRef, len(snapshots))
-	for _, snapshot := range snapshots {
-		evaluations[snapshot.UserID] = teachingadvice.EvaluateStudent(snapshot)
-		studentRefs[snapshot.UserID] = dto.TeacherReviewStudentRef{
-			ID:       snapshot.UserID,
-			Username: snapshot.Username,
-			Name:     snapshot.Name,
-		}
+	var trendEventDelta int64
+	var trendSolveDelta int64
+	hasTrend := trend != nil && len(trend.Points) >= 2
+	if hasTrend {
+		first := trend.Points[0]
+		last := trend.Points[len(trend.Points)-1]
+		trendEventDelta = last.EventCount - first.EventCount
+		trendSolveDelta = last.SolveCount - first.SolveCount
 	}
 
-	adviceItems := teachingadvice.BuildClassReview(
-		normalized,
-		teachingadvice.ClassSummarySnapshot{
-			ClassName:        normalized,
-			StudentCount:     len(snapshots),
-			ActiveRate:       summaryDTO.ActiveRate,
-			RecentEventCount: summaryDTO.RecentEventCount,
-		},
-		classTrend,
-		snapshots,
-		evaluations,
-	)
-
-	items := make([]dto.TeacherClassReviewItem, 0, len(adviceItems))
-	for _, adviceItem := range adviceItems {
-		item := dto.TeacherClassReviewItem{
-			Code:        adviceItem.Code,
-			Severity:    string(adviceItem.Severity),
-			Summary:     adviceItem.Summary,
-			Evidence:    adviceItem.Evidence,
-			Action:      adviceItem.Action,
-			ReasonCodes: append([]string(nil), adviceItem.ReasonCodes...),
-			Dimension:   adviceItem.Dimension,
-			Students:    reviewStudentRefsByIDs(studentRefs, adviceItem.StudentIDs),
-		}
-		if adviceItem.RecommendationStudentID != nil {
-			candidateIDs := prioritizedStudentIDs(*adviceItem.RecommendationStudentID, adviceItem.StudentIDs)
-			if recommendation := s.matchingStudentRecommendation(ctx, candidateIDs, adviceItem.Dimension, 6); recommendation != nil {
-				item.Recommendation = recommendation
-			}
-		}
-		items = append(items, item)
-	}
-
-	return &dto.TeacherClassReviewResp{
-		ClassName: normalized,
-		Items:     items,
-	}, nil
+	return classreview.BuildResponse(ctx, classreview.Input{
+		ClassName:        normalized,
+		ActiveRate:       summary.ActiveRate,
+		RecentEventCount: summary.RecentEventCount,
+		HasTrend:         hasTrend,
+		TrendEventDelta:  trendEventDelta,
+		TrendSolveDelta:  trendSolveDelta,
+		Snapshots:        snapshots,
+	}, classreview.RecommendationResolverFunc(s.matchingStudentRecommendation)), nil
 }
 
-func buildClassTrendSnapshot(trend *queryports.ClassTrend) *teachingadvice.ClassTrendSnapshot {
-	if trend == nil || len(trend.Points) < 2 {
-		return nil
+func (s *ClassInsightQueryService) parseWindow(query *dto.TeacherClassInsightQuery) (classwindow.Range, error) {
+	if query == nil {
+		return classwindow.Parse(queryNow(), "", "")
 	}
-	first := trend.Points[0]
-	last := trend.Points[len(trend.Points)-1]
-	return &teachingadvice.ClassTrendSnapshot{
-		EventDelta: last.EventCount - first.EventCount,
-		SolveDelta: last.SolveCount - first.SolveCount,
+	window, err := classwindow.Parse(queryNow(), query.FromDate, query.ToDate)
+	if err != nil {
+		return classwindow.Range{}, errcode.New(errcode.ErrInvalidParams.Code, err.Error(), errcode.ErrInvalidParams.HTTPStatus)
 	}
+	return window, nil
 }
 
 func (s *ClassInsightQueryService) matchingStudentRecommendation(
@@ -200,6 +178,10 @@ func (s *ClassInsightQueryService) matchingStudentRecommendation(
 	return nil
 }
 
+var queryNow = func() time.Time {
+	return time.Now().UTC()
+}
+
 func recommendationMatchesDimension(challenge *dto.ChallengeRecommendation, dimension string) bool {
 	if challenge == nil {
 		return false
@@ -208,40 +190,4 @@ func recommendationMatchesDimension(challenge *dto.ChallengeRecommendation, dime
 		return true
 	}
 	return strings.EqualFold(strings.TrimSpace(challenge.Category), dimension)
-}
-
-func prioritizedStudentIDs(primary int64, studentIDs []int64) []int64 {
-	ids := make([]int64, 0, len(studentIDs)+1)
-	seen := make(map[int64]struct{}, len(studentIDs)+1)
-	appendID := func(id int64) {
-		if id <= 0 {
-			return
-		}
-		if _, ok := seen[id]; ok {
-			return
-		}
-		seen[id] = struct{}{}
-		ids = append(ids, id)
-	}
-
-	appendID(primary)
-	for _, studentID := range studentIDs {
-		appendID(studentID)
-	}
-	return ids
-}
-
-func reviewStudentRefsByIDs(
-	refsByID map[int64]dto.TeacherReviewStudentRef,
-	studentIDs []int64,
-) []dto.TeacherReviewStudentRef {
-	refs := make([]dto.TeacherReviewStudentRef, 0, len(studentIDs))
-	for _, studentID := range studentIDs {
-		ref, ok := refsByID[studentID]
-		if !ok {
-			continue
-		}
-		refs = append(refs, ref)
-	}
-	return refs
 }

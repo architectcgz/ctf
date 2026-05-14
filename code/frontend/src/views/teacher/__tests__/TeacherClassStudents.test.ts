@@ -12,6 +12,7 @@ const ElTableColumn = { template: '<div><slot /></div>' }
 const ElButton = { template: '<button><slot /></button>' }
 
 const pushMock = vi.fn()
+const replaceMock = vi.fn()
 const routeMock = {
   params: {
     className: 'Class A',
@@ -34,7 +35,7 @@ vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
-    useRouter: () => ({ push: pushMock }),
+    useRouter: () => ({ push: pushMock, replace: replaceMock }),
     useRoute: () => routeMock,
   }
 })
@@ -52,17 +53,20 @@ function deferred<T>() {
 describe('TeacherClassStudents', () => {
   const reportDialogStub = {
     name: 'TeacherClassReportExportDialog',
-    props: ['modelValue', 'defaultClassName'],
+    props: ['modelValue', 'defaultClassName', 'defaultFromDate', 'defaultToDate'],
     template:
-      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
+      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" :data-default-from-date="defaultFromDate || \'\'" :data-default-to-date="defaultToDate || \'\'" />',
   }
 
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
+    replaceMock.mockReset()
     routeMock.params.className = 'Class A'
     routeMock.query.panel = 'students'
+    delete routeMock.query.from_date
+    delete routeMock.query.to_date
     teacherApiMocks.getClasses.mockReset()
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassReview.mockReset()
@@ -378,7 +382,13 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')
     expect(classStudentsPageSource).toContain('<span>平均解题</span>')
     expect(classStudentsPageSource).toContain('<Target class="h-4 w-4" />')
-    expect(classStudentsPageSource).toContain('<span>近 7 天活跃率</span>')
+    expect(classStudentsPageSource).toContain('班级训练时间段')
+    expect(classStudentsPageSource).toContain('开始日期')
+    expect(classStudentsPageSource).toContain('结束日期')
+    expect(classStudentsPageSource).toContain('应用时间段')
+    expect(classStudentsPageSource).toContain('恢复默认')
+    expect(classStudentsPageSource).toContain('<span>当前窗口活跃率</span>')
+    expect(classStudentsPageSource).not.toContain('<span>近 7 天活跃率</span>')
     expect(classStudentsPageSource).toContain('<Activity class="h-4 w-4" />')
   })
 
@@ -407,6 +417,63 @@ describe('TeacherClassStudents', () => {
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('100% 班级')
+  })
+
+  it('时间段 query 应驱动班级概览请求，并在应用后回写路由与导出弹窗上下文', async () => {
+    routeMock.query.from_date = '2026-03-01'
+    routeMock.query.to_date = '2026-03-07'
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+
+    const reportDialog = wrapper.get('[data-testid="class-report-dialog"]')
+    expect(reportDialog.attributes('data-default-from-date')).toBe('2026-03-01')
+    expect(reportDialog.attributes('data-default-to-date')).toBe('2026-03-07')
+
+    const dateInputs = wrapper.findAll('input[type="date"]')
+    expect(dateInputs).toHaveLength(2)
+    await dateInputs[0].setValue('2026-03-05')
+    await dateInputs[1].setValue('2026-03-09')
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('应用时间段'))
+      ?.trigger('click')
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        panel: 'students',
+        from_date: '2026-03-05',
+        to_date: '2026-03-09',
+      },
+    })
   })
 
   it('管理员从班级详情返回班级管理时应回到后台班级页', async () => {

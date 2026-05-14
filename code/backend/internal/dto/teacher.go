@@ -12,6 +12,11 @@ type TeacherClassQuery struct {
 	Size int `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
+type TeacherClassInsightQuery struct {
+	FromDate string `form:"from_date"`
+	ToDate   string `form:"to_date"`
+}
+
 type TeacherClassSummaryResp struct {
 	ClassName          string  `json:"class_name"`
 	StudentCount       int64   `json:"student_count"`

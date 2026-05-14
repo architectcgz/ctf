@@ -97,8 +97,13 @@ func (h *Handler) GetOverview(c *gin.Context) {
 
 func (h *Handler) GetClassSummary(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherClassInsightQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
 
-	summary, err := h.classInsightService.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	summary, err := h.classInsightService.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -109,8 +114,13 @@ func (h *Handler) GetClassSummary(c *gin.Context) {
 
 func (h *Handler) GetClassTrend(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherClassInsightQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
 
-	trend, err := h.classInsightService.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	trend, err := h.classInsightService.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -121,8 +131,13 @@ func (h *Handler) GetClassTrend(c *gin.Context) {
 
 func (h *Handler) GetClassReview(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherClassInsightQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
 
-	review, err := h.classInsightService.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	review, err := h.classInsightService.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return

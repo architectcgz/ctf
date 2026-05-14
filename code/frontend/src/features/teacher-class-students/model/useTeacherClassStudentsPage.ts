@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getClassReview, getClassSummary, getClassTrend } from '@/api/teacher'
@@ -7,6 +7,14 @@ import type {
   TeacherClassSummaryData,
   TeacherClassTrendData,
 } from '@/api/contracts'
+import {
+  buildTeacherClassInsightWindowQuery,
+  describeTeacherClassInsightWindow,
+  getTeacherClassInsightWindowError,
+  isSameTeacherClassInsightWindow,
+  parseTeacherClassInsightWindowQuery,
+  hasTeacherClassInsightWindow,
+} from '@/features/teacher-class-insight-window/model/window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -37,6 +45,25 @@ export function useTeacherClassStudentsPage() {
   const { selectedClassName, studentNoQuery } = filters
   const { students, loading: loadingStudents } = studentListQuery
   const error = computed(() => workspaceError.value ?? studentListQuery.error.value)
+  const activeInsightWindow = computed(() => parseTeacherClassInsightWindowQuery(route.query))
+  const insightWindowDraft = ref(parseTeacherClassInsightWindowQuery(route.query))
+  const insightWindowError = computed(() =>
+    getTeacherClassInsightWindowError(insightWindowDraft.value)
+  )
+  const insightWindowLabel = computed(() =>
+    describeTeacherClassInsightWindow(activeInsightWindow.value)
+  )
+  const canApplyInsightWindow = computed(() => {
+    if (insightWindowError.value) {
+      return false
+    }
+    return !isSameTeacherClassInsightWindow(insightWindowDraft.value, activeInsightWindow.value)
+  })
+  const canResetInsightWindow = computed(
+    () =>
+      hasTeacherClassInsightWindow(insightWindowDraft.value) ||
+      hasTeacherClassInsightWindow(activeInsightWindow.value)
+  )
   let latestWorkspaceRequestID = 0
 
   function classNameFromRoute(): string {
@@ -58,12 +85,26 @@ export function useTeacherClassStudentsPage() {
 
     const requestID = ++latestWorkspaceRequestID
     workspaceError.value = null
+    const routeInsightWindow = parseTeacherClassInsightWindowQuery(route.query)
+    const routeInsightWindowError = getTeacherClassInsightWindowError(routeInsightWindow)
+    if (routeInsightWindowError) {
+      workspaceError.value = routeInsightWindowError
+      clearWorkspaceDetails()
+      return
+    }
+    const insightWindowQuery = buildTeacherClassInsightWindowQuery(routeInsightWindow)
 
     try {
       const [nextReview, nextSummary, nextTrend] = await Promise.all([
-        getClassReview(className),
-        getClassSummary(className),
-        getClassTrend(className),
+        insightWindowQuery
+          ? getClassReview(className, insightWindowQuery)
+          : getClassReview(className),
+        insightWindowQuery
+          ? getClassSummary(className, insightWindowQuery)
+          : getClassSummary(className),
+        insightWindowQuery
+          ? getClassTrend(className, insightWindowQuery)
+          : getClassTrend(className),
       ])
       if (requestID !== latestWorkspaceRequestID) {
         return
@@ -131,20 +172,73 @@ export function useTeacherClassStudentsPage() {
     reportDialogVisible.value = true
   }
 
-  watch(
-    () => route.params.className,
-    () => {
-      void loadClassWorkspace()
+  function updateInsightWindowFromDate(value: string): void {
+    insightWindowDraft.value = {
+      ...insightWindowDraft.value,
+      fromDate: value.trim(),
     }
+  }
+
+  function updateInsightWindowToDate(value: string): void {
+    insightWindowDraft.value = {
+      ...insightWindowDraft.value,
+      toDate: value.trim(),
+    }
+  }
+
+  async function applyInsightWindow(): Promise<void> {
+    if (insightWindowError.value) {
+      return
+    }
+
+    const nextQuery = { ...route.query }
+    const nextInsightWindow = buildTeacherClassInsightWindowQuery(insightWindowDraft.value)
+    if (nextInsightWindow) {
+      nextQuery.from_date = nextInsightWindow.from_date
+      nextQuery.to_date = nextInsightWindow.to_date
+    } else {
+      delete nextQuery.from_date
+      delete nextQuery.to_date
+    }
+
+    if (
+      String(route.query.from_date || '') === String(nextQuery.from_date || '') &&
+      String(route.query.to_date || '') === String(nextQuery.to_date || '')
+    ) {
+      return
+    }
+
+    await router.replace({ query: nextQuery })
+  }
+
+  async function resetInsightWindow(): Promise<void> {
+    insightWindowDraft.value = {
+      fromDate: '',
+      toDate: '',
+    }
+
+    if (!hasTeacherClassInsightWindow(activeInsightWindow.value)) {
+      return
+    }
+
+    const nextQuery = { ...route.query }
+    delete nextQuery.from_date
+    delete nextQuery.to_date
+    await router.replace({ query: nextQuery })
+  }
+
+  watch(
+    () => [route.params.className, route.query.from_date, route.query.to_date] as const,
+    () => {
+      insightWindowDraft.value = parseTeacherClassInsightWindowQuery(route.query)
+      void loadClassWorkspace()
+    },
+    { immediate: true }
   )
 
   watch(studentNoQuery, () => {
     if (!selectedClassName.value) return
     studentListQuery.scheduleLoadStudents(selectedClassName.value)
-  })
-
-  onMounted(() => {
-    void initialize()
   })
 
   return {
@@ -157,11 +251,23 @@ export function useTeacherClassStudentsPage() {
     loadingStudents,
     error,
     reportDialogVisible,
+    insightWindowFromDate: computed(() => insightWindowDraft.value.fromDate),
+    insightWindowToDate: computed(() => insightWindowDraft.value.toDate),
+    insightWindowError,
+    insightWindowLabel,
+    activeInsightWindowFromDate: computed(() => activeInsightWindow.value.fromDate),
+    activeInsightWindowToDate: computed(() => activeInsightWindow.value.toDate),
+    canApplyInsightWindow,
+    canResetInsightWindow,
     initialize,
     openClassManagement,
     openDashboard,
     openClassReportDialog,
     updateStudentNoQuery,
+    updateInsightWindowFromDate,
+    updateInsightWindowToDate,
+    applyInsightWindow,
+    resetInsightWindow,
     openStudent,
   }
 }

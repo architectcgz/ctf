@@ -387,6 +387,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 
 	assessmentRepo := assessmentinfra.NewRepository(db)
 	reportRepo := assessmentinfra.NewReportRepository(db)
+	queryRepo := queryinfra.NewRepository(db)
 	profileReader := assessmentqry.NewProfileService(assessmentRepo)
 	recommendationService := assessmentqry.NewRecommendationService(
 		assessmentRepo,
@@ -401,13 +402,13 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		reportRepo,
 		reportRepo,
 		reportRepo,
+		queryRepo,
 		reportRepo,
 		reportRepo,
 		profileReader,
 		cfg.Report,
 		zap.NewNop(),
 	)
-	queryRepo := queryinfra.NewRepository(db)
 	userLookupRepo := teachingQueryUserLookupAdapter{users: identityinfra.NewRepository(db)}
 	classInsightService := teachingqueries.NewClassInsightService(
 		userLookupRepo,
@@ -421,7 +422,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		recommendationService,
 	)
 
-	classReview, err := classInsightService.GetClassReview(ctx, teacher.ID, model.RoleTeacher, seedClassName)
+	classReview, err := classInsightService.GetClassReview(ctx, teacher.ID, model.RoleTeacher, seedClassName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("load class review: %w", err)
 	}

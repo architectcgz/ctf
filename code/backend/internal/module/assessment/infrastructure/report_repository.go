@@ -254,6 +254,119 @@ func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className s
 	return rows, err
 }
 
+func (r *ReportRepository) ListClassCategoryDistribution(ctx context.Context, className string) ([]assessmentdomain.ClassDistributionStat, error) {
+	return r.listClassDistribution(ctx, className, "c.category")
+}
+
+func (r *ReportRepository) ListClassDifficultyDistribution(ctx context.Context, className string) ([]assessmentdomain.ClassDistributionStat, error) {
+	return r.listClassDistribution(ctx, className, "c.difficulty")
+}
+
+func (r *ReportRepository) listClassDistribution(
+	ctx context.Context,
+	className string,
+	groupExpr string,
+) ([]assessmentdomain.ClassDistributionStat, error) {
+	rows := make([]assessmentdomain.ClassDistributionStat, 0)
+	query := fmt.Sprintf(`
+		WITH class_students AS (
+			SELECT id
+			FROM users
+			WHERE class_name = ? AND role = ? AND deleted_at IS NULL
+		),
+		solved_pairs AS (
+			SELECT DISTINCT s.user_id, c.id AS challenge_id, %s AS bucket
+			FROM submissions s
+			JOIN challenges c ON c.id = s.challenge_id AND c.status = ?
+			WHERE s.user_id IN (SELECT id FROM class_students)
+				AND s.is_correct = TRUE
+				AND s.contest_id IS NULL
+		)
+		SELECT
+			%s AS key,
+			COUNT(DISTINCT c.id) AS total_challenges,
+			COUNT(DISTINCT CASE WHEN sp.challenge_id IS NOT NULL THEN c.id END) AS covered_challenges,
+			COUNT(DISTINCT sp.user_id) AS solved_students
+		FROM challenges c
+		LEFT JOIN solved_pairs sp ON sp.challenge_id = c.id
+		WHERE c.status = ?
+		GROUP BY %s
+		ORDER BY %s
+	`, groupExpr, groupExpr, groupExpr, groupExpr)
+
+	err := r.db.WithContext(ctx).Raw(
+		query,
+		className,
+		model.RoleStudent,
+		model.ChallengeStatusPublished,
+		model.ChallengeStatusPublished,
+	).Scan(&rows).Error
+	return rows, err
+}
+
+func (r *ReportRepository) GetClassContestMigrationSummary(ctx context.Context, className string) (*assessmentdomain.ClassContestMigrationSummary, error) {
+	summary := &assessmentdomain.ClassContestMigrationSummary{}
+	type summaryRow struct {
+		ParticipatingStudents int `gorm:"column:participating_students"`
+		SuccessfulStudents    int `gorm:"column:successful_students"`
+		AttackCount           int `gorm:"column:attack_count"`
+		SuccessCount          int `gorm:"column:success_count"`
+	}
+
+	var row summaryRow
+	if err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			COUNT(DISTINCT aal.submitted_by_user_id) AS participating_students,
+			COUNT(DISTINCT CASE
+				WHEN aal.is_success = TRUE AND aal.score_gained > 0 THEN aal.submitted_by_user_id
+			END) AS successful_students,
+			COUNT(*) AS attack_count,
+			COUNT(CASE
+				WHEN aal.is_success = TRUE AND aal.score_gained > 0 THEN 1
+			END) AS success_count
+		FROM awd_attack_logs aal
+		JOIN users u ON u.id = aal.submitted_by_user_id
+		WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
+			AND aal.submitted_by_user_id IS NOT NULL
+			AND aal.source = ?
+	`, className, model.RoleStudent, model.AWDAttackSourceSubmission).Scan(&row).Error; err != nil {
+		return nil, err
+	}
+
+	summary.ParticipatingStudents = row.ParticipatingStudents
+	summary.SuccessfulStudents = row.SuccessfulStudents
+	summary.AttackCount = row.AttackCount
+	summary.SuccessCount = row.SuccessCount
+
+	dimensionRows := make([]struct {
+		Category string `gorm:"column:category"`
+	}, 0)
+	if err := r.db.WithContext(ctx).Raw(`
+		SELECT DISTINCT ac.category
+		FROM awd_attack_logs aal
+		JOIN users u ON u.id = aal.submitted_by_user_id
+		JOIN awd_challenges ac ON ac.id = aal.awd_challenge_id
+		WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
+			AND aal.submitted_by_user_id IS NOT NULL
+			AND aal.source = ?
+			AND aal.is_success = TRUE
+			AND aal.score_gained > 0
+			AND ac.deleted_at IS NULL
+		ORDER BY ac.category
+	`, className, model.RoleStudent, model.AWDAttackSourceSubmission).Scan(&dimensionRows).Error; err != nil {
+		return nil, err
+	}
+
+	summary.SuccessDimensions = make([]string, 0, len(dimensionRows))
+	for _, row := range dimensionRows {
+		if strings.TrimSpace(row.Category) == "" {
+			continue
+		}
+		summary.SuccessDimensions = append(summary.SuccessDimensions, row.Category)
+	}
+	return summary, nil
+}
+
 type contestScoreboardRow struct {
 	TeamID              int64  `gorm:"column:team_id"`
 	TeamName            string `gorm:"column:team_name"`

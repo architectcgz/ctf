@@ -111,11 +111,18 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
-		"profileRepo        assessmentports.ProfileRepository",
-		"recommendationRepo assessmentports.RecommendationRepository",
-		"reportRepo         assessmentports.ReportRepository",
-		"awdReviewRepo      assessmentports.TeacherAWDReviewRepository",
-		"challengeRepo      assessmentports.ChallengeRepository",
+		"profileRepo",
+		"assessmentports.ProfileRepository",
+		"recommendationRepo",
+		"assessmentports.RecommendationRepository",
+		"reportRepo",
+		"assessmentports.ReportRepository",
+		"classInsightRepo",
+		"assessmentports.AssessmentClassInsightRepository",
+		"awdReviewRepo",
+		"assessmentports.TeacherAWDReviewRepository",
+		"challengeRepo",
+		"assessmentports.ChallengeRepository",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

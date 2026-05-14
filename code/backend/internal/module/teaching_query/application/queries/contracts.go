@@ -11,9 +11,9 @@ type OverviewService interface {
 }
 
 type ClassInsightService interface {
-	GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error)
-	GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error)
-	GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error)
+	GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassSummaryResp, error)
+	GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassTrendResp, error)
+	GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassReviewResp, error)
 }
 
 type StudentReviewService interface {

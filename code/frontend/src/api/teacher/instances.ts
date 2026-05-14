@@ -1,6 +1,10 @@
 import { request } from '../request'
 
-import type { ReportExportData, TeacherInstanceItem } from '../contracts'
+import type {
+  ReportExportData,
+  TeacherClassReportExportPayload,
+  TeacherInstanceItem,
+} from '../contracts'
 
 export async function getTeacherInstances(
   params?: {
@@ -56,6 +60,6 @@ export async function destroyTeacherInstance(id: string): Promise<void> {
   })
 }
 
-export async function exportClassReport(data: Record<string, unknown>) {
+export async function exportClassReport(data: TeacherClassReportExportPayload) {
   return request<ReportExportData>({ method: 'POST', url: '/reports/class', data })
 }

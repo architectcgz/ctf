@@ -8,10 +8,14 @@ const props = defineProps<{
   trend: TeacherClassTrendData | null
   title?: string
   subtitle?: string
+  emptyDescription?: string
   bare?: boolean
 }>()
 
-const panelTitle = computed(() => props.title || '近 7 天训练趋势')
+const panelTitle = computed(() => props.title || '训练趋势')
+const emptyDescription = computed(
+  () => props.emptyDescription || '当前时间段还没有可展示的训练趋势'
+)
 
 const trendPoints = computed(() => {
   const points = Array.isArray(props.trend?.points) ? props.trend.points : []
@@ -53,6 +57,9 @@ const series = computed(() => [
       <h2 class="teacher-panel__title">
         {{ panelTitle }}
       </h2>
+      <p v-if="props.subtitle" class="teacher-panel__copy">
+        {{ props.subtitle }}
+      </p>
     </header>
 
     <div
@@ -63,7 +70,7 @@ const series = computed(() => [
         暂无
       </p>
       <p class="teacher-panel__empty-copy">
-        近 7 天还没有可展示的训练趋势
+        {{ emptyDescription }}
       </p>
     </div>
 
@@ -87,7 +94,7 @@ const series = computed(() => [
         暂无
       </p>
       <p class="teacher-panel__empty-copy">
-        近 7 天还没有可展示的训练趋势
+        {{ emptyDescription }}
       </p>
     </div>
 
@@ -123,5 +130,12 @@ const series = computed(() => [
   background: transparent;
   padding: 0;
   box-shadow: none;
+}
+
+.teacher-panel__copy {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
 }
 </style>

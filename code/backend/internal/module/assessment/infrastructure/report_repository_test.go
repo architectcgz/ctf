@@ -53,6 +53,15 @@ func findDimensionStat(rows []assessmentdomain.ReportDimensionStat, dimension st
 	return nil
 }
 
+func findDistributionStat(rows []assessmentdomain.ClassDistributionStat, key string) *assessmentdomain.ClassDistributionStat {
+	for index := range rows {
+		if rows[index].Key == key {
+			return &rows[index]
+		}
+	}
+	return nil
+}
+
 func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing.T) {
 	t.Parallel()
 
@@ -519,5 +528,113 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	}
 	if roundID, ok := events[1].Meta["round_id"].(int64); !ok || roundID != round.ID {
 		t.Fatalf("expected round_id=%d, got %+v", round.ID, events[1].Meta)
+	}
+}
+
+func TestReportRepositoryListClassDistributions(t *testing.T) {
+	t.Parallel()
+
+	db := newReportRepositoryTestDB(t)
+	repo := NewReportRepository(db)
+	ctx := context.Background()
+	now := time.Date(2026, 5, 14, 10, 0, 0, 0, time.UTC)
+
+	users := []model.User{
+		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+	}
+	if err := db.Create(&users).Error; err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+
+	challenges := []model.Challenge{
+		{ID: 701, Title: "web-easy", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 702, Title: "web-medium", Category: "web", Difficulty: model.ChallengeDifficultyMedium, Points: 150, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 703, Title: "pwn-hard", Category: "pwn", Difficulty: model.ChallengeDifficultyHard, Points: 200, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	}
+	if err := db.Create(&challenges).Error; err != nil {
+		t.Fatalf("seed challenges: %v", err)
+	}
+
+	submissions := []model.Submission{
+		{ID: 701, UserID: 1, ChallengeID: 701, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},
+		{ID: 702, UserID: 2, ChallengeID: 702, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},
+		{ID: 703, UserID: 2, ChallengeID: 703, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},
+	}
+	if err := db.Create(&submissions).Error; err != nil {
+		t.Fatalf("seed submissions: %v", err)
+	}
+
+	categoryRows, err := repo.ListClassCategoryDistribution(ctx, "class-a")
+	if err != nil {
+		t.Fatalf("ListClassCategoryDistribution() error = %v", err)
+	}
+	web := findDistributionStat(categoryRows, "web")
+	if web == nil || web.TotalChallenges != 2 || web.CoveredChallenges != 2 || web.SolvedStudents != 2 {
+		t.Fatalf("expected web category distribution, got %+v", categoryRows)
+	}
+
+	difficultyRows, err := repo.ListClassDifficultyDistribution(ctx, "class-a")
+	if err != nil {
+		t.Fatalf("ListClassDifficultyDistribution() error = %v", err)
+	}
+	hard := findDistributionStat(difficultyRows, model.ChallengeDifficultyHard)
+	if hard == nil || hard.TotalChallenges != 1 || hard.CoveredChallenges != 1 || hard.SolvedStudents != 1 {
+		t.Fatalf("expected hard difficulty distribution, got %+v", difficultyRows)
+	}
+}
+
+func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
+	t.Parallel()
+
+	db := newReportRepositoryTestDB(t)
+	repo := NewReportRepository(db)
+	ctx := context.Background()
+	now := time.Date(2026, 5, 14, 11, 0, 0, 0, time.UTC)
+
+	users := []model.User{
+		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+		{ID: 3, Username: "carol", Role: model.RoleStudent, ClassName: "class-b", Status: model.UserStatusActive},
+	}
+	if err := db.Create(&users).Error; err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+
+	round := model.AWDRound{ID: 81, ContestID: 300, RoundNumber: 1, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	if err := db.Create(&round).Error; err != nil {
+		t.Fatalf("seed round: %v", err)
+	}
+
+	challenges := []model.AWDChallenge{
+		{ID: 801, Name: "awd-web", Slug: "awd-web", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 802, Name: "awd-pwn", Slug: "awd-pwn", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	}
+	if err := db.Create(&challenges).Error; err != nil {
+		t.Fatalf("seed awd challenges: %v", err)
+	}
+
+	aliceID := int64(1)
+	bobID := int64(2)
+	carolID := int64(3)
+	logs := []model.AWDAttackLog{
+		{ID: 811, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 2, AWDChallengeID: 801, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: true, ScoreGained: 100, CreatedAt: now},
+		{ID: 812, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 3, AWDChallengeID: 801, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: false, ScoreGained: 0, CreatedAt: now},
+		{ID: 813, RoundID: round.ID, AttackerTeamID: 2, VictimTeamID: 3, AWDChallengeID: 802, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &bobID, IsSuccess: true, ScoreGained: 200, CreatedAt: now},
+		{ID: 814, RoundID: round.ID, AttackerTeamID: 3, VictimTeamID: 1, AWDChallengeID: 802, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &carolID, IsSuccess: true, ScoreGained: 300, CreatedAt: now},
+	}
+	if err := db.Create(&logs).Error; err != nil {
+		t.Fatalf("seed awd logs: %v", err)
+	}
+
+	summary, err := repo.GetClassContestMigrationSummary(ctx, "class-a")
+	if err != nil {
+		t.Fatalf("GetClassContestMigrationSummary() error = %v", err)
+	}
+	if summary.ParticipatingStudents != 2 || summary.SuccessfulStudents != 2 || summary.AttackCount != 3 || summary.SuccessCount != 2 {
+		t.Fatalf("unexpected contest migration summary: %+v", summary)
+	}
+	if strings.Join(summary.SuccessDimensions, ",") != "pwn,web" {
+		t.Fatalf("unexpected success dimensions: %+v", summary.SuccessDimensions)
 	}
 }

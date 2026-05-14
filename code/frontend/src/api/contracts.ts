@@ -848,6 +848,11 @@ export interface TeacherClassItem {
   student_count?: number
 }
 
+export interface TeacherClassInsightQueryData {
+  from_date?: string
+  to_date?: string
+}
+
 export interface TeacherClassSummaryData {
   class_name: string
   student_count: number
@@ -1097,6 +1102,11 @@ export interface ReportExportData {
   download_url?: string
   expires_at?: ISODateTime
   error_message?: string
+}
+
+export interface TeacherClassReportExportPayload extends TeacherClassInsightQueryData {
+  class_name: string
+  format: 'pdf' | 'excel'
 }
 
 export interface TeacherAWDReviewContestItemData {

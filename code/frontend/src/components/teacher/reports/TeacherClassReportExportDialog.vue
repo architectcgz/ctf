@@ -13,6 +13,8 @@ import { formatDate } from '@/utils/format'
 const props = defineProps<{
   modelValue: boolean
   defaultClassName?: string
+  defaultFromDate?: string
+  defaultToDate?: string
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +36,8 @@ const {
   previewTrend,
   classNamePlaceholder,
   normalizedClassNameText,
+  selectedWindowLabel,
+  selectedWindowError,
   selectedFormatLabel,
   selectedFormatHint,
   derivedDownloadHint,
@@ -41,7 +45,8 @@ const {
   activeRateText,
   latestStatusMeta,
   latestExpiresText,
-  syncContextClassName,
+  latestWindowLabel,
+  syncContext,
   loadPreview,
   handleExport,
   handleDownload,
@@ -56,17 +61,25 @@ watch(
   () => props.modelValue,
   (isOpen) => {
     if (!isOpen) return
-    syncContextClassName(props.defaultClassName)
+    syncContext({
+      className: props.defaultClassName,
+      fromDate: props.defaultFromDate,
+      toDate: props.defaultToDate,
+    })
     void loadPreview()
   },
   { immediate: true }
 )
 
 watch(
-  () => props.defaultClassName,
-  (nextClassName, previousClassName) => {
-    if (!props.modelValue || nextClassName === previousClassName) return
-    syncContextClassName(nextClassName)
+  () => [props.defaultClassName, props.defaultFromDate, props.defaultToDate] as const,
+  (nextValue, previousValue) => {
+    if (!props.modelValue || nextValue === previousValue) return
+    syncContext({
+      className: nextValue[0],
+      fromDate: nextValue[1],
+      toDate: nextValue[2],
+    })
     void loadPreview()
   }
 )
@@ -98,12 +111,17 @@ function closeDialog(): void {
                 当前教师上下文
               </h4>
               <p class="class-report-section__copy">
-                导出任务会优先使用当前教师绑定班级，也可以临时切换到其他班级。
+                导出任务会优先使用当前教师绑定班级，并沿用当前页面的训练时间段。
               </p>
             </div>
-            <span class="teacher-surface-chip">
-              当前班级：{{ previewClassName || normalizedClassNameText }}
-            </span>
+            <div class="class-report-context-chips">
+              <span class="teacher-surface-chip">
+                当前班级：{{ previewClassName || normalizedClassNameText }}
+              </span>
+              <span class="teacher-surface-chip">
+                当前窗口：{{ selectedWindowLabel }}
+              </span>
+            </div>
           </div>
         </section>
 
@@ -117,7 +135,7 @@ function closeDialog(): void {
                 导出设置
               </h4>
               <p class="class-report-section__copy">
-                默认沿用当前教师或页面上下文班级，也可以在这里临时改成其他班级。
+                默认沿用当前教师或页面上下文班级，也可以在这里临时调整导出窗口与班级范围。
               </p>
             </div>
           </div>
@@ -134,6 +152,30 @@ function closeDialog(): void {
                 >
               </span>
             </label>
+
+            <div class="class-report-range-grid">
+              <label class="ui-field class-report-field">
+                <span class="ui-field__label">开始日期</span>
+                <span class="ui-control-wrap">
+                  <input
+                    v-model="form.fromDate"
+                    type="date"
+                    class="ui-control class-report-field__control"
+                  >
+                </span>
+              </label>
+
+              <label class="ui-field class-report-field">
+                <span class="ui-field__label">结束日期</span>
+                <span class="ui-control-wrap">
+                  <input
+                    v-model="form.toDate"
+                    type="date"
+                    class="ui-control class-report-field__control"
+                  >
+                </span>
+              </label>
+            </div>
 
             <fieldset class="class-report-format-group">
               <legend class="ui-field__label class-report-format-group__label">
@@ -172,6 +214,14 @@ function closeDialog(): void {
               </div>
             </fieldset>
           </div>
+
+          <p
+            v-if="selectedWindowError"
+            class="class-report-section__warning"
+            role="alert"
+          >
+            {{ selectedWindowError }}
+          </p>
 
           <div
             class="class-report-section__actions"
@@ -216,6 +266,17 @@ function closeDialog(): void {
               </article>
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">
+                  时间窗口
+                </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ selectedWindowLabel }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  预览与导出共用这一段训练时间
+                </div>
+              </article>
+              <article class="progress-card metric-panel-card">
+                <div class="progress-card-label metric-panel-label">
                   导出格式
                 </div>
                 <div class="progress-card-value metric-panel-value">
@@ -254,7 +315,7 @@ function closeDialog(): void {
                 当前班级报告预览
               </h4>
               <p class="class-report-section__copy">
-                不下载也能先看班级近 7 天趋势、教学复盘结论和学生洞察。
+                不下载也能先看当前时间段内的班级趋势、教学复盘结论和学生洞察。
               </p>
             </div>
           </div>
@@ -303,13 +364,13 @@ function closeDialog(): void {
               </article>
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">
-                  近 7 天活跃率
+                  当前窗口活跃率
                 </div>
                 <div class="progress-card-value metric-panel-value">
                   {{ activeRateText }}
                 </div>
                 <div class="progress-card-hint metric-panel-helper">
-                  近 7 天至少有一次训练动作的学生占比
+                  当前时间段至少有一次训练动作的学生占比
                 </div>
               </article>
             </section>
@@ -317,8 +378,8 @@ function closeDialog(): void {
             <div class="class-report-preview-stack">
               <TeacherClassTrendPanel
                 :trend="previewTrend"
-                title="班级近 7 天训练趋势"
-                subtitle="直接查看当前班级训练事件、成功解题和活跃学生走势。"
+                title="班级训练趋势"
+                :subtitle="`当前窗口：${selectedWindowLabel}`"
               />
 
               <TeacherClassReviewPanel
@@ -391,6 +452,10 @@ function closeDialog(): void {
               <div>
                 <dt>班级</dt>
                 <dd>{{ latestExport.className }}</dd>
+              </div>
+              <div>
+                <dt>时间窗口</dt>
+                <dd>{{ latestWindowLabel }}</dd>
               </div>
               <div>
                 <dt>格式</dt>
@@ -499,6 +564,12 @@ function closeDialog(): void {
   gap: var(--space-4);
 }
 
+.class-report-context-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .class-report-section__title {
   margin: var(--space-3) 0 0;
   font-size: var(--font-size-1-08);
@@ -517,6 +588,12 @@ function closeDialog(): void {
   display: grid;
   gap: var(--space-4);
   margin-top: var(--space-5);
+}
+
+.class-report-range-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .class-report-field {
@@ -543,6 +620,12 @@ function closeDialog(): void {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.class-report-section__warning {
+  margin: var(--space-4) 0 0;
+  font-size: var(--font-size-0-82);
+  color: var(--color-danger);
 }
 
 .class-report-format-option {
@@ -770,6 +853,7 @@ function closeDialog(): void {
 }
 
 @media (max-width: 720px) {
+  .class-report-range-grid,
   .class-report-format-grid,
   .class-report-preview-summary__grid,
   .class-report-kpi-grid {

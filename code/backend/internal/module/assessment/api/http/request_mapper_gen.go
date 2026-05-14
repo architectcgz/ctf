@@ -15,6 +15,8 @@ func (c *AssessmentRequestMapperImpl) ToCreateClassReportInput(source dto.Create
 	var commandsCreateClassReportInput commands.CreateClassReportInput
 	commandsCreateClassReportInput.ClassName = source.ClassName
 	commandsCreateClassReportInput.Format = source.Format
+	commandsCreateClassReportInput.FromDate = source.FromDate
+	commandsCreateClassReportInput.ToDate = source.ToDate
 	return commandsCreateClassReportInput
 }
 func (c *AssessmentRequestMapperImpl) ToCreateContestExportInput(source dto.CreateContestExportReq) commands.CreateContestExportInput {

@@ -7,6 +7,8 @@ type CreatePersonalReportInput struct {
 type CreateClassReportInput struct {
 	ClassName string
 	Format    string
+	FromDate  string
+	ToDate    string
 }
 
 type CreateContestExportInput struct {

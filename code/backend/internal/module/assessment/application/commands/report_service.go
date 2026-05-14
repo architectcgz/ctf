@@ -22,8 +22,11 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/mapperutil"
 	teachingadvice "ctf-platform/internal/teaching/advice"
+	"ctf-platform/internal/teaching/classreview"
+	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
 )
@@ -34,6 +37,7 @@ type ReportService struct {
 	contestRepo       assessmentports.AssessmentReportContestLookupRepository
 	personalRepo      assessmentports.AssessmentPersonalReportRepository
 	classRepo         assessmentports.AssessmentClassReportRepository
+	classInsightRepo  assessmentports.AssessmentClassInsightRepository
 	contestExportRepo assessmentports.AssessmentContestExportRepository
 	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository
 	assessmentService assessmentports.AssessmentProfileReader
@@ -54,11 +58,24 @@ type personalReportData struct {
 }
 
 type classReportData struct {
-	ClassName         string
-	TotalStudents     int
-	AverageScore      float64
-	DimensionAverages []assessmentdomain.ClassDimensionAverage
-	TopStudents       []assessmentdomain.ClassTopStudent
+	ClassName              string                                    `json:"class_name"`
+	Window                 classReportWindow                         `json:"window"`
+	TotalStudents          int                                       `json:"total_students"`
+	AverageScore           float64                                   `json:"average_score"`
+	DimensionAverages      []assessmentdomain.ClassDimensionAverage   `json:"dimension_averages"`
+	TopStudents            []assessmentdomain.ClassTopStudent        `json:"top_students"`
+	Summary                *dto.TeacherClassSummaryResp              `json:"summary,omitempty"`
+	Trend                  *dto.TeacherClassTrendResp                `json:"trend,omitempty"`
+	Review                 *dto.TeacherClassReviewResp               `json:"review,omitempty"`
+	CategoryDistribution   []assessmentdomain.ClassDistributionStat  `json:"category_distribution"`
+	DifficultyDistribution []assessmentdomain.ClassDistributionStat  `json:"difficulty_distribution"`
+	ContestMigration       assessmentdomain.ClassContestMigrationSummary `json:"contest_migration"`
+}
+
+type classReportWindow struct {
+	FromDate string `json:"from_date"`
+	ToDate   string `json:"to_date"`
+	Days     int    `json:"days"`
 }
 
 type contestExportData struct {
@@ -99,12 +116,17 @@ type ReviewArchiveStudent struct {
 	ClassName string `json:"class_name,omitempty"`
 }
 
+var reportNow = func() time.Time {
+	return time.Now().UTC()
+}
+
 func NewReportService(
 	lifecycleRepo assessmentports.AssessmentReportLifecycleRepository,
 	userRepo assessmentports.AssessmentReportUserLookupRepository,
 	contestRepo assessmentports.AssessmentReportContestLookupRepository,
 	personalRepo assessmentports.AssessmentPersonalReportRepository,
 	classRepo assessmentports.AssessmentClassReportRepository,
+	classInsightRepo assessmentports.AssessmentClassInsightRepository,
 	contestExportRepo assessmentports.AssessmentContestExportRepository,
 	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository,
 	assessmentService assessmentports.AssessmentProfileReader,
@@ -122,6 +144,7 @@ func NewReportService(
 		contestRepo:       contestRepo,
 		personalRepo:      personalRepo,
 		classRepo:         classRepo,
+		classInsightRepo:  classInsightRepo,
 		contestExportRepo: contestExportRepo,
 		reviewArchiveRepo: reviewArchiveRepo,
 		assessmentService: assessmentService,
@@ -202,6 +225,10 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	if err := validateClassReportAccess(requester, className); err != nil {
 		return nil, err
 	}
+	window, err := s.parseClassWindow(req)
+	if err != nil {
+		return nil, err
+	}
 
 	format := s.normalizeFormat(req.Format)
 	report := &model.Report{
@@ -216,7 +243,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	}
 
 	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
-		filePath, expiresAt, genErr := s.generateClassReport(runCtx, report.ID, className, format)
+		filePath, expiresAt, genErr := s.generateClassReport(runCtx, report.ID, className, format, window)
 		if genErr != nil {
 			return genErr
 		}
@@ -569,8 +596,8 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 	return filePath, time.Now().Add(s.config.FileTTL), nil
 }
 
-func (s *ReportService) generateClassReport(ctx context.Context, reportID int64, className, format string) (string, time.Time, error) {
-	data, err := s.buildClassReportData(ctx, className)
+func (s *ReportService) generateClassReport(ctx context.Context, reportID int64, className, format string, window classwindow.Range) (string, time.Time, error) {
+	data, err := s.buildClassReportData(ctx, className, window)
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -583,7 +610,7 @@ func (s *ReportService) generateClassReport(ctx context.Context, reportID int64,
 		return "", time.Time{}, err
 	}
 
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateContestExport(ctx context.Context, reportID, contestID int64, format string) (string, time.Time, error) {
@@ -670,7 +697,7 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 	}, nil
 }
 
-func (s *ReportService) buildClassReportData(ctx context.Context, className string) (*classReportData, error) {
+func (s *ReportService) buildClassReportData(ctx context.Context, className string, window classwindow.Range) (*classReportData, error) {
 	totalStudents, err := s.classRepo.CountClassStudents(ctx, className)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -687,13 +714,79 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	categoryDistribution, err := s.classRepo.ListClassCategoryDistribution(ctx, className)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	difficultyDistribution, err := s.classRepo.ListClassDifficultyDistribution(ctx, className)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	contestMigration, err := s.classRepo.GetClassContestMigrationSummary(ctx, className)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	var summaryResp *dto.TeacherClassSummaryResp
+	var trendResp *dto.TeacherClassTrendResp
+	var reviewResp *dto.TeacherClassReviewResp
+	if s.classInsightRepo != nil {
+		summary, err := s.classInsightRepo.GetClassSummary(ctx, className, window.Since)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		summaryResp = mapClassSummary(summary)
+
+		trend, err := s.classInsightRepo.GetClassTrend(ctx, className, window.StartOfDay, window.Days)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		trendResp = mapClassTrend(trend)
+
+		snapshots, err := s.classInsightRepo.ListClassTeachingFactSnapshots(ctx, className, window.Since)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+
+		var trendEventDelta int64
+		var trendSolveDelta int64
+		hasTrend := trend != nil && len(trend.Points) >= 2
+		if hasTrend {
+			first := trend.Points[0]
+			last := trend.Points[len(trend.Points)-1]
+			trendEventDelta = last.EventCount - first.EventCount
+			trendSolveDelta = last.SolveCount - first.SolveCount
+		}
+		reviewResp = classreview.BuildResponse(ctx, classreview.Input{
+			ClassName:        className,
+			ActiveRate:       summary.ActiveRate,
+			RecentEventCount: summary.RecentEventCount,
+			HasTrend:         hasTrend,
+			TrendEventDelta:  trendEventDelta,
+			TrendSolveDelta:  trendSolveDelta,
+			Snapshots:        snapshots,
+		}, nil)
+	}
 
 	return &classReportData{
 		ClassName:         className,
+		Window:            classReportWindow{FromDate: window.FromDate, ToDate: window.ToDate, Days: window.Days},
 		TotalStudents:     totalStudents,
 		AverageScore:      avgScore,
 		DimensionAverages: assessmentdomain.FillMissingDimensionAverages(dimensionAverages),
 		TopStudents:       topStudents,
+		Summary:           summaryResp,
+		Trend:             trendResp,
+		Review:            reviewResp,
+		CategoryDistribution: assessmentdomain.FillMissingDistributionStats(
+			categoryDistribution,
+			model.AllDimensions,
+		),
+		DifficultyDistribution: assessmentdomain.FillMissingDistributionStats(
+			difficultyDistribution,
+			assessmentdomain.ClassReportDifficultyOrder(),
+		),
+		ContestMigration: derefClassContestMigration(contestMigration),
 	}, nil
 }
 
@@ -1335,6 +1428,54 @@ func (s *ReportService) normalizeArchiveFormat(format string) string {
 	return model.ReportFormatJSON
 }
 
+func (s *ReportService) parseClassWindow(req CreateClassReportInput) (classwindow.Range, error) {
+	window, err := classwindow.Parse(reportNow(), req.FromDate, req.ToDate)
+	if err != nil {
+		return classwindow.Range{}, errcode.New(errcode.ErrInvalidParams.Code, err.Error(), errcode.ErrInvalidParams.HTTPStatus)
+	}
+	return window, nil
+}
+
+func mapClassSummary(summary *queryports.ClassSummary) *dto.TeacherClassSummaryResp {
+	if summary == nil {
+		return nil
+	}
+	return &dto.TeacherClassSummaryResp{
+		ClassName:          summary.ClassName,
+		StudentCount:       summary.StudentCount,
+		AverageSolved:      summary.AverageSolved,
+		ActiveStudentCount: summary.ActiveStudentCount,
+		ActiveRate:         summary.ActiveRate,
+		RecentEventCount:   summary.RecentEventCount,
+	}
+}
+
+func mapClassTrend(trend *queryports.ClassTrend) *dto.TeacherClassTrendResp {
+	if trend == nil {
+		return nil
+	}
+	points := make([]dto.TeacherClassTrendPoint, 0, len(trend.Points))
+	for _, point := range trend.Points {
+		points = append(points, dto.TeacherClassTrendPoint{
+			Date:               point.Date,
+			ActiveStudentCount: point.ActiveStudentCount,
+			EventCount:         point.EventCount,
+			SolveCount:         point.SolveCount,
+		})
+	}
+	return &dto.TeacherClassTrendResp{
+		ClassName: trend.ClassName,
+		Points:    points,
+	}
+}
+
+func derefClassContestMigration(summary *assessmentdomain.ClassContestMigrationSummary) assessmentdomain.ClassContestMigrationSummary {
+	if summary == nil {
+		return assessmentdomain.ClassContestMigrationSummary{}
+	}
+	return *summary
+}
+
 func reportFileExtension(format string) string {
 	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
 		return "json"
@@ -1439,11 +1580,19 @@ func writeClassPDF(filePath string, data *classReportData) error {
 	addReportTitle(pdf, "Class Training Report")
 	addSummaryBlock(pdf, []summaryLine{
 		{Label: "Class", Value: sanitizePDFText(data.ClassName)},
+		{Label: "Window", Value: fmt.Sprintf("%s to %s (%d days)", data.Window.FromDate, data.Window.ToDate, data.Window.Days)},
 		{Label: "Total Students", Value: fmt.Sprintf("%d", data.TotalStudents)},
 		{Label: "Average Score", Value: fmt.Sprintf("%.2f", data.AverageScore)},
+		{Label: "Active Rate", Value: fmt.Sprintf("%.0f%%", reviewSummaryActiveRate(data.Summary))},
+		{Label: "Recent Events", Value: fmt.Sprintf("%d", reviewSummaryRecentEvents(data.Summary))},
 	})
 	addAverageChart(pdf, "Dimension Average", data.DimensionAverages)
+	addClassTrendTable(pdf, "Trend Snapshot", data.Trend)
+	addDistributionTable(pdf, "Category Distribution", data.CategoryDistribution)
+	addDistributionTable(pdf, "Difficulty Distribution", data.DifficultyDistribution)
 	addTopStudentsTable(pdf, "Top Students", data.TopStudents)
+	addContestMigrationSection(pdf, data.ContestMigration)
+	addClassReviewOutlineTable(pdf, data.Review)
 	return pdf.OutputFileAndClose(filePath)
 }
 
@@ -1514,7 +1663,17 @@ func writeClassExcel(filePath string, data *classReportData) error {
 
 	summarySheet := "Summary"
 	file.SetSheetName("Sheet1", summarySheet)
+	trendSheet := "Trend"
+	reviewSheet := "Review"
+	categorySheet := "Category"
+	difficultySheet := "Difficulty"
+	migrationSheet := "Migration"
 	topSheet := "TopStudents"
+	file.NewSheet(trendSheet)
+	file.NewSheet(reviewSheet)
+	file.NewSheet(categorySheet)
+	file.NewSheet(difficultySheet)
+	file.NewSheet(migrationSheet)
 	file.NewSheet(topSheet)
 
 	headerStyle := mustNewExcelStyle(file, &excelize.Style{
@@ -1524,18 +1683,39 @@ func writeClassExcel(filePath string, data *classReportData) error {
 
 	writePairs(file, summarySheet, []summaryLine{
 		{Label: "Class", Value: data.ClassName},
+		{Label: "Window", Value: fmt.Sprintf("%s ~ %s (%d days)", data.Window.FromDate, data.Window.ToDate, data.Window.Days)},
 		{Label: "Total Students", Value: fmt.Sprintf("%d", data.TotalStudents)},
 		{Label: "Average Score", Value: fmt.Sprintf("%.2f", data.AverageScore)},
+		{Label: "Active Rate", Value: fmt.Sprintf("%.0f%%", reviewSummaryActiveRate(data.Summary))},
+		{Label: "Recent Events", Value: fmt.Sprintf("%d", reviewSummaryRecentEvents(data.Summary))},
 	}, headerStyle)
 
-	file.SetCellValue(summarySheet, "A7", "Dimension")
-	file.SetCellValue(summarySheet, "B7", "Average Score")
-	file.SetCellStyle(summarySheet, "A7", "B7", headerStyle)
+	file.SetCellValue(summarySheet, "A9", "Dimension")
+	file.SetCellValue(summarySheet, "B9", "Average Score")
+	file.SetCellStyle(summarySheet, "A9", "B9", headerStyle)
 	for idx, dimension := range data.DimensionAverages {
-		row := idx + 8
+		row := idx + 10
 		file.SetCellValue(summarySheet, fmt.Sprintf("A%d", row), dimension.Dimension)
 		file.SetCellValue(summarySheet, fmt.Sprintf("B%d", row), dimension.AvgScore)
 	}
+
+	file.SetCellValue(trendSheet, "A1", "Date")
+	file.SetCellValue(trendSheet, "B1", "Active Students")
+	file.SetCellValue(trendSheet, "C1", "Events")
+	file.SetCellValue(trendSheet, "D1", "Solves")
+	file.SetCellStyle(trendSheet, "A1", "D1", headerStyle)
+	for idx, point := range safeTrendPoints(data.Trend) {
+		row := idx + 2
+		file.SetCellValue(trendSheet, fmt.Sprintf("A%d", row), point.Date)
+		file.SetCellValue(trendSheet, fmt.Sprintf("B%d", row), point.ActiveStudentCount)
+		file.SetCellValue(trendSheet, fmt.Sprintf("C%d", row), point.EventCount)
+		file.SetCellValue(trendSheet, fmt.Sprintf("D%d", row), point.SolveCount)
+	}
+
+	writeDistributionSheet(file, categorySheet, headerStyle, data.CategoryDistribution)
+	writeDistributionSheet(file, difficultySheet, headerStyle, data.DifficultyDistribution)
+	writeReviewSheet(file, reviewSheet, headerStyle, data.Review)
+	writeContestMigrationSheet(file, migrationSheet, headerStyle, data.ContestMigration)
 
 	file.SetCellValue(topSheet, "A1", "Rank")
 	file.SetCellValue(topSheet, "B1", "Username")
@@ -1552,9 +1732,9 @@ func writeClassExcel(filePath string, data *classReportData) error {
 		_ = file.AddChart(summarySheet, "D2", &excelize.Chart{
 			Type: excelize.Col,
 			Series: []excelize.ChartSeries{{
-				Name:       fmt.Sprintf("%s!$B$7", summarySheet),
-				Categories: fmt.Sprintf("%s!$A$8:$A$%d", summarySheet, len(data.DimensionAverages)+7),
-				Values:     fmt.Sprintf("%s!$B$8:$B$%d", summarySheet, len(data.DimensionAverages)+7),
+				Name:       fmt.Sprintf("%s!$B$9", summarySheet),
+				Categories: fmt.Sprintf("%s!$A$10:$A$%d", summarySheet, len(data.DimensionAverages)+9),
+				Values:     fmt.Sprintf("%s!$B$10:$B$%d", summarySheet, len(data.DimensionAverages)+9),
 			}},
 			Title:  []excelize.RichTextRun{{Text: "Dimension Average"}},
 			Legend: excelize.ChartLegend{Position: "bottom"},
@@ -1562,6 +1742,11 @@ func writeClassExcel(filePath string, data *classReportData) error {
 	}
 
 	setReportSheetLayout(file, summarySheet)
+	setReportSheetLayout(file, trendSheet)
+	setReportSheetLayout(file, reviewSheet)
+	setReportSheetLayout(file, categorySheet)
+	setReportSheetLayout(file, difficultySheet)
+	setReportSheetLayout(file, migrationSheet)
 	setReportSheetLayout(file, topSheet)
 	return file.SaveAs(filePath)
 }
@@ -1664,6 +1849,77 @@ func addTopStudentsTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain
 	}
 }
 
+func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *dto.TeacherClassTrendResp) {
+	points := safeTrendPoints(trend)
+	if len(points) == 0 {
+		return
+	}
+	pdf.SetFont("Helvetica", "B", 14)
+	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
+	writePDFCustomTableHeader(pdf, []string{"Date", "Active", "Events", "Solves"}, []float64{42, 36, 36, 36})
+	pdf.SetFont("Helvetica", "", 10)
+	for _, point := range points {
+		ensurePDFSpace(pdf, 8)
+		writePDFTableRow(pdf, []float64{42, 36, 36, 36}, []string{
+			point.Date,
+			fmt.Sprintf("%d", point.ActiveStudentCount),
+			fmt.Sprintf("%d", point.EventCount),
+			fmt.Sprintf("%d", point.SolveCount),
+		})
+	}
+}
+
+func addDistributionTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain.ClassDistributionStat) {
+	if len(rows) == 0 {
+		return
+	}
+	pdf.SetFont("Helvetica", "B", 14)
+	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
+	writePDFCustomTableHeader(pdf, []string{"Key", "Solved Students", "Covered", "Total"}, []float64{46, 44, 36, 36})
+	pdf.SetFont("Helvetica", "", 10)
+	for _, row := range rows {
+		ensurePDFSpace(pdf, 8)
+		writePDFTableRow(pdf, []float64{46, 44, 36, 36}, []string{
+			row.Key,
+			fmt.Sprintf("%d", row.SolvedStudents),
+			fmt.Sprintf("%d", row.CoveredChallenges),
+			fmt.Sprintf("%d", row.TotalChallenges),
+		})
+	}
+}
+
+func addContestMigrationSection(pdf *gofpdf.Fpdf, summary assessmentdomain.ClassContestMigrationSummary) {
+	pdf.SetFont("Helvetica", "B", 14)
+	pdf.CellFormat(0, 8, "Contest Migration", "", 1, "L", false, 0, "")
+	addSummaryBlock(pdf, []summaryLine{
+		{Label: "Participating Students", Value: fmt.Sprintf("%d", summary.ParticipatingStudents)},
+		{Label: "Successful Students", Value: fmt.Sprintf("%d", summary.SuccessfulStudents)},
+		{Label: "Attack Events", Value: fmt.Sprintf("%d", summary.AttackCount)},
+		{Label: "Success Events", Value: fmt.Sprintf("%d", summary.SuccessCount)},
+		{Label: "Success Dimensions", Value: strings.Join(summary.SuccessDimensions, ", ")},
+	})
+}
+
+func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *dto.TeacherClassReviewResp) {
+	items := safeReviewItems(review)
+	if len(items) == 0 {
+		return
+	}
+	pdf.SetFont("Helvetica", "B", 14)
+	pdf.CellFormat(0, 8, "Review Outline", "", 1, "L", false, 0, "")
+	writePDFCustomTableHeader(pdf, []string{"Code", "Severity", "Dimension", "Students"}, []float64{42, 32, 36, 68})
+	pdf.SetFont("Helvetica", "", 10)
+	for _, item := range items {
+		ensurePDFSpace(pdf, 8)
+		writePDFTableRow(pdf, []float64{42, 32, 36, 68}, []string{
+			item.Code,
+			item.Severity,
+			item.Dimension,
+			reviewStudentNames(item.Students),
+		})
+	}
+}
+
 func writePDFTableHeader(pdf *gofpdf.Fpdf, headers []string) {
 	pdf.SetFillColor(220, 230, 241)
 	pdf.SetFont("Helvetica", "B", 10)
@@ -1673,6 +1929,26 @@ func writePDFTableHeader(pdf *gofpdf.Fpdf, headers []string) {
 	}
 	for idx, header := range headers {
 		pdf.CellFormat(widths[idx], 7, sanitizePDFText(header), "1", 0, "C", true, 0, "")
+	}
+	pdf.Ln(-1)
+}
+
+func writePDFCustomTableHeader(pdf *gofpdf.Fpdf, headers []string, widths []float64) {
+	pdf.SetFillColor(220, 230, 241)
+	pdf.SetFont("Helvetica", "B", 10)
+	for idx, header := range headers {
+		pdf.CellFormat(widths[idx], 7, sanitizePDFText(header), "1", 0, "C", true, 0, "")
+	}
+	pdf.Ln(-1)
+}
+
+func writePDFTableRow(pdf *gofpdf.Fpdf, widths []float64, values []string) {
+	for idx, value := range values {
+		align := "L"
+		if idx > 0 {
+			align = "C"
+		}
+		pdf.CellFormat(widths[idx], 7, sanitizePDFText(value), "1", 0, align, false, 0, "")
 	}
 	pdf.Ln(-1)
 }
@@ -1733,4 +2009,92 @@ func writePairs(file *excelize.File, sheet string, rows []summaryLine, headerSty
 func setReportSheetLayout(file *excelize.File, sheet string) {
 	file.SetColWidth(sheet, "A", "A", 22)
 	file.SetColWidth(sheet, "B", "E", 18)
+}
+
+func writeDistributionSheet(file *excelize.File, sheet string, headerStyle int, rows []assessmentdomain.ClassDistributionStat) {
+	file.SetCellValue(sheet, "A1", "Key")
+	file.SetCellValue(sheet, "B1", "Solved Students")
+	file.SetCellValue(sheet, "C1", "Covered Challenges")
+	file.SetCellValue(sheet, "D1", "Total Challenges")
+	file.SetCellStyle(sheet, "A1", "D1", headerStyle)
+	for idx, row := range rows {
+		line := idx + 2
+		file.SetCellValue(sheet, fmt.Sprintf("A%d", line), row.Key)
+		file.SetCellValue(sheet, fmt.Sprintf("B%d", line), row.SolvedStudents)
+		file.SetCellValue(sheet, fmt.Sprintf("C%d", line), row.CoveredChallenges)
+		file.SetCellValue(sheet, fmt.Sprintf("D%d", line), row.TotalChallenges)
+	}
+}
+
+func writeReviewSheet(file *excelize.File, sheet string, headerStyle int, review *dto.TeacherClassReviewResp) {
+	file.SetCellValue(sheet, "A1", "Code")
+	file.SetCellValue(sheet, "B1", "Severity")
+	file.SetCellValue(sheet, "C1", "Dimension")
+	file.SetCellValue(sheet, "D1", "Students")
+	file.SetCellValue(sheet, "E1", "Summary")
+	file.SetCellValue(sheet, "F1", "Evidence")
+	file.SetCellValue(sheet, "G1", "Action")
+	file.SetCellStyle(sheet, "A1", "G1", headerStyle)
+	for idx, item := range safeReviewItems(review) {
+		line := idx + 2
+		file.SetCellValue(sheet, fmt.Sprintf("A%d", line), item.Code)
+		file.SetCellValue(sheet, fmt.Sprintf("B%d", line), item.Severity)
+		file.SetCellValue(sheet, fmt.Sprintf("C%d", line), item.Dimension)
+		file.SetCellValue(sheet, fmt.Sprintf("D%d", line), reviewStudentNames(item.Students))
+		file.SetCellValue(sheet, fmt.Sprintf("E%d", line), item.Summary)
+		file.SetCellValue(sheet, fmt.Sprintf("F%d", line), item.Evidence)
+		file.SetCellValue(sheet, fmt.Sprintf("G%d", line), item.Action)
+	}
+}
+
+func writeContestMigrationSheet(file *excelize.File, sheet string, headerStyle int, summary assessmentdomain.ClassContestMigrationSummary) {
+	writePairs(file, sheet, []summaryLine{
+		{Label: "Participating Students", Value: fmt.Sprintf("%d", summary.ParticipatingStudents)},
+		{Label: "Successful Students", Value: fmt.Sprintf("%d", summary.SuccessfulStudents)},
+		{Label: "Attack Events", Value: fmt.Sprintf("%d", summary.AttackCount)},
+		{Label: "Success Events", Value: fmt.Sprintf("%d", summary.SuccessCount)},
+		{Label: "Success Dimensions", Value: strings.Join(summary.SuccessDimensions, ", ")},
+	}, headerStyle)
+}
+
+func safeTrendPoints(trend *dto.TeacherClassTrendResp) []dto.TeacherClassTrendPoint {
+	if trend == nil {
+		return []dto.TeacherClassTrendPoint{}
+	}
+	return trend.Points
+}
+
+func safeReviewItems(review *dto.TeacherClassReviewResp) []dto.TeacherClassReviewItem {
+	if review == nil {
+		return []dto.TeacherClassReviewItem{}
+	}
+	return review.Items
+}
+
+func reviewStudentNames(students []dto.TeacherReviewStudentRef) string {
+	names := make([]string, 0, len(students))
+	for _, student := range students {
+		if student.Name != nil && strings.TrimSpace(*student.Name) != "" {
+			names = append(names, strings.TrimSpace(*student.Name))
+			continue
+		}
+		if strings.TrimSpace(student.Username) != "" {
+			names = append(names, strings.TrimSpace(student.Username))
+		}
+	}
+	return strings.Join(names, ", ")
+}
+
+func reviewSummaryActiveRate(summary *dto.TeacherClassSummaryResp) float64 {
+	if summary == nil {
+		return 0
+	}
+	return summary.ActiveRate
+}
+
+func reviewSummaryRecentEvents(summary *dto.TeacherClassSummaryResp) int64 {
+	if summary == nil {
+		return 0
+	}
+	return summary.RecentEventCount
 }

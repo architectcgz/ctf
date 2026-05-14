@@ -711,11 +711,111 @@ export interface TeacherOverviewData {
 
 `data`：`TeacherStudentItem[]`
 
-### 6.4 GET `/api/v1/teacher/students/:id/progress`
+### 6.4 GET `/api/v1/teacher/classes/:name/summary`
+
+共享查询参数：
+
+```ts
+export interface TeacherClassInsightQueryData {
+  from_date?: string   // YYYY-MM-DD
+  to_date?: string     // YYYY-MM-DD
+}
+```
+
+约束：
+
+- `from_date` 与 `to_date` 都不传时，后端默认统计最近 `7` 个自然日
+- 两个字段必须同时传入；只传一个会返回校验错误
+- 两个字段都传入时，按自然日闭区间统计
+- 单次跨度最大 `31` 天
+
+`data`：
+
+```ts
+export interface TeacherClassSummaryData {
+  class_name: string
+  student_count: number
+  average_solved: number
+  active_student_count: number
+  active_rate: number
+  recent_event_count: number
+}
+```
+
+### 6.5 GET `/api/v1/teacher/classes/:name/trend`
+
+共享查询参数：同 `TeacherClassInsightQueryData`
+
+`data`：
+
+```ts
+export interface TeacherClassTrendPoint {
+  date: string
+  active_student_count: number
+  event_count: number
+  solve_count: number
+}
+
+export interface TeacherClassTrendData {
+  class_name: string
+  points: TeacherClassTrendPoint[]
+}
+```
+
+### 6.6 GET `/api/v1/teacher/classes/:name/review`
+
+共享查询参数：同 `TeacherClassInsightQueryData`
+
+`data`：
+
+```ts
+export interface TeacherReviewStudentRef {
+  id: ID
+  username: string
+  name?: string
+}
+
+export interface TeacherClassReviewRecommendationData {
+  challenge_id: ID
+  title: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  dimension?: string
+  difficulty_band?: 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
+  severity?: 'good' | 'attention' | 'warning' | 'danger'
+  reason_codes?: string[]
+  summary: string
+  evidence?: string
+}
+
+export interface TeacherClassReviewItemData {
+  code: string
+  severity: 'good' | 'attention' | 'warning' | 'danger'
+  summary: string
+  evidence?: string
+  action?: string
+  reason_codes?: string[]
+  dimension?: string
+  students?: TeacherReviewStudentRef[]
+  recommendation?: TeacherClassReviewRecommendationData
+}
+
+export interface TeacherClassReviewData {
+  class_name: string
+  items: TeacherClassReviewItemData[]
+}
+```
+
+说明：
+
+- `summary / trend / review` 三个接口共享同一组时间窗 contract
+- 页面班级详情与班级报告导出预览复用这三条接口，不再各自维护第二套“近 7 天”口径
+
+### 6.7 GET `/api/v1/teacher/students/:id/progress`
 
 `data`：`MyProgressData`（或包含更细颗粒度的 challenge 列表；需确认）。
 
-### 6.5 GET `/api/v1/teacher/students/:id/evidence`
+### 6.8 GET `/api/v1/teacher/students/:id/evidence`
 
 `data`：
 
@@ -796,7 +896,35 @@ export interface ReportExportData {
 
 ### 7.4 POST `/api/v1/reports/class`
 
+请求体：
+
+```ts
+export interface CreateClassReportReq {
+  class_name: string
+  format?: 'pdf' | 'excel'
+  from_date?: string   // YYYY-MM-DD
+  to_date?: string     // YYYY-MM-DD
+}
+```
+
+时间窗规则：同 `TeacherClassInsightQueryData`。
+
 `data`：同 `ReportExportData`（大班级建议异步，status=processing；完成后通过通知推送下载地址）。
+
+导出内容说明：
+
+- 班级报告预览与导出共用同一时间窗
+- `summary / trend / review` 严格按当前时间窗统计
+- `average_score / dimension_averages / top_students / category_distribution / difficulty_distribution / contest_migration` 仍表示当前班级能力快照，不回溯重算历史窗口
+- 当前导出结构新增：
+  - `window`
+  - `summary`
+  - `trend`
+  - `review`
+  - `category_distribution`
+  - `difficulty_distribution`
+  - `contest_migration`
+- `pdf` 继续提供可打印汇报版；`excel` 保留完整中文复盘文本，便于继续筛选与归档
 
 ### 7.5 POST `/api/v1/admin/contests/:id/export`
 

@@ -39,6 +39,12 @@ const props = defineProps<{
   studentNoQuery: string
   loadingStudents: boolean
   error: string | null
+  insightWindowFromDate: string
+  insightWindowToDate: string
+  insightWindowError: string | null
+  insightWindowLabel: string
+  canApplyInsightWindow: boolean
+  canResetInsightWindow: boolean
 }>()
 
 const emit = defineEmits<{
@@ -47,6 +53,10 @@ const emit = defineEmits<{
   openDashboard: []
   openReportExport: []
   updateStudentNoQuery: [value: string]
+  updateInsightWindowFromDate: [value: string]
+  updateInsightWindowToDate: [value: string]
+  applyInsightWindow: []
+  resetInsightWindow: []
   openStudent: [studentId: string]
 }>()
 
@@ -133,8 +143,8 @@ function resolveWorkspacePanelProps(tabKey: WorkspacePanelTab): Record<string, u
     case 'trend':
       return {
         trend: props.trend,
-        title: '班级近 7 天训练趋势',
-        subtitle: '先看整体节奏，再下钻到具体学生。',
+        title: '班级训练趋势',
+        subtitle: `当前窗口：${props.insightWindowLabel}`,
       }
     case 'review':
       return {
@@ -189,6 +199,83 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
     </nav>
 
     <main class="content-pane">
+        <section class="teacher-window-shell" aria-label="班级训练时间段">
+          <div class="teacher-window-head">
+            <div class="teacher-window-copy">
+              <div class="teacher-summary-title">
+                <span>Training Window</span>
+              </div>
+              <h2 class="teacher-window-title">班级训练时间段</h2>
+              <p class="teacher-window-description">
+                当前统计窗口：{{ props.insightWindowLabel }}
+              </p>
+            </div>
+            <span class="teacher-surface-chip">
+              {{ props.insightWindowLabel }}
+            </span>
+          </div>
+
+          <div class="teacher-window-grid">
+            <label class="teacher-field">
+              <span class="teacher-field-label">开始日期</span>
+              <div class="teacher-field-control teacher-filter-control">
+                <input
+                  :value="props.insightWindowFromDate"
+                  type="date"
+                  class="teacher-input"
+                  @input="
+                    emit(
+                      'updateInsightWindowFromDate',
+                      ($event.target as HTMLInputElement).value
+                    )
+                  "
+                >
+              </div>
+            </label>
+
+            <label class="teacher-field">
+              <span class="teacher-field-label">结束日期</span>
+              <div class="teacher-field-control teacher-filter-control">
+                <input
+                  :value="props.insightWindowToDate"
+                  type="date"
+                  class="teacher-input"
+                  @input="
+                    emit('updateInsightWindowToDate', ($event.target as HTMLInputElement).value)
+                  "
+                >
+              </div>
+            </label>
+
+            <div class="teacher-window-actions">
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                :disabled="!props.canResetInsightWindow"
+                @click="emit('resetInsightWindow')"
+              >
+                恢复默认
+              </button>
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary"
+                :disabled="!props.canApplyInsightWindow"
+                @click="emit('applyInsightWindow')"
+              >
+                应用时间段
+              </button>
+            </div>
+          </div>
+
+          <p
+            v-if="props.insightWindowError"
+            class="teacher-window-error"
+            role="alert"
+          >
+            {{ props.insightWindowError }}
+          </p>
+        </section>
+
         <section
           v-show="activeTab === 'overview'"
           id="class-overview"
@@ -229,14 +316,14 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
                   </article>
                   <article class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
-                      <span>近 7 天活跃率</span>
+                      <span>当前窗口活跃率</span>
                       <Activity class="h-4 w-4" />
                     </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ activeRateText }}
                     </div>
                     <div class="progress-card-hint metric-panel-helper">
-                      近 7 天内至少产生训练事件的学生占比
+                      当前时间段内至少产生训练事件的学生占比
                     </div>
                   </article>
                 </div>
@@ -443,6 +530,70 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
   flex: 1 1 auto;
   flex-direction: column;
 }
+
+.teacher-window-shell {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 78%, var(--color-bg-base))
+    );
+}
+
+.teacher-window-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.teacher-window-copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.teacher-window-title {
+  margin: 0;
+  font-size: var(--font-size-1-20);
+  line-height: 1.2;
+}
+
+.teacher-window-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.teacher-window-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.teacher-window-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.teacher-window-error {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  color: var(--color-danger);
+}
+
 .teacher-directory-section {
   margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
@@ -545,7 +696,15 @@ function studentWeakCategory(student: { weak_dimension?: string | null }) {
 }
 
 @media (max-width: 1080px) {
+  .teacher-window-grid {
+    grid-template-columns: 1fr;
+  }
+
   .teacher-directory-row-cta {
+    justify-content: flex-start;
+  }
+
+  .teacher-window-actions {
     justify-content: flex-start;
   }
 }

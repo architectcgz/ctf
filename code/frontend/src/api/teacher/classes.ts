@@ -4,6 +4,7 @@ import type {
   PageResult,
   RecommendationItem,
   TeacherClassItem,
+  TeacherClassInsightQueryData,
   TeacherOverviewData,
   TeacherClassReviewData,
   TeacherClassSummaryData,
@@ -165,21 +166,32 @@ export async function getStudentsDirectory(
   }
 }
 
-export async function getClassSummary(name: string): Promise<TeacherClassSummaryData> {
+export async function getClassSummary(
+  name: string,
+  params?: TeacherClassInsightQueryData
+): Promise<TeacherClassSummaryData> {
   return request<TeacherClassSummaryData>({
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/summary`,
+    params,
   })
 }
 
-export async function getClassTrend(name: string): Promise<TeacherClassTrendData> {
+export async function getClassTrend(
+  name: string,
+  params?: TeacherClassInsightQueryData
+): Promise<TeacherClassTrendData> {
   return request<TeacherClassTrendData>({
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/trend`,
+    params,
   })
 }
 
-export async function getClassReview(name: string): Promise<TeacherClassReviewData> {
+export async function getClassReview(
+  name: string,
+  params?: TeacherClassInsightQueryData
+): Promise<TeacherClassReviewData> {
   const payload = await request<{
     class_name: string
     items: Array<{
@@ -211,6 +223,7 @@ export async function getClassReview(name: string): Promise<TeacherClassReviewDa
   }>({
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/review`,
+    params,
   })
 
   return {

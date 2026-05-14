@@ -39,13 +39,14 @@ type Module struct {
 }
 
 type Deps struct {
-	AppContext    context.Context
-	Config        *config.Config
-	Logger        *zap.Logger
-	DB            *gorm.DB
-	Cache         *redislib.Client
-	Events        platformevents.Bus
-	ChallengeRepo assessmentports.ChallengeRepository
+	AppContext       context.Context
+	Config           *config.Config
+	Logger           *zap.Logger
+	DB               *gorm.DB
+	Cache            *redislib.Client
+	Events           platformevents.Bus
+	ChallengeRepo    assessmentports.ChallengeRepository
+	ClassInsightRepo assessmentports.AssessmentClassInsightRepository
 }
 
 type moduleDeps struct {
@@ -53,6 +54,7 @@ type moduleDeps struct {
 	profileRepo         assessmentports.ProfileRepository
 	recommendationRepo  assessmentports.RecommendationRepository
 	reportRepo          assessmentports.ReportRepository
+	classInsightRepo    assessmentports.AssessmentClassInsightRepository
 	awdReviewRepo       assessmentports.TeacherAWDReviewRepository
 	challengeRepo       assessmentports.ChallengeRepository
 	profileLockStore    assessmentports.AssessmentProfileLockStore
@@ -100,6 +102,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		profileRepo:         repo,
 		recommendationRepo:  repo,
 		reportRepo:          assessmentinfra.NewReportRepository(deps.DB),
+		classInsightRepo:    deps.ClassInsightRepo,
 		awdReviewRepo:       assessmentinfra.NewTeacherAWDReviewRepository(deps.DB),
 		challengeRepo:       deps.ChallengeRepo,
 		profileLockStore:    assessmentinfra.NewProfileLockStore(deps.Cache, deps.Config.Assessment),
@@ -135,6 +138,7 @@ func buildReportHandler(deps moduleDeps, profileQueryService assessmentports.Ass
 		deps.reportRepo,
 		deps.reportRepo,
 		deps.reportRepo,
+		deps.classInsightRepo,
 		deps.reportRepo,
 		deps.reportRepo,
 		profileQueryService,

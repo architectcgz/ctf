@@ -123,6 +123,8 @@ describe('TeacherClassReportExportDialog', () => {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
       },
       global: {
         plugins: [pinia],
@@ -136,10 +138,20 @@ describe('TeacherClassReportExportDialog', () => {
     await flushPromises()
 
     expect(getClassStudentsMock).toHaveBeenCalledWith('Class A')
-    expect(getClassReviewMock).toHaveBeenCalledWith('Class A')
-    expect(getClassSummaryMock).toHaveBeenCalledWith('Class A')
-    expect(getClassTrendMock).toHaveBeenCalledWith('Class A')
+    expect(getClassReviewMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(getClassSummaryMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(getClassTrendMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
     expect(wrapper.text()).toContain('当前班级报告预览')
+    expect(wrapper.text()).toContain('当前窗口：2026-03-01 至 2026-03-07')
   })
 
   it('教师班级报告导出弹窗应接入后台共享弹窗与表单原语', () => {
@@ -153,6 +165,7 @@ describe('TeacherClassReportExportDialog', () => {
     expect(teacherClassReportExportDialogSource).toContain('class="ui-control')
     expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
     expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
+    expect(teacherClassReportExportDialogSource).toContain('type="date"')
   })
 
   it('点击创建导出任务会调用 exportClassReport', async () => {
@@ -170,6 +183,8 @@ describe('TeacherClassReportExportDialog', () => {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
       },
       global: {
         plugins: [pinia],
@@ -191,6 +206,8 @@ describe('TeacherClassReportExportDialog', () => {
     expect(exportClassReportMock).toHaveBeenCalledWith({
       class_name: 'Class A',
       format: 'pdf',
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
     })
   })
 
@@ -209,6 +226,8 @@ describe('TeacherClassReportExportDialog', () => {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
       },
       global: {
         plugins: [pinia],

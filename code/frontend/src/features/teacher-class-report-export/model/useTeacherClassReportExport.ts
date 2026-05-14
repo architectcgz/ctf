@@ -17,6 +17,12 @@ import type {
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
+import {
+  buildTeacherClassInsightWindowQuery,
+  createTeacherClassInsightWindowDraft,
+  describeTeacherClassInsightWindow,
+  getTeacherClassInsightWindowError,
+} from '@/features/teacher-class-insight-window/model/window'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
 
@@ -25,8 +31,16 @@ type ReportFormat = 'pdf' | 'excel'
 interface ExportRecord {
   className: string
   format: ReportFormat
+  fromDate: string
+  toDate: string
   createdAt: string
   result: ReportExportData
+}
+
+interface ExportContext {
+  className?: string
+  fromDate?: string
+  toDate?: string
 }
 
 export function useTeacherClassReportExport() {
@@ -37,6 +51,8 @@ export function useTeacherClassReportExport() {
   const form = ref({
     className: authStore.user?.class_name ?? '',
     format: 'pdf' as ReportFormat,
+    fromDate: '',
+    toDate: '',
   })
 
   const submitting = ref(false)
@@ -49,12 +65,19 @@ export function useTeacherClassReportExport() {
   const previewReview = ref<TeacherClassReviewData | null>(null)
   const previewSummary = ref<TeacherClassSummaryData | null>(null)
   const previewTrend = ref<TeacherClassTrendData | null>(null)
+  let latestPreviewRequestId = 0
 
   const classNamePlaceholder = computed(() =>
     authStore.user?.class_name ? `默认班级：${authStore.user.class_name}` : '请输入要导出的班级名称'
   )
 
   const normalizedClassNameText = computed(() => normalizeClassName() || '未选择')
+  const selectedWindowLabel = computed(() =>
+    describeTeacherClassInsightWindow(currentInsightWindow())
+  )
+  const selectedWindowError = computed(() =>
+    getTeacherClassInsightWindowError(currentInsightWindow())
+  )
   const selectedFormatLabel = computed(() => (form.value.format === 'pdf' ? 'PDF' : 'Excel'))
 
   const selectedFormatHint = computed(() =>
@@ -115,6 +138,13 @@ export function useTeacherClassReportExport() {
       ? formatDate(latestExport.value.result.expires_at)
       : '待生成完成后返回'
   })
+  const latestWindowLabel = computed(() => {
+    if (!latestExport.value) return '默认最近 7 天'
+    return describeTeacherClassInsightWindow({
+      fromDate: latestExport.value.fromDate,
+      toDate: latestExport.value.toDate,
+    })
+  })
 
   function resolveContextClassName(className?: string): string {
     return className?.trim() || authStore.user?.class_name?.trim() || ''
@@ -124,6 +154,13 @@ export function useTeacherClassReportExport() {
     return form.value.className.trim() || authStore.user?.class_name?.trim() || ''
   }
 
+  function currentInsightWindow() {
+    return createTeacherClassInsightWindowDraft({
+      fromDate: form.value.fromDate,
+      toDate: form.value.toDate,
+    })
+  }
+
   function resetPreviewState(): void {
     previewStudents.value = []
     previewReview.value = null
@@ -131,11 +168,18 @@ export function useTeacherClassReportExport() {
     previewTrend.value = null
   }
 
-  function syncContextClassName(className?: string): void {
-    const nextClassName = resolveContextClassName(className)
+  function syncContext(context?: ExportContext): void {
+    const nextClassName = resolveContextClassName(context?.className)
+    const nextInsightWindow = createTeacherClassInsightWindowDraft({
+      fromDate: context?.fromDate,
+      toDate: context?.toDate,
+    })
     form.value.className = nextClassName
+    form.value.fromDate = nextInsightWindow.fromDate
+    form.value.toDate = nextInsightWindow.toDate
 
     if (latestExport.value && latestExport.value.className !== nextClassName) {
+      stopPolling()
       latestExport.value = null
     }
   }
@@ -149,6 +193,16 @@ export function useTeacherClassReportExport() {
       return
     }
 
+    const insightWindow = currentInsightWindow()
+    const insightWindowError = getTeacherClassInsightWindowError(insightWindow)
+    if (insightWindowError) {
+      previewClassName.value = className
+      previewError.value = insightWindowError
+      return
+    }
+
+    const requestId = ++latestPreviewRequestId
+    const insightWindowQuery = buildTeacherClassInsightWindowQuery(insightWindow)
     previewLoading.value = true
     previewError.value = null
     previewClassName.value = className
@@ -156,40 +210,69 @@ export function useTeacherClassReportExport() {
     try {
       const [students, review, summary, trend] = await Promise.all([
         getClassStudents(className),
-        getClassReview(className),
-        getClassSummary(className),
-        getClassTrend(className),
+        insightWindowQuery
+          ? getClassReview(className, insightWindowQuery)
+          : getClassReview(className),
+        insightWindowQuery
+          ? getClassSummary(className, insightWindowQuery)
+          : getClassSummary(className),
+        insightWindowQuery
+          ? getClassTrend(className, insightWindowQuery)
+          : getClassTrend(className),
       ])
+      if (requestId !== latestPreviewRequestId) {
+        return
+      }
       previewStudents.value = students
       previewReview.value = review
       previewSummary.value = summary
       previewTrend.value = trend
     } catch (err) {
+      if (requestId !== latestPreviewRequestId) {
+        return
+      }
       console.error('加载班级报告预览失败:', err)
       resetPreviewState()
       previewError.value = '加载当前班级预览失败，请稍后重试'
     } finally {
-      previewLoading.value = false
+      if (requestId === latestPreviewRequestId) {
+        previewLoading.value = false
+      }
     }
   }
 
   async function handleExport(): Promise<void> {
+    if (submitting.value) {
+      return
+    }
+
     const className = normalizeClassName()
     if (!className) {
       toast.warning('请先填写班级名称')
       return
     }
 
+    const insightWindow = currentInsightWindow()
+    const insightWindowError = getTeacherClassInsightWindowError(insightWindow)
+    if (insightWindowError) {
+      toast.warning(insightWindowError)
+      return
+    }
+
     submitting.value = true
     try {
+      const insightWindowQuery = buildTeacherClassInsightWindowQuery(insightWindow)
       const result = await exportClassReport({
         class_name: className,
         format: form.value.format,
+        ...insightWindowQuery,
       })
 
       latestExport.value = {
         className,
         format: form.value.format,
+        fromDate: insightWindow.fromDate,
+        toDate: insightWindow.toDate,
         createdAt: new Date().toISOString(),
         result,
       }
@@ -223,7 +306,9 @@ export function useTeacherClassReportExport() {
   }
 
   async function handleDownload(): Promise<void> {
-    if (!latestExport.value || latestExport.value.result.status !== 'ready') return
+    if (downloading.value || !latestExport.value || latestExport.value.result.status !== 'ready') {
+      return
+    }
 
     downloading.value = true
     try {
@@ -260,6 +345,8 @@ export function useTeacherClassReportExport() {
     previewTrend,
     classNamePlaceholder,
     normalizedClassNameText,
+    selectedWindowLabel,
+    selectedWindowError,
     selectedFormatLabel,
     selectedFormatHint,
     derivedDownloadHint,
@@ -267,7 +354,8 @@ export function useTeacherClassReportExport() {
     activeRateText,
     latestStatusMeta,
     latestExpiresText,
-    syncContextClassName,
+    latestWindowLabel,
+    syncContext,
     loadPreview,
     handleExport,
     handleDownload,

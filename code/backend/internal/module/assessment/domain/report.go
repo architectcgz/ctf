@@ -48,6 +48,21 @@ type ClassTopStudent struct {
 	Rank       int
 }
 
+type ClassDistributionStat struct {
+	Key               string
+	TotalChallenges   int
+	CoveredChallenges int
+	SolvedStudents    int
+}
+
+type ClassContestMigrationSummary struct {
+	ParticipatingStudents int
+	SuccessfulStudents    int
+	AttackCount           int
+	SuccessCount          int
+	SuccessDimensions     []string
+}
+
 type ContestExportScoreboardItem struct {
 	Rank             int        `json:"rank"`
 	TeamID           int64      `json:"team_id"`
@@ -194,6 +209,33 @@ func FillMissingDimensionAverages(rows []ClassDimensionAverage) []ClassDimension
 		})
 	}
 	return filled
+}
+
+func FillMissingDistributionStats(rows []ClassDistributionStat, keys []string) []ClassDistributionStat {
+	index := make(map[string]ClassDistributionStat, len(rows))
+	for _, row := range rows {
+		index[row.Key] = row
+	}
+
+	filled := make([]ClassDistributionStat, 0, len(keys))
+	for _, key := range keys {
+		row, ok := index[key]
+		if !ok {
+			row = ClassDistributionStat{Key: key}
+		}
+		filled = append(filled, row)
+	}
+	return filled
+}
+
+func ClassReportDifficultyOrder() []string {
+	return []string{
+		model.ChallengeDifficultyBeginner,
+		model.ChallengeDifficultyEasy,
+		model.ChallengeDifficultyMedium,
+		model.ChallengeDifficultyHard,
+		model.ChallengeDifficultyInsane,
+	}
 }
 
 func NormalizeReportConfig(cfg config.ReportConfig) config.ReportConfig {

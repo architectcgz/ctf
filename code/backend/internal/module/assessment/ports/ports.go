@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -111,6 +112,15 @@ type AssessmentClassReportRepository interface {
 	GetClassAverageScore(ctx context.Context, className string) (float64, error)
 	ListClassDimensionAverages(ctx context.Context, className string) ([]assessmentdomain.ClassDimensionAverage, error)
 	ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentdomain.ClassTopStudent, error)
+	ListClassCategoryDistribution(ctx context.Context, className string) ([]assessmentdomain.ClassDistributionStat, error)
+	ListClassDifficultyDistribution(ctx context.Context, className string) ([]assessmentdomain.ClassDistributionStat, error)
+	GetClassContestMigrationSummary(ctx context.Context, className string) (*assessmentdomain.ClassContestMigrationSummary, error)
+}
+
+type AssessmentClassInsightRepository interface {
+	GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
+	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
+	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 
 type AssessmentContestExportRepository interface {
