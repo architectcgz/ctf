@@ -2,50 +2,36 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
 
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) httpClientForAWDTarget(accessURL, runtimeDetails string) *http.Client {
-	client := u.httpClient
-	if client == nil {
-		client = &http.Client{Timeout: normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout)}
+func (u *AWDRoundUpdater) executeAWDHTTPRequest(ctx context.Context, request contestports.AWDHTTPRequest) (contestports.AWDHTTPResponse, error) {
+	if u == nil || u.httpRuntime == nil {
+		return contestports.AWDHTTPResponse{}, newAWDCheckError("http_request_failed", "http_runtime_not_configured")
 	}
+	request.Timeout = normalizedAWDCheckerTimeout(request.Timeout)
+	return u.httpRuntime.Execute(ctx, request)
+}
 
-	targetHost, dialIP := resolveAWDHTTPDialOverride(accessURL, runtimeDetails)
-	if targetHost == "" || dialIP == "" {
-		return client
-	}
-
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	if baseTransport, ok := client.Transport.(*http.Transport); ok && baseTransport != nil {
-		transport = baseTransport.Clone()
-	}
-	baseDialContext := transport.DialContext
-	if baseDialContext == nil {
-		dialer := &net.Dialer{}
-		baseDialContext = dialer.DialContext
-	}
-
-	transport.Proxy = nil
-	transport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
-		host, port, err := net.SplitHostPort(address)
-		if err == nil && strings.EqualFold(host, targetHost) {
-			address = net.JoinHostPort(dialIP, port)
+func normalizeAWDHTTPRuntimeError(err error) (string, string) {
+	var runtimeErr *contestports.AWDHTTPRuntimeError
+	if errors.As(err, &runtimeErr) {
+		errorCode := "http_request_failed"
+		if runtimeErr.Kind == contestports.AWDHTTPRuntimeErrorKindResponseRead {
+			errorCode = "http_response_read_failed"
 		}
-		return baseDialContext(ctx, network, address)
+		if runtimeErr.Err != nil {
+			return errorCode, sanitizeAWDCheckError(runtimeErr.Err)
+		}
+		return errorCode, sanitizeAWDCheckError(runtimeErr)
 	}
-
-	return &http.Client{
-		Transport:     transport,
-		CheckRedirect: client.CheckRedirect,
-		Jar:           client.Jar,
-		Timeout:       client.Timeout,
-	}
+	return normalizeAWDCheckError(err, "http_request_failed")
 }
 
 func resolveAWDHTTPDialOverride(accessURL, runtimeDetails string) (string, string) {

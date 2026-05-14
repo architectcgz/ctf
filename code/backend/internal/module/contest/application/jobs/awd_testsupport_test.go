@@ -1,6 +1,9 @@
 package jobs_test
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -49,7 +52,7 @@ func awdServiceIDPtr(contestID, challengeID int64) *int64 {
 }
 
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {
-	return contestjobs.NewAWDRoundUpdater(
+	updater := contestjobs.NewAWDRoundUpdater(
 		contestinfra.NewAWDJobRepository(contestinfra.NewAWDRepository(db)),
 		contestinfra.NewAWDRoundStateStore(redisClient),
 		cfg,
@@ -58,4 +61,13 @@ func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg confi
 		log,
 		contestinfra.NewScoreboardCache(db, redisClient),
 	)
+	setAWDHTTPRuntimeForTest(updater, nil, cfg.CheckerTimeout)
+	return updater
+}
+
+func setAWDHTTPRuntimeForTest(updater *contestjobs.AWDRoundUpdater, client *http.Client, timeout time.Duration) {
+	if updater == nil {
+		return
+	}
+	updater.SetHTTPRuntime(contestinfra.NewAWDHTTPRuntimeAdapter(client, timeout))
 }

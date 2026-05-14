@@ -1,12 +1,11 @@
 package jobs
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
+
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
@@ -58,34 +57,23 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
 	}
 
-	reqCtx, cancel := context.WithTimeout(ctx, normalizedAWDCheckerTimeout(u.cfg.CheckerTimeout))
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(reqCtx, action.Method, targetURL, bytes.NewBufferString(bodyValue))
-	if err != nil {
-		summary.ErrorCode = "http_request_failed"
-		summary.Error = sanitizeAWDCheckError(err)
-		return awdHTTPCheckerActionRuntimeResult{summary: summary}
-	}
+	headers := make(map[string]string, len(action.Headers))
 	for key, value := range action.Headers {
-		req.Header.Set(key, renderAWDHTTPCheckerTemplate(value, templateData))
+		headers[key] = renderAWDHTTPCheckerTemplate(value, templateData)
 	}
 
-	client := u.httpClientForAWDTarget(accessURL, runtimeDetails)
-
-	resp, err := client.Do(req)
+	resp, err := u.executeAWDHTTPRequest(ctx, contestports.AWDHTTPRequest{
+		AccessURL:      accessURL,
+		RuntimeDetails: runtimeDetails,
+		URL:            targetURL,
+		Method:         action.Method,
+		Headers:        headers,
+		Body:           bodyValue,
+		ReadBody:       true,
+		Timeout:        u.cfg.CheckerTimeout,
+	})
 	if err != nil {
-		summary.ErrorCode = "http_request_failed"
-		summary.Error = sanitizeAWDCheckError(err)
-		return awdHTTPCheckerActionRuntimeResult{summary: summary}
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		summary.StatusCode = resp.StatusCode
-		summary.ErrorCode = "http_response_read_failed"
-		summary.Error = sanitizeAWDCheckError(readErr)
+		summary.ErrorCode, summary.Error = normalizeAWDHTTPRuntimeError(err)
 		return awdHTTPCheckerActionRuntimeResult{summary: summary}
 	}
 
@@ -93,17 +81,17 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 	if resp.StatusCode != action.ExpectedStatus {
 		summary.ErrorCode = "unexpected_http_status"
 		summary.Error = fmt.Sprintf("unexpected_http_status:%d", resp.StatusCode)
-		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: resp.Body}
 	}
 
-	if len(expectedSubstrings) > 0 && !containsAnyAWDExpectedSubstring(string(bodyBytes), expectedSubstrings) {
+	if len(expectedSubstrings) > 0 && !containsAnyAWDExpectedSubstring(resp.Body, expectedSubstrings) {
 		summary.ErrorCode = "flag_mismatch"
 		summary.Error = "flag_mismatch"
-		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: resp.Body}
 	}
 
 	summary.Healthy = true
-	return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: string(bodyBytes)}
+	return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: resp.Body}
 }
 
 func containsAnyAWDExpectedSubstring(body string, expectedSubstrings []string) bool {
