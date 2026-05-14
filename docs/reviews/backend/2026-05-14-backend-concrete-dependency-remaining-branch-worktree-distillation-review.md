@@ -1,9 +1,10 @@
-# Phase5 Remaining Branch And Worktree Distillation Review
+# 后端 Concrete 依赖收口批次遗留分支与 Worktree 提炼评审
 
 ## Review Target
 
 - 仓库：`/home/azhi/workspace/projects/ctf`
 - 主分支：`main`
+- 范围说明：这里评审的是 2026-05-12 到 2026-05-14 这一批“后端 concrete 依赖收口”遗留分支；历史分支名里仍带有 `phase5`，但正文不再直接把它当作对外说明名词。
 - 清理对象：
   - `challenge-image-command-not-found-contract-phase5-slice33`
   - `challenge-writeup-not-found-contract-phase5-slice28`
@@ -11,7 +12,7 @@
   - `challenge-transaction-heavy-concrete-surface-phase5-slice36`
   - `codex/phase5-slice39`
   - `codex/contest-awd-http-runtime-slice40`
-- 评审目的：判断剩余 `phase5` 分支与 worktree 是否还有未回到 `main` 的有效代码，还是已经被主干吸收或被主干更新版覆盖。
+- 评审目的：判断这批后端 concrete 依赖收口遗留分支与 worktree 是否还有未回到 `main` 的有效代码，还是已经被主干吸收或被主干更新版覆盖。
 
 ## Classification Check
 
@@ -22,7 +23,7 @@
 ## Gate Verdict
 
 - `pass`
-- 结论：剩余 `phase5` worktree 没有需要继续人工抄回 `main` 的代码；`slice40` 分支也不应再做代码层 cherry-pick，而应保留当前主干实现并只回收分支历史。
+- 结论：这批遗留 worktree 没有需要继续人工抄回 `main` 的代码；`slice40` 分支也不应再做代码层 cherry-pick，而应保留当前主干实现并只回收分支历史。
 
 ## Findings
 
@@ -88,7 +89,7 @@
 - 无需要继续修改 `main` 代码的 blocker。
 - 需要执行的清理动作：
   - 为 `codex/contest-awd-http-runtime-slice40` 回收历史而不是强行 cherry-pick tree。
-  - 删除所有剩余 `phase5` worktree 和对应本地分支，避免旧分支继续制造“看起来未合并”的噪音。
+  - 删除所有这批收口遗留 worktree 和对应本地分支，避免旧分支继续制造“看起来未合并”的噪音。
 
 ## Required Re-validation
 
@@ -106,4 +107,4 @@ cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh
 ## Touched Known-Debt Status
 
 - 本次只清理历史分支与 worktree，不新增 touched surface。
-- `slice33` / `slice28` / `slice38` / `slice40` 对应的 phase5 debt 已经由当前 `main` 的实现继续收口；剩余差异不是“主干漏掉了代码”，而是“旧 worktree 落后于主干”。
+- `slice33` / `slice28` / `slice38` / `slice40` 对应的这批 concrete 依赖收口债务，已经由当前 `main` 的实现继续收口；剩余差异不是“主干漏掉了代码”，而是“旧 worktree 落后于主干”。
