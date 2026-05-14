@@ -7,23 +7,23 @@ import (
 	"strings"
 	"testing"
 
-	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
+	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 )
 
 func TestQueryServiceImplementsTeachingQuery(t *testing.T) {
-	var _ teachingreadmodelqueries.Service = (*teachingreadmodelqueries.QueryService)(nil)
-	var _ teachingreadmodelqueries.OverviewService = (*teachingreadmodelqueries.OverviewQueryService)(nil)
-	var _ teachingreadmodelqueries.ClassInsightService = (*teachingreadmodelqueries.ClassInsightQueryService)(nil)
-	var _ teachingreadmodelqueries.StudentReviewService = (*teachingreadmodelqueries.StudentReviewQueryService)(nil)
+	var _ teachingqueryqueries.Service = (*teachingqueryqueries.QueryService)(nil)
+	var _ teachingqueryqueries.OverviewService = (*teachingqueryqueries.OverviewQueryService)(nil)
+	var _ teachingqueryqueries.ClassInsightService = (*teachingqueryqueries.ClassInsightQueryService)(nil)
+	var _ teachingqueryqueries.StudentReviewService = (*teachingqueryqueries.StudentReviewQueryService)(nil)
 }
 
 func TestHandlerDependsOnTeachingQuery(t *testing.T) {
 	t.Parallel()
 
 	handlerType := reflect.TypeOf(NewHandler)
-	serviceType := reflect.TypeOf((*teachingreadmodelqueries.Service)(nil)).Elem()
-	overviewType := reflect.TypeOf((*teachingreadmodelqueries.OverviewService)(nil)).Elem()
-	classInsightType := reflect.TypeOf((*teachingreadmodelqueries.ClassInsightService)(nil)).Elem()
+	serviceType := reflect.TypeOf((*teachingqueryqueries.Service)(nil)).Elem()
+	overviewType := reflect.TypeOf((*teachingqueryqueries.OverviewService)(nil)).Elem()
+	classInsightType := reflect.TypeOf((*teachingqueryqueries.ClassInsightService)(nil)).Elem()
 
 	if got := handlerType.NumIn(); got != 4 {
 		t.Fatalf("NewHandler() parameter count = %d, want 4", got)
@@ -40,8 +40,8 @@ func TestHandlerDependsOnTeachingQuery(t *testing.T) {
 	if got := handlerType.In(3).Name(); got != "StudentReviewService" {
 		t.Fatalf("NewHandler() fourth parameter name = %s, want StudentReviewService", got)
 	}
-	if got := handlerType.In(3).PkgPath(); got != "ctf-platform/internal/module/teaching_readmodel/application/queries" {
-		t.Fatalf("NewHandler() fourth parameter pkg = %s, want teaching_readmodel/application/queries", got)
+	if got := handlerType.In(3).PkgPath(); got != "ctf-platform/internal/module/teaching_query/application/queries" {
+		t.Fatalf("NewHandler() fourth parameter pkg = %s, want teaching_query/application/queries", got)
 	}
 
 	field, ok := reflect.TypeOf(Handler{}).FieldByName("service")
@@ -75,8 +75,8 @@ func TestHandlerDependsOnTeachingQuery(t *testing.T) {
 	if got := studentReviewField.Type.Name(); got != "StudentReviewService" {
 		t.Fatalf("Handler.studentReviewService name = %s, want StudentReviewService", got)
 	}
-	if got := studentReviewField.Type.PkgPath(); got != "ctf-platform/internal/module/teaching_readmodel/application/queries" {
-		t.Fatalf("Handler.studentReviewService pkg = %s, want teaching_readmodel/application/queries", got)
+	if got := studentReviewField.Type.PkgPath(); got != "ctf-platform/internal/module/teaching_query/application/queries" {
+		t.Fatalf("Handler.studentReviewService pkg = %s, want teaching_query/application/queries", got)
 	}
 }
 

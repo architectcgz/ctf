@@ -80,7 +80,7 @@
 
 - 教师复盘与评估层
   - 负责：AWD 赛事复盘、学生证据阅读、报告和归档导出
-  - owner：`assessment` + `teaching_readmodel`
+  - owner：`assessment` + `teaching_query`
 
 ### 3.2 事实源与所有权
 
@@ -92,7 +92,7 @@
 - 攻击与流量事实源：`awd_attack_logs`、`awd_traffic_events`
 - 防守工作区事实源：`awd_defense_workspaces`
 - 教师赛事复盘事实源：`TeacherAWDReviewService`
-- 学生证据与攻击会话事实源：`teaching_readmodel`
+- 学生证据与攻击会话事实源：`teaching_query`
 
 ## 4. 关键模型与不变量
 

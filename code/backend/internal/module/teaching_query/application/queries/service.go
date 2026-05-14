@@ -8,26 +8,26 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
 type QueryService struct {
-	repo       teachingReadModelQueryRepository
+	repo       teachingQueryRepository
 	pagination config.PaginationConfig
 }
 
-type teachingReadModelQueryRepository interface {
-	readmodelports.TeachingUserLookupRepository
-	readmodelports.TeachingClassQueryRepository
-	readmodelports.TeachingStudentDirectoryRepository
+type teachingQueryRepository interface {
+	queryports.TeachingUserLookupRepository
+	queryports.TeachingClassQueryRepository
+	queryports.TeachingStudentDirectoryRepository
 }
 
 var _ Service = (*QueryService)(nil)
 
 func NewQueryService(
-	repo teachingReadModelQueryRepository,
+	repo teachingQueryRepository,
 	pagination config.PaginationConfig,
 ) *QueryService {
 	return &QueryService{
@@ -65,7 +65,7 @@ func (s *QueryService) ListClasses(
 		if err != nil {
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
-		return commonmapper.NonNilSlice(teachingReadmodelMapper.ToClassItems(items)), total, page, size, nil
+		return commonmapper.NonNilSlice(teachingQueryMapper.ToClassItems(items)), total, page, size, nil
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
@@ -166,7 +166,7 @@ func (s *QueryService) ListStudents(
 	if err != nil {
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
-	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), total, page, size, nil
+	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), total, page, size, nil
 }
 
 func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirectoryQuery) (int, int) {
@@ -215,11 +215,11 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(items)), nil
+	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), nil
 }
 
 type classAccessRepository interface {
-	readmodelports.TeachingUserLookupRepository
+	queryports.TeachingUserLookupRepository
 }
 
 func ensureClassAccess(ctx context.Context, repo classAccessRepository, requesterID int64, requesterRole, className string) error {

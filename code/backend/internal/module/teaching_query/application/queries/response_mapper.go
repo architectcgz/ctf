@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/dto"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -14,14 +14,14 @@ import (
 // goverter:extend MapTeacherRecommendationItems
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :queries
-type teachingReadmodelResponseMapper interface {
-	ToClassItems(source []readmodelports.ClassItem) []dto.TeacherClassItem
-	ToStudentItems(source []readmodelports.StudentItem) []dto.TeacherStudentItem
-	ToClassSummary(source readmodelports.ClassSummary) dto.TeacherClassSummaryResp
-	ToClassSummaryPtr(source *readmodelports.ClassSummary) *dto.TeacherClassSummaryResp
-	ToClassTrendResp(source readmodelports.ClassTrend) dto.TeacherClassTrendResp
-	ToClassTrendRespPtr(source *readmodelports.ClassTrend) *dto.TeacherClassTrendResp
-	ToTimelineEvents(source []readmodelports.TimelineEventRecord) []dto.TimelineEvent
+type teachingQueryResponseMapper interface {
+	ToClassItems(source []queryports.ClassItem) []dto.TeacherClassItem
+	ToStudentItems(source []queryports.StudentItem) []dto.TeacherStudentItem
+	ToClassSummary(source queryports.ClassSummary) dto.TeacherClassSummaryResp
+	ToClassSummaryPtr(source *queryports.ClassSummary) *dto.TeacherClassSummaryResp
+	ToClassTrendResp(source queryports.ClassTrend) dto.TeacherClassTrendResp
+	ToClassTrendRespPtr(source *queryports.ClassTrend) *dto.TeacherClassTrendResp
+	ToTimelineEvents(source []queryports.TimelineEventRecord) []dto.TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
 	ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
 	ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
@@ -32,7 +32,7 @@ type teachingReadmodelResponseMapper interface {
 	ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem
 }
 
-var teachingReadmodelMapper teachingReadmodelResponseMapper
+var teachingQueryMapper teachingQueryResponseMapper
 
 func CopyTime(value time.Time) time.Time {
 	return value
@@ -44,7 +44,7 @@ func MapTeacherRecommendationItems(source []*dto.ChallengeRecommendation) []dto.
 		if item == nil {
 			continue
 		}
-		items = append(items, teachingReadmodelMapper.ToTeacherRecommendationItem(*item))
+		items = append(items, teachingQueryMapper.ToTeacherRecommendationItem(*item))
 	}
 	return items
 }

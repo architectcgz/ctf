@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -56,8 +56,8 @@ func (r *Repository) CountClasses(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]readmodelports.ClassItem, error) {
-	items := make([]readmodelports.ClassItem, 0)
+func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error) {
+	items := make([]queryports.ClassItem, 0)
 	query := r.db.WithContext(ctx).Model(&model.User{}).
 		Select("class_name AS name, COUNT(*) AS student_count").
 		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
@@ -187,8 +187,8 @@ func (r *Repository) ListStudents(
 	className, keyword, studentNo, sortKey, sortOrder string,
 	since time.Time,
 	offset, limit int,
-) ([]readmodelports.StudentItem, int64, error) {
-	items := make([]readmodelports.StudentItem, 0)
+) ([]queryports.StudentItem, int64, error) {
+	items := make([]queryports.StudentItem, 0)
 	var total int64
 	countQuery := applyStudentFilters(
 		r.db.WithContext(ctx).Table("users AS u").Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent),
@@ -217,7 +217,7 @@ func (r *Repository) ListStudents(
 	return items, total, nil
 }
 
-func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error) {
+func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]queryports.StudentItem, error) {
 	items, _, err := r.ListStudents(ctx, className, keyword, studentNo, "solved_count", "desc", since, 0, 0)
 	if err != nil {
 		return nil, err
@@ -230,13 +230,13 @@ func (r *Repository) ListStudentsByClasses(
 	classNames []string,
 	keyword, studentNo string,
 	since time.Time,
-) ([]readmodelports.StudentItem, error) {
+) ([]queryports.StudentItem, error) {
 	normalized := normalizeClassScope(classNames)
 	if len(normalized) == 0 {
-		return []readmodelports.StudentItem{}, nil
+		return []queryports.StudentItem{}, nil
 	}
 
-	items := make([]readmodelports.StudentItem, 0)
+	items := make([]queryports.StudentItem, 0)
 	query := applyStudentFilters(
 		applyStudentScopeFilter(r.listStudentsBaseQuery(ctx, since), normalized),
 		"",
@@ -762,8 +762,8 @@ func (r *Repository) CountSolvedChallenges(ctx context.Context, userID int64) (i
 	return count, nil
 }
 
-func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
-	rows := make([]readmodelports.ProgressRow, 0)
+func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
+	rows := make([]queryports.ProgressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.category AS key,
@@ -783,8 +783,8 @@ func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]r
 	return rows, nil
 }
 
-func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
-	rows := make([]readmodelports.ProgressRow, 0)
+func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
+	rows := make([]queryports.ProgressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.difficulty AS key,
@@ -812,7 +812,7 @@ func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([
 	return rows, nil
 }
 
-func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]readmodelports.TimelineEventRecord, error) {
+func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -884,7 +884,7 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	})
 
 	if offset >= len(rows) {
-		return []readmodelports.TimelineEventRecord{}, nil
+		return []queryports.TimelineEventRecord{}, nil
 	}
 	end := offset + limit
 	if end > len(rows) {
@@ -892,9 +892,9 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	}
 	rows = rows[offset:end]
 
-	events := make([]readmodelports.TimelineEventRecord, len(rows))
+	events := make([]queryports.TimelineEventRecord, len(rows))
 	for i, row := range rows {
-		events[i] = readmodelports.TimelineEventRecord{
+		events[i] = queryports.TimelineEventRecord{
 			Type:        row.Type,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
@@ -907,8 +907,8 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	return events, nil
 }
 
-func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]readmodelports.EvidenceEventRecord, error) {
-	events := make([]readmodelports.EvidenceEventRecord, 0)
+func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]queryports.EvidenceEventRecord, error) {
+	events := make([]queryports.EvidenceEventRecord, 0)
 
 	accessRows := make([]struct {
 		ChallengeID int64     `gorm:"column:challenge_id"`
@@ -931,7 +931,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 		return nil, fmt.Errorf("get student evidence access rows: %w", err)
 	}
 	for _, row := range accessRows {
-		events = append(events, toReadmodelEvidenceRecord(evidence.NewInstanceAccessEvent(evidence.InstanceAccessInput{
+		events = append(events, toEvidenceRecord(evidence.NewInstanceAccessEvent(evidence.InstanceAccessInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
@@ -962,7 +962,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 		return nil, fmt.Errorf("get student evidence proxy rows: %w", err)
 	}
 	for _, row := range proxyRows {
-		events = append(events, toReadmodelEvidenceRecord(evidence.NewProxyRequestEvent(evidence.ProxyRequestInput{
+		events = append(events, toEvidenceRecord(evidence.NewProxyRequestEvent(evidence.ProxyRequestInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
@@ -997,7 +997,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 		return nil, fmt.Errorf("get student evidence submission rows: %w", err)
 	}
 	for _, row := range submissionRows {
-		events = append(events, toReadmodelEvidenceRecord(evidence.NewChallengeSubmissionEvent(evidence.ChallengeSubmissionInput{
+		events = append(events, toEvidenceRecord(evidence.NewChallengeSubmissionEvent(evidence.ChallengeSubmissionInput{
 			UserID:      userID,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
@@ -1031,7 +1031,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 		return nil, fmt.Errorf("get student evidence manual review rows: %w", err)
 	}
 	for _, row := range manualReviewRows {
-		events = append(events, toReadmodelEvidenceRecord(evidence.NewManualReviewEvent(evidence.ManualReviewInput{
+		events = append(events, toEvidenceRecord(evidence.NewManualReviewEvent(evidence.ManualReviewInput{
 			UserID:       userID,
 			ChallengeID:  row.ChallengeID,
 			Title:        row.Title,
@@ -1070,7 +1070,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 			return nil, fmt.Errorf("get student evidence writeup rows: %w", err)
 		}
 		for _, row := range writeupRows {
-			events = append(events, toReadmodelEvidenceRecord(evidence.NewWriteupEvent(evidence.WriteupInput{
+			events = append(events, toEvidenceRecord(evidence.NewWriteupEvent(evidence.WriteupInput{
 				UserID:           userID,
 				ChallengeID:      row.ChallengeID,
 				Title:            row.Title,
@@ -1135,7 +1135,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 			if row.SubmittedByUserID != nil && *row.SubmittedByUserID == userID {
 				scope = "student"
 			}
-			events = append(events, toReadmodelEvidenceRecord(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
+			events = append(events, toEvidenceRecord(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
 				UserID:            userID,
 				TeamID:            &teamID,
 				ContestID:         &contestID,
@@ -1200,7 +1200,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 			roundID := row.RoundID
 			serviceID := row.ServiceID
 			victimTeamID := row.VictimTeamID
-			events = append(events, toReadmodelEvidenceRecord(evidence.NewAWDTrafficEvent(evidence.AWDTrafficInput{
+			events = append(events, toEvidenceRecord(evidence.NewAWDTrafficEvent(evidence.AWDTrafficInput{
 				UserID:            userID,
 				TeamID:            &teamID,
 				ContestID:         &contestID,
@@ -1312,13 +1312,13 @@ func (r *Repository) listStudentAuditTimelineRows(ctx context.Context, userID in
 	return rows, nil
 }
 
-func (r *Repository) GetClassSummary(ctx context.Context, className string, since time.Time) (*readmodelports.ClassSummary, error) {
+func (r *Repository) GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error) {
 	studentCount, err := r.CountStudentsByClass(ctx, className)
 	if err != nil {
 		return nil, err
 	}
 
-	summary := &readmodelports.ClassSummary{
+	summary := &queryports.ClassSummary{
 		ClassName:    className,
 		StudentCount: studentCount,
 	}
@@ -1346,7 +1346,7 @@ func (r *Repository) GetClassSummary(ctx context.Context, className string, sinc
 	return summary, nil
 }
 
-func (r *Repository) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*readmodelports.ClassTrend, error) {
+func (r *Repository) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error) {
 	if days <= 0 {
 		days = 7
 	}
@@ -1378,11 +1378,11 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		return nil, fmt.Errorf("get class trend: %w", err)
 	}
 
-	points := make([]readmodelports.ClassTrendPoint, days)
+	points := make([]queryports.ClassTrendPoint, days)
 	indexByDate := make(map[string]int, days)
 	for i := 0; i < days; i++ {
 		date := since.AddDate(0, 0, i).Format("2006-01-02")
-		points[i] = readmodelports.ClassTrendPoint{Date: date}
+		points[i] = queryports.ClassTrendPoint{Date: date}
 		indexByDate[date] = i
 	}
 
@@ -1409,7 +1409,7 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		points[i].ActiveStudentCount = int64(len(activeUsersByDate[points[i].Date]))
 	}
 
-	return &readmodelports.ClassTrend{
+	return &queryports.ClassTrend{
 		ClassName: className,
 		Points:    points,
 	}, nil
@@ -1420,13 +1420,13 @@ func (r *Repository) GetOverviewTrend(
 	classNames []string,
 	since time.Time,
 	days int,
-) (*readmodelports.OverviewTrend, error) {
+) (*queryports.OverviewTrend, error) {
 	normalized := normalizeClassScope(classNames)
 	if days <= 0 {
 		days = 7
 	}
 	if len(normalized) == 0 {
-		return &readmodelports.OverviewTrend{Points: []readmodelports.OverviewTrendPoint{}}, nil
+		return &queryports.OverviewTrend{Points: []queryports.OverviewTrendPoint{}}, nil
 	}
 
 	type eventRow struct {
@@ -1456,11 +1456,11 @@ func (r *Repository) GetOverviewTrend(
 		return nil, fmt.Errorf("get overview trend: %w", err)
 	}
 
-	points := make([]readmodelports.OverviewTrendPoint, days)
+	points := make([]queryports.OverviewTrendPoint, days)
 	indexByDate := make(map[string]int, days)
 	for i := 0; i < days; i++ {
 		date := since.AddDate(0, 0, i).Format("2006-01-02")
-		points[i] = readmodelports.OverviewTrendPoint{Date: date}
+		points[i] = queryports.OverviewTrendPoint{Date: date}
 		indexByDate[date] = i
 	}
 
@@ -1487,7 +1487,7 @@ func (r *Repository) GetOverviewTrend(
 		points[i].ActiveStudentCount = int64(len(activeUsersByDate[points[i].Date]))
 	}
 
-	return &readmodelports.OverviewTrend{Points: points}, nil
+	return &queryports.OverviewTrend{Points: points}, nil
 }
 
 type timelineEventRow struct {
@@ -1575,8 +1575,8 @@ func (r *Repository) getRecentEventCountByClass(ctx context.Context, className s
 	return result.Count, nil
 }
 
-func toReadmodelEvidenceRecord(event evidence.Event) readmodelports.EvidenceEventRecord {
-	return readmodelports.EvidenceEventRecord{
+func toEvidenceRecord(event evidence.Event) queryports.EvidenceEventRecord {
+	return queryports.EvidenceEventRecord{
 		Type:         event.Type,
 		Source:       event.Source,
 		Stage:        event.Stage,

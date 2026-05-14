@@ -43,7 +43,8 @@ import (
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
+	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
+	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -94,9 +95,9 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/awd/reviews/:id", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/archive", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/report", "internal/module/assessment/api/http")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/overview", "internal/module/teaching_readmodel/api/http")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/evidence", "internal/module/teaching_readmodel/api/http")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/attack-sessions", "internal/module/teaching_readmodel/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/overview", "internal/module/teaching_query/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/evidence", "internal/module/teaching_query/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/attack-sessions", "internal/module/teaching_query/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/writeup-submissions", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/challenges/:id/writeup-submissions/me", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/authoring/challenges/:id/writeup/recommend", "internal/module/challenge/api/http")
@@ -293,8 +294,8 @@ func TestOpsModuleContractsCompile(t *testing.T) {
 	var _ auditlog.Recorder = (*opscmd.AuditService)(nil)
 }
 
-func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
-	var _ teachingreadmodelqueries.Service = (*teachingreadmodelqueries.QueryService)(nil)
+func TestTeachingQueryModuleContractsCompile(t *testing.T) {
+	var _ teachingqueryqueries.Service = (*teachingqueryqueries.QueryService)(nil)
 }
 
 func TestCompositionModulesExposeContracts(t *testing.T) {
@@ -317,7 +318,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf(&opshttp.DashboardHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "NotificationHandler", reflect.TypeOf(&opshttp.NotificationHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "RiskHandler", reflect.TypeOf(&opshttp.RiskHandler{}))
-	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodelqueries.Service)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.TeachingQueryModule{}), "Handler", reflect.TypeOf(&teachingqueryhttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "Catalog", reflect.TypeOf((*challengecontracts.ChallengeContract)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagValidator", reflect.TypeOf((*challengecontracts.FlagValidator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagHandler", reflect.TypeOf(&challengehttp.FlagHandler{}))
@@ -967,8 +968,8 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"practiceports.PracticeInstanceLookupRepository",
-		"practiceports.RuntimeInstanceService",
+		"challengeports.ImageRuntime",
+		"opsports.RuntimeQuery",
 		"contestports.AWDContainerFileWriter",
 	}
 	for _, marker := range expected {
@@ -1047,33 +1048,33 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	}
 }
 
-func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
+func TestTeachingQueryModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "teaching_readmodel_module.go"))
+	content, err := os.ReadFile(filepath.Join("composition", "teaching_query_module.go"))
 	if err != nil {
-		t.Fatalf("read teaching_readmodel_module.go: %v", err)
+		t.Fatalf("read teaching_query_module.go: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
-		"type TeachingReadmodelModule = readmodelruntime.Module",
-		"readmodelruntime.Build(",
-		"readmodelruntime.Deps{",
+		"type TeachingQueryModule = teachingqueryruntime.Module",
+		"teachingqueryruntime.Build(",
+		"teachingqueryruntime.Deps{",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("teaching readmodel composition should declare typed deps marker %s", marker)
+			t.Fatalf("teaching query composition should declare typed deps marker %s", marker)
 		}
 	}
 
 	blocked := []string{
 		"type teachingReadmodelModuleDeps struct",
-		"readmodelinfra.NewRepository(",
+		"queryinfra.NewRepository(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("teaching readmodel composition should not keep wiring marker %s", marker)
+			t.Fatalf("teaching query composition should not keep wiring marker %s", marker)
 		}
 	}
 }

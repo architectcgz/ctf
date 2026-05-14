@@ -31,14 +31,14 @@ type adminRouteDeps struct {
 }
 
 type userRouteDeps struct {
-	auditRecorder     auditlog.Recorder
-	auditLogger       *zap.Logger
-	assessment        *composition.AssessmentModule
-	challenge         *composition.ChallengeModule
-	contest           *composition.ContestModule
-	instance          *composition.InstanceModule
-	practice          *composition.PracticeModule
-	teachingReadmodel *composition.TeachingReadmodelModule
+	auditRecorder auditlog.Recorder
+	auditLogger   *zap.Logger
+	assessment    *composition.AssessmentModule
+	challenge     *composition.ChallengeModule
+	contest       *composition.ContestModule
+	instance      *composition.InstanceModule
+	practice      *composition.PracticeModule
+	teachingQuery *composition.TeachingQueryModule
 }
 
 type challengeLookup interface {
@@ -848,13 +848,13 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
 
-	teacherOrAbove.GET("/overview", deps.teachingReadmodel.Handler.GetOverview)
-	teacherOrAbove.GET("/classes", deps.teachingReadmodel.Handler.ListClasses)
-	teacherOrAbove.GET("/students", deps.teachingReadmodel.Handler.ListStudents)
-	teacherOrAbove.GET("/classes/:name/students", deps.teachingReadmodel.Handler.ListClassStudents)
-	teacherOrAbove.GET("/classes/:name/summary", deps.teachingReadmodel.Handler.GetClassSummary)
-	teacherOrAbove.GET("/classes/:name/trend", deps.teachingReadmodel.Handler.GetClassTrend)
-	teacherOrAbove.GET("/classes/:name/review", deps.teachingReadmodel.Handler.GetClassReview)
+	teacherOrAbove.GET("/overview", deps.teachingQuery.Handler.GetOverview)
+	teacherOrAbove.GET("/classes", deps.teachingQuery.Handler.ListClasses)
+	teacherOrAbove.GET("/students", deps.teachingQuery.Handler.ListStudents)
+	teacherOrAbove.GET("/classes/:name/students", deps.teachingQuery.Handler.ListClassStudents)
+	teacherOrAbove.GET("/classes/:name/summary", deps.teachingQuery.Handler.GetClassSummary)
+	teacherOrAbove.GET("/classes/:name/trend", deps.teachingQuery.Handler.GetClassTrend)
+	teacherOrAbove.GET("/classes/:name/review", deps.teachingQuery.Handler.GetClassReview)
 	teacherOrAbove.GET("/instances", deps.instance.Handler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
@@ -864,12 +864,12 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.instance.Handler.DestroyTeacherInstance,
 	)
-	teacherOrAbove.GET("/students/:id/progress", deps.teachingReadmodel.Handler.GetStudentProgress)
+	teacherOrAbove.GET("/students/:id/progress", deps.teachingQuery.Handler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", deps.assessment.Handler.GetStudentSkillProfile)
-	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
-	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
-	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
-	teacherOrAbove.GET("/students/:id/attack-sessions", deps.teachingReadmodel.Handler.GetStudentAttackSessions)
+	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingQuery.Handler.GetStudentRecommendations)
+	teacherOrAbove.GET("/students/:id/timeline", deps.teachingQuery.Handler.GetStudentTimeline)
+	teacherOrAbove.GET("/students/:id/evidence", deps.teachingQuery.Handler.GetStudentEvidence)
+	teacherOrAbove.GET("/students/:id/attack-sessions", deps.teachingQuery.Handler.GetStudentAttackSessions)
 	teacherOrAbove.GET("/students/:id/review-archive", deps.assessment.ReportHandler.GetStudentReviewArchive)
 	teacherOrAbove.POST("/students/:id/review-archive/export",
 		audit(middleware.AuditOptions{

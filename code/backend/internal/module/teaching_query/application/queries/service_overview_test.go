@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -14,11 +14,11 @@ import (
 type overviewRepoStub struct {
 	findUserByIDFn          func(ctx context.Context, userID int64) (*model.User, error)
 	countStudentsByClassFn  func(ctx context.Context, className string) (int64, error)
-	listClassesFn           func(ctx context.Context, offset, limit int) ([]readmodelports.ClassItem, error)
-	listStudentsByClassFn   func(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error)
-	listStudentsByClassesFn func(ctx context.Context, classNames []string, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error)
-	getClassSummaryFn       func(ctx context.Context, className string, since time.Time) (*readmodelports.ClassSummary, error)
-	getOverviewTrendFn      func(ctx context.Context, classNames []string, since time.Time, days int) (*readmodelports.OverviewTrend, error)
+	listClassesFn           func(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error)
+	listStudentsByClassFn   func(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]queryports.StudentItem, error)
+	listStudentsByClassesFn func(ctx context.Context, classNames []string, keyword, studentNo string, since time.Time) ([]queryports.StudentItem, error)
+	getClassSummaryFn       func(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
+	getOverviewTrendFn      func(ctx context.Context, classNames []string, since time.Time, days int) (*queryports.OverviewTrend, error)
 }
 
 func (s *overviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
@@ -39,11 +39,11 @@ func (s *overviewRepoStub) CountClasses(context.Context) (int64, error) {
 	return 0, nil
 }
 
-func (s *overviewRepoStub) ListClasses(ctx context.Context, offset, limit int) ([]readmodelports.ClassItem, error) {
+func (s *overviewRepoStub) ListClasses(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error) {
 	if s.listClassesFn != nil {
 		return s.listClassesFn(ctx, offset, limit)
 	}
-	return []readmodelports.ClassItem{}, nil
+	return []queryports.ClassItem{}, nil
 }
 
 func (s *overviewRepoStub) ListStudents(
@@ -56,19 +56,19 @@ func (s *overviewRepoStub) ListStudents(
 	time.Time,
 	int,
 	int,
-) ([]readmodelports.StudentItem, int64, error) {
-	return []readmodelports.StudentItem{}, 0, nil
+) ([]queryports.StudentItem, int64, error) {
+	return []queryports.StudentItem{}, 0, nil
 }
 
 func (s *overviewRepoStub) ListStudentsByClass(
 	ctx context.Context,
 	className, keyword, studentNo string,
 	since time.Time,
-) ([]readmodelports.StudentItem, error) {
+) ([]queryports.StudentItem, error) {
 	if s.listStudentsByClassFn != nil {
 		return s.listStudentsByClassFn(ctx, className, keyword, studentNo, since)
 	}
-	return []readmodelports.StudentItem{}, nil
+	return []queryports.StudentItem{}, nil
 }
 
 func (s *overviewRepoStub) CountPublishedChallenges(context.Context) (int64, error) {
@@ -79,35 +79,35 @@ func (s *overviewRepoStub) CountSolvedChallenges(context.Context, int64) (int64,
 	return 0, nil
 }
 
-func (s *overviewRepoStub) GetCategoryProgress(context.Context, int64) ([]readmodelports.ProgressRow, error) {
-	return []readmodelports.ProgressRow{}, nil
+func (s *overviewRepoStub) GetCategoryProgress(context.Context, int64) ([]queryports.ProgressRow, error) {
+	return []queryports.ProgressRow{}, nil
 }
 
-func (s *overviewRepoStub) GetDifficultyProgress(context.Context, int64) ([]readmodelports.ProgressRow, error) {
-	return []readmodelports.ProgressRow{}, nil
+func (s *overviewRepoStub) GetDifficultyProgress(context.Context, int64) ([]queryports.ProgressRow, error) {
+	return []queryports.ProgressRow{}, nil
 }
 
-func (s *overviewRepoStub) GetStudentTimeline(context.Context, int64, int, int) ([]readmodelports.TimelineEventRecord, error) {
-	return []readmodelports.TimelineEventRecord{}, nil
+func (s *overviewRepoStub) GetStudentTimeline(context.Context, int64, int, int) ([]queryports.TimelineEventRecord, error) {
+	return []queryports.TimelineEventRecord{}, nil
 }
 
-func (s *overviewRepoStub) GetStudentEvidence(context.Context, int64, evidence.Query) ([]readmodelports.EvidenceEventRecord, error) {
-	return []readmodelports.EvidenceEventRecord{}, nil
+func (s *overviewRepoStub) GetStudentEvidence(context.Context, int64, evidence.Query) ([]queryports.EvidenceEventRecord, error) {
+	return []queryports.EvidenceEventRecord{}, nil
 }
 
 func (s *overviewRepoStub) GetClassSummary(
 	ctx context.Context,
 	className string,
 	since time.Time,
-) (*readmodelports.ClassSummary, error) {
+) (*queryports.ClassSummary, error) {
 	if s.getClassSummaryFn != nil {
 		return s.getClassSummaryFn(ctx, className, since)
 	}
 	return nil, nil
 }
 
-func (s *overviewRepoStub) GetClassTrend(context.Context, string, time.Time, int) (*readmodelports.ClassTrend, error) {
-	return &readmodelports.ClassTrend{}, nil
+func (s *overviewRepoStub) GetClassTrend(context.Context, string, time.Time, int) (*queryports.ClassTrend, error) {
+	return &queryports.ClassTrend{}, nil
 }
 
 func (s *overviewRepoStub) ListClassTeachingFactSnapshots(
@@ -123,11 +123,11 @@ func (s *overviewRepoStub) ListStudentsByClasses(
 	classNames []string,
 	keyword, studentNo string,
 	since time.Time,
-) ([]readmodelports.StudentItem, error) {
+) ([]queryports.StudentItem, error) {
 	if s.listStudentsByClassesFn != nil {
 		return s.listStudentsByClassesFn(ctx, classNames, keyword, studentNo, since)
 	}
-	return []readmodelports.StudentItem{}, nil
+	return []queryports.StudentItem{}, nil
 }
 
 func (s *overviewRepoStub) GetOverviewTrend(
@@ -135,11 +135,11 @@ func (s *overviewRepoStub) GetOverviewTrend(
 	classNames []string,
 	since time.Time,
 	days int,
-) (*readmodelports.OverviewTrend, error) {
+) (*queryports.OverviewTrend, error) {
 	if s.getOverviewTrendFn != nil {
 		return s.getOverviewTrendFn(ctx, classNames, since, days)
 	}
-	return &readmodelports.OverviewTrend{}, nil
+	return &queryports.OverviewTrend{}, nil
 }
 
 func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
@@ -152,13 +152,13 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 		countStudentsByClassFn: func(context.Context, string) (int64, error) {
 			return 2, nil
 		},
-		listStudentsByClassesFn: func(context.Context, []string, string, string, time.Time) ([]readmodelports.StudentItem, error) {
+		listStudentsByClassesFn: func(context.Context, []string, string, string, time.Time) ([]queryports.StudentItem, error) {
 			weakCrypto := "crypto"
 			weakPwn := "pwn"
 			className := "Class A"
 			nameAlice := "Alice"
 			nameBob := "Bob"
-			return []readmodelports.StudentItem{
+			return []queryports.StudentItem{
 				{
 					ID:               1,
 					Username:         "alice",
@@ -181,17 +181,17 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 				},
 			}, nil
 		},
-		listStudentsByClassFn: func(context.Context, string, string, string, time.Time) ([]readmodelports.StudentItem, error) {
+		listStudentsByClassFn: func(context.Context, string, string, string, time.Time) ([]queryports.StudentItem, error) {
 			weakCrypto := "crypto"
 			weakPwn := "pwn"
 			className := "Class A"
-			return []readmodelports.StudentItem{
+			return []queryports.StudentItem{
 				{ID: 1, Username: "alice", ClassName: &className, SolvedCount: 4, TotalScore: 320, RecentEventCount: 0, WeakDimension: &weakCrypto},
 				{ID: 2, Username: "bob", ClassName: &className, SolvedCount: 2, TotalScore: 180, RecentEventCount: 3, WeakDimension: &weakPwn},
 			}, nil
 		},
-		getClassSummaryFn: func(context.Context, string, time.Time) (*readmodelports.ClassSummary, error) {
-			return &readmodelports.ClassSummary{
+		getClassSummaryFn: func(context.Context, string, time.Time) (*queryports.ClassSummary, error) {
+			return &queryports.ClassSummary{
 				ClassName:          "Class A",
 				StudentCount:       2,
 				AverageSolved:      3,
@@ -200,9 +200,9 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 				RecentEventCount:   3,
 			}, nil
 		},
-		getOverviewTrendFn: func(context.Context, []string, time.Time, int) (*readmodelports.OverviewTrend, error) {
-			return &readmodelports.OverviewTrend{
-				Points: []readmodelports.OverviewTrendPoint{
+		getOverviewTrendFn: func(context.Context, []string, time.Time, int) (*queryports.OverviewTrend, error) {
+			return &queryports.OverviewTrend{
+				Points: []queryports.OverviewTrendPoint{
 					{Date: "2026-05-06", ActiveStudentCount: 1, EventCount: 2, SolveCount: 1},
 					{Date: "2026-05-07", ActiveStudentCount: 1, EventCount: 1, SolveCount: 1},
 				},

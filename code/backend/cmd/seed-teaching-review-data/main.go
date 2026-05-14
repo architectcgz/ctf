@@ -23,8 +23,8 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
-	readmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
-	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
+	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -390,14 +390,14 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		cfg.Report,
 		zap.NewNop(),
 	)
-	readmodelRepo := readmodelinfra.NewRepository(db)
-	classInsightService := readmodelqueries.NewClassInsightService(
-		readmodelRepo,
+	queryRepo := queryinfra.NewRepository(db)
+	classInsightService := teachingqueries.NewClassInsightService(
+		queryRepo,
 		recommendationService,
 		zap.NewNop(),
 	)
-	studentReviewService := readmodelqueries.NewStudentReviewService(
-		readmodelRepo,
+	studentReviewService := teachingqueries.NewStudentReviewService(
+		queryRepo,
 		recommendationService,
 	)
 

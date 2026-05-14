@@ -1,4 +1,4 @@
-package teaching_readmodel
+package teaching_query
 
 import (
 	"go/parser"
@@ -15,7 +15,7 @@ func TestRootPackageKeepsNoConcreteGoFiles(t *testing.T) {
 
 	files, err := filepath.Glob("*.go")
 	if err != nil {
-		t.Fatalf("glob teaching_readmodel root files: %v", err)
+		t.Fatalf("glob teaching_query root files: %v", err)
 	}
 
 	nonTestFiles := make([]string, 0, len(files))
@@ -27,7 +27,7 @@ func TestRootPackageKeepsNoConcreteGoFiles(t *testing.T) {
 	}
 
 	if len(nonTestFiles) != 0 {
-		t.Fatalf("teaching_readmodel root package should keep no non-test go files, got %v", nonTestFiles)
+		t.Fatalf("teaching_query root package should keep no non-test go files, got %v", nonTestFiles)
 	}
 }
 
@@ -42,7 +42,7 @@ func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 		if strings.HasSuffix(file, "_test.go") {
 			continue
 		}
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/infrastructure")
 	}
 }
 
@@ -57,8 +57,8 @@ func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 		if strings.HasSuffix(file, "_test.go") {
 			continue
 		}
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/api/http")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/infrastructure")
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 	}
 }
@@ -74,9 +74,9 @@ func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/api/http")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/infrastructure")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_readmodel/application/queries")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/teaching_query/application/queries")
 	}
 }
 
@@ -85,10 +85,10 @@ func TestPortsDoNotDeclareWideRepository(t *testing.T) {
 
 	content, err := os.ReadFile(filepath.Join("ports", "query.go"))
 	if err != nil {
-		t.Fatalf("read teaching_readmodel ports file: %v", err)
+		t.Fatalf("read teaching_query ports file: %v", err)
 	}
 	if strings.Contains(string(content), "type Repository interface") {
-		t.Fatalf("teaching_readmodel ports must not declare the legacy wide Repository interface")
+		t.Fatalf("teaching_query ports must not declare the legacy wide Repository interface")
 	}
 }
 
@@ -104,13 +104,13 @@ func TestInfrastructureDoesNotDependOnDTO(t *testing.T) {
 	}
 }
 
-func TestRuntimeOwnsTeachingReadmodelWiring(t *testing.T) {
+func TestRuntimeOwnsTeachingQueryWiring(t *testing.T) {
 	t.Parallel()
 
 	runtimeFile := filepath.Join("runtime", "module.go")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_readmodel/infrastructure")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_readmodel/application/queries")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_readmodel/api/http")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_query/infrastructure")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_query/application/queries")
+	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/teaching_query/api/http")
 }
 
 func TestRuntimeUsesTypedDeps(t *testing.T) {
@@ -118,13 +118,13 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 
 	content, err := os.ReadFile(filepath.Join("runtime", "module.go"))
 	if err != nil {
-		t.Fatalf("read teaching_readmodel runtime module: %v", err)
+		t.Fatalf("read teaching_query runtime module: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
-		"readmodelports.TeachingClassInsightRepository",
+		"queryports.TeachingClassInsightRepository",
 		"recommendations assessmentcontracts.RecommendationProvider",
 		"buildQueryService(",
 		"buildOverviewService(",
@@ -133,16 +133,16 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("teaching_readmodel runtime should declare typed deps marker %s", marker)
+			t.Fatalf("teaching_query runtime should declare typed deps marker %s", marker)
 		}
 	}
 
 	blocked := []string{
-		"Query   readmodelqueries.Service",
+		"Query   teachingqueries.Service",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("teaching_readmodel runtime should not keep wide query export marker %s", marker)
+			t.Fatalf("teaching_query runtime should not keep wide query export marker %s", marker)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func TestContractsSplitStudentReviewOwner(t *testing.T) {
 
 	content, err := os.ReadFile(filepath.Join("application", "queries", "contracts.go"))
 	if err != nil {
-		t.Fatalf("read teaching_readmodel contracts: %v", err)
+		t.Fatalf("read teaching_query contracts: %v", err)
 	}
 
 	source := string(content)
@@ -183,7 +183,7 @@ func TestDirectoryQueryServiceDoesNotOwnStudentReviewMethods(t *testing.T) {
 
 	content, err := os.ReadFile(filepath.Join("application", "queries", "service.go"))
 	if err != nil {
-		t.Fatalf("read teaching_readmodel query service: %v", err)
+		t.Fatalf("read teaching_query query service: %v", err)
 	}
 
 	source := string(content)

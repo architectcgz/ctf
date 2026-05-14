@@ -20,11 +20,11 @@
 
 - `code/backend/internal/model/challenge.go`、`instance.go`、`contest.go`、`contest_awd_service.go`、`contest_status_transition.go`、`image_build_job.go`、`awd_service_operation.go`、`awd_defense_workspace.go`
   - 负责：声明当前 GORM 模型、状态枚举、默认值和关键关系，例如 `instance_sharing`、`share_scope`、`service_id`、`contest.status`、`contest_awd_services` 和 `awd_defense_workspaces`
-  - 不负责：在 API 层泄漏 persistence 内部字段，或把读模型聚合结果反向定义成底层表 schema
+  - 不负责：在 API 层泄漏 persistence 内部字段，或把查询聚合结果反向定义成底层表 schema
 
-- `code/backend/internal/module/*/infrastructure/` 与 `code/backend/internal/module/teaching_readmodel/infrastructure/repository.go`
-  - 负责：按 owner 模块读写各自表，教师复盘、证据链、画像和归档查询通过 readmodel repository 做跨表聚合；依据见 `practice/infrastructure/repository.go`、`contest/infrastructure/*.go`、`assessment/infrastructure/*.go`
-  - 不负责：让读模型 owner 修改练习、竞赛或题目写侧状态，也不让页面查询直接越过 owner 拼接写库逻辑
+- `code/backend/internal/module/*/infrastructure/` 与 `code/backend/internal/module/teaching_query/infrastructure/repository.go`
+  - 负责：按 owner 模块读写各自表，教师复盘、证据链、画像和归档查询通过 `teaching_query` 基础设施层做跨表聚合；依据见 `practice/infrastructure/repository.go`、`contest/infrastructure/*.go`、`assessment/infrastructure/*.go`
+  - 不负责：让查询聚合模块修改练习、竞赛或题目写侧状态，也不让页面查询直接越过 owner 拼接写库逻辑
 
 - `code/backend/internal/pkg/redis/keys.go`、`code/backend/internal/module/runtime/infrastructure/proxy_ticket_store.go`
   - 负责：提供会话、榜单缓存、调度锁、代理票据等 Redis key 约束；缓存和锁只承担性能与并发职责，不覆盖 PostgreSQL 中的业务真相

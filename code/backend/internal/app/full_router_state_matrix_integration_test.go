@@ -21,7 +21,7 @@ import (
 	"ctf-platform/internal/model"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
-	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
+	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -36,23 +36,23 @@ type fullRouterEnvelope struct {
 	Data    json.RawMessage `json:"data"`
 }
 
-func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
+func TestTeacherRoutesAreServedByTeachingQuery(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
-	originalBuildTeachingReadmodelModule := buildTeachingReadmodelModule
+	originalBuildTeachingQueryModule := buildTeachingQueryModule
 	t.Cleanup(func() {
-		buildTeachingReadmodelModule = originalBuildTeachingReadmodelModule
+		buildTeachingQueryModule = originalBuildTeachingQueryModule
 	})
 
 	called := false
-	buildTeachingReadmodelModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingReadmodelModule {
-		module := originalBuildTeachingReadmodelModule(root, assessment)
+	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingQueryModule {
+		module := originalBuildTeachingQueryModule(root, assessment)
 		called = true
 		if module == nil || module.Handler == nil {
-			t.Fatal("expected teaching readmodel module handler")
+			t.Fatal("expected teaching query module handler")
 		}
 		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&teachinghttp.Handler{}); got != want {
-			t.Fatalf("teaching readmodel handler type = %v, want %v", got, want)
+			t.Fatalf("teaching query handler type = %v, want %v", got, want)
 		}
 		return module
 	}
@@ -65,7 +65,7 @@ func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
 		t.Fatal("expected router")
 	}
 	if !called {
-		t.Fatal("expected teaching readmodel module builder to be called")
+		t.Fatal("expected teaching query module builder to be called")
 	}
 }
 

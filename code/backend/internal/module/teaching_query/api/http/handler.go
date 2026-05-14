@@ -7,22 +7,22 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
+	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
-	service              teachingreadmodelqueries.Service
-	overviewService      teachingreadmodelqueries.OverviewService
-	classInsightService  teachingreadmodelqueries.ClassInsightService
-	studentReviewService teachingreadmodelqueries.StudentReviewService
+	service              teachingqueryqueries.Service
+	overviewService      teachingqueryqueries.OverviewService
+	classInsightService  teachingqueryqueries.ClassInsightService
+	studentReviewService teachingqueryqueries.StudentReviewService
 }
 
 func NewHandler(
-	service teachingreadmodelqueries.Service,
-	overviewService teachingreadmodelqueries.OverviewService,
-	classInsightService teachingreadmodelqueries.ClassInsightService,
-	studentReviewService teachingreadmodelqueries.StudentReviewService,
+	service teachingqueryqueries.Service,
+	overviewService teachingqueryqueries.OverviewService,
+	classInsightService teachingqueryqueries.ClassInsightService,
+	studentReviewService teachingqueryqueries.StudentReviewService,
 ) *Handler {
 	return &Handler{
 		service:              service,

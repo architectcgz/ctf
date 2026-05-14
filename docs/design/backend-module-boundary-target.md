@@ -21,28 +21,28 @@
   - 负责：让每条写路径、状态机、权限判断、重试策略和副作用都有唯一 owner。
   - 不负责：为了目录整齐给每个模块机械创建空 `domain`、空 `ports` 或空 `contracts`。
 
-- `readmodel` 只用于跨 owner 只读聚合。
+- 查询聚合模块只用于跨 owner 只读聚合。
   - 负责：承接教师视角、复盘视角、跨表统计和页面聚合查询。
   - 不负责：拥有写侧状态、执行业务状态流转，或成为绕开 owner contract 的万能查询仓库。
 
 - 容器运行能力应从业务实例生命周期中拆清。
   - 负责：区分“实例状态与访问权”这种业务事实，以及“Docker 网络、容器、ACL、文件读写”这种运行时适配。
-  - 不负责：继续让一个宽泛 `runtime` 同时承担实例写模型、Docker 适配、教师查询、代理 ticket 和 AWD 文件操作。
+  - 不负责：继续让一个宽泛 `runtime` 同时承担实例业务 owner、Docker 适配、教师查询、代理 ticket 和 AWD 文件操作。
 
 ## 目标模块版图
 
 | 目标模块 | 类型 | 负责 | 不负责 | 对外暴露 |
 | --- | --- | --- | --- | --- |
-| `identity` | 写模型 | 用户、角色、账号状态、资料、密码哈希与密码变更、管理端用户能力 | session、token、CAS、WebSocket ticket | 用户查询、用户写入、凭据校验、资料命令/查询 contract，管理端 handler |
-| `auth` | 认证能力 / 写模型 | 登录、登出、会话、CAS、WebSocket ticket、认证中间件所需 token 能力 | 用户资料 owner、用户仓储实现、管理端用户 CRUD | 认证 handler、session/token contract、认证上下文构造能力 |
-| `challenge` | 写模型 | 题目元数据、题包、附件、镜像引用、Flag 策略、Writeup、拓扑模板 | 实例状态、容器生命周期、竞赛计分 | 题目 catalog、Flag validator、image store、题目管理 handler |
-| `instance` | 写模型 | 实例记录、排队、状态机、启动/续期/销毁、访问 ticket、实例清理和实例可见性查询 | Docker SDK、题目元数据 owner、提交计分 | 实例 command/query contract、实例 handler、调度 background job |
+| `identity` | 业务 owner | 用户、角色、账号状态、资料、密码哈希与密码变更、管理端用户能力 | session、token、CAS、WebSocket ticket | 用户查询、用户写入、凭据校验、资料命令/查询 contract，管理端 handler |
+| `auth` | 认证能力 / 业务 owner | 登录、登出、会话、CAS、WebSocket ticket、认证中间件所需 token 能力 | 用户资料 owner、用户仓储实现、管理端用户 CRUD | 认证 handler、session/token contract、认证上下文构造能力 |
+| `challenge` | 业务 owner | 题目元数据、题包、附件、镜像引用、Flag 策略、Writeup、拓扑模板 | 实例状态、容器生命周期、竞赛计分 | 题目 catalog、Flag validator、image store、题目管理 handler |
+| `instance` | 业务 owner | 实例记录、排队、状态机、启动/续期/销毁、访问 ticket、实例清理和实例可见性查询 | Docker SDK、题目元数据 owner、提交计分 | 实例 command/query contract、实例 handler、调度 background job |
 | `container_runtime` | 平台适配 | Docker Engine、网络、ACL、容器文件读写、探活、镜像探测、资源限制 | 用户权限、竞赛规则、实例业务状态 | container engine ports 的 adapter；默认不暴露 HTTP handler |
-| `practice` | 写模型 | 日常训练、练习提交、个人解题状态、练习排行榜、人工评审入口 | 容器底层执行、题目定义、能力画像写入 | 练习 handler、提交/解题事件、练习 query contract |
-| `contest` | 写模型 | 竞赛、报名、队伍、题目入赛、排行榜、冻结榜、公告、AWD 轮次、AWD 攻击计分 | 题目定义、容器底层执行、通知发送实现 | 竞赛 handler、AWD handler、排行榜 query、竞赛事件 |
-| `assessment` | 分析产物写模型 | 能力画像、推荐、报告、复盘归档、评估重建任务 | 提交判定、竞赛计分主链路、教师页面聚合查询 | 画像/推荐/报告 contract、报告 handler、事件消费者 |
+| `practice` | 业务 owner | 日常训练、练习提交、个人解题状态、练习排行榜、人工评审入口 | 容器底层执行、题目定义、能力画像写入 | 练习 handler、提交/解题事件、练习 query contract |
+| `contest` | 业务 owner | 竞赛、报名、队伍、题目入赛、排行榜、冻结榜、公告、AWD 轮次、AWD 攻击计分 | 题目定义、容器底层执行、通知发送实现 | 竞赛 handler、AWD handler、排行榜 query、竞赛事件 |
+| `assessment` | 分析产物 owner | 能力画像、推荐、报告、复盘归档、评估重建任务 | 提交判定、竞赛计分主链路、教师页面聚合查询 | 画像/推荐/报告 contract、报告 handler、事件消费者 |
 | `ops` | 运营支撑 | 审计、通知、WebSocket 广播适配、运行概览、风险视图 | 业务状态 owner、业务规则决策 | audit recorder、notification handler、realtime broadcaster adapter |
-| `teaching_readmodel` | 读模型 | 教师班级、学生证据链、复盘、跨训练/竞赛/评估的只读聚合 | 写入训练/竞赛/评估事实、替代 owner 规则 | 教师端 query handler、只读 query service |
+| `teaching_query` | 查询聚合模块 | 教师班级、学生证据链、复盘、跨训练/竞赛/评估的只读聚合 | 写入训练/竞赛/评估事实、替代 owner 规则 | 教师端 query handler、只读 query service |
 
 ### 命名说明
 
@@ -68,7 +68,7 @@ flowchart LR
     INSTANCE --> CONTAINER["container runtime ports"]
     ASSESSMENT["assessment"] -.consumes events / queries.-> PRACTICE
     ASSESSMENT -.consumes events / queries.-> CONTEST
-    TEACHING_RM["teaching_readmodel"] --> PRACTICE
+    TEACHING_RM["teaching_query"] --> PRACTICE
     TEACHING_RM --> CONTEST
     TEACHING_RM --> ASSESSMENT
     OPS["ops"] -.subscribes events / implements adapters.-> AUTH
@@ -82,7 +82,7 @@ flowchart LR
 - `instance` 通过 container runtime ports 调用 Docker/ACL/文件能力；业务模块不能直接依赖 Docker SDK。
 - `assessment` 不应挂在提交计分的同步写路径上更新画像；优先消费训练/竞赛事件或通过显式重建任务收敛。
 - `ops` 不应成为业务模块的硬依赖；业务模块发布事件或使用窄 port，通知和 WebSocket 广播由 `ops` 适配。
-- `teaching_readmodel` 可以跨 owner 读取只读事实，但不能反向回写 owner 表，也不能承载状态转换规则。
+- `teaching_query` 可以跨 owner 读取只读事实，但不能反向回写 owner 表，也不能承载状态转换规则。
 
 ## 对外暴露规则
 
@@ -121,7 +121,7 @@ flowchart LR
 | `assessment / ops` 事件化边界仍未完全收口 | `practice` 画像链已切到事件消费，但通知、广播、缓存失效和其他副作用仍有继续统一 owner 表达的空间 | 副作用默认经事件或窄 port 触发，避免业务写路径继续同步背负实现细节 | 中 |
 | `contest -> ops` 实时广播耦合 | 竞赛业务服务知道 WebSocket 适配细节 | `contest` 使用 broadcaster port 或事件，`ops` 实现适配 | 中 |
 | application 层 GORM/Redis allowlist 多 | 用例层仍暴露框架和存储实现，影响测试和迁移 | 用 ports 包装事务、缓存、锁和查询能力 | 中 |
-| readmodel repository 过宽 | 容易成为跨表万能仓库 | 按教师目录、学生证据、班级洞察等 query capability 拆小 | 低到中 |
+| 查询聚合 repository 过宽 | 容易成为跨表万能仓库 | 按教师目录、学生证据、班级洞察等 query capability 拆小 | 低到中 |
 
 ## 迁移切片建议
 
@@ -194,27 +194,27 @@ flowchart LR
 2. 将画像失效、推荐缓存失效、通知发送、WebSocket 广播改为事件消费者或窄 port adapter。
 3. 对关键用户可见副作用保留同步 fallback 或失败记录，避免静默丢失。
 
-### 阶段 4：复核 readmodel
+### 阶段 4：复核查询聚合模块
 
 当前状态（2026-05-13，phase 4 / slice 4）：
 
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已并回 `practice/application/queries` 与 `practice/api/http`。
-- `internal/module/practice_readmodel/` 已删除，因为这两条查询只读取 `practice` 自有事实，不构成跨 owner readmodel。
-- 当前 readmodel 只保留 `teaching_readmodel` 这类真实跨 owner 聚合入口。
-- 教师总览 `GetOverview` 已从宽 `teaching_readmodel/application/queries.Service` 中拆到独立 `OverviewService`；`teaching_readmodel/api/http.Handler` 不再通过单个大一统 query 接口承接 overview。
-- 班级详情 `GetClassSummary`、`GetClassTrend`、`GetClassReview` 已继续从剩余宽 `Service` 中拆到独立 `ClassInsightService`；`teaching_readmodel/api/http.Handler` 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService`。
-- 学生复盘 `GetStudentProgress`、`GetStudentRecommendations`、`GetStudentTimeline`、`GetStudentEvidence`、`GetStudentAttackSessions` 已从剩余宽 `Service` 中拆到独立 `StudentReviewService`；`teaching_readmodel/api/http.Handler` 现在分别依赖目录 `Service`、`OverviewService`、`ClassInsightService`、`StudentReviewService`。
+- `internal/module/practice_readmodel/` 已删除，因为这两条查询只读取 `practice` 自有事实，不构成跨 owner 查询聚合模块。
+- 当前查询聚合模块只保留 `teaching_query` 这类真实跨 owner 聚合入口。
+- 教师总览 `GetOverview` 已从宽 `teaching_query/application/queries.Service` 中拆到独立 `OverviewService`；`teaching_query/api/http.Handler` 不再通过单个大一统 query 接口承接 overview。
+- 班级详情 `GetClassSummary`、`GetClassTrend`、`GetClassReview` 已继续从剩余宽 `Service` 中拆到独立 `ClassInsightService`；`teaching_query/api/http.Handler` 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService`。
+- 学生复盘 `GetStudentProgress`、`GetStudentRecommendations`、`GetStudentTimeline`、`GetStudentEvidence`、`GetStudentAttackSessions` 已从剩余宽 `Service` 中拆到独立 `StudentReviewService`；`teaching_query/api/http.Handler` 现在分别依赖目录 `Service`、`OverviewService`、`ClassInsightService`、`StudentReviewService`。
 
 目标：
 
-- `teaching_readmodel` 保留为教师视角跨 owner 聚合。
-- 如果未来个人进度/时间线再次跨 owner，再重新评估是否需要专门 readmodel。
+- `teaching_query` 保留为教师视角跨 owner 聚合。
+- 如果未来个人进度/时间线再次跨 owner，再重新评估是否需要专门查询聚合模块。
 
 建议动作：
 
 1. 逐个查询标注数据来源和 UI consumer。
 2. 纯 practice 查询继续留在 `practice/application/queries`。
-3. 跨 owner 查询保留 `teaching_readmodel`，并继续评估目录查询是否还要进一步显式命名为更窄 owner，但不再把学生复盘回挂到目录 query surface。
+3. 跨 owner 查询保留 `teaching_query`，并继续评估目录查询是否还要进一步显式命名为更窄 owner，但不再把学生复盘回挂到目录 query surface。
 
 ### 阶段 5：收窄 application concrete allowlist
 
@@ -292,7 +292,7 @@ flowchart LR
 - `practice`、`contest` 不直接依赖 `ops` 具体实现，通知和广播通过事件或窄 port。
 - `practice` 写路径不同步依赖 `assessment` 写服务；画像更新改为事件消费或显式重建。
 - 每个模块的 `runtime.Module` 只暴露 handler、contract implementation、background job 和 closer，不暴露具体 repository。
-- readmodel 模块只有只读聚合查询，不包含业务状态流转和写路径。
+- 查询聚合模块只有只读聚合查询，不包含业务状态流转和写路径。
 - application concrete dependency allowlist 明显收缩，并且新增项必须有 review 理由。
 
 ## 论文写作口径
@@ -303,4 +303,4 @@ flowchart LR
 
 - 认证与身份分离：`auth` 负责认证会话，`identity` 负责用户与凭据。
 - 实例业务与容器适配分离：`instance` 负责实例生命周期，`container_runtime` 封装 Docker。
-- 训练、竞赛、评估通过事件和 contract 协作，读模型负责教师复盘和跨模块聚合。
+- 训练、竞赛、评估通过事件和 contract 协作，查询聚合模块负责教师复盘和跨模块聚合。

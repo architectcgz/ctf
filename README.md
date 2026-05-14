@@ -2,7 +2,7 @@
 
 本仓库主要包含平台实现、架构与契约文档、题目与题包，以及开发过程中沉淀的规则和资料。
 
-- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前按 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`practice_readmodel`、`teaching_readmodel` 等模块组织
+- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前按 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`teaching_query` 等模块组织，其中 `teaching_query` 负责教师侧查询聚合
 - 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Tailwind CSS 4 + 仓库内通用前端原语
 - 开发依赖：本项目自带的 Compose 与 infra 入口位于 `docker/ctf/` 和 `docker/ctf/infra/`，可直接启动 `ctf-api`、`ctf-postgres`、`ctf-redis`、`ctf-registry`
 - 文档入口：架构和页面设计主要看 `docs/architecture/`，接口与题包契约主要看 `docs/contracts/`

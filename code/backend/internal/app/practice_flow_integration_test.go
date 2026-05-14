@@ -50,9 +50,9 @@ import (
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	teachingreadmodelhttp "ctf-platform/internal/module/teaching_readmodel/api/http"
-	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
-	teachingreadmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
+	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
+	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	teachingqueryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -935,16 +935,16 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		logger,
 	)
 	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService, practiceProgressTimelineService)
-	teachingReadmodelRepo := teachingreadmodelinfra.NewRepository(db)
-	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, cfg.Pagination)
-	teachingReadmodelOverviewService := teachingreadmodelqueries.NewOverviewService(teachingReadmodelRepo)
-	teachingReadmodelClassInsightService := teachingreadmodelqueries.NewClassInsightService(teachingReadmodelRepo, nil, logger)
-	teachingReadmodelStudentReviewService := teachingreadmodelqueries.NewStudentReviewService(teachingReadmodelRepo, nil)
-	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(
-		teachingReadmodelService,
-		teachingReadmodelOverviewService,
-		teachingReadmodelClassInsightService,
-		teachingReadmodelStudentReviewService,
+	teachingQueryRepo := teachingqueryinfra.NewRepository(db)
+	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryRepo, cfg.Pagination)
+	teachingQueryOverviewService := teachingqueryqueries.NewOverviewService(teachingQueryRepo)
+	teachingQueryClassInsightService := teachingqueryqueries.NewClassInsightService(teachingQueryRepo, nil, logger)
+	teachingQueryStudentReviewService := teachingqueryqueries.NewStudentReviewService(teachingQueryRepo, nil)
+	teachingQueryHandler := teachingqueryhttp.NewHandler(
+		teachingQueryService,
+		teachingQueryOverviewService,
+		teachingQueryClassInsightService,
+		teachingQueryStudentReviewService,
 	)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{}, nil)
 
@@ -998,8 +998,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
 	teacherGroup := protected.Group("/teacher")
 	teacherGroup.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
-	teacherGroup.GET("/students/:id/evidence", teachingReadmodelHandler.GetStudentEvidence)
-	teacherGroup.GET("/students/:id/attack-sessions", teachingReadmodelHandler.GetStudentAttackSessions)
+	teacherGroup.GET("/students/:id/evidence", teachingQueryHandler.GetStudentEvidence)
+	teacherGroup.GET("/students/:id/attack-sessions", teachingQueryHandler.GetStudentAttackSessions)
 
 	t.Cleanup(func() {
 		if sqlDB, sqlErr := db.DB(); sqlErr == nil {

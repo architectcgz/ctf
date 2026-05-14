@@ -105,15 +105,14 @@
       "code/backend/internal/validation"
     ]
   },
-  "backend_readmodel_query": {
-    "description": "Cross-module read/query work should reuse existing readmodel modules or owner contracts instead of adding direct cross-module repository reads.",
+  "backend_query_aggregation": {
+    "description": "Cross-module read/query work should reuse existing query aggregation modules or owner contracts instead of adding direct cross-module repository reads.",
     "examples": [
-      "code/backend/internal/module/practice_readmodel",
-      "code/backend/internal/module/teaching_readmodel"
+      "code/backend/internal/module/teaching_query"
     ],
     "must_reuse": [
-      "code/backend/internal/module/*_readmodel/ports",
-      "code/backend/internal/module/*_readmodel/infrastructure",
+      "code/backend/internal/module/teaching_query/ports",
+      "code/backend/internal/module/teaching_query/infrastructure",
       "code/backend/internal/module/*/contracts"
     ]
   },

@@ -8,17 +8,17 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
 type overviewQueryRepository interface {
-	readmodelports.TeachingUserLookupRepository
-	readmodelports.TeachingClassQueryRepository
-	readmodelports.TeachingStudentDirectoryRepository
-	readmodelports.TeachingClassInsightRepository
-	readmodelports.TeachingOverviewRepository
+	queryports.TeachingUserLookupRepository
+	queryports.TeachingClassQueryRepository
+	queryports.TeachingStudentDirectoryRepository
+	queryports.TeachingClassInsightRepository
+	queryports.TeachingOverviewRepository
 }
 
 type OverviewQueryService struct {
@@ -57,7 +57,7 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	students := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(studentItems))
+	students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 
 	trend, err := s.repo.GetOverviewTrend(ctx, classNames, startOfDay, 7)
 	if err != nil {
@@ -93,7 +93,7 @@ func emptyOverviewResponse() *dto.TeacherOverviewResp {
 	}
 }
 
-func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, requesterID int64, requesterRole string) ([]readmodelports.ClassItem, error) {
+func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, requesterID int64, requesterRole string) ([]queryports.ClassItem, error) {
 	if requesterRole == model.RoleAdmin {
 		items, err := s.repo.ListClasses(ctx, 0, 0)
 		if err != nil {
@@ -112,14 +112,14 @@ func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, req
 
 	className := strings.TrimSpace(requester.ClassName)
 	if className == "" {
-		return []readmodelports.ClassItem{}, nil
+		return []queryports.ClassItem{}, nil
 	}
 
 	count, err := s.repo.CountStudentsByClass(ctx, className)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return []readmodelports.ClassItem{{
+	return []queryports.ClassItem{{
 		Name:         className,
 		StudentCount: count,
 	}}, nil
@@ -215,7 +215,7 @@ func limitOverviewStudents(students []dto.TeacherStudentItem, limit int) []dto.T
 
 func (s *OverviewQueryService) buildOverviewClassFocuses(
 	ctx context.Context,
-	classItems []readmodelports.ClassItem,
+	classItems []queryports.ClassItem,
 	since time.Time,
 ) ([]dto.TeacherOverviewClassFocusResp, error) {
 	focuses := make([]dto.TeacherOverviewClassFocusResp, 0, len(classItems))
@@ -232,7 +232,7 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
-		students := commonmapper.NonNilSlice(teachingReadmodelMapper.ToStudentItems(studentItems))
+		students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 		dominantWeakDimension, _ := selectOverviewWeakDimensionStudents(students)
 		riskStudents := selectOverviewRiskStudents(students, len(students))
 
@@ -263,7 +263,7 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 }
 
 func buildOverviewSummary(
-	classItems []readmodelports.ClassItem,
+	classItems []queryports.ClassItem,
 	students []dto.TeacherStudentItem,
 	focusStudents []dto.TeacherStudentItem,
 ) dto.TeacherOverviewSummaryResp {
@@ -290,7 +290,7 @@ func buildOverviewSummary(
 	return summary
 }
 
-func mapOverviewTrend(source *readmodelports.OverviewTrend) dto.TeacherOverviewTrendResp {
+func mapOverviewTrend(source *queryports.OverviewTrend) dto.TeacherOverviewTrendResp {
 	if source == nil || len(source.Points) == 0 {
 		return dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}}
 	}

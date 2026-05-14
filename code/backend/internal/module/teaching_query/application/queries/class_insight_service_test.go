@@ -7,14 +7,14 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
 type classInsightRepoStub struct {
 	findUserByIDFn                 func(ctx context.Context, userID int64) (*model.User, error)
-	getClassSummaryFn              func(ctx context.Context, className string, since time.Time) (*readmodelports.ClassSummary, error)
-	getClassTrendFn                func(ctx context.Context, className string, since time.Time, days int) (*readmodelports.ClassTrend, error)
+	getClassSummaryFn              func(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
+	getClassTrendFn                func(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
 	listClassTeachingFactSnapshots func(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 
@@ -25,18 +25,18 @@ func (s *classInsightRepoStub) FindUserByID(ctx context.Context, userID int64) (
 	return nil, nil
 }
 
-func (s *classInsightRepoStub) GetClassSummary(ctx context.Context, className string, since time.Time) (*readmodelports.ClassSummary, error) {
+func (s *classInsightRepoStub) GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error) {
 	if s.getClassSummaryFn != nil {
 		return s.getClassSummaryFn(ctx, className, since)
 	}
 	return nil, nil
 }
 
-func (s *classInsightRepoStub) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*readmodelports.ClassTrend, error) {
+func (s *classInsightRepoStub) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error) {
 	if s.getClassTrendFn != nil {
 		return s.getClassTrendFn(ctx, className, since, days)
 	}
-	return &readmodelports.ClassTrend{}, nil
+	return &queryports.ClassTrend{}, nil
 }
 
 func (s *classInsightRepoStub) ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
@@ -64,8 +64,8 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
 			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		getClassSummaryFn: func(context.Context, string, time.Time) (*readmodelports.ClassSummary, error) {
-			return &readmodelports.ClassSummary{
+		getClassSummaryFn: func(context.Context, string, time.Time) (*queryports.ClassSummary, error) {
+			return &queryports.ClassSummary{
 				ClassName:          "Class A",
 				StudentCount:       3,
 				AverageSolved:      2.5,
@@ -101,8 +101,8 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
 			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		getClassSummaryFn: func(context.Context, string, time.Time) (*readmodelports.ClassSummary, error) {
-			return &readmodelports.ClassSummary{
+		getClassSummaryFn: func(context.Context, string, time.Time) (*queryports.ClassSummary, error) {
+			return &queryports.ClassSummary{
 				ClassName:          "Class A",
 				StudentCount:       3,
 				AverageSolved:      2,
@@ -111,10 +111,10 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 				RecentEventCount:   12,
 			}, nil
 		},
-		getClassTrendFn: func(context.Context, string, time.Time, int) (*readmodelports.ClassTrend, error) {
-			return &readmodelports.ClassTrend{
+		getClassTrendFn: func(context.Context, string, time.Time, int) (*queryports.ClassTrend, error) {
+			return &queryports.ClassTrend{
 				ClassName: "Class A",
-				Points: []readmodelports.ClassTrendPoint{
+				Points: []queryports.ClassTrendPoint{
 					{Date: "2026-05-06", EventCount: 8, SolveCount: 4},
 					{Date: "2026-05-12", EventCount: 5, SolveCount: 3},
 				},

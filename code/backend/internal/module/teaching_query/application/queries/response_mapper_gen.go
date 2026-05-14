@@ -5,12 +5,12 @@ package queries
 
 import (
 	dto "ctf-platform/internal/dto"
-	ports "ctf-platform/internal/module/teaching_readmodel/ports"
+	ports "ctf-platform/internal/module/teaching_query/ports"
 )
 
-type teachingReadmodelResponseMapperImpl struct{}
+type teachingQueryResponseMapperImpl struct{}
 
-func (c *teachingReadmodelResponseMapperImpl) ToClassItems(source []ports.ClassItem) []dto.TeacherClassItem {
+func (c *teachingQueryResponseMapperImpl) ToClassItems(source []ports.ClassItem) []dto.TeacherClassItem {
 	var dtoTeacherClassItemList []dto.TeacherClassItem
 	if source != nil {
 		dtoTeacherClassItemList = make([]dto.TeacherClassItem, len(source))
@@ -20,7 +20,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassItems(source []ports.ClassI
 	}
 	return dtoTeacherClassItemList
 }
-func (c *teachingReadmodelResponseMapperImpl) ToClassSummary(source ports.ClassSummary) dto.TeacherClassSummaryResp {
+func (c *teachingQueryResponseMapperImpl) ToClassSummary(source ports.ClassSummary) dto.TeacherClassSummaryResp {
 	var dtoTeacherClassSummaryResp dto.TeacherClassSummaryResp
 	dtoTeacherClassSummaryResp.ClassName = source.ClassName
 	dtoTeacherClassSummaryResp.StudentCount = source.StudentCount
@@ -30,7 +30,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassSummary(source ports.ClassS
 	dtoTeacherClassSummaryResp.RecentEventCount = source.RecentEventCount
 	return dtoTeacherClassSummaryResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToClassSummaryPtr(source *ports.ClassSummary) *dto.TeacherClassSummaryResp {
+func (c *teachingQueryResponseMapperImpl) ToClassSummaryPtr(source *ports.ClassSummary) *dto.TeacherClassSummaryResp {
 	var pDtoTeacherClassSummaryResp *dto.TeacherClassSummaryResp
 	if source != nil {
 		dtoTeacherClassSummaryResp := c.ToClassSummary((*source))
@@ -38,7 +38,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassSummaryPtr(source *ports.Cl
 	}
 	return pDtoTeacherClassSummaryResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToClassTrendResp(source ports.ClassTrend) dto.TeacherClassTrendResp {
+func (c *teachingQueryResponseMapperImpl) ToClassTrendResp(source ports.ClassTrend) dto.TeacherClassTrendResp {
 	var dtoTeacherClassTrendResp dto.TeacherClassTrendResp
 	dtoTeacherClassTrendResp.ClassName = source.ClassName
 	if source.Points != nil {
@@ -49,7 +49,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassTrendResp(source ports.Clas
 	}
 	return dtoTeacherClassTrendResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToClassTrendRespPtr(source *ports.ClassTrend) *dto.TeacherClassTrendResp {
+func (c *teachingQueryResponseMapperImpl) ToClassTrendRespPtr(source *ports.ClassTrend) *dto.TeacherClassTrendResp {
 	var pDtoTeacherClassTrendResp *dto.TeacherClassTrendResp
 	if source != nil {
 		dtoTeacherClassTrendResp := c.ToClassTrendResp((*source))
@@ -57,7 +57,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToClassTrendRespPtr(source *ports.
 	}
 	return pDtoTeacherClassTrendResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
+func (c *teachingQueryResponseMapperImpl) ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
 	var dtoTeacherReviewStudentRefList []dto.TeacherReviewStudentRef
 	if source != nil {
 		dtoTeacherReviewStudentRefList = make([]dto.TeacherReviewStudentRef, len(source))
@@ -67,7 +67,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToReviewStudentRefs(source []dto.T
 	}
 	return dtoTeacherReviewStudentRefList
 }
-func (c *teachingReadmodelResponseMapperImpl) ToStudentItems(source []ports.StudentItem) []dto.TeacherStudentItem {
+func (c *teachingQueryResponseMapperImpl) ToStudentItems(source []ports.StudentItem) []dto.TeacherStudentItem {
 	var dtoTeacherStudentItemList []dto.TeacherStudentItem
 	if source != nil {
 		dtoTeacherStudentItemList = make([]dto.TeacherStudentItem, len(source))
@@ -77,7 +77,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToStudentItems(source []ports.Stud
 	}
 	return dtoTeacherStudentItemList
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem {
 	var dtoTeacherRecommendationItem dto.TeacherRecommendationItem
 	dtoTeacherRecommendationItem.ChallengeID = source.ID
 	dtoTeacherRecommendationItem.Title = source.Title
@@ -96,7 +96,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItem(source
 	dtoTeacherRecommendationItem.Evidence = source.Evidence
 	return dtoTeacherRecommendationItem
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem {
 	var pDtoTeacherRecommendationItem *dto.TeacherRecommendationItem
 	if source != nil {
 		dtoTeacherRecommendationItem := c.ToTeacherRecommendationItem((*source))
@@ -104,13 +104,13 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationItemPtr(sou
 	}
 	return pDtoTeacherRecommendationItem
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp {
 	var dtoTeacherRecommendationResp dto.TeacherRecommendationResp
 	dtoTeacherRecommendationResp.WeakDimensions = c.ToTeacherRecommendationWeakDimensions(source.WeakDimensions)
 	dtoTeacherRecommendationResp.Challenges = MapTeacherRecommendationItems(source.Challenges)
 	return dtoTeacherRecommendationResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp {
 	var pDtoTeacherRecommendationResp *dto.TeacherRecommendationResp
 	if source != nil {
 		dtoTeacherRecommendationResp := c.ToTeacherRecommendationResp((*source))
@@ -118,7 +118,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationRespPtr(sou
 	}
 	return pDtoTeacherRecommendationResp
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
 	var dtoTeacherRecommendationWeakDimension dto.TeacherRecommendationWeakDimension
 	dtoTeacherRecommendationWeakDimension.Dimension = source.Dimension
 	dtoTeacherRecommendationWeakDimension.Severity = source.Severity
@@ -126,7 +126,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimensi
 	dtoTeacherRecommendationWeakDimension.Evidence = source.Evidence
 	return dtoTeacherRecommendationWeakDimension
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
 	var dtoTeacherRecommendationWeakDimensionList []dto.TeacherRecommendationWeakDimension
 	if source != nil {
 		dtoTeacherRecommendationWeakDimensionList = make([]dto.TeacherRecommendationWeakDimension, len(source))
@@ -136,7 +136,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToTeacherRecommendationWeakDimensi
 	}
 	return dtoTeacherRecommendationWeakDimensionList
 }
-func (c *teachingReadmodelResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []dto.TimelineEvent {
+func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []dto.TimelineEvent {
 	var dtoTimelineEventList []dto.TimelineEvent
 	if source != nil {
 		dtoTimelineEventList = make([]dto.TimelineEvent, len(source))
@@ -146,7 +146,7 @@ func (c *teachingReadmodelResponseMapperImpl) ToTimelineEvents(source []ports.Ti
 	}
 	return dtoTimelineEventList
 }
-func (c *teachingReadmodelResponseMapperImpl) dtoTeacherStudentItemToDtoTeacherReviewStudentRef(source dto.TeacherStudentItem) dto.TeacherReviewStudentRef {
+func (c *teachingQueryResponseMapperImpl) dtoTeacherStudentItemToDtoTeacherReviewStudentRef(source dto.TeacherStudentItem) dto.TeacherReviewStudentRef {
 	var dtoTeacherReviewStudentRef dto.TeacherReviewStudentRef
 	dtoTeacherReviewStudentRef.ID = source.ID
 	dtoTeacherReviewStudentRef.Username = source.Username
@@ -156,13 +156,13 @@ func (c *teachingReadmodelResponseMapperImpl) dtoTeacherStudentItemToDtoTeacherR
 	}
 	return dtoTeacherReviewStudentRef
 }
-func (c *teachingReadmodelResponseMapperImpl) portsClassItemToDtoTeacherClassItem(source ports.ClassItem) dto.TeacherClassItem {
+func (c *teachingQueryResponseMapperImpl) portsClassItemToDtoTeacherClassItem(source ports.ClassItem) dto.TeacherClassItem {
 	var dtoTeacherClassItem dto.TeacherClassItem
 	dtoTeacherClassItem.Name = source.Name
 	dtoTeacherClassItem.StudentCount = source.StudentCount
 	return dtoTeacherClassItem
 }
-func (c *teachingReadmodelResponseMapperImpl) portsClassTrendPointToDtoTeacherClassTrendPoint(source ports.ClassTrendPoint) dto.TeacherClassTrendPoint {
+func (c *teachingQueryResponseMapperImpl) portsClassTrendPointToDtoTeacherClassTrendPoint(source ports.ClassTrendPoint) dto.TeacherClassTrendPoint {
 	var dtoTeacherClassTrendPoint dto.TeacherClassTrendPoint
 	dtoTeacherClassTrendPoint.Date = source.Date
 	dtoTeacherClassTrendPoint.ActiveStudentCount = source.ActiveStudentCount
@@ -170,7 +170,7 @@ func (c *teachingReadmodelResponseMapperImpl) portsClassTrendPointToDtoTeacherCl
 	dtoTeacherClassTrendPoint.SolveCount = source.SolveCount
 	return dtoTeacherClassTrendPoint
 }
-func (c *teachingReadmodelResponseMapperImpl) portsStudentItemToDtoTeacherStudentItem(source ports.StudentItem) dto.TeacherStudentItem {
+func (c *teachingQueryResponseMapperImpl) portsStudentItemToDtoTeacherStudentItem(source ports.StudentItem) dto.TeacherStudentItem {
 	var dtoTeacherStudentItem dto.TeacherStudentItem
 	dtoTeacherStudentItem.ID = source.ID
 	dtoTeacherStudentItem.Username = source.Username
@@ -195,7 +195,7 @@ func (c *teachingReadmodelResponseMapperImpl) portsStudentItemToDtoTeacherStuden
 	}
 	return dtoTeacherStudentItem
 }
-func (c *teachingReadmodelResponseMapperImpl) portsTimelineEventRecordToDtoTimelineEvent(source ports.TimelineEventRecord) dto.TimelineEvent {
+func (c *teachingQueryResponseMapperImpl) portsTimelineEventRecordToDtoTimelineEvent(source ports.TimelineEventRecord) dto.TimelineEvent {
 	var dtoTimelineEvent dto.TimelineEvent
 	dtoTimelineEvent.Type = source.Type
 	dtoTimelineEvent.ChallengeID = source.ChallengeID

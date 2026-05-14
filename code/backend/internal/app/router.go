@@ -28,16 +28,16 @@ type routerRuntime struct {
 }
 
 var (
-	buildAuthModule              = composition.BuildAuthModule
-	buildAssessmentModule        = composition.BuildAssessmentModule
-	buildContainerRuntimeModule  = composition.BuildContainerRuntimeModule
-	buildChallengeModule         = composition.BuildChallengeModule
-	buildContestModule           = composition.BuildContestModule
-	buildIdentityModule          = composition.BuildIdentityModule
-	buildInstanceModule          = composition.BuildInstanceModule
-	buildOpsModule               = composition.BuildOpsModule
-	buildPracticeModule          = composition.BuildPracticeModule
-	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
+	buildAuthModule             = composition.BuildAuthModule
+	buildAssessmentModule       = composition.BuildAssessmentModule
+	buildContainerRuntimeModule = composition.BuildContainerRuntimeModule
+	buildChallengeModule        = composition.BuildChallengeModule
+	buildContestModule          = composition.BuildContestModule
+	buildIdentityModule         = composition.BuildIdentityModule
+	buildInstanceModule         = composition.BuildInstanceModule
+	buildOpsModule              = composition.BuildOpsModule
+	buildPracticeModule         = composition.BuildPracticeModule
+	buildTeachingQueryModule    = composition.BuildTeachingQueryModule
 )
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
@@ -149,7 +149,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
-	teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
+	teachingQueryModule := buildTeachingQueryModule(root, assessmentModule)
 	contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 	contestRealtimeHandler := contesthttp.NewRealtimeHandler(
 		tokenService,
@@ -179,14 +179,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		practice:        practiceModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
-		auditLogger:       composition.NamedAuditLogger(log),
-		auditRecorder:     opsModule.AuditService,
-		assessment:        assessmentModule,
-		challenge:         challengeModule,
-		contest:           contestModule,
-		practice:          practiceModule,
-		instance:          instanceModule,
-		teachingReadmodel: teachingReadmodelModule,
+		auditLogger:   composition.NamedAuditLogger(log),
+		auditRecorder: opsModule.AuditService,
+		assessment:    assessmentModule,
+		challenge:     challengeModule,
+		contest:       contestModule,
+		practice:      practiceModule,
+		instance:      instanceModule,
+		teachingQuery: teachingQueryModule,
 	})
 	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
 	engine.GET("/ws/contests/:id/scoreboard", contestRealtimeHandler.ServeScoreboardWS)

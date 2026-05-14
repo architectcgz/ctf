@@ -447,7 +447,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildAuthModule := buildAuthModule
 	originalBuildChallengeModule := buildChallengeModule
 	originalBuildAssessmentModule := buildAssessmentModule
-	originalBuildTeachingReadmodelModule := buildTeachingReadmodelModule
+	originalBuildTeachingQueryModule := buildTeachingQueryModule
 	originalBuildContestModule := buildContestModule
 	originalBuildPracticeModule := buildPracticeModule
 	defer func() {
@@ -458,7 +458,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildAuthModule = originalBuildAuthModule
 		buildChallengeModule = originalBuildChallengeModule
 		buildAssessmentModule = originalBuildAssessmentModule
-		buildTeachingReadmodelModule = originalBuildTeachingReadmodelModule
+		buildTeachingQueryModule = originalBuildTeachingQueryModule
 		buildContestModule = originalBuildContestModule
 		buildPracticeModule = originalBuildPracticeModule
 	}()
@@ -512,12 +512,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "assessment")
 		return originalBuildAssessmentModule(root, challenge)
 	}
-	buildTeachingReadmodelModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingReadmodelModule {
+	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingQueryModule {
 		if root == nil || assessment == nil {
-			t.Fatal("expected root and assessment for teaching readmodel module builder")
+			t.Fatal("expected root and assessment for teaching query module builder")
 		}
-		calls = append(calls, "teaching_readmodel")
-		return originalBuildTeachingReadmodelModule(root, assessment)
+		calls = append(calls, "teaching_query")
+		return originalBuildTeachingQueryModule(root, assessment)
 	}
 	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.ContainerRuntimeModule) *composition.ContestModule {
 		if root == nil || challenge == nil || runtime == nil {
@@ -542,7 +542,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"container_runtime", "ops", "instance", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice"}
+	expectedCalls := []string{"container_runtime", "ops", "instance", "identity", "auth", "challenge", "assessment", "teaching_query", "contest", "practice"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

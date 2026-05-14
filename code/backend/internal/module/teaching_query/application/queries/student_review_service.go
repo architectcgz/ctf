@@ -10,7 +10,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	teachingevidence "ctf-platform/internal/teaching/evidence"
 	"ctf-platform/pkg/errcode"
@@ -18,8 +18,8 @@ import (
 
 type studentReviewQueryRepository interface {
 	classAccessRepository
-	readmodelports.TeachingStudentProfileRepository
-	readmodelports.TeachingStudentActivityRepository
+	queryports.TeachingStudentProfileRepository
+	queryports.TeachingStudentActivityRepository
 }
 
 type StudentReviewQueryService struct {
@@ -90,7 +90,7 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 	if result == nil {
 		return &dto.TeacherRecommendationResp{}, nil
 	}
-	resp := teachingReadmodelMapper.ToTeacherRecommendationRespPtr(result)
+	resp := teachingQueryMapper.ToTeacherRecommendationRespPtr(result)
 	if resp == nil {
 		return &dto.TeacherRecommendationResp{}, nil
 	}
@@ -110,7 +110,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TimelineResp{Events: commonmapper.NonNilSlice(teachingReadmodelMapper.ToTimelineEvents(events))}, nil
+	return &dto.TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
 }
 
 func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
@@ -229,11 +229,11 @@ func normalizeUTC(value *time.Time) *time.Time {
 	return &normalized
 }
 
-func filterEvidenceEvents(events []readmodelports.EvidenceEventRecord, query teachingevidence.Query) []readmodelports.EvidenceEventRecord {
+func filterEvidenceEvents(events []queryports.EvidenceEventRecord, query teachingevidence.Query) []queryports.EvidenceEventRecord {
 	if len(events) == 0 {
 		return events
 	}
-	filtered := make([]readmodelports.EvidenceEventRecord, 0, len(events))
+	filtered := make([]queryports.EvidenceEventRecord, 0, len(events))
 	for _, event := range events {
 		if query.ContestID != nil && !int64PtrEqual(event.ContestID, *query.ContestID) {
 			continue
@@ -255,13 +255,13 @@ func filterEvidenceEvents(events []readmodelports.EvidenceEventRecord, query tea
 	return filtered
 }
 
-func paginateEvidenceEvents(events []readmodelports.EvidenceEventRecord, query teachingevidence.Query) []readmodelports.EvidenceEventRecord {
+func paginateEvidenceEvents(events []queryports.EvidenceEventRecord, query teachingevidence.Query) []queryports.EvidenceEventRecord {
 	if len(events) == 0 {
-		return []readmodelports.EvidenceEventRecord{}
+		return []queryports.EvidenceEventRecord{}
 	}
 	offset := query.Offset
 	if offset >= len(events) {
-		return []readmodelports.EvidenceEventRecord{}
+		return []queryports.EvidenceEventRecord{}
 	}
 	if offset < 0 {
 		offset = 0
@@ -276,11 +276,11 @@ func paginateEvidenceEvents(events []readmodelports.EvidenceEventRecord, query t
 	return events[offset:end]
 }
 
-func filterAttackSessionEvents(events []readmodelports.EvidenceEventRecord, query *dto.TeacherAttackSessionQuery) []readmodelports.EvidenceEventRecord {
+func filterAttackSessionEvents(events []queryports.EvidenceEventRecord, query *dto.TeacherAttackSessionQuery) []queryports.EvidenceEventRecord {
 	if query == nil {
 		return events
 	}
-	filtered := make([]readmodelports.EvidenceEventRecord, 0, len(events))
+	filtered := make([]queryports.EvidenceEventRecord, 0, len(events))
 	for _, event := range events {
 		if query.Mode != "" && attackEventMode(event) != query.Mode {
 			continue
@@ -296,7 +296,7 @@ func filterAttackSessionEvents(events []readmodelports.EvidenceEventRecord, quer
 	return filtered
 }
 
-func buildAttackSessions(studentID int64, events []readmodelports.EvidenceEventRecord) []dto.TeacherAttackSession {
+func buildAttackSessions(studentID int64, events []queryports.EvidenceEventRecord) []dto.TeacherAttackSession {
 	if len(events) == 0 {
 		return []dto.TeacherAttackSession{}
 	}
@@ -304,7 +304,7 @@ func buildAttackSessions(studentID int64, events []readmodelports.EvidenceEventR
 		return events[i].Timestamp.Before(events[j].Timestamp)
 	})
 
-	grouped := make(map[string][]readmodelports.EvidenceEventRecord)
+	grouped := make(map[string][]queryports.EvidenceEventRecord)
 	order := make([]string, 0)
 	for _, event := range events {
 		key := attackSessionGroupKey(event)
@@ -316,7 +316,7 @@ func buildAttackSessions(studentID int64, events []readmodelports.EvidenceEventR
 
 	sessions := make([]dto.TeacherAttackSession, 0, len(grouped))
 	for _, key := range order {
-		chunk := make([]readmodelports.EvidenceEventRecord, 0)
+		chunk := make([]queryports.EvidenceEventRecord, 0)
 		for _, event := range grouped[key] {
 			if len(chunk) > 0 && event.Timestamp.Sub(chunk[len(chunk)-1].Timestamp) > attackSessionGap {
 				sessions = append(sessions, buildAttackSession(studentID, len(sessions)+1, chunk))
@@ -335,7 +335,7 @@ func buildAttackSessions(studentID int64, events []readmodelports.EvidenceEventR
 	return sessions
 }
 
-func buildAttackSession(studentID int64, sequence int, events []readmodelports.EvidenceEventRecord) dto.TeacherAttackSession {
+func buildAttackSession(studentID int64, sequence int, events []queryports.EvidenceEventRecord) dto.TeacherAttackSession {
 	first := events[0]
 	last := events[len(events)-1]
 	sessionID := fmt.Sprintf("sess_%d_%d", studentID, sequence)
@@ -366,7 +366,7 @@ func buildAttackSession(studentID int64, sequence int, events []readmodelports.E
 	return session
 }
 
-func toAttackEvent(studentID int64, sessionID string, index int, event readmodelports.EvidenceEventRecord) dto.TeacherAttackEvent {
+func toAttackEvent(studentID int64, sessionID string, index int, event queryports.EvidenceEventRecord) dto.TeacherAttackEvent {
 	return dto.TeacherAttackEvent{
 		ID:         fmt.Sprintf("%s_evt_%d", sessionID, index+1),
 		SessionID:  sessionID,
@@ -431,14 +431,14 @@ func paginateAttackSessions(sessions []dto.TeacherAttackSession, query *dto.Teac
 	return sessions[offset:end]
 }
 
-func attackSessionGroupKey(event readmodelports.EvidenceEventRecord) string {
+func attackSessionGroupKey(event queryports.EvidenceEventRecord) string {
 	if attackEventMode(event) == "awd" {
 		return fmt.Sprintf("awd:%s:%s:%s:%s", ptrKey(event.TeamID), ptrKey(event.ContestID), ptrKey(event.ServiceID), ptrKey(event.VictimTeamID))
 	}
 	return fmt.Sprintf("%s:%d:%s", attackEventMode(event), event.ChallengeID, ptrKey(event.ContestID))
 }
 
-func attackEventMode(event readmodelports.EvidenceEventRecord) string {
+func attackEventMode(event queryports.EvidenceEventRecord) string {
 	if strings.HasPrefix(event.Type, "awd_") {
 		return "awd"
 	}
@@ -448,7 +448,7 @@ func attackEventMode(event readmodelports.EvidenceEventRecord) string {
 	return "practice"
 }
 
-func attackEventChallengeID(event readmodelports.EvidenceEventRecord) *int64 {
+func attackEventChallengeID(event queryports.EvidenceEventRecord) *int64 {
 	if event.ChallengeID <= 0 {
 		return nil
 	}
@@ -456,7 +456,7 @@ func attackEventChallengeID(event readmodelports.EvidenceEventRecord) *int64 {
 	return &value
 }
 
-func deriveAttackSessionResult(events []readmodelports.EvidenceEventRecord) string {
+func deriveAttackSessionResult(events []queryports.EvidenceEventRecord) string {
 	hasFailure := false
 	hasAction := false
 	for _, event := range events {
@@ -479,7 +479,7 @@ func deriveAttackSessionResult(events []readmodelports.EvidenceEventRecord) stri
 	return "unknown"
 }
 
-func evidenceEventSucceeded(event readmodelports.EvidenceEventRecord) bool {
+func evidenceEventSucceeded(event queryports.EvidenceEventRecord) bool {
 	if event.Meta == nil {
 		return false
 	}
@@ -492,7 +492,7 @@ func evidenceEventSucceeded(event readmodelports.EvidenceEventRecord) bool {
 	return false
 }
 
-func evidenceEventStage(event readmodelports.EvidenceEventRecord) string {
+func evidenceEventStage(event queryports.EvidenceEventRecord) string {
 	if event.Stage != "" {
 		return event.Stage
 	}
@@ -504,7 +504,7 @@ func evidenceEventStage(event readmodelports.EvidenceEventRecord) string {
 	return "trace"
 }
 
-func evidenceEventSource(event readmodelports.EvidenceEventRecord) string {
+func evidenceEventSource(event queryports.EvidenceEventRecord) string {
 	if event.Source != "" {
 		return event.Source
 	}
@@ -556,7 +556,7 @@ func getAccessibleStudent(
 	return student, nil
 }
 
-func toProgressBreakdownMap(rows []readmodelports.ProgressRow) map[string]dto.ProgressBreakdown {
+func toProgressBreakdownMap(rows []queryports.ProgressRow) map[string]dto.ProgressBreakdown {
 	if len(rows) == 0 {
 		return map[string]dto.ProgressBreakdown{}
 	}

@@ -9,14 +9,14 @@ import (
 
 	"ctf-platform/internal/dto"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/pkg/errcode"
 )
 
 type classInsightQueryRepository interface {
 	classAccessRepository
-	readmodelports.TeachingClassInsightRepository
+	queryports.TeachingClassInsightRepository
 }
 
 type ClassInsightQueryService struct {
@@ -55,7 +55,7 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return teachingReadmodelMapper.ToClassSummaryPtr(summary), nil
+	return teachingQueryMapper.ToClassSummaryPtr(summary), nil
 }
 
 func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error) {
@@ -73,7 +73,7 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return teachingReadmodelMapper.ToClassTrendRespPtr(trend), nil
+	return teachingQueryMapper.ToClassTrendRespPtr(trend), nil
 }
 
 func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error) {
@@ -101,7 +101,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	summaryDTO := teachingReadmodelMapper.ToClassSummaryPtr(summary)
+	summaryDTO := teachingQueryMapper.ToClassSummaryPtr(summary)
 	classTrend := buildClassTrendSnapshot(trend)
 	evaluations := make(map[int64]teachingadvice.StudentEvaluation, len(snapshots))
 	studentRefs := make(map[int64]dto.TeacherReviewStudentRef, len(snapshots))
@@ -154,7 +154,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 	}, nil
 }
 
-func buildClassTrendSnapshot(trend *readmodelports.ClassTrend) *teachingadvice.ClassTrendSnapshot {
+func buildClassTrendSnapshot(trend *queryports.ClassTrend) *teachingadvice.ClassTrendSnapshot {
 	if trend == nil || len(trend.Points) < 2 {
 		return nil
 	}
@@ -192,7 +192,7 @@ func (s *ClassInsightQueryService) matchingStudentRecommendation(
 			if challenge == nil || !recommendationMatchesDimension(challenge, targetDimension) {
 				continue
 			}
-			return teachingReadmodelMapper.ToTeacherRecommendationItemPtr(challenge)
+			return teachingQueryMapper.ToTeacherRecommendationItemPtr(challenge)
 		}
 	}
 	return nil

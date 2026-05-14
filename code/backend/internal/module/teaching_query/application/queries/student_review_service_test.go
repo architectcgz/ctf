@@ -7,7 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -15,10 +15,10 @@ type studentReviewRepoStub struct {
 	findUserByIDFn             func(ctx context.Context, userID int64) (*model.User, error)
 	countPublishedChallengesFn func(ctx context.Context) (int64, error)
 	countSolvedChallengesFn    func(ctx context.Context, userID int64) (int64, error)
-	getCategoryProgressFn      func(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error)
-	getDifficultyProgressFn    func(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error)
-	getStudentTimelineFn       func(ctx context.Context, userID int64, limit, offset int) ([]readmodelports.TimelineEventRecord, error)
-	getStudentEvidenceFn       func(ctx context.Context, userID int64, query evidence.Query) ([]readmodelports.EvidenceEventRecord, error)
+	getCategoryProgressFn      func(ctx context.Context, userID int64) ([]queryports.ProgressRow, error)
+	getDifficultyProgressFn    func(ctx context.Context, userID int64) ([]queryports.ProgressRow, error)
+	getStudentTimelineFn       func(ctx context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error)
+	getStudentEvidenceFn       func(ctx context.Context, userID int64, query evidence.Query) ([]queryports.EvidenceEventRecord, error)
 }
 
 func (s *studentReviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
@@ -42,32 +42,32 @@ func (s *studentReviewRepoStub) CountSolvedChallenges(ctx context.Context, userI
 	return 0, nil
 }
 
-func (s *studentReviewRepoStub) GetCategoryProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
+func (s *studentReviewRepoStub) GetCategoryProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
 	if s.getCategoryProgressFn != nil {
 		return s.getCategoryProgressFn(ctx, userID)
 	}
-	return []readmodelports.ProgressRow{}, nil
+	return []queryports.ProgressRow{}, nil
 }
 
-func (s *studentReviewRepoStub) GetDifficultyProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
+func (s *studentReviewRepoStub) GetDifficultyProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
 	if s.getDifficultyProgressFn != nil {
 		return s.getDifficultyProgressFn(ctx, userID)
 	}
-	return []readmodelports.ProgressRow{}, nil
+	return []queryports.ProgressRow{}, nil
 }
 
-func (s *studentReviewRepoStub) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]readmodelports.TimelineEventRecord, error) {
+func (s *studentReviewRepoStub) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error) {
 	if s.getStudentTimelineFn != nil {
 		return s.getStudentTimelineFn(ctx, userID, limit, offset)
 	}
-	return []readmodelports.TimelineEventRecord{}, nil
+	return []queryports.TimelineEventRecord{}, nil
 }
 
-func (s *studentReviewRepoStub) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]readmodelports.EvidenceEventRecord, error) {
+func (s *studentReviewRepoStub) GetStudentEvidence(ctx context.Context, userID int64, query evidence.Query) ([]queryports.EvidenceEventRecord, error) {
 	if s.getStudentEvidenceFn != nil {
 		return s.getStudentEvidenceFn(ctx, userID, query)
 	}
-	return []readmodelports.EvidenceEventRecord{}, nil
+	return []queryports.EvidenceEventRecord{}, nil
 }
 
 type studentReviewRecommendationStub struct {
@@ -101,11 +101,11 @@ func TestStudentReviewQueryServiceGetStudentProgressUsesAccessibleStudent(t *tes
 		countSolvedChallengesFn: func(context.Context, int64) (int64, error) {
 			return 5, nil
 		},
-		getCategoryProgressFn: func(context.Context, int64) ([]readmodelports.ProgressRow, error) {
-			return []readmodelports.ProgressRow{{Key: "web", Total: 10, Solved: 3}}, nil
+		getCategoryProgressFn: func(context.Context, int64) ([]queryports.ProgressRow, error) {
+			return []queryports.ProgressRow{{Key: "web", Total: 10, Solved: 3}}, nil
 		},
-		getDifficultyProgressFn: func(context.Context, int64) ([]readmodelports.ProgressRow, error) {
-			return []readmodelports.ProgressRow{{Key: "easy", Total: 8, Solved: 4}}, nil
+		getDifficultyProgressFn: func(context.Context, int64) ([]queryports.ProgressRow, error) {
+			return []queryports.ProgressRow{{Key: "easy", Total: 8, Solved: 4}}, nil
 		},
 	}
 
@@ -187,11 +187,11 @@ func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testi
 				return nil, nil
 			}
 		},
-		getStudentEvidenceFn: func(_ context.Context, userID int64, query evidence.Query) ([]readmodelports.EvidenceEventRecord, error) {
+		getStudentEvidenceFn: func(_ context.Context, userID int64, query evidence.Query) ([]queryports.EvidenceEventRecord, error) {
 			if userID != 101 || query.ChallengeID != nil || query.ContestID != nil || query.RoundID != nil {
 				t.Fatalf("unexpected evidence query = %+v for user=%d", query, userID)
 			}
-			return []readmodelports.EvidenceEventRecord{
+			return []queryports.EvidenceEventRecord{
 				{Type: "instance_proxy_request", ChallengeID: 8, Title: "web-101", Timestamp: start, Detail: "open proxy"},
 				{Type: "challenge_submission", ChallengeID: 8, Title: "web-101", Timestamp: start.Add(2 * time.Minute), Detail: "submit flag", Meta: map[string]any{"is_correct": true}},
 			}, nil
