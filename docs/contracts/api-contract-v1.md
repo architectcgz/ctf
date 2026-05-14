@@ -2,9 +2,11 @@
 
 > 目的：把 **CTF 前端（`ctf/frontend`）当前会调用的接口** 与 **后端 API 设计（`ctf/docs/architecture/backend/04-api-design.md`）** 的返回结构统一成一份“契约”，作为联调与实现的唯一参考，避免后期因字段名/类型不一致返工。
 >
-> 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0），应与本文保持一致。
+> 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0，稳定 bundle），应与本文保持一致。
 >
-> 最后更新：2026-05-11
+> 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
+>
+> 最后更新：2026-05-14
 
 ---
 

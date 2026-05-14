@@ -1,0 +1,37 @@
+/reports/personal:
+  post:
+    tags: [Reports]
+    summary: 导出个人能力报告（PDF）
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: false
+      content:
+        application/json: {schema: {type: object, description: 请求体以实现为准；允许为空}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeReportExportData'}}
+/reports/class:
+  post:
+    tags: [Reports]
+    summary: 导出班级报告（PDF / Excel）
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              class_name: {type: string, description: 未传时后端会尝试回退到当前教师绑定班级。}
+              format: {type: string, enum: [pdf, excel]}
+              from_date: {type: string, format: date, description: 班级报告开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。}
+              to_date: {type: string, format: date, description: 班级报告结束日期。与 from_date 必须同时传入；最大跨度 31 天。}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeReportExportData'}}

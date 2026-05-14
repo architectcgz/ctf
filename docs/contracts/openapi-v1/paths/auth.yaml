@@ -1,0 +1,160 @@
+/auth/login:
+  post:
+    tags: [Auth]
+    summary: 用户登录
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/LoginRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeLoginData'}}
+      '403':
+        description: Forbidden
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '401':
+        description: Unauthorized
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '429':
+        description: Too Many Requests
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/register:
+  post:
+    tags: [Auth]
+    summary: 用户注册（注册成功即登录）
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+            - {$ref: '#/components/schemas/LoginRequest'}
+            description: 注册字段以实现为准；此处至少包含 username/password
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeLoginData'}}
+      '400':
+        description: Bad Request
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/logout:
+  post:
+    tags: [Auth]
+    summary: 退出登录
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/profile:
+  get:
+    tags: [Auth]
+    summary: 获取当前用户信息
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              allOf:
+              - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+              - type: object
+                required: [data]
+                properties: {data: {$ref: '#/components/schemas/AuthUser'}}
+      '401':
+        description: Unauthorized
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/password:
+  put:
+    tags: [Auth]
+    summary: 修改密码
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [old_password, new_password]
+            properties: {old_password: {type: string, format: password}, new_password: {type: string, format: password}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/ws-ticket:
+  post:
+    tags: [Auth]
+    summary: 获取 WebSocket 一次性 ticket
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeWsTicketData'}}
+/auth/cas/status:
+  get:
+    tags: [Auth]
+    summary: 获取 CAS 认证接入状态
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeCASStatusData'}}
+/auth/cas/login:
+  get:
+    tags: [Auth]
+    summary: 获取 CAS 登录跳转地址
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeCASLoginData'}}
+      '503':
+        description: Service Unavailable
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/auth/cas/callback:
+  get:
+    tags: [Auth]
+    summary: CAS 登录回调入口
+    parameters:
+    - in: query
+      name: ticket
+      required: true
+      schema: {type: string}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeLoginData'}}
+      '400':
+        description: Bad Request
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '401':
+        description: Unauthorized
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '403':
+        description: Forbidden
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '503':
+        description: Service Unavailable
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}

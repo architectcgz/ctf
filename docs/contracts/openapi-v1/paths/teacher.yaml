@@ -1,0 +1,309 @@
+/teacher/classes:
+  get:
+    tags: [Teacher]
+    summary: 教师班级列表
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherClassListData'}}
+/teacher/overview:
+  get:
+    tags: [Teacher]
+    summary: 教师教学概览
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherOverviewData'}}
+/teacher/classes/{name}/students:
+  get:
+    tags: [Teacher]
+    summary: 班级学员列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: name
+      required: true
+      schema: {type: string}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherStudentListData'}}
+/teacher/classes/{name}/summary:
+  get:
+    tags: [Teacher]
+    summary: 班级训练概览
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: name
+      required: true
+      schema: {type: string}
+    - in: query
+      name: from_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。
+    - in: query
+      name: to_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherClassSummaryData'}}
+/teacher/classes/{name}/trend:
+  get:
+    tags: [Teacher]
+    summary: 班级训练趋势
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: name
+      required: true
+      schema: {type: string}
+    - in: query
+      name: from_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。
+    - in: query
+      name: to_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherClassTrendData'}}
+/teacher/classes/{name}/review:
+  get:
+    tags: [Teacher]
+    summary: 班级教学复盘
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: name
+      required: true
+      schema: {type: string}
+    - in: query
+      name: from_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘开始日期。与 to_date 必须同时传入；都不传时默认最近 7 天。
+    - in: query
+      name: to_date
+      required: false
+      schema: {type: string, format: date}
+      description: 班级复盘结束日期。与 from_date 必须同时传入；最大跨度 31 天。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherClassReviewData'}}
+/teacher/students/{id}/progress:
+  get:
+    tags: [Teacher]
+    summary: 教师查看指定学员进度
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMyProgressData'}}
+/teacher/students/{id}/evidence:
+  get:
+    tags: [Teacher]
+    summary: 教师查看指定学员证据流
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: query
+      name: challenge_id
+      required: false
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherEvidenceData'}}
+/teacher/students/{id}/review-archive/export:
+  post:
+    tags: [Reports, Teacher]
+    summary: 导出学生复盘归档（JSON）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              format: {type: string, enum: [json]}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeReportExportData'}}
+/teacher/students/{id}/review-archive:
+  get:
+    tags: [Reports, Teacher]
+    summary: 查看学生复盘归档
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeReviewArchiveData'}}
+/teacher/writeup-submissions:
+  get:
+    tags: [Teacher]
+    summary: 教师查看题解提交列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - {in: query, name: student_id, schema: {$ref: '#/components/schemas/ID'}}
+    - {in: query, name: challenge_id, schema: {$ref: '#/components/schemas/ID'}}
+    - {in: query, name: class_name, schema: {type: string}}
+    - {in: query, name: submission_status, schema: {$ref: '#/components/schemas/SubmissionWriteupStatus'}}
+    - {in: query, name: review_status, schema: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}}
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupListData'}}
+/teacher/writeup-submissions/{id}:
+  get:
+    tags: [Teacher]
+    summary: 教师查看题解提交详情
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupDetailData'}}
+/teacher/writeup-submissions/{id}/review:
+  put:
+    tags: [Teacher]
+    summary: 教师评阅题解提交
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/ReviewSubmissionWriteupRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSubmissionWriteupData'}}
+/teacher/manual-review-submissions:
+  get:
+    tags: [Teacher]
+    summary: 教师查看人工审核提交列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - {in: query, name: student_id, schema: {$ref: '#/components/schemas/ID'}}
+    - {in: query, name: challenge_id, schema: {$ref: '#/components/schemas/ID'}}
+    - {in: query, name: class_name, schema: {type: string}}
+    - {in: query, name: review_status, schema: {$ref: '#/components/schemas/TeacherManualReviewStatus'}}
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionListData'}}
+/teacher/manual-review-submissions/{id}:
+  get:
+    tags: [Teacher]
+    summary: 教师查看人工审核提交详情
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionDetailData'}}
+/teacher/manual-review-submissions/{id}/review:
+  put:
+    tags: [Teacher]
+    summary: 教师评阅人工审核提交
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/ReviewManualReviewSubmissionRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionDetailData'}}

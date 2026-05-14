@@ -1,0 +1,167 @@
+/challenges:
+  get:
+    tags: [Challenges]
+    summary: 获取靶场列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    - {in: query, name: category, schema: {$ref: '#/components/schemas/ChallengeCategory'}}
+    - {in: query, name: difficulty, schema: {$ref: '#/components/schemas/ChallengeDifficulty'}}
+    - {in: query, name: sort, schema: {type: string, description: '如 "created_at:desc"'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeListData'}}
+/challenges/{id}:
+  get:
+    tags: [Challenges]
+    summary: 获取靶场详情
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeDetailData'}}
+/challenges/{id}/instances:
+  post:
+    tags: [Instances]
+    summary: 启动靶机实例
+    description: 如果挑战拓扑包含细粒度 ports/protocol 策略，接口会按 source_node_key -> target_node_key 方向下发容器间 ACL。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceData'}}
+/challenges/{id}/submit:
+  post:
+    tags: [Challenges]
+    summary: 提交 Flag
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/SubmitFlagRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopePracticeSubmitFlagData'}}
+      '400':
+        description: Bad Request
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopePracticeSubmitFlagData'}}
+/challenges/{id}/writeup-submissions:
+  post:
+    tags: [Challenges]
+    summary: 提交或保存我的题解
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpsertSubmissionWriteupRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSubmissionWriteupData'}}
+/challenges/{id}/writeup-submissions/me:
+  get:
+    tags: [Challenges]
+    summary: 获取我的题解提交
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNullableSubmissionWriteupData'}}
+/challenges/{id}/submissions/mine:
+  get:
+    tags: [Challenges]
+    summary: 获取我的题目提交记录
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeSubmissionRecordListData'}}
+/challenges/{id}/hints/{level}/unlock:
+  post:
+    tags: [Challenges]
+    summary: 解锁提示
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: level
+      required: true
+      schema: {type: integer, minimum: 1}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeUnlockHintData'}}
+/challenges/{id}/writeup:
+  get:
+    tags: [Challenges]
+    summary: 获取题目公开题解
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeWriteupData'}}
+      '404': {description: Not Found}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}

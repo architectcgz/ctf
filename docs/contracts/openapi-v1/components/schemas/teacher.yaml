@@ -1,0 +1,408 @@
+ApiEnvelopeNullableSubmissionWriteupData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data:
+        allOf:
+        - {$ref: '#/components/schemas/SubmissionWriteupData'}
+        nullable: true
+SubmissionWriteupStatus: {type: string, enum: [draft, submitted]}
+SubmissionWriteupReviewStatus: {type: string, enum: [pending, reviewed, excellent, needs_revision]}
+UpsertSubmissionWriteupRequest:
+  type: object
+  required: [title, content, submission_status]
+  properties: {title: {type: string}, content: {type: string}, submission_status: {$ref: '#/components/schemas/SubmissionWriteupStatus'}}
+SubmissionWriteupData:
+  type: object
+  required:
+  - id
+  - user_id
+  - challenge_id
+  - title
+  - content
+  - submission_status
+  - review_status
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    user_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    contest_id: {$ref: '#/components/schemas/ID', nullable: true}
+    title: {type: string}
+    content: {type: string}
+    submission_status: {$ref: '#/components/schemas/SubmissionWriteupStatus'}
+    review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    reviewed_by: {$ref: '#/components/schemas/ID', nullable: true}
+    reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    review_comment: {type: string, nullable: true}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeSubmissionWriteupData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/SubmissionWriteupData'}}
+TeacherSubmissionWriteupItem:
+  type: object
+  required:
+  - id
+  - user_id
+  - student_username
+  - challenge_id
+  - challenge_title
+  - title
+  - content_preview
+  - submission_status
+  - review_status
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    user_id: {$ref: '#/components/schemas/ID'}
+    student_username: {type: string}
+    student_name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    challenge_title: {type: string}
+    title: {type: string}
+    content_preview: {type: string}
+    submission_status: {$ref: '#/components/schemas/SubmissionWriteupStatus'}
+    review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+TeacherSubmissionWriteupListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/TeacherSubmissionWriteupItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeTeacherSubmissionWriteupListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherSubmissionWriteupListData'}}
+TeacherSubmissionWriteupDetailData:
+  allOf:
+  - {$ref: '#/components/schemas/SubmissionWriteupData'}
+  - type: object
+    required: [student_username, challenge_title]
+    properties:
+      student_username: {type: string}
+      student_name: {type: string, nullable: true}
+      class_name: {type: string, nullable: true}
+      challenge_title: {type: string}
+      reviewer_name: {type: string, nullable: true}
+ApiEnvelopeTeacherSubmissionWriteupDetailData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherSubmissionWriteupDetailData'}}
+ReviewSubmissionWriteupRequest:
+  type: object
+  required: [review_status]
+  properties: {review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}, review_comment: {type: string,
+      nullable: true}}
+TeacherManualReviewStatus: {type: string, enum: [pending, approved, rejected]}
+TeacherManualReviewSubmissionItemData:
+  type: object
+  required:
+  - id
+  - user_id
+  - student_username
+  - challenge_id
+  - challenge_title
+  - answer_preview
+  - review_status
+  - submitted_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    user_id: {$ref: '#/components/schemas/ID'}
+    student_username: {type: string}
+    student_name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    challenge_title: {type: string}
+    answer_preview: {type: string}
+    review_status: {$ref: '#/components/schemas/TeacherManualReviewStatus'}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime'}
+    reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+TeacherManualReviewSubmissionListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/TeacherManualReviewSubmissionItemData'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeTeacherManualReviewSubmissionListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherManualReviewSubmissionListData'}}
+TeacherManualReviewSubmissionDetailData:
+  type: object
+  required:
+  - id
+  - user_id
+  - student_username
+  - challenge_id
+  - challenge_title
+  - answer
+  - is_correct
+  - score
+  - review_status
+  - submitted_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    user_id: {$ref: '#/components/schemas/ID'}
+    student_username: {type: string}
+    student_name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    challenge_title: {type: string}
+    answer: {type: string}
+    is_correct: {type: boolean}
+    score: {type: integer, minimum: 0}
+    review_status: {$ref: '#/components/schemas/TeacherManualReviewStatus'}
+    reviewed_by: {$ref: '#/components/schemas/ID', nullable: true}
+    reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    review_comment: {type: string, nullable: true}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+    reviewer_name: {type: string, nullable: true}
+ApiEnvelopeTeacherManualReviewSubmissionDetailData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherManualReviewSubmissionDetailData'}}
+ReviewManualReviewSubmissionRequest:
+  type: object
+  required: [review_status]
+  properties:
+    review_status: {type: string, enum: [approved, rejected]}
+    review_comment: {type: string, nullable: true}
+TeacherClassItem:
+  type: object
+  required: [name]
+  properties:
+    name: {type: string}
+    student_count: {type: integer, nullable: true, minimum: 0}
+ApiEnvelopeTeacherClassListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/TeacherClassItem'}}
+TeacherClassSummaryData:
+  type: object
+  required: [class_name, student_count, average_solved, active_student_count, active_rate, recent_event_count]
+  properties:
+    class_name: {type: string}
+    student_count: {type: integer, minimum: 0}
+    average_solved: {type: number, minimum: 0}
+    active_student_count: {type: integer, minimum: 0}
+    active_rate: {type: number, minimum: 0}
+    recent_event_count: {type: integer, minimum: 0}
+ApiEnvelopeTeacherClassSummaryData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherClassSummaryData'}}
+TeacherClassTrendPoint:
+  type: object
+  required: [date, active_student_count, event_count, solve_count]
+  properties:
+    date: {type: string, format: date}
+    active_student_count: {type: integer, minimum: 0}
+    event_count: {type: integer, minimum: 0}
+    solve_count: {type: integer, minimum: 0}
+TeacherClassTrendData:
+  type: object
+  required: [class_name, points]
+  properties:
+    class_name: {type: string}
+    points: {type: array, items: {$ref: '#/components/schemas/TeacherClassTrendPoint'}}
+ApiEnvelopeTeacherClassTrendData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherClassTrendData'}}
+TeacherReviewStudentRef:
+  type: object
+  required: [id, username]
+  properties: {id: {$ref: '#/components/schemas/ID'}, username: {type: string}, name: {type: string, nullable: true}}
+TeacherClassReviewRecommendationData:
+  type: object
+  required: [challenge_id, title, category, difficulty, summary]
+  properties:
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    category: {$ref: '#/components/schemas/ChallengeCategory'}
+    difficulty: {$ref: '#/components/schemas/ChallengeDifficulty'}
+    dimension: {type: string, nullable: true}
+    difficulty_band: {type: string, nullable: true, enum: [beginner, easy, medium, hard, insane]}
+    severity: {type: string, nullable: true, enum: [good, attention, warning, danger]}
+    reason_codes: {type: array, nullable: true, items: {type: string}}
+    summary: {type: string}
+    evidence: {type: string, nullable: true}
+TeacherClassReviewItemData:
+  type: object
+  required: [code, severity, summary]
+  properties:
+    code: {type: string}
+    severity: {type: string, enum: [good, attention, warning, danger]}
+    summary: {type: string}
+    evidence: {type: string, nullable: true}
+    action: {type: string, nullable: true}
+    reason_codes: {type: array, nullable: true, items: {type: string}}
+    dimension: {type: string, nullable: true}
+    students: {type: array, nullable: true, items: {$ref: '#/components/schemas/TeacherReviewStudentRef'}}
+    recommendation:
+      allOf:
+      - {$ref: '#/components/schemas/TeacherClassReviewRecommendationData'}
+      nullable: true
+TeacherClassReviewData:
+  type: object
+  required: [class_name, items]
+  properties:
+    class_name: {type: string}
+    items: {type: array, items: {$ref: '#/components/schemas/TeacherClassReviewItemData'}}
+ApiEnvelopeTeacherClassReviewData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherClassReviewData'}}
+TeacherStudentItem:
+  type: object
+  required: [id, username]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    username: {type: string}
+    student_no: {type: string, nullable: true}
+    name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    solved_count: {type: integer, nullable: true, minimum: 0}
+    total_score: {type: integer, nullable: true, minimum: 0}
+    recent_event_count: {type: integer, nullable: true, minimum: 0}
+    weak_dimension: {type: string, nullable: true}
+    progress: {$ref: '#/components/schemas/MyProgressData', nullable: true}
+ApiEnvelopeTeacherStudentListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/TeacherStudentItem'}}
+TeacherOverviewSummaryData:
+  type: object
+  required:
+  - class_count
+  - student_count
+  - active_student_count
+  - active_rate
+  - average_solved
+  - recent_event_count
+  - risk_student_count
+  properties:
+    class_count: {type: integer, minimum: 0}
+    student_count: {type: integer, minimum: 0}
+    active_student_count: {type: integer, minimum: 0}
+    active_rate: {type: number, minimum: 0}
+    average_solved: {type: number, minimum: 0}
+    recent_event_count: {type: integer, minimum: 0}
+    risk_student_count: {type: integer, minimum: 0}
+TeacherOverviewTrendPoint:
+  type: object
+  required: [date, active_student_count, event_count, solve_count]
+  properties:
+    date: {type: string}
+    active_student_count: {type: integer, minimum: 0}
+    event_count: {type: integer, minimum: 0}
+    solve_count: {type: integer, minimum: 0}
+TeacherOverviewTrendData:
+  type: object
+  required: [points]
+  properties:
+    points: {type: array, items: {$ref: '#/components/schemas/TeacherOverviewTrendPoint'}}
+TeacherOverviewWeakDimensionData:
+  type: object
+  required: [dimension, student_count]
+  properties: {dimension: {type: string}, student_count: {type: integer, minimum: 0}}
+TeacherOverviewClassFocusData:
+  type: object
+  required: [class_name, student_count, active_rate, recent_event_count, risk_student_count]
+  properties:
+    class_name: {type: string}
+    student_count: {type: integer, minimum: 0}
+    active_rate: {type: number, minimum: 0}
+    recent_event_count: {type: integer, minimum: 0}
+    risk_student_count: {type: integer, minimum: 0}
+    dominant_weak_dimension: {type: string, nullable: true}
+TeacherOverviewData:
+  type: object
+  required: [summary, trend, focus_classes, focus_students, weak_dimensions]
+  properties:
+    summary: {$ref: '#/components/schemas/TeacherOverviewSummaryData'}
+    trend: {$ref: '#/components/schemas/TeacherOverviewTrendData'}
+    focus_classes: {type: array, items: {$ref: '#/components/schemas/TeacherOverviewClassFocusData'}}
+    focus_students: {type: array, items: {$ref: '#/components/schemas/TeacherStudentItem'}}
+    spotlight_student:
+      allOf:
+      - {$ref: '#/components/schemas/TeacherStudentItem'}
+      nullable: true
+    weak_dimensions: {type: array, items: {$ref: '#/components/schemas/TeacherOverviewWeakDimensionData'}}
+ApiEnvelopeTeacherOverviewData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherOverviewData'}}
+TeacherEvidenceSummaryData:
+  type: object
+  required: [total_events, proxy_request_count, submit_count, success_count, challenge_id]
+  properties:
+    total_events: {type: integer, minimum: 0}
+    proxy_request_count: {type: integer, minimum: 0}
+    submit_count: {type: integer, minimum: 0}
+    success_count: {type: integer, minimum: 0}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+TeacherEvidenceEventData:
+  type: object
+  required: [type, challenge_id, title, detail, timestamp]
+  properties:
+    type: {type: string}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    detail: {type: string}
+    timestamp: {$ref: '#/components/schemas/ISODateTime'}
+    meta: {type: object, nullable: true, additionalProperties: true}
+TeacherEvidenceData:
+  type: object
+  required: [summary, events]
+  properties:
+    summary: {$ref: '#/components/schemas/TeacherEvidenceSummaryData'}
+    events: {type: array, items: {$ref: '#/components/schemas/TeacherEvidenceEventData'}}
+ApiEnvelopeTeacherEvidenceData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/TeacherEvidenceData'}}

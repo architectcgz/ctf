@@ -1,0 +1,44 @@
+/users/me/progress:
+  get:
+    tags: [Assessment]
+    summary: 我的整体进度
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMyProgressData'}}
+/users/me/timeline:
+  get:
+    tags: [Assessment]
+    summary: 我的时间线
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMyTimelineData'}}
+/users/me/skill-profile:
+  get:
+    tags: [Assessment]
+    summary: 我的能力画像
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSkillProfileData'}}
+/users/me/recommendations:
+  get:
+    tags: [Assessment]
+    summary: 个性化推荐靶场
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeRecommendationData'}}

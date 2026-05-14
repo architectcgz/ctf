@@ -1,0 +1,63 @@
+AuthUser:
+  type: object
+  required: [id, username, role]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    username: {type: string}
+    role: {$ref: '#/components/schemas/UserRole'}
+    avatar: {type: string, nullable: true}
+    name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+LoginRequest:
+  type: object
+  required: [username, password]
+  properties: {username: {type: string}, password: {type: string, format: password}}
+LoginData:
+  type: object
+  required: [user]
+  properties: {user: {$ref: '#/components/schemas/AuthUser'}}
+ApiEnvelopeLoginData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/LoginData'}}
+WsTicketData:
+  type: object
+  required: [ticket, expires_at]
+  properties: {ticket: {type: string}, expires_at: {$ref: '#/components/schemas/ISODateTime'}}
+ApiEnvelopeWsTicketData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/WsTicketData'}}
+CASStatusData:
+  type: object
+  required: [provider, enabled, configured, auto_provision, login_path, callback_path]
+  properties:
+    provider: {type: string, enum: [cas]}
+    enabled: {type: boolean}
+    configured: {type: boolean}
+    auto_provision: {type: boolean}
+    login_path: {type: string}
+    callback_path: {type: string}
+ApiEnvelopeCASStatusData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/CASStatusData'}}
+CASLoginData:
+  type: object
+  required: [provider, redirect_url, callback_url]
+  properties:
+    provider: {type: string, enum: [cas]}
+    redirect_url: {type: string}
+    callback_url: {type: string}
+ApiEnvelopeCASLoginData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/CASLoginData'}}

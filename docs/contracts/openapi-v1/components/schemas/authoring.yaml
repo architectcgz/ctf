@@ -1,0 +1,60 @@
+AuthoringAWDChallenge:
+  type: object
+  required:
+  - id
+  - name
+  - slug
+  - category
+  - difficulty
+  - description
+  - service_type
+  - deployment_mode
+  - version
+  - status
+  - readiness_status
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    name: {type: string}
+    slug: {type: string}
+    category: {type: string}
+    difficulty: {type: string, enum: [beginner, easy, medium, hard, insane]}
+    description: {type: string}
+    service_type: {$ref: '#/components/schemas/AWDServiceType'}
+    deployment_mode: {$ref: '#/components/schemas/AWDDeploymentMode'}
+    version: {type: string}
+    status: {$ref: '#/components/schemas/AWDChallengeStatus'}
+    readiness_status: {$ref: '#/components/schemas/AWDReadinessStatus'}
+    created_by:
+      allOf:
+      - {$ref: '#/components/schemas/ID'}
+      nullable: true
+    last_verified_at:
+      allOf:
+      - {$ref: '#/components/schemas/ISODateTime'}
+      nullable: true
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+CreateAWDChallengeRequest:
+  type: object
+  required: [name, slug, category, difficulty, service_type, deployment_mode]
+  properties:
+    name: {type: string}
+    slug: {type: string}
+    category: {type: string}
+    difficulty: {type: string, enum: [beginner, easy, medium, hard, insane]}
+    description: {type: string}
+    service_type: {$ref: '#/components/schemas/AWDServiceType'}
+    deployment_mode: {$ref: '#/components/schemas/AWDDeploymentMode'}
+UpdateAWDChallengeRequest:
+  type: object
+  properties:
+    name: {type: string}
+    slug: {type: string}
+    category: {type: string}
+    difficulty: {type: string, enum: [beginner, easy, medium, hard, insane]}
+    description: {type: string}
+    service_type: {$ref: '#/components/schemas/AWDServiceType'}
+    deployment_mode: {$ref: '#/components/schemas/AWDDeploymentMode'}
+    status: {$ref: '#/components/schemas/AWDChallengeStatus'}

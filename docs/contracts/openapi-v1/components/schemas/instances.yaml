@@ -1,0 +1,89 @@
+InstanceSharing: {type: string, enum: [per_user, per_team, shared]}
+InstanceStatus:
+  type: string
+  enum:
+  - pending
+  - creating
+  - running
+  - expired
+  - destroying
+  - destroyed
+  - failed
+  - crashed
+SshInfo:
+  type: object
+  required: [host, port, username]
+  properties:
+    host: {type: string}
+    port: {type: integer, minimum: 1, maximum: 65535}
+    username: {type: string}
+InstanceData:
+  type: object
+  required:
+  - id
+  - challenge_id
+  - status
+  - share_scope
+  - flag_type
+  - expires_at
+  - remaining_extends
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    status: {$ref: '#/components/schemas/InstanceStatus'}
+    share_scope: {$ref: '#/components/schemas/InstanceSharing'}
+    access_url: {type: string, nullable: true}
+    ssh_info: {$ref: '#/components/schemas/SshInfo', nullable: true}
+    flag_type: {$ref: '#/components/schemas/FlagType'}
+    expires_at: {$ref: '#/components/schemas/ISODateTime'}
+    remaining_extends: {type: integer, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    queue_position: {type: integer, nullable: true, minimum: 1}
+    eta_seconds: {type: integer, nullable: true, minimum: 0}
+    progress:
+      type: integer
+      nullable: true
+      minimum: 0
+      maximum: 100
+ApiEnvelopeInstanceData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/InstanceData'}}
+InstanceExtendData:
+  type: object
+  required: [id, expires_at, remaining_extends]
+  properties: {id: {$ref: '#/components/schemas/ID'}, expires_at: {$ref: '#/components/schemas/ISODateTime'}, remaining_extends: {
+      type: integer, minimum: 0}}
+ApiEnvelopeInstanceExtendData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/InstanceExtendData'}}
+InstanceAccessData:
+  type: object
+  required: [access_url]
+  properties: {access_url: {type: string}}
+ApiEnvelopeInstanceAccessData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/InstanceAccessData'}}
+InstanceListItem:
+  allOf:
+  - {$ref: '#/components/schemas/InstanceData'}
+  - type: object
+    required: [challenge_title, category, difficulty]
+    properties: {challenge_title: {type: string}, category: {$ref: '#/components/schemas/ChallengeCategory'}, difficulty: {
+        $ref: '#/components/schemas/ChallengeDifficulty'}}
+ApiEnvelopeInstanceListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/InstanceListItem'}}

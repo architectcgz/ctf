@@ -1,0 +1,105 @@
+/instances/{id}:
+  delete:
+    tags: [Instances]
+    summary: 销毁实例
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/instances/{id}/extend:
+  post:
+    tags: [Instances]
+    summary: 延长实例有效期
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceExtendData'}}
+/instances/{id}/access:
+  post:
+    tags: [Instances]
+    summary: 获取实例平台代理入口
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceAccessData'}}
+/instances/{id}/proxy:
+  get:
+    tags: [Instances]
+    summary: 通过平台代理访问实例根路径
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: query
+      name: ticket
+      required: false
+      schema: {type: string}
+    responses: {'200': {description: Proxied target response}, '302': {description: Bootstrap redirect after proxy ticket
+          exchange}}
+/instances/{id}/proxy/{proxyPath}:
+  get:
+    tags: [Instances]
+    summary: 通过平台代理访问实例子路径
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: proxyPath
+      required: true
+      schema: {type: string}
+    responses: {'200': {description: Proxied target response}}
+  post:
+    tags: [Instances]
+    summary: 通过平台代理向实例子路径发起写请求
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: proxyPath
+      required: true
+      schema: {type: string}
+    requestBody:
+      required: false
+      content:
+        application/json: {schema: {type: object, additionalProperties: true}}
+    responses: {'200': {description: Proxied target response}}
+/instances:
+  get:
+    tags: [Instances]
+    summary: 获取我的实例列表
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceListData'}}

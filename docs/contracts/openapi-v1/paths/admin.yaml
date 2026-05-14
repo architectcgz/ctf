@@ -1,0 +1,667 @@
+/admin/contests/{id}/export:
+  post:
+    tags: [Reports, Admin]
+    summary: 导出赛事结果归档（JSON）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              format: {type: string, enum: [json]}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeReportExportData'}}
+/admin/dashboard:
+  get:
+    tags: [Admin]
+    summary: 管理仪表盘（概览数据）
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminDashboardData'}}
+/admin/users:
+  get:
+    tags: [Admin]
+    summary: 用户列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminUserListData'}}
+  post:
+    tags: [Admin]
+    summary: 创建用户
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/AdminUserUpsertRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminUserUpsertData'}}
+/admin/users/{id}:
+  put:
+    tags: [Admin]
+    summary: 更新用户
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/AdminUserUpsertRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminUserUpsertData'}}
+  delete:
+    tags: [Admin]
+    summary: 删除用户
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/admin/users/import:
+  post:
+    tags: [Admin]
+    summary: 批量导入用户（文件上传）
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties: {file: {type: string, format: binary}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminUserImportData'}}
+/admin/audit-logs:
+  get:
+    tags: [Admin]
+    summary: 审计日志查询（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAuditLogListData'}}
+/admin/contests:
+  get:
+    tags: [Admin]
+    summary: 竞赛列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestListData'}}
+  post:
+    tags: [Admin]
+    summary: 创建竞赛
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestUpsertData'}}
+/admin/contests/{id}:
+  put:
+    tags: [Admin]
+    summary: 更新竞赛
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestUpsertData'}}
+  delete:
+    tags: [Admin]
+    summary: 删除竞赛
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/admin/contests/{id}/announcements:
+  get:
+    tags: [Admin]
+    summary: 管理员查看竞赛公告列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestAnnouncementListData'}}
+  post:
+    tags: [Admin]
+    summary: 创建竞赛公告
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestAnnouncementData'}}
+/admin/contests/{id}/registrations:
+  get:
+    tags: [Admin]
+    summary: 管理员查看竞赛报名列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: query
+      name: status
+      required: false
+      schema: {$ref: '#/components/schemas/ContestRegistrationStatus'}
+    - in: query
+      name: page
+      required: false
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: size
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestRegistrationListData'}}
+/admin/contests/{id}/registrations/{rid}:
+  put:
+    tags: [Admin]
+    summary: 审核竞赛报名
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/ReviewContestRegistrationRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestRegistrationData'}}
+/admin/contests/{id}/announcements/{aid}:
+  delete:
+    tags: [Admin]
+    summary: 删除竞赛公告
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: aid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/admin/contests/{id}/challenges:
+  get:
+    tags: [Admin]
+    summary: 获取管理员赛事题目配置列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestChallengeListData'}}
+  post:
+    tags: [Admin]
+    summary: 向赛事添加题目并写入 AWD 配置
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateAdminContestChallengeRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestChallengeData'}}
+/admin/contests/{id}/challenges/{cid}:
+  put:
+    tags: [Admin]
+    summary: 更新赛事题目配置
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: cid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpdateAdminContestChallengeRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+  delete:
+    tags: [Admin]
+    summary: 移除赛事题目
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: cid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/admin/contests/{id}/awd/readiness:
+  get:
+    tags: [Admin]
+    summary: 获取 AWD 开赛就绪检查结果
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDReadinessData'}}
+/admin/contests/{id}/awd/services:
+  get:
+    tags: [Admin]
+    summary: 获取赛事 AWD 显式服务列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestAWDServiceListData'}}
+  post:
+    tags: [Admin]
+    summary: 新增赛事 AWD 显式服务
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateAdminContestAWDServiceRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminContestAWDServiceData'}}
+/admin/contests/{id}/awd/services/{sid}:
+  put:
+    tags: [Admin]
+    summary: 更新赛事 AWD 显式服务
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpdateAdminContestAWDServiceRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+  delete:
+    tags: [Admin]
+    summary: 删除赛事 AWD 显式服务
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/admin/contests/{id}/awd/checker-preview:
+  post:
+    tags: [Admin]
+    summary: 试跑 AWD Checker 并返回保存令牌
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/PreviewAwdCheckerRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDCheckerPreviewData'}}
+/admin/contests/{id}/awd/rounds:
+  get:
+    tags: [Admin]
+    summary: 获取 AWD 轮次列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdRoundListData'}}
+  post:
+    tags: [Admin]
+    summary: 创建 AWD 轮次
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateAwdRoundRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdRound'}}
+/admin/contests/{id}/awd/current-round/check:
+  post:
+    tags: [Admin]
+    summary: 手动触发当前轮服务检查
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdCheckerRunData'}}
+/admin/contests/{id}/awd/rounds/{rid}/services:
+  get:
+    tags: [Admin]
+    summary: 获取 AWD 轮次服务检查结果
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdTeamServiceListData'}}
+/admin/contests/{id}/awd/rounds/{rid}/services/check:
+  post:
+    tags: [Admin]
+    summary: 写入 AWD 服务检查结果
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpsertAwdServiceCheckRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdTeamServiceData'}}
+/admin/contests/{id}/awd/rounds/{rid}/attacks:
+  get:
+    tags: [Admin]
+    summary: 获取 AWD 攻击日志
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdAttackLogListData'}}
+  post:
+    tags: [Admin]
+    summary: 写入 AWD 攻击日志
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateAwdAttackLogRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdAttackLogData'}}
+/admin/contests/{id}/awd/rounds/{rid}/summary:
+  get:
+    tags: [Admin]
+    summary: 获取 AWD 轮次统计汇总
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: rid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdRoundSummaryData'}}

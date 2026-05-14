@@ -1,0 +1,344 @@
+/contests/{id}/awd/services/{sid}/targets/{team_id}/access:
+  post:
+    tags: [AWD]
+    summary: 获取 AWD 跨队攻击代理入口
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: team_id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceAccessData'}}
+/contests/{id}/awd/services/{sid}/targets/{team_id}/proxy:
+  get:
+    tags: [AWD]
+    summary: 通过平台代理访问 AWD 目标服务根路径
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: team_id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: query
+      name: ticket
+      required: false
+      schema: {type: string}
+    responses: {'200': {description: Proxied target response}, '302': {description: Bootstrap redirect after proxy ticket
+          exchange}}
+/contests/{id}/awd/services/{sid}/targets/{team_id}/proxy/{proxyPath}:
+  get:
+    tags: [AWD]
+    summary: 通过平台代理访问 AWD 目标服务子路径
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: team_id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: proxyPath
+      required: true
+      schema: {type: string}
+    responses: {'200': {description: Proxied target response}}
+  post:
+    tags: [AWD]
+    summary: 通过平台代理向 AWD 目标服务发起写请求
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: team_id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: proxyPath
+      required: true
+      schema: {type: string}
+    requestBody:
+      required: false
+      content:
+        application/json: {schema: {type: object, additionalProperties: true}}
+    responses: {'200': {description: Proxied target response}}
+/contests:
+  get:
+    tags: [Contests]
+    summary: 竞赛列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestListData'}}
+/contests/{id}:
+  get:
+    tags: [Contests]
+    summary: 竞赛详情
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestDetailData'}}
+/contests/{id}/register:
+  post:
+    tags: [Contests]
+    summary: 报名竞赛
+    description: 提交后默认进入待审核状态；已审核通过的重复报名按幂等成功处理。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/contests/{id}/challenges:
+  get:
+    tags: [Contests]
+    summary: 竞赛题目列表
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestChallengeListData'}}
+/contests/{id}/challenges/{cid}/submissions:
+  post:
+    tags: [Contests]
+    summary: 竞赛中提交 Flag
+    description: 按动态计分规则结算本次提交；同一队伍同一题仅首次正确提交计分，未组队参赛者按个人维度去重。若该题随后出现新的正确提交，系统会按最新 solve_count 回溯重算该题全部历史正确提交，并同步修正队伍总分与 live
+      排行榜。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: cid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/SubmitFlagRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSubmitFlagData'}}
+/contests/{id}/awd/challenges/{cid}/submissions:
+  post:
+    tags: [Contests]
+    summary: AWD 模式提交攻击 Flag
+    description: 从当前登录用户的已审核报名记录解析攻击方队伍，按当前轮 Flag 校验提交结果，并写入 AWD 攻击日志；在 `contest.awd.previous_round_grace` 宽限期内同时接受上一轮 Flag。同一轮内同一攻击队对同一受害队同一题仅首次成功提交计分，后续成功重复提交只记日志不重复得分。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: cid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/SubmitAwdAttackRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAwdAttackLogData'}}
+/contests/{id}/challenges/{cid}/instances:
+  post:
+    tags: [Contests]
+    summary: 竞赛中启动靶机实例
+    description: 仅非 AWD 竞赛使用该入口；实例按用户维度创建或复用。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: cid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceData'}}
+/contests/{id}/awd/services/{sid}/instances:
+  post:
+    tags: [Contests]
+    summary: AWD 竞赛中按服务启动靶机实例
+    description: AWD 竞赛统一按 service_id 复用同队共享实例。
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: sid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeInstanceData'}}
+/contests/{id}/scoreboard:
+  get:
+    tags: [Contests]
+    summary: 竞赛排行榜（分页）
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 50}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestScoreboardData'}}
+/contests/{id}/announcements:
+  get:
+    tags: [Contests]
+    summary: 竞赛公告列表
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestAnnouncementListData'}}
+/contests/{id}/teams:
+  post:
+    tags: [Contests]
+    summary: 创建队伍
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateTeamRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeamData'}}
+/contests/{id}/teams/{tid}/join:
+  post:
+    tags: [Contests]
+    summary: 加入队伍
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    - in: path
+      name: tid
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/contests/{id}/my-progress:
+  get:
+    tags: [Contests]
+    summary: 我在该竞赛的解题进度
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeContestMyProgressData'}}

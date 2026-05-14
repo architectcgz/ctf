@@ -21,3 +21,23 @@ This file is append-only. Keep current task evidence in `.harness/reuse-decision
 ### Reuse note
 - 题目详情页和管理员题目详情页应复用已有附件下载入口。
 - 后端附件接口已经返回正确 `Content-Disposition` 和 ZIP 字节，前端不应再保留并行的 `Axios -> Blob -> objectURL` 下载链路。
+
+## 2026-05-14 openapi source and bundle split
+
+### Change type
+- schema
+- docs
+- script
+
+### Similar implementations found
+- `docs/contracts/openapi-v1.yaml`
+- `scripts/check-code-changes.sh`
+- `scripts/check-consistency.sh`
+
+### Decision
+- `extend_existing`
+
+### Reuse note
+- `docs/contracts/openapi-v1.yaml` 保持稳定 bundle 路径，不直接迁走或改名。
+- 需要提升可维护性时，在同级新增拆分源目录，由脚本单向生成 bundle，而不是让消费方理解外部 `$ref`。
+- 后续 OpenAPI 变更应先改 `docs/contracts/openapi-v1/`，再运行 `python3 scripts/sync_openapi_from_contract.py`。

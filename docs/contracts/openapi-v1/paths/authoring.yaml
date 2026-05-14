@@ -1,0 +1,521 @@
+/authoring/challenge-imports:
+  post:
+    tags: [Authoring]
+    summary: 预览题目包导入结果
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties: {file: {type: string, format: binary}}
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeImportPreviewData'}}
+/authoring/challenge-imports/{id}:
+  get:
+    tags: [Authoring]
+    summary: 获取题目包导入预览
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeImportPreviewData'}}
+/authoring/challenge-imports/{id}/commit:
+  post:
+    tags: [Authoring]
+    summary: 确认导入题目包
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeImportCommitData'}}
+/authoring/challenges:
+  get:
+    tags: [Authoring]
+    summary: 题目列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeListData'}}
+  post:
+    tags: [Authoring]
+    summary: 创建题目
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准；返回 challenge 的列表字段子集}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeUpsertData'}}
+/authoring/awd-challenges:
+  get:
+    tags: [Authoring]
+    summary: AWD 题目列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - {in: query, name: keyword, schema: {type: string}}
+    - {in: query, name: service_type, schema: {$ref: '#/components/schemas/AWDServiceType'}}
+    - {in: query, name: status, schema: {$ref: '#/components/schemas/AWDChallengeStatus'}}
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDChallengePageData'}}
+  post:
+    tags: [Authoring]
+    summary: 创建 AWD 题目
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/CreateAWDChallengeRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDChallengeData'}}
+/authoring/awd-challenges/{id}:
+  get:
+    tags: [Authoring]
+    summary: 获取 AWD 题目详情
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDChallengeData'}}
+      '404': {description: Not Found}
+  put:
+    tags: [Authoring]
+    summary: 更新 AWD 题目
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpdateAWDChallengeRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAWDChallengeData'}}
+      '404': {description: Not Found}
+  delete:
+    tags: [Authoring]
+    summary: 删除 AWD 题目
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+      '404': {description: Not Found}
+/authoring/challenges/{id}:
+  put:
+    tags: [Authoring]
+    summary: 更新题目
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准；返回 challenge 的列表字段子集}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeUpsertData'}}
+  delete:
+    tags: [Authoring]
+    summary: 删除题目
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/authoring/challenges/{id}/flag:
+  get:
+    tags: [Authoring]
+    summary: 获取题目 Flag 配置摘要
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeFlagConfigData'}}
+  put:
+    tags: [Authoring]
+    summary: 配置题目 Flag
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/ConfigureChallengeFlagRequest'}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeConfigureChallengeFlagData'}}
+/authoring/challenges/{id}/self-check:
+  post:
+    tags: [Authoring]
+    summary: 题目同步自检
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeSelfCheckData'}}
+/authoring/challenges/{id}/publish-requests:
+  post:
+    tags: [Authoring]
+    summary: 提交题目发布自检
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengePublishRequestData'}}
+/authoring/challenges/{id}/publish-requests/latest:
+  get:
+    tags: [Authoring]
+    summary: 查询最近一次题目发布自检
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengePublishRequestData'}}
+      '404': {description: Not Found}
+/authoring/images:
+  get:
+    tags: [Authoring]
+    summary: 镜像列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminImageListData'}}
+  post:
+    tags: [Authoring]
+    summary: 创建镜像记录/触发构建（字段集以实现为准）
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {type: object, description: 字段集以实现为准}}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminImageCreateData'}}
+/authoring/images/{id}:
+  delete:
+    tags: [Authoring]
+    summary: 删除镜像
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+/authoring/challenges/{id}/writeup:
+  get:
+    tags: [Authoring]
+    summary: 获取题目题解
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeWriteupData'}}
+      '404': {description: Not Found}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+  put:
+    tags: [Authoring]
+    summary: 保存题目题解
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeAdminChallengeWriteupData'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpsertChallengeWriteupRequest'}}
+  delete:
+    tags: [Authoring]
+    summary: 删除题目题解
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+/authoring/challenges/{id}/topology:
+  get:
+    tags: [Authoring]
+    summary: 获取挑战拓扑
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeTopologyData'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+  put:
+    tags: [Authoring]
+    summary: 保存挑战拓扑
+    description: 支持保存多网络拓扑与细粒度 ACL；细粒度规则会在实例启动时真实下发。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeChallengeTopologyData'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/SaveChallengeTopologyRequest'}}
+  delete:
+    tags: [Authoring]
+    summary: 删除挑战拓扑
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+/authoring/environment-templates:
+  get:
+    tags: [Authoring]
+    summary: 获取环境模板列表
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateListData'}}
+    security:
+    - {sessionCookieAuth: []}
+  post:
+    tags: [Authoring]
+    summary: 创建环境模板
+    description: 支持创建带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'}}
+    security:
+    - {sessionCookieAuth: []}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'}}
+/authoring/environment-templates/{id}:
+  get:
+    tags: [Authoring]
+    summary: 获取环境模板详情
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+  put:
+    tags: [Authoring]
+    summary: 更新环境模板
+    description: 支持更新带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'}}
+  delete:
+    tags: [Authoring]
+    summary: 删除环境模板
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}

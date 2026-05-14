@@ -106,8 +106,14 @@ check_contains "works/AGENTS.md" 'harness-migration-map\.md' "works AGENTS refer
 
 echo "[C8] AGENTS captures file placement rules"
 check_file "docs/文档规范.md"
+check_file "docs/contracts/README.md"
+check_file "docs/contracts/openapi-v1/index.yaml"
+check_file "scripts/sync_openapi_from_contract.py"
 check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentation guide"
 check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
+check_contains "docs/README.md" 'docs/contracts/README\.md' "docs README references contracts guide"
+check_contains "docs/contracts/README.md" 'openapi-v1/' "contracts README references split OpenAPI source"
+check_contains "docs/contracts/api-contract-v1.md" 'openapi-v1/' "API contract references split OpenAPI source"
 check_contains "docs/文档规范.md" '文档修改前置读取协议' "documentation guide defines pre-edit reading protocol"
 check_contains "docs/文档规范.md" '新增路径登记协议' "documentation guide defines new path registration protocol"
 check_contains "AGENTS.md" '文档修改前置读取协议' "AGENTS references document pre-edit protocol"
@@ -127,6 +133,7 @@ check_contains "scripts/check-docs-consistency.py" 'VAGUE_ARCHITECTURE_PHRASES' 
 check_contains "scripts/check-docs-consistency.py" 'check_architecture_doc_quality' "documentation consistency script checks architecture doc quality"
 check_contains "AGENTS.md" 'docs/architecture/' "AGENTS references docs/architecture"
 check_contains "AGENTS.md" 'docs/contracts/' "AGENTS references docs/contracts"
+check_contains "AGENTS.md" 'docs/contracts/openapi-v1/' "AGENTS references split OpenAPI source"
 check_contains "AGENTS.md" 'docs/design/' "AGENTS references docs/design"
 check_contains "AGENTS.md" 'docs/plan/impl-plan/' "AGENTS references docs/plan/impl-plan"
 check_contains "AGENTS.md" 'docs/reviews/' "AGENTS references docs/reviews"
@@ -135,6 +142,9 @@ check_contains "AGENTS.md" 'docs/operations/' "AGENTS references docs/operations
 
 echo "[C8b] documentation references stay current"
 python3 scripts/check-docs-consistency.py
+
+echo "[C8c] OpenAPI source and bundle stay synced"
+python3 scripts/sync_openapi_from_contract.py --check
 
 echo "[C9] works index covers harness good practices"
 check_file "works/harness-good-practices.md"

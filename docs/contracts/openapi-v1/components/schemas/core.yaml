@@ -1,0 +1,29 @@
+ID: {type: string, description: 统一：所有 id/xxx_id 字段均返回 string（避免 JS 超过 2^53 精度问题）}
+ISODateTime: {type: string, format: date-time, description: 'RFC3339/ISO8601，服务端统一以 UTC 输出，如 "2026-03-01T03:15:22Z"'}
+FieldError:
+  type: object
+  required: [field, message]
+  properties: {field: {type: string}, message: {type: string}}
+ApiEnvelopeBase:
+  type: object
+  required: [code, message, request_id]
+  properties:
+    code: {type: integer, description: 0=成功，非0=业务错误码（见 backend/04-api-design.md §3）}
+    message: {type: string, description: 成功固定 "success"，失败为摘要信息（前端提示优先走 errorMap）}
+    request_id: {type: string, description: 必填：用于日志追踪}
+    errors: {type: array, items: {$ref: '#/components/schemas/FieldError'}}
+ApiEnvelopeNull:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {nullable: true, description: 无业务数据时为 null}}
+PageResult:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {}, description: 列表项类型由具体接口覆盖}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+UserRole: {type: string, enum: [student, teacher, admin]}

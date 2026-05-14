@@ -1,0 +1,59 @@
+openapi: 3.0.3
+info:
+  title: CTF Platform API (v1)
+  version: "1.0.0"
+  description: |
+    机器可读接口契约（OpenAPI 3.0）。
+
+    - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
+    - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
+    - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
+  x-last-updated: "2026-05-14"
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Auth
+  - name: Challenges
+  - name: Instances
+  - name: Contests
+  - name: Notifications
+  - name: Teacher
+  - name: Assessment
+  - name: Reports
+  - name: Admin
+  - name: Authoring
+
+components:
+  securitySchemes:
+    sessionCookieAuth:
+      type: apiKey
+      in: cookie
+      name: ctf_session
+  schemas:
+    $merge:
+      - components/schemas/core.yaml
+      - components/schemas/auth.yaml
+      - components/schemas/challenges.yaml
+      - components/schemas/instances.yaml
+      - components/schemas/contests.yaml
+      - components/schemas/notifications.yaml
+      - components/schemas/teacher.yaml
+      - components/schemas/assessment.yaml
+      - components/schemas/admin.yaml
+      - components/schemas/authoring.yaml
+      - components/schemas/awd.yaml
+
+paths:
+  $merge:
+    - paths/auth.yaml
+    - paths/challenges.yaml
+    - paths/instances.yaml
+    - paths/contests.yaml
+    - paths/notifications.yaml
+    - paths/teacher.yaml
+    - paths/users.yaml
+    - paths/admin.yaml
+    - paths/authoring.yaml
+    - paths/reports.yaml

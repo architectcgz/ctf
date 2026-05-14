@@ -48,6 +48,7 @@
 - 新增文件前，先判断它属于“最终事实”“中间设计”“实施过程”“评审证据”“长期积累”中的哪一类。
 - `docs/architecture/`：当前架构与最终设计事实源；后端、前端、业务专题和最终页面设计进入这里。
 - `docs/contracts/`：API、OpenAPI、事件、题包格式、导入导出结构等契约。
+- OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。
 - `docs/plan/impl-plan/`：结构性实现方案、阶段计划、执行清单和验证步骤。
 - `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings。

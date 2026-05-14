@@ -1,0 +1,34 @@
+/notifications:
+  get:
+    tags: [Notifications]
+    summary: 我的通知列表（分页）
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: query
+      name: page
+      schema: {type: integer, minimum: 1, default: 1}
+    - in: query
+      name: page_size
+      schema: {type: integer, minimum: 1, default: 20}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNotificationListData'}}
+/notifications/{id}/read:
+  put:
+    tags: [Notifications]
+    summary: 标记通知为已读
+    security:
+    - {sessionCookieAuth: []}
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema: {$ref: '#/components/schemas/ID'}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}

@@ -1,0 +1,511 @@
+AdminChallengeFlagConfigData:
+  type: object
+  required: [configured]
+  properties:
+    configured: {type: boolean}
+    flag_type: {$ref: '#/components/schemas/FlagType', nullable: true}
+    flag_regex: {type: string, nullable: true}
+    flag_prefix: {type: string, nullable: true}
+ApiEnvelopeAdminChallengeFlagConfigData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeFlagConfigData'}}
+AdminChallengeWriteupData:
+  type: object
+  required:
+  - id
+  - challenge_id
+  - title
+  - content
+  - visibility
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    content: {type: string}
+    visibility: {$ref: '#/components/schemas/ChallengeWriteupVisibility'}
+    release_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    created_by: {$ref: '#/components/schemas/ID', nullable: true}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAdminChallengeWriteupData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeWriteupData'}}
+AdminContestChallengeData:
+  type: object
+  required:
+  - id
+  - contest_id
+  - challenge_id
+  - points
+  - order
+  - is_visible
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    contest_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string, nullable: true}
+    category:
+      allOf:
+      - {$ref: '#/components/schemas/ChallengeCategory'}
+      nullable: true
+    difficulty:
+      allOf:
+      - {$ref: '#/components/schemas/ChallengeDifficulty'}
+      nullable: true
+    points: {type: integer, minimum: 1}
+    order: {type: integer, minimum: 0}
+    is_visible: {type: boolean}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAdminContestChallengeData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminContestChallengeData'}}
+ApiEnvelopeAdminContestChallengeListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/AdminContestChallengeData'}}
+CreateAdminContestChallengeRequest:
+  type: object
+  required: [challenge_id]
+  properties:
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    points: {type: integer, minimum: 1, nullable: true}
+    order: {type: integer, minimum: 0, nullable: true}
+    is_visible: {type: boolean, nullable: true}
+UpdateAdminContestChallengeRequest:
+  type: object
+  properties:
+    points: {type: integer, minimum: 1, nullable: true}
+    order: {type: integer, minimum: 0, nullable: true}
+    is_visible: {type: boolean, nullable: true}
+AdminContestAWDServiceData:
+  type: object
+  required:
+  - id
+  - contest_id
+  - challenge_id
+  - display_name
+  - order
+  - is_visible
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    contest_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    awd_challenge_id:
+      allOf:
+      - {$ref: '#/components/schemas/ID'}
+      nullable: true
+    display_name: {type: string}
+    order: {type: integer, minimum: 0}
+    is_visible: {type: boolean}
+    score_config: {type: object, nullable: true, additionalProperties: true}
+    runtime_config:
+      type: object
+      nullable: true
+      additionalProperties: true
+      description: 正式 runtime 配置字段集合；新写入记录不再持久化兼容影子字段 challenge_id
+    validation_state:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerValidationState'}
+      nullable: true
+    last_preview_at:
+      allOf:
+      - {$ref: '#/components/schemas/ISODateTime'}
+      nullable: true
+    last_preview_result:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerPreviewData'}
+      nullable: true
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAdminContestAWDServiceData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminContestAWDServiceData'}}
+ApiEnvelopeAdminContestAWDServiceListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/AdminContestAWDServiceData'}}
+CreateAdminContestAWDServiceRequest:
+  type: object
+  required: [awd_challenge_id, points]
+  properties:
+    awd_challenge_id: {$ref: '#/components/schemas/ID'}
+    points: {type: integer, minimum: 1, maximum: 500}
+    display_name: {type: string, maxLength: 128, nullable: true}
+    order: {type: integer, minimum: 0, nullable: true}
+    is_visible: {type: boolean, nullable: true}
+    checker_type:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerType'}
+      nullable: true
+    checker_config: {type: object, nullable: true, additionalProperties: true}
+    awd_sla_score:
+      type: integer
+      minimum: 0
+      maximum: 5
+      nullable: true
+      default: 1
+    awd_defense_score:
+      type: integer
+      minimum: 0
+      maximum: 5
+      nullable: true
+      default: 2
+    awd_checker_preview_token: {type: string, maxLength: 200, nullable: true}
+UpdateAdminContestAWDServiceRequest:
+  type: object
+  properties:
+    awd_challenge_id:
+      allOf:
+      - {$ref: '#/components/schemas/ID'}
+      nullable: true
+    points:
+      type: integer
+      minimum: 1
+      maximum: 500
+      nullable: true
+    display_name: {type: string, maxLength: 128, nullable: true}
+    order: {type: integer, minimum: 0, nullable: true}
+    is_visible: {type: boolean, nullable: true}
+    checker_type:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerType'}
+      nullable: true
+    checker_config: {type: object, nullable: true, additionalProperties: true}
+    awd_sla_score:
+      type: integer
+      minimum: 0
+      maximum: 5
+      nullable: true
+    awd_defense_score:
+      type: integer
+      minimum: 0
+      maximum: 5
+      nullable: true
+    awd_checker_preview_token: {type: string, maxLength: 200, nullable: true}
+AdminDashboardData:
+  type: object
+  required: [online_instances, container_health_rate, submissions_today, submissions_error_rate]
+  properties:
+    online_instances: {type: integer, minimum: 0}
+    container_health_rate: {type: number}
+    submissions_today: {type: integer, minimum: 0}
+    submissions_error_rate: {type: number}
+    alerts:
+      type: array
+      nullable: true
+      items:
+        type: object
+        required: [id, title, level, created_at]
+        properties:
+          id: {$ref: '#/components/schemas/ID'}
+          title: {type: string}
+          level: {type: string}
+          created_at: {$ref: '#/components/schemas/ISODateTime'}
+    recent_audit_logs:
+      type: array
+      nullable: true
+      items:
+        type: object
+        required: [id, action, actor, created_at]
+        properties:
+          id: {$ref: '#/components/schemas/ID'}
+          action: {type: string}
+          actor: {type: string}
+          created_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAdminDashboardData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminDashboardData'}}
+AdminUserStatus: {type: string, enum: [active, inactive, locked, banned]}
+AdminUserListItem:
+  type: object
+  required: [id, username, status, roles, created_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    username: {type: string}
+    name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    status: {$ref: '#/components/schemas/AdminUserStatus'}
+    roles: {type: array, items: {$ref: '#/components/schemas/UserRole'}}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+AdminUserListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/AdminUserListItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeAdminUserListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminUserListData'}}
+AdminUserUpsertData:
+  type: object
+  required: [user]
+  properties: {user: {$ref: '#/components/schemas/AdminUserListItem'}}
+ApiEnvelopeAdminUserUpsertData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminUserUpsertData'}}
+AdminUserUpsertRequest:
+  type: object
+  properties:
+    username: {type: string}
+    name: {type: string, nullable: true}
+    class_name: {type: string, nullable: true}
+    status: {$ref: '#/components/schemas/AdminUserStatus'}
+    roles: {type: array, items: {$ref: '#/components/schemas/UserRole'}}
+    password: {type: string, format: password, nullable: true}
+AdminUserImportData:
+  type: object
+  required: [created, updated, failed]
+  properties:
+    created: {type: integer, minimum: 0}
+    updated: {type: integer, minimum: 0}
+    failed: {type: integer, minimum: 0}
+    errors:
+      type: array
+      nullable: true
+      items:
+        type: object
+        required: [row, message]
+        properties: {row: {type: integer, minimum: 1}, message: {type: string}}
+ApiEnvelopeAdminUserImportData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminUserImportData'}}
+AdminChallengeImportPreviewData:
+  type: object
+  required:
+  - id
+  - file_name
+  - slug
+  - title
+  - description
+  - category
+  - difficulty
+  - points
+  - flag
+  - runtime
+  - extensions
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    file_name: {type: string}
+    slug: {type: string}
+    title: {type: string}
+    description: {type: string}
+    category: {$ref: '#/components/schemas/ChallengeCategory'}
+    difficulty: {$ref: '#/components/schemas/ChallengeDifficulty'}
+    points: {type: integer, minimum: 1}
+    attachments: {type: array, nullable: true, items: {$ref: '#/components/schemas/ChallengeImportAttachment'}}
+    hints: {type: array, nullable: true, items: {$ref: '#/components/schemas/ChallengeImportHint'}}
+    flag: {$ref: '#/components/schemas/ChallengeImportFlag'}
+    runtime: {$ref: '#/components/schemas/ChallengeImportRuntime'}
+    extensions: {$ref: '#/components/schemas/ChallengeImportExtensions'}
+    warnings: {type: array, nullable: true, items: {type: string}}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAdminChallengeImportPreviewData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeImportPreviewData'}}
+AdminChallengeImportCommitData:
+  type: object
+  required: [challenge]
+  properties:
+    challenge: {type: object, description: 导入确认后返回的题目详情字段以实现为准, additionalProperties: true}
+ApiEnvelopeAdminChallengeImportCommitData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeImportCommitData'}}
+AdminChallengeStatus: {type: string, enum: [draft, review, active, archived]}
+AdminChallengeListItem:
+  type: object
+  required:
+  - id
+  - title
+  - category
+  - difficulty
+  - status
+  - base_score
+  - solve_count
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    category: {$ref: '#/components/schemas/ChallengeCategory'}
+    difficulty: {$ref: '#/components/schemas/ChallengeDifficulty'}
+    status: {$ref: '#/components/schemas/AdminChallengeStatus'}
+    base_score: {type: integer, minimum: 0}
+    solve_count: {type: integer, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+AdminChallengeListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/AdminChallengeListItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeAdminChallengeListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeListData'}}
+AdminChallengeUpsertData:
+  type: object
+  required: [challenge]
+  properties: {challenge: {$ref: '#/components/schemas/AdminChallengeListItem'}}
+ApiEnvelopeAdminChallengeUpsertData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengeUpsertData'}}
+AdminChallengePublishRequestStatus: {type: string, enum: [queued, running, succeeded, failed]}
+AdminChallengePublishRequestData:
+  type: object
+  required:
+  - id
+  - challenge_id
+  - requested_by
+  - status
+  - active
+  - request_source
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    requested_by: {$ref: '#/components/schemas/ID'}
+    status: {$ref: '#/components/schemas/AdminChallengePublishRequestStatus'}
+    active: {type: boolean}
+    request_source: {type: string}
+    failure_summary: {type: string, nullable: true}
+    started_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    finished_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    published_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+    result:
+      allOf:
+      - {$ref: '#/components/schemas/ChallengeSelfCheckData'}
+      nullable: true
+ApiEnvelopeAdminChallengePublishRequestData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminChallengePublishRequestData'}}
+ImageSourceType: {type: string, enum: [registry, dockerfile, upload]}
+ImageStatus: {type: string, enum: [pending, building, ready, failed, deprecated]}
+AdminImageListItem:
+  type: object
+  required: [id, name, tag, source_type, status, created_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    name: {type: string}
+    tag: {type: string}
+    source_type: {$ref: '#/components/schemas/ImageSourceType'}
+    status: {$ref: '#/components/schemas/ImageStatus'}
+    size_bytes: {type: integer, nullable: true, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+AdminImageListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/AdminImageListItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeAdminImageListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminImageListData'}}
+AdminImageCreateData:
+  type: object
+  required: [image]
+  properties: {image: {$ref: '#/components/schemas/AdminImageListItem'}}
+ApiEnvelopeAdminImageCreateData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminImageCreateData'}}
+AuditLogItem:
+  type: object
+  required: [id, action, resource_type, actor_user_id, actor_username, created_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    action: {type: string}
+    resource_type: {type: string}
+    resource_id: {$ref: '#/components/schemas/ID', nullable: true}
+    actor_user_id: {$ref: '#/components/schemas/ID'}
+    actor_username: {type: string}
+    ip: {type: string, nullable: true}
+    user_agent: {type: string, nullable: true}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    detail: {type: object, nullable: true, additionalProperties: true}
+AuditLogListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/AuditLogItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeAuditLogListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AuditLogListData'}}
+AdminContestUpsertData:
+  type: object
+  required: [contest]
+  properties: {contest: {$ref: '#/components/schemas/ContestDetailData'}}
+ApiEnvelopeAdminContestUpsertData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AdminContestUpsertData'}}

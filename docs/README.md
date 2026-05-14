@@ -3,6 +3,7 @@
 ## 当前设计入口
 
 - `docs/文档规范.md`：文档写作、目录归属、命名和验证规范。
+- `docs/contracts/README.md`：接口、OpenAPI 和题包契约入口。
 - `docs/architecture/README.md`：最终架构与设计事实源入口。
 - `docs/design/README.md`：设计文档读取顺序、过期规则和迁移说明。
 
@@ -10,6 +11,7 @@
 
 - 新增或修改文档前，先按 `docs/文档规范.md` 判断文档类型和目录归属。
 - 先读当前索引，再读具体设计文档。
+- 接口与字段契约统一从 `docs/contracts/README.md` 进入；OpenAPI 变更先改拆分源，再同步 bundle。
 - 页面设计、设计系统和专题设计统一从 `docs/architecture/` 进入。
 - `docs/reviews/` 是历史评审快照，不是当前设计事实源。
 - `practice/` 中的过程资料和历史计划索引不覆盖后续代码和架构事实。

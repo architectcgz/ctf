@@ -1,0 +1,336 @@
+AWDRoundStatus: {type: string, enum: [pending, running, finished]}
+AwdServiceStatus: {type: string, enum: [up, down, compromised]}
+AwdAttackType: {type: string, enum: [flag_capture, service_exploit]}
+AWDCheckerType: {type: string, enum: [legacy_probe, http_standard, tcp_standard, script_checker]}
+AWDCheckerValidationState: {type: string, enum: [pending, passed, failed, stale]}
+AwdRound:
+  type: object
+  required:
+  - id
+  - contest_id
+  - round_number
+  - status
+  - attack_score
+  - defense_score
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    contest_id: {$ref: '#/components/schemas/ID'}
+    round_number: {type: integer, minimum: 1}
+    status: {$ref: '#/components/schemas/AWDRoundStatus'}
+    started_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    ended_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    attack_score: {type: integer, minimum: 0, maximum: 100}
+    defense_score: {type: integer, minimum: 0, maximum: 10}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAwdRound:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AwdRound'}}
+ApiEnvelopeAwdRoundListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/AwdRound'}}
+AwdTeamService:
+  type: object
+  required:
+  - id
+  - round_id
+  - team_id
+  - team_name
+  - challenge_id
+  - service_status
+  - check_result
+  - attack_received
+  - sla_score
+  - defense_score
+  - attack_score
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    round_id: {$ref: '#/components/schemas/ID'}
+    team_id: {$ref: '#/components/schemas/ID'}
+    team_name: {type: string}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    service_status: {$ref: '#/components/schemas/AwdServiceStatus'}
+    checker_type:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerType'}
+      nullable: true
+    check_result: {type: object, additionalProperties: true}
+    attack_received: {type: integer, minimum: 0}
+    sla_score: {type: integer, minimum: 0}
+    defense_score: {type: integer, minimum: 0}
+    attack_score: {type: integer, minimum: 0}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAwdTeamServiceData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AwdTeamService'}}
+ApiEnvelopeAwdTeamServiceListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/AwdTeamService'}}
+AwdAttackLog:
+  type: object
+  required:
+  - id
+  - round_id
+  - attacker_team_id
+  - attacker_team
+  - victim_team_id
+  - victim_team
+  - challenge_id
+  - attack_type
+  - is_success
+  - score_gained
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    round_id: {$ref: '#/components/schemas/ID'}
+    attacker_team_id: {$ref: '#/components/schemas/ID'}
+    attacker_team: {type: string}
+    victim_team_id: {$ref: '#/components/schemas/ID'}
+    victim_team: {type: string}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    attack_type: {$ref: '#/components/schemas/AwdAttackType'}
+    submitted_flag: {type: string, nullable: true}
+    is_success: {type: boolean}
+    score_gained: {type: integer, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeAwdAttackLogData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AwdAttackLog'}}
+ApiEnvelopeAwdAttackLogListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/AwdAttackLog'}}
+AwdRoundSummaryItem:
+  type: object
+  required:
+  - team_id
+  - team_name
+  - service_up_count
+  - service_down_count
+  - service_compromised_count
+  - sla_score
+  - defense_score
+  - attack_score
+  - successful_attack_count
+  - successful_breach_count
+  - unique_attackers_against
+  - total_score
+  properties:
+    team_id: {$ref: '#/components/schemas/ID'}
+    team_name: {type: string}
+    service_up_count: {type: integer, minimum: 0}
+    service_down_count: {type: integer, minimum: 0}
+    service_compromised_count: {type: integer, minimum: 0}
+    sla_score: {type: integer}
+    defense_score: {type: integer}
+    attack_score: {type: integer}
+    successful_attack_count: {type: integer, minimum: 0}
+    successful_breach_count: {type: integer, minimum: 0}
+    unique_attackers_against: {type: integer, minimum: 0}
+    total_score: {type: integer}
+AwdRoundSummaryData:
+  type: object
+  required: [round, items]
+  properties:
+    round: {$ref: '#/components/schemas/AwdRound'}
+    items: {type: array, items: {$ref: '#/components/schemas/AwdRoundSummaryItem'}}
+ApiEnvelopeAwdRoundSummaryData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AwdRoundSummaryData'}}
+AwdCheckerRunData:
+  type: object
+  required: [round, services]
+  properties:
+    round: {$ref: '#/components/schemas/AwdRound'}
+    services: {type: array, items: {$ref: '#/components/schemas/AwdTeamService'}}
+ApiEnvelopeAwdCheckerRunData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AwdCheckerRunData'}}
+AWDCheckerPreviewContextData:
+  type: object
+  required: [access_url, preview_flag, round_number, team_id, challenge_id]
+  properties:
+    access_url: {type: string}
+    preview_flag: {type: string}
+    round_number: {type: integer, minimum: 0}
+    team_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+AWDCheckerPreviewData:
+  type: object
+  required: [service_status, check_result, preview_context]
+  properties:
+    checker_type:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerType'}
+      nullable: true
+    service_status: {$ref: '#/components/schemas/AwdServiceStatus'}
+    check_result: {type: object, additionalProperties: true}
+    preview_context: {$ref: '#/components/schemas/AWDCheckerPreviewContextData'}
+    preview_token: {type: string, nullable: true}
+ApiEnvelopeAWDCheckerPreviewData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AWDCheckerPreviewData'}}
+PreviewAwdCheckerRequest:
+  type: object
+  required: [challenge_id, checker_type, access_url]
+  properties:
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    checker_type: {$ref: '#/components/schemas/AWDCheckerType'}
+    checker_config: {type: object, description: 'Checker 配置。http_standard 使用 put_flag/get_flag/havoc； tcp_standard 使用 timeout_ms
+        与 steps[].send/send_template/send_hex/expect_contains/expect_regex； script_checker 使用 runtime/entry/files/timeout_sec/args/env/output，其中
+        files 只允许题目包内相对文件路径。
+
+        ', additionalProperties: true}
+    access_url: {type: string, maxLength: 1024}
+    preview_flag: {type: string, maxLength: 512, nullable: true}
+AWDReadinessBlockingReason: {type: string, enum: [missing_checker, invalid_checker_config, pending_validation, last_preview_failed,
+    validation_stale]}
+AWDReadinessAction: {type: string, enum: [create_round, run_current_round_check, start_contest]}
+AWDReadinessGlobalReason: {type: string, enum: [no_challenges]}
+AWDReadinessItemData:
+  type: object
+  required: [challenge_id, title, validation_state, blocking_reason]
+  properties:
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    checker_type:
+      allOf:
+      - {$ref: '#/components/schemas/AWDCheckerType'}
+      nullable: true
+    validation_state: {$ref: '#/components/schemas/AWDCheckerValidationState'}
+    last_preview_at:
+      allOf:
+      - {$ref: '#/components/schemas/ISODateTime'}
+      nullable: true
+    last_access_url: {type: string, nullable: true}
+    blocking_reason: {$ref: '#/components/schemas/AWDReadinessBlockingReason'}
+AWDReadinessData:
+  type: object
+  required:
+  - contest_id
+  - ready
+  - total_challenges
+  - passed_challenges
+  - pending_challenges
+  - failed_challenges
+  - stale_challenges
+  - missing_checker_challenges
+  - blocking_count
+  - blocking_actions
+  - global_blocking_reasons
+  - items
+  properties:
+    contest_id: {$ref: '#/components/schemas/ID'}
+    ready: {type: boolean}
+    total_challenges: {type: integer, minimum: 0}
+    passed_challenges: {type: integer, minimum: 0}
+    pending_challenges: {type: integer, minimum: 0}
+    failed_challenges: {type: integer, minimum: 0}
+    stale_challenges: {type: integer, minimum: 0}
+    missing_checker_challenges: {type: integer, minimum: 0}
+    blocking_count: {type: integer, minimum: 0}
+    blocking_actions: {type: array, items: {$ref: '#/components/schemas/AWDReadinessAction'}}
+    global_blocking_reasons: {type: array, items: {$ref: '#/components/schemas/AWDReadinessGlobalReason'}}
+    items: {type: array, items: {$ref: '#/components/schemas/AWDReadinessItemData'}}
+ApiEnvelopeAWDReadinessData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AWDReadinessData'}}
+CreateAwdRoundRequest:
+  type: object
+  required: [round_number]
+  properties:
+    round_number: {type: integer, minimum: 1}
+    status: {$ref: '#/components/schemas/AWDRoundStatus', nullable: true}
+    attack_score:
+      type: integer
+      minimum: 0
+      maximum: 100
+      nullable: true
+      default: 30
+    defense_score:
+      type: integer
+      minimum: 0
+      maximum: 10
+      nullable: true
+      default: 3
+UpsertAwdServiceCheckRequest:
+  type: object
+  required: [team_id, challenge_id, service_status]
+  properties:
+    team_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    service_status: {$ref: '#/components/schemas/AwdServiceStatus'}
+    check_result: {type: object, additionalProperties: true}
+CreateAwdAttackLogRequest:
+  type: object
+  required: [attacker_team_id, victim_team_id, challenge_id, attack_type, is_success]
+  properties:
+    attacker_team_id: {$ref: '#/components/schemas/ID'}
+    victim_team_id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    attack_type: {$ref: '#/components/schemas/AwdAttackType'}
+    submitted_flag: {type: string, nullable: true}
+    is_success: {type: boolean}
+SubmitAwdAttackRequest:
+  type: object
+  required: [victim_team_id, flag]
+  properties: {victim_team_id: {$ref: '#/components/schemas/ID'}, flag: {type: string, maxLength: 512}}
+AWDServiceType: {type: string, enum: [web_http, binary_tcp, multi_container]}
+AWDDeploymentMode: {type: string, enum: [single_container, topology]}
+AWDChallengeStatus: {type: string, enum: [draft, published, archived]}
+AWDReadinessStatus: {type: string, enum: [pending, passed, failed]}
+AWDChallengePageData:
+  type: object
+  required: [items, total, page, size]
+  properties:
+    items: {type: array, items: {$ref: '#/components/schemas/AuthoringAWDChallenge'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    size: {type: integer, minimum: 1}
+ApiEnvelopeAWDChallengeData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AuthoringAWDChallenge'}}
+ApiEnvelopeAWDChallengePageData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/AWDChallengePageData'}}

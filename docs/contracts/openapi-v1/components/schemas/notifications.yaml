@@ -1,0 +1,26 @@
+NotificationType: {type: string, enum: [system, contest, challenge, team]}
+NotificationItem:
+  type: object
+  required: [id, type, title, unread, created_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    type: {$ref: '#/components/schemas/NotificationType'}
+    title: {type: string}
+    content: {type: string, nullable: true}
+    level: {type: string, nullable: true, enum: [info, success, warning, error]}
+    unread: {type: boolean}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+NotificationListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/NotificationItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeNotificationListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/NotificationListData'}}

@@ -1,0 +1,400 @@
+ChallengeCategory: {type: string, enum: [web, pwn, reverse, crypto, misc, forensics]}
+ChallengeDifficulty: {type: string, enum: [beginner, easy, medium, hard, hell]}
+ChallengeListItem:
+  type: object
+  required:
+  - id
+  - title
+  - category
+  - difficulty
+  - tags
+  - solved_count
+  - total_attempts
+  - is_solved
+  - points
+  - created_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    category: {$ref: '#/components/schemas/ChallengeCategory'}
+    difficulty: {$ref: '#/components/schemas/ChallengeDifficulty'}
+    tags: {type: array, items: {type: string}}
+    solved_count: {type: integer, minimum: 0}
+    total_attempts: {type: integer, minimum: 0}
+    is_solved: {type: boolean}
+    points: {type: integer, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+ChallengeListData:
+  type: object
+  required: [list, total, page, page_size]
+  properties:
+    list: {type: array, items: {$ref: '#/components/schemas/ChallengeListItem'}}
+    total: {type: integer, minimum: 0}
+    page: {type: integer, minimum: 1}
+    page_size: {type: integer, minimum: 1}
+ApiEnvelopeChallengeListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ChallengeListData'}}
+ChallengeHint:
+  type: object
+  required: [id, level, is_unlocked]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    level: {type: integer, minimum: 1}
+    title: {type: string, nullable: true}
+    cost_points: {type: integer, nullable: true, minimum: 0}
+    is_unlocked: {type: boolean}
+    content: {type: string, nullable: true}
+ChallengeDetailData:
+  type: object
+  required:
+  - id
+  - title
+  - description
+  - category
+  - difficulty
+  - tags
+  - points
+  - need_target
+  - flag_type
+  - instance_sharing
+  - is_solved
+  - hints
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    description: {type: string, description: Markdown}
+    category: {$ref: '#/components/schemas/ChallengeCategory'}
+    difficulty: {$ref: '#/components/schemas/ChallengeDifficulty'}
+    tags: {type: array, items: {type: string}}
+    points: {type: integer, minimum: 0}
+    need_target: {type: boolean, description: 题目是否需要启动靶机实例}
+    flag_type: {$ref: '#/components/schemas/FlagType'}
+    instance_sharing: {$ref: '#/components/schemas/InstanceSharing'}
+    attachment_url: {type: string, nullable: true}
+    is_solved: {type: boolean}
+    solved_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    hints: {type: array, items: {$ref: '#/components/schemas/ChallengeHint'}}
+ApiEnvelopeChallengeDetailData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ChallengeDetailData'}}
+FlagType: {type: string, enum: [static, dynamic, regex, manual_review]}
+SubmitFlagRequest:
+  type: object
+  required: [flag]
+  properties: {flag: {type: string}}
+SubmitFlagData:
+  type: object
+  required: [is_correct, status, submitted_at]
+  properties:
+    is_correct: {type: boolean}
+    status: {type: string, enum: [correct, incorrect, pending_review]}
+    points: {type: integer, nullable: true, minimum: 0}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime'}
+    instance_shutdown_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+PracticeSubmitFlagData:
+  type: object
+  required: [is_correct, status, submitted_at]
+  properties:
+    is_correct: {type: boolean}
+    status: {type: string, enum: [correct, incorrect, pending_review]}
+    points: {type: integer, nullable: true, minimum: 0}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime'}
+    instance_shutdown_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+ChallengeSubmissionRecordData:
+  type: object
+  required: [id, status, submitted_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    status: {type: string, enum: [correct, incorrect, pending_review]}
+    answer: {type: string, nullable: true}
+    submitted_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeSubmitFlagData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/SubmitFlagData'}}
+ApiEnvelopePracticeSubmitFlagData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/PracticeSubmitFlagData'}}
+ApiEnvelopeChallengeSubmissionRecordListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/ChallengeSubmissionRecordData'}}
+ConfigureChallengeFlagRequest:
+  type: object
+  required: [flag_type]
+  properties:
+    flag_type: {$ref: '#/components/schemas/FlagType'}
+    flag: {type: string, nullable: true}
+    flag_regex: {type: string, nullable: true}
+    flag_prefix: {type: string, nullable: true}
+ConfigureChallengeFlagData:
+  type: object
+  required: [message]
+  properties: {message: {type: string}}
+ApiEnvelopeConfigureChallengeFlagData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ConfigureChallengeFlagData'}}
+UnlockHintData:
+  type: object
+  required: [hint]
+  properties:
+    hint: {$ref: '#/components/schemas/ChallengeHint'}
+    points_spent: {type: integer, nullable: true, minimum: 0}
+    remaining_points: {type: integer, nullable: true, minimum: 0}
+ApiEnvelopeUnlockHintData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/UnlockHintData'}}
+TopologyTier: {type: string, enum: [public, service, internal]}
+TopologyPolicyAction: {type: string, enum: [allow, deny]}
+TopologyPolicyProtocol: {type: string, enum: [tcp, udp, any]}
+TopologyNetwork:
+  type: object
+  required: [key, name]
+  properties:
+    key: {type: string, maxLength: 64}
+    name: {type: string, maxLength: 128}
+    cidr: {type: string, nullable: true}
+    internal: {type: boolean}
+TopologyNode:
+  type: object
+  required: [key, name]
+  properties:
+    key: {type: string, maxLength: 64}
+    name: {type: string, maxLength: 128}
+    image_id: {$ref: '#/components/schemas/ID', nullable: true}
+    service_port:
+      type: integer
+      minimum: 1
+      maximum: 65535
+      nullable: true
+    inject_flag: {type: boolean}
+    tier: {$ref: '#/components/schemas/TopologyTier', nullable: true}
+    network_keys: {type: array, items: {type: string, maxLength: 64}}
+    env: {type: object, additionalProperties: {type: string}}
+    resources:
+      type: object
+      properties:
+        cpu_quota:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        memory_mb: {type: integer, minimum: 64, maximum: 16384}
+        pids_limit: {type: integer, minimum: 1, maximum: 10000}
+TopologyLink:
+  type: object
+  required: [from_node_key, to_node_key]
+  properties: {from_node_key: {type: string, maxLength: 64}, to_node_key: {type: string, maxLength: 64}}
+TopologyTrafficPolicy:
+  type: object
+  required: [source_node_key, target_node_key, action]
+  properties:
+    source_node_key: {type: string, maxLength: 64}
+    target_node_key: {type: string, maxLength: 64}
+    action: {$ref: '#/components/schemas/TopologyPolicyAction'}
+    protocol:
+      allOf:
+      - {$ref: '#/components/schemas/TopologyPolicyProtocol'}
+      nullable: true
+      description: 细粒度 ACL 协议维度，支持 any / tcp / udp
+    ports:
+      type: array
+      description: 细粒度 ACL 的目标端口列表；为空时表示匹配对应协议的全部端口
+      items: {type: integer, minimum: 1, maximum: 65535}
+ChallengeTopologyData:
+  type: object
+  required: [id, challenge_id, entry_node_key, nodes, created_at, updated_at]
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    template_id: {$ref: '#/components/schemas/ID', nullable: true}
+    entry_node_key: {type: string, maxLength: 64}
+    networks: {type: array, items: {$ref: '#/components/schemas/TopologyNetwork'}}
+    nodes: {type: array, items: {$ref: '#/components/schemas/TopologyNode'}}
+    links: {type: array, items: {$ref: '#/components/schemas/TopologyLink'}}
+    policies: {type: array, items: {$ref: '#/components/schemas/TopologyTrafficPolicy'}}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+EnvironmentTemplateData:
+  type: object
+  required:
+  - id
+  - name
+  - description
+  - entry_node_key
+  - nodes
+  - usage_count
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    name: {type: string, maxLength: 128}
+    description: {type: string}
+    entry_node_key: {type: string, maxLength: 64}
+    networks: {type: array, items: {$ref: '#/components/schemas/TopologyNetwork'}}
+    nodes: {type: array, items: {$ref: '#/components/schemas/TopologyNode'}}
+    links: {type: array, items: {$ref: '#/components/schemas/TopologyLink'}}
+    policies: {type: array, items: {$ref: '#/components/schemas/TopologyTrafficPolicy'}}
+    usage_count: {type: integer, minimum: 0}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+SaveChallengeTopologyRequest:
+  type: object
+  properties:
+    template_id: {$ref: '#/components/schemas/ID', nullable: true}
+    entry_node_key: {type: string, maxLength: 64, nullable: true}
+    networks: {type: array, items: {$ref: '#/components/schemas/TopologyNetwork'}}
+    nodes: {type: array, items: {$ref: '#/components/schemas/TopologyNode'}}
+    links: {type: array, items: {$ref: '#/components/schemas/TopologyLink'}}
+    policies: {type: array, items: {$ref: '#/components/schemas/TopologyTrafficPolicy'}}
+UpsertEnvironmentTemplateRequest:
+  type: object
+  required: [name, entry_node_key, nodes]
+  properties:
+    name: {type: string, maxLength: 128}
+    description: {type: string, nullable: true}
+    entry_node_key: {type: string, maxLength: 64}
+    networks: {type: array, items: {$ref: '#/components/schemas/TopologyNetwork'}}
+    nodes: {type: array, items: {$ref: '#/components/schemas/TopologyNode'}}
+    links: {type: array, items: {$ref: '#/components/schemas/TopologyLink'}}
+    policies: {type: array, items: {$ref: '#/components/schemas/TopologyTrafficPolicy'}}
+ApiEnvelopeChallengeTopologyData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ChallengeTopologyData'}}
+ApiEnvelopeEnvironmentTemplateData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/EnvironmentTemplateData'}}
+ApiEnvelopeEnvironmentTemplateListData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties:
+      data: {type: array, items: {$ref: '#/components/schemas/EnvironmentTemplateData'}}
+ChallengeWriteupVisibility: {type: string, enum: [private, public, scheduled]}
+ChallengeWriteupData:
+  type: object
+  required:
+  - id
+  - challenge_id
+  - title
+  - content
+  - visibility
+  - is_released
+  - requires_spoiler_warning
+  - created_at
+  - updated_at
+  properties:
+    id: {$ref: '#/components/schemas/ID'}
+    challenge_id: {$ref: '#/components/schemas/ID'}
+    title: {type: string}
+    content: {type: string}
+    visibility: {$ref: '#/components/schemas/ChallengeWriteupVisibility'}
+    release_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+    is_released: {type: boolean}
+    requires_spoiler_warning: {type: boolean}
+    created_at: {$ref: '#/components/schemas/ISODateTime'}
+    updated_at: {$ref: '#/components/schemas/ISODateTime'}
+ApiEnvelopeChallengeWriteupData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ChallengeWriteupData'}}
+UpsertChallengeWriteupRequest:
+  type: object
+  required: [title, content, visibility]
+  properties:
+    title: {type: string}
+    content: {type: string}
+    visibility: {$ref: '#/components/schemas/ChallengeWriteupVisibility'}
+    release_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+ChallengeImportAttachment:
+  type: object
+  required: [name, path]
+  properties: {name: {type: string}, path: {type: string}}
+ChallengeImportHint:
+  type: object
+  required: [level, content]
+  properties:
+    id: {$ref: '#/components/schemas/ID', nullable: true}
+    level: {type: integer, minimum: 1}
+    title: {type: string, nullable: true}
+    cost_points: {type: integer, nullable: true, minimum: 0}
+    content: {type: string}
+ChallengeImportFlag:
+  type: object
+  required: [type]
+  properties:
+    type: {type: string, enum: [static, dynamic]}
+    prefix: {type: string, nullable: true}
+ChallengeImportRuntime:
+  type: object
+  properties:
+    type: {type: string, enum: [container], nullable: true}
+    image_ref: {type: string, nullable: true}
+ChallengeImportTopologyExtension:
+  type: object
+  required: [enabled]
+  properties: {source: {type: string, nullable: true}, enabled: {type: boolean}}
+ChallengeImportExtensions:
+  type: object
+  required: [topology]
+  properties: {topology: {$ref: '#/components/schemas/ChallengeImportTopologyExtension'}}
+ChallengeSelfCheckStepData:
+  type: object
+  required: [name, passed, message]
+  properties: {name: {type: string}, passed: {type: boolean}, message: {type: string}}
+ChallengeSelfCheckPhaseData:
+  type: object
+  required: [passed, started_at, ended_at, steps]
+  properties:
+    passed: {type: boolean}
+    started_at: {$ref: '#/components/schemas/ISODateTime'}
+    ended_at: {$ref: '#/components/schemas/ISODateTime'}
+    steps: {type: array, items: {$ref: '#/components/schemas/ChallengeSelfCheckStepData'}}
+ChallengeSelfCheckRuntimeData:
+  allOf:
+  - {$ref: '#/components/schemas/ChallengeSelfCheckPhaseData'}
+  - type: object
+    required: [container_count, network_count]
+    properties: {access_url: {type: string, nullable: true}, container_count: {type: integer, minimum: 0}, network_count: {
+        type: integer, minimum: 0}}
+ChallengeSelfCheckData:
+  type: object
+  required: [challenge_id, precheck, runtime]
+  properties: {challenge_id: {$ref: '#/components/schemas/ID'}, precheck: {$ref: '#/components/schemas/ChallengeSelfCheckPhaseData'},
+    runtime: {$ref: '#/components/schemas/ChallengeSelfCheckRuntimeData'}}
+ApiEnvelopeChallengeSelfCheckData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/ChallengeSelfCheckData'}}

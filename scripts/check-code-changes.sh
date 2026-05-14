@@ -32,7 +32,7 @@ check_api_contract_changes() {
   local runtime_changed
   runtime_changed="$(printf '%s\n' "$changed" | grep -Ev '^code/frontend/src/api/__tests__/' || true)"
   local api_surface_pattern='(^code/backend/internal/app/router\.go$|^code/backend/internal/dto/|^code/backend/internal/handler/|^code/backend/internal/module/.+/api/|^code/backend/internal/module/.+/handler\.go$|^code/backend/pkg/response/|^code/backend/pkg/errcode/|^code/frontend/src/api/.+\.(ts|vue)$|^code/frontend/src/api/contracts\.ts$)'
-  local contract_pattern='(^docs/contracts/api-contract-v1\.md$|^docs/contracts/openapi-v1\.yaml$|^docs/architecture/backend/04-api-design\.md$)'
+  local contract_pattern='(^docs/contracts/api-contract-v1\.md$|^docs/contracts/openapi-v1\.yaml$|^docs/contracts/openapi-v1/|^docs/architecture/backend/04-api-design\.md$)'
 
   if ! matches_any "$api_surface_pattern" "$runtime_changed"; then
     echo "  $(green PASS) — API surface unchanged"
@@ -48,6 +48,7 @@ check_api_contract_changes() {
   echo "    Update at least one of:"
   echo "    - docs/contracts/api-contract-v1.md"
   echo "    - docs/contracts/openapi-v1.yaml"
+  echo "    - docs/contracts/openapi-v1/"
   echo "    - docs/architecture/backend/04-api-design.md"
   fail=1
 }
