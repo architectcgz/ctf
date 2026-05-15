@@ -1504,6 +1504,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		ID:        26001,
 		Name:      "registry.example.edu/ctf/awd-preview",
 		Tag:       "v1",
+		Digest:    "sha256:preview-v1",
 		Status:    model.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -1590,7 +1591,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	if !runtimeProbe.cleanupCalled {
 		t.Fatal("expected preview runtime cleanup")
 	}
-	if runtimeProbe.lastImageName != "registry.example.edu/ctf/awd-preview:v1" {
+	if runtimeProbe.lastImageName != "registry.example.edu/ctf/awd-preview@sha256:preview-v1" {
 		t.Fatalf("unexpected preview image: %s", runtimeProbe.lastImageName)
 	}
 	if runtimeProbe.lastEnv["FLAG"] != "flag{preview}" {

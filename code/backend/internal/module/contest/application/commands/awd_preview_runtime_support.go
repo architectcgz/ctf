@@ -202,7 +202,7 @@ func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int
 	if imageItem.Status != model.ImageStatusAvailable {
 		return "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("preview image %d status=%s", imageItem.ID, imageItem.Status))
 	}
-	return fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag), nil
+	return model.BuildRuntimeImageRef(imageItem), nil
 }
 
 func readStringFromAny(value any) string {

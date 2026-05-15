@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -40,4 +42,25 @@ type Image struct {
 
 func (Image) TableName() string {
 	return "images"
+}
+
+func BuildRuntimeImageRef(image *Image) string {
+	if image == nil {
+		return ""
+	}
+
+	name := strings.TrimSpace(image.Name)
+	tag := strings.TrimSpace(image.Tag)
+	digest := strings.TrimSpace(image.Digest)
+
+	if name == "" {
+		return ""
+	}
+	if digest != "" {
+		return fmt.Sprintf("%s@%s", name, digest)
+	}
+	if tag == "" {
+		return name
+	}
+	return fmt.Sprintf("%s:%s", name, tag)
 }

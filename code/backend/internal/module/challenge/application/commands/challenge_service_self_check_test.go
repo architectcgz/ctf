@@ -16,6 +16,7 @@ type fakeChallengeRuntimeProbe struct {
 	createContainerCalled bool
 	createTopologyCalled  bool
 	cleanupCalled         bool
+	lastImageName         string
 
 	containerResultAccessURL string
 	containerResultDetails   model.InstanceRuntimeDetails
@@ -35,8 +36,9 @@ func (f *fakeChallengeRuntimeProbe) CreateTopology(_ context.Context, _ *challen
 	return f.topologyResult, nil
 }
 
-func (f *fakeChallengeRuntimeProbe) CreateContainer(_ context.Context, _ string, _ map[string]string) (string, model.InstanceRuntimeDetails, error) {
+func (f *fakeChallengeRuntimeProbe) CreateContainer(_ context.Context, imageName string, _ map[string]string) (string, model.InstanceRuntimeDetails, error) {
 	f.createContainerCalled = true
+	f.lastImageName = imageName
 	if f.containerResultErr != nil {
 		return "", model.InstanceRuntimeDetails{}, f.containerResultErr
 	}
@@ -138,6 +140,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	image := &model.Image{
 		Name:   "ctf/web-demo",
 		Tag:    "latest",
+		Digest: "sha256:selfcheck-demo",
 		Status: model.ImageStatusAvailable,
 	}
 	if err := db.Create(image).Error; err != nil {
@@ -185,6 +188,9 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	}
 	if !probe.createContainerCalled {
 		t.Fatalf("expected single-container startup called")
+	}
+	if probe.lastImageName != "ctf/web-demo@sha256:selfcheck-demo" {
+		t.Fatalf("unexpected runtime image ref: %s", probe.lastImageName)
 	}
 	if !probe.cleanupCalled {
 		t.Fatalf("expected runtime cleanup called")

@@ -163,6 +163,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 		ID:        501,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
+		Digest:    "sha256:awd-web-v1",
 		Status:    model.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -226,7 +227,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 					if len(req.Networks) != 1 || req.Networks[0].Name != "ctf-awd-contest-7001" || !req.Networks[0].Shared {
 						t.Fatalf("expected stable shared AWD contest network, got %+v", req.Networks)
 					}
-					if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
+					if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web@sha256:awd-web-v1" {
 						t.Fatalf("unexpected runtime topology request: %+v", req)
 					}
 					if req.Nodes[0].Env["CHECKER_TOKEN"] != contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, 501, checkerSecret) {
