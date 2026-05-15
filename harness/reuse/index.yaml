@@ -1,5 +1,35 @@
 # Durable reuse index. Keep this file cumulative; do not replace it with the current task.
 entries:
+  - id: teacher-admin-overview-panel-header-adoption
+    updated_at: "2026-05-15"
+    change_types:
+      - page
+      - component
+      - layout
+    keywords:
+      - workspace-panel-header
+      - workspace-panel-divider
+      - overview-panel
+      - teacher
+      - admin
+      - contest
+      - user-governance
+      - class-students
+    decision: extend_existing
+    must_reuse:
+      - code/frontend/src/style.css
+      - code/frontend/src/components/dashboard/student/StudentOverviewStyleEditorial.vue
+      - code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue
+      - code/frontend/src/components/dashboard/student/StudentCategoryProgressPage.vue
+      - code/frontend/src/components/dashboard/student/StudentTimelinePage.vue
+      - code/frontend/src/components/dashboard/student/StudentDifficultyPage.vue
+    tests:
+      - code/frontend/src/views/__tests__/workspacePageHeaderStyles.test.ts
+      - code/frontend/src/views/__tests__/workspaceShellStyles.test.ts
+      - code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts
+    notes:
+      - Overview sections inside workspace tabs should adopt `workspace-panel-header`, not `workspace-page-header`.
+      - Put metric strips inside `workspace-panel-header__summary` and separate downstream directory content with `workspace-panel-divider` when the section continues below the header.
   - id: writeup-submission-no-review-contract-frontend
     updated_at: "2026-05-15"
     change_types:

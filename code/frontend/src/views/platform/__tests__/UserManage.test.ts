@@ -373,7 +373,9 @@ describe('UserManage', () => {
   })
 
   it('用户治理页头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(userGovernanceSource).toContain('class="header-actions user-panel-actions"')
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__actions header-actions user-panel-actions"'
+    )
     expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
     expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
     expect(userGovernanceSource).toContain('class="ui-btn ui-btn--secondary user-action-btn"')
@@ -489,8 +491,15 @@ describe('UserManage', () => {
     expect(userGovernanceSource).toContain(
       '--workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);'
     )
-    expect(userGovernanceSource).toMatch(
-      /\.user-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    expect(userGovernanceSource).toContain(
+      '<header class="workspace-panel-header user-overview-head">'
+    )
+    expect(userGovernanceSource).toContain('class="workspace-panel-header__intro"')
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__actions header-actions user-panel-actions"'
+    )
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
   })
 

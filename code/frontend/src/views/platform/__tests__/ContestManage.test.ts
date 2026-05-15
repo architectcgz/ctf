@@ -487,7 +487,14 @@ describe('ContestManage', () => {
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
     expect(contestOrchestrationSource).toContain(
-      '<header class="workspace-page-header contest-overview-head">'
+      '<header class="workspace-panel-header contest-overview-head">'
+    )
+    expect(contestOrchestrationSource).toContain('class="workspace-panel-header__intro"')
+    expect(contestOrchestrationSource).toContain(
+      'class="workspace-panel-header__actions ui-toolbar-actions contest-panel-actions"'
+    )
+    expect(contestOrchestrationSource).toContain(
+      'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(contestOrchestrationSource).not.toMatch(
       /\.contest-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s

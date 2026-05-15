@@ -132,7 +132,9 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /--user-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 58%, transparent\);/
     )
-    expect(userGovernanceSource).toContain('class="header-actions user-panel-actions"')
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__actions header-actions user-panel-actions"'
+    )
     expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
     expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
     expect(userGovernanceSource).toMatch(
@@ -165,8 +167,13 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
     )
-    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
+    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
     expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(userGovernanceSource).toContain('<div class="workspace-panel-divider" aria-hidden="true" />')
+    expect(userGovernanceSource).not.toContain('<header class="workspace-page-header user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="workspace-tab-heading user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-import-head">')
@@ -600,9 +607,11 @@ describe('admin management surface alignment', () => {
     expect(classManageSource).not.toMatch(/^\.list-heading\s*\{/m)
     expect(studentManageSource).not.toMatch(/^\.list-heading\s*\{/m)
     expect(instanceManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid')
+    expect(userGovernanceSource).toContain(
+      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid'
+    )
     expect(contestOrchestrationSource).toContain(
-      'class="admin-summary-grid contest-overview-summary'
+      'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary'
     )
     expect(classManageCombinedSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary'
@@ -735,7 +744,7 @@ describe('admin management surface alignment', () => {
     )
 
     expect(userGovernanceSource).toContain(
-      'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface'
+      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface'
     )
     expect(userGovernanceSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(userGovernanceSource).toContain(
@@ -750,7 +759,7 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).not.toContain('user-overview-stat')
 
     expect(contestOrchestrationSource).toContain(
-      'class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+      'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(contestOrchestrationSource).toContain(
       'class="journal-note progress-card metric-panel-card"'
@@ -780,12 +789,16 @@ describe('admin management surface alignment', () => {
   })
 
   it('workspace summary headers should divide actions from metric cards', () => {
-    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
+    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
+    expect(userGovernanceSource).toContain('<div class="workspace-panel-divider" aria-hidden="true" />')
     expect(userGovernanceSource).not.toMatch(
       /\.user-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
     expect(contestOrchestrationSource).toContain(
-      '<header class="workspace-page-header contest-overview-head">'
+      '<header class="workspace-panel-header contest-overview-head">'
+    )
+    expect(contestOrchestrationSource).toContain(
+      '<div class="workspace-panel-divider" aria-hidden="true" />'
     )
     expect(contestOrchestrationSource).not.toMatch(
       /\.contest-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s

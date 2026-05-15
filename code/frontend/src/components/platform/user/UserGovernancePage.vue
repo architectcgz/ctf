@@ -211,15 +211,15 @@ function handleImportChange(event: Event): void {
         class="user-panel user-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="workspace-page-header user-overview-head">
-          <div class="workspace-tab-heading__main">
+        <header class="workspace-panel-header user-overview-head">
+          <div class="workspace-panel-header__intro">
             <div class="workspace-overline">
               User Workspace
             </div>
             <h1 class="workspace-page-title">用户治理台</h1>
           </div>
 
-          <div class="header-actions user-panel-actions">
+          <div class="workspace-panel-header__actions header-actions user-panel-actions">
             <button
               type="button"
               class="header-btn header-btn--ghost"
@@ -247,61 +247,62 @@ function handleImportChange(event: Event): void {
               创建用户
             </button>
           </div>
+          <div class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>用户总量</span>
+                <Users class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ total.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前条件下的用户总数
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>活跃账号</span>
+                <UserPlus class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ activeCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前活跃状态的账号
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>教师角色</span>
+                <GraduationCap class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ teacherCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前页教师账号数量
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>导入回执</span>
+                <FileUp class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                {{ importSummary }}
+              </div>
+            </article>
+          </div>
         </header>
 
-        <div class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>用户总量</span>
-              <Users class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ total.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前条件下的用户总数
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>活跃账号</span>
-              <UserPlus class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ activeCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前活跃状态的账号
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>教师角色</span>
-              <GraduationCap class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ teacherCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页教师账号数量
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>导入回执</span>
-              <FileUp class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              {{ importSummary }}
-            </div>
-          </article>
-        </div>
+        <div class="workspace-panel-divider" aria-hidden="true" />
 
         <section class="workspace-directory-section user-directory-section">
           <header class="list-heading user-directory-head">
@@ -689,9 +690,17 @@ function handleImportChange(event: Event): void {
   gap: var(--space-4);
 }
 
+.user-panel--workspace {
+  gap: 0;
+}
+
 .user-overview-head,
 .user-import-head {
   gap: var(--space-3);
+}
+
+.user-overview-head {
+  --workspace-panel-divider-gap: var(--space-divider-gap);
 }
 
 .user-overview-grid {

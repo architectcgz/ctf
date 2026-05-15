@@ -193,8 +193,8 @@ describe('TeacherClassStudents', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('学生列表')
-    expect(wrapper.find('.teacher-topbar').exists()).toBe(true)
-    expect(wrapper.find('.teacher-summary').exists()).toBe(true)
+    expect(wrapper.find('.class-overview-topbar').exists()).toBe(true)
+    expect(wrapper.find('.class-overview-summary').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-shell').exists()).toBe(true)
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
     expect(wrapper.find('#class-tab-overview').exists()).toBe(true)
@@ -341,10 +341,16 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('class="top-tabs"')
     expect(classStudentsPageSource).toContain('class="content-pane"')
     expect(classStudentsPageSource).toContain('WorkspaceDataTable')
-    expect(classStudentsPageSource).toContain('class="teacher-topbar class-overview-topbar"')
-    expect(classStudentsPageSource).toContain('class="teacher-summary class-overview-summary"')
+    expect(classStudentsPageSource).toContain('class="workspace-panel-header class-overview-topbar"')
+    expect(classStudentsPageSource).toContain('class="workspace-panel-header__intro teacher-heading"')
     expect(classStudentsPageSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="teacher-title workspace-page-title class-overview-title"'
+    )
+    expect(classStudentsPageSource).toContain(
+      'class="workspace-panel-header__actions header-actions"'
+    )
+    expect(classStudentsPageSource).toContain(
+      'class="workspace-panel-header__summary teacher-summary-grid class-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(classStudentsPageSource).toContain('class="progress-card metric-panel-card"')
     expect(classStudentsPageSource).toMatch(
@@ -374,9 +380,8 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).not.toMatch(/\.teacher-directory-row-metrics\s*\{/)
     expect(classStudentsPageSource).toContain('当前班级学生总数')
     expect(classStudentsPageSource).toContain('当前班级人均完成题目数')
-    expect(classStudentsPageSource).toMatch(/\.class-overview-topbar\s*\{[^}]*border-bottom:\s*0;/s)
     expect(classStudentsPageSource).toMatch(
-      /\.class-overview-summary\s*\{[^}]*padding:\s*0;[^}]*border-bottom:\s*0;/s
+      /\.class-overview-summary\s*\{[^}]*padding:\s*0;/s
     )
     expect(classStudentsPageSource).toContain('<span>班级人数</span>')
     expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')

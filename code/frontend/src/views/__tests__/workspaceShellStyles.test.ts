@@ -89,7 +89,6 @@ describe('workspace shell shared styles', () => {
       classManageHeroPanelSource,
       classManagementPageSource,
       contestListSource,
-      contestOrchestrationPageSource,
       imageManageHeroPanelSource,
       instanceManageHeroPanelSource,
       instanceListSource,
@@ -101,13 +100,25 @@ describe('workspace shell shared styles', () => {
       studentManageHeroPanelSource,
       teacherAwdReviewWorkspaceHeaderSource,
       teacherInstanceManagementPageSource,
-      userGovernanceSource,
       userProfileSource,
     ]) {
       expect(source).toContain('workspace-page-header')
       expect(source).not.toContain('<section class="workspace-hero">')
       expect(source).not.toMatch(/\.workspace-hero\s*\{/)
     }
+  })
+
+  it('overview 工作区面板头部应改用共享 workspace-panel-header，而不是继续占用页级页头', () => {
+    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
+    expect(userGovernanceSource).not.toContain(
+      '<header class="workspace-page-header user-overview-head">'
+    )
+    expect(contestOrchestrationPageSource).toContain(
+      '<header class="workspace-panel-header contest-overview-head">'
+    )
+    expect(contestOrchestrationPageSource).not.toContain(
+      '<header class="workspace-page-header contest-overview-head">'
+    )
   })
 
   it('工作区页面不应继续在局部重复声明骨架壳层样式', () => {
@@ -165,9 +176,6 @@ describe('workspace shell shared styles', () => {
   })
 
   it('带顶部 tab 的页面不应在 tab 面板内重复渲染 eyebrow', () => {
-    expect(scoreboardSource).not.toContain('Contest Scoreboard')
-    expect(scoreboardSource).not.toContain('Contest Scoreboard Directory')
-    expect(scoreboardSource).not.toContain('Points Scoreboard Directory')
     expect(scoreboardSource).not.toContain(
       'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
     )

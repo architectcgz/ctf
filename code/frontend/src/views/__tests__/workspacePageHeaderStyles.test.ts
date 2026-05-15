@@ -239,7 +239,7 @@ describe('workspace page header styles', () => {
       },
       {
         source: studentAnalysisPageSource,
-        include: /<h1 class="teacher-title">[\s\S]*?<\/h1>/,
+        include: /<h1 class="teacher-title workspace-page-title[\s\S]*?<\/h1>/,
         exclude: /<h1 class="teacher-title workspace-tab-heading__title">[\s\S]*?<\/h1>/,
       },
       {
@@ -438,15 +438,24 @@ describe('workspace page header styles', () => {
     expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
     expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
-    expect(userGovernanceSource).toContain('<header class="workspace-page-header user-overview-head">')
-    expect(contestOrchestrationSource).toContain(
-      '<header class="workspace-page-header contest-overview-head">'
-    )
     expect(challengeImportHeroSource).toContain(
       '<header class="workspace-page-header challenge-import-heading">'
     )
     expect(writeupEditorSource).toContain('<PageHeader')
     expect(writeupViewSource).toContain('<PageHeader')
+  })
+
+  it('overview 工作区面板应复用共享 workspace-panel-header 结构', () => {
+    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
+    expect(userGovernanceSource).not.toContain(
+      '<header class="workspace-page-header user-overview-head">'
+    )
+    expect(contestOrchestrationSource).toContain(
+      '<header class="workspace-panel-header contest-overview-head">'
+    )
+    expect(contestOrchestrationSource).not.toContain(
+      '<header class="workspace-page-header contest-overview-head">'
+    )
   })
 
   it('高频详情页顶部 tab 触控高度应回到共享默认值', () => {

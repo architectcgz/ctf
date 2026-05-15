@@ -64,3 +64,25 @@ This file is append-only. Keep current task evidence in `.harness/reuse-decision
 ### Reuse note
 - 学生题解提交链路继续复用现有 challenge-detail flow，教师题解展示继续复用现有 teacher writeup 列表和复盘面板。
 - 题解提交状态应只保留 `draft / published`，契约与前端都不再暴露 writeup 专属审核态。
+
+## 2026-05-15 teacher admin overview panel header adoption
+
+### Change type
+- page
+- component
+- layout
+
+### Similar implementations found
+- `code/frontend/src/style.css`
+- `code/frontend/src/components/dashboard/student/StudentOverviewStyleEditorial.vue`
+- `code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue`
+- `code/frontend/src/components/dashboard/student/StudentCategoryProgressPage.vue`
+- `code/frontend/src/components/dashboard/student/StudentTimelinePage.vue`
+- `code/frontend/src/components/dashboard/student/StudentDifficultyPage.vue`
+
+### Decision
+- `extend_existing`
+
+### Reuse note
+- 工作区 tab 内的 overview 面板头部默认复用 `workspace-panel-header` 系列原语，不继续把这类面板实现成 `workspace-page-header`。
+- 指标卡片并入 `workspace-panel-header__summary`，头部与目录正文之间的分隔优先使用 `workspace-panel-divider` 和统一 gap token，而不是各页面各写一层边线和 margin。

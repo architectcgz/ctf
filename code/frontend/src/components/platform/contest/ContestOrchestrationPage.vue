@@ -103,15 +103,15 @@ function openContestWorkbench(contest: ContestDetailData) {
         class="contest-panel contest-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="workspace-page-header contest-overview-head">
-          <div class="workspace-tab-heading__main">
+        <header class="workspace-panel-header contest-overview-head">
+          <div class="workspace-panel-header__intro">
             <div class="workspace-overline">
               Contest Workspace
             </div>
             <h1 class="workspace-page-title">竞赛目录</h1>
           </div>
 
-          <div class="ui-toolbar-actions contest-panel-actions">
+          <div class="workspace-panel-header__actions ui-toolbar-actions contest-panel-actions">
             <button
               type="button"
               class="ui-btn ui-btn--ghost"
@@ -130,61 +130,62 @@ function openContestWorkbench(contest: ContestDetailData) {
               创建竞赛
             </button>
           </div>
+          <div class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>赛事总量</span>
+                <Trophy class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ total.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前条件下的赛事总数
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>报名中</span>
+                <Users class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ registeringCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前筛选条件下开放报名的赛事
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>进行中</span>
+                <Activity class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ runningCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前筛选条件下正在进行的赛事
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>AWD 模式</span>
+                <Layers class="h-4 w-4" />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ awdCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前页已接入运维链路的赛事
+              </div>
+            </article>
+          </div>
         </header>
 
-        <div class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>赛事总量</span>
-              <Trophy class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ total.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前条件下的赛事总数
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>报名中</span>
-              <Users class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ registeringCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前筛选条件下开放报名的赛事
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>进行中</span>
-              <Activity class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ runningCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前筛选条件下正在进行的赛事
-            </div>
-          </article>
-
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>AWD 模式</span>
-              <Layers class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ awdCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页已接入运维链路的赛事
-            </div>
-          </article>
-        </div>
+        <div class="workspace-panel-divider" aria-hidden="true" />
 
         <section class="workspace-directory-section contest-directory-section">
           <header class="list-heading">
@@ -381,8 +382,12 @@ function openContestWorkbench(contest: ContestDetailData) {
   gap: var(--space-5);
 }
 
+.contest-panel--workspace {
+  gap: 0;
+}
+
 .contest-overview-head {
-  gap: var(--space-4);
+  --workspace-panel-divider-gap: var(--space-divider-gap);
 }
 
 .contest-panel-actions {
