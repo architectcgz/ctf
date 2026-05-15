@@ -110,7 +110,7 @@
   --space-workspace-panel-title-gap: var(--workspace-page-title-margin-top);
   --space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);
   --space-workspace-panel-block-gap: var(--space-5);
-  --space-workspace-panel-divider-gap: var(--space-1);
+  --space-workspace-panel-divider-gap: var(--space-3);
   --space-workspace-tab-padding-top: var(--space-2-5);
   --space-workspace-tab-padding-bottom: var(--space-3);
   --space-workspace-content-padding: var(--space-7);

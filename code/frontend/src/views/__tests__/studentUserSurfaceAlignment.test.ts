@@ -31,7 +31,7 @@ describe('student and user surface alignment', () => {
       '--space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);'
     )
     expect(themeSource).toContain('--space-workspace-panel-block-gap: var(--space-5);')
-    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-1);')
+    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-3);')
     expect(styleSource).toContain('.workspace-panel-header__intro')
     expect(styleSource).toContain('.workspace-panel-divider')
     expect(styleSource).toContain('.workspace-panel-header__meta,')

@@ -37,7 +37,7 @@ describe('spacing system tokens', () => {
       '--space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);'
     )
     expect(themeSource).toContain('--space-workspace-panel-block-gap: var(--space-5);')
-    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-1);')
+    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-3);')
     expect(themeSource).toContain('--space-divider-gap: var(--space-4);')
   })
 
