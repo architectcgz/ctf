@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -70,7 +71,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		return resp, nil
 	}
 	if instance.Status == model.InstanceStatusPending || instance.Status == model.InstanceStatusCreating {
-		return instanceRespForScope(instance, scope), nil
+		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 
 	if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
@@ -81,12 +82,26 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	if s.schedulerEnabled() {
 		nextStatus = model.InstanceStatusPending
 	}
-	nextExpiresAt := time.Now().Add(s.config.Container.DefaultTTL)
+	nextExpiresAt, err := s.resolveInstanceExpiresAt(ctx, scope)
+	if err != nil {
+		return nil, err
+	}
+	preserveHostPort := requiresPublishedHostPort(scope, s.config.Container.AccessHost)
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
-		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, requiresPublishedHostPort(scope)); err != nil {
+		if preserveHostPort && instance.HostPort <= 0 {
+			hostPort, err := txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+			if err != nil {
+				return errcode.ErrInternal.WithCause(err)
+			}
+			if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
+				return errcode.ErrInternal.WithCause(err)
+			}
+			instance.HostPort = hostPort
+		}
+		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, preserveHostPort); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		operationStatus := model.AWDServiceOperationStatusRequested
@@ -105,7 +120,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	instance.NetworkID = ""
 	instance.RuntimeDetails = ""
 	instance.AccessURL = ""
-	if !requiresPublishedHostPort(scope) {
+	if !preserveHostPort {
 		instance.HostPort = 0
 	}
 	instance.Status = nextStatus
@@ -124,7 +139,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 			return nil, err
 		}
 	}
-	return instanceRespForScope(instance, scope), nil
+	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
 func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error) {
@@ -164,6 +179,10 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		}
 	}
 	scope = resolveEffectiveInstanceScope(chal, scope)
+	expiresAt, err := s.resolveInstanceExpiresAt(ctx, scope)
+	if err != nil {
+		return nil, err
+	}
 
 	flag, nonce, err := s.buildInstanceFlag(scope.FlagSubjectID, challengeID, chal)
 	if err != nil {
@@ -188,11 +207,17 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return errcode.ErrInternal.WithCause(err)
 		}
 		if existingInstance != nil {
-			if scope.ShareScope == model.InstanceSharingShared {
+			if scope.ContestMode == model.ContestModeAWD {
+				if !existingInstance.ExpiresAt.Equal(expiresAt) {
+					if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, expiresAt); err != nil {
+						return errcode.ErrInternal.WithCause(err)
+					}
+					existingInstance.ExpiresAt = expiresAt
+				}
+			} else if scope.ShareScope == model.InstanceSharingShared {
 				refreshedExpiry := existingInstance.ExpiresAt
-				candidateExpiry := time.Now().Add(s.config.Container.DefaultTTL)
-				if candidateExpiry.After(refreshedExpiry) {
-					refreshedExpiry = candidateExpiry
+				if expiresAt.After(refreshedExpiry) {
+					refreshedExpiry = expiresAt
 				}
 				if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, refreshedExpiry); err != nil {
 					return errcode.ErrInternal.WithCause(err)
@@ -218,7 +243,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		}
 
 		hostPort := 0
-		if requiresPublishedHostPort(scope) {
+		if requiresPublishedHostPort(scope, s.config.Container.AccessHost) {
 			var err error
 			hostPort, err = txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
 			if err != nil {
@@ -236,7 +261,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			ShareScope:  scope.ShareScope,
 			Status:      initialStatus,
 			Nonce:       nonce,
-			ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
+			ExpiresAt:   expiresAt,
 			MaxExtends:  s.config.Container.MaxExtends,
 		}
 		if err := txRepo.CreateInstance(ctx, instance); err != nil {
@@ -252,30 +277,47 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return nil, err
 	}
 	if reused {
-		return instanceRespForScope(instance, scope), nil
+		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 	if s.schedulerEnabled() {
 		s.logger.Info("实例已入启动队列",
 			zap.Int64("user_id", userID),
 			zap.Int64("challenge_id", challengeID),
 			zap.Int64("instance_id", instance.ID))
-		return instanceRespForScope(instance, scope), nil
+		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 
 	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
 		return nil, err
 	}
-	return instanceRespForScope(instance, scope), nil
+	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
-func requiresPublishedHostPort(scope practiceports.InstanceScope) bool {
-	return scope.ContestMode != model.ContestModeAWD
-}
-
-func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope) *dto.InstanceResp {
-	resp := domain.InstanceRespFromModel(instance)
+func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *dto.InstanceResp {
+	resp := domain.InstanceRespFromModel(instance, publicHost, accessHost)
 	if scope.ContestMode == model.ContestModeAWD {
 		resp.AccessURL = ""
 	}
 	return resp
+}
+
+func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practiceports.InstanceScope) (time.Time, error) {
+	if scope.ContestMode != model.ContestModeAWD || scope.ContestID == nil || *scope.ContestID <= 0 {
+		return time.Now().Add(s.config.Container.DefaultTTL), nil
+	}
+	if s.contestScope == nil {
+		return time.Time{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+
+	contest, err := s.contestScope.FindContestByID(ctx, *scope.ContestID)
+	if err != nil {
+		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
+			return time.Time{}, errcode.ErrContestNotFound
+		}
+		return time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if contest == nil {
+		return time.Time{}, errcode.ErrContestNotFound
+	}
+	return contest.EndTime.UTC(), nil
 }

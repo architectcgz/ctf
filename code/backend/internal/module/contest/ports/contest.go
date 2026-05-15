@@ -186,6 +186,10 @@ type ContestStatusRepository interface {
 	ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
 }
 
+type ContestEndedRuntimeCleaner interface {
+	CleanupEndedContestAWDInstances(ctx context.Context, contestID int64) error
+}
+
 type ContestStatusSideEffectStore interface {
 	CreateFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error
 	ClearFrozenScoreboardSnapshot(ctx context.Context, contestID int64) error

@@ -105,15 +105,18 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	t.Parallel()
 
 	teamID := int64(4104)
+	contestEnd := time.Date(2026, 5, 15, 12, 0, 0, 0, time.UTC)
+	var createdInstance *model.Instance
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			if contestID != 3104 {
 				t.Fatalf("unexpected contest id: %d", contestID)
 			}
 			return &model.Contest{
-				ID:     contestID,
-				Mode:   model.ContestModeAWD,
-				Status: model.ContestStatusRunning,
+				ID:      contestID,
+				Mode:    model.ContestModeAWD,
+				Status:  model.ContestStatusRunning,
+				EndTime: contestEnd,
 			}, nil
 		},
 		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
@@ -144,6 +147,8 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 			}, nil
 		},
 		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+			copied := *instance
+			createdInstance = &copied
 			instance.ID = 9104
 			return nil
 		},
@@ -197,19 +202,24 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending awd service instance, got %+v", resp)
 	}
+	if createdInstance == nil || !createdInstance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("expected awd instance expiry to follow contest end time %s, got %+v", contestEnd, createdInstance)
+	}
 }
 
 func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	t.Parallel()
 
 	teamID := int64(4105)
+	contestEnd := time.Date(2026, 5, 15, 13, 0, 0, 0, time.UTC)
 	var createdInstance *model.Instance
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			return &model.Contest{
-				ID:     contestID,
-				Mode:   model.ContestModeAWD,
-				Status: model.ContestStatusRunning,
+				ID:      contestID,
+				Mode:    model.ContestModeAWD,
+				Status:  model.ContestStatusRunning,
+				EndTime: contestEnd,
 			}, nil
 		},
 		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
@@ -288,6 +298,214 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	if createdInstance.HostPort != 0 {
 		t.Fatalf("expected no AWD host port reservation, got %d", createdInstance.HostPort)
 	}
+	if !createdInstance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("expected awd instance expiry to follow contest end time %s, got %s", contestEnd, createdInstance.ExpiresAt)
+	}
+}
+
+func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testing.T) {
+	t.Parallel()
+
+	teamID := int64(4115)
+	contestEnd := time.Date(2026, 5, 15, 14, 0, 0, 0, time.UTC)
+	var createdInstance *model.Instance
+	reserved := false
+	bound := false
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+			return &model.Contest{
+				ID:      contestID,
+				Mode:    model.ContestModeAWD,
+				Status:  model.ContestStatusRunning,
+				EndTime: contestEnd,
+			}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2115,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":115,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: contestID,
+				UserID:    userID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+			reserved = true
+			return 30015, nil
+		},
+		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+			bound = true
+			if port != 30015 || instanceID != 9115 {
+				t.Fatalf("unexpected host port bind: port=%d instance_id=%d", port, instanceID)
+			}
+			return nil
+		},
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+			instance.ID = 9115
+			copied := *instance
+			createdInstance = &copied
+			return nil
+		},
+	}
+
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:       id,
+				Status:   model.ChallengeStatusPublished,
+				ImageID:  115,
+				FlagType: model.FlagTypeStatic,
+				FlagHash: "flag{awd-static}",
+			}, nil
+		},
+	}
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		challengeRepo,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				AccessHost:           "host-gateway.internal",
+				PortRangeStart:       30000,
+				PortRangeEnd:         30020,
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil), repo, challengeRepo)
+
+	resp, err := service.StartContestAWDService(context.Background(), 5115, 3115, 7115)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != 9115 {
+		t.Fatalf("expected created awd service instance, got %+v", resp)
+	}
+	if resp.AccessURL != "" {
+		t.Fatalf("expected student-facing awd access url to stay hidden, got %+v", resp)
+	}
+	if !reserved || !bound {
+		t.Fatalf("expected awd instance to reserve and bind host port, reserved=%v bound=%v", reserved, bound)
+	}
+	if createdInstance == nil {
+		t.Fatal("expected instance to be created")
+	}
+	if createdInstance.HostPort != 30015 {
+		t.Fatalf("expected reserved AWD host port, got %d", createdInstance.HostPort)
+	}
+	if !createdInstance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("expected awd instance expiry to follow contest end time %s, got %s", contestEnd, createdInstance.ExpiresAt)
+	}
+}
+
+func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	teamID := int64(4118)
+	serviceID := int64(7118)
+	contestID := int64(3118)
+	userID := int64(5118)
+	contestEnd := now.Add(6 * time.Hour).UTC()
+	existingInstance := &model.Instance{
+		ID:          9118,
+		UserID:      userID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 2118,
+		ServiceID:   &serviceID,
+		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(5 * time.Minute),
+		MaxExtends:  2,
+	}
+	refreshCalled := false
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
+			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2118,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":118,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: gotContestID,
+				UserID:    gotUserID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		findScopedExistingInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			if gotUserID != userID || gotChallengeID != 2118 {
+				t.Fatalf("unexpected scoped lookup: user=%d challenge=%d", gotUserID, gotChallengeID)
+			}
+			return existingInstance, nil
+		},
+		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+			refreshCalled = true
+			if instanceID != existingInstance.ID {
+				t.Fatalf("unexpected refresh instance id: %d", instanceID)
+			}
+			if !expiresAt.Equal(contestEnd) {
+				t.Fatalf("expected expiry refresh to contest end time %s, got %s", contestEnd, expiresAt)
+			}
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		&stubPracticeChallengeContract{},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil), repo, &stubPracticeChallengeContract{})
+
+	resp, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != existingInstance.ID {
+		t.Fatalf("expected reused awd instance, got %+v", resp)
+	}
+	if !refreshCalled {
+		t.Fatal("expected awd instance expiry to be refreshed")
+	}
+	if !resp.ExpiresAt.Equal(contestEnd) || !existingInstance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("expected awd instance expiry to refresh to contest end time %s, resp=%s stored=%s", contestEnd, resp.ExpiresAt, existingInstance.ExpiresAt)
+	}
 }
 
 func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
@@ -298,6 +516,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	serviceID := int64(7106)
 	contestID := int64(3106)
 	userID := int64(5106)
+	contestEnd := now.Add(4 * time.Hour).UTC()
 	instance := &model.Instance{
 		ID:             9106,
 		UserID:         userID,
@@ -321,7 +540,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	var operation *model.AWDServiceOperation
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning}, nil
+			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
 		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
 			if gotContestID != contestID || gotServiceID != serviceID {
@@ -356,8 +575,8 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 			if instanceID != instance.ID {
 				t.Fatalf("unexpected reset instance id: %d", instanceID)
 			}
-			if !expiresAt.After(now) {
-				t.Fatalf("expected refreshed restart expiry after now, got %s now=%s", expiresAt, now)
+			if !expiresAt.Equal(contestEnd) {
+				t.Fatalf("expected restart expiry to follow contest end time %s, got %s", contestEnd, expiresAt)
 			}
 			if preserveHostPort {
 				t.Fatal("AWD restart must clear historical host port instead of preserving it")
@@ -411,8 +630,8 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	if resetStatus != model.InstanceStatusPending {
 		t.Fatalf("expected reset to pending, got %q", resetStatus)
 	}
-	if !resp.ExpiresAt.After(now) || !instance.ExpiresAt.After(now) {
-		t.Fatalf("restart should refresh expired instance ttl, resp=%s instance=%s now=%s", resp.ExpiresAt, instance.ExpiresAt, now)
+	if !resp.ExpiresAt.Equal(contestEnd) || !instance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("restart should refresh awd instance expiry to contest end time, resp=%s instance=%s expected=%s", resp.ExpiresAt, instance.ExpiresAt, contestEnd)
 	}
 	if instance.ServiceID == nil || *instance.ServiceID != serviceID || instance.Nonce != "nonce-keep" || instance.HostPort != 0 {
 		t.Fatalf("restart should preserve identity fields, got %+v", instance)
@@ -422,6 +641,255 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	}
 	if operation == nil || operation.OperationType != model.AWDServiceOperationTypeRestart || operation.RequestedBy != model.AWDServiceOperationRequestedByUser || !operation.SLABillable {
 		t.Fatalf("expected billable user restart operation, got %+v", operation)
+	}
+}
+
+func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	teamID := int64(4116)
+	serviceID := int64(7116)
+	contestID := int64(3116)
+	userID := int64(5116)
+	contestEnd := now.Add(3 * time.Hour).UTC()
+	instance := &model.Instance{
+		ID:             9116,
+		UserID:         userID,
+		ContestID:      &contestID,
+		TeamID:         &teamID,
+		ChallengeID:    2116,
+		ServiceID:      &serviceID,
+		HostPort:       32116,
+		ContainerID:    "old-container",
+		NetworkID:      "old-network",
+		RuntimeDetails: `{"containers":[{"id":"old-container","host_port":32116}]}`,
+		ShareScope:     model.InstanceSharingPerTeam,
+		Status:         model.InstanceStatusRunning,
+		AccessURL:      "http://host-gateway.internal:32116",
+		Nonce:          "nonce-keep",
+		ExpiresAt:      now.Add(-time.Minute),
+		MaxExtends:     2,
+	}
+	var cleanupInstanceID int64
+	var resetStatus string
+	var preserveHostPortArg bool
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
+			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2116,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":116,"instance_sharing":"per_team"},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: gotContestID,
+				UserID:    gotUserID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			return instance, nil
+		},
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
+			if !expiresAt.Equal(contestEnd) {
+				t.Fatalf("expected restart expiry to follow contest end time %s, got %s", contestEnd, expiresAt)
+			}
+			preserveHostPortArg = preserveHostPort
+			resetStatus = status
+			return nil
+		},
+		createAWDServiceOperationFn: func(ctx context.Context, got *model.AWDServiceOperation) error {
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		&stubPracticeChallengeContract{},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, got *model.Instance) error {
+				cleanupInstanceID = got.ID
+				if got.HostPort != 0 {
+					t.Fatalf("restart cleanup must not release preserved host port allocation, got host_port=%d", got.HostPort)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				AccessHost:           "host-gateway.internal",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil), repo, &stubPracticeChallengeContract{})
+
+	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("RestartContestAWDService() error = %v", err)
+	}
+	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected same pending instance, got %+v", resp)
+	}
+	if cleanupInstanceID != instance.ID {
+		t.Fatalf("expected cleanup for instance %d, got %d", instance.ID, cleanupInstanceID)
+	}
+	if resetStatus != model.InstanceStatusPending {
+		t.Fatalf("expected reset to pending, got %q", resetStatus)
+	}
+	if !preserveHostPortArg {
+		t.Fatal("expected restart to preserve awd host port when access host is configured")
+	}
+	if !resp.ExpiresAt.Equal(contestEnd) || !instance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("restart should refresh awd instance expiry to contest end time, resp=%s instance=%s expected=%s", resp.ExpiresAt, instance.ExpiresAt, contestEnd)
+	}
+	if instance.HostPort != 32116 {
+		t.Fatalf("expected preserved awd host port, got %+v", instance)
+	}
+	if instance.ContainerID != "" || instance.NetworkID != "" || instance.RuntimeDetails != "" || instance.AccessURL != "" {
+		t.Fatalf("restart should clear runtime fields, got %+v", instance)
+	}
+}
+
+func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndInstanceHasNone(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	teamID := int64(4117)
+	serviceID := int64(7117)
+	contestID := int64(3117)
+	userID := int64(5117)
+	contestEnd := now.Add(2 * time.Hour).UTC()
+	instance := &model.Instance{
+		ID:             9117,
+		UserID:         userID,
+		ContestID:      &contestID,
+		TeamID:         &teamID,
+		ChallengeID:    2117,
+		ServiceID:      &serviceID,
+		HostPort:       0,
+		ContainerID:    "old-container",
+		NetworkID:      "old-network",
+		RuntimeDetails: `{"containers":[{"id":"old-container"}]}`,
+		ShareScope:     model.InstanceSharingPerTeam,
+		Status:         model.InstanceStatusRunning,
+		AccessURL:      "http://awd-c3117-t4117-s7117:8080",
+		Nonce:          "nonce-keep",
+		ExpiresAt:      now.Add(-time.Minute),
+		MaxExtends:     2,
+	}
+	var reserved bool
+	var bound bool
+	var preserveHostPortArg bool
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
+			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2117,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":117,"instance_sharing":"per_team"},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: gotContestID,
+				UserID:    gotUserID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			return instance, nil
+		},
+		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+			reserved = true
+			return 32117, nil
+		},
+		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+			bound = true
+			if port != 32117 || instanceID != instance.ID {
+				t.Fatalf("unexpected reserved host port bind: port=%d instance=%d", port, instanceID)
+			}
+			return nil
+		},
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
+			if !expiresAt.Equal(contestEnd) {
+				t.Fatalf("expected restart expiry to follow contest end time %s, got %s", contestEnd, expiresAt)
+			}
+			preserveHostPortArg = preserveHostPort
+			return nil
+		},
+		createAWDServiceOperationFn: func(ctx context.Context, got *model.AWDServiceOperation) error {
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		&stubPracticeChallengeContract{},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, got *model.Instance) error {
+				if got.HostPort != 0 {
+					t.Fatalf("restart cleanup must not release newly reserved host port allocation, got host_port=%d", got.HostPort)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				AccessHost:           "host-gateway.internal",
+				PortRangeStart:       32000,
+				PortRangeEnd:         32150,
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil), repo, &stubPracticeChallengeContract{})
+
+	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("RestartContestAWDService() error = %v", err)
+	}
+	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected same pending instance, got %+v", resp)
+	}
+	if !reserved || !bound {
+		t.Fatalf("expected restart to reserve and bind a host port, reserved=%v bound=%v", reserved, bound)
+	}
+	if !preserveHostPortArg {
+		t.Fatal("expected reset path to preserve the newly reserved host port")
+	}
+	if !resp.ExpiresAt.Equal(contestEnd) || !instance.ExpiresAt.Equal(contestEnd) {
+		t.Fatalf("restart should refresh awd instance expiry to contest end time, resp=%s instance=%s expected=%s", resp.ExpiresAt, instance.ExpiresAt, contestEnd)
+	}
+	if instance.HostPort != 32117 {
+		t.Fatalf("expected instance host port to be backfilled before reprovision, got %+v", instance)
 	}
 }
 

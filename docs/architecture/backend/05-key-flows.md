@@ -14,7 +14,7 @@
 ## 当前设计
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
-  - 负责：处理练习 / 竞赛 / AWD 开题链路中的作用域锁、实例占位、`pending -> creating -> running` 状态推进、端口与运行时补偿
+  - 负责：处理练习 / 竞赛 / AWD 开题链路中的作用域锁、实例占位、`pending -> creating -> running` 状态推进、端口与运行时补偿；普通实例 `expires_at` 继续走 `container.default_ttl`，AWD 队伍服务实例 `expires_at` 改由 `contest.end_time` owner
   - 不负责：引入独立 Redis 队列或让 HTTP 请求直接等待完整 Docker 冷启动；当前排队事实仍落在 `instances` 表与调度器循环里
 
 - `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`instance_service.go`
@@ -22,7 +22,7 @@
   - 不负责：让前端或外部工具绕过平台鉴权直接使用底层容器网络信息
 
 - `code/backend/internal/module/contest/application/jobs/status_update_runner.go`、`status_transition_service.go`、`statusmachine/side_effects.go`
-  - 负责：推进 `contests.status` 的时间窗状态机、调度锁续租、transition replay 和副作用重放，保证 `registration / running / frozen / ended` 口径一致
+  - 负责：推进 `contests.status` 的时间窗状态机、调度锁续租、transition replay 和副作用重放，保证 `registration / running / frozen / ended` 口径一致；`ended` side effect 会同步清理 AWD live 状态、队伍服务实例 runtime、defense workspace companion container，并收口未完成的 AWD service operation
   - 不负责：让管理命令或定时任务直接改表而跳过 transition 记录与副作用协议
 
 - `code/backend/internal/module/contest/application/jobs/awd_round_runtime.go`、`awd_round_updater.go`、`awd_checks.go`、`awd_service_check_empty_result.go`
@@ -130,7 +130,7 @@ sequenceDiagram
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
 | 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
-| 实例有效期 | `expires_at = now() + challenge.duration`，默认 2 小时 | 防止资源长期占用，到期自动回收 |
+| 实例有效期 | 普通实例 `expires_at = now() + container.default_ttl`；AWD 队伍服务实例 `expires_at = contest.end_time` | 让练习实例继续按通用 TTL 回收，同时避免 AWD 比赛中的队伍服务在比赛未结束前被 2 小时 TTL 提前销毁 |
 
 ### 1.4 异常处理
 
@@ -753,7 +753,7 @@ sequenceDiagram
 
     alt running/frozen && now()>=end_time
         CS->>PG: UPDATE status='ended'
-        Note over CS: 触发赛后清理: 回收所有运行中实例(异步)
+        Note over CS: 触发 ended side effect：清空 AWD live 状态，并同步清理该比赛 AWD 队伍服务实例、defense workspace companion container 与未完成 operation
     end
 ```
 
@@ -764,7 +764,7 @@ sequenceDiagram
 | 状态流转原子性 | `UPDATE ... WHERE status=?` 条件更新 | CAS 语义，防止并发重复流转 |
 | 扫描频率 | 每 10s 一次 | 状态流转对时间精度要求不高，10s 延迟可接受 |
 | 行为约束实现 | 中间件/拦截器统一校验竞赛状态 | 避免每个接口重复校验，集中管理 |
-| 赛后资源清理 | 异步批量回收，不阻塞状态流转 | ended 状态写入后立即生效，容器回收可延迟 |
+| 赛后资源清理 | `ended` side effect 同步清理 AWD live 状态、队伍服务实例、defense workspace companion container，并把未完成的 AWD service operation 收口到终态；普通实例继续由 runtime cleaner 按 `expires_at` 回收 | 保证 AWD 比赛结束后不会残留可访问队伍运行态，也不会留下仍显示为 provisioning / recovering 的历史操作 |
 
 ### 6.7 异常处理
 

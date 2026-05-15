@@ -27,6 +27,16 @@ type statusUpdaterRepoStub struct {
 	transitionConfigured bool
 }
 
+type endedContestRuntimeCleanerStub struct {
+	cleanedContestIDs []int64
+	err               error
+}
+
+func (s *endedContestRuntimeCleanerStub) CleanupEndedContestAWDInstances(_ context.Context, contestID int64) error {
+	s.cleanedContestIDs = append(s.cleanedContestIDs, contestID)
+	return s.err
+}
+
 func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, _, _ int) ([]*model.Contest, int64, error) {
 	s.listCalls++
 	s.receivedStatus = append([]string(nil), statuses...)
@@ -133,8 +143,9 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 		t.Fatalf("seed service status cache: %v", err)
 	}
 
+	runtimeCleaner := &endedContestRuntimeCleanerStub{}
 	updater := NewStatusUpdater(repo, time.Minute, 100, 30*time.Second, nil)
-	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient, runtimeCleaner))
 	repo.transitionApplied = true
 
 	updater.updateStatuses(context.Background())
@@ -147,6 +158,9 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 	}
 	if mini.Exists(rediskeys.AWDServiceStatusKey(11)) {
 		t.Fatalf("expected service status key to be cleared")
+	}
+	if len(runtimeCleaner.cleanedContestIDs) != 1 || runtimeCleaner.cleanedContestIDs[0] != 11 {
+		t.Fatalf("expected ended runtime cleaner to run for contest 11, got %+v", runtimeCleaner.cleanedContestIDs)
 	}
 }
 

@@ -208,6 +208,41 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 	})
 }
 
+func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return nil
+	}
+
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var instance model.Instance
+		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
+			return err
+		}
+
+		now := time.Now()
+		if err := tx.Model(&model.Instance{}).
+			Where("id = ?", id).
+			Updates(map[string]any{
+				"status":          model.InstanceStatusExpired,
+				"host_port":       0,
+				"container_id":    "",
+				"network_id":      "",
+				"runtime_details": "",
+				"access_url":      "",
+				"destroyed_at":    now,
+				"updated_at":      now,
+			}).Error; err != nil {
+			return err
+		}
+
+		deleteQuery := tx.Where("instance_id = ?", id)
+		if instance.HostPort > 0 {
+			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
+		}
+		return deleteQuery.Delete(&model.PortAllocation{}).Error
+	})
+}
+
 func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
 	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instance.ID).

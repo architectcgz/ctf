@@ -18,8 +18,13 @@
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
-  - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制
+  - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则直接跟随 `contest.end_time`
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
+  - 本地 Docker Compose 部署补充：当前 runtime 已区分 `container.public_host` 与 `container.access_host`。`public_host` 继续作为学生看到的宿主发布地址；`access_host` 只给 `ctf-api` 容器内部的实例就绪探测与 HTTP 代理使用。compose dev 需要把 `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1`、`CTF_CONTAINER_ACCESS_HOST=host-gateway.internal` 成对配置，并通过 `host-gateway.internal:host-gateway` 回到宿主机发布端口。
+
+- `code/backend/internal/module/contest/application/statusmachine/side_effects.go`、`code/backend/internal/module/contest/infrastructure/{status_side_effect_store.go,ended_contest_runtime_cleaner.go}`
+  - 负责：在比赛进入 `ended` 时同步清空 AWD live 状态缓存，并主动清理该比赛下的 AWD 队伍服务运行态；收口范围包括实例 runtime、端口占用、defense workspace companion container，以及仍处于 `requested / provisioning / recovering` 的 AWD service operation，最后把实例写回 `expired`
+  - 不负责：接管普通练习实例的定时过期扫描；这部分仍由 `instance` 模块 runtime cleaner 按 `expires_at` 收口
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
@@ -131,7 +136,7 @@ type ContainerManager interface {
 |------|------|----------|
 | `pending` | 创建请求已入队，等待调度 | 通常 < 5s，高峰期受排队影响 |
 | `creating` | 正在创建网络/容器/注入 Flag | 通常 < 30s |
-| `running` | 容器正常运行，用户可访问 | 由题目配置决定（默认 2h） |
+| `running` | 容器正常运行，用户可访问 | 普通实例默认 2h；AWD 队伍服务实例跟随比赛结束时间 |
 | `expired` | 已超过有效期，等待回收 | 等待下一次清理扫描周期 |
 | `destroying` | 正在执行销毁流程 | 通常 < 10s |
 | `destroyed` | 已完全销毁，资源已释放（终态） | - |
@@ -1446,17 +1451,43 @@ scripts/registry/deploy-private-registry.sh \
 
 平台运行节点拉取私有镜像、平台构建题包镜像并推送到私有 registry 时，都通过后端 `container.registry` 配置读取 registry 地址和凭据。该配置属于 `ctf` 平台部署配置，只加载到 `ctf-api`；不要写进题包、题目容器或学生防守容器。
 
+当前配置语义已经拆成两层：
+
+- `container.registry.server`
+  - 负责：镜像 ref 前缀、Docker daemon push/pull 目标、registry 域名匹配
+  - 不负责：保证 `ctf-api` 容器内 Go 进程可以直接连到同一个 host:port
+- `container.registry.access_server`
+  - 负责：仅给后端进程直连 registry API 使用，例如 manifest `HEAD /v2/...`
+  - 不负责：改写镜像 ref，也不应被写进 `images.name/tag`、`image_build_jobs.target_ref` 或 AWD `runtime_config.image_ref`
+
+本地 compose dev 默认场景是：
+
+- `server=127.0.0.1:5000`
+- `access_server=ctf-registry:5000`
+
+当前启动期还有一条显式 guardrail：
+
+- 如果后端进程运行在容器里，并且 `container.registry.server` 仍指向 `127.0.0.1` / `localhost`
+- 那么必须显式配置 `container.registry.access_server`
+- 否则 `code/backend/internal/config/config.go` 会在启动阶段直接拒绝这份配置，避免把“push 能通、verify 不通”的错位状态带进运行期
+
+这样可以同时满足：
+
+- `docker build/push/pull` 继续通过宿主 Docker daemon 访问本机 `127.0.0.1:5000`
+- `ctf-api` 容器内的 verifier 直接走 `ctf-network` 访问 `ctf-registry:5000`
+
 ```yaml
 container:
   registry:
     enabled: true
     build_enabled: true
     server: registry.ctf.local:5000
+    access_server: "" # 可选；本地 compose dev 常用 ctf-registry:5000
     username: ctf
     password: ${CTF_CONTAINER_REGISTRY_PASSWORD}
 ```
 
-当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 或 registry manifest client 传递认证信息。例如 `registry.ctf.local:5000/awd/awd-demo:c1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
+当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 或 registry verifier 传递认证信息。例如 `registry.ctf.local:5000/awd/awd-demo:c1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。若额外配置了 `container.registry.access_server`，只有 verifier 发 manifest 请求时会把目标 host 改成它；image ref 归属判断和 Docker auth server 仍然以 `container.registry.server` 为准。
 
 为了让 Docker Desktop / Docker UI 里的展示归属更稳定，平台动态创建的题目容器还会补充 Compose 风格标签：
 

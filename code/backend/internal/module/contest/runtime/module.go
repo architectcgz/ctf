@@ -48,6 +48,7 @@ type Deps struct {
 	FlagValidator         challengecontracts.FlagValidator
 	ContainerFiles        contestports.AWDContainerFileWriter
 	RuntimeProbe          challengeports.ChallengeRuntimeProbe
+	EndedRuntimeCleaner   contestports.ContestEndedRuntimeCleaner
 }
 
 type moduleDeps struct {
@@ -77,6 +78,7 @@ type moduleDeps struct {
 	flagValidator         challengecontracts.FlagValidator
 	containerFiles        contestports.AWDContainerFileWriter
 	runtimeProbe          challengeports.ChallengeRuntimeProbe
+	endedRuntimeCleaner   contestports.ContestEndedRuntimeCleaner
 }
 
 func Build(deps Deps) *Module {
@@ -147,6 +149,7 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		flagValidator:         deps.FlagValidator,
 		containerFiles:        deps.ContainerFiles,
 		runtimeProbe:          deps.RuntimeProbe,
+		endedRuntimeCleaner:   deps.EndedRuntimeCleaner,
 	}
 }
 
@@ -154,7 +157,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	cache := deps.input.Cache
-	statusSideEffects := contestinfra.NewContestStatusSideEffectStore(cache)
+	statusSideEffects := contestinfra.NewContestStatusSideEffectStore(cache, deps.endedRuntimeCleaner)
 	statusUpdateLockStore := contestinfra.NewContestStatusUpdateLockStore(cache)
 	scoreboardStateStore := contestinfra.NewContestScoreboardStateStore(cache)
 
