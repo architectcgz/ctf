@@ -32,7 +32,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 
-	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, isAWDInstance(instance), chal, topology.EntryNodeKey, spec, flag)
+	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost), chal, topology.EntryNodeKey, spec, flag)
 	if err != nil {
 		return err
 	}
@@ -44,31 +44,40 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-			_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+			s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+		}
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if err := applyTopologyCreateResultToInstance(instance, result); err != nil {
+		if awdWorkspacePlan != nil {
+			s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 		}
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 	if awdWorkspacePlan != nil {
 		workspaceContainerID := awdWorkspacePlan.workspaceContainerID
 		if awdWorkspacePlan.createWorkspace {
+			if err := s.cleanupAWDDefenseWorkspaceCompanion(ctx, awdWorkspacePlan.staleWorkspaceContainerID); err != nil {
+				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+				return errcode.ErrContainerCreateFailed.WithCause(err)
+			}
 			workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
 			if err != nil {
-				_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 				return errcode.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
 		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+			if awdWorkspacePlan.createWorkspace {
+				if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
+					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)
+				} else {
+					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+				}
+			}
 			return errcode.ErrContainerCreateFailed.WithCause(err)
 		}
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
-	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
-	}
-	instance.ContainerID = result.PrimaryContainerID
-	instance.NetworkID = result.NetworkID
-	instance.RuntimeDetails = runtimeDetails
-	instance.AccessURL = result.AccessURL
 	return nil
 }
 
@@ -116,7 +125,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 		}
 		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
-			DisableEntryPortPublishing: isAWDInstance(instance),
+			DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
 			ContainerName:              buildRuntimeContainerName(chal, instance),
 			Networks:                   networks,
 			Nodes: []practiceports.TopologyCreateNode{
@@ -135,31 +144,40 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 		})
 		if err != nil {
 			if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-				_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+			}
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		if err := applyTopologyCreateResultToInstance(instance, result); err != nil {
+			if awdWorkspacePlan != nil {
+				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 			}
 			return errcode.ErrContainerCreateFailed.WithCause(err)
 		}
 		if awdWorkspacePlan != nil {
 			workspaceContainerID := awdWorkspacePlan.workspaceContainerID
 			if awdWorkspacePlan.createWorkspace {
+				if err := s.cleanupAWDDefenseWorkspaceCompanion(ctx, awdWorkspacePlan.staleWorkspaceContainerID); err != nil {
+					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+					return errcode.ErrContainerCreateFailed.WithCause(err)
+				}
 				workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
 				if err != nil {
-					_ = s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusFailed, "")
+					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 					return errcode.ErrContainerCreateFailed.WithCause(err)
 				}
 			}
 			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+				if awdWorkspacePlan.createWorkspace {
+					if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
+						s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)
+					} else {
+						s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
+					}
+				}
 				return errcode.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
-		runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
-		if err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
-		}
-		instance.ContainerID = result.PrimaryContainerID
-		instance.NetworkID = result.NetworkID
-		instance.RuntimeDetails = runtimeDetails
-		instance.AccessURL = result.AccessURL
 		return nil
 	}
 
@@ -187,7 +205,23 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	instance.ContainerID = containerID
 	instance.NetworkID = networkID
 	instance.RuntimeDetails = runtimeDetails
-	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, hostPort)
+	host := model.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
+	instance.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
+	return nil
+}
+
+func applyTopologyCreateResultToInstance(instance *model.Instance, result *practiceports.TopologyCreateResult) error {
+	if instance == nil || result == nil {
+		return fmt.Errorf("topology create result is nil")
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
+	if err != nil {
+		return err
+	}
+	instance.ContainerID = result.PrimaryContainerID
+	instance.NetworkID = result.NetworkID
+	instance.RuntimeDetails = runtimeDetails
+	instance.AccessURL = result.AccessURL
 	return nil
 }
 

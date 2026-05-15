@@ -19,8 +19,18 @@ const (
 	// Keep the companion shell usable out of the box instead of relying on the
 	// SSH client to negotiate locale/editor state each time.
 	awdDefenseWorkspaceBootstrapPrelude = `set -e
-if ! command -v git >/dev/null 2>&1 || ! command -v vim >/dev/null 2>&1 || ! command -v nano >/dev/null 2>&1; then
-  apk add --no-cache git vim nano
+missing_tools=""
+if ! command -v git >/dev/null 2>&1; then
+  missing_tools="$missing_tools git"
+fi
+if ! command -v vim >/dev/null 2>&1; then
+  missing_tools="$missing_tools vim"
+fi
+if ! command -v nano >/dev/null 2>&1; then
+  missing_tools="$missing_tools nano"
+fi
+if [ -n "$missing_tools" ] && command -v apk >/dev/null 2>&1; then
+  apk add --no-cache $missing_tools || true
 fi`
 	awdDefenseWorkspaceGitUserName          = "workspace"
 	awdDefenseWorkspaceGitUserEmail         = "workspace@local"
@@ -39,18 +49,19 @@ type awdDefenseWorkspaceRepository interface {
 }
 
 type awdDefenseWorkspacePlan struct {
-	contestID              int64
-	teamID                 int64
-	serviceID              int64
-	workspaceRevision      int64
-	seedSignature          string
-	runtimeMounts          []model.ContainerMount
-	workspaceMounts        []model.ContainerMount
-	workspaceContainerID   string
-	workspaceContainerName string
-	checkerTokenEnv        string
-	checkerToken           string
-	createWorkspace        bool
+	contestID                 int64
+	teamID                    int64
+	serviceID                 int64
+	workspaceRevision         int64
+	seedSignature             string
+	runtimeMounts             []model.ContainerMount
+	workspaceMounts           []model.ContainerMount
+	workspaceContainerID      string
+	staleWorkspaceContainerID string
+	workspaceContainerName    string
+	checkerTokenEnv           string
+	checkerToken              string
+	createWorkspace           bool
 }
 
 type awdDefenseWorkspaceConfig struct {
@@ -85,7 +96,7 @@ func buildAWDDefenseWorkspaceBootstrapCommand(mounts []model.ContainerMount) str
 	for _, target := range listAWDDefenseWorkspaceWritableTargets(mounts) {
 		quotedTarget := shellQuoteForPOSIXSh(target)
 		quotedGitDir := shellQuoteForPOSIXSh(path.Join(target, ".git"))
-		builder.WriteString("\nif [ -d ")
+		builder.WriteString("\nif command -v git >/dev/null 2>&1 && [ -d ")
 		builder.WriteString(quotedTarget)
 		builder.WriteString(" ] && [ ! -d ")
 		builder.WriteString(quotedGitDir)
@@ -242,6 +253,10 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	}
 	if current != nil {
 		plan.workspaceContainerID = strings.TrimSpace(current.ContainerID)
+		if current.Status != model.AWDDefenseWorkspaceStatusRunning && plan.workspaceContainerID != "" {
+			plan.staleWorkspaceContainerID = plan.workspaceContainerID
+			plan.workspaceContainerID = ""
+		}
 	}
 	plan.createWorkspace = current == nil || current.Status != model.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
 	if !plan.createWorkspace {
@@ -249,7 +264,11 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 		if err != nil {
 			return nil, err
 		}
-		if state == nil || !state.Exists || !state.Running {
+		if state == nil || !state.Exists {
+			plan.workspaceContainerID = ""
+			plan.createWorkspace = true
+		} else if !state.Running {
+			plan.staleWorkspaceContainerID = plan.workspaceContainerID
 			plan.workspaceContainerID = ""
 			plan.createWorkspace = true
 		}
@@ -456,6 +475,44 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 		return "", err
 	}
 	return strings.TrimSpace(result.PrimaryContainerID), nil
+}
+
+func (s *Service) cleanupAWDDefenseWorkspaceCompanion(ctx context.Context, containerID string) error {
+	if s == nil || s.runtimeService == nil || strings.TrimSpace(containerID) == "" {
+		return nil
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{ContainerID: strings.TrimSpace(containerID)},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return s.runtimeService.CleanupRuntime(ctx, &model.Instance{RuntimeDetails: runtimeDetails})
+}
+
+func resolveAWDDefenseWorkspaceFailureContainerID(plan *awdDefenseWorkspacePlan, containerID string) string {
+	if trimmed := strings.TrimSpace(containerID); trimmed != "" {
+		return trimmed
+	}
+	if plan == nil {
+		return ""
+	}
+	return strings.TrimSpace(plan.staleWorkspaceContainerID)
+}
+
+func (s *Service) persistAWDDefenseWorkspaceFailure(ctx context.Context, plan *awdDefenseWorkspacePlan, instanceID int64, containerID string) {
+	if plan == nil || !plan.createWorkspace {
+		return
+	}
+	_ = s.persistAWDDefenseWorkspaceState(
+		ctx,
+		plan,
+		instanceID,
+		model.AWDDefenseWorkspaceStatusFailed,
+		resolveAWDDefenseWorkspaceFailureContainerID(plan, containerID),
+	)
 }
 
 func cloneAWDDefenseWorkspaceShellEnv() map[string]string {

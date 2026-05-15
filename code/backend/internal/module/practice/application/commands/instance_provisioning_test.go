@@ -480,6 +480,164 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	}
 }
 
+func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        503,
+		Name:      "ctf/awd-web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7003)
+	teamID := int64(7103)
+	serviceID := int64(8003)
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name: "AWD Service",
+		RuntimeConfig: map[string]any{
+			"image_id":         503,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"defense_workspace": map[string]any{
+				"entry_mode":      "ssh",
+				"seed_root":       "docker/workspace",
+				"workspace_roots": []string{"docker/workspace/src"},
+				"writable_roots":  []string{"docker/workspace/src"},
+				"readonly_roots":  []string{},
+				"runtime_mounts": []map[string]any{
+					{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode service snapshot: %v", err)
+	}
+
+	instance := &model.Instance{
+		ID:          9003,
+		UserID:      45,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ChallengeID: 503,
+		HostPort:    30031,
+		Status:      model.InstanceStatusCreating,
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	var cleanupPayload *model.Instance
+	instanceRepo := &interceptAWDDefenseWorkspaceRepository{
+		Repository: runtimeinfrarepo.NewRepository(db),
+		upsertFn: func(ctx context.Context, workspace *model.AWDDefenseWorkspace) error {
+			if workspace != nil && workspace.Status == model.AWDDefenseWorkspaceStatusRunning {
+				return fmt.Errorf("persist running workspace state failed")
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		&stubPracticeRepository{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+				return &model.ContestAWDService{
+					ID:              gotServiceID,
+					ContestID:       gotContestID,
+					AWDChallengeID:  503,
+					IsVisible:       true,
+					ServiceSnapshot: serviceSnapshot,
+				}, nil
+			},
+		},
+		nil,
+		challengeinfra.NewImageRepository(db),
+		instanceRepo,
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, got *model.Instance) error {
+				copied := *got
+				cleanupPayload = &copied
+				return nil
+			},
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				if len(req.Nodes) == 1 && req.Nodes[0].Image == "python:3.12-alpine" {
+					return &practiceports.TopologyCreateResult{
+						PrimaryContainerID: "workspace-ctr",
+						NetworkID:          "net-awd-contest-7003",
+						AccessURL:          "tcp://172.30.0.41:22",
+						RuntimeDetails: model.InstanceRuntimeDetails{
+							Containers: []model.InstanceRuntimeContainer{
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+							},
+						},
+					}, nil
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "runtime-ctr",
+					NetworkID:          "net-awd-contest-7003",
+					AccessURL:          "http://host-gateway.internal:30031",
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Networks: []model.InstanceRuntimeNetwork{
+							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+						},
+						Containers: []model.InstanceRuntimeContainer{
+							{NodeKey: "default", ContainerID: "runtime-ctr", ServicePort: 8080, HostPort: 30031, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
+						},
+					},
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				AccessHost:         "host-gateway.internal",
+				PublicHost:         "127.0.0.1",
+				CreateTimeout:      time.Second,
+				StartProbeTimeout:  20 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 1,
+			},
+		},
+		nil,
+	)
+
+	err = service.provisionInstance(context.Background(), instance, &model.Challenge{
+		ID:             503,
+		ImageID:        503,
+		FlagType:       model.FlagTypeStatic,
+		FlagHash:       "flag{demo}",
+		TargetPort:     8080,
+		TargetProtocol: model.ChallengeTargetProtocolHTTP,
+	}, nil, "flag{demo}")
+	if err == nil || err.Error() != errcode.ErrContainerCreateFailed.Error() {
+		t.Fatalf("expected container create failed error, got %v", err)
+	}
+	if cleanupPayload == nil {
+		t.Fatal("expected cleanup to be triggered")
+	}
+	details, err := model.DecodeInstanceRuntimeDetails(cleanupPayload.RuntimeDetails)
+	if err != nil {
+		t.Fatalf("expected cleanup payload to carry runtime details, got %+v err=%v", cleanupPayload, err)
+	}
+	if len(details.Containers) != 1 || details.Containers[0].ContainerID != "runtime-ctr" {
+		t.Fatalf("expected cleanup payload to include primary runtime details, got %+v", details)
+	}
+	if cleanupPayload.ContainerID != "runtime-ctr" || cleanupPayload.NetworkID != "net-awd-contest-7003" {
+		t.Fatalf("expected cleanup payload to retain primary runtime identity, got %+v", cleanupPayload)
+	}
+}
+
 func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 	t.Parallel()
 
