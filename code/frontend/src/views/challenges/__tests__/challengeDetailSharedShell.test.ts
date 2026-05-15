@@ -130,6 +130,15 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeInstanceCardSource).not.toContain('var(--color-primary) 88%, white')
   })
 
+  it('题目右侧实例卡不应继续渲染实现说明式提示文案', () => {
+    expect(challengeInstanceCardSource).not.toContain(
+      '实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或重启。'
+    )
+    expect(challengeInstanceCardSource).toContain(
+      "v-if=\"props.instanceSharing === 'shared'\""
+    )
+  })
+
   it('题目详情夜间模式应覆盖 workspace page 底色，避免外层主内容区继续发亮', () => {
     expect(challengeDetailSource).toContain(
       '--bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));'

@@ -291,12 +291,8 @@ const startButtonLabel = computed(() => {
 
     <div v-else>
       <div class="instance-note">
-        <div>
-          {{
-            props.instanceSharing === 'shared'
-              ? '该题使用共享实例，再次启动会进入同一环境并自动刷新有效期。'
-              : '实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或重启。'
-          }}
+        <div v-if="props.instanceSharing === 'shared'">
+          该题使用共享实例，再次启动会进入同一环境并自动刷新有效期。
         </div>
         <div>
           {{
