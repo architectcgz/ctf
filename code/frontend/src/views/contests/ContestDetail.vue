@@ -501,12 +501,16 @@ const {
 
 
 .contest-divider {
-  margin: 1.4rem 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  margin-block: var(--contest-divider-gap, var(--space-divider-gap));
+  border-top: 1px solid
+    var(
+      --contest-divider-border,
+      var(--journal-divider, color-mix(in srgb, var(--color-border-default) 86%, transparent))
+    );
 }
 
 .contest-divider--compact {
-  margin-block: 1rem;
+  margin-block: var(--space-divider-gap-compact);
 }
 
 
@@ -517,11 +521,11 @@ const {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .contest-section__title:not(.workspace-tab-heading__title) {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--color-text-primary);

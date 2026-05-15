@@ -1705,18 +1705,24 @@ describe('ContestDetail', () => {
     expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 
-  it('竞赛概览数值区域应接入共享 metric panel surface', () => {
+  it('竞赛概览 header 应复用共享 panel 节奏并移除重复元信息', () => {
+    expect(contestOverviewPanelSource).toContain('class="workspace-panel contest-overview-panel"')
+    expect(contestOverviewPanelSource).toContain('class="contest-hero workspace-panel-header"')
     expect(contestOverviewPanelSource).toContain(
-      'class="contest-score-rail progress-card metric-panel-card metric-panel-workspace-surface"'
+      'class="contest-hero__main workspace-panel-header__intro"'
     )
+    expect(contestOverviewPanelSource).not.toContain('class="contest-meta-strip"')
+    expect(contestOverviewPanelSource).not.toContain('class="contest-score-rail')
+    expect(contestOverviewPanelSource).not.toContain('<div class="contest-divider" />')
+    expect((contestOverviewPanelSource.match(/class="workspace-panel-divider"/g) ?? []).length).toBe(3)
+  })
+
+  it('竞赛概览数值区域应接入共享 metric panel surface', () => {
     expect(contestOverviewPanelSource).toContain(
       'class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(contestOverviewPanelSource).toContain(
       'class="contest-stat progress-card metric-panel-card"'
-    )
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-score-rail__label progress-card-label metric-panel-label"'
     )
     expect(contestOverviewPanelSource).toContain(
       'class="contest-stat__label progress-card-label metric-panel-label"'
@@ -1727,6 +1733,32 @@ describe('ContestDetail', () => {
     expect(contestOverviewPanelSource).toContain('<Trophy class="h-4 w-4" />')
     expect(contestOverviewPanelSource).not.toContain('--metric-panel-grid-gap: 0.85rem;')
     expect(contestOverviewPanelSource).not.toContain('gap: 1.25rem;')
+  })
+
+  it('竞赛赛程信息应承接状态和倒计时，而不是继续停留在 hero 里重复展示', () => {
+    expect(contestOverviewPanelSource).toContain('<span>当前状态</span>')
+    expect(contestOverviewPanelSource).toContain('<span>剩余时间</span>')
+    expect(contestOverviewPanelSource).toContain("{{ getStatusLabel(contest.status) }}")
+    expect(contestOverviewPanelSource).toContain('{{ countdown }}')
+  })
+
+  it('竞赛规则正文应显式拉满列宽并保持左对齐，避免视觉上漂到中间', () => {
+    expect(contestOverviewPanelSource).toContain('.contest-copy {')
+    expect(contestOverviewPanelSource).toContain('width: 100%;')
+    expect(contestOverviewPanelSource).toContain('justify-self: stretch;')
+    expect(contestOverviewPanelSource).toContain('text-align: start;')
+  })
+
+  it('竞赛规则区应使用更紧凑的标题到正文间距，避免单段文案显得松散', () => {
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-section contest-section--flat contest-section--copy-tight"'
+    )
+    expect(contestOverviewPanelSource).toContain('.contest-section--copy-tight {')
+    expect(contestOverviewPanelSource).toContain('align-content: start;')
+    expect(contestOverviewPanelSource).toContain('gap: var(--space-2-5);')
+    expect(contestOverviewPanelSource).toContain('.contest-section--copy-tight > .contest-section__head {')
+    expect(contestOverviewPanelSource).toContain('align-items: flex-start;')
+    expect(contestOverviewPanelSource).toContain('justify-content: flex-start;')
   })
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {

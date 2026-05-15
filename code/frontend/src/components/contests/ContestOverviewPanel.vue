@@ -23,12 +23,12 @@ defineProps<Props>()
 <template>
   <section
     id="contest-workspace-panel-overview"
-    class="workspace-panel"
+    class="workspace-panel contest-overview-panel"
     role="tabpanel"
     aria-labelledby="contest-workspace-tab-overview"
   >
-    <header class="contest-hero">
-      <div class="contest-hero__main">
+    <header class="contest-hero workspace-panel-header">
+      <div class="contest-hero__main workspace-panel-header__intro">
         <div class="workspace-overline">
           Contest
         </div>
@@ -38,41 +38,10 @@ defineProps<Props>()
         <p class="contest-hero__desc workspace-page-copy">
           {{ contest.description || '当前竞赛暂未提供描述。' }}
         </p>
-
-        <div class="contest-meta-strip">
-          <span class="contest-chip contest-chip--status">
-            {{ getStatusLabel(contest.status) }}
-          </span>
-          <span class="contest-chip contest-chip--neutral">
-            {{ getModeLabel(contest.mode) }}
-          </span>
-          <span class="contest-chip contest-chip--neutral">
-            {{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}
-          </span>
-          <span
-            v-if="countdown"
-            class="contest-chip contest-chip--accent"
-          >
-            {{ countdown }}
-          </span>
-        </div>
       </div>
-
-      <aside class="contest-score-rail progress-card metric-panel-card metric-panel-workspace-surface">
-        <div class="contest-score-rail__label progress-card-label metric-panel-label">
-          <span>总分</span>
-          <Trophy class="h-4 w-4" />
-        </div>
-        <div class="contest-score-rail__value progress-card-value metric-panel-value">
-          {{ totalPoints }} <small>分</small>
-        </div>
-        <div class="contest-score-rail__note progress-card-hint metric-panel-helper">
-          {{ challengeCount }} 题 · {{ solvedCount }} 已解 · {{ memberCount }} 人
-        </div>
-      </aside>
     </header>
 
-    <div class="contest-divider" />
+    <div class="workspace-panel-divider" aria-hidden="true" />
 
     <section class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="contest-stat progress-card metric-panel-card">
@@ -125,10 +94,10 @@ defineProps<Props>()
       </article>
     </section>
 
-    <div class="contest-divider" />
+    <div class="workspace-panel-divider" aria-hidden="true" />
 
     <div class="contest-overview-grid">
-      <section class="contest-section contest-section--flat">
+      <section class="contest-section contest-section--flat contest-section--copy-tight">
         <div class="contest-section__head workspace-tab-heading">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
@@ -157,6 +126,17 @@ defineProps<Props>()
         </div>
         <div class="contest-copy-list">
           <div class="contest-copy-row">
+            <span>当前状态</span>
+            <strong>{{ getStatusLabel(contest.status) }}</strong>
+          </div>
+          <div
+            v-if="countdown"
+            class="contest-copy-row"
+          >
+            <span>剩余时间</span>
+            <strong>{{ countdown }}</strong>
+          </div>
+          <div class="contest-copy-row">
             <span>开始时间</span>
             <strong>{{ formatTime(contest.starts_at) }}</strong>
           </div>
@@ -176,7 +156,7 @@ defineProps<Props>()
       </section>
     </div>
 
-    <div class="contest-divider" />
+    <div class="workspace-panel-divider" aria-hidden="true" />
 
     <section class="contest-section contest-section--flat">
       <div class="contest-section__head workspace-tab-heading">
@@ -203,40 +183,25 @@ defineProps<Props>()
 </template>
 
 <style scoped>
+.contest-overview-panel {
+  --workspace-panel-divider-gap: var(--space-divider-gap);
+}
+
 .contest-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 15rem;
-  gap: var(--space-5);
+  min-width: 0;
+}
+
+.contest-hero__main {
+  min-width: 0;
 }
 
 .contest-hero__title {
-  margin-top: var(--space-3-5);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .contest-hero__desc {
-  margin-top: var(--space-3);
   max-width: 60ch;
-  color: var(--color-text-secondary);
-}
-
-.contest-meta-strip {
-  margin-top: var(--space-4);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.contest-score-rail {
-  --metric-panel-padding: var(--space-4);
-  --metric-panel-value-size: var(--font-size-34);
-  align-self: start;
-}
-
-.contest-score-rail__value small {
-  font-size: var(--font-size-0-85);
-  font-weight: 700;
   color: var(--color-text-secondary);
 }
 
@@ -251,21 +216,34 @@ defineProps<Props>()
 
 .contest-overview-grid {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-section-gap-compact);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contest-section--flat {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.contest-section--copy-tight {
+  align-content: start;
+  gap: var(--space-2-5);
+}
+
+.contest-section--copy-tight > .contest-section__head {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .contest-section--flat + .contest-section--flat {
   border-top: 0;
 }
 
-.contest-copy,
-.contest-copy-list {
-  margin-top: var(--space-4);
-}
-
 .contest-copy {
+  width: 100%;
+  justify-self: stretch;
   white-space: pre-wrap;
+  text-align: start;
   font-size: var(--font-size-0-92);
   line-height: 1.8;
   color: var(--color-text-primary);
@@ -300,14 +278,6 @@ defineProps<Props>()
 }
 
 @media (max-width: 860px) {
-  .contest-hero {
-    grid-template-columns: 1fr;
-  }
-
-  .contest-score-rail {
-    width: 100%;
-  }
-
   .contest-stat-grid,
   .contest-overview-grid {
     grid-template-columns: minmax(0, 1fr);
