@@ -53,23 +53,41 @@ const primaryDifficulty = computed<RankedDifficultyStat | null>(() =>
   selectDifficultyPriority(props.difficultyStats)
 )
 const hasDifficultyStats = computed(() => orderedStats.value.length > 0)
+const hasPendingDifficulty = computed(() =>
+  orderedStats.value.some((item) => item.remaining > 0)
+)
 const solvedDifficultyCount = computed(
   () => orderedStats.value.filter((item) => item.solved > 0).length
 )
 const headlineTitle = computed(() =>
-  primaryDifficulty.value
-    ? `先推这一档强度：${difficultyLabel(primaryDifficulty.value.difficulty)}`
-    : '先开始建立强度节奏'
+  !hasDifficultyStats.value
+    ? '先开始建立强度节奏'
+    : !hasPendingDifficulty.value
+      ? '强度层级已补齐'
+      : `先推这一档强度：${difficultyLabel(primaryDifficulty.value!.difficulty)}`
+)
+const headlineCopy = computed(() =>
+  !hasDifficultyStats.value
+    ? '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
+    : !hasPendingDifficulty.value
+      ? '所有难度档位都已补齐，接下来可以从题库继续挑题维持手感。'
+      : '先补当前最该推进的一档，再决定要不要继续抬强度。'
 )
 const summaryCards = computed(() => [
   {
     key: 'focus',
     label: '当前完成率',
-    value: primaryDifficulty.value ? `${primaryDifficulty.value.rate}%` : '待建立',
+    value: primaryDifficulty.value
+      ? `${primaryDifficulty.value.rate}%`
+      : hasDifficultyStats.value
+        ? '100%'
+        : '待建立',
     icon: Target,
     helper: primaryDifficulty.value
       ? `${difficultyLabel(primaryDifficulty.value.difficulty)} 还有 ${primaryDifficulty.value.remaining} 道题待补，先把这一档推稳。`
-      : '先做出第一批难度分布，这里就会告诉你下一步该推哪一档。',
+      : hasDifficultyStats.value
+        ? '所有难度档位都已补齐，可以继续按兴趣挑题维持手感。'
+        : '先做出第一批难度分布，这里就会告诉你下一步该推哪一档。',
   },
   {
     key: 'coverage',
@@ -79,7 +97,9 @@ const summaryCards = computed(() => [
       : '待建立',
     icon: BarChart2,
     helper: hasDifficultyStats.value
-      ? '看已经摸到的难度层级有多少，判断训练是不是还停在熟悉区间。'
+      ? hasPendingDifficulty.value
+        ? '看已经摸到的难度层级有多少，判断训练是不是还停在熟悉区间。'
+        : '所有难度层级都已经跑通，可以继续把训练节奏保持住。'
       : '还没有难度数据时，先从题库里做几道题把强度分布跑出来。',
   },
   {
@@ -87,11 +107,15 @@ const summaryCards = computed(() => [
     label: '推进节奏',
     value: primaryDifficulty.value
       ? `先补 ${difficultyLabel(primaryDifficulty.value.difficulty)}`
-      : '先形成样本',
+      : hasDifficultyStats.value
+        ? '保持节奏'
+        : '先形成样本',
     icon: Flame,
     helper: primaryDifficulty.value
       ? '先补完成率更低的一档，再继续往上提强度，训练节奏会更稳。'
-      : '先把训练样本积累起来，再决定应该从哪一档开始往上推。',
+      : hasDifficultyStats.value
+        ? '所有档位都已补齐后，就按题库兴趣继续推进即可。'
+        : '先把训练样本积累起来，再决定应该从哪一档开始往上推。',
   },
 ])
 
@@ -155,11 +179,7 @@ function difficultyActionItemStyle(difficulty: string, isPrimary: boolean): Reco
             {{ headlineTitle }}
           </h1>
           <p class="workspace-page-copy max-w-2xl">
-            {{
-              hasDifficultyStats
-                ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
-                : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
-            }}
+            {{ headlineCopy }}
           </p>
         </div>
 
@@ -170,7 +190,11 @@ function difficultyActionItemStyle(difficulty: string, isPrimary: boolean): Reco
         >
           <button class="journal-btn-primary" @click="openPrimaryDifficulty">
             {{
-              primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
+              primaryDifficulty
+                ? `先做${difficultyLabel(primaryDifficulty.difficulty)}`
+                : hasDifficultyStats
+                  ? '继续训练'
+                  : '去训练'
             }}
           </button>
           <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
@@ -203,7 +227,11 @@ function difficultyActionItemStyle(difficulty: string, isPrimary: boolean): Reco
         <section class="difficulty-section">
           <div v-if="hasDifficultyStats" class="difficulty-toolbar">
             <p class="difficulty-toolbar__copy">
-              难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
+              {{
+                hasPendingDifficulty
+                  ? '难度顺序固定，主推档位已高亮，按列表从上往下看就够了。'
+                  : '所有难度档位都已补齐，按列表查看当前训练分布就行。'
+              }}
             </p>
           </div>
 
@@ -280,7 +308,9 @@ function difficultyActionItemStyle(difficulty: string, isPrimary: boolean): Reco
               {{
                 primaryDifficulty
                   ? `当前最需要补的是${difficultyLabel(primaryDifficulty.difficulty)}。先补当前断档，再按层级继续往上推。`
-                  : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
+                  : hasDifficultyStats
+                    ? '所有难度档位都已补齐，接下来可以从题库继续挑题维持手感。'
+                    : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
               }}
             </p>
           </div>

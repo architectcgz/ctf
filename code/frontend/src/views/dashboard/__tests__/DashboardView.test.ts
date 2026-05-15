@@ -532,6 +532,50 @@ describe('DashboardView', () => {
     })
   })
 
+  it('应该在 difficulty 全部完成后切换为收口态，不再继续提示补入门', async () => {
+    routeState.query = { panel: 'difficulty' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 15,
+      rank: 7,
+      category_stats: [{ category: 'web', solved: 5, total: 5 }],
+      difficulty_stats: [
+        { difficulty: 'beginner', solved: 1, total: 1 },
+        { difficulty: 'easy', solved: 2, total: 2 },
+        { difficulty: 'medium', solved: 3, total: 3 },
+        { difficulty: 'hard', solved: 4, total: 4 },
+        { difficulty: 'insane', solved: 5, total: 5 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const primaryButton = difficultyPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '继续训练')
+
+    expect(difficultyPanel.text()).toContain('强度层级已补齐')
+    expect(difficultyPanel.text()).toContain('所有难度档位都已补齐')
+    expect(difficultyPanel.text()).not.toContain('当前最需要补的是入门')
+    expect(difficultyPanel.findAll('.difficulty-action-item--primary')).toHaveLength(0)
+    expect(primaryButton).toBeTruthy()
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
     routeState.params = { variant: '2' }
 
