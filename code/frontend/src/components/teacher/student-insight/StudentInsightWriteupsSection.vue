@@ -48,7 +48,7 @@ const emit = defineEmits<{
 
 const publishedWriteupSubmissions = computed(() =>
   props.writeupSubmissions.filter(
-    (item) => item.submission_status === 'published' || item.submission_status === 'submitted'
+    (item) => item.submission_status === 'published'
   )
 )
 const publishedChallengeCount = computed(

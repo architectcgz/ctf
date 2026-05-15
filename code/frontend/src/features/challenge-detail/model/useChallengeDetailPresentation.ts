@@ -166,7 +166,7 @@ export function useChallengeDetailPresentation({
 
   function submissionStatusLabel(status?: SubmissionWriteupStatus): string {
     if (status === 'draft') return '草稿'
-    if (status === 'published' || status === 'submitted') return '已发布'
+    if (status === 'published') return '已发布'
     return '未开始'
   }
 
@@ -188,10 +188,7 @@ export function useChallengeDetailPresentation({
 
   function visibilityStatusLabel(status?: SubmissionWriteupVisibilityStatus): string {
     if (status === 'hidden') return '已隐藏'
-    if (
-      myWriteup.value?.submission_status === 'published' ||
-      myWriteup.value?.submission_status === 'submitted'
-    ) {
+    if (myWriteup.value?.submission_status === 'published') {
       return '已公开'
     }
     return '未发布'

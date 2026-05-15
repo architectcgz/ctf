@@ -1,5 +1,34 @@
 # Durable reuse index. Keep this file cumulative; do not replace it with the current task.
 entries:
+  - id: writeup-submission-no-review-contract-frontend
+    updated_at: "2026-05-15"
+    change_types:
+      - page
+      - component
+      - hook
+      - api
+      - schema
+    keywords:
+      - challenge-detail
+      - writeup
+      - submission-status
+      - published
+      - no-review
+      - teacher-writeup
+    decision: extend_existing
+    must_reuse:
+      - code/frontend/src/features/challenge-detail/model/useChallengeWriteupSubmissionFlow.ts
+      - code/frontend/src/features/challenge-detail/model/useChallengeDetailPresentation.ts
+      - code/frontend/src/components/challenge/ChallengeWriteupPanel.vue
+      - code/frontend/src/components/teacher/student-insight/StudentInsightWriteupsSection.vue
+      - code/frontend/src/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue
+      - code/frontend/src/api/contracts.ts
+    tests:
+      - code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts
+      - code/frontend/src/api/__tests__/teacher.test.ts
+    notes:
+      - Keep writeup submission limited to draft/published and derive public visibility from the persisted writeup record.
+      - Do not reintroduce a writeup-specific review_status or review endpoint when the backend model only carries visibility/publish state.
   - id: challenge-attachment-native-download
     updated_at: "2026-05-11"
     change_types:

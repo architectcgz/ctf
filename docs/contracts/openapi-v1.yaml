@@ -882,8 +882,8 @@ components:
             allOf:
             - {$ref: '#/components/schemas/SubmissionWriteupData'}
             nullable: true
-    SubmissionWriteupStatus: {type: string, enum: [draft, submitted]}
-    SubmissionWriteupReviewStatus: {type: string, enum: [pending, reviewed, excellent, needs_revision]}
+    SubmissionWriteupStatus: {type: string, enum: [draft, published]}
+    SubmissionWriteupVisibilityStatus: {type: string, enum: [visible, hidden]}
     UpsertSubmissionWriteupRequest:
       type: object
       required: [title, content, submission_status]
@@ -897,7 +897,8 @@ components:
       - title
       - content
       - submission_status
-      - review_status
+      - visibility_status
+      - is_recommended
       - created_at
       - updated_at
       properties:
@@ -908,11 +909,11 @@ components:
         title: {type: string}
         content: {type: string}
         submission_status: {$ref: '#/components/schemas/SubmissionWriteupStatus'}
-        review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}
-        submitted_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
-        reviewed_by: {$ref: '#/components/schemas/ID', nullable: true}
-        reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
-        review_comment: {type: string, nullable: true}
+        visibility_status: {$ref: '#/components/schemas/SubmissionWriteupVisibilityStatus'}
+        is_recommended: {type: boolean}
+        recommended_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+        recommended_by: {$ref: '#/components/schemas/ID', nullable: true}
+        published_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
         created_at: {$ref: '#/components/schemas/ISODateTime'}
         updated_at: {$ref: '#/components/schemas/ISODateTime'}
     ApiEnvelopeSubmissionWriteupData:
@@ -932,22 +933,24 @@ components:
       - title
       - content_preview
       - submission_status
-      - review_status
+      - visibility_status
+      - is_recommended
       - updated_at
       properties:
         id: {$ref: '#/components/schemas/ID'}
         user_id: {$ref: '#/components/schemas/ID'}
         student_username: {type: string}
         student_name: {type: string, nullable: true}
+        student_no: {type: string, nullable: true}
         class_name: {type: string, nullable: true}
         challenge_id: {$ref: '#/components/schemas/ID'}
         challenge_title: {type: string}
         title: {type: string}
         content_preview: {type: string}
         submission_status: {$ref: '#/components/schemas/SubmissionWriteupStatus'}
-        review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}
-        submitted_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
-        reviewed_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
+        visibility_status: {$ref: '#/components/schemas/SubmissionWriteupVisibilityStatus'}
+        is_recommended: {type: boolean}
+        published_at: {$ref: '#/components/schemas/ISODateTime', nullable: true}
         updated_at: {$ref: '#/components/schemas/ISODateTime'}
     TeacherSubmissionWriteupListData:
       type: object
@@ -971,20 +974,15 @@ components:
         properties:
           student_username: {type: string}
           student_name: {type: string, nullable: true}
+          student_no: {type: string, nullable: true}
           class_name: {type: string, nullable: true}
           challenge_title: {type: string}
-          reviewer_name: {type: string, nullable: true}
     ApiEnvelopeTeacherSubmissionWriteupDetailData:
       allOf:
       - {$ref: '#/components/schemas/ApiEnvelopeBase'}
       - type: object
         required: [data]
         properties: {data: {$ref: '#/components/schemas/TeacherSubmissionWriteupDetailData'}}
-    ReviewSubmissionWriteupRequest:
-      type: object
-      required: [review_status]
-      properties: {review_status: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}, review_comment: {type: string,
-          nullable: true}}
     TeacherManualReviewStatus: {type: string, enum: [pending, approved, rejected]}
     TeacherManualReviewSubmissionItemData:
       type: object
@@ -3293,7 +3291,7 @@ paths:
       - {in: query, name: challenge_id, schema: {$ref: '#/components/schemas/ID'}}
       - {in: query, name: class_name, schema: {type: string}}
       - {in: query, name: submission_status, schema: {$ref: '#/components/schemas/SubmissionWriteupStatus'}}
-      - {in: query, name: review_status, schema: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}}
+      - {in: query, name: visibility_status, schema: {$ref: '#/components/schemas/SubmissionWriteupVisibilityStatus'}}
       - in: query
         name: page
         schema: {type: integer, minimum: 1, default: 1}
@@ -3321,26 +3319,6 @@ paths:
           description: OK
           content:
             application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupDetailData'}}
-  /teacher/writeup-submissions/{id}/review:
-    put:
-      tags: [Teacher]
-      summary: 教师评阅题解提交
-      security:
-      - {sessionCookieAuth: []}
-      parameters:
-      - in: path
-        name: id
-        required: true
-        schema: {$ref: '#/components/schemas/ID'}
-      requestBody:
-        required: true
-        content:
-          application/json: {schema: {$ref: '#/components/schemas/ReviewSubmissionWriteupRequest'}}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSubmissionWriteupData'}}
   /teacher/manual-review-submissions:
     get:
       tags: [Teacher]

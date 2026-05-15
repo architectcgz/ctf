@@ -39,8 +39,7 @@
         </span>
         <span
           v-else-if="
-            myWriteup?.submission_status === 'published' ||
-              myWriteup?.submission_status === 'submitted'
+            myWriteup?.submission_status === 'published'
           "
           class="writeup-status-pill writeup-status-pill--success"
         >

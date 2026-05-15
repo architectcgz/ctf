@@ -5,7 +5,7 @@ import type {
 } from '@/api/contracts'
 
 function submissionStatusLabel(status: ReviewArchiveWriteupItemData['submission_status']): string {
-  return status === 'published' || status === 'submitted' ? '已发布' : '草稿'
+  return status === 'published' ? '已发布' : '草稿'
 }
 
 function visibilityStatusLabel(status: ReviewArchiveWriteupItemData['visibility_status']): string {

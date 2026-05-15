@@ -107,7 +107,7 @@ export interface ChallengeWriteupData {
   updated_at: ISODateTime
 }
 
-export type SubmissionWriteupStatus = 'draft' | 'published' | 'submitted'
+export type SubmissionWriteupStatus = 'draft' | 'published'
 export type SubmissionWriteupVisibilityStatus = 'visible' | 'hidden'
 
 export interface SubmissionWriteupData {
@@ -118,8 +118,8 @@ export interface SubmissionWriteupData {
   title: string
   content: string
   submission_status: SubmissionWriteupStatus
-  visibility_status?: SubmissionWriteupVisibilityStatus
-  is_recommended?: boolean
+  visibility_status: SubmissionWriteupVisibilityStatus
+  is_recommended: boolean
   recommended_at?: ISODateTime
   recommended_by?: ID
   published_at?: ISODateTime

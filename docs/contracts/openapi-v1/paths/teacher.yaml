@@ -201,7 +201,7 @@
     - {in: query, name: challenge_id, schema: {$ref: '#/components/schemas/ID'}}
     - {in: query, name: class_name, schema: {type: string}}
     - {in: query, name: submission_status, schema: {$ref: '#/components/schemas/SubmissionWriteupStatus'}}
-    - {in: query, name: review_status, schema: {$ref: '#/components/schemas/SubmissionWriteupReviewStatus'}}
+    - {in: query, name: visibility_status, schema: {$ref: '#/components/schemas/SubmissionWriteupVisibilityStatus'}}
     - in: query
       name: page
       schema: {type: integer, minimum: 1, default: 1}
@@ -229,26 +229,6 @@
         description: OK
         content:
           application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupDetailData'}}
-/teacher/writeup-submissions/{id}/review:
-  put:
-    tags: [Teacher]
-    summary: 教师评阅题解提交
-    security:
-    - {sessionCookieAuth: []}
-    parameters:
-    - in: path
-      name: id
-      required: true
-      schema: {$ref: '#/components/schemas/ID'}
-    requestBody:
-      required: true
-      content:
-        application/json: {schema: {$ref: '#/components/schemas/ReviewSubmissionWriteupRequest'}}
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeSubmissionWriteupData'}}
 /teacher/manual-review-submissions:
   get:
     tags: [Teacher]

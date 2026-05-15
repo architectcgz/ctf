@@ -389,8 +389,8 @@ export interface ChallengeWriteupData {
 请求体：
 
 ```ts
-export type SubmissionWriteupStatus = 'draft' | 'submitted'
-export type SubmissionWriteupReviewStatus = 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+export type SubmissionWriteupStatus = 'draft' | 'published'
+export type SubmissionWriteupVisibilityStatus = 'visible' | 'hidden'
 
 export interface UpsertSubmissionWriteupReq {
   title: string
@@ -410,11 +410,11 @@ export interface SubmissionWriteupData {
   title: string
   content: string
   submission_status: SubmissionWriteupStatus
-  review_status: SubmissionWriteupReviewStatus
-  submitted_at?: ISODateTime
-  reviewed_by?: ID
-  reviewed_at?: ISODateTime
-  review_comment?: string
+  visibility_status: SubmissionWriteupVisibilityStatus
+  is_recommended: boolean
+  recommended_at?: ISODateTime
+  recommended_by?: ID
+  published_at?: ISODateTime
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -422,7 +422,7 @@ export interface SubmissionWriteupData {
 
 > 说明：
 > - 同一学生对同一题目只有一条 `submission_writeup` 记录，接口语义为 upsert。
-> - 当 `submission_status='submitted'` 时，后端会回填 `submitted_at`，并将 `review_status` 置为 `pending`。
+> - 当 `submission_status='published'` 时，后端会回填 `published_at`。
 
 ### 3.13 GET `/api/v1/challenges/:id/writeup-submissions/me`
 
@@ -1397,7 +1397,7 @@ export interface TeacherSubmissionWriteupQuery {
   challenge_id?: ID
   class_name?: string
   submission_status?: SubmissionWriteupStatus
-  review_status?: SubmissionWriteupReviewStatus
+  visibility_status?: SubmissionWriteupVisibilityStatus
   page?: number
   page_size?: number
 }
@@ -1411,15 +1411,16 @@ export interface TeacherSubmissionWriteupItem {
   user_id: ID
   student_username: string
   student_name?: string
+  student_no?: string
   class_name?: string
   challenge_id: ID
   challenge_title: string
   title: string
   content_preview: string
   submission_status: SubmissionWriteupStatus
-  review_status: SubmissionWriteupReviewStatus
-  submitted_at?: ISODateTime
-  reviewed_at?: ISODateTime
+  visibility_status: SubmissionWriteupVisibilityStatus
+  is_recommended: boolean
+  published_at?: ISODateTime
   updated_at: ISODateTime
 }
 
@@ -1438,26 +1439,13 @@ export type TeacherSubmissionWriteupListData = PageResult<TeacherSubmissionWrite
 export interface TeacherSubmissionWriteupDetail extends SubmissionWriteupData {
   student_username: string
   student_name?: string
+  student_no?: string
   class_name?: string
   challenge_title: string
-  reviewer_name?: string
 }
 ```
 
-### 8.17 PUT `/api/v1/teacher/writeup-submissions/:id/review`
-
-请求体：
-
-```ts
-export interface ReviewSubmissionWriteupReq {
-  review_status: SubmissionWriteupReviewStatus
-  review_comment?: string
-}
-```
-
-`data`：`SubmissionWriteupData`
-
-### 8.18 GET `/api/v1/teacher/manual-review-submissions`
+### 8.17 GET `/api/v1/teacher/manual-review-submissions`
 
 `query`：
 
@@ -1491,7 +1479,7 @@ export interface TeacherManualReviewSubmissionItemData {
 }
 ```
 
-### 8.19 GET `/api/v1/teacher/manual-review-submissions/:id`
+### 8.18 GET `/api/v1/teacher/manual-review-submissions/:id`
 
 `data`：
 
@@ -1517,7 +1505,7 @@ export interface TeacherManualReviewSubmissionDetailData {
 }
 ```
 
-### 8.20 PUT `/api/v1/teacher/manual-review-submissions/:id/review`
+### 8.19 PUT `/api/v1/teacher/manual-review-submissions/:id/review`
 
 请求体：
 
@@ -1530,7 +1518,7 @@ export interface ReviewManualReviewSubmissionReq {
 
 `data`：`TeacherManualReviewSubmissionDetailData`
 
-### 8.21 GET `/api/v1/authoring/challenges/:id/topology` / PUT `/api/v1/authoring/challenges/:id/topology` / DELETE `/api/v1/authoring/challenges/:id/topology`
+### 8.20 GET `/api/v1/authoring/challenges/:id/topology` / PUT `/api/v1/authoring/challenges/:id/topology` / DELETE `/api/v1/authoring/challenges/:id/topology`
 
 `data`：
 
