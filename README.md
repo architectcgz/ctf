@@ -82,6 +82,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 `docker/ctf/docker-compose.dev.yml` 默认端口如下，并且仅绑定到 `127.0.0.1`，避免开发态暴露到局域网：
 
 - `ctf-api`: `8080`
+- `ctf-api` AWD 防守 SSH 网关: `2222`
 - `ctf-postgres`: `15432`
 - `ctf-redis`: `16379`
 

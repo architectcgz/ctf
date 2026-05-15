@@ -5,8 +5,8 @@ import os
 from flask import Flask
 
 WORKSPACE_SRC = Path("/workspace/src")
-if str(WORKSPACE_SRC) not in sys.path:
-    sys.path.insert(0, str(WORKSPACE_SRC))
+workspace_src = str(WORKSPACE_SRC)
+sys.path = [workspace_src] + [path for path in sys.path if path != workspace_src]
 
 from challenge_app import register_challenge_routes
 from ctf_runtime import ensure_flag_file, register_runtime_routes

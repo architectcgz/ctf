@@ -220,6 +220,64 @@ else
   done <<< "$feedback_changed"
 fi
 
+echo "[C13] dev compose exposes AWD defense SSH port when enabled"
+dev_config_file="code/backend/configs/config.dev.yaml"
+dev_compose_file="docker/ctf/docker-compose.dev.yml"
+if [[ ! -f "$dev_config_file" ]]; then
+  echo "  $(red FAIL) — missing $dev_config_file"
+  fail=1
+elif [[ ! -f "$dev_compose_file" ]]; then
+  echo "  $(red FAIL) — missing $dev_compose_file"
+  fail=1
+elif grep -qE '^[[:space:]]*defense_ssh_enabled:[[:space:]]*true([[:space:]]|$)' "$dev_config_file"; then
+  ssh_port="$(
+    awk -F: '
+      /^[[:space:]]*defense_ssh_port:[[:space:]]*[0-9]+([[:space:]]|$)/ {
+        value=$2
+        sub(/^[[:space:]]+/, "", value)
+        sub(/[[:space:]]+$/, "", value)
+        print value
+        exit
+      }
+    ' "$dev_config_file"
+  )"
+  if [[ -z "$ssh_port" ]]; then
+    echo "  $(red FAIL) — unable to resolve defense_ssh_port from $dev_config_file"
+    fail=1
+  elif grep -qE "\"127\\.0\\.0\\.1:${ssh_port}:${ssh_port}\"|\"0\\.0\\.0\\.0:${ssh_port}:${ssh_port}\"|\"${ssh_port}:${ssh_port}\"" "$dev_compose_file"; then
+    echo "  $(green PASS) — dev compose exposes AWD defense SSH port $ssh_port"
+  else
+    echo "  $(red FAIL) — dev compose must expose AWD defense SSH port $ssh_port when defense_ssh_enabled is true"
+    fail=1
+  fi
+else
+  echo "  $(green PASS) — dev defense SSH gateway disabled"
+fi
+
+echo "[C14] AWD runtime prioritizes /workspace/src over image fallback"
+runtime_app_files="$(
+  find challenges/awd -path '*/docker/runtime/app.py' | sort
+)"
+if [[ -z "${runtime_app_files// }" ]]; then
+  echo "  $(green PASS) — no AWD runtime app.py files found"
+else
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    if grep -qF 'if str(WORKSPACE_SRC) not in sys.path' "$file"; then
+      echo "  $(red FAIL) — $file still uses conditional WORKSPACE_SRC insertion"
+      fail=1
+      continue
+    fi
+    if grep -qF 'workspace_src = str(WORKSPACE_SRC)' "$file" \
+      && grep -qF 'sys.path = [workspace_src] + [path for path in sys.path if path != workspace_src]' "$file"; then
+      echo "  $(green PASS) — $file pins /workspace/src ahead of image fallback"
+    else
+      echo "  $(red FAIL) — $file must deduplicate and pin /workspace/src at sys.path[0]"
+      fail=1
+    fi
+  done <<< "$runtime_app_files"
+fi
+
 if [[ "$fail" -eq 0 ]]; then
   echo "$(green '✓ all harness consistency checks passed')"
 else

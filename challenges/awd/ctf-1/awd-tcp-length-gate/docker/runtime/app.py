@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 
 WORKSPACE_SRC = Path("/workspace/src")
-if str(WORKSPACE_SRC) not in sys.path:
-    sys.path.insert(0, str(WORKSPACE_SRC))
+workspace_src = str(WORKSPACE_SRC)
+sys.path = [workspace_src] + [path for path in sys.path if path != workspace_src]
 
 from challenge_app import handle_length_gate
 from ctf_runtime import handle_get_flag, handle_set_flag
