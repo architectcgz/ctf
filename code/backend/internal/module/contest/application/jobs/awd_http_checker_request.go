@@ -36,7 +36,12 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 	}
 
 	bodyValue := renderAWDHTTPCheckerTemplate(action.BodyTemplate, templateData)
-	if response, ok := u.runAWDHTTPCheckerActionInSandbox(ctx, targetURL, accessURL, runtimeDetails, action, bodyValue); ok {
+	headers := make(map[string]string, len(action.Headers))
+	for key, value := range action.Headers {
+		headers[key] = renderAWDHTTPCheckerTemplate(value, templateData)
+	}
+
+	if response, ok := u.runAWDHTTPCheckerActionInSandbox(ctx, targetURL, accessURL, runtimeDetails, action, headers, bodyValue); ok {
 		if response.Error != "" {
 			summary.ErrorCode = "http_request_failed"
 			summary.Error = response.Error
@@ -55,11 +60,6 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 		}
 		summary.Healthy = true
 		return awdHTTPCheckerActionRuntimeResult{summary: summary, responseBody: response.Body}
-	}
-
-	headers := make(map[string]string, len(action.Headers))
-	for key, value := range action.Headers {
-		headers[key] = renderAWDHTTPCheckerTemplate(value, templateData)
 	}
 
 	resp, err := u.executeAWDHTTPRequest(ctx, contestports.AWDHTTPRequest{

@@ -26,6 +26,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 	accessURL string,
 	runtimeDetails string,
 	action awdHTTPCheckerActionConfig,
+	headers map[string]string,
 	bodyValue string,
 ) (awdHTTPSandboxResponse, bool) {
 	networkMode := resolveAWDCheckerNetworkMode(accessURL, runtimeDetails)
@@ -33,7 +34,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 		return awdHTTPSandboxResponse{}, false
 	}
 
-	headers, err := json.Marshal(action.Headers)
+	headersPayload, err := json.Marshal(headers)
 	if err != nil {
 		return awdHTTPSandboxResponse{Error: sanitizeAWDCheckError(err)}, true
 	}
@@ -50,7 +51,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 		Env: map[string]string{
 			"AWD_HTTP_METHOD":  action.Method,
 			"AWD_HTTP_URL":     targetURL,
-			"AWD_HTTP_HEADERS": string(headers),
+			"AWD_HTTP_HEADERS": string(headersPayload),
 			"AWD_HTTP_BODY":    bodyValue,
 			"AWD_HTTP_TIMEOUT": strconv.FormatFloat(timeout.Seconds(), 'f', 3, 64),
 		},

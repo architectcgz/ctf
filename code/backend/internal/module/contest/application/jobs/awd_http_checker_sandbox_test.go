@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -56,9 +57,10 @@ func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {
 		awdHTTPCheckerActionConfig{
 			Method:         "GET",
 			Path:           "/api/flag",
+			Headers:        map[string]string{"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"},
 			ExpectedStatus: 200,
 		},
-		awdHTTPCheckerTemplateData{},
+		awdHTTPCheckerTemplateData{CheckerToken: "sandbox-checker-token"},
 		[]string{"flag{round}"},
 	)
 
@@ -74,5 +76,12 @@ func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {
 	}
 	if job.Env["AWD_HTTP_URL"] != "http://awd-c8-t15-s21:8080/api/flag" {
 		t.Fatalf("unexpected sandbox url: %q", job.Env["AWD_HTTP_URL"])
+	}
+	var headers map[string]string
+	if err := json.Unmarshal([]byte(job.Env["AWD_HTTP_HEADERS"]), &headers); err != nil {
+		t.Fatalf("unmarshal sandbox headers: %v", err)
+	}
+	if headers["X-AWD-Checker-Token"] != "sandbox-checker-token" {
+		t.Fatalf("unexpected sandbox headers: %+v", headers)
 	}
 }
