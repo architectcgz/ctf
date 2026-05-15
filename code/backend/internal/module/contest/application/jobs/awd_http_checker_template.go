@@ -7,6 +7,7 @@ import (
 
 type awdHTTPCheckerTemplateData struct {
 	Flag           string
+	CheckerToken   string
 	Round          int
 	TeamID         int64
 	AWDChallengeID int64
@@ -15,6 +16,7 @@ type awdHTTPCheckerTemplateData struct {
 func renderAWDHTTPCheckerTemplate(templateValue string, data awdHTTPCheckerTemplateData) string {
 	replacer := strings.NewReplacer(
 		"{{FLAG}}", data.Flag,
+		"{{CHECKER_TOKEN}}", data.CheckerToken,
 		"{{ROUND}}", strconv.Itoa(data.Round),
 		"{{TEAM_ID}}", strconv.FormatInt(data.TeamID, 10),
 		"{{AWD_CHALLENGE_ID}}", strconv.FormatInt(data.AWDChallengeID, 10),

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -60,6 +62,111 @@ func TestAWDRoundUpdaterRunAWDHTTPCheckerActionUsesHTTPRuntime(t *testing.T) {
 	}
 	if request.Timeout != time.Second {
 		t.Fatalf("unexpected timeout: %v", request.Timeout)
+	}
+}
+
+func TestAWDRoundUpdaterPreviewHTTPStandardUsesCheckerToken(t *testing.T) {
+	runtime := &awdHTTPRuntimeStub{
+		response: contestports.AWDHTTPResponse{
+			StatusCode: http.StatusOK,
+			Body:       "flag{preview}",
+		},
+	}
+	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, "", nil, nil)
+	updater.SetHTTPRuntime(runtime)
+
+	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
+		ServiceID:      2001,
+		AWDChallengeID: 3001,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig: `{
+			"get_flag": {
+				"path": "/api/flag",
+				"headers": {
+					"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"
+				},
+				"expected_status": 200,
+				"expected_substring": "{{FLAG}}"
+			}
+		}`,
+		CheckerTokenEnv: "CHECKER_TOKEN",
+		CheckerToken:    "preview-checker-token",
+		AccessURL:       "http://service.local:8080",
+		PreviewFlag:     "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewServiceCheck() error = %v", err)
+	}
+	if resp.ServiceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("unexpected preview status: %s; result=%s", resp.ServiceStatus, resp.CheckResult)
+	}
+	if len(runtime.requests) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(runtime.requests))
+	}
+	request := runtime.requests[0]
+	if request.Headers["X-AWD-Checker-Token"] != "preview-checker-token" {
+		t.Fatalf("unexpected checker token header: %+v", request.Headers)
+	}
+}
+
+func TestAWDRoundUpdaterHTTPStandardDerivesCheckerTokenForRuntimeChecks(t *testing.T) {
+	const secret = "runtime-secret-12345678901234567890"
+	const contestID int64 = 71
+	const teamID int64 = 81
+	const serviceID int64 = 2001
+	const challengeID int64 = 3001
+
+	expectedToken := contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, challengeID, secret)
+	runtime := &awdHTTPRuntimeStub{
+		response: contestports.AWDHTTPResponse{
+			StatusCode: http.StatusOK,
+			Body:       "ok",
+		},
+	}
+	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, secret, nil, nil)
+	updater.SetHTTPRuntime(runtime)
+
+	outcome, err := updater.buildAWDCheckOutcomeFromHTTPStandard(
+		context.Background(),
+		contestID,
+		nil,
+		teamID,
+		contestports.AWDServiceDefinition{
+			ServiceID:       serviceID,
+			AWDChallengeID:  challengeID,
+			CheckerType:     model.AWDCheckerTypeHTTPStandard,
+			CheckerTokenEnv: "CHECKER_TOKEN",
+			CheckerConfig: `{
+				"get_flag": {
+					"path": "/api/flag",
+					"headers": {
+						"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"
+					},
+					"expected_status": 200
+				}
+			}`,
+		},
+		[]contestports.AWDServiceInstance{
+			{
+				ServiceID:      serviceID,
+				AWDChallengeID: challengeID,
+				AccessURL:      "http://service.local:8080",
+			},
+		},
+		"manual",
+	)
+	if err != nil {
+		t.Fatalf("buildAWDCheckOutcomeFromHTTPStandard() error = %v", err)
+	}
+	if outcome.serviceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("unexpected outcome: %+v", outcome)
+	}
+	if len(runtime.requests) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(runtime.requests))
+	}
+	request := runtime.requests[0]
+	if request.Headers["X-AWD-Checker-Token"] != expectedToken {
+		t.Fatalf("unexpected checker token header: %+v", request.Headers)
 	}
 }
 

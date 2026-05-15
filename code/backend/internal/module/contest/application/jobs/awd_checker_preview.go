@@ -111,6 +111,7 @@ func (u *AWDRoundUpdater) buildAWDPreviewOutcomeFromHTTPStandard(
 
 	templateData := awdHTTPCheckerTemplateData{
 		Flag:           previewContext.PreviewFlag,
+		CheckerToken:   strings.TrimSpace(definition.CheckerToken),
 		Round:          previewContext.RoundNumber,
 		TeamID:         previewContext.TeamID,
 		AWDChallengeID: previewContext.AWDChallengeID,

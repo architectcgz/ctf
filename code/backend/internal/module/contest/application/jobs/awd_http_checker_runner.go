@@ -47,10 +47,17 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 			currentFlag = acceptedFlags[0]
 		}
 	}
+	checkerToken := ""
+	if needsAWDHTTPCheckerToken(config) {
+		checkerToken, err = u.resolveAWDCheckerToken(definition, contestID, teamID)
+		if err != nil {
+			return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
+		}
+	}
 
 	targets := make([]awdHTTPCheckerTargetRuntimeResult, 0, len(instances))
 	for _, instance := range instances {
-		targets = append(targets, u.runAWDHTTPCheckerTarget(ctx, instance, round, teamID, definition, config, currentFlag, acceptedFlags))
+		targets = append(targets, u.runAWDHTTPCheckerTarget(ctx, instance, round, teamID, definition, config, currentFlag, checkerToken, acceptedFlags))
 	}
 
 	status := applyAWDHTTPCheckerAggregateResult(&result, targets)
@@ -65,6 +72,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	definition contestports.AWDServiceDefinition,
 	config awdHTTPCheckerConfig,
 	currentFlag string,
+	checkerToken string,
 	acceptedFlags []string,
 ) awdHTTPCheckerTargetRuntimeResult {
 	startedAt := time.Now()
@@ -75,6 +83,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 
 	templateData := awdHTTPCheckerTemplateData{
 		Flag:           currentFlag,
+		CheckerToken:   strings.TrimSpace(checkerToken),
 		Round:          0,
 		TeamID:         teamID,
 		AWDChallengeID: definition.AWDChallengeID,
@@ -241,4 +250,23 @@ func needsAWDHTTPCheckerFlags(config awdHTTPCheckerConfig) bool {
 		strings.Contains(config.PutFlag.BodyTemplate, "{{FLAG}}") ||
 		strings.Contains(config.GetFlag.BodyTemplate, "{{FLAG}}") ||
 		strings.Contains(config.Havoc.BodyTemplate, "{{FLAG}}")
+}
+
+func needsAWDHTTPCheckerToken(config awdHTTPCheckerConfig) bool {
+	return actionUsesAWDHTTPCheckerToken(config.PutFlag) ||
+		actionUsesAWDHTTPCheckerToken(config.GetFlag) ||
+		actionUsesAWDHTTPCheckerToken(config.Havoc)
+}
+
+func actionUsesAWDHTTPCheckerToken(action awdHTTPCheckerActionConfig) bool {
+	if strings.Contains(action.BodyTemplate, "{{CHECKER_TOKEN}}") ||
+		strings.Contains(action.ExpectedSubstring, "{{CHECKER_TOKEN}}") {
+		return true
+	}
+	for _, value := range action.Headers {
+		if strings.Contains(value, "{{CHECKER_TOKEN}}") {
+			return true
+		}
+	}
+	return false
 }
