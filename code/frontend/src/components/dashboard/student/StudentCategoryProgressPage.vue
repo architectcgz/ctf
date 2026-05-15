@@ -302,6 +302,10 @@ function categoryPillValue(category: string) {
   --journal-soft-panel-shell-padding: var(--space-4) var(--space-4-5);
 }
 
+.category-action-item {
+  --journal-soft-panel-item-border: var(--journal-shell-border);
+}
+
 .category-action-item + .category-action-item {
   margin-top: var(--space-3);
 }

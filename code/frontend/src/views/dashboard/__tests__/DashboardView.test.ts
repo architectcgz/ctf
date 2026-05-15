@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '../DashboardView.vue'
 import dashboardViewSource from '../DashboardView.vue?raw'
+import studentCategoryProgressPageSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -404,6 +405,12 @@ describe('DashboardView', () => {
     await primaryButton!.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
+  it('分类补强卡片应统一使用明确的外边框 token', () => {
+    expect(studentCategoryProgressPageSource).toContain(
+      '--journal-soft-panel-item-border: var(--journal-shell-border);'
+    )
   })
 
   it('应该在 difficulty 子菜单下展示强度推进工作区并支持跳转到对应难度题目', async () => {
