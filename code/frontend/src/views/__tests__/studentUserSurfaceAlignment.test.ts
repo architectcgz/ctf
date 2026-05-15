@@ -96,6 +96,9 @@ describe('student and user surface alignment', () => {
     expect(journalSoftSurfacesSource).toContain('--journal-divider: color-mix')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-shell')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item')
+    expect(journalSoftSurfacesSource).toMatch(
+      /\.journal-soft-surface \.journal-soft-panel-item\s*\{[\s\S]*display:\s*block;[\s\S]*width:\s*100%;/s
+    )
     expect(journalSoftSurfacesSource).toContain(
       '.journal-soft-surface .journal-soft-panel-item--accent'
     )
@@ -134,6 +137,9 @@ describe('student and user surface alignment', () => {
     expect(studentCategoryProgressSource).toContain('journal-soft-surface')
     expect(studentCategoryProgressSource).toContain('journal-soft-panel-shell')
     expect(studentCategoryProgressSource).toContain('journal-soft-panel-item')
+    expect(studentCategoryProgressSource).toMatch(
+      /\.category-action-list\s*\{[\s\S]*--journal-soft-panel-shell-padding:\s*0;[\s\S]*\}/s
+    )
     expect(studentCategoryProgressSource).toMatch(
       /\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s
     )

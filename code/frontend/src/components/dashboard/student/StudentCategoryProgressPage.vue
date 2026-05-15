@@ -283,7 +283,7 @@ function categoryActionItemStyle(category: string, isPrimary: boolean): Record<s
 }
 
 .category-action-list {
-  --journal-soft-panel-shell-padding: var(--space-4) var(--space-4-5);
+  --journal-soft-panel-shell-padding: 0;
 }
 
 .category-action-item {
