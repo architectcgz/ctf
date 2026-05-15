@@ -143,7 +143,8 @@ describe('TeacherDashboard', () => {
     expect(wrapper.text()).toContain('Bob 当前保持领先')
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('薄弱项 crypto')
-    expect(wrapper.get('#overview .hero-rail.workspace-subpanel').text()).toBe('')
+    expect(wrapper.find('#overview .teacher-dashboard-overview-head').exists()).toBe(true)
+    expect(wrapper.find('#overview .workspace-overline').text()).toBe('Teaching Overview')
 
     expect(
       wrapper.findAll('#overview .teacher-overview-card.progress-card.metric-panel-card')
@@ -182,18 +183,23 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('class="workspace-tabbar top-tabs"')
     expect(teacherDashboardPageSource).toContain('class="workspace-tab top-tab"')
     expect(teacherDashboardPageSource).toContain(
-      'class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header teacher-dashboard-overview-head"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="workspace-panel-header__meta meta-strip"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="workspace-panel-header__summary teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain(
       'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(teacherDashboardPageSource).toContain('class="hero-rail workspace-subpanel"')
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
     expect(teacherDashboardPageSource).toContain(
       '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
     )
     expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
-    expect(teacherDashboardPageSource).not.toContain('workspace-overline')
+    expect(teacherDashboardPageSource).toContain('class="workspace-overline"')
     expect(teacherDashboardPageSource).not.toContain('openReportExport')
 
     const wrapper = await mountDashboard()

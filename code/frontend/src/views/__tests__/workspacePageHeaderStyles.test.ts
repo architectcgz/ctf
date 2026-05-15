@@ -219,7 +219,7 @@ describe('workspace page header styles', () => {
       },
       {
         source: teacherDashboardSource,
-        include: /<h1 class="hero-title">\s*教学介入台\s*<\/h1>/,
+        include: /<h1 class="hero-title workspace-page-title">\s*教学介入台\s*<\/h1>/,
         exclude: '<h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>',
       },
       {
@@ -455,6 +455,12 @@ describe('workspace page header styles', () => {
     )
     expect(contestOrchestrationSource).not.toContain(
       '<header class="workspace-page-header contest-overview-head">'
+    )
+    expect(teacherDashboardSource).toContain(
+      '<header class="workspace-panel-header teacher-dashboard-overview-head">'
+    )
+    expect(studentAnalysisPageSource).toContain(
+      '<header class="workspace-panel-header student-analysis-overview-head">'
     )
   })
 

@@ -126,11 +126,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   orderedTabs: workspaceTabOrder,
   defaultTab: 'overview',
 })
+const detailTabs = workspaceTabs.filter((tab) => tab.key !== 'overview')
 </script>
 
 <template>
   <div class="workspace-shell journal-eyebrow-text">
-    <nav class="top-tabs"
+    <nav class="workspace-tabbar top-tabs"
       role="tablist"
       aria-label="学员分析标签页"
     >
@@ -139,7 +140,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         :id="tab.buttonId"
         :key="tab.key"
         :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        class="top-tab"
+        class="workspace-tab top-tab"
         :class="{ active: activeTab === tab.key }"
         type="button"
         role="tab"
@@ -154,52 +155,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
     </nav>
 
     <main class="content-pane">
-        <header
-          v-if="activeTab === 'overview'"
-          class="teacher-topbar"
-        >
-          <div class="teacher-heading workspace-tab-heading__main">
-            <h1 class="teacher-title workspace-page-title student-analysis-title">
-              {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
-            </h1>
-          </div>
-
-          <div
-            class="header-actions"
-            role="group"
-            aria-label="学员分析快捷操作"
-          >
-            <button
-              type="button"
-              class="header-btn header-btn--ghost"
-              @click="emit('openClassStudents')"
-            >
-              返回学生列表
-            </button>
-            <button
-              type="button"
-              class="header-btn header-btn--ghost"
-              @click="emit('openReportExport')"
-            >
-              导出班级报告
-            </button>
-            <button
-              type="button"
-              class="header-btn header-btn--ghost"
-              @click="emit('openReviewArchive')"
-            >
-              完整复盘页
-            </button>
-            <button
-              type="button"
-              class="header-btn header-btn--primary"
-              @click="emit('exportReviewArchive')"
-            >
-              导出复盘归档
-            </button>
-          </div>
-        </header>
-
         <div
           v-if="error"
           class="workspace-alert"
@@ -225,49 +180,135 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         </div>
 
         <section
-          v-if="activeTab === 'overview'"
-          class="summary-strip metric-panel-grid"
+          v-show="activeTab === 'overview'"
+          id="student-overview"
+          class="tab-panel section student-analysis-overview-panel"
+          :class="{ active: activeTab === 'overview' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
-          <article class="summary-card summary-card--solved progress-card metric-panel-card">
-            <div class="summary-card__label progress-card-label metric-panel-label">
-              <span>已做题目数</span>
-              <CheckCircle class="h-4 w-4" />
+          <header class="workspace-panel-header student-analysis-overview-head">
+            <div class="workspace-panel-header__intro teacher-heading">
+              <div class="workspace-overline">
+                Student Insight
+              </div>
+              <h1 class="teacher-title workspace-page-title student-analysis-title">
+                {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
+              </h1>
             </div>
-            <div class="summary-card__value progress-card-value metric-panel-value">
-              {{ progress?.solved_challenges ?? 0 }}
+
+            <div
+              class="workspace-panel-header__actions header-actions"
+              role="group"
+              aria-label="学员分析快捷操作"
+            >
+              <button
+                type="button"
+                class="header-btn header-btn--ghost"
+                @click="emit('openClassStudents')"
+              >
+                返回学生列表
+              </button>
+              <button
+                type="button"
+                class="header-btn header-btn--ghost"
+                @click="emit('openReportExport')"
+              >
+                导出班级报告
+              </button>
+              <button
+                type="button"
+                class="header-btn header-btn--ghost"
+                @click="emit('openReviewArchive')"
+              >
+                完整复盘页
+              </button>
+              <button
+                type="button"
+                class="header-btn header-btn--primary"
+                @click="emit('exportReviewArchive')"
+              >
+                导出复盘归档
+              </button>
             </div>
-            <div class="summary-card__hint progress-card-hint metric-panel-helper">
-              已成功完成的题目数量
+
+            <div class="workspace-panel-header__summary summary-strip metric-panel-grid">
+              <article class="summary-card summary-card--solved progress-card metric-panel-card">
+                <div class="summary-card__label progress-card-label metric-panel-label">
+                  <span>已做题目数</span>
+                  <CheckCircle class="h-4 w-4" />
+                </div>
+                <div class="summary-card__value progress-card-value metric-panel-value">
+                  {{ progress?.solved_challenges ?? 0 }}
+                </div>
+                <div class="summary-card__hint progress-card-hint metric-panel-helper">
+                  已成功完成的题目数量
+                </div>
+              </article>
+              <article class="summary-card summary-card--completion progress-card metric-panel-card">
+                <div class="summary-card__label progress-card-label metric-panel-label">
+                  <span>完成率</span>
+                  <Trophy class="h-4 w-4" />
+                </div>
+                <div class="summary-card__value progress-card-value metric-panel-value">
+                  {{ solvedRate }}%
+                </div>
+                <div class="summary-card__hint progress-card-hint metric-panel-helper">
+                  基于当前学员训练数据计算
+                </div>
+              </article>
+              <article class="summary-card summary-card--weakness progress-card metric-panel-card">
+                <div class="summary-card__label progress-card-label metric-panel-label">
+                  <span>薄弱维度</span>
+                  <AlertTriangle class="h-4 w-4" />
+                </div>
+                <div class="summary-card__value progress-card-value metric-panel-value">
+                  {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
+                </div>
+                <div class="summary-card__hint progress-card-hint metric-panel-helper">
+                  基于能力画像提炼的风险点
+                </div>
+              </article>
             </div>
-          </article>
-          <article class="summary-card summary-card--completion progress-card metric-panel-card">
-            <div class="summary-card__label progress-card-label metric-panel-label">
-              <span>完成率</span>
-              <Trophy class="h-4 w-4" />
-            </div>
-            <div class="summary-card__value progress-card-value metric-panel-value">
-              {{ solvedRate }}%
-            </div>
-            <div class="summary-card__hint progress-card-hint metric-panel-helper">
-              基于当前学员训练数据计算
-            </div>
-          </article>
-          <article class="summary-card summary-card--weakness progress-card metric-panel-card">
-            <div class="summary-card__label progress-card-label metric-panel-label">
-              <span>薄弱维度</span>
-              <AlertTriangle class="h-4 w-4" />
-            </div>
-            <div class="summary-card__value progress-card-value metric-panel-value">
-              {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
-            </div>
-            <div class="summary-card__hint progress-card-hint metric-panel-helper">
-              基于能力画像提炼的风险点
-            </div>
-          </article>
+          </header>
+
+          <div class="workspace-panel-divider" aria-hidden="true" />
+
+          <StudentInsightPanel
+            active-section="overview"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :attack-sessions="attackSessions"
+            :review-challenge-options="reviewChallengeOptions"
+            :review-workspace-loading="reviewWorkspaceLoading"
+            :review-workspace-query="reviewWorkspaceQuery"
+            :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
+            @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
+          />
         </section>
 
         <section
-          v-for="tab in workspaceTabs"
+          v-for="tab in detailTabs"
           v-show="activeTab === tab.key"
           :id="tab.panelId"
           :key="tab.panelId"
@@ -346,7 +387,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .content-pane {
   display: grid;
   gap: var(--space-section-gap-compact, var(--space-4));
-  padding-top: var(--workspace-tabs-panel-gap, var(--workspace-tab-panel-gap-top-tight));
+  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
+}
+
+.student-analysis-overview-head {
+  --workspace-panel-divider-gap: var(--space-divider-gap);
 }
 
 .student-analysis-title {
@@ -363,7 +408,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-alert {
-  margin-bottom: var(--space-section-gap, var(--space-6));
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
   background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
@@ -391,8 +435,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .summary-strip {
   --metric-panel-grid-gap: var(--space-2-5) var(--space-4);
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
-  margin: 0 0 var(--space-5);
-  padding: var(--space-1) 0 0;
+  margin: 0;
+  padding: 0;
 }
 
 .summary-card {
@@ -719,11 +763,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 @media (max-width: 1023px) {
   .summary-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .teacher-topbar {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 

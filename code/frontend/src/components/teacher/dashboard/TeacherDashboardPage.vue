@@ -87,19 +87,24 @@ const {
         <section
           v-show="activeTab === 'overview'"
           id="overview"
-          class="workspace-hero teacher-dashboard-hero tab-panel"
+          class="tab-panel teacher-dashboard-overview"
           :class="{ active: activeTab === 'overview' }"
           role="tabpanel"
           aria-labelledby="dashboard-tab-overview"
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
-          <div class="workspace-tab-heading__main">
-            <h1 class="hero-title">教学介入台</h1>
-            <p class="hero-summary">
-              {{ overviewDescription }}
-            </p>
+          <header class="workspace-panel-header teacher-dashboard-overview-head">
+            <div class="workspace-panel-header__intro">
+              <div class="workspace-overline">
+                Teaching Overview
+              </div>
+              <h1 class="hero-title workspace-page-title">教学介入台</h1>
+              <p class="workspace-page-copy hero-summary">
+                {{ overviewDescription }}
+              </p>
+            </div>
 
-            <div class="meta-strip">
+            <div class="workspace-panel-header__meta meta-strip">
               <span
                 v-for="(pill, index) in metaPills"
                 :key="pill"
@@ -111,7 +116,7 @@ const {
             </div>
 
             <div
-              class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+              class="workspace-panel-header__summary teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
             >
               <article
                 v-for="item in overviewMetrics"
@@ -129,28 +134,26 @@ const {
                 </div>
               </article>
             </div>
+          </header>
 
-            <div v-if="error" class="workspace-alert">
-              <div class="workspace-alert-title-row">
-                <AlertTriangle class="workspace-alert-icon h-4 w-4" />
-                <div class="workspace-alert-title">加载失败</div>
-              </div>
-              <div class="workspace-alert-copy">
-                {{ error }}
-              </div>
-              <div class="workspace-alert-actions">
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--primary ui-btn--sm"
-                  @click="emit('retry')"
-                >
-                  重试加载
-                </button>
-              </div>
+          <div v-if="error" class="workspace-alert">
+            <div class="workspace-alert-title-row">
+              <AlertTriangle class="workspace-alert-icon h-4 w-4" />
+              <div class="workspace-alert-title">加载失败</div>
+            </div>
+            <div class="workspace-alert-copy">
+              {{ error }}
+            </div>
+            <div class="workspace-alert-actions">
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary ui-btn--sm"
+                @click="emit('retry')"
+              >
+                重试加载
+              </button>
             </div>
           </div>
-
-          <aside class="hero-rail workspace-subpanel" aria-hidden="true" />
         </section>
 
         <section
@@ -487,11 +490,13 @@ const {
   gap: var(--space-6);
 }
 
-.teacher-dashboard-hero {
+.teacher-dashboard-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.34fr);
-  gap: var(--space-7);
-  align-items: stretch;
+  gap: var(--space-5);
+}
+
+.teacher-dashboard-overview-head {
+  --workspace-panel-header-block-gap: var(--space-5);
 }
 
 .overview-panel {
@@ -515,17 +520,12 @@ const {
 
 .hero-summary {
   max-width: 760px;
-  margin-top: var(--space-4);
-  font-size: var(--font-size-15);
-  line-height: 1.8;
-  color: var(--journal-muted);
 }
 
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-5);
 }
 
 .meta-pill {
@@ -545,26 +545,12 @@ const {
   color: var(--journal-accent-strong);
 }
 
-.teacher-overview-summary {
-  margin-top: var(--space-5);
-}
-
 .summary-grid {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
 
 .teacher-overview-card {
   min-height: 7.75rem;
-}
-
-.hero-rail {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 100%;
-  padding: var(--space-5);
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--teacher-card-border));
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
 .teacher-dashboard-panel-body {
@@ -915,7 +901,6 @@ const {
 }
 
 @media (max-width: 1180px) {
-  .teacher-dashboard-hero,
   .portrait-grid {
     grid-template-columns: 1fr;
   }

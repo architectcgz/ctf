@@ -63,7 +63,17 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('--teacher-divider:')
     expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
-    expect(studentAnalysisSource).toContain('class="top-tabs"')
+    expect(studentAnalysisSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(studentAnalysisSource).toContain(
+      'class="workspace-panel-header student-analysis-overview-head"'
+    )
+    expect(studentAnalysisSource).toContain(
+      'class="workspace-panel-header__actions header-actions"'
+    )
+    expect(studentAnalysisSource).toContain(
+      'class="workspace-panel-header__summary summary-strip metric-panel-grid"'
+    )
+    expect(studentAnalysisSource).toContain('class="workspace-panel-divider"')
     expect(studentAnalysisSource).toContain(
       'class="teacher-title workspace-page-title student-analysis-title"'
     )
@@ -77,10 +87,10 @@ describe('teacher detail surface alignment', () => {
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
     )
     expect(studentAnalysisSource).toMatch(
-      /\.content-pane\s*\{[\s\S]*padding-top:\s*var\(--workspace-tabs-panel-gap,\s*var\(--workspace-tab-panel-gap-top-tight\)\);/s
+      /\.content-pane\s*\{[\s\S]*padding-top:\s*var\(--workspace-tabs-panel-gap,\s*var\(--space-workspace-tabs-panel-gap\)\);/s
     )
     expect(studentAnalysisSource).toMatch(
-      /\.summary-strip\s*\{[\s\S]*?margin:\s*0 0 var\(--space-5\);[\s\S]*?padding:\s*var\(--space-1\) 0 0;/s
+      /\.summary-strip\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/s
     )
     expect(studentAnalysisSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
     expect(studentAnalysisSource).toContain(

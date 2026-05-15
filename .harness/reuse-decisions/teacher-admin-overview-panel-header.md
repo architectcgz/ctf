@@ -15,6 +15,8 @@
 - code/frontend/src/components/platform/contest/ContestOrchestrationPage.vue
 - code/frontend/src/components/platform/user/UserGovernancePage.vue
 - code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
+- code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue
+- code/frontend/src/components/teacher/class-management/StudentAnalysisPage.vue
 
 ## Similar implementations found
 - code/frontend/src/style.css
@@ -36,10 +38,16 @@ extend_existing
 - code/frontend/src/components/platform/contest/ContestOrchestrationPage.vue
 - code/frontend/src/components/platform/user/UserGovernancePage.vue
 - code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
+- code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue
+- code/frontend/src/components/teacher/class-management/StudentAnalysisPage.vue
 - code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 - code/frontend/src/views/platform/__tests__/UserManage.test.ts
 - code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase22.test.ts
 - code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts
 - code/frontend/src/views/teacher/__tests__/TeacherClassStudents.test.ts
+- code/frontend/src/views/teacher/__tests__/TeacherDashboard.test.ts
+- code/frontend/src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts
+- code/frontend/src/views/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts
+- code/frontend/src/views/__tests__/journalEyebrowStyles.test.ts
 - code/frontend/src/views/__tests__/workspacePageHeaderStyles.test.ts
 - code/frontend/src/views/__tests__/workspaceShellStyles.test.ts

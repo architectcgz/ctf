@@ -701,10 +701,10 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(studentAnalysisPageSource).not.toContain('class="workspace-topbar"')
-    expect(studentAnalysisPageSource).toContain('class="top-tabs"')
+    expect(studentAnalysisPageSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toContain('class="content-pane"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="workspace-tabbar top-tabs"[\s\S]*<main class="content-pane">/s
     )
   })
 

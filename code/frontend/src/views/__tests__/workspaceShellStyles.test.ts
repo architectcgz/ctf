@@ -119,6 +119,12 @@ describe('workspace shell shared styles', () => {
     expect(contestOrchestrationPageSource).not.toContain(
       '<header class="workspace-page-header contest-overview-head">'
     )
+    expect(teacherDashboardPageSource).toContain(
+      '<header class="workspace-panel-header teacher-dashboard-overview-head">'
+    )
+    expect(studentAnalysisPageSource).toContain(
+      '<header class="workspace-panel-header student-analysis-overview-head">'
+    )
   })
 
   it('工作区页面不应继续在局部重复声明骨架壳层样式', () => {
