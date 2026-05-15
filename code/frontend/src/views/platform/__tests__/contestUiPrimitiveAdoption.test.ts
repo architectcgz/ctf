@@ -18,7 +18,13 @@ describe('contest ui primitive adoption', () => {
     expect(contestOperationsHubHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
     expect(contestOperationsHubCombinedSource).toContain(
-      'class="header-actions contest-ops-hero__actions"'
+      'class="workspace-panel-header__actions header-actions contest-ops-hero__actions"'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '<header class="workspace-panel-header contest-ops-hero">'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      'class="workspace-panel-header__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-actions"')
     expect(contestOperationsHubHeroPanelSource).toContain(

@@ -12,7 +12,10 @@ describe('ContestOperationsHub panel extraction', () => {
     expect(contestOperationsHubHeroPanelSource).toContain('Event Operations')
     expect(contestOperationsHubHeroPanelSource).toContain('返回竞赛目录')
     expect(contestOperationsHubHeroPanelSource).toContain(
-      'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
+      '<header class="workspace-panel-header contest-ops-hero">'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      'class="workspace-panel-header__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
   })
 })

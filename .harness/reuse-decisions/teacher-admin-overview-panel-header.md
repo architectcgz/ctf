@@ -13,6 +13,7 @@
 - code/frontend/src/components/dashboard/student/StudentTimelinePage.vue
 - code/frontend/src/components/dashboard/student/StudentDifficultyPage.vue
 - code/frontend/src/components/platform/contest/ContestOrchestrationPage.vue
+- code/frontend/src/components/platform/contest/ContestOperationsHubHeroPanel.vue
 - code/frontend/src/components/platform/user/UserGovernancePage.vue
 - code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
 - code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue
@@ -36,11 +37,15 @@ extend_existing
 
 ## Files to modify
 - code/frontend/src/components/platform/contest/ContestOrchestrationPage.vue
+- code/frontend/src/components/platform/contest/ContestOperationsHubHeroPanel.vue
 - code/frontend/src/components/platform/user/UserGovernancePage.vue
 - code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue
 - code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue
 - code/frontend/src/components/teacher/class-management/StudentAnalysisPage.vue
 - code/frontend/src/views/platform/__tests__/ContestManage.test.ts
+- code/frontend/src/views/platform/__tests__/ContestOperationsHub.test.ts
+- code/frontend/src/views/platform/__tests__/contestOperationsHubPanelExtraction.test.ts
+- code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoption.test.ts
 - code/frontend/src/views/platform/__tests__/UserManage.test.ts
 - code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase22.test.ts
 - code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts

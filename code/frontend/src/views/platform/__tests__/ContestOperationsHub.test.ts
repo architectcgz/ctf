@@ -265,10 +265,13 @@ describe('ContestOperationsHub', () => {
 
   it('uses shared directory heading and metric primitives for the ops index shell', () => {
     expect(contestOperationsHubHeroPanelSource).toContain(
-      '<header class="workspace-page-header contest-ops-hero">'
+      '<header class="workspace-panel-header contest-ops-hero">'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
-      'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
+      'class="workspace-panel-header__actions header-actions contest-ops-hero__actions"'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      'class="workspace-panel-header__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
       '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
@@ -307,6 +310,9 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubHeroPanelSource).not.toContain('margin-top: var(--space-5);')
     expect(contestOperationsHubWorkspacePanelSource).toContain('padding: 0;')
     expect(contestOperationsHubWorkspacePanelSource).toContain('gap: var(--space-4);')
+    expect(contestOperationsHubHeroPanelSource).not.toContain(
+      '<header class="workspace-page-header contest-ops-hero">'
+    )
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

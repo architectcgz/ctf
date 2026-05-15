@@ -31,6 +31,7 @@ import teacherDashboardSource from '@/components/teacher/dashboard/TeacherDashbo
 import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import writeupEditorSource from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue?raw'
 import writeupViewSource from '@/components/platform/writeup/ChallengeWriteupViewPage.vue?raw'
@@ -461,6 +462,12 @@ describe('workspace page header styles', () => {
     )
     expect(studentAnalysisPageSource).toContain(
       '<header class="workspace-panel-header student-analysis-overview-head">'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '<header class="workspace-panel-header contest-ops-hero">'
+    )
+    expect(contestOperationsHubHeroPanelSource).not.toContain(
+      '<header class="workspace-page-header contest-ops-hero">'
     )
   })
 

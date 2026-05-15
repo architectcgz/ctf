@@ -123,8 +123,7 @@
 }
 
 .workspace-page-header + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),
-.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),
-.contest-ops-hero + .contest-ops-summary {
+.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid) {
   margin-top: var(--workspace-hero-summary-gap, var(--space-5));
 }
 

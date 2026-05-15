@@ -41,6 +41,7 @@ import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 
 const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
@@ -124,6 +125,12 @@ describe('workspace shell shared styles', () => {
     )
     expect(studentAnalysisPageSource).toContain(
       '<header class="workspace-panel-header student-analysis-overview-head">'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '<header class="workspace-panel-header contest-ops-hero">'
+    )
+    expect(contestOperationsHubHeroPanelSource).not.toContain(
+      '<header class="workspace-page-header contest-ops-hero">'
     )
   })
 
