@@ -514,6 +514,15 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.practice.Handler.StartAdminContestAWDInstance,
 	)
+	adminOnly.POST("/contests/:id/awd/instances/prewarm",
+		middleware.ParseInt64Param("id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_awd_instance_prewarm",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.practice.Handler.PrewarmAdminContestAWDInstances,
+	)
 	adminOnly.POST("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{

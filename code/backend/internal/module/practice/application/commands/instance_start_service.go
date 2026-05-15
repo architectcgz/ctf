@@ -15,6 +15,12 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+const (
+	adminAWDPrewarmOutcomeStarted = "started"
+	adminAWDPrewarmOutcomeReused  = "reused"
+	adminAWDPrewarmOutcomeFailed  = "failed"
+)
+
 func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
 	return s.startPersonalChallenge(ctx, userID, challengeID)
 }
@@ -156,6 +162,135 @@ func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID
 		ServiceID: serviceID,
 		Instance:  instance,
 	}, nil
+}
+
+func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error) {
+	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
+	if err != nil {
+		return nil, err
+	}
+	if contest.Status == model.ContestStatusEnded {
+		return nil, errcode.ErrContestEnded
+	}
+	if contest.Status != model.ContestStatusRegistration {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("awd 赛前预热仅支持报名阶段"))
+	}
+	if req == nil {
+		req = &dto.PrewarmAdminContestAWDInstancesReq{}
+	}
+
+	teams, err := s.resolveAdminContestAWDPrewarmTeams(ctx, contestID, req.TeamID)
+	if err != nil {
+		return nil, err
+	}
+	services, err := s.repo.ListContestAWDServices(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	existingInstances, err := s.repo.ListContestAWDInstances(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	resp := &dto.AdminAWDInstancePrewarmResp{
+		ContestID: contestID,
+		Results:   make([]*dto.AdminAWDInstancePrewarmItemResp, 0, len(teams)*len(services)),
+	}
+	for _, team := range teams {
+		for _, service := range services {
+			if service == nil || !service.IsVisible {
+				continue
+			}
+			item := s.prewarmAdminContestAWDTeamService(
+				ctx,
+				contestID,
+				team,
+				service,
+				existingInstances,
+			)
+			resp.Results = append(resp.Results, item)
+			resp.Summary.Total++
+			switch item.Outcome {
+			case adminAWDPrewarmOutcomeStarted:
+				resp.Summary.Started++
+			case adminAWDPrewarmOutcomeReused:
+				resp.Summary.Reused++
+			default:
+				resp.Summary.Failed++
+			}
+		}
+	}
+	return resp, nil
+}
+
+func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contestID int64, teamID *int64) ([]*model.Team, error) {
+	if teamID != nil {
+		team, err := s.repo.FindContestTeam(ctx, contestID, *teamID)
+		if err != nil {
+			if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
+				return nil, errcode.ErrTeamNotFound
+			}
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return []*model.Team{team}, nil
+	}
+
+	teams, err := s.repo.ListContestTeams(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	return teams, nil
+}
+
+func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *model.Team, service *model.ContestAWDService, existingInstances []*model.Instance) *dto.AdminAWDInstancePrewarmItemResp {
+	result := &dto.AdminAWDInstancePrewarmItemResp{
+		Outcome: adminAWDPrewarmOutcomeFailed,
+	}
+	if team != nil {
+		result.TeamID = team.ID
+	}
+	if service != nil {
+		result.ServiceID = service.ID
+	}
+	if team == nil || team.ID <= 0 {
+		result.ErrorMessage = "队伍不存在"
+		return result
+	}
+	if service == nil || service.ID <= 0 {
+		result.ErrorMessage = "服务不存在"
+		return result
+	}
+	if team.CaptainID <= 0 {
+		result.ErrorMessage = "队伍缺少队长用户"
+		return result
+	}
+	for _, instance := range existingInstances {
+		if instance == nil || instance.TeamID == nil || instance.ServiceID == nil {
+			continue
+		}
+		if *instance.TeamID != team.ID || *instance.ServiceID != service.ID {
+			continue
+		}
+		result.Outcome = adminAWDPrewarmOutcomeReused
+		result.Instance = instanceRespForScope(instance, practiceports.InstanceScope{
+			ContestMode: model.ContestModeAWD,
+		}, s.config.Container.PublicHost, s.config.Container.AccessHost)
+		return result
+	}
+
+	challengeID, ownerUserID, scope, err := s.resolveAdminContestAWDServiceInstanceScope(ctx, contestID, team.ID, service.ID)
+	if err != nil {
+		result.ErrorMessage = err.Error()
+		return result
+	}
+
+	instance, err := s.startChallengeWithScope(ctx, ownerUserID, challengeID, scope)
+	if err != nil {
+		result.ErrorMessage = err.Error()
+		return result
+	}
+	result.Instance = instance
+	result.Outcome = adminAWDPrewarmOutcomeStarted
+	return result
 }
 
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {

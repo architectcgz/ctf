@@ -799,6 +799,27 @@ export interface AdminContestAWDInstanceItemData {
   instance?: InstanceData
 }
 
+export interface AdminContestAWDInstancePrewarmItemData {
+  team_id: ID
+  service_id: ID
+  outcome: 'started' | 'reused' | 'failed'
+  instance?: InstanceData
+  error_message?: string
+}
+
+export interface AdminContestAWDInstancePrewarmSummaryData {
+  total: number
+  started: number
+  reused: number
+  failed: number
+}
+
+export interface AdminContestAWDInstancePrewarmData {
+  contest_id: ID
+  results: AdminContestAWDInstancePrewarmItemData[]
+  summary: AdminContestAWDInstancePrewarmSummaryData
+}
+
 export interface AdminContestAWDInstanceOrchestrationData {
   contest_id: ID
   teams: AdminContestAWDInstanceTeamData[]

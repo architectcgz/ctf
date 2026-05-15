@@ -25,6 +25,7 @@ const adminApiMocks = vi.hoisted(() => ({
   listContestAWDRounds: vi.fn(),
   listContestAWDRoundTrafficEvents: vi.fn(),
   listContestTeams: vi.fn(),
+  prewarmContestAWDInstances: vi.fn(),
   runContestAWDCurrentRoundCheck: vi.fn(),
   runContestAWDRoundCheck: vi.fn(),
   startContestAWDTeamServiceInstance: vi.fn(),
@@ -171,6 +172,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestAWDRounds.mockReset()
     adminApiMocks.listContestAWDRoundTrafficEvents.mockReset()
     adminApiMocks.listContestTeams.mockReset()
+    adminApiMocks.prewarmContestAWDInstances.mockReset()
     adminApiMocks.runContestAWDCurrentRoundCheck.mockReset()
     adminApiMocks.runContestAWDRoundCheck.mockReset()
     adminApiMocks.startContestAWDTeamServiceInstance.mockReset()
@@ -242,6 +244,16 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.createContestAWDServiceCheck.mockResolvedValue(undefined)
     adminApiMocks.createAdminContestChallenge.mockResolvedValue(undefined)
     adminApiMocks.createContestAWDService.mockResolvedValue(undefined)
+    adminApiMocks.prewarmContestAWDInstances.mockResolvedValue({
+      contest_id: 'awd-1',
+      results: [],
+      summary: {
+        total: 0,
+        started: 0,
+        reused: 0,
+        failed: 0,
+      },
+    })
     adminApiMocks.updateContestAWDService.mockResolvedValue(undefined)
     adminApiMocks.startContestAWDTeamServiceInstance.mockResolvedValue({
       team_id: 'team-1',
@@ -301,6 +313,69 @@ describe('usePlatformContestAwd', () => {
         }),
       }),
     ])
+
+    wrapper.unmount()
+  })
+
+  it('报名阶段批量启动本队时应调用赛前预热接口', async () => {
+    adminApiMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
+      contest_id: 'awd-1',
+      teams: [
+        {
+          team_id: 'team-1',
+          team_name: 'Red Team',
+          captain_id: 'captain-1',
+        },
+      ],
+      services: [
+        {
+          service_id: 'service-1',
+          awd_challenge_id: 'challenge-1',
+          display_name: 'Bank Portal',
+          is_visible: true,
+        },
+      ],
+      instances: [],
+    })
+    adminApiMocks.prewarmContestAWDInstances.mockResolvedValue({
+      contest_id: 'awd-1',
+      results: [
+        {
+          team_id: 'team-1',
+          service_id: 'service-1',
+          outcome: 'started',
+          instance: undefined,
+          error_message: undefined,
+        },
+      ],
+      summary: {
+        total: 1,
+        started: 1,
+        reused: 0,
+        failed: 0,
+      },
+    })
+
+    let composable!: ReturnType<typeof usePlatformContestAwd>
+    const selectedContest = ref<ContestDetailData | null>(buildContest({ status: 'registering' }))
+    const Harness = defineComponent({
+      setup() {
+        composable = usePlatformContestAwd(selectedContest)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    await composable.startTeamAllServices('team-1')
+    await flushPromises()
+
+    expect(adminApiMocks.prewarmContestAWDInstances).toHaveBeenCalledWith('awd-1', {
+      team_id: 'team-1',
+    })
+    expect(adminApiMocks.startContestAWDTeamServiceInstance).not.toHaveBeenCalled()
+    expect(toastMocks.success).toHaveBeenCalled()
 
     wrapper.unmount()
   })

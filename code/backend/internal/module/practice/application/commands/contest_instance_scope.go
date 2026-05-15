@@ -60,28 +60,39 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 }
 
 func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
-	if s.contestScope == nil {
-		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
-	}
-	contest, err := s.contestScope.FindContestByID(ctx, contestID)
+	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
-			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotFound
-		}
-		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
-	}
-	if contest.Mode != model.ContestModeAWD {
-		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
+		return 0, 0, practiceports.InstanceScope{}, err
 	}
 	switch contest.Status {
-	case model.ContestStatusRunning, model.ContestStatusFrozen:
+	case model.ContestStatusRegistration, model.ContestStatusRunning, model.ContestStatusFrozen:
 	default:
 		if contest.Status == model.ContestStatusEnded {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestEnded
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotRunning
 	}
+	return s.resolveAdminContestAWDServiceInstanceScopeWithContest(ctx, contest, contestID, teamID, serviceID)
+}
 
+func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
+	if s.contestScope == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+	contest, err := s.contestScope.FindContestByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
+			return nil, errcode.ErrContestNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if contest.Mode != model.ContestModeAWD {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
+	}
+	return contest, nil
+}
+
+func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx context.Context, contest *model.Contest, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
 	team, err := s.contestScope.FindContestTeam(ctx, contestID, teamID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {

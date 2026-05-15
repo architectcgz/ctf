@@ -16,6 +16,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
@@ -179,6 +180,160 @@ func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t
 	}
 	if instance.ShareScope != model.InstanceSharingPerTeam {
 		t.Fatalf("expected per-team share scope, got %s", instance.ShareScope)
+	}
+}
+
+func TestServiceStartAdminContestAWDTeamServiceAllowsRegistrationForPrewarmRetry(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now().UTC()
+
+	seedContestInstanceChallenge(t, db, 10055, 20055, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30055, 20055, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDService(t, db, 7003055, 30055, 20055, now)
+	seedContestInstanceTeam(t, db, 30055, 40055, 50055, now)
+	seedContestInstanceTeamMember(t, db, 30055, 40055, 50055, now)
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.StartAdminContestAWDTeamService(context.Background(), 30055, 40055, 7003055)
+	if err != nil {
+		t.Fatalf("StartAdminContestAWDTeamService() during registration error = %v", err)
+	}
+	if resp == nil || resp.Instance == nil {
+		t.Fatalf("expected registration prewarm retry to return instance, got %+v", resp)
+	}
+}
+
+func TestServicePrewarmAdminContestAWDInstancesStartsVisibleServicesForSelectedTeam(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now().UTC()
+
+	seedContestInstanceChallenge(t, db, 10100, 20100, now)
+	seedContestInstanceChallenge(t, db, 10101, 20101, now)
+	seedContestInstanceChallenge(t, db, 10102, 20102, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30100, 20100, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDService(t, db, 70100, 30100, 20100, now)
+	seedContestInstanceAWDService(t, db, 70101, 30100, 20101, now)
+	seedContestInstanceAWDServiceWithVisibility(t, db, 70102, 30100, 20102, false, now)
+	seedContestInstanceTeam(t, db, 30100, 40100, 50100, now)
+	seedContestInstanceTeamMember(t, db, 30100, 40100, 50100, now)
+
+	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
+		t.Fatalf("ensure instances.service_id column: %v", err)
+	}
+
+	service := newContestInstanceTestService(t, db)
+	teamID := int64(40100)
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30100, &dto.PrewarmAdminContestAWDInstancesReq{
+		TeamID: &teamID,
+	})
+	if err != nil {
+		t.Fatalf("PrewarmAdminContestAWDInstances() error = %v", err)
+	}
+	if resp.Summary.Total != 2 || resp.Summary.Started != 2 || resp.Summary.Reused != 0 || resp.Summary.Failed != 0 {
+		t.Fatalf("unexpected prewarm summary: %+v", resp.Summary)
+	}
+	if len(resp.Results) != 2 {
+		t.Fatalf("expected 2 visible service results, got %+v", resp.Results)
+	}
+	for _, item := range resp.Results {
+		if item.TeamID != 40100 {
+			t.Fatalf("expected selected team only, got %+v", item)
+		}
+		if item.ServiceID == 70102 {
+			t.Fatalf("hidden service should not be prewarmed, got %+v", item)
+		}
+		if item.Outcome != "started" || item.Instance == nil {
+			t.Fatalf("expected started instance result, got %+v", item)
+		}
+	}
+}
+
+func TestServicePrewarmAdminContestAWDInstancesReturnsReusedAndFailedResults(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now().UTC()
+
+	seedContestInstanceChallenge(t, db, 10110, 20110, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30110, 20110, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDService(t, db, 70110, 30110, 20110, now)
+	seedContestInstanceTeam(t, db, 30110, 40110, 50110, now)
+	seedContestInstanceTeamMember(t, db, 30110, 40110, 50110, now)
+
+	if err := db.Create(&model.Team{
+		ID:         40111,
+		ContestID:  30110,
+		Name:       "Broken Team",
+		CaptainID:  0,
+		InviteCode: "broken",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create broken team: %v", err)
+	}
+
+	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
+		t.Fatalf("ensure instances.service_id column: %v", err)
+	}
+
+	contestID := int64(30110)
+	teamID := int64(40110)
+	serviceID := int64(70110)
+	if err := db.Create(&model.Instance{
+		ID:          90110,
+		UserID:      50110,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 20110,
+		ServiceID:   &serviceID,
+		ShareScope:  model.InstanceSharingPerTeam,
+		ContainerID: "existing-team-instance",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30110",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("seed shared instance: %v", err)
+	}
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30110, &dto.PrewarmAdminContestAWDInstancesReq{})
+	if err != nil {
+		t.Fatalf("PrewarmAdminContestAWDInstances() error = %v", err)
+	}
+	if resp.Summary.Total != 2 || resp.Summary.Started != 0 || resp.Summary.Reused != 1 || resp.Summary.Failed != 1 {
+		t.Fatalf("unexpected prewarm summary: %+v results=%#v", resp.Summary, resp.Results)
+	}
+
+	outcomes := make(map[int64]string, len(resp.Results))
+	for _, item := range resp.Results {
+		outcomes[item.TeamID] = item.Outcome
+		if item.TeamID == 40110 && item.Instance == nil {
+			t.Fatalf("expected reused instance for valid team, got %+v", item)
+		}
+		if item.TeamID == 40111 && strings.TrimSpace(item.ErrorMessage) == "" {
+			t.Fatalf("expected failure message for broken team, got %+v", item)
+		}
+	}
+	if outcomes[40110] != "reused" || outcomes[40111] != "failed" {
+		t.Fatalf("unexpected outcomes: %+v", outcomes)
+	}
+}
+
+func TestServicePrewarmAdminContestAWDInstancesRejectsNonRegistrationContest(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now().UTC()
+
+	seedContestInstanceChallenge(t, db, 10120, 20120, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30120, 20120, model.ContestStatusRunning, now)
+	seedContestInstanceAWDService(t, db, 70120, 30120, 20120, now)
+	seedContestInstanceTeam(t, db, 30120, 40120, 50120, now)
+	seedContestInstanceTeamMember(t, db, 30120, 40120, 50120, now)
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30120, &dto.PrewarmAdminContestAWDInstancesReq{})
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected non-registration contest prewarm rejected, resp=%+v err=%v", resp, err)
 	}
 }
 
@@ -490,8 +645,8 @@ func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeI
 	t.Helper()
 	if err := db.Create(&model.Image{
 		ID:        imageID,
-		Name:      "ctf/web",
-		Tag:       "v1",
+		Name:      fmt.Sprintf("ctf/web-%d", imageID),
+		Tag:       fmt.Sprintf("v%d", imageID),
 		Status:    model.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -531,13 +686,18 @@ func seedContestInstanceUser(t *testing.T, db *gorm.DB, userID int64, now time.T
 
 func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
+	seedContestInstanceAWDContestWithStatus(t, db, contestID, challengeID, model.ContestStatusRunning, now)
+}
+
+func seedContestInstanceAWDContestWithStatus(t *testing.T, db *gorm.DB, contestID, challengeID int64, status string, now time.Time) {
+	t.Helper()
 	if err := db.Create(&model.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
 		Mode:      model.ContestModeAWD,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    status,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -557,6 +717,11 @@ func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challen
 
 func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contestID, challengeID int64, now time.Time) {
 	t.Helper()
+	seedContestInstanceAWDServiceWithVisibility(t, db, serviceID, contestID, challengeID, true, now)
+}
+
+func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serviceID, contestID, challengeID int64, visible bool, now time.Time) {
+	t.Helper()
 	var challenge model.Challenge
 	if err := db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load challenge for awd service snapshot: %v", err)
@@ -567,7 +732,7 @@ func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contest
 		AWDChallengeID: challengeID,
 		DisplayName:    "Bank Portal",
 		Order:          1,
-		IsVisible:      true,
+		IsVisible:      visible,
 		ScoreConfig:    `{"points":100}`,
 		RuntimeConfig:  `{"checker_type":"http_standard"}`,
 		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, model.ContestAWDServiceSnapshot{

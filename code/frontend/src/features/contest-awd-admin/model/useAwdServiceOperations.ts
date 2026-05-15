@@ -2,9 +2,13 @@ import { ref, type Ref } from 'vue'
 
 import {
   getContestAWDInstanceOrchestration,
+  prewarmContestAWDInstances,
   startContestAWDTeamServiceInstance,
 } from '@/api/admin/contests'
-import type { ContestDetailData } from '@/api/contracts'
+import type {
+  AdminContestAWDInstancePrewarmSummaryData,
+  ContestDetailData,
+} from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 
 import {
@@ -81,6 +85,14 @@ export function useAwdServiceOperations(options: UseAwdServiceOperationsOptions)
 
     startingInstanceKey.value = `team:${teamId}`
     try {
+      if (selectedContest.value.status === 'registering') {
+        const result = await prewarmContestAWDInstances(selectedContest.value.id, {
+          team_id: teamId,
+        })
+        reportPrewarmSummary(result.summary, '队伍服务赛前预热')
+        await refreshInstanceOrchestration()
+        return
+      }
       for (const serviceId of serviceIds) {
         await startContestAWDTeamServiceInstance(selectedContest.value.id, {
           team_id: teamId,
@@ -118,6 +130,12 @@ export function useAwdServiceOperations(options: UseAwdServiceOperationsOptions)
 
     startingInstanceKey.value = 'all'
     try {
+      if (selectedContest.value.status === 'registering') {
+        const result = await prewarmContestAWDInstances(selectedContest.value.id)
+        reportPrewarmSummary(result.summary, '全部队伍赛前预热')
+        await refreshInstanceOrchestration()
+        return
+      }
       for (const target of targets) {
         await startContestAWDTeamServiceInstance(selectedContest.value.id, {
           team_id: target.teamId,
@@ -132,6 +150,17 @@ export function useAwdServiceOperations(options: UseAwdServiceOperationsOptions)
     } finally {
       startingInstanceKey.value = null
     }
+  }
+
+  function reportPrewarmSummary(
+    summary: AdminContestAWDInstancePrewarmSummaryData,
+    label: string
+  ) {
+    if (summary.failed > 0) {
+      toast.error(`${label}部分失败：新增 ${summary.started}，复用 ${summary.reused}，失败 ${summary.failed}`)
+      return
+    }
+    toast.success(`${label}完成：新增 ${summary.started}，复用 ${summary.reused}`)
   }
 
   return {

@@ -28,6 +28,7 @@ type practiceService interface {
 	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
 	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
+	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error)
@@ -182,6 +183,34 @@ func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 		req.TeamID,
 		req.ServiceID,
 	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// PrewarmAdminContestAWDInstances 赛前批量预热 AWD 队伍服务实例
+// POST /api/v1/admin/contests/:id/awd/instances/prewarm
+func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.PrewarmAdminContestAWDInstancesReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	if req.TeamID != nil && *req.TeamID <= 0 {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	resp, err := h.service.PrewarmAdminContestAWDInstances(c.Request.Context(), contestID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

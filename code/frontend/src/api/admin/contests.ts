@@ -25,6 +25,8 @@ import type {
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
   AdminContestAWDInstanceItemData,
+  AdminContestAWDInstancePrewarmData,
+  AdminContestAWDInstancePrewarmItemData,
   AdminContestAWDInstanceOrchestrationData,
   AdminContestAWDInstanceServiceData,
   AdminContestAWDInstanceTeamData,
@@ -461,11 +463,32 @@ interface RawAdminContestAWDInstanceItem {
   instance?: RawInstanceData | null
 }
 
+interface RawAdminContestAWDInstancePrewarmItem {
+  team_id: string | number
+  service_id: string | number
+  outcome: 'started' | 'reused' | 'failed'
+  instance?: RawInstanceData | null
+  error_message?: string | null
+}
+
+interface RawAdminContestAWDInstancePrewarmSummary {
+  total: number
+  started: number
+  reused: number
+  failed: number
+}
+
 interface RawAdminContestAWDInstanceOrchestration {
   contest_id: string | number
   teams: RawAdminContestAWDInstanceTeamItem[]
   services: RawAdminContestAWDInstanceServiceItem[]
   instances: RawAdminContestAWDInstanceItem[]
+}
+
+interface RawAdminContestAWDInstancePrewarm {
+  contest_id: string | number
+  results: RawAdminContestAWDInstancePrewarmItem[]
+  summary: RawAdminContestAWDInstancePrewarmSummary
 }
 
 interface ContestListParams {
@@ -925,6 +948,18 @@ function normalizeAdminContestAWDInstanceItem(
   }
 }
 
+function normalizeAdminContestAWDInstancePrewarmItem(
+  item: RawAdminContestAWDInstancePrewarmItem
+): AdminContestAWDInstancePrewarmItemData {
+  return {
+    team_id: String(item.team_id),
+    service_id: String(item.service_id),
+    outcome: item.outcome,
+    instance: item.instance ? normalizeInstanceData(item.instance) : undefined,
+    error_message: item.error_message || undefined,
+  }
+}
+
 function normalizeAdminContestAWDInstanceOrchestration(
   item: RawAdminContestAWDInstanceOrchestration
 ): AdminContestAWDInstanceOrchestrationData {
@@ -933,6 +968,21 @@ function normalizeAdminContestAWDInstanceOrchestration(
     teams: item.teams.map(normalizeAdminContestAWDInstanceTeam),
     services: item.services.map(normalizeAdminContestAWDInstanceService),
     instances: item.instances.map(normalizeAdminContestAWDInstanceItem),
+  }
+}
+
+function normalizeAdminContestAWDInstancePrewarm(
+  item: RawAdminContestAWDInstancePrewarm
+): AdminContestAWDInstancePrewarmData {
+  return {
+    contest_id: String(item.contest_id),
+    results: item.results.map(normalizeAdminContestAWDInstancePrewarmItem),
+    summary: {
+      total: item.summary?.total ?? 0,
+      started: item.summary?.started ?? 0,
+      reused: item.summary?.reused ?? 0,
+      failed: item.summary?.failed ?? 0,
+    },
   }
 }
 
@@ -1222,6 +1272,23 @@ export async function startContestAWDTeamServiceInstance(
     },
   })
   return normalizeAdminContestAWDInstanceItem(response)
+}
+
+export async function prewarmContestAWDInstances(
+  contestId: string,
+  data?: { team_id?: string | number }
+): Promise<AdminContestAWDInstancePrewarmData> {
+  const response = await request<RawAdminContestAWDInstancePrewarm>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/instances/prewarm`,
+    data:
+      data?.team_id == null
+        ? {}
+        : {
+            team_id: Number(data.team_id),
+          },
+  })
+  return normalizeAdminContestAWDInstancePrewarm(response)
 }
 
 export async function createContestAWDService(
