@@ -98,13 +98,12 @@ describe('PlatformOverview', () => {
   })
 
   it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(adminDashboardPageSource).toContain(
-      'class="header-btn header-btn--primary overview-action-main"'
-    )
+    expect(adminDashboardPageSource).toContain('class="header-btn header-btn--primary"')
     expect(adminDashboardPageSource).toContain('class="header-btn header-btn--ghost"')
     expect(adminDashboardPageSource).toContain(
       'class="header-btn header-btn--ghost overview-anchor-btn"'
     )
+    expect(adminDashboardPageSource).not.toContain('overview-action-main')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
   })
@@ -115,7 +114,7 @@ describe('PlatformOverview', () => {
     )
     expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')
     expect(adminDashboardPageSource).toContain('class="content-pane overview-content"')
-    expect(adminDashboardPageSource).toContain('class="workspace-page-header"')
+    expect(adminDashboardPageSource).toContain('class="workspace-page-header overview-page-header"')
     expect(adminDashboardPageSource).not.toContain('class="workspace-hero"')
     expect(adminDashboardPageSource).not.toContain('tab-panel')
     expect(adminDashboardPageSource).toContain('class="hero-title workspace-page-title"')

@@ -5,10 +5,9 @@ import adminDashboardSource from '@/components/platform/dashboard/PlatformOvervi
 describe('admin dashboard surface alignment', () => {
   it('softens the hero primary action border and focus ring to match the dark surface system', () => {
     expect(adminDashboardSource).toContain('class="header-actions overview-action-grid"')
-    expect(adminDashboardSource).toContain(
-      'class="header-btn header-btn--primary overview-action-main"'
-    )
+    expect(adminDashboardSource).toContain('class="header-btn header-btn--primary"')
     expect(adminDashboardSource).toContain('class="header-btn header-btn--ghost"')
+    expect(adminDashboardSource).not.toContain('overview-action-main')
     expect(adminDashboardSource).toMatch(
       /\.workspace-alert-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--journal-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
     )
@@ -17,11 +16,15 @@ describe('admin dashboard surface alignment', () => {
   it('frames the overview hero action rail as a compact operational panel', () => {
     expect(adminDashboardSource).toContain('class="overview-hero-actions"')
     expect(adminDashboardSource).toContain('class="header-actions overview-action-grid"')
+    expect(adminDashboardSource).toContain('class="workspace-page-header overview-page-header"')
     expect(adminDashboardSource).toMatch(
       /\.overview-hero-actions\s*\{[\s\S]*border:\s*1px solid var\(--workspace-line-soft\);[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:/s
     )
     expect(adminDashboardSource).toMatch(
       /\.overview-hero-actions\s*\{[\s\S]*align-self:\s*start;[\s\S]*width:\s*min\(19rem,\s*100%\);[\s\S]*padding:\s*var\(--space-3\);/s
+    )
+    expect(adminDashboardSource).toMatch(
+      /\.overview-page-header\s*\{[\s\S]*align-items:\s*start;/s
     )
     expect(adminDashboardSource).toMatch(
       /\.hero-meta-badge\s*\{[\s\S]*padding-bottom:\s*var\(--space-2\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s

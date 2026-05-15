@@ -42,7 +42,7 @@ const {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell">
     <main class="content-pane overview-content">
         <section id="admin-dashboard-overview" class="overview-panel">
-          <header class="workspace-page-header">
+          <header class="workspace-page-header overview-page-header">
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Operations Workspace</div>
               <h1 class="hero-title workspace-page-title">系统值守台</h1>
@@ -75,7 +75,7 @@ const {
               <div class="header-actions overview-action-grid">
                 <button
                   type="button"
-                  class="header-btn header-btn--primary overview-action-main"
+                  class="header-btn header-btn--primary"
                   @click="emit('openAuditLog')"
                 >
                   <Clock class="h-4 w-4" />
@@ -407,6 +407,10 @@ const {
   box-shadow: var(--workspace-shadow-panel);
 }
 
+.overview-page-header {
+  align-items: start;
+}
+
 .hero-meta-badge {
   display: grid;
   gap: var(--space-1);
@@ -454,10 +458,6 @@ const {
   --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
   justify-content: center;
   min-width: 0;
-}
-
-.overview-action-main {
-  grid-column: 1 / -1;
 }
 
 .workspace-alert-actions > .ui-btn.ui-btn--ghost {
