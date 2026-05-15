@@ -387,7 +387,6 @@ const detailTabs = workspaceTabs.filter((tab) => tab.key !== 'overview')
 .content-pane {
   display: grid;
   gap: var(--space-section-gap-compact, var(--space-4));
-  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
 }
 
 .student-analysis-overview-head {

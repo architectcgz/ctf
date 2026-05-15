@@ -86,9 +86,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
     )
-    expect(studentAnalysisSource).toMatch(
-      /\.content-pane\s*\{[\s\S]*padding-top:\s*var\(--workspace-tabs-panel-gap,\s*var\(--space-workspace-tabs-panel-gap\)\);/s
-    )
+    expect(studentAnalysisSource).not.toMatch(/\.content-pane\s*\{[\s\S]*padding-top:/s)
     expect(studentAnalysisSource).toMatch(
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/s
     )

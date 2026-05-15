@@ -175,6 +175,11 @@ describe('workspace shell shared styles', () => {
     expect(imageManageSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
   })
 
+  it('top-tabs 工作区页面也不应在局部重复声明 content-pane 顶部间距', () => {
+    expect(studentAnalysisPageSource).toContain('<main class="content-pane">')
+    expect(studentAnalysisPageSource).not.toMatch(/\.content-pane\s*\{[^}]*padding-top:/s)
+  })
+
   it('工作区页面不应继续在局部重复声明 tab 面板切换动画', () => {
     for (const source of [
       dashboardViewSource,
