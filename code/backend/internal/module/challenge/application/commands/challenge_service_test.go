@@ -77,7 +77,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateChallenge() error = %v", err)
 	}
-	if resp.Status != model.ChallengeStatusDraft {
+	if resp.Status != string(model.ChallengeStatusDraft) {
 		t.Fatalf("unexpected status: %s", resp.Status)
 	}
 	if resp.CreatedBy == nil || *resp.CreatedBy != 1001 {
@@ -211,7 +211,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	// 创建靶场和运行中的实例
-	challenge := &model.Challenge{Title: "Test", Status: "draft"}
+	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
 	db.Create(challenge)
 	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
 

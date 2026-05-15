@@ -145,7 +145,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		return nil, err
 	}
 	if challenge.Status != model.ChallengeStatusPublished {
-		return nil, errcode.ErrForbidden
+		return nil, buildChallengeAccessUnavailableError(challenge.Status)
 	}
 
 	var isSolved bool
@@ -180,6 +180,25 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 	resp.TotalAttempts = attempts
 	resp.IsSolved = isSolved
 	return resp, nil
+}
+
+func buildChallengeAccessUnavailableError(status model.ChallengeStatus) error {
+	switch status {
+	case model.ChallengeStatusDraft:
+		return errcode.New(
+			errcode.ErrChallengeNotPublish.Code,
+			"题目为草稿，无法访问",
+			errcode.ErrChallengeNotPublish.HTTPStatus,
+		)
+	case model.ChallengeStatusArchived:
+		return errcode.New(
+			errcode.ErrChallengeNotPublish.Code,
+			"题目已归档，无法访问",
+			errcode.ErrChallengeNotPublish.HTTPStatus,
+		)
+	default:
+		return errcode.ErrChallengeNotPublish
+	}
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {

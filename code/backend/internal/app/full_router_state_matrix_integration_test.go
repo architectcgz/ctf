@@ -932,7 +932,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var createdChallenge dto.ChallengeResp
 	decodeFullRouterData(t, resp, &createdChallenge)
-	if createdChallenge.Status != model.ChallengeStatusDraft || len(createdChallenge.Hints) != 2 {
+	if createdChallenge.Status != string(model.ChallengeStatusDraft) || len(createdChallenge.Hints) != 2 {
 		t.Fatalf("unexpected created challenge: %+v", createdChallenge)
 	}
 

@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+type ChallengeStatus string
+
 const (
 	ChallengeDifficultyBeginner = "beginner"
 	ChallengeDifficultyEasy     = "easy"
@@ -13,9 +15,9 @@ const (
 	ChallengeDifficultyHard     = "hard"
 	ChallengeDifficultyInsane   = "insane"
 
-	ChallengeStatusDraft     = "draft"
-	ChallengeStatusPublished = "published"
-	ChallengeStatusArchived  = "archived"
+	ChallengeStatusDraft     ChallengeStatus = "draft"
+	ChallengeStatusPublished ChallengeStatus = "published"
+	ChallengeStatusArchived  ChallengeStatus = "archived"
 
 	FlagTypeStatic       = "static"
 	FlagTypeDynamic      = "dynamic"
@@ -50,7 +52,7 @@ type Challenge struct {
 	Points          int             `gorm:"column:points"`
 	ImageID         int64           `gorm:"column:image_id"`
 	AttachmentURL   string          `gorm:"column:attachment_url"`
-	Status          string          `gorm:"column:status"`
+	Status          ChallengeStatus `gorm:"column:status"`
 	FlagType        string          `gorm:"column:flag_type;default:'static'"`
 	FlagHash        string          `gorm:"column:flag_hash;size:128"`
 	FlagSalt        string          `gorm:"column:flag_salt;size:64"`

@@ -216,7 +216,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CommitChallengeImport() error = %v", err)
 	}
-	if resp.Status != model.ChallengeStatusDraft {
+	if resp.Status != string(model.ChallengeStatusDraft) {
 		t.Fatalf("expected draft challenge, got %q", resp.Status)
 	}
 

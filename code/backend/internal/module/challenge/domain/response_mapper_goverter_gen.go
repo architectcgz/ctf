@@ -177,7 +177,7 @@ func (c *challengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge
 	dtoChallengeResp.ImageID = source.ImageID
 	dtoChallengeResp.AttachmentURL = source.AttachmentURL
 	dtoChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
-	dtoChallengeResp.Status = source.Status
+	dtoChallengeResp.Status = string(source.Status)
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
 		dtoChallengeResp.CreatedBy = &xint64
