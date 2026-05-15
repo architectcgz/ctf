@@ -17,10 +17,8 @@
   --el-text-color-regular: var(--color-text-secondary);
   --el-bg-color: var(--color-bg-surface);
   --el-bg-color-overlay: var(--color-bg-elevated);
-  --workspace-tab-panel-gap-top: 1.5rem;
-  --workspace-tab-panel-gap-top-tight: 0.2rem;
   --workspace-topbar-tabs-gap: 0;
-  --workspace-tabs-panel-gap: var(--workspace-tab-panel-gap-top-tight);
+  --workspace-tabs-panel-gap: var(--space-workspace-tabs-panel-gap);
   --workspace-directory-gap-top: 0.75rem;
   --workspace-directory-gap-pagination: 0.5rem;
   --workspace-directory-page-block-gap: var(--space-5);
@@ -494,7 +492,7 @@ option {
         var(--journal-surface-subtle, var(--color-bg-elevated)) 74%,
         var(--color-bg-base)
       )
-  );
+    );
   display: grid;
   gap: 0;
   box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
@@ -925,19 +923,78 @@ option {
   max-width: 48rem;
 }
 
+.workspace-panel-header {
+  min-width: 0;
+}
+
+.workspace-panel-divider {
+  margin-block: var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap))
+    var(--space-1-5);
+  border-top: 1px solid
+    var(
+      --workspace-panel-divider-border,
+      var(--journal-divider, color-mix(in srgb, var(--color-border-default) 88%, transparent))
+    );
+}
+
+.workspace-panel-header__intro
+  > :where(
+    .workspace-page-title,
+    .journal-page-title,
+    .challenge-page .challenge-title,
+    .contest-page .contest-title,
+    .instance-page .instance-title,
+    .scoreboard-page .scoreboard-title,
+    .notification-page .notification-title,
+    .teacher-management-shell .teacher-title,
+    .workspace-shell .manage-title,
+    .workspace-shell .hero-title,
+    .hero-copy .hero-title,
+    .admin-page-title,
+    .image-header .image-title,
+    .report-page .report-title,
+    .topology-page--template-library .topology-hero-title
+  ) {
+  margin-top: var(--workspace-panel-header-title-gap, var(--space-workspace-panel-title-gap));
+}
+
+.workspace-panel-header__intro
+  > :where(
+    .workspace-page-copy,
+    .challenge-page .challenge-subtitle,
+    .contest-page .contest-subtitle,
+    .instance-page .instance-subtitle,
+    .scoreboard-page .scoreboard-subtitle,
+    .notification-page .notification-subtitle,
+    .teacher-management-shell .teacher-copy,
+    .admin-page-copy,
+    .image-header .image-copy,
+    .report-page .report-copy,
+    .skill-overview-copy,
+    .topology-page--template-library .topology-hero-description
+  ) {
+  margin-top: var(--workspace-panel-header-copy-gap, var(--space-workspace-panel-copy-gap));
+}
+
+.workspace-panel-header__meta,
+.workspace-panel-header__actions,
+.workspace-panel-header__summary {
+  margin-top: var(--workspace-panel-header-block-gap, var(--space-workspace-panel-block-gap));
+}
+
 .top-tabs + .tab-panel,
 .workspace-tabbar.top-tabs + .tab-panel {
-  padding-top: var(--workspace-tab-panel-gap-top-tight);
+  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
 }
 
 .top-tabs + .content-pane,
 .workspace-tabbar.top-tabs + .content-pane {
-  padding-top: var(--workspace-tab-panel-gap-top-tight);
+  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
 }
 
 .top-tabs + .skill-teacher-panel,
 .workspace-tabbar.top-tabs + .skill-teacher-panel {
-  margin-top: var(--workspace-tab-panel-gap-top-tight);
+  margin-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
 }
 
 ::selection {

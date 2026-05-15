@@ -9,6 +9,7 @@ import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 
+const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 const globalStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -21,9 +22,8 @@ describe('page tabs shared styles', () => {
 
   it('应提供顶部标题、页签轨道与面板之间的全局间距语义变量', () => {
     expect(globalStyleSource).toContain('--workspace-topbar-tabs-gap: 0;')
-    expect(globalStyleSource).toContain(
-      '--workspace-tabs-panel-gap: var(--workspace-tab-panel-gap-top-tight);'
-    )
+    expect(globalStyleSource).toContain('--workspace-tabs-panel-gap: var(--space-workspace-tabs-panel-gap);')
+    expect(themeSource).toContain('--space-workspace-tabs-panel-gap: var(--space-3-5);')
     expect(pageTabsSource).toContain(
       'padding-bottom: var(--journal-topbar-padding-bottom, var(--workspace-topbar-tabs-gap, 0));'
     )

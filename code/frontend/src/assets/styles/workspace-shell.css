@@ -140,6 +140,21 @@
   padding: var(--workspace-content-padding, var(--space-workspace-content-padding));
 }
 
+.workspace-shell > .top-tabs + .content-pane,
+.workspace-shell > .workspace-tabbar.top-tabs + .content-pane {
+  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
+}
+
+.workspace-shell > .top-tabs + .tab-panel,
+.workspace-shell > .workspace-tabbar.top-tabs + .tab-panel {
+  padding-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
+}
+
+.workspace-shell > .top-tabs + .skill-teacher-panel,
+.workspace-shell > .workspace-tabbar.top-tabs + .skill-teacher-panel {
+  margin-top: var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap));
+}
+
 .workspace-shell .workspace-page-header {
   display: grid;
   grid-template-columns: var(--workspace-page-header-columns, minmax(0, 1fr) auto);

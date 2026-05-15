@@ -2,7 +2,11 @@
 import { computed } from 'vue'
 import { BarChart2, Target, Trophy } from 'lucide-vue-next'
 
-import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
+import {
+  ChallengeCategoryPill,
+  getChallengeCategoryColor,
+  toChallengeCategory,
+} from '@/entities/challenge'
 
 import { rankCategoryActionItems } from './utils'
 
@@ -99,6 +103,20 @@ function openPrimaryCategory(): void {
 function categoryPillValue(category: string) {
   return toChallengeCategory(category)
 }
+
+function categoryActionItemStyle(category: string, isPrimary: boolean): Record<string, string> {
+  const normalizedCategory = toChallengeCategory(category)
+  if (!normalizedCategory) {
+    return {}
+  }
+
+  const color = getChallengeCategoryColor(normalizedCategory)
+
+  return {
+    '--journal-soft-panel-item-border': `color-mix(in srgb, ${color} ${isPrimary ? 40 : 30}%, var(--journal-shell-border))`,
+    '--journal-soft-panel-item-background': `color-mix(in srgb, ${color} ${isPrimary ? 10 : 6}%, var(--journal-surface-subtle))`,
+  }
+}
 </script>
 
 <template>
@@ -111,45 +129,35 @@ function categoryPillValue(category: string) {
     "
   >
     <div :class="embedded ? undefined : 'content-pane'">
-      <div class="category-header">
-        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-          {{ headlineTitle }}
-        </h1>
-        <p class="workspace-page-copy max-w-2xl">
-          {{
-            hasCategoryStats
-              ? '按分类找短板，先补当前最需要回填的那一类。'
-              : '先完成几道题，这里会自动排出下一步最该补的分类。'
-          }}
-        </p>
-
-        <div
-          class="mt-5 flex flex-wrap gap-3"
-          role="group"
-          aria-label="分类进度快捷操作"
-        >
-          <button
-            class="journal-btn-primary"
-            @click="openPrimaryCategory"
-          >
-            {{ primaryCategory ? `先去 ${primaryCategory.category}` : '去训练' }}
-          </button>
-          <button
-            class="journal-btn-outline"
-            @click="emit('openChallenges')"
-          >
-            浏览全部题目
-          </button>
-          <button
-            class="journal-btn-outline"
-            @click="emit('openSkillProfile')"
-          >
-            能力画像
-          </button>
+      <div class="workspace-panel-header category-header">
+        <div class="workspace-panel-header__intro">
+          <div class="workspace-overline">Category</div>
+          <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+            {{ headlineTitle }}
+          </h1>
+          <p class="workspace-page-copy max-w-2xl">
+            {{
+              hasCategoryStats
+                ? '按分类找短板，先补当前最需要回填的那一类。'
+                : '先完成几道题，这里会自动排出下一步最该补的分类。'
+            }}
+          </p>
         </div>
 
         <div
-          class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+          class="workspace-panel-header__actions flex flex-wrap gap-3"
+          role="group"
+          aria-label="分类进度快捷操作"
+        >
+          <button class="journal-btn-primary" @click="openPrimaryCategory">
+            {{ primaryCategory ? `先去 ${primaryCategory.category}` : '去训练' }}
+          </button>
+          <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
+          <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
+        </div>
+
+        <div
+          class="workspace-panel-header__summary category-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"
         >
           <article
             v-for="card in summaryCards"
@@ -169,39 +177,26 @@ function categoryPillValue(category: string) {
           </article>
         </div>
       </div>
+      <div class="workspace-panel-divider" aria-hidden="true" />
 
-      <div
-        class="category-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-        :class="{ 'category-board--embedded': embedded }"
-      >
+      <div class="category-board px-1 pt-0 md:px-2 md:pt-0">
         <section class="category-section">
-          <div
-            v-if="rankedCategories.length > 0"
-            class="category-toolbar"
-          >
-            <p class="category-toolbar__copy">
-              从排序最前的分类开始，完成一类再继续往后推。
-            </p>
+          <div v-if="rankedCategories.length > 0" class="category-toolbar">
+            <p class="category-toolbar__copy">从排序最前的分类开始，完成一类再继续往后推。</p>
           </div>
 
-          <div
-            v-if="rankedCategories.length === 0"
-            class="journal-soft-empty-state mt-5"
-          >
+          <div v-if="rankedCategories.length === 0" class="journal-soft-empty-state mt-5">
             当前还没有分类统计数据，先完成几道题再回来查看。
           </div>
 
-          <div
-            v-else
-            class="category-action-list journal-soft-panel-shell mt-5"
-          >
+          <div v-else class="category-action-list journal-soft-panel-shell mt-5">
             <article
               v-for="(item, index) in rankedCategories"
               :key="item.category"
               class="category-action-item journal-soft-panel-item"
-              :class="{
-                'journal-soft-panel-item--accent': primaryCategory?.category === item.category,
-              }"
+              :style="
+                categoryActionItemStyle(item.category, primaryCategory?.category === item.category)
+              "
               :data-test="`category-action-${item.category}`"
             >
               <div class="category-action-item__body">
@@ -216,7 +211,9 @@ function categoryPillValue(category: string) {
                     />
                     <span v-else class="category-action-item__name">{{ item.category }}</span>
                     <span class="category-action-item__rate">{{ item.rate }}%</span>
-                    <span class="category-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                    <span class="category-action-item__count"
+                      >{{ item.solved }}/{{ item.total }}</span
+                    >
                   </div>
                   <p class="journal-soft-body-copy mt-2 text-sm leading-6">
                     {{ categoryActionCopy(item, index) }}
@@ -263,11 +260,6 @@ function categoryPillValue(category: string) {
   --journal-soft-button-primary-color: var(--journal-accent);
 }
 
-.category-header {
-  display: grid;
-  gap: var(--space-3);
-}
-
 .category-summary-strip {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
@@ -275,14 +267,6 @@ function categoryPillValue(category: string) {
 .category-summary-strip.metric-panel-default-surface {
   --metric-panel-border: var(--journal-soft-border);
   --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-}
-
-.category-board {
-  border-top: 1px solid var(--journal-divider);
-}
-
-.category-board--embedded {
-  margin-top: var(--space-5);
 }
 
 .category-toolbar {

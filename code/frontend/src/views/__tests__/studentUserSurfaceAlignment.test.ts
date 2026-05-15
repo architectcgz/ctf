@@ -12,6 +12,7 @@ import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
+const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,
   'utf-8'
@@ -22,6 +23,72 @@ const journalUserShellSource = readFileSync(
 )
 
 describe('student and user surface alignment', () => {
+  it('student dashboard panel headers 应复用 timeline 节奏抽出的共享 header 间距原语', () => {
+    expect(themeSource).toContain(
+      '--space-workspace-panel-title-gap: var(--workspace-page-title-margin-top);'
+    )
+    expect(themeSource).toContain(
+      '--space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);'
+    )
+    expect(themeSource).toContain('--space-workspace-panel-block-gap: var(--space-5);')
+    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-1);')
+    expect(styleSource).toContain('.workspace-panel-header__intro')
+    expect(styleSource).toContain('.workspace-panel-divider')
+    expect(styleSource).toContain('.workspace-panel-header__meta,')
+    expect(styleSource).toContain('.workspace-panel-header__actions,')
+    expect(styleSource).toContain('.workspace-panel-header__summary {')
+    expect(styleSource).toContain(
+      'var(--workspace-panel-header-title-gap, var(--space-workspace-panel-title-gap))'
+    )
+    expect(styleSource).toContain(
+      'var(--workspace-panel-header-copy-gap, var(--space-workspace-panel-copy-gap))'
+    )
+    expect(styleSource).toContain(
+      'var(--workspace-panel-header-block-gap, var(--space-workspace-panel-block-gap))'
+    )
+    expect(styleSource).toContain(
+      'var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap))'
+    )
+    expect(studentOverviewSource).toContain(
+      'class="workspace-panel-header__actions journal-actions"'
+    )
+    expect(studentRecommendationSource).toContain(
+      'class="workspace-panel-header recommendation-header"'
+    )
+    expect(studentCategoryProgressSource).toContain(
+      'class="workspace-panel-header category-header"'
+    )
+    expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
+    expect(studentTimelineSource).toContain('class="workspace-panel-header timeline-header"')
+    expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
+    expect(studentRecommendationSource).toContain('class="workspace-panel-divider"')
+    expect(studentCategoryProgressSource).toContain('class="workspace-panel-divider"')
+    expect(studentDifficultySource).toContain('class="workspace-panel-divider"')
+  })
+
+  it('student dashboard tabs 应通过共享 divider 收口 header 和 body 之间的分隔，而不是继续各自维护外层边线', () => {
+    expect(studentOverviewSource).not.toMatch(/\.journal-board::before\s*\{/)
+    expect(studentOverviewSource).not.toContain('journal-board--embedded')
+
+    expect(studentRecommendationSource).not.toContain('recommend-board mt-6')
+    expect(studentRecommendationSource).not.toContain('recommend-board--embedded')
+    expect(studentRecommendationSource).not.toMatch(
+      /\.recommend-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+    )
+
+    expect(studentCategoryProgressSource).not.toContain('category-board mt-6')
+    expect(studentCategoryProgressSource).not.toContain('category-board--embedded')
+    expect(studentCategoryProgressSource).not.toMatch(
+      /\.category-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+    )
+
+    expect(studentDifficultySource).not.toContain('difficulty-board mt-6')
+    expect(studentDifficultySource).not.toContain('difficulty-board--embedded')
+    expect(studentDifficultySource).not.toMatch(
+      /\.difficulty-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+    )
+  })
+
   it('student dashboard detail pages should use softened control and track tokens instead of bright hardcoded borders', () => {
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-shell')
     expect(journalSoftSurfacesSource).toContain('--journal-shell-border: color-mix')
@@ -29,7 +96,9 @@ describe('student and user surface alignment', () => {
     expect(journalSoftSurfacesSource).toContain('--journal-divider: color-mix')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-shell')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item')
-    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item--accent')
+    expect(journalSoftSurfacesSource).toContain(
+      '.journal-soft-surface .journal-soft-panel-item--accent'
+    )
     expect(studentOverviewSource).toMatch(
       /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
     )
@@ -40,6 +109,8 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).toContain('journal-soft-surface')
     expect(studentDifficultySource).toContain('journal-soft-panel-shell')
     expect(studentDifficultySource).toContain('journal-soft-panel-item')
+    expect(studentDifficultySource).toContain('difficultyActionItemStyle(')
+    expect(studentDifficultySource).toContain('getChallengeDifficultyColor')
     expect(studentDifficultySource).toContain('.difficulty-note')
     expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
@@ -72,7 +143,7 @@ describe('student and user surface alignment', () => {
 
   it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
     expect(studentTimelineSource).toContain(
-      'class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentTimelineSource).toContain(
       'class="timeline-metric-card progress-card metric-panel-card"'
@@ -136,7 +207,7 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).toContain('当前目标难度')
     expect(studentRecommendationSource).toContain('浏览全部题目')
     expect(studentRecommendationSource).toContain(
-      'class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary recommendation-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentRecommendationSource).toContain(
       'class="recommendation-summary-card progress-card metric-panel-card"'
@@ -178,7 +249,7 @@ describe('student and user surface alignment', () => {
   it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
     expect(studentCategoryProgressSource).toContain('优先补这个分类')
     expect(studentCategoryProgressSource).toContain(
-      'class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary category-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentCategoryProgressSource).toContain(
       'class="category-summary-card progress-card metric-panel-card"'
@@ -202,7 +273,7 @@ describe('student and user surface alignment', () => {
   it('student difficulty 应切换到强度推进工作区和 shared metric-panel 摘要卡片栈，而不是继续保留说明型双栏结构', () => {
     expect(studentDifficultySource).toContain('先推这一档强度')
     expect(studentDifficultySource).toContain(
-      'class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary difficulty-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentDifficultySource).toContain(
       'class="difficulty-summary-card progress-card metric-panel-card"'

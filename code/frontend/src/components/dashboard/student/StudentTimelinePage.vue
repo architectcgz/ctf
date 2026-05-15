@@ -114,34 +114,37 @@ function changeTimelinePage(page: number): void {
         : 'journal-shell journal-hero timeline-shell-flat px-6 py-6 md:px-8'
     "
   >
-    <div class="timeline-header">
-      <div>
+    <div class="workspace-panel-header timeline-header">
+      <div class="workspace-panel-header__intro">
+        <div class="workspace-overline">
+          Timeline
+        </div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           训练记录总览
         </h1>
         <p class="workspace-page-copy max-w-2xl">
           按时间回看最近训练动作，看看节奏有没有断。
         </p>
-        <div
-          class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+      </div>
+      <div
+        class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"
+      >
+        <article
+          v-for="metric in timelineMetrics"
+          :key="metric.key"
+          class="timeline-metric-card progress-card metric-panel-card"
         >
-          <article
-            v-for="metric in timelineMetrics"
-            :key="metric.key"
-            class="timeline-metric-card progress-card metric-panel-card"
-          >
-            <div class="journal-note-label progress-card-label metric-panel-label">
-              <span>{{ metric.label }}</span>
-              <component :is="metric.icon" class="h-4 w-4" />
-            </div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ metric.value }}
-            </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              {{ metric.helper }}
-            </div>
-          </article>
-        </div>
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            <span>{{ metric.label }}</span>
+            <component :is="metric.icon" class="h-4 w-4" />
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ metric.value }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ metric.helper }}
+          </div>
+        </article>
       </div>
     </div>
 
@@ -239,11 +242,6 @@ function changeTimelinePage(page: number): void {
   border-radius: 0 !important;
   box-shadow: none;
   overflow: visible;
-}
-
-.timeline-header {
-  display: grid;
-  gap: var(--space-4);
 }
 
 .timeline-metric-grid {

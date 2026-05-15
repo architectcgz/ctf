@@ -2,7 +2,11 @@
 import { computed } from 'vue'
 import { BarChart2, Flame, Target } from 'lucide-vue-next'
 
-import { ChallengeDifficultyText, toChallengeDifficulty } from '@/entities/challenge'
+import {
+  ChallengeDifficultyText,
+  getChallengeDifficultyColor,
+  toChallengeDifficulty,
+} from '@/entities/challenge'
 import { difficultyLabel } from '@/utils/challenge'
 
 import { orderDifficultyActionItems, selectDifficultyPriority } from './utils'
@@ -118,6 +122,20 @@ function openPrimaryDifficulty(): void {
 function difficultyPillValue(difficulty: string) {
   return toChallengeDifficulty(difficulty)
 }
+
+function difficultyActionItemStyle(difficulty: string, isPrimary: boolean): Record<string, string> {
+  const normalizedDifficulty = toChallengeDifficulty(difficulty)
+  if (!normalizedDifficulty) {
+    return {}
+  }
+
+  const color = getChallengeDifficultyColor(normalizedDifficulty)
+
+  return {
+    '--journal-soft-panel-item-border': `color-mix(in srgb, ${color} ${isPrimary ? 40 : 30}%, var(--journal-shell-border))`,
+    '--journal-soft-panel-item-background': `color-mix(in srgb, ${color} ${isPrimary ? 10 : 6}%, var(--journal-surface-subtle))`,
+  }
+}
 </script>
 
 <template>
@@ -130,19 +148,26 @@ function difficultyPillValue(difficulty: string) {
     "
   >
     <div :class="embedded ? undefined : 'content-pane'">
-      <div class="difficulty-header">
-        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-          {{ headlineTitle }}
-        </h1>
-        <p class="workspace-page-copy max-w-2xl">
-          {{
-            hasDifficultyStats
-              ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
-              : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
-          }}
-        </p>
+      <div class="workspace-panel-header difficulty-header">
+        <div class="workspace-panel-header__intro">
+          <div class="workspace-overline">Difficulty</div>
+          <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+            {{ headlineTitle }}
+          </h1>
+          <p class="workspace-page-copy max-w-2xl">
+            {{
+              hasDifficultyStats
+                ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
+                : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
+            }}
+          </p>
+        </div>
 
-        <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="难度进度快捷操作">
+        <div
+          class="workspace-panel-header__actions flex flex-wrap gap-3"
+          role="group"
+          aria-label="难度进度快捷操作"
+        >
           <button class="journal-btn-primary" @click="openPrimaryDifficulty">
             {{
               primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
@@ -152,7 +177,7 @@ function difficultyPillValue(difficulty: string) {
         </div>
 
         <div
-          class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+          class="workspace-panel-header__summary difficulty-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"
         >
           <article
             v-for="card in summaryCards"
@@ -172,11 +197,9 @@ function difficultyPillValue(difficulty: string) {
           </article>
         </div>
       </div>
+      <div class="workspace-panel-divider" aria-hidden="true" />
 
-      <div
-        class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-        :class="{ 'difficulty-board--embedded': embedded }"
-      >
+      <div class="difficulty-board px-1 pt-0 md:px-2 md:pt-0">
         <section class="difficulty-section">
           <div v-if="hasDifficultyStats" class="difficulty-toolbar">
             <p class="difficulty-toolbar__copy">
@@ -193,10 +216,14 @@ function difficultyPillValue(difficulty: string) {
               v-for="(item, index) in orderedStats"
               :key="item.difficulty"
               class="difficulty-action-item journal-soft-panel-item"
+              :style="
+                difficultyActionItemStyle(
+                  item.difficulty,
+                  primaryDifficulty?.difficulty === item.difficulty
+                )
+              "
               :class="{
                 'difficulty-action-item--primary':
-                  primaryDifficulty?.difficulty === item.difficulty,
-                'journal-soft-panel-item--accent':
                   primaryDifficulty?.difficulty === item.difficulty,
               }"
               :data-test="`difficulty-action-${item.difficulty}`"
@@ -264,11 +291,6 @@ function difficultyPillValue(difficulty: string) {
 </template>
 
 <style scoped>
-.difficulty-header {
-  display: grid;
-  gap: var(--space-3);
-}
-
 .difficulty-summary-strip {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
@@ -276,14 +298,6 @@ function difficultyPillValue(difficulty: string) {
 .difficulty-summary-strip.metric-panel-default-surface {
   --metric-panel-border: var(--journal-soft-border);
   --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-}
-
-.difficulty-board {
-  border-top: 1px solid var(--journal-divider);
-}
-
-.difficulty-board--embedded {
-  margin-top: var(--space-5);
 }
 
 .difficulty-toolbar {

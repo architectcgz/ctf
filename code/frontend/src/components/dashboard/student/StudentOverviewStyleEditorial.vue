@@ -115,49 +115,35 @@ const operationsSummary = computed(() => [
     "
   >
     <div :class="embedded ? undefined : 'content-pane'">
-      <div>
-        <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
-          {{ displayName }} 的训练总览
-        </h1>
-        <p class="workspace-page-copy max-w-2xl">
-          先看进度、短板和最近状态，再决定下一步训练。
-        </p>
+      <div class="workspace-panel-header">
+        <div class="workspace-panel-header__intro">
+          <div class="workspace-overline">Overview</div>
+          <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
+            {{ displayName }} 的训练总览
+          </h1>
+          <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
+        </div>
 
-        <div class="journal-actions mt-6">
-          <button
-            type="button"
-            class="journal-btn-primary"
-            @click="emit('openChallenges')"
-          >
+        <div class="workspace-panel-header__actions journal-actions">
+          <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
             继续训练
           </button>
-          <button
-            type="button"
-            class="journal-btn-outline"
-            @click="emit('openSkillProfile')"
-          >
+          <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
             查看能力画像
           </button>
         </div>
       </div>
-      <div
-        class="journal-board"
-        :class="{ 'journal-board--embedded': embedded }"
-      >
+      <div class="workspace-panel-divider" aria-hidden="true" />
+      <div class="journal-board">
         <section class="journal-bento">
           <article class="journal-panel journal-radar-card px-6 py-6">
             <div class="journal-panel-head">
               <div>
-                <h3 class="journal-soft-section-title text-xl font-semibold">
-                  能力雷达
-                </h3>
+                <h3 class="journal-soft-section-title text-xl font-semibold">能力雷达</h3>
               </div>
               <MapPinned class="journal-soft-accent-icon h-5 w-5" />
             </div>
-            <div
-              v-if="hasRadarData"
-              class="journal-radar-body mt-4"
-            >
+            <div v-if="hasRadarData" class="journal-radar-body mt-4">
               <div class="journal-radar-chart">
                 <div class="skill-dimension-chart__frame">
                   <div class="skill-dimension-chart__inner">
@@ -189,10 +175,7 @@ const operationsSummary = computed(() => [
                 </article>
               </div>
             </div>
-            <div
-              v-else
-              class="journal-soft-empty-state journal-soft-empty-state--compact mt-6"
-            >
+            <div v-else class="journal-soft-empty-state journal-soft-empty-state--compact mt-6">
               当前能力数据不足，完成更多题目后将生成雷达图。
             </div>
           </article>
@@ -200,16 +183,11 @@ const operationsSummary = computed(() => [
           <article class="journal-panel journal-rank-card px-6 py-6">
             <div class="journal-panel-head">
               <div>
-                <h3 class="journal-soft-section-title text-xl font-semibold">
-                  竞技表现
-                </h3>
+                <h3 class="journal-soft-section-title text-xl font-semibold">竞技表现</h3>
               </div>
               <Trophy class="journal-soft-accent-icon h-5 w-5" />
             </div>
-            <div
-              v-if="hasStoryMetrics"
-              :class="storyMetricGridClass"
-            >
+            <div v-if="hasStoryMetrics" :class="storyMetricGridClass">
               <article
                 v-for="item in storyMetrics"
                 :key="item.label"
@@ -247,9 +225,7 @@ const operationsSummary = computed(() => [
           <article class="journal-panel journal-ops-card px-6 py-6">
             <div class="journal-panel-head">
               <div>
-                <h3 class="journal-soft-section-title text-xl font-semibold">
-                  公告与状态
-                </h3>
+                <h3 class="journal-soft-section-title text-xl font-semibold">公告与状态</h3>
               </div>
               <BellRing class="journal-soft-accent-icon h-5 w-5" />
             </div>
@@ -261,19 +237,13 @@ const operationsSummary = computed(() => [
               >
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex items-center gap-3">
-                    <component
-                      :is="item.icon"
-                      class="journal-soft-accent-icon h-4 w-4"
-                    />
+                    <component :is="item.icon" class="journal-soft-accent-icon h-4 w-4" />
                     <div class="journal-soft-body-title text-sm font-medium">
                       {{ item.label }}
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span
-                      class="status-dot"
-                      :class="`status-dot-${item.status}`"
-                    />
+                    <span class="status-dot" :class="`status-dot-${item.status}`" />
                     <span class="journal-soft-body-title tech-font text-sm font-medium">{{
                       item.value
                     }}</span>
@@ -299,27 +269,6 @@ const operationsSummary = computed(() => [
   --journal-soft-button-height: 36px;
   --journal-soft-button-padding: var(--space-2) var(--space-4);
   --journal-soft-button-hover-transform: translateY(-1px);
-}
-
-.journal-board {
-  margin-top: 1.5rem;
-  position: relative;
-  padding-top: 1.25rem;
-  --journal-board-divider: color-mix(in srgb, var(--journal-ink) 22%, transparent);
-}
-
-.journal-board::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--journal-board-divider);
-}
-
-.journal-board--embedded {
-  margin-top: 1.25rem;
 }
 
 .journal-panel {

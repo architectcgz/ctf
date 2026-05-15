@@ -106,6 +106,11 @@
   --space-workspace-note-gap-y: var(--space-2-5);
   --space-workspace-tabs-gap: var(--space-7);
   --space-workspace-tabs-offset-top: var(--space-2-5);
+  --space-workspace-tabs-panel-gap: var(--space-3-5);
+  --space-workspace-panel-title-gap: var(--workspace-page-title-margin-top);
+  --space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);
+  --space-workspace-panel-block-gap: var(--space-5);
+  --space-workspace-panel-divider-gap: var(--space-1);
   --space-workspace-tab-padding-top: var(--space-2-5);
   --space-workspace-tab-padding-bottom: var(--space-3);
   --space-workspace-content-padding: var(--space-7);

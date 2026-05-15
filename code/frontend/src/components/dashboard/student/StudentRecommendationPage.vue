@@ -80,15 +80,18 @@ function weakDimensionCategory(value: string) {
     "
   >
     <div :class="embedded ? undefined : 'content-pane'">
-      <div class="recommendation-header">
-        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-          现在先练这几道
-        </h1>
-        <p class="workspace-page-copy max-w-2xl">
-          按当前顺序直接开练，做完这一组再回来刷新下一批建议。
-        </p>
+      <div class="workspace-panel-header recommendation-header">
+        <div class="workspace-panel-header__intro">
+          <div class="workspace-overline">Recommendations</div>
+          <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+            现在先练这几道
+          </h1>
+          <p class="workspace-page-copy max-w-2xl">
+            按当前顺序直接开练，做完这一组再回来刷新下一批建议。
+          </p>
+        </div>
 
-        <div class="mt-5 flex flex-wrap gap-2">
+        <div class="workspace-panel-header__meta flex flex-wrap gap-2">
           <template v-if="visibleWeakDimensions.length > 0">
             <template v-for="dim in visibleWeakDimensions" :key="dim">
               <ChallengeCategoryPill
@@ -108,7 +111,7 @@ function weakDimensionCategory(value: string) {
         </div>
 
         <div
-          class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+          class="workspace-panel-header__summary recommendation-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"
         >
           <article
             v-for="card in summaryCards"
@@ -128,11 +131,9 @@ function weakDimensionCategory(value: string) {
           </article>
         </div>
       </div>
+      <div class="workspace-panel-divider" aria-hidden="true" />
 
-      <div
-        class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-        :class="{ 'recommend-board--embedded': embedded }"
-      >
+      <div class="recommend-board px-1 pt-0 md:px-2 md:pt-0">
         <section class="recommend-section">
           <div v-if="recommendations.length > 0" class="recommend-toolbar">
             <p class="recommend-toolbar__copy">
@@ -212,11 +213,6 @@ function weakDimensionCategory(value: string) {
   );
 }
 
-.recommendation-header {
-  display: grid;
-  gap: var(--space-3);
-}
-
 .recommendation-summary-strip {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
@@ -233,14 +229,6 @@ function weakDimensionCategory(value: string) {
 .recommend-item:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--journal-accent) 52%, var(--journal-soft-border));
   outline-offset: 2px;
-}
-
-.recommend-board {
-  border-top: 1px solid var(--journal-divider);
-}
-
-.recommend-board--embedded {
-  margin-top: var(--space-5);
 }
 
 .recommend-toolbar {

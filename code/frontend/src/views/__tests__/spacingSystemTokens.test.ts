@@ -29,6 +29,15 @@ describe('spacing system tokens', () => {
     expect(themeSource).toContain('--space-workspace-side-padding: var(--space-7);')
     expect(themeSource).toContain('--space-workspace-content-padding: var(--space-7);')
     expect(themeSource).toContain('--space-workspace-content-start-padding-top: var(--space-4);')
+    expect(themeSource).toContain('--space-workspace-tabs-panel-gap: var(--space-3-5);')
+    expect(themeSource).toContain(
+      '--space-workspace-panel-title-gap: var(--workspace-page-title-margin-top);'
+    )
+    expect(themeSource).toContain(
+      '--space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);'
+    )
+    expect(themeSource).toContain('--space-workspace-panel-block-gap: var(--space-5);')
+    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-1);')
     expect(themeSource).toContain('--space-divider-gap: var(--space-4);')
   })
 
@@ -39,6 +48,9 @@ describe('spacing system tokens', () => {
     expect(workspaceShellSource).toContain('var(--space-workspace-tabs-gap)')
     expect(workspaceShellSource).toContain('var(--space-workspace-content-padding)')
     expect(workspaceShellSource).toContain('var(--space-workspace-content-start-padding-top)')
+    expect(workspaceShellSource).toContain(
+      'var(--workspace-tabs-panel-gap, var(--space-workspace-tabs-panel-gap))'
+    )
     expect(workspaceShellSource).toContain('.workspace-shell > .content-pane:first-child')
     expect(workspaceShellSource).not.toContain('.workspace-shell > .workspace-grid')
     expect(workspaceShellSource).not.toContain('padding: 22px 28px 0;')
