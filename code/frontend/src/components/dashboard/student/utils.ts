@@ -73,7 +73,9 @@ export function orderDifficultyActionItems<T extends DifficultyProgressStat>(
 export function selectDifficultyPriority<T extends DifficultyProgressStat>(
   difficultyStats: T[]
 ): (T & { rate: number; remaining: number; order: number }) | null {
-  const orderedItems = orderDifficultyActionItems(difficultyStats).filter((item) => item.total > 0)
+  const orderedItems = orderDifficultyActionItems(difficultyStats).filter(
+    (item) => item.remaining > 0
+  )
   if (orderedItems.length === 0) return null
 
   return [...orderedItems].sort((left, right) => {
