@@ -7,6 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { RADAR_AREA_FILL, resolveRadarCanvasVisuals } from '@/components/charts/radarVisuals'
+import { useTheme } from '@/composables/useTheme'
 import { useEChartsMountGate } from '@/components/charts/echartsMountGate'
 
 use([RadarComponent, TooltipComponent, LegendComponent, EChartsRadarChart, CanvasRenderer])
@@ -36,9 +37,11 @@ const props = withDefaults(
     centerY: '50%',
   }
 )
+const { theme } = useTheme()
 const { containerRef, isChartReady } = useEChartsMountGate()
 
 const option = computed<EChartsOption>(() => {
+  void theme.value
   const visuals = resolveRadarCanvasVisuals(RADAR_AREA_FILL)
   return {
     tooltip: { trigger: 'item' },

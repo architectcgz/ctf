@@ -2,18 +2,62 @@ import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import RadarChart from '../RadarChart.vue'
 import LineChart from '../LineChart.vue'
 import lineChartSource from '../LineChart.vue?raw'
 import barChartSource from '../BarChart.vue?raw'
 import gaugeChartSource from '../GaugeChart.vue?raw'
 import radarChartSource from '../RadarChart.vue?raw'
+import { useTheme } from '@/composables/useTheme'
 
 vi.mock('vue-echarts', () => ({
   default: {
     name: 'VChart',
+    props: {
+      option: {
+        type: Object,
+        default: null,
+      },
+      autoresize: {
+        type: Boolean,
+        default: false,
+      },
+    },
     template: '<div data-testid="echart-instance" />',
   },
 }))
+
+interface RadarOption {
+  radar?: {
+    axisName?: {
+      color?: string
+    }
+  }
+}
+
+const mockedThemeColors: Record<'dark' | 'light', Record<string, string>> = {
+  dark: {
+    '--color-text-primary': 'dark-text-primary',
+    '--color-text-secondary': 'dark-text-secondary',
+    '--color-border-default': 'dark-border-default',
+    '--color-border-subtle': 'dark-border-subtle',
+    '--color-primary': 'dark-primary',
+    '--color-primary-hover': 'dark-primary-hover',
+  },
+  light: {
+    '--color-text-primary': 'light-text-primary',
+    '--color-text-secondary': 'light-text-secondary',
+    '--color-border-default': 'light-border-default',
+    '--color-border-subtle': 'light-border-subtle',
+    '--color-primary': 'light-primary',
+    '--color-primary-hover': 'light-primary-hover',
+  },
+}
+
+function resolveMockThemeColor(name: string): string {
+  const themeName = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
+  return mockedThemeColors[themeName][name] ?? ''
+}
 
 class ResizeObserverStub {
   static instances: ResizeObserverStub[] = []
@@ -86,5 +130,61 @@ describe('ECharts mount gate', () => {
     expect(barChartSource).toContain('useEChartsMountGate')
     expect(gaugeChartSource).toContain('useEChartsMountGate')
     expect(radarChartSource).toContain('useEChartsMountGate')
+    expect(lineChartSource).toContain('void theme.value')
+    expect(barChartSource).toContain('void theme.value')
+    expect(gaugeChartSource).toContain('void theme.value')
+    expect(radarChartSource).toContain('void theme.value')
+  })
+
+  it('雷达图在切换主题后应重新取用当前主题的轴标签颜色', async () => {
+    localStorage.clear()
+    const { initTheme, toggleTheme, setTheme } = useTheme()
+    initTheme()
+    const getComputedStyleSpy = vi.spyOn(window, 'getComputedStyle').mockImplementation(() => ({
+      getPropertyValue: (name: string) => resolveMockThemeColor(name),
+    } as CSSStyleDeclaration))
+
+    try {
+      const wrapper = mount(RadarChart, {
+        attachTo: document.body,
+        props: {
+          indicators: [
+            { name: 'Web', max: 100 },
+            { name: 'Crypto', max: 100 },
+          ],
+          values: [82, 55],
+        },
+      })
+
+      const chartContainer = wrapper.element as HTMLElement
+      Object.defineProperty(chartContainer, 'clientWidth', {
+        configurable: true,
+        value: 640,
+      })
+      Object.defineProperty(chartContainer, 'clientHeight', {
+        configurable: true,
+        value: 320,
+      })
+
+      ResizeObserverStub.instances[0]?.trigger(chartContainer)
+      await nextTick()
+
+      const chart = wrapper.getComponent({ name: 'VChart' })
+      const darkAxisColor = (chart.props('option') as RadarOption).radar?.axisName?.color
+
+      expect(darkAxisColor).toBe(resolveMockThemeColor('--color-text-primary'))
+
+      toggleTheme()
+      await nextTick()
+
+      const lightAxisColor = (chart.props('option') as RadarOption).radar?.axisName?.color
+
+      expect(lightAxisColor).toBe(resolveMockThemeColor('--color-text-primary'))
+      expect(lightAxisColor).not.toBe(darkAxisColor)
+    } finally {
+      getComputedStyleSpy.mockRestore()
+      setTheme('dark')
+      await nextTick()
+    }
   })
 })
