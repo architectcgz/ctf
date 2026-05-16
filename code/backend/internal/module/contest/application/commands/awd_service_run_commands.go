@@ -22,7 +22,7 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 		return nil, err
 	}
 	now := time.Now().UTC()
-	if !now.Before(contest.EndTime) {
+	if contestdomain.ContestHasEndedAt(contest, now) {
 		return nil, errcode.ErrContestEnded
 	}
 	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {

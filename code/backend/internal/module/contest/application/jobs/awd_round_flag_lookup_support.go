@@ -15,6 +15,7 @@ var errAWDFlagUnavailable = errors.New("awd_flag_unavailable")
 
 func (u *AWDRoundUpdater) resolveAcceptedRoundFlags(
 	ctx context.Context,
+	contest *model.Contest,
 	contestID int64,
 	round *model.AWDRound,
 	teamID int64,
@@ -27,7 +28,7 @@ func (u *AWDRoundUpdater) resolveAcceptedRoundFlags(
 	}
 	flags := []string{currentFlag}
 
-	if !u.allowPreviousRoundFlag(round, now) {
+	if !u.allowPreviousRoundFlag(contest, round, now) {
 		return flags, nil
 	}
 
@@ -48,11 +49,12 @@ func (u *AWDRoundUpdater) resolveAcceptedRoundFlags(
 	return append(flags, previousFlag), nil
 }
 
-func (u *AWDRoundUpdater) allowPreviousRoundFlag(round *model.AWDRound, now time.Time) bool {
+func (u *AWDRoundUpdater) allowPreviousRoundFlag(contest *model.Contest, round *model.AWDRound, now time.Time) bool {
 	if round == nil || round.RoundNumber <= 1 || u.cfg.PreviousRoundGrace <= 0 || round.StartedAt == nil {
 		return false
 	}
-	return now.Before(round.StartedAt.Add(u.cfg.PreviousRoundGrace))
+	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
+	return effectiveNow.Before(round.StartedAt.Add(u.cfg.PreviousRoundGrace))
 }
 
 func (u *AWDRoundUpdater) resolveRoundFlag(

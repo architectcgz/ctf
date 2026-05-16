@@ -53,7 +53,7 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 		model.ContestStatusFrozen,
 	}
 
-	contests, _, err := u.repo.ListByStatusesAndTimeRange(runCtx, statuses, now, 0, u.batchSize)
+	contests, err := u.listTransitionCandidates(runCtx, statuses, now)
 	if err != nil {
 		u.log.Error("list_contests_failed", zap.Error(err))
 		return
@@ -120,6 +120,42 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 			u.log.Info("contest_status_updated", zap.Int64("contest_id", contest.ID), zap.String("old_status", contest.Status), zap.String("new_status", newStatus))
 		}
 	}
+}
+
+func (u *StatusUpdater) listTransitionCandidates(ctx context.Context, statuses []string, now time.Time) ([]*model.Contest, error) {
+	if u.repo == nil || u.batchSize <= 0 {
+		return nil, nil
+	}
+
+	candidates := make([]*model.Contest, 0, u.batchSize)
+	offset := 0
+	for len(candidates) < u.batchSize {
+		page, total, err := u.repo.ListByStatusesAndTimeRange(ctx, statuses, now, offset, u.batchSize)
+		if err != nil {
+			return nil, err
+		}
+		if len(page) == 0 {
+			break
+		}
+
+		for _, contest := range page {
+			if contest == nil {
+				continue
+			}
+			if u.calculateStatus(contest, now) != contest.Status {
+				candidates = append(candidates, contest)
+				if len(candidates) >= u.batchSize {
+					break
+				}
+			}
+		}
+
+		offset += len(page)
+		if int64(offset) >= total {
+			break
+		}
+	}
+	return candidates, nil
 }
 
 func (u *StatusUpdater) acquireStatusUpdateLock(ctx context.Context) (contestports.ContestSchedulerLockLease, bool, error) {

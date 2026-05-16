@@ -38,7 +38,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	for _, team := range teams {
 		for _, definition := range definitions {
 			key := awdServiceTargetKey{teamID: team.ID, serviceID: definition.ServiceID}
-			outcome, checkErr := u.checkTeamChallengeServices(ctx, contest.ID, team.ID, definition, grouped[key], round, source)
+			outcome, checkErr := u.checkTeamChallengeServices(ctx, contest, contest.ID, team.ID, definition, grouped[key], round, source)
 			if checkErr != nil {
 				return checkErr
 			}

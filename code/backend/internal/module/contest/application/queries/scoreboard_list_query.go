@@ -39,6 +39,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	if err != nil {
 		return nil, err
 	}
+	effectiveEnd := contestdomain.ContestEffectiveEndTime(contest)
 	results, teamIDs := filterScoreboardResults(s.logger, contestID, results)
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
@@ -60,7 +61,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 				Title:     contest.Title,
 				Status:    contest.Status,
 				StartedAt: contest.StartTime,
-				EndsAt:    contest.EndTime,
+				EndsAt:    effectiveEnd,
 			},
 			Scoreboard: &ScoreboardPageResult{
 				List:     []*ScoreboardItemResult{},
@@ -82,7 +83,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 			Title:     contest.Title,
 			Status:    contest.Status,
 			StartedAt: contest.StartTime,
-			EndsAt:    contest.EndTime,
+			EndsAt:    effectiveEnd,
 		},
 		Scoreboard: &ScoreboardPageResult{
 			List:     items,

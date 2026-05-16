@@ -11,6 +11,7 @@ import (
 
 func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	ctx context.Context,
+	contest *model.Contest,
 	contestID int64,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
@@ -25,7 +26,7 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	)
 	switch checkerType {
 	case model.AWDCheckerTypeHTTPStandard:
-		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contestID, round, teamID, definition, instances, source)
+		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contest, contestID, round, teamID, definition, instances, source)
 	case model.AWDCheckerTypeTCPStandard:
 		outcome, err = u.buildAWDCheckOutcomeFromTCPStandard(ctx, contestID, round, teamID, definition, instances, source, "")
 	case model.AWDCheckerTypeScript:

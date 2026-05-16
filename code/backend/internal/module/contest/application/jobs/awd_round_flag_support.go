@@ -55,9 +55,9 @@ func (u *AWDRoundUpdater) currentRoundTTL(contest *model.Contest, round *model.A
 	if contest == nil || round == nil {
 		return 0
 	}
-	roundEnd := contest.EndTime
+	roundEnd := contestdomain.ContestEffectiveEndTime(contest)
 	if round.StartedAt != nil {
-		candidate := round.StartedAt.Add(u.cfg.RoundInterval)
+		candidate := round.StartedAt.Add(u.cfg.RoundInterval).Add(contestdomain.ContestPausedDuration(contest))
 		if candidate.Before(roundEnd) {
 			roundEnd = candidate
 		}

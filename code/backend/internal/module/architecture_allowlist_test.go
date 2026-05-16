@@ -31,6 +31,7 @@ var allowedDomainInternalImports = map[string]struct{}{
 	"contest/domain/awd_service_config.go -> ctf-platform/internal/model":             {},
 	"contest/domain/awd_source_support.go -> ctf-platform/internal/model":             {},
 	"contest/domain/contest.go -> ctf-platform/internal/model":                        {},
+	"contest/domain/contest_timing.go -> ctf-platform/internal/model":                 {},
 	"contest/domain/registration.go -> ctf-platform/internal/model":                   {},
 	"practice/domain/mappers.go -> ctf-platform/internal/dto":                         {},
 	"practice/domain/mappers.go -> ctf-platform/internal/model":                       {},
@@ -66,17 +67,18 @@ var allowedModuleDependencies = map[string]struct{}{
 }
 
 var allowedTransactionFiles = map[string]struct{}{
-	"challenge/infrastructure/repository.go":                         {},
-	"challenge/infrastructure/tag_repository.go":                     {},
-	"contest/infrastructure/awd_repository.go":                       {},
-	"contest/infrastructure/contest_status_update_repository.go":     {},
-	"contest/infrastructure/submission_repository.go":                {},
-	"contest/infrastructure/team_membership_lifecycle_repository.go": {},
-	"contest/infrastructure/team_membership_repository.go":           {},
-	"identity/infrastructure/repository.go":                          {},
-	"ops/infrastructure/notification_repository.go":                  {},
-	"practice/infrastructure/repository.go":                          {},
-	"runtime/infrastructure/repository.go":                           {},
+	"challenge/infrastructure/repository.go":                            {},
+	"challenge/infrastructure/tag_repository.go":                        {},
+	"contest/infrastructure/awd_repository.go":                          {},
+	"contest/infrastructure/contest_awd_runtime_recovery_repository.go": {},
+	"contest/infrastructure/contest_status_update_repository.go":        {},
+	"contest/infrastructure/submission_repository.go":                   {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go":    {},
+	"contest/infrastructure/team_membership_repository.go":              {},
+	"identity/infrastructure/repository.go":                             {},
+	"ops/infrastructure/notification_repository.go":                     {},
+	"practice/infrastructure/repository.go":                             {},
+	"runtime/infrastructure/repository.go":                              {},
 }
 
 var allowedOversizedRuntimeModules = map[string]struct{}{
@@ -118,6 +120,7 @@ var allowedTimeNowFiles = map[string]struct{}{
 	"contest/application/jobs/awd_check_run.go":                            {},
 	"contest/application/jobs/awd_checker_preview.go":                      {},
 	"contest/application/jobs/awd_http_checker_runner.go":                  {},
+	"instance/application/commands/startup_runtime_recovery_service.go":    {},
 	"contest/application/jobs/awd_probe_runtime.go":                        {},
 	"contest/application/jobs/awd_round_updater.go":                        {},
 	"contest/application/jobs/awd_script_checker_runner.go":                {},

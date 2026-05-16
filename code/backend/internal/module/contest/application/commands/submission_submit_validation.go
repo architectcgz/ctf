@@ -22,7 +22,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 	}
 
 	submittedAt := time.Now().UTC()
-	if !submittedAt.Before(contest.EndTime) {
+	if contestdomain.ContestHasEndedAt(contest, submittedAt) {
 		return nil, errcode.ErrContestEnded
 	}
 	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {

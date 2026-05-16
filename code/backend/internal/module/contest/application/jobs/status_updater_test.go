@@ -37,7 +37,11 @@ func (s *endedContestRuntimeCleanerStub) CleanupEndedContestAWDInstances(_ conte
 	return s.err
 }
 
-func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, _, _ int) ([]*model.Contest, int64, error) {
+func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, offset, limit int) ([]*model.Contest, int64, error) {
+	return s.listByStatusesAndTimeRange(statuses, offset, limit)
+}
+
+func (s *statusUpdaterRepoStub) listByStatusesAndTimeRange(statuses []string, offset, limit int) ([]*model.Contest, int64, error) {
 	s.listCalls++
 	s.receivedStatus = append([]string(nil), statuses...)
 	if s.listCalled != nil && s.listCalls == 1 {
@@ -46,7 +50,19 @@ func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, st
 	if s.listBlock != nil {
 		<-s.listBlock
 	}
-	return s.contests, int64(len(s.contests)), nil
+	total := len(s.contests)
+	if offset >= total {
+		return nil, int64(total), nil
+	}
+	if limit <= 0 {
+		limit = total
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	page := append([]*model.Contest(nil), s.contests[offset:end]...)
+	return page, int64(total), nil
 }
 
 func (s *statusUpdaterRepoStub) ApplyStatusTransition(_ context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error) {
@@ -109,6 +125,37 @@ func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 		if repo.receivedStatus[i] != status {
 			t.Fatalf("expected status %q at index %d, got %q", status, i, repo.receivedStatus[i])
 		}
+	}
+}
+
+func TestStatusUpdaterUpdateStatusesPagesPastNonTransitioningContests(t *testing.T) {
+	now := time.Now().UTC()
+	repo := &statusUpdaterRepoStub{
+		contests: []*model.Contest{
+			{
+				ID:        21,
+				Status:    model.ContestStatusRegistration,
+				StartTime: now.Add(time.Hour),
+				EndTime:   now.Add(2 * time.Hour),
+			},
+			{
+				ID:        22,
+				Status:    model.ContestStatusRunning,
+				StartTime: now.Add(-2 * time.Hour),
+				EndTime:   now.Add(-time.Minute),
+			},
+		},
+	}
+	repo.transitionApplied = true
+
+	updater := NewStatusUpdater(repo, time.Minute, 1, 30*time.Second, nil)
+	updater.updateStatuses(context.Background())
+
+	if got := repo.updatedStatus[22]; got != model.ContestStatusEnded {
+		t.Fatalf("expected paged candidate contest to end, got %q", got)
+	}
+	if repo.listCalls < 2 {
+		t.Fatalf("expected updater to scan multiple pages, got %d calls", repo.listCalls)
 	}
 }
 

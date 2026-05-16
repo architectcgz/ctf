@@ -14,6 +14,7 @@ import (
 
 func (s *AWDService) resolveAcceptedRoundFlags(
 	ctx context.Context,
+	contest *model.Contest,
 	contestID int64,
 	round *model.AWDRound,
 	victimTeamID int64,
@@ -28,7 +29,7 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 	}
 	flags := []string{currentFlag}
 
-	if !s.allowPreviousRoundFlag(round, now) {
+	if !s.allowPreviousRoundFlag(contest, round, now) {
 		return flags, nil
 	}
 
@@ -49,11 +50,12 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 	return append(flags, previousFlag), nil
 }
 
-func (s *AWDService) allowPreviousRoundFlag(round *model.AWDRound, now time.Time) bool {
+func (s *AWDService) allowPreviousRoundFlag(contest *model.Contest, round *model.AWDRound, now time.Time) bool {
 	if round == nil || round.RoundNumber <= 1 || s.awdConfig.PreviousRoundGrace <= 0 || round.StartedAt == nil {
 		return false
 	}
-	return now.Before(round.StartedAt.Add(s.awdConfig.PreviousRoundGrace))
+	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
+	return effectiveNow.Before(round.StartedAt.Add(s.awdConfig.PreviousRoundGrace))
 }
 
 func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, awdChallengeID int64, flagPrefix string, serviceID int64) (string, error) {

@@ -438,7 +438,7 @@ func instanceRespForScope(instance *model.Instance, scope practiceports.Instance
 
 func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practiceports.InstanceScope) (time.Time, error) {
 	if scope.ContestMode != model.ContestModeAWD || scope.ContestID == nil || *scope.ContestID <= 0 {
-		return time.Now().Add(s.config.Container.DefaultTTL), nil
+		return time.Now().UTC().Add(s.config.Container.DefaultTTL), nil
 	}
 	if s.contestScope == nil {
 		return time.Time{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
@@ -454,5 +454,12 @@ func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practicepo
 	if contest == nil {
 		return time.Time{}, errcode.ErrContestNotFound
 	}
-	return contest.EndTime.UTC(), nil
+	return practiceContestEffectiveEndTime(contest), nil
+}
+
+func practiceContestEffectiveEndTime(contest *model.Contest) time.Time {
+	if contest == nil {
+		return time.Time{}
+	}
+	return contest.EndTime.UTC().Add(time.Duration(contest.PausedSeconds) * time.Second)
 }

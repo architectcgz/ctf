@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 func (u *AWDRoundUpdater) calculateRoundPlan(contest *model.Contest, now time.Time) (int, int, bool) {
@@ -13,7 +14,8 @@ func (u *AWDRoundUpdater) calculateRoundPlan(contest *model.Contest, now time.Ti
 	if !contest.EndTime.After(contest.StartTime) {
 		return 0, 0, false
 	}
-	if now.Before(contest.StartTime) {
+	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
+	if effectiveNow.Before(contest.StartTime) {
 		return 0, 0, false
 	}
 
@@ -22,11 +24,11 @@ func (u *AWDRoundUpdater) calculateRoundPlan(contest *model.Contest, now time.Ti
 	if totalRounds <= 0 {
 		return 0, 0, false
 	}
-	if !now.Before(contest.EndTime) {
+	if !effectiveNow.Before(contest.EndTime) {
 		return 0, totalRounds, true
 	}
 
-	activeRound := int(now.Sub(contest.StartTime)/u.cfg.RoundInterval) + 1
+	activeRound := int(effectiveNow.Sub(contest.StartTime)/u.cfg.RoundInterval) + 1
 	if activeRound > totalRounds {
 		activeRound = totalRounds
 	}

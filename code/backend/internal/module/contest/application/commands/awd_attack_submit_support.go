@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -25,7 +26,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 		return nil, err
 	}
 	now := time.Now().UTC()
-	if !now.Before(contest.EndTime) {
+	if contestdomain.ContestHasEndedAt(contest, now) {
 		return nil, errcode.ErrContestEnded
 	}
 	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
@@ -47,7 +48,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	snapshot, _ := model.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
 	flagPrefix := resolveSubmitAttackFlagPrefix(snapshot)
 
-	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, runtimeService.AWDChallengeID, flagPrefix, runtimeService.ID, now)
+	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contest, contestID, round, req.VictimTeamID, runtimeService.AWDChallengeID, flagPrefix, runtimeService.ID, now)
 	if err != nil {
 		return nil, err
 	}

@@ -476,6 +476,24 @@ func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*mod
 	return instances, err
 }
 
+func (r *Repository) RefreshActiveAWDInstanceExpiryByContest(ctx context.Context, contestID int64, activeAt, expiresAt time.Time) error {
+	if contestID <= 0 || expiresAt.IsZero() {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Model(&model.Instance{}).
+		Where("contest_id = ? AND service_id IS NOT NULL AND status IN ?", contestID, []string{
+			model.InstanceStatusPending,
+			model.InstanceStatusCreating,
+			model.InstanceStatusRunning,
+		}).
+		Where("expires_at > ?", activeAt.UTC()).
+		Updates(map[string]any{
+			"expires_at": expiresAt.UTC(),
+			"updated_at": time.Now().UTC(),
+		}).Error
+}
+
 func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
 	if id <= 0 {
 		return false, nil

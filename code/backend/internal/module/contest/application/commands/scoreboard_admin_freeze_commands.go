@@ -22,15 +22,17 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 	}
 
 	now := time.Now().UTC()
-	if !now.Before(contest.EndTime) {
+	if contestdomain.ContestHasEndedAt(contest, now) {
 		return errcode.ErrContestEnded
 	}
 
-	freezeTime := contest.EndTime.Add(-time.Duration(minutesBeforeEnd) * time.Minute)
-	contest.FreezeTime = &freezeTime
+	effectiveEnd := contestdomain.ContestEffectiveEndTime(contest)
+	storedFreezeTime := effectiveEnd.Add(-time.Duration(minutesBeforeEnd) * time.Minute).Add(-contestdomain.ContestPausedDuration(contest))
+	contest.FreezeTime = &storedFreezeTime
 	previousStatus := contest.Status
 	previousVersion := contest.StatusVersion
-	if !now.Before(freezeTime) {
+	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
+	if !effectiveNow.Before(storedFreezeTime) {
 		contest.Status = model.ContestStatusFrozen
 		contest.StatusVersion++
 		contest.UpdatedAt = now
@@ -68,7 +70,7 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	previousStatus := contest.Status
 	previousVersion := contest.StatusVersion
 	now := time.Now().UTC()
-	if contest.Status == model.ContestStatusFrozen && now.Before(contest.EndTime) {
+	if contest.Status == model.ContestStatusFrozen && !contestdomain.ContestHasEndedAt(contest, now) {
 		contest.Status = model.ContestStatusRunning
 		contest.StatusVersion++
 		contest.UpdatedAt = now

@@ -46,7 +46,8 @@ func IsFrozenContest(contest *model.Contest, now time.Time) bool {
 	if contest.FreezeTime == nil {
 		return false
 	}
-	return !now.Before(*contest.FreezeTime) && now.Before(contest.EndTime)
+	effectiveNow := ContestEffectiveNow(contest, now)
+	return !effectiveNow.Before(contest.FreezeTime.UTC()) && effectiveNow.Before(contest.EndTime.UTC())
 }
 
 func ShouldGateAWDContestStart(mode, currentStatus string, targetStatus *string) bool {

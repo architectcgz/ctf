@@ -128,6 +128,7 @@ func TestAWDRoundUpdaterHTTPStandardDerivesCheckerTokenForRuntimeChecks(t *testi
 
 	outcome, err := updater.buildAWDCheckOutcomeFromHTTPStandard(
 		context.Background(),
+		nil,
 		contestID,
 		nil,
 		teamID,

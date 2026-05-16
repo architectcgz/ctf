@@ -18,13 +18,18 @@
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
-  - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则直接跟随 `contest.end_time`
+  - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
   - 本地 Docker Compose 部署补充：当前 runtime 已区分 `container.public_host` 与 `container.access_host`。`public_host` 继续作为学生看到的宿主发布地址；`access_host` 只给 `ctf-api` 容器内部的实例就绪探测与 HTTP 代理使用。compose dev 需要把 `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1`、`CTF_CONTAINER_ACCESS_HOST=host-gateway.internal` 成对配置，并通过 `host-gateway.internal:host-gateway` 回到宿主机发布端口。
 
 - `code/backend/internal/module/contest/application/statusmachine/side_effects.go`、`code/backend/internal/module/contest/infrastructure/{status_side_effect_store.go,ended_contest_runtime_cleaner.go}`
   - 负责：在比赛进入 `ended` 时同步清空 AWD live 状态缓存，并主动清理该比赛下的 AWD 队伍服务运行态；收口范围包括实例 runtime、端口占用、defense workspace companion container，以及仍处于 `requested / provisioning / recovering` 的 AWD service operation，最后把实例写回 `expired`
   - 不负责：接管普通练习实例的定时过期扫描；这部分仍由 `instance` 模块 runtime cleaner 按 `expires_at` 收口
+
+- `code/backend/internal/module/contest/domain/contest_timing.go`、`code/backend/internal/module/contest/application/jobs/{status_update_support.go,awd_round_plan.go,awd_round_flag_support.go}`、`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
+  - 负责：把 AWD 比赛的有效时间窗统一收口到 `effectiveNow = now - pausedDuration` 与 `effectiveEnd = end_time + pausedDuration`；`pausedDuration` 来自 `contests.paused_seconds`，会同时作用到 round 推进、封榜时间、Flag 读取窗口、榜单结束时间和 `until_contest_end` 实例过期时间
+  - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前的运行态，并把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
+  - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
@@ -37,6 +42,7 @@
 ## 接口或数据影响
 
 - 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
+- AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
 - 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`contest.awd.scheduler_*`，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
@@ -45,6 +51,7 @@
 - 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
 - runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
 - 练习实例创建与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`
+- AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/runtime/infrastructure/repository_awd_expiry_refresh_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`
 - 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
 - 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
@@ -136,7 +143,7 @@ type ContainerManager interface {
 |------|------|----------|
 | `pending` | 创建请求已入队，等待调度 | 通常 < 5s，高峰期受排队影响 |
 | `creating` | 正在创建网络/容器/注入 Flag | 通常 < 30s |
-| `running` | 容器正常运行，用户可访问 | 普通实例默认 2h；AWD 队伍服务实例跟随比赛结束时间 |
+| `running` | 容器正常运行，用户可访问 | 普通实例默认 2h；AWD 队伍服务实例跟随比赛有效结束时间（`end_time + paused_seconds`） |
 | `expired` | 已超过有效期，等待回收 | 等待下一次清理扫描周期 |
 | `destroying` | 正在执行销毁流程 | 通常 < 10s |
 | `destroyed` | 已完全销毁，资源已释放（终态） | - |

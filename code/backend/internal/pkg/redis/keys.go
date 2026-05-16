@@ -119,6 +119,8 @@ const (
 	keyInstanceExpireQueue = "instance:expire_queue"
 	// keyContainerCleanupLock 容器清理任务分布式锁
 	keyContainerCleanupLock = "container:cleanup:lock"
+	// keyPlatformRuntimeState 宿主机运行态心跳与 boot_id 快照
+	keyPlatformRuntimeState = "platform:runtime:state"
 )
 
 // InstanceUserKey 用户当前运行实例映射
@@ -149,6 +151,12 @@ func InstanceExpireQueueKey() string {
 // 数据结构: STRING (UUID token) | TTL: 2m（默认）
 func ContainerCleanupLockKey() string {
 	return withNS(keyContainerCleanupLock)
+}
+
+// PlatformRuntimeStateKey 宿主机运行态心跳与 boot_id 快照
+// 数据结构: HASH (boot_id,last_heartbeat_at) | TTL: 无过期
+func PlatformRuntimeStateKey() string {
+	return withNS(keyPlatformRuntimeState)
 }
 
 // ============================================================

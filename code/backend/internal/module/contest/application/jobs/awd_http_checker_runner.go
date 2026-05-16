@@ -12,6 +12,7 @@ import (
 
 func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 	ctx context.Context,
+	contest *model.Contest,
 	contestID int64,
 	round *model.AWDRound,
 	teamID int64,
@@ -39,7 +40,7 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 	acceptedFlags := []string{}
 	currentFlag := ""
 	if needsAWDHTTPCheckerFlags(config) {
-		acceptedFlags, err = u.resolveAcceptedRoundFlags(ctx, contestID, round, teamID, definition, time.Now().UTC())
+		acceptedFlags, err = u.resolveAcceptedRoundFlags(ctx, contest, contestID, round, teamID, definition, time.Now().UTC())
 		if err != nil {
 			return buildAWDDownCheckOutcome(result, "flag_unavailable", sanitizeAWDCheckError(err))
 		}

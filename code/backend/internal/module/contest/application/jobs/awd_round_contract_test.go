@@ -184,7 +184,7 @@ func TestAWDRoundUpdaterResolveAcceptedRoundFlagsTreatsPreviousRoundSentinelAsCu
 		FlagPrefix:     "awd",
 	}
 
-	flags, err := updater.resolveAcceptedRoundFlags(context.Background(), 10, round, 41, definition, startedAt.Add(30*time.Second))
+	flags, err := updater.resolveAcceptedRoundFlags(context.Background(), nil, 10, round, 41, definition, startedAt.Add(30*time.Second))
 	if err != nil {
 		t.Fatalf("resolveAcceptedRoundFlags() error = %v", err)
 	}
@@ -194,6 +194,39 @@ func TestAWDRoundUpdaterResolveAcceptedRoundFlagsTreatsPreviousRoundSentinelAsCu
 	expected := contestdomain.BuildAWDRoundFlag(10, 2, 41, 31, "slice39-secret", "awd")
 	if flags[0] != expected {
 		t.Fatalf("unexpected current round flag: got %q want %q", flags[0], expected)
+	}
+}
+
+func TestAWDRoundUpdaterResolveAcceptedRoundFlagsUsesEffectiveNowForPauseWindow(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	startedAt := now.Add(-2 * time.Minute)
+	contest := &model.Contest{PausedSeconds: 90}
+	updater := &AWDRoundUpdater{
+		repo:       awdRoundUpdaterRepoStub{},
+		cfg:        config.ContestAWDConfig{PreviousRoundGrace: time.Minute},
+		flagSecret: "slice39-secret",
+	}
+
+	round := &model.AWDRound{ID: 11, ContestID: 10, RoundNumber: 2, StartedAt: &startedAt}
+	definition := contestports.AWDServiceDefinition{
+		ServiceID:      21,
+		AWDChallengeID: 31,
+		FlagPrefix:     "awd",
+	}
+
+	flags, err := updater.resolveAcceptedRoundFlags(context.Background(), contest, 10, round, 41, definition, now)
+	if err != nil {
+		t.Fatalf("resolveAcceptedRoundFlags() error = %v", err)
+	}
+	if len(flags) != 2 {
+		t.Fatalf("expected current and previous round flags while contest is paused, got %d: %+v", len(flags), flags)
+	}
+	wantCurrent := contestdomain.BuildAWDRoundFlag(10, 2, 41, 31, "slice39-secret", "awd")
+	wantPrevious := contestdomain.BuildAWDRoundFlag(10, 1, 41, 31, "slice39-secret", "awd")
+	if flags[0] != wantCurrent || flags[1] != wantPrevious {
+		t.Fatalf("unexpected accepted flags: got %+v want [%q %q]", flags, wantCurrent, wantPrevious)
 	}
 }
 

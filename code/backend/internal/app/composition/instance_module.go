@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -59,7 +60,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	cleanupService := runtimecmd.NewRuntimeCleanupService(module.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
 	provisioningService := runtimecmd.NewProvisioningService(repo, module.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
-	queryService := instanceqry.NewInstanceService(repo)
+	queryService := instanceqry.NewInstanceService(repo, &cfg.Container)
 	proxyTicketService := instanceqry.NewProxyTicketService(
 		runtimeinfra.NewProxyTicketStore(root.Cache()),
 		repo,
@@ -72,6 +73,19 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		&cfg.Container,
 		log.Named("instance_maintenance_service"),
 	)
+	startupRecovery := instancecmd.NewStartupRuntimeRecoveryService(
+		maintenanceService,
+		contestinfra.NewRepository(root.DB()),
+		repo,
+		runtimeinfra.NewPlatformRuntimeStateStore(root.Cache()),
+		0,
+		log.Named("startup_runtime_recovery"),
+	)
+	root.RegisterBackgroundJob(NewBackgroundJob(
+		"startup_runtime_recovery",
+		startupRecovery.Start,
+		startupRecovery.Stop,
+	))
 	cleaner := runtimeinfra.NewCleaner(
 		maintenanceService,
 		root.Cache(),
@@ -129,7 +143,7 @@ func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {
 	if ops != nil {
 		auditRecorder = ops.AuditService
 	}
-	m.Handler = runtimehttp.NewHandler(m.service, auditRecorder, runtimehttp.CookieConfig{
+	m.Handler = runtimehttp.NewHandler(m.service, cfg.Container.PublicHost, cfg.Container.AccessHost, auditRecorder, runtimehttp.CookieConfig{
 		Secure:   cfg.Auth.SessionCookieSecure,
 		SameSite: cfg.Auth.CookieSameSite(),
 	}, m.proxyTrafficRecorder)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -15,7 +16,8 @@ func (s *AWDService) calculateActiveRoundNumber(contest *model.Contest, now time
 	if !contest.EndTime.After(contest.StartTime) {
 		return 0, false
 	}
-	if now.Before(contest.StartTime) || !now.Before(contest.EndTime) {
+	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
+	if effectiveNow.Before(contest.StartTime) || !effectiveNow.Before(contest.EndTime) {
 		return 0, false
 	}
 
@@ -25,7 +27,7 @@ func (s *AWDService) calculateActiveRoundNumber(contest *model.Contest, now time
 		return 0, false
 	}
 
-	activeRound := int(now.Sub(contest.StartTime)/s.awdConfig.RoundInterval) + 1
+	activeRound := int(effectiveNow.Sub(contest.StartTime)/s.awdConfig.RoundInterval) + 1
 	if activeRound > totalRounds {
 		activeRound = totalRounds
 	}
@@ -52,7 +54,7 @@ func (s *AWDService) isLiveContestWindow(ctx context.Context, contestID int64) b
 		return false
 	}
 	now := time.Now().UTC()
-	if !now.Before(contest.EndTime) {
+	if contestdomain.ContestHasEndedAt(contest, now) {
 		return false
 	}
 	return contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusFrozen
