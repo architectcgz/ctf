@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -156,13 +157,39 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 			}
 			resp, err = e.cli.ContainerCreate(ctx, containerCfg, hostCfg, networkCfg, nil, cfg.Name)
 			if err != nil {
-				return "", err
+				return "", normalizeContainerCreateError(err)
 			}
 			return resp.ID, nil
 		}
-		return "", err
+		return "", normalizeContainerCreateError(err)
 	}
 	return resp.ID, nil
+}
+
+func normalizeContainerCreateError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if isPublishedHostPortConflictError(err) {
+		return runtimeports.WrapPublishedHostPortConflict(err)
+	}
+	return err
+}
+
+func isPublishedHostPortConflictError(err error) bool {
+	for current := err; current != nil; current = errors.Unwrap(current) {
+		message := strings.ToLower(strings.TrimSpace(current.Error()))
+		if message == "" {
+			continue
+		}
+		if strings.Contains(message, "port is already allocated") ||
+			strings.Contains(message, "address already in use") ||
+			strings.Contains(message, "bind for 0.0.0.0:") ||
+			strings.Contains(message, "bind for [::]:") {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error) {
