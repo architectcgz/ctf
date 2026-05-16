@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
-func TestLoadReadsContainerFlagSecretFromEnv(t *testing.T) {
+func chdirToBackendRoot(t *testing.T) {
+	t.Helper()
+
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("runtime.Caller() failed")
@@ -26,8 +28,20 @@ func TestLoadReadsContainerFlagSecretFromEnv(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Chdir(currentDir)
 	})
+}
 
-	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+func setContainerFlagSecretEnv(t *testing.T, secret string) string {
+	t.Helper()
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", secret)
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE", secretFile)
+	return secretFile
+}
+
+func TestLoadReadsContainerFlagSecretFromEnv(t *testing.T) {
+	chdirToBackendRoot(t)
+	secretFile := setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
 
 	cfg, err := Load("dev")
 	if err != nil {
@@ -37,27 +51,18 @@ func TestLoadReadsContainerFlagSecretFromEnv(t *testing.T) {
 	if cfg.Container.FlagGlobalSecret != "integration-secret-123456789012345" {
 		t.Fatalf("expected container flag secret from env, got %q", cfg.Container.FlagGlobalSecret)
 	}
+	persistedSecret, err := os.ReadFile(secretFile)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if strings.TrimSpace(string(persistedSecret)) != cfg.Container.FlagGlobalSecret {
+		t.Fatalf("expected persisted secret to match env secret, got %q", persistedSecret)
+	}
 }
 
 func TestLoadReadsContainerRegistryCredentialsFromEnv(t *testing.T) {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("runtime.Caller() failed")
-	}
-
-	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd() error = %v", err)
-	}
-	if err := os.Chdir(backendRoot); err != nil {
-		t.Fatalf("Chdir() error = %v", err)
-	}
-	t.Cleanup(func() {
-		_ = os.Chdir(currentDir)
-	})
-
-	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
 	t.Setenv("CTF_CONTAINER_REGISTRY_ENABLED", "true")
 	t.Setenv("CTF_CONTAINER_REGISTRY_SERVER", "registry.example.edu")
 	t.Setenv("CTF_CONTAINER_REGISTRY_ACCESS_SERVER", "registry-internal:5000")
@@ -160,26 +165,10 @@ func TestValidateAllowsLocalRegistryServerOutsideContainerWithoutAccessServer(t 
 }
 
 func TestLoadRejectsTooShortContainerFlagSecret(t *testing.T) {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("runtime.Caller() failed")
-	}
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "too-short-secret")
 
-	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd() error = %v", err)
-	}
-	if err := os.Chdir(backendRoot); err != nil {
-		t.Fatalf("Chdir() error = %v", err)
-	}
-	t.Cleanup(func() {
-		_ = os.Chdir(currentDir)
-	})
-
-	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "too-short-secret")
-
-	_, err = Load("dev")
+	_, err := Load("dev")
 	if err == nil {
 		t.Fatal("expected Load() to fail for short CTF_CONTAINER_FLAG_GLOBAL_SECRET, got nil")
 	}
@@ -189,26 +178,10 @@ func TestLoadRejectsTooShortContainerFlagSecret(t *testing.T) {
 }
 
 func TestLoadRejectsCredentialedCORSWithoutAllowOrigins(t *testing.T) {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("runtime.Caller() failed")
-	}
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
 
-	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd() error = %v", err)
-	}
-	if err := os.Chdir(backendRoot); err != nil {
-		t.Fatalf("Chdir() error = %v", err)
-	}
-	t.Cleanup(func() {
-		_ = os.Chdir(currentDir)
-	})
-
-	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
-
-	_, err = Load("prod")
+	_, err := Load("prod")
 	if err == nil {
 		t.Fatal("expected Load() to fail for credentialed CORS without allow_origins, got nil")
 	}
@@ -218,24 +191,8 @@ func TestLoadRejectsCredentialedCORSWithoutAllowOrigins(t *testing.T) {
 }
 
 func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("runtime.Caller() failed")
-	}
-
-	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd() error = %v", err)
-	}
-	if err := os.Chdir(backendRoot); err != nil {
-		t.Fatalf("Chdir() error = %v", err)
-	}
-	t.Cleanup(func() {
-		_ = os.Chdir(currentDir)
-	})
-
-	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
 
 	cfg, err := Load("dev")
 	if err != nil {
@@ -252,6 +209,68 @@ func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	}
 	if cfg.Container.DefenseWorkbenchRoot != "/app" {
 		t.Fatalf("expected defense workbench root /app in dev baseline config, got %q", cfg.Container.DefenseWorkbenchRoot)
+	}
+}
+
+func TestLoadRestoresContainerFlagSecretFromPersistedFile(t *testing.T) {
+	chdirToBackendRoot(t)
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+	expectedSecret := "persisted-secret-12345678901234567890"
+	if err := os.WriteFile(secretFile, []byte(expectedSecret+"\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE", secretFile)
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Container.FlagGlobalSecret != expectedSecret {
+		t.Fatalf("expected persisted secret %q, got %q", expectedSecret, cfg.Container.FlagGlobalSecret)
+	}
+}
+
+func TestLoadGeneratesAndPersistsContainerFlagSecretWhenMissing(t *testing.T) {
+	chdirToBackendRoot(t)
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE", secretFile)
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if len(cfg.Container.FlagGlobalSecret) < 32 {
+		t.Fatalf("expected generated secret length >= 32, got %d", len(cfg.Container.FlagGlobalSecret))
+	}
+	persistedSecret, err := os.ReadFile(secretFile)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if strings.TrimSpace(string(persistedSecret)) != cfg.Container.FlagGlobalSecret {
+		t.Fatalf("expected generated secret to be persisted, got %q", persistedSecret)
+	}
+}
+
+func TestLoadRejectsMismatchedPersistedContainerFlagSecret(t *testing.T) {
+	chdirToBackendRoot(t)
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+	if err := os.WriteFile(secretFile, []byte("persisted-secret-12345678901234567890\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "different-secret-12345678901234567890")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE", secretFile)
+
+	_, err := Load("dev")
+	if err == nil {
+		t.Fatal("expected Load() to reject mismatched persisted container flag secret, got nil")
+	}
+	if !strings.Contains(err.Error(), "does not match persisted secret file") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

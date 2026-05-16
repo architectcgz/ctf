@@ -127,6 +127,7 @@ container:
   start_probe_interval: 300ms
   start_probe_attempts: 5
   flag_global_secret: "" # 建议通过 CTF_CONTAINER_FLAG_GLOBAL_SECRET 注入
+  flag_global_secret_file: storage/runtime/flag-global-secret
   public_host: localhost
   access_host: "" # 可选；仅给后端进程在容器内探测 / 代理实例使用，本地 compose 可填 host-gateway.internal
   proxy_ticket_ttl: 15m
@@ -152,11 +153,11 @@ container:
     enabled: true
     poll_interval: 1s
     desired_reconcile_interval: 15s
-    batch_size: 4
     desired_reconcile_failure_initial_backoff: 30s
     desired_reconcile_failure_max_backoff: 10m
     desired_reconcile_suppress_after_failures: 6
     desired_reconcile_suppress_duration: 30m
+    batch_size: 4
     max_concurrent_starts: 4
     max_active_instances: 60
 

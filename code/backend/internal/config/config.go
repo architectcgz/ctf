@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	pkgcrypto "ctf-platform/pkg/crypto"
 )
 
 type Config struct {
@@ -152,6 +154,7 @@ type ContainerConfig struct {
 	StartProbeInterval              time.Duration            `mapstructure:"start_probe_interval"`
 	StartProbeAttempts              int                      `mapstructure:"start_probe_attempts"`
 	FlagGlobalSecret                string                   `mapstructure:"flag_global_secret"`
+	FlagGlobalSecretFile            string                   `mapstructure:"flag_global_secret_file"`
 	PublicHost                      string                   `mapstructure:"public_host"`
 	AccessHost                      string                   `mapstructure:"access_host"`
 	ProxyTicketTTL                  time.Duration            `mapstructure:"proxy_ticket_ttl"`
@@ -330,9 +333,15 @@ func Load(env string) (*Config, error) {
 	}
 
 	cfg.Container.FlagGlobalSecret = strings.TrimSpace(cfg.Container.FlagGlobalSecret)
-	if cfg.Container.FlagGlobalSecret == "" {
-		return nil, fmt.Errorf("container.flag_global_secret must be set via CTF_CONTAINER_FLAG_GLOBAL_SECRET environment variable")
+	cfg.Container.FlagGlobalSecretFile = strings.TrimSpace(cfg.Container.FlagGlobalSecretFile)
+	if cfg.Container.FlagGlobalSecret != "" && len(cfg.Container.FlagGlobalSecret) < 32 {
+		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}
+	resolvedFlagSecret, err := resolveContainerFlagGlobalSecret(cfg.Container.FlagGlobalSecret, cfg.Container.FlagGlobalSecretFile)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Container.FlagGlobalSecret = resolvedFlagSecret
 	if len(cfg.Container.FlagGlobalSecret) < 32 {
 		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}
@@ -436,15 +445,6 @@ func (c *Config) Validate() error {
 		if c.Container.Scheduler.DesiredReconcileInterval <= 0 {
 			return fmt.Errorf("container.scheduler.desired_reconcile_interval must be greater than 0")
 		}
-		if c.Container.Scheduler.BatchSize <= 0 {
-			return fmt.Errorf("container.scheduler.batch_size must be greater than 0")
-		}
-		if c.Container.Scheduler.MaxConcurrentStarts <= 0 {
-			return fmt.Errorf("container.scheduler.max_concurrent_starts must be greater than 0")
-		}
-		if c.Container.Scheduler.MaxActiveInstances < 0 {
-			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
-		}
 		if c.Container.Scheduler.DesiredReconcileFailureInitialBackoff <= 0 {
 			return fmt.Errorf("container.scheduler.desired_reconcile_failure_initial_backoff must be greater than 0")
 		}
@@ -457,6 +457,15 @@ func (c *Config) Validate() error {
 		if c.Container.Scheduler.DesiredReconcileSuppressAfterFailures > 0 &&
 			c.Container.Scheduler.DesiredReconcileSuppressDuration <= 0 {
 			return fmt.Errorf("container.scheduler.desired_reconcile_suppress_duration must be greater than 0 when desired_reconcile_suppress_after_failures is enabled")
+		}
+		if c.Container.Scheduler.BatchSize <= 0 {
+			return fmt.Errorf("container.scheduler.batch_size must be greater than 0")
+		}
+		if c.Container.Scheduler.MaxConcurrentStarts <= 0 {
+			return fmt.Errorf("container.scheduler.max_concurrent_starts must be greater than 0")
+		}
+		if c.Container.Scheduler.MaxActiveInstances < 0 {
+			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
 		}
 	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
@@ -717,6 +726,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.start_probe_interval", 300*time.Millisecond)
 	v.SetDefault("container.start_probe_attempts", 5)
 	v.SetDefault("container.flag_global_secret", "")
+	v.SetDefault("container.flag_global_secret_file", "storage/runtime/flag-global-secret")
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.access_host", "")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
@@ -741,6 +751,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.scheduler.enabled", true)
 	v.SetDefault("container.scheduler.poll_interval", time.Second)
 	v.SetDefault("container.scheduler.desired_reconcile_interval", 15*time.Second)
+	v.SetDefault("container.scheduler.desired_reconcile_failure_initial_backoff", 30*time.Second)
+	v.SetDefault("container.scheduler.desired_reconcile_failure_max_backoff", 10*time.Minute)
+	v.SetDefault("container.scheduler.desired_reconcile_suppress_after_failures", 6)
+	v.SetDefault("container.scheduler.desired_reconcile_suppress_duration", 30*time.Minute)
 	v.SetDefault("container.scheduler.batch_size", 4)
 	v.SetDefault("container.scheduler.max_concurrent_starts", 4)
 	v.SetDefault("container.scheduler.max_active_instances", 60)
@@ -751,10 +765,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("challenge.publish_check.poll_interval", 2*time.Second)
 	v.SetDefault("challenge.publish_check.batch_size", 1)
 	v.SetDefault("score.cache_ttl", 5*time.Minute)
-	v.SetDefault("container.scheduler.desired_reconcile_failure_initial_backoff", 30*time.Second)
-	v.SetDefault("container.scheduler.desired_reconcile_failure_max_backoff", 10*time.Minute)
-	v.SetDefault("container.scheduler.desired_reconcile_suppress_after_failures", 6)
-	v.SetDefault("container.scheduler.desired_reconcile_suppress_duration", 30*time.Minute)
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)
 	v.SetDefault("cache.progress_ttl", 10*time.Minute)
@@ -810,4 +820,119 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.awd.checker_sandbox.nofile_limit", 128)
 	v.SetDefault("contest.awd.checker_sandbox.output_limit_bytes", 32768)
 	v.SetDefault("contest.awd.checker_sandbox.network_mode", "")
+}
+
+func resolveContainerFlagGlobalSecret(secret, secretFile string) (string, error) {
+	secret = strings.TrimSpace(secret)
+	secretFile = strings.TrimSpace(secretFile)
+
+	if secret != "" {
+		if secretFile == "" {
+			return secret, nil
+		}
+		persistedSecret, exists, err := loadPersistedContainerFlagGlobalSecret(secretFile)
+		if err != nil {
+			return "", fmt.Errorf("load container.flag_global_secret_file: %w", err)
+		}
+		if exists {
+			if persistedSecret != secret {
+				return "", fmt.Errorf("container.flag_global_secret does not match persisted secret file %s", secretFile)
+			}
+			return secret, nil
+		}
+		if err := persistContainerFlagGlobalSecret(secretFile, secret); err != nil {
+			return "", fmt.Errorf("persist container.flag_global_secret_file: %w", err)
+		}
+		return secret, nil
+	}
+
+	if secretFile == "" {
+		return "", fmt.Errorf("container.flag_global_secret must be set via CTF_CONTAINER_FLAG_GLOBAL_SECRET or persisted via container.flag_global_secret_file")
+	}
+
+	persistedSecret, exists, err := loadPersistedContainerFlagGlobalSecret(secretFile)
+	if err != nil {
+		return "", fmt.Errorf("load container.flag_global_secret_file: %w", err)
+	}
+	if exists {
+		return persistedSecret, nil
+	}
+
+	generatedSecret, err := pkgcrypto.GenerateNonce()
+	if err != nil {
+		return "", fmt.Errorf("generate container.flag_global_secret: %w", err)
+	}
+	generatedSecret = strings.TrimSpace(generatedSecret)
+	if err := persistContainerFlagGlobalSecret(secretFile, generatedSecret); err != nil {
+		return "", fmt.Errorf("persist generated container.flag_global_secret_file: %w", err)
+	}
+	return generatedSecret, nil
+}
+
+func loadPersistedContainerFlagGlobalSecret(secretFile string) (string, bool, error) {
+	cleanPath := filepath.Clean(strings.TrimSpace(secretFile))
+	if cleanPath == "" || cleanPath == "." {
+		return "", false, fmt.Errorf("secret file path is empty")
+	}
+	data, err := os.ReadFile(cleanPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", false, nil
+		}
+		return "", false, err
+	}
+	secret := strings.TrimSpace(string(data))
+	if secret == "" {
+		return "", false, fmt.Errorf("secret file %s is empty", cleanPath)
+	}
+	return secret, true, nil
+}
+
+func persistContainerFlagGlobalSecret(secretFile, secret string) error {
+	cleanPath := filepath.Clean(strings.TrimSpace(secretFile))
+	secret = strings.TrimSpace(secret)
+	if cleanPath == "" || cleanPath == "." {
+		return fmt.Errorf("secret file path is empty")
+	}
+	if secret == "" {
+		return fmt.Errorf("secret is empty")
+	}
+
+	if persistedSecret, exists, err := loadPersistedContainerFlagGlobalSecret(cleanPath); err != nil {
+		return err
+	} else if exists {
+		if persistedSecret != secret {
+			return fmt.Errorf("secret file %s already exists with a different value", cleanPath)
+		}
+		return nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(cleanPath), 0o700); err != nil {
+		return err
+	}
+
+	tmpFile, err := os.CreateTemp(filepath.Dir(cleanPath), ".flag-global-secret-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+	defer func() {
+		_ = os.Remove(tmpPath)
+	}()
+
+	if err := tmpFile.Chmod(0o600); err != nil {
+		_ = tmpFile.Close()
+		return err
+	}
+	if _, err := tmpFile.WriteString(secret + "\n"); err != nil {
+		_ = tmpFile.Close()
+		return err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, cleanPath); err != nil {
+		return err
+	}
+	return nil
 }

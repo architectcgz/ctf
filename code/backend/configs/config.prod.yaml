@@ -26,6 +26,8 @@ auth:
   session_cookie_secure: true
 
 container:
+  # 若部署层不稳定注入 CTF_CONTAINER_FLAG_GLOBAL_SECRET，可改用持久化文件恢复同一把动态 Flag 密钥。
+  flag_global_secret_file: storage/runtime/flag-global-secret
   # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost
   public_host: ctf.example.com
   # 可选；仅当后端进程与题目发布端口不在同一网络视角时，才需要单独配置内部访问 host。
@@ -56,10 +58,10 @@ container:
     enabled: true
     poll_interval: 1s
     desired_reconcile_interval: 15s
-    batch_size: 4
-    max_concurrent_starts: 4
     desired_reconcile_failure_initial_backoff: 30s
     desired_reconcile_failure_max_backoff: 10m
     desired_reconcile_suppress_after_failures: 6
     desired_reconcile_suppress_duration: 30m
+    batch_size: 4
+    max_concurrent_starts: 4
     max_active_instances: 60
