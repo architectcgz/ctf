@@ -181,12 +181,16 @@ type ContainerRegistryConfig struct {
 }
 
 type ContainerSchedulerConfig struct {
-	Enabled                  bool          `mapstructure:"enabled"`
-	PollInterval             time.Duration `mapstructure:"poll_interval"`
-	DesiredReconcileInterval time.Duration `mapstructure:"desired_reconcile_interval"`
-	BatchSize                int           `mapstructure:"batch_size"`
-	MaxConcurrentStarts      int           `mapstructure:"max_concurrent_starts"`
-	MaxActiveInstances       int           `mapstructure:"max_active_instances"`
+	Enabled                               bool          `mapstructure:"enabled"`
+	PollInterval                          time.Duration `mapstructure:"poll_interval"`
+	DesiredReconcileInterval              time.Duration `mapstructure:"desired_reconcile_interval"`
+	DesiredReconcileFailureInitialBackoff time.Duration `mapstructure:"desired_reconcile_failure_initial_backoff"`
+	DesiredReconcileFailureMaxBackoff     time.Duration `mapstructure:"desired_reconcile_failure_max_backoff"`
+	DesiredReconcileSuppressAfterFailures int           `mapstructure:"desired_reconcile_suppress_after_failures"`
+	DesiredReconcileSuppressDuration      time.Duration `mapstructure:"desired_reconcile_suppress_duration"`
+	BatchSize                             int           `mapstructure:"batch_size"`
+	MaxConcurrentStarts                   int           `mapstructure:"max_concurrent_starts"`
+	MaxActiveInstances                    int           `mapstructure:"max_active_instances"`
 }
 
 type PaginationConfig struct {
@@ -440,6 +444,19 @@ func (c *Config) Validate() error {
 		}
 		if c.Container.Scheduler.MaxActiveInstances < 0 {
 			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
+		}
+		if c.Container.Scheduler.DesiredReconcileFailureInitialBackoff <= 0 {
+			return fmt.Errorf("container.scheduler.desired_reconcile_failure_initial_backoff must be greater than 0")
+		}
+		if c.Container.Scheduler.DesiredReconcileFailureMaxBackoff < c.Container.Scheduler.DesiredReconcileFailureInitialBackoff {
+			return fmt.Errorf("container.scheduler.desired_reconcile_failure_max_backoff must be greater than or equal to container.scheduler.desired_reconcile_failure_initial_backoff")
+		}
+		if c.Container.Scheduler.DesiredReconcileSuppressAfterFailures < 0 {
+			return fmt.Errorf("container.scheduler.desired_reconcile_suppress_after_failures must be greater than or equal to 0")
+		}
+		if c.Container.Scheduler.DesiredReconcileSuppressAfterFailures > 0 &&
+			c.Container.Scheduler.DesiredReconcileSuppressDuration <= 0 {
+			return fmt.Errorf("container.scheduler.desired_reconcile_suppress_duration must be greater than 0 when desired_reconcile_suppress_after_failures is enabled")
 		}
 	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
@@ -734,6 +751,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("challenge.publish_check.poll_interval", 2*time.Second)
 	v.SetDefault("challenge.publish_check.batch_size", 1)
 	v.SetDefault("score.cache_ttl", 5*time.Minute)
+	v.SetDefault("container.scheduler.desired_reconcile_failure_initial_backoff", 30*time.Second)
+	v.SetDefault("container.scheduler.desired_reconcile_failure_max_backoff", 10*time.Minute)
+	v.SetDefault("container.scheduler.desired_reconcile_suppress_after_failures", 6)
+	v.SetDefault("container.scheduler.desired_reconcile_suppress_duration", 30*time.Minute)
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)
 	v.SetDefault("cache.progress_ttl", 10*time.Minute)

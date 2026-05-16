@@ -17,14 +17,18 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if instance == nil {
 		return
 	}
+	failedAt := time.Now().UTC()
 	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
-	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusFailed, "provision_failed", time.Now().UTC()); err != nil {
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
 		s.logger.Warn("更新失败实例 AWD 操作状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
+		s.recordDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID, fmt.Errorf("provision_failed"), failedAt)
 	}
 }
 
@@ -54,6 +58,9 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
 		return errcode.ErrInternal.WithCause(err)
+	}
+	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
+		s.clearDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 	}
 	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
 		s.logger.Warn("更新实例 AWD 操作完成状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))

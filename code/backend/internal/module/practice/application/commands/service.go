@@ -65,6 +65,7 @@ type Service struct {
 	runtimeService   practiceports.RuntimeInstanceService
 	scoreService     ScoreUpdater
 	rateLimitStore   practiceports.PracticeFlagSubmitRateLimitStore
+	desiredState     practiceports.PracticeDesiredAWDReconcileStateStore
 	config           *config.Config
 	logger           *zap.Logger
 	eventBus         platformevents.Bus
@@ -78,6 +79,14 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 		return nil
 	}
 	s.eventBus = bus
+	return s
+}
+
+func (s *Service) SetDesiredAWDReconcileStateStore(store practiceports.PracticeDesiredAWDReconcileStateStore) *Service {
+	if s == nil {
+		return nil
+	}
+	s.desiredState = store
 	return s
 }
 

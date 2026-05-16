@@ -121,6 +121,8 @@ const (
 	keyContainerCleanupLock = "container:cleanup:lock"
 	// keyPlatformRuntimeState 宿主机运行态心跳与 boot_id 快照
 	keyPlatformRuntimeState = "platform:runtime:state"
+	// keyDesiredAWDReconcileStatePrefix AWD desired reconcile 的 scope 级失败退避 / suppress 状态
+	keyDesiredAWDReconcileStatePrefix = "awd:desired_reconcile:state:"
 )
 
 // InstanceUserKey 用户当前运行实例映射
@@ -157,6 +159,12 @@ func ContainerCleanupLockKey() string {
 // 数据结构: HASH (boot_id,last_heartbeat_at) | TTL: 无过期
 func PlatformRuntimeStateKey() string {
 	return withNS(keyPlatformRuntimeState)
+}
+
+// DesiredAWDReconcileStateKey AWD desired reconcile 的 scope 级失败退避 / suppress 状态
+// 数据结构: HASH (failure_count,last_failure_at,next_attempt_at,suppressed_until,last_error) | TTL: 重试窗口后保留一段有限时间
+func DesiredAWDReconcileStateKey(contestID, teamID, serviceID int64) string {
+	return withNS(fmt.Sprintf("%s%d:%d:%d", keyDesiredAWDReconcileStatePrefix, contestID, teamID, serviceID))
 }
 
 // ============================================================

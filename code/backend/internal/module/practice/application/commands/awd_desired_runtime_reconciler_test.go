@@ -2,9 +2,13 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
@@ -12,6 +16,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
@@ -324,6 +329,374 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 	}
 	if failedInstance.Nonce != "nonce-old" {
 		t.Fatalf("expected failed instance nonce to be preserved, got %+v", failedInstance)
+	}
+}
+
+func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	contestID := int64(3402)
+	teamID := int64(4402)
+	serviceID := int64(5402)
+	contest := &model.Contest{
+		ID:      contestID,
+		Mode:    model.ContestModeAWD,
+		Status:  model.ContestStatusRunning,
+		EndTime: time.Now().UTC().Add(time.Hour),
+	}
+	team := &model.Team{ID: teamID, ContestID: contestID, CaptainID: 7402, Name: "team-c"}
+	serviceDef := &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 6402, IsVisible: true}
+
+	var resolveCalls int32
+	repo := &stubPracticeRepository{
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*model.Contest, error) {
+			return []*model.Contest{contest}, nil
+		},
+		listContestTeamsFn: func(context.Context, int64) ([]*model.Team, error) {
+			return []*model.Team{team}, nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*model.ContestAWDService, error) {
+			return []*model.ContestAWDService{serviceDef}, nil
+		},
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+			return nil, nil
+		},
+		findContestTeamFn: func(context.Context, int64, int64) (*model.Team, error) {
+			return team, nil
+		},
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
+			atomic.AddInt32(&resolveCalls, 1)
+			return nil, errors.New("bad runtime config")
+		},
+	}
+
+	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 4,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:                               true,
+					PollInterval:                          time.Second,
+					DesiredReconcileInterval:              time.Second,
+					DesiredReconcileFailureInitialBackoff: time.Minute,
+					DesiredReconcileFailureMaxBackoff:     time.Minute,
+					DesiredReconcileSuppressAfterFailures: 3,
+					DesiredReconcileSuppressDuration:      10 * time.Minute,
+				},
+			},
+		},
+		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if got := atomic.LoadInt32(&resolveCalls); got != 1 {
+		t.Fatalf("expected one reconcile attempt, got %d", got)
+	}
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("second ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if got := atomic.LoadInt32(&resolveCalls); got != 1 {
+		t.Fatalf("expected backoff to suppress immediate retry, got %d attempts", got)
+	}
+
+	state, exists, err := stateStore.LoadDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID)
+	if err != nil {
+		t.Fatalf("LoadDesiredAWDReconcileState() error = %v", err)
+	}
+	if !exists || state == nil || state.FailureCount != 1 {
+		t.Fatalf("unexpected desired reconcile state: exists=%v state=%+v", exists, state)
+	}
+	if !state.NextAttemptAt.After(state.LastFailureAt) {
+		t.Fatalf("expected next attempt after last failure, got %+v", state)
+	}
+}
+
+func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	contestID := int64(3501)
+	teamID := int64(4501)
+	serviceID := int64(5501)
+	challengeID := int64(6501)
+	contestEnd := time.Now().UTC().Add(time.Hour)
+	contest := &model.Contest{ID: contestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}
+	team := &model.Team{ID: teamID, ContestID: contestID, CaptainID: 7501, Name: "team-d"}
+	serviceDef := &model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		AWDChallengeID:  challengeID,
+		IsVisible:       true,
+		ServiceSnapshot: `{"name":"awd-web","runtime_config":{"image_id":103,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+	}
+
+	var createdInstance *model.Instance
+	var operationCalls int32
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(context.Context, int64) (*model.Contest, error) { return contest, nil },
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*model.Contest, error) {
+			return []*model.Contest{contest}, nil
+		},
+		listContestTeamsFn: func(context.Context, int64) ([]*model.Team, error) {
+			return []*model.Team{team}, nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*model.ContestAWDService, error) {
+			return []*model.ContestAWDService{serviceDef}, nil
+		},
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+			return nil, nil
+		},
+		findContestTeamFn:       func(context.Context, int64, int64) (*model.Team, error) { return team, nil },
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) { return serviceDef, nil },
+		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+			return nil, nil
+		},
+		countScopedRunningInstancesFn: func(context.Context, int64, practiceports.InstanceScope) (int, error) {
+			return 0, nil
+		},
+		createInstanceFn: func(_ context.Context, instance *model.Instance) error {
+			copied := *instance
+			copied.ID = 8501
+			createdInstance = &copied
+			instance.ID = copied.ID
+			return nil
+		},
+		createAWDServiceOperationFn: func(context.Context, *model.AWDServiceOperation) error {
+			atomic.AddInt32(&operationCalls, 1)
+			return nil
+		},
+	}
+
+	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 4,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:                               true,
+					PollInterval:                          time.Second,
+					DesiredReconcileInterval:              time.Second,
+					DesiredReconcileFailureInitialBackoff: time.Minute,
+					DesiredReconcileFailureMaxBackoff:     time.Minute,
+					DesiredReconcileSuppressAfterFailures: 1,
+					DesiredReconcileSuppressDuration:      10 * time.Minute,
+				},
+			},
+		},
+		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if createdInstance == nil {
+		t.Fatal("expected desired reconcile to create an instance before failure")
+	}
+	service.markInstanceFailed(context.Background(), createdInstance)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("second ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if got := atomic.LoadInt32(&operationCalls); got != 1 {
+		t.Fatalf("expected suppressed scope to avoid extra auto operation, got %d", got)
+	}
+
+	state, exists, err := stateStore.LoadDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID)
+	if err != nil {
+		t.Fatalf("LoadDesiredAWDReconcileState() error = %v", err)
+	}
+	if !exists || state == nil || state.FailureCount != 1 {
+		t.Fatalf("unexpected desired reconcile state after provision failure: exists=%v state=%+v", exists, state)
+	}
+	if state.SuppressedUntil.IsZero() {
+		t.Fatalf("expected scope to enter suppress window, got %+v", state)
+	}
+}
+
+func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	contestID := int64(3551)
+	teamID := int64(4551)
+	serviceID := int64(5551)
+	challengeID := int64(6551)
+	contestEnd := time.Now().UTC().Add(time.Hour)
+	contest := &model.Contest{ID: contestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}
+	team := &model.Team{ID: teamID, ContestID: contestID, CaptainID: 7551, Name: "team-corrupt"}
+	serviceDef := &model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		AWDChallengeID:  challengeID,
+		IsVisible:       true,
+		ServiceSnapshot: `{"name":"awd-web","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+	}
+
+	if err := redisClient.HSet(context.Background(), rediskeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID), map[string]any{
+		"failure_count": "invalid",
+	}).Err(); err != nil {
+		t.Fatalf("seed corrupted desired reconcile state: %v", err)
+	}
+
+	var createdInstance *model.Instance
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(context.Context, int64) (*model.Contest, error) { return contest, nil },
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*model.Contest, error) {
+			return []*model.Contest{contest}, nil
+		},
+		listContestTeamsFn: func(context.Context, int64) ([]*model.Team, error) {
+			return []*model.Team{team}, nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*model.ContestAWDService, error) {
+			return []*model.ContestAWDService{serviceDef}, nil
+		},
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+			return nil, nil
+		},
+		findContestTeamFn:       func(context.Context, int64, int64) (*model.Team, error) { return team, nil },
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) { return serviceDef, nil },
+		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+			return nil, nil
+		},
+		countScopedRunningInstancesFn: func(context.Context, int64, practiceports.InstanceScope) (int, error) {
+			return 0, nil
+		},
+		createInstanceFn: func(_ context.Context, instance *model.Instance) error {
+			copied := *instance
+			createdInstance = &copied
+			instance.ID = 8551
+			return nil
+		},
+	}
+
+	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 4,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:                  true,
+					PollInterval:             time.Second,
+					DesiredReconcileInterval: time.Second,
+				},
+			},
+		},
+		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if createdInstance == nil {
+		t.Fatal("expected reconcile to continue when desired state cache is corrupted")
+	}
+}
+
+func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	contestID := int64(3601)
+	teamID := int64(4601)
+	serviceID := int64(5601)
+	contestEnd := time.Now().UTC().Add(time.Hour)
+	contest := &model.Contest{ID: contestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}
+	team := &model.Team{ID: teamID, ContestID: contestID, CaptainID: 7601, Name: "team-e"}
+	serviceDef := &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 6601, IsVisible: true}
+	activeInstance := &model.Instance{
+		ID:          8601,
+		UserID:      team.CaptainID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 6601,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   contestEnd,
+	}
+
+	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
+	if err := stateStore.StoreDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID, &practiceports.DesiredAWDReconcileState{
+		FailureCount:    3,
+		LastFailureAt:   time.Now().UTC().Add(-time.Minute),
+		NextAttemptAt:   time.Now().UTC().Add(time.Minute),
+		SuppressedUntil: time.Now().UTC().Add(10 * time.Minute),
+		LastError:       "stale failure",
+	}); err != nil {
+		t.Fatalf("StoreDesiredAWDReconcileState() error = %v", err)
+	}
+
+	repo := &stubPracticeRepository{
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*model.Contest, error) {
+			return []*model.Contest{contest}, nil
+		},
+		listContestTeamsFn: func(context.Context, int64) ([]*model.Team, error) {
+			return []*model.Team{team}, nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*model.ContestAWDService, error) {
+			return []*model.ContestAWDService{serviceDef}, nil
+		},
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+			return []*model.Instance{activeInstance}, nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour}},
+		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
+	}
+
+	if _, exists, err := stateStore.LoadDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID); err != nil {
+		t.Fatalf("LoadDesiredAWDReconcileState() error = %v", err)
+	} else if exists {
+		t.Fatal("expected active scope to clear stale desired reconcile suppress state")
 	}
 }
 

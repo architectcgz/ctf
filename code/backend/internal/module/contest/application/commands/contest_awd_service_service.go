@@ -285,6 +285,9 @@ func (s *ContestAWDServiceService) ensureMutableAWDContest(ctx context.Context, 
 	if contest.Mode != model.ContestModeAWD {
 		return nil, errcode.ErrInvalidParams
 	}
+	if contestdomain.IsContestImmutable(contest) {
+		return nil, errcode.ErrContestImmutable
+	}
 	return contest, nil
 }
 

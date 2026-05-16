@@ -160,6 +160,34 @@ func (s *Service) desiredAWDReconcileInterval() time.Duration {
 	return s.config.Container.Scheduler.DesiredReconcileInterval
 }
 
+func (s *Service) desiredAWDReconcileFailureInitialBackoff() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileFailureInitialBackoff <= 0 {
+		return 30 * time.Second
+	}
+	return s.config.Container.Scheduler.DesiredReconcileFailureInitialBackoff
+}
+
+func (s *Service) desiredAWDReconcileFailureMaxBackoff() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileFailureMaxBackoff <= 0 {
+		return 10 * time.Minute
+	}
+	return s.config.Container.Scheduler.DesiredReconcileFailureMaxBackoff
+}
+
+func (s *Service) desiredAWDReconcileSuppressAfterFailures() int {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileSuppressAfterFailures < 0 {
+		return 0
+	}
+	return s.config.Container.Scheduler.DesiredReconcileSuppressAfterFailures
+}
+
+func (s *Service) desiredAWDReconcileSuppressDuration() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileSuppressDuration <= 0 {
+		return 30 * time.Minute
+	}
+	return s.config.Container.Scheduler.DesiredReconcileSuppressDuration
+}
+
 func (s *Service) shouldRunDesiredAWDReconcile(lastAttemptAt, now time.Time) bool {
 	if now.IsZero() {
 		now = time.Now().UTC()

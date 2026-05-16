@@ -328,6 +328,20 @@ type PracticeFlagSubmitRateLimitStore interface {
 	AllowFlagSubmit(ctx context.Context, userID, challengeID int64, limit int, window time.Duration) (bool, error)
 }
 
+type DesiredAWDReconcileState struct {
+	FailureCount    int
+	LastFailureAt   time.Time
+	NextAttemptAt   time.Time
+	SuppressedUntil time.Time
+	LastError       string
+}
+
+type PracticeDesiredAWDReconcileStateStore interface {
+	LoadDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64) (*DesiredAWDReconcileState, bool, error)
+	StoreDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64, state *DesiredAWDReconcileState) error
+	DeleteDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64) error
+}
+
 type PracticeInstanceReadinessProbe interface {
 	ProbeAccessURL(ctx context.Context, accessURL string, timeout time.Duration) error
 }

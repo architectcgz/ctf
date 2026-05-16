@@ -18,6 +18,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	"ctf-platform/pkg/errcode"
 )
 
 func newContestAWDServiceForTest(t *testing.T) (*ContestAWDServiceService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
@@ -267,6 +268,51 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 	})
 	if err == nil {
 		t.Fatal("expected oversized display points to be rejected")
+	}
+}
+
+func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1811,
+		Title:     "awd-service-create-running",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+		ID:             181101,
+		Name:           "Immutable Create Service",
+		Slug:           "immutable-create-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://immutable-create.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create AWD challenge: %v", err)
+	}
+
+	_, err := service.CreateContestAWDService(context.Background(), 1811, CreateContestAWDServiceInput{
+		AWDChallengeID: 181101,
+		Points:         100,
+		Order:          1,
+		IsVisible:      boolPtr(true),
+	})
+	if err != errcode.ErrContestImmutable {
+		t.Fatalf("expected ErrContestImmutable, got %v", err)
 	}
 }
 
@@ -939,6 +985,64 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}
 }
 
+func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
+	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1812,
+		Title:     "awd-service-update-frozen",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusFrozen,
+		StartTime: now.Add(-2 * time.Hour),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+		ID:             181201,
+		Name:           "Immutable Update Service",
+		Slug:           "immutable-update-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://immutable-update.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create AWD challenge: %v", err)
+	}
+	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ID:              181202,
+		ContestID:       1812,
+		AWDChallengeID:  181201,
+		DisplayName:     "Immutable Update Service",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
+		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/flag"}}}`,
+		ValidationState: model.AWDCheckerValidationStatePending,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	displayName := "should-not-update"
+	err := service.UpdateContestAWDService(context.Background(), 1812, 181202, UpdateContestAWDServiceInput{
+		DisplayName: &displayName,
+	})
+	if err != errcode.ErrContestImmutable {
+		t.Fatalf("expected ErrContestImmutable, got %v", err)
+	}
+}
+
 func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerTokenEnvMismatched(t *testing.T) {
 	mini, err := miniredis.Run()
 	if err != nil {
@@ -1162,5 +1266,60 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 
 	if _, err := contestChallengeRepo.FindChallenge(context.Background(), 803, 1003); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatalf("expected contest_challenges bridge removed, got err=%v", err)
+	}
+}
+
+func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
+	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1813,
+		Title:     "awd-service-delete-ended",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusEnded,
+		StartTime: now.Add(-3 * time.Hour),
+		EndTime:   now.Add(-time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+		ID:             181301,
+		Name:           "Immutable Delete Service",
+		Slug:           "immutable-delete-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://immutable-delete.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create AWD challenge: %v", err)
+	}
+	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ID:              181302,
+		ContestID:       1813,
+		AWDChallengeID:  181301,
+		DisplayName:     "Immutable Delete Service",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
+		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/flag"}}}`,
+		ValidationState: model.AWDCheckerValidationStatePending,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	err := service.DeleteContestAWDService(context.Background(), 1813, 181302)
+	if err != errcode.ErrContestImmutable {
+		t.Fatalf("expected ErrContestImmutable, got %v", err)
 	}
 }

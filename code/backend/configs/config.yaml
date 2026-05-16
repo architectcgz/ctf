@@ -153,6 +153,10 @@ container:
     poll_interval: 1s
     desired_reconcile_interval: 15s
     batch_size: 4
+    desired_reconcile_failure_initial_backoff: 30s
+    desired_reconcile_failure_max_backoff: 10m
+    desired_reconcile_suppress_after_failures: 6
+    desired_reconcile_suppress_duration: 30m
     max_concurrent_starts: 4
     max_active_instances: 60
 

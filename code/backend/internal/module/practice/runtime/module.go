@@ -111,6 +111,7 @@ type moduleDeps struct {
 	challengeRepo  challengecontracts.PracticeChallengeContract
 	imageStore     challengecontracts.ImageStore
 	progressCache  practiceports.PracticeUserProgressCache
+	desiredState   practiceports.PracticeDesiredAWDReconcileStateStore
 }
 
 func Build(deps Deps) *Module {
@@ -143,6 +144,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		challengeRepo:  deps.ChallengeRepo,
 		imageStore:     deps.ImageStore,
 		progressCache:  practiceinfra.NewProgressCache(deps.Cache),
+		desiredState:   practiceinfra.NewDesiredAWDReconcileStateStore(deps.Cache),
 	}
 }
 
@@ -170,6 +172,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		flagSubmitRateLimitStore,
 		cfg,
 		log.Named("practice_service")).
+		SetDesiredAWDReconcileStateStore(deps.desiredState).
 		SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(deps.commandRepo)).
 		SetManualReviewRepository(practiceinfra.NewManualReviewRepository(deps.commandRepo)).
 		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(deps.commandRepo)).
