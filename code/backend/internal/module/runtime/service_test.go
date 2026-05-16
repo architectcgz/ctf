@@ -431,7 +431,7 @@ func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected CreateContainer() to fail when runtime engine is unavailable")
 	}
-	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+	if !errors.Is(err, runtimeports.ErrRuntimeEngineUnavailable) {
 		t.Fatalf("expected runtime engine unavailable error, got %v", err)
 	}
 	if containerID != "" || networkID != "" || hostPort != 0 || servicePort != 0 {
@@ -482,7 +482,7 @@ func TestServiceRemoveContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected RemoveContainer() to fail when runtime engine is unavailable")
 	}
-	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+	if !errors.Is(err, runtimeports.ErrRuntimeEngineUnavailable) {
 		t.Fatalf("expected runtime engine unavailable error, got %v", err)
 	}
 }
@@ -509,6 +509,22 @@ func TestServiceRemoveContainerHonorsCancellation(t *testing.T) {
 	}
 }
 
+func TestServiceRemoveContainerIgnoresMissingContainer(t *testing.T) {
+	t.Parallel()
+
+	engine := &fakeRuntimeEngine{
+		removeContainerErr: runtimeports.WrapRuntimeContainerNotFound(errors.New("Error response from daemon: No such container: ctr-missing")),
+	}
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
+
+	if err := cleanupService.RemoveContainer(context.Background(), "ctr-missing"); err != nil {
+		t.Fatalf("expected missing container to be ignored, got %v", err)
+	}
+	if engine.removedContainerID != "ctr-missing" {
+		t.Fatalf("expected cleanup to attempt removing ctr-missing, got %s", engine.removedContainerID)
+	}
+}
+
 func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
@@ -523,7 +539,7 @@ func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected CleanupRuntime() to fail when runtime engine is unavailable")
 	}
-	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+	if !errors.Is(err, runtimeports.ErrRuntimeEngineUnavailable) {
 		t.Fatalf("expected runtime engine unavailable error, got %v", err)
 	}
 }
@@ -558,7 +574,7 @@ func TestServiceCleanupRuntimeIgnoresMissingNetwork(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{
-		removeNetworkErr: errors.New("Error response from daemon: network net-missing not found"),
+		removeNetworkErr: runtimeports.WrapRuntimeNetworkNotFound(errors.New("Error response from daemon: network net-missing not found")),
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
@@ -1435,7 +1451,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	}
 
 	engine := &fakeRuntimeEngine{
-		removeContainerErr: errors.New("Error response from daemon: No such container: missing-ctr"),
+		removeContainerErr: runtimeports.WrapRuntimeContainerNotFound(errors.New("Error response from daemon: No such container: missing-ctr")),
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{

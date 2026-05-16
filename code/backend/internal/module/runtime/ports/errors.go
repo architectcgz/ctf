@@ -2,33 +2,57 @@ package ports
 
 import "errors"
 
-var ErrPublishedHostPortConflict = errors.New("runtime published host port conflict")
+var (
+	ErrRuntimeEngineUnavailable  = errors.New("runtime engine is not configured")
+	ErrRuntimeContainerNotFound  = errors.New("runtime container not found")
+	ErrRuntimeNetworkNotFound    = errors.New("runtime network not found")
+	ErrPublishedHostPortConflict = errors.New("runtime published host port conflict")
+)
 
-type publishedHostPortConflictError struct {
+type runtimeError struct {
+	kind  error
 	cause error
 }
 
-func (e *publishedHostPortConflictError) Error() string {
-	if e == nil || e.cause == nil {
-		return ErrPublishedHostPortConflict.Error()
+func (e *runtimeError) Error() string {
+	if e == nil || e.kind == nil {
+		return ""
 	}
-	return ErrPublishedHostPortConflict.Error() + ": " + e.cause.Error()
+	if e.cause == nil {
+		return e.kind.Error()
+	}
+	return e.kind.Error() + ": " + e.cause.Error()
 }
 
-func (e *publishedHostPortConflictError) Unwrap() error {
+func (e *runtimeError) Unwrap() error {
 	if e == nil {
 		return nil
 	}
 	return e.cause
 }
 
-func (e *publishedHostPortConflictError) Is(target error) bool {
-	return target == ErrPublishedHostPortConflict
+func (e *runtimeError) Is(target error) bool {
+	return e != nil && e.kind == target
+}
+
+func wrapRuntimeError(kind error, err error) error {
+	if kind == nil {
+		return err
+	}
+	if err == nil || errors.Is(err, kind) {
+		return err
+	}
+	return &runtimeError{kind: kind, cause: err}
+}
+
+func WrapRuntimeContainerNotFound(err error) error {
+	return wrapRuntimeError(ErrRuntimeContainerNotFound, err)
+}
+
+func WrapRuntimeNetworkNotFound(err error) error {
+	return wrapRuntimeError(ErrRuntimeNetworkNotFound, err)
 }
 
 func WrapPublishedHostPortConflict(err error) error {
-	if err == nil || errors.Is(err, ErrPublishedHostPortConflict) {
-		return err
-	}
-	return &publishedHostPortConflictError{cause: err}
+	return wrapRuntimeError(ErrPublishedHostPortConflict, err)
 }

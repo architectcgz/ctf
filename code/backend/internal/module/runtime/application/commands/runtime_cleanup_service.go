@@ -2,8 +2,7 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"errors"
 	"time"
 
 	"go.uber.org/zap"
@@ -102,7 +101,7 @@ func (s *RuntimeCleanupService) removeContainer(ctx context.Context, containerID
 	defer cancel()
 	_ = s.engine.StopContainer(timeoutCtx, containerID, 5*time.Second)
 	if err := s.engine.RemoveContainer(timeoutCtx, containerID, true); err != nil {
-		if isMissingContainerError(err) {
+		if errors.Is(err, runtimeports.ErrRuntimeContainerNotFound) {
 			s.logger.Info("删除容器跳过，容器不存在", zap.String("container_id", containerID))
 			return nil
 		}
@@ -123,7 +122,7 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := s.engine.RemoveNetwork(timeoutCtx, networkID); err != nil {
-		if isMissingNetworkError(err) {
+		if errors.Is(err, runtimeports.ErrRuntimeNetworkNotFound) {
 			s.logger.Info("删除网络跳过，网络不存在", zap.String("network_id", networkID))
 			return nil
 		}
@@ -152,20 +151,6 @@ func (s *RuntimeCleanupService) releasePort(ctx context.Context, instanceID int6
 	return nil
 }
 
-func isMissingContainerError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.Contains(strings.ToLower(err.Error()), "no such container")
-}
-
-func isMissingNetworkError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.Contains(strings.ToLower(err.Error()), "network") && strings.Contains(strings.ToLower(err.Error()), "not found")
-}
-
 func errRuntimeEngineUnavailable() error {
-	return fmt.Errorf("runtime engine is not configured")
+	return runtimeports.ErrRuntimeEngineUnavailable
 }

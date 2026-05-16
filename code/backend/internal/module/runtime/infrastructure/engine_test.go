@@ -10,6 +10,7 @@ import (
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/model"
 )
 
 func TestBuildSecurityOpts(t *testing.T) {
@@ -217,5 +218,90 @@ func TestSelectServicePort(t *testing.T) {
 				t.Fatalf("selectServicePort() = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestResolveContainerResourceLimitsClonesInput(t *testing.T) {
+	t.Parallel()
+
+	input := &model.ResourceLimits{
+		CPUQuota:  1.5,
+		Memory:    256 * 1024 * 1024,
+		PidsLimit: 128,
+	}
+
+	resolved, err := resolveContainerResourceLimits(input, &config.ContainerConfig{})
+	if err != nil {
+		t.Fatalf("resolveContainerResourceLimits() error = %v", err)
+	}
+	if resolved == input {
+		t.Fatal("expected resolved resource limits to be a clone, got original pointer")
+	}
+
+	resolved.Memory = 512 * 1024 * 1024
+	if input.Memory != 256*1024*1024 {
+		t.Fatalf("expected input memory to stay unchanged, got %d", input.Memory)
+	}
+}
+
+func TestResolveContainerResourceLimitsUsesDefaults(t *testing.T) {
+	t.Parallel()
+
+	resolved, err := resolveContainerResourceLimits(nil, &config.ContainerConfig{
+		DefaultCPUQuota:  2,
+		DefaultMemory:    512 * 1024 * 1024,
+		DefaultPidsLimit: 256,
+	})
+	if err != nil {
+		t.Fatalf("resolveContainerResourceLimits() error = %v", err)
+	}
+	if resolved.CPUQuota != 2 || resolved.Memory != 512*1024*1024 || resolved.PidsLimit != 256 {
+		t.Fatalf("unexpected resolved defaults: %+v", resolved)
+	}
+}
+
+func TestResolveContainerSecurityConfigClonesInput(t *testing.T) {
+	t.Parallel()
+
+	input := &model.SecurityConfig{
+		ReadonlyRootfs: true,
+		CapDrop:        []string{"ALL"},
+		CapAdd:         []string{"NET_BIND_SERVICE"},
+		SecurityOpt:    []string{"no-new-privileges:true"},
+		User:           "1000:1000",
+	}
+
+	resolved := resolveContainerSecurityConfig(input, &config.ContainerConfig{})
+	if resolved == input {
+		t.Fatal("expected resolved security config to be a clone, got original pointer")
+	}
+	if &resolved.CapDrop[0] == &input.CapDrop[0] {
+		t.Fatal("expected CapDrop slice to be cloned")
+	}
+	if &resolved.CapAdd[0] == &input.CapAdd[0] {
+		t.Fatal("expected CapAdd slice to be cloned")
+	}
+	if &resolved.SecurityOpt[0] == &input.SecurityOpt[0] {
+		t.Fatal("expected SecurityOpt slice to be cloned")
+	}
+}
+
+func TestResolveContainerSecurityConfigUsesDefaults(t *testing.T) {
+	t.Parallel()
+
+	resolved := resolveContainerSecurityConfig(nil, &config.ContainerConfig{
+		ReadonlyRootfs:      true,
+		AllowedCapabilities: []string{"CHOWN"},
+		RunAsUser:           "1000:1000",
+		Seccomp:             "default",
+	})
+	if !resolved.ReadonlyRootfs || resolved.User != "1000:1000" {
+		t.Fatalf("unexpected resolved defaults: %+v", resolved)
+	}
+	if !reflect.DeepEqual(resolved.CapDrop, []string{"ALL"}) {
+		t.Fatalf("unexpected CapDrop defaults: %v", resolved.CapDrop)
+	}
+	if !reflect.DeepEqual(resolved.CapAdd, []string{"CHOWN"}) {
+		t.Fatalf("unexpected CapAdd defaults: %v", resolved.CapAdd)
 	}
 }

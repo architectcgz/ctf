@@ -14,7 +14,6 @@ import (
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -58,8 +57,8 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	repo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := runtimecmd.NewRuntimeCleanupService(module.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
-	provisioningService := runtimecmd.NewProvisioningService(repo, module.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
+	cleanupService := module.CleanupService
+	provisioningService := module.ProvisioningService
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container)
 	proxyTicketService := instanceqry.NewProxyTicketService(
@@ -130,7 +129,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			cfg.Container.DefenseSSHHost,
 			cfg.Container.DefenseSSHPort,
 		),
-		startupRecovery: startupRecovery,
+		startupRecovery:      startupRecovery,
 		proxyTrafficRecorder: runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
 	}
 }

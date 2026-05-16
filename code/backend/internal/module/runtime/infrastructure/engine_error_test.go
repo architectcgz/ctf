@@ -42,3 +42,37 @@ func TestNormalizeContainerCreateErrorPassesThroughNonConflict(t *testing.T) {
 		t.Fatalf("expected non-conflict error not to match published host port conflict, got %v", err)
 	}
 }
+
+func TestNormalizeContainerNotFoundErrorWrapsTypedSentinel(t *testing.T) {
+	t.Parallel()
+
+	rawErr := errdefs.NotFound(errors.New("Error response from daemon: No such container: ctr-missing"))
+
+	err := normalizeContainerNotFoundError(rawErr)
+	if !errors.Is(err, runtimeports.ErrRuntimeContainerNotFound) {
+		t.Fatalf("expected runtime container not found, got %v", err)
+	}
+	if !errors.Is(err, rawErr) {
+		t.Fatalf("expected wrapped error to preserve original docker error, got %v", err)
+	}
+	if errors.Unwrap(err) != rawErr {
+		t.Fatalf("expected wrapped error to unwrap to original docker error, got %v", errors.Unwrap(err))
+	}
+}
+
+func TestNormalizeNetworkNotFoundErrorWrapsTypedSentinel(t *testing.T) {
+	t.Parallel()
+
+	rawErr := errdefs.NotFound(errors.New("Error response from daemon: network net-missing not found"))
+
+	err := normalizeNetworkNotFoundError(rawErr)
+	if !errors.Is(err, runtimeports.ErrRuntimeNetworkNotFound) {
+		t.Fatalf("expected runtime network not found, got %v", err)
+	}
+	if !errors.Is(err, rawErr) {
+		t.Fatalf("expected wrapped error to preserve original docker error, got %v", err)
+	}
+	if errors.Unwrap(err) != rawErr {
+		t.Fatalf("expected wrapped error to unwrap to original docker error, got %v", errors.Unwrap(err))
+	}
+}

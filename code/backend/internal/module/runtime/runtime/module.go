@@ -33,6 +33,8 @@ type Module struct {
 	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
 	ContestContainerFiles   contestports.AWDContainerFileWriter
 
+	ProvisioningService     *runtimecmd.ProvisioningService
+	CleanupService          *runtimecmd.RuntimeCleanupService
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
 	FileRuntime               runtimeports.ContainerFileRuntime
@@ -92,6 +94,8 @@ func Build(deps Deps) *Module {
 		OpsRuntimeStatsProvider:   opsDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
 		ProvisioningRuntime:       deps.ProvisioningRuntime,
+		ProvisioningService:       internalDeps.provisioningService,
+		CleanupService:            internalDeps.cleanupService,
 		CleanupRuntime:            deps.CleanupRuntime,
 		FileRuntime:               deps.FileRuntime,
 		ManagedContainerInventory: deps.ManagedContainerInventory,
