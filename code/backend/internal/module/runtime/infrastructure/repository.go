@@ -353,11 +353,13 @@ func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contes
 
 func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select("inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved)
+	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "inst_team_retired_ctl", "inst_service_disabled_ctl")
+	err := applyAWDActiveScopeFilter(query, "inst.service_id", "inst_team_retired_ctl", "inst_service_disabled_ctl").
 		Where("inst.id = ?", instanceID).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
@@ -377,11 +379,13 @@ func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, 
 
 func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*model.Instance, error) {
 	var instances []*model.Instance
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select("DISTINCT inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved)
+	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl")
+	err := applyAWDActiveScopeFilter(query, "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl").
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
@@ -396,7 +400,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 
 func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
 	rows := make([]userVisibleInstanceRow, 0)
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select(strings.Join([]string{
 			"inst.id",
@@ -420,7 +424,9 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
 		Joins("LEFT JOIN challenges c ON c.id = inst.challenge_id").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved)
+	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl")
+	err := applyAWDActiveScopeFilter(query, "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl").
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
 		Where(strings.Join([]string{

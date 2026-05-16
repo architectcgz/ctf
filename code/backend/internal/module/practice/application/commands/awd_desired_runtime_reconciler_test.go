@@ -700,6 +700,86 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 	}
 }
 
+func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	contestID := int64(3602)
+	teamID := int64(4602)
+	serviceID := int64(5602)
+	challengeID := int64(6602)
+	contestEnd := time.Now().UTC().Add(time.Hour)
+	contest := &model.Contest{ID: contestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}
+	team := &model.Team{ID: teamID, ContestID: contestID, CaptainID: 7602, Name: "team-manual-suppress"}
+	serviceDef := &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, IsVisible: true}
+
+	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
+	if err := stateStore.StoreDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID, &practiceports.DesiredAWDReconcileState{
+		FailureCount:  1,
+		LastFailureAt: time.Now().UTC().Add(-time.Minute),
+		NextAttemptAt: time.Now().UTC().Add(time.Minute),
+		LastError:     "stale failure",
+	}); err != nil {
+		t.Fatalf("StoreDesiredAWDReconcileState() error = %v", err)
+	}
+
+	createCalled := false
+	repo := &stubPracticeRepository{
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*model.Contest, error) {
+			return []*model.Contest{contest}, nil
+		},
+		listContestTeamsFn: func(context.Context, int64) ([]*model.Team, error) {
+			return []*model.Team{team}, nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*model.ContestAWDService, error) {
+			return []*model.ContestAWDService{serviceDef}, nil
+		},
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+			return nil, nil
+		},
+		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*model.AWDScopeControl, error) {
+			return []*model.AWDScopeControl{{
+				ContestID:   contestID,
+				TeamID:      teamID,
+				ScopeType:   model.AWDScopeControlScopeTeamService,
+				ServiceID:   serviceID,
+				ControlType: model.AWDScopeControlTypeDesiredReconcileSuppressed,
+			}}, nil
+		},
+		createInstanceFn: func(context.Context, *model.Instance) error {
+			createCalled = true
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour}},
+		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+
+	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
+		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
+	}
+	if createCalled {
+		t.Fatal("expected manual suppress to skip automatic desired reconcile")
+	}
+
+	if _, exists, err := stateStore.LoadDesiredAWDReconcileState(context.Background(), contestID, teamID, serviceID); err != nil {
+		t.Fatalf("LoadDesiredAWDReconcileState() error = %v", err)
+	} else if exists {
+		t.Fatal("expected manual suppress to clear automatic desired reconcile state")
+	}
+}
+
 func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 	t.Parallel()
 

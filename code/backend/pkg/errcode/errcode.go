@@ -116,6 +116,8 @@ var (
 	ErrAWDCheckerPreviewExpired     = New(14026, "试跑结果已失效，请重新试跑后再保存", http.StatusConflict)
 	ErrAWDCheckerPreviewUnavailable = New(14027, "当前未配置可保存试跑结果的 Redis，请先完成 Redis 配置后再试跑", http.StatusServiceUnavailable)
 	ErrAWDDefenseSSHUnavailable     = New(14028, "AWD SSH 防守入口未启用", http.StatusConflict)
+	ErrAWDTeamRetired               = New(14029, "当前队伍已退赛", http.StatusForbidden)
+	ErrAWDServiceDisabled           = New(14030, "当前队伍服务已被停用", http.StatusForbidden)
 )
 
 // 通知与 WebSocket 相关错误码 (15000-15999)

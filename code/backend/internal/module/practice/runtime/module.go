@@ -73,6 +73,7 @@ type moduleDeps struct {
 		practiceports.PracticeContestAWDInstanceRepository
 		practiceports.PracticeContestTeamRepository
 		practiceports.PracticeContestRegistrationRepository
+		practiceports.PracticeAWDScopeControlRepository
 		practiceports.PracticeSubmissionWriteRepository
 		practiceports.PracticeSolvedSubmissionRepository
 		practiceports.PracticeSubmissionHistoryRepository

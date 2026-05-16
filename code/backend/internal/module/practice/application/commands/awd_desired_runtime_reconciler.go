@@ -48,6 +48,11 @@ func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *model
 	if err != nil {
 		return err
 	}
+	controls, err := s.listContestAWDScopeControls(ctx, contest.ID)
+	if err != nil {
+		return err
+	}
+	controlIndex := buildAWDContestControlIndex(controls)
 
 	activeScopes := make(map[string]struct{}, len(instances))
 	for _, instance := range instances {
@@ -63,6 +68,11 @@ func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *model
 		}
 		for _, service := range services {
 			if service == nil || service.ID <= 0 || !service.IsVisible {
+				continue
+			}
+			controlState := controlIndex.state(team.ID, service.ID)
+			if controlState.suppressesDesiredReconcile() {
+				s.clearDesiredAWDReconcileFailure(ctx, contest.ID, team.ID, service.ID)
 				continue
 			}
 			scopeKey := awdDesiredRuntimeScopeKey(team.ID, service.ID)

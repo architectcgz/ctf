@@ -152,6 +152,73 @@ func (r *Repository) FindContestRegistration(ctx context.Context, contestID, use
 	return &registration, nil
 }
 
+func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error) {
+	var controls []*model.AWDScopeControl
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ?", contestID).
+		Order("team_id ASC, scope_type ASC, service_id ASC, control_type ASC, id ASC").
+		Find(&controls).Error; err != nil {
+		return nil, err
+	}
+	return controls, nil
+}
+
+func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error) {
+	var controls []*model.AWDScopeControl
+	query := r.dbWithContext(ctx).
+		Where("contest_id = ? AND team_id = ?", contestID, teamID)
+	if serviceID > 0 {
+		query = query.Where(
+			"(scope_type = ? AND service_id = 0) OR (scope_type = ? AND service_id = ?)",
+			model.AWDScopeControlScopeTeam,
+			model.AWDScopeControlScopeTeamService,
+			serviceID,
+		)
+	} else {
+		query = query.Where("scope_type = ? AND service_id = 0", model.AWDScopeControlScopeTeam)
+	}
+	if err := query.
+		Order("scope_type ASC, service_id ASC, control_type ASC, id ASC").
+		Find(&controls).Error; err != nil {
+		return nil, err
+	}
+	return controls, nil
+}
+
+func (r *Repository) UpsertAWDScopeControl(ctx context.Context, control *model.AWDScopeControl) error {
+	if control == nil {
+		return nil
+	}
+
+	now := time.Now().UTC()
+	if control.CreatedAt.IsZero() {
+		control.CreatedAt = now
+	}
+	control.UpdatedAt = now
+
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "contest_id"},
+			{Name: "team_id"},
+			{Name: "scope_type"},
+			{Name: "service_id"},
+			{Name: "control_type"},
+		},
+		DoUpdates: clause.Assignments(map[string]any{
+			"reason":     control.Reason,
+			"updated_by": control.UpdatedBy,
+			"updated_at": now,
+		}),
+	}).Create(control).Error
+}
+
+func (r *Repository) DeleteAWDScopeControl(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error {
+	return r.dbWithContext(ctx).
+		Where("contest_id = ? AND team_id = ? AND scope_type = ? AND control_type = ? AND service_id = ?",
+			contestID, teamID, scopeType, controlType, serviceID).
+		Delete(&model.AWDScopeControl{}).Error
+}
+
 func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
 	if scope.ServiceID != nil {
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).

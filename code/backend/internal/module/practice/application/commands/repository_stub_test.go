@@ -24,6 +24,10 @@ type stubPracticeRepository struct {
 	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*model.Team, error)
 	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*model.Team, error)
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	listContestAWDScopeControlsFn          func(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error)
+	listScopeAWDScopeControlsFn            func(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error)
+	upsertAWDScopeControlFn                func(ctx context.Context, control *model.AWDScopeControl) error
+	deleteAWDScopeControlFn                func(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
 	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
 	findScopedRestartableInstanceFn        func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
@@ -132,6 +136,34 @@ func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, co
 		return s.findContestRegistrationFn(ctx, contestID, userID)
 	}
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error) {
+	if s.listContestAWDScopeControlsFn != nil {
+		return s.listContestAWDScopeControlsFn(ctx, contestID)
+	}
+	return nil, nil
+}
+
+func (s *stubPracticeRepository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error) {
+	if s.listScopeAWDScopeControlsFn != nil {
+		return s.listScopeAWDScopeControlsFn(ctx, contestID, teamID, serviceID)
+	}
+	return nil, nil
+}
+
+func (s *stubPracticeRepository) UpsertAWDScopeControl(ctx context.Context, control *model.AWDScopeControl) error {
+	if s.upsertAWDScopeControlFn != nil {
+		return s.upsertAWDScopeControlFn(ctx, control)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) DeleteAWDScopeControl(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error {
+	if s.deleteAWDScopeControlFn != nil {
+		return s.deleteAWDScopeControlFn(ctx, contestID, teamID, scopeType, controlType, serviceID)
+	}
+	return nil
 }
 
 func (s *stubPracticeRepository) LockInstanceScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {

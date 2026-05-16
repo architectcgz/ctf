@@ -28,6 +28,9 @@ type practiceService interface {
 	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
 	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
+	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*dto.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*dto.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*dto.AdminAWDScopeControlResp, error)
 	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
@@ -216,6 +219,123 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 		return
 	}
 
+	response.Success(c, resp)
+}
+
+// SetAdminContestAWDTeamRetired 设置队伍退赛控制
+// PUT /api/v1/admin/contests/:id/awd/teams/:team_id/retirement
+func (h *Handler) SetAdminContestAWDTeamRetired(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.SetAdminContestAWDTeamRetiredReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SetAdminContestAWDTeamRetired(
+		c.Request.Context(),
+		contestID,
+		teamID,
+		authctx.MustCurrentUser(c).UserID,
+		req.Retired != nil && *req.Retired,
+		req.Reason,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+// SetAdminContestAWDTeamServiceDisabled 设置队伍服务停用控制
+// PUT /api/v1/admin/contests/:id/awd/teams/:team_id/services/:sid/disabled
+func (h *Handler) SetAdminContestAWDTeamServiceDisabled(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.SetAdminContestAWDServiceDisabledReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SetAdminContestAWDTeamServiceDisabled(
+		c.Request.Context(),
+		contestID,
+		teamID,
+		serviceID,
+		authctx.MustCurrentUser(c).UserID,
+		req.Disabled != nil && *req.Disabled,
+		req.Reason,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+// SetAdminContestAWDDesiredReconcileSuppressed 设置 scope 级 desired reconcile suppress
+// PUT /api/v1/admin/contests/:id/awd/teams/:team_id/services/:sid/suppression
+func (h *Handler) SetAdminContestAWDDesiredReconcileSuppressed(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.SetAdminContestAWDDesiredReconcileSuppressedReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SetAdminContestAWDDesiredReconcileSuppressed(
+		c.Request.Context(),
+		contestID,
+		teamID,
+		serviceID,
+		authctx.MustCurrentUser(c).UserID,
+		req.Suppressed != nil && *req.Suppressed,
+		req.Reason,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
 	response.Success(c, resp)
 }
 

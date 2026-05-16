@@ -518,6 +518,37 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
 			Action:        model.AuditActionCreate,
+	adminOnly.PUT("/contests/:id/awd/teams/:team_id/retirement",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("team_id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "contest_awd_team_retirement",
+			DetailBuilder: middleware.DetailFromParams("id", "team_id"),
+		}),
+		deps.practice.Handler.SetAdminContestAWDTeamRetired,
+	)
+	adminOnly.PUT("/contests/:id/awd/teams/:team_id/services/:sid/disabled",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("team_id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "contest_awd_service_disable",
+			DetailBuilder: middleware.DetailFromParams("id", "team_id", "sid"),
+		}),
+		deps.practice.Handler.SetAdminContestAWDTeamServiceDisabled,
+	)
+	adminOnly.PUT("/contests/:id/awd/teams/:team_id/services/:sid/suppression",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("team_id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "contest_awd_desired_reconcile_suppression",
+			DetailBuilder: middleware.DetailFromParams("id", "team_id", "sid"),
+		}),
+		deps.practice.Handler.SetAdminContestAWDDesiredReconcileSuppressed,
 			ResourceType:  "contest_awd_instance_prewarm",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),

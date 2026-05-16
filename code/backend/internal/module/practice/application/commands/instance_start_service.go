@@ -39,6 +39,9 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	if err != nil {
 		return nil, err
 	}
+	if err := s.ensureAWDScopeAllowsLifecycle(ctx, scope); err != nil {
+		return nil, err
+	}
 	resp, err := s.startChallengeWithScope(ctx, userID, challengeID, scope)
 	if err != nil {
 		return nil, err
@@ -50,6 +53,9 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
 	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
+		return nil, err
+	}
+	if err := s.ensureAWDScopeAllowsLifecycle(ctx, scope); err != nil {
 		return nil, err
 	}
 	return s.restartOrStartScopedAWDService(ctx, awdScopedRuntimeRequest{
@@ -137,17 +143,19 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		if err := txRepo.LockInstanceScope(ctx, req.OwnerUserID, req.ChallengeID, scope); err != nil {
 			return err
 		}
+		staleHostPort := 0
 		if preserveHostPort && instance.HostPort > 0 {
 			reusable, err := txRepo.IsHostPortReusableForRestart(ctx, instance.ID, instance.HostPort)
 			if err != nil {
 				return errcode.ErrInternal.WithCause(err)
 			}
 			if !reusable {
+				staleHostPort = instance.HostPort
 				instance.HostPort = 0
 			}
 		}
 		if preserveHostPort && instance.HostPort <= 0 {
-			hostPort, err := txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+			hostPort, err := txRepo.ReserveAvailablePortExcluding(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd, staleHostPort)
 			if err != nil {
 				return errcode.ErrInternal.WithCause(err)
 			}
@@ -207,6 +215,9 @@ func (s *Service) recordScopedAWDServiceOperation(ctx context.Context, instanceI
 func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error) {
 	challengeID, ownerUserID, scope, err := s.resolveAdminContestAWDServiceInstanceScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
+		return nil, err
+	}
+	if err := s.ensureAWDScopeAllowsLifecycle(ctx, scope); err != nil {
 		return nil, err
 	}
 	instance, err := s.startChallengeWithScope(ctx, ownerUserID, challengeID, scope)
@@ -317,6 +328,19 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 	}
 	if team.CaptainID <= 0 {
 		result.ErrorMessage = "队伍缺少队长用户"
+		return result
+	}
+	scope := practiceports.InstanceScope{
+		ContestMode: model.ContestModeAWD,
+	}
+	contestIDCopy := contestID
+	teamIDCopy := team.ID
+	serviceIDCopy := service.ID
+	scope.ContestID = &contestIDCopy
+	scope.TeamID = &teamIDCopy
+	scope.ServiceID = &serviceIDCopy
+	if err := s.ensureAWDScopeAllowsLifecycle(ctx, scope); err != nil {
+		result.ErrorMessage = err.Error()
 		return result
 	}
 	for _, instance := range existingInstances {

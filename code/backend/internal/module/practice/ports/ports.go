@@ -193,6 +193,13 @@ type PracticeContestRegistrationRepository interface {
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 }
 
+type PracticeAWDScopeControlRepository interface {
+	ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error)
+	ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error)
+	UpsertAWDScopeControl(ctx context.Context, control *model.AWDScopeControl) error
+	DeleteAWDScopeControl(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
+}
+
 type PracticeContestScopeRepository interface {
 	PracticeContestLookupRepository
 	PracticeContestChallengeLookupRepository

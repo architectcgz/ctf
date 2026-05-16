@@ -113,12 +113,17 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	controls, err := s.listContestAWDScopeControls(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 
 	resp := &dto.AdminAWDInstanceOrchestrationResp{
 		ContestID: contestID,
 		Teams:     make([]*dto.AdminAWDInstanceTeamResp, 0, len(teams)),
 		Services:  make([]*dto.AdminAWDInstanceServiceResp, 0, len(services)),
 		Instances: make([]*dto.AdminAWDInstanceItemResp, 0, len(instances)),
+		Controls:  make([]*dto.AdminAWDScopeControlResp, 0, len(controls)),
 	}
 	for _, team := range teams {
 		resp.Teams = append(resp.Teams, &dto.AdminAWDInstanceTeamResp{
@@ -148,8 +153,34 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 		resp.Instances = append(resp.Instances, &dto.AdminAWDInstanceItemResp{
 			TeamID:    *instance.TeamID,
 			ServiceID: *instance.ServiceID,
-			Instance:  domain.InstanceRespFromModel(instance),
+			Instance:  domain.InstanceRespFromModel(instance, s.config.Container.PublicHost, s.config.Container.AccessHost),
 		})
 	}
+	for _, control := range controls {
+		if control == nil {
+			continue
+		}
+		resp.Controls = append(resp.Controls, adminAWDScopeControlRecordResp(control))
+	}
 	return resp, nil
+}
+
+func adminAWDScopeControlRecordResp(control *model.AWDScopeControl) *dto.AdminAWDScopeControlResp {
+	if control == nil {
+		return nil
+	}
+	resp := &dto.AdminAWDScopeControlResp{
+		ScopeType:   control.ScopeType,
+		ControlType: control.ControlType,
+		TeamID:      control.TeamID,
+		Enabled:     true,
+		Reason:      control.Reason,
+		UpdatedBy:   control.UpdatedBy,
+		UpdatedAt:   &control.UpdatedAt,
+	}
+	if control.ScopeType == model.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
+		serviceID := control.ServiceID
+		resp.ServiceID = &serviceID
+	}
+	return resp
 }

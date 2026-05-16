@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 
 	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -13,7 +14,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 	}
 
 	var scope runtimeports.AWDTargetProxyScope
-	err := r.dbWithContext(ctx).
+	query := r.dbWithContext(ctx).
 		Table("contests AS co").
 		Select(`
 			inst.id AS instance_id,
@@ -31,9 +32,39 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 		Joins("JOIN teams AS victim ON victim.contest_id = co.id AND victim.id = ? AND victim.deleted_at IS NULL", victimTeamID).
 		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = co.id AND cas.id = ? AND cas.is_visible = ? AND cas.deleted_at IS NULL", serviceID, true).
 		Joins("JOIN instances AS inst ON inst.contest_id = co.id AND inst.team_id = victim.id AND inst.service_id = cas.id").
-		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", model.AWDRoundStatusRunning).
+		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", model.AWDRoundStatusRunning)
+	query = query.
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
+				"attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl"),
+			model.AWDScopeControlScopeTeam,
+			model.AWDScopeControlTypeRetired,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
+				"attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl"),
+			model.AWDScopeControlScopeTeamService,
+			model.AWDScopeControlTypeServiceDisabled,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
+				"victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl"),
+			model.AWDScopeControlScopeTeam,
+			model.AWDScopeControlTypeRetired,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
+				"victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl"),
+			model.AWDScopeControlScopeTeamService,
+			model.AWDScopeControlTypeServiceDisabled,
+		)
+	err := query.
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, model.ContestModeAWD, []string{model.ContestStatusRunning, model.ContestStatusFrozen}).
 		Where("tm.team_id <> victim.id").
+		Where("attacker_team_retired_ctl.id IS NULL").
+		Where("attacker_service_disabled_ctl.id IS NULL").
+		Where("victim_team_retired_ctl.id IS NULL").
+		Where("victim_service_disabled_ctl.id IS NULL").
 		Where("inst.status IN ?", []string{
 			model.InstanceStatusPending,
 			model.InstanceStatusCreating,
@@ -68,7 +99,7 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 		ServiceID         int64            `gorm:"column:service_id"`
 		AWDChallengeID    int64            `gorm:"column:awd_challenge_id"`
 	}
-	err := r.dbWithContext(ctx).
+	query := r.dbWithContext(ctx).
 		Table("contests AS co").
 		Select(`
 			inst.id AS instance_id,
@@ -84,8 +115,12 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = co.id AND cas.id = ? AND cas.is_visible = ? AND cas.deleted_at IS NULL", serviceID, true).
 		Joins("JOIN instances AS inst ON inst.contest_id = co.id AND inst.team_id = tm.team_id AND inst.service_id = cas.id").
 		Joins("JOIN awd_defense_workspaces AS ws ON ws.contest_id = co.id AND ws.team_id = tm.team_id AND ws.service_id = cas.id AND ws.instance_id = inst.id").
-		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", model.AWDRoundStatusRunning).
+		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", model.AWDRoundStatusRunning)
+	query = joinAWDActiveScopeControls(query, "co.id", "tm.team_id", "cas.id", "defense_team_retired_ctl", "defense_service_disabled_ctl")
+	err := query.
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, model.ContestModeAWD, []string{model.ContestStatusRunning, model.ContestStatusFrozen}).
+		Where("defense_team_retired_ctl.id IS NULL").
+		Where("defense_service_disabled_ctl.id IS NULL").
 		Where("inst.status = ?", model.InstanceStatusRunning).
 		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", model.AWDDefenseWorkspaceStatusRunning).
 		Order("inst.created_at DESC, inst.id DESC").
