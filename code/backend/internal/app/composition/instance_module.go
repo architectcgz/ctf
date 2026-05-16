@@ -37,6 +37,7 @@ type InstanceModule struct {
 
 	service              *runtimeHTTPServiceAdapter
 	proxyTrafficRecorder runtimeProxyTrafficRecorder
+	startupRecovery      *instancecmd.StartupRuntimeRecoveryService
 }
 
 type runtimeProxyTrafficRecorder interface {
@@ -129,8 +130,18 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			cfg.Container.DefenseSSHHost,
 			cfg.Container.DefenseSSHPort,
 		),
+		startupRecovery: startupRecovery,
 		proxyTrafficRecorder: runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
 	}
+}
+
+func (m *InstanceModule) SetAWDDesiredRuntimeReconciler(reconciler interface {
+	ReconcileDesiredAWDInstances(ctx context.Context) error
+}) {
+	if m == nil || m.startupRecovery == nil || reconciler == nil {
+		return
+	}
+	m.startupRecovery.SetDesiredRuntimeReconciler(reconciler)
 }
 
 func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {

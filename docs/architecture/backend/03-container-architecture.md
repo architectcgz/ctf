@@ -17,8 +17,9 @@
   - 负责：封装当前单机 Docker Engine 适配、容器创建 / 清理 / 文件 / 镜像 / 统计能力，以及 practice / challenge / ops 仍在复用的底层 runtime adapter
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
-- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
+- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
+  - 负责：在 `practice_instance_scheduler` 循环里按 `container.scheduler.desired_reconcile_interval` 周期性收敛 AWD `running / frozen` 比赛的期望运行态，补齐“应该活着的 `team × visible service`”，并优先复用已有实例行 / nonce，而不是直接扩展成新的批量重启控制面
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
   - 本地 Docker Compose 部署补充：当前 runtime 已区分 `container.public_host` 与 `container.access_host`。`public_host` 继续作为学生看到的宿主发布地址；`access_host` 只给 `ctf-api` 容器内部的实例就绪探测与 HTTP 代理使用。compose dev 需要把 `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1`、`CTF_CONTAINER_ACCESS_HOST=host-gateway.internal` 成对配置，并通过 `host-gateway.internal:host-gateway` 回到宿主机发布端口。
 
@@ -28,7 +29,7 @@
 
 - `code/backend/internal/module/contest/domain/contest_timing.go`、`code/backend/internal/module/contest/application/jobs/{status_update_support.go,awd_round_plan.go,awd_round_flag_support.go}`、`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
   - 负责：把 AWD 比赛的有效时间窗统一收口到 `effectiveNow = now - pausedDuration` 与 `effectiveEnd = end_time + pausedDuration`；`pausedDuration` 来自 `contests.paused_seconds`，会同时作用到 round 推进、封榜时间、Flag 读取窗口、榜单结束时间和 `until_contest_end` 实例过期时间
-  - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前的运行态，并把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
+  - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化或 heartbeat 长时间停滞时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
@@ -1627,6 +1628,7 @@ container:
   scheduler:
     enabled: true
     poll_interval: "1s"
+    desired_reconcile_interval: "15s"
     batch_size: 4
     max_concurrent_starts: 4
     max_active_instances: 60

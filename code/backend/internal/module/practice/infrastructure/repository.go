@@ -58,6 +58,20 @@ func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*mod
 	return &contest, nil
 }
 
+func (r *Repository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*model.Contest, error) {
+	var contests []*model.Contest
+	if err := r.dbWithContext(ctx).
+		Where("mode = ? AND status IN ? AND deleted_at IS NULL",
+			model.ContestModeAWD,
+			[]string{model.ContestStatusRunning, model.ContestStatusFrozen},
+		).
+		Order("id ASC").
+		Find(&contests).Error; err != nil {
+		return nil, err
+	}
+	return contests, nil
+}
+
 func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
 	var contestChallenge model.ContestChallenge
 	if err := r.dbWithContext(ctx).
@@ -167,7 +181,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 }
 
 func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	query := r.scopedInstanceQuery(ctx, userID, challengeID, scope).
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
@@ -231,7 +245,7 @@ func (r *Repository) scopedInstanceQuery(ctx context.Context, userID, challengeI
 }
 
 func (r *Repository) CountScopedRunningInstances(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	query := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
@@ -266,7 +280,7 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,
-			"updated_at": time.Now(),
+			"updated_at": time.Now().UTC(),
 		}).Error
 }
 
@@ -275,7 +289,7 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 		return nil
 	}
 	if expiresAt.IsZero() {
-		expiresAt = time.Now()
+		expiresAt = time.Now().UTC()
 	}
 
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -305,9 +319,21 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			if stored.InstanceID == nil {
 				if err := tx.Model(&model.PortAllocation{}).
 					Where("port = ?", instance.HostPort).
-					Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now()}).Error; err != nil {
+					Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now().UTC()}).Error; err != nil {
 					return err
 				}
+			}
+		}
+		if preserveHostPort && instance.HostPort <= 0 {
+			var allocation model.PortAllocation
+			err := tx.Where("instance_id = ?", instance.ID).
+				Order("updated_at DESC, port DESC").
+				First(&allocation).Error
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			if err == nil && allocation.Port > 0 {
+				instance.HostPort = allocation.Port
 			}
 		}
 		if !preserveHostPort {
@@ -324,7 +350,10 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			"status":          status,
 			"expires_at":      expiresAt,
 			"destroyed_at":    nil,
-			"updated_at":      time.Now(),
+			"updated_at":      time.Now().UTC(),
+		}
+		if preserveHostPort && instance.HostPort > 0 {
+			updates["host_port"] = instance.HostPort
 		}
 		if !preserveHostPort {
 			updates["host_port"] = 0
@@ -358,7 +387,7 @@ func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Cont
 			"status":        status,
 			"error_message": errorMessage,
 			"finished_at":   finishedAt,
-			"updated_at":    time.Now(),
+			"updated_at":    time.Now().UTC(),
 		}).Error
 }
 
@@ -370,7 +399,7 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		"status":        status,
 		"error_message": errorMessage,
 		"finished_at":   finishedAt,
-		"updated_at":    time.Now(),
+		"updated_at":    time.Now().UTC(),
 	}
 	return r.dbWithContext(ctx).
 		Model(&model.AWDServiceOperation{}).
@@ -402,7 +431,7 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 		Where("port = ?", port).
 		Updates(map[string]any{
 			"instance_id": instanceID,
-			"updated_at":  time.Now(),
+			"updated_at":  time.Now().UTC(),
 		}).Error
 }
 

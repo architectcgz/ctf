@@ -28,6 +28,7 @@ type practiceCommandRepository interface {
 	practiceports.PracticeInstanceRestartTxRepository
 	practiceports.PracticeAWDServiceOperationTxRepository
 	practiceports.PracticeContestLookupRepository
+	practiceports.PracticeDesiredAWDContestRepository
 	practiceports.PracticeContestChallengeLookupRepository
 	practiceports.PracticeContestAWDServiceRepository
 	practiceports.PracticeContestAWDInstanceRepository

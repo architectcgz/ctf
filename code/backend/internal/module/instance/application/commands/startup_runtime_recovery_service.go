@@ -17,10 +17,15 @@ const (
 	defaultStartupRuntimeHeartbeatInterval = 30 * time.Second
 	defaultStartupRuntimeRecoveryTimeout   = 5 * time.Minute
 	defaultBootIDPath                      = "/proc/sys/kernel/random/boot_id"
+	startupRuntimeHeartbeatToleranceFactor = 2
 )
 
 type startupRuntimeReconciler interface {
 	ReconcileLostActiveRuntimes(ctx context.Context) error
+}
+
+type startupRuntimeDesiredReconciler interface {
+	ReconcileDesiredAWDInstances(ctx context.Context) error
 }
 
 type startupRuntimeContestRepository interface {
@@ -38,6 +43,7 @@ type startupRuntimeStateStore interface {
 
 type StartupRuntimeRecoveryService struct {
 	reconciler   startupRuntimeReconciler
+	desired      startupRuntimeDesiredReconciler
 	contests     startupRuntimeContestRepository
 	instances    startupRuntimeInstanceRepository
 	stateStore   startupRuntimeStateStore
@@ -78,6 +84,14 @@ func NewStartupRuntimeRecoveryService(
 	}
 }
 
+func (s *StartupRuntimeRecoveryService) SetDesiredRuntimeReconciler(reconciler startupRuntimeDesiredReconciler) *StartupRuntimeRecoveryService {
+	if s == nil {
+		return nil
+	}
+	s.desired = reconciler
+	return s
+}
+
 func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 	if ctx == nil {
 		return fmt.Errorf("startup runtime recovery requires context")
@@ -93,6 +107,18 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 	s.started = true
 	s.mu.Unlock()
 
+	started := false
+	defer func() {
+		if started {
+			return
+		}
+		cancel()
+		s.mu.Lock()
+		s.cancel = nil
+		s.started = false
+		s.mu.Unlock()
+	}()
+
 	currentBootID, err := s.readCurrentBootID()
 	if err != nil {
 		return err
@@ -103,8 +129,8 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok && s.shouldRecoverFromHostReboot(lastBootID, currentBootID, lastHeartbeatAt) {
-		if err := s.recoverFromHostReboot(runCtx, currentBootID, lastBootID, lastHeartbeatAt, startedAt); err != nil {
+	if ok && s.shouldRecoverFromRuntimeOutage(lastBootID, currentBootID, lastHeartbeatAt, startedAt) {
+		if err := s.recoverFromRuntimeOutage(runCtx, currentBootID, lastBootID, lastHeartbeatAt, startedAt); err != nil {
 			return err
 		}
 	} else if err := s.recordHeartbeat(runCtx, currentBootID, startedAt); err != nil {
@@ -116,6 +142,7 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 		defer s.wg.Done()
 		s.runHeartbeatLoop(runCtx, currentBootID)
 	}()
+	started = true
 	return nil
 }
 
@@ -144,17 +171,28 @@ func (s *StartupRuntimeRecoveryService) Stop(ctx context.Context) error {
 
 	select {
 	case <-done:
+		s.mu.Lock()
+		s.cancel = nil
+		s.started = false
+		s.mu.Unlock()
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
 	}
 }
 
-func (s *StartupRuntimeRecoveryService) recoverFromHostReboot(ctx context.Context, currentBootID, lastBootID string, lastHeartbeatAt, startedAt time.Time) error {
+func (s *StartupRuntimeRecoveryService) recoverFromRuntimeOutage(ctx context.Context, currentBootID, lastBootID string, lastHeartbeatAt, startedAt time.Time) error {
+	bootIDChanged := strings.TrimSpace(lastBootID) != "" &&
+		strings.TrimSpace(currentBootID) != "" &&
+		strings.TrimSpace(lastBootID) != strings.TrimSpace(currentBootID)
+	heartbeatStale := s.isRuntimeHeartbeatStale(lastHeartbeatAt, startedAt)
 	s.log.Warn(
-		"host_reboot_detected_for_runtime_recovery",
+		"runtime_outage_detected_for_startup_recovery",
 		zap.Time("last_heartbeat_at", lastHeartbeatAt),
 		zap.Time("started_at", startedAt),
+		zap.Duration("outage_duration", startedAt.Sub(lastHeartbeatAt)),
+		zap.Bool("boot_id_changed", bootIDChanged),
+		zap.Bool("heartbeat_stale", heartbeatStale),
 	)
 
 	recoveryCtx, cancel := context.WithTimeout(ctx, defaultStartupRuntimeRecoveryTimeout)
@@ -167,6 +205,11 @@ func (s *StartupRuntimeRecoveryService) recoverFromHostReboot(ctx context.Contex
 	}
 	if s.reconciler != nil {
 		if err := s.reconciler.ReconcileLostActiveRuntimes(recoveryCtx); err != nil {
+			return err
+		}
+	}
+	if s.desired != nil {
+		if err := s.desired.ReconcileDesiredAWDInstances(recoveryCtx); err != nil {
 			return err
 		}
 	}
@@ -219,11 +262,31 @@ func buildStartupRuntimeRecoveryKey(lastBootID string, lastHeartbeatAt time.Time
 	return strings.TrimSpace(lastBootID) + "|" + lastHeartbeatAt.UTC().Format(time.RFC3339Nano)
 }
 
-func (s *StartupRuntimeRecoveryService) shouldRecoverFromHostReboot(lastBootID, currentBootID string, lastHeartbeatAt time.Time) bool {
-	if strings.TrimSpace(lastBootID) == "" || strings.TrimSpace(currentBootID) == "" || lastHeartbeatAt.IsZero() {
+func (s *StartupRuntimeRecoveryService) shouldRecoverFromRuntimeOutage(lastBootID, currentBootID string, lastHeartbeatAt, startedAt time.Time) bool {
+	if lastHeartbeatAt.IsZero() {
 		return false
 	}
-	return strings.TrimSpace(lastBootID) != strings.TrimSpace(currentBootID)
+	if strings.TrimSpace(lastBootID) != "" &&
+		strings.TrimSpace(currentBootID) != "" &&
+		strings.TrimSpace(lastBootID) != strings.TrimSpace(currentBootID) {
+		return true
+	}
+	return s.isRuntimeHeartbeatStale(lastHeartbeatAt, startedAt)
+}
+
+func (s *StartupRuntimeRecoveryService) isRuntimeHeartbeatStale(lastHeartbeatAt, startedAt time.Time) bool {
+	if lastHeartbeatAt.IsZero() || startedAt.IsZero() || !startedAt.After(lastHeartbeatAt) {
+		return false
+	}
+	return startedAt.Sub(lastHeartbeatAt) > s.runtimeHeartbeatStaleThreshold()
+}
+
+func (s *StartupRuntimeRecoveryService) runtimeHeartbeatStaleThreshold() time.Duration {
+	threshold := s.heartbeatGap * startupRuntimeHeartbeatToleranceFactor
+	if threshold <= 0 {
+		return defaultStartupRuntimeHeartbeatInterval * startupRuntimeHeartbeatToleranceFactor
+	}
+	return threshold
 }
 
 func (s *StartupRuntimeRecoveryService) runHeartbeatLoop(ctx context.Context, bootID string) {

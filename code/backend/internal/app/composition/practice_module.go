@@ -19,6 +19,9 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		ChallengeRepo:  challenge.Catalog,
 		ImageStore:     challenge.ImageStore,
 	})
+	if instance != nil && module != nil && module.AWDDesiredRuntimeReconciler != nil {
+		instance.SetAWDDesiredRuntimeReconciler(module.AWDDesiredRuntimeReconciler)
+	}
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))
 	}

@@ -127,6 +127,7 @@ type PracticeInstanceRestartTxRepository interface {
 	PracticeScopedRestartableInstanceRepository
 	PracticeInstanceRestartRepository
 	PracticeAWDServiceOperationCreateRepository
+	PracticePortReservationRepository
 }
 
 type PracticeAWDServiceOperationTxRepository interface {
@@ -147,6 +148,10 @@ type PracticeAWDServiceOperationTxManager interface {
 
 type PracticeContestLookupRepository interface {
 	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+}
+
+type PracticeDesiredAWDContestRepository interface {
+	ListDesiredRuntimeAWDContests(ctx context.Context) ([]*model.Contest, error)
 }
 
 type PracticeContestChallengeLookupRepository interface {

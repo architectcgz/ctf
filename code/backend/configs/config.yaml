@@ -128,6 +128,7 @@ container:
   start_probe_attempts: 5
   flag_global_secret: "" # 建议通过 CTF_CONTAINER_FLAG_GLOBAL_SECRET 注入
   public_host: localhost
+  access_host: "" # 可选；仅给后端进程在容器内探测 / 代理实例使用，本地 compose 可填 host-gateway.internal
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
   defense_ssh_enabled: false
@@ -139,6 +140,7 @@ container:
     enabled: false
     scheme: https
     server: "" # 例如 registry.example.edu 或 registry.local:5000
+    access_server: "" # 可选；仅给后端进程直连 registry API 使用，本地 compose 可填 ctf-registry:5000
     username: "" # 建议通过 CTF_CONTAINER_REGISTRY_USERNAME 注入
     password: "" # 建议通过 CTF_CONTAINER_REGISTRY_PASSWORD 注入
     identity_token: "" # 可选，使用 token 认证时通过 CTF_CONTAINER_REGISTRY_IDENTITY_TOKEN 注入
@@ -149,6 +151,7 @@ container:
   scheduler:
     enabled: true
     poll_interval: 1s
+    desired_reconcile_interval: 15s
     batch_size: 4
     max_concurrent_starts: 4
     max_active_instances: 60

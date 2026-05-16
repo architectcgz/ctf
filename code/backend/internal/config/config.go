@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -31,6 +32,13 @@ type Config struct {
 	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
 	WebSocket      WebSocketConfig      `mapstructure:"websocket"`
 	Contest        ContestConfig        `mapstructure:"contest"`
+}
+
+var runningInContainer = func() bool {
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+	return strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST")) != ""
 }
 
 type AppConfig struct {
@@ -145,6 +153,7 @@ type ContainerConfig struct {
 	StartProbeAttempts              int                      `mapstructure:"start_probe_attempts"`
 	FlagGlobalSecret                string                   `mapstructure:"flag_global_secret"`
 	PublicHost                      string                   `mapstructure:"public_host"`
+	AccessHost                      string                   `mapstructure:"access_host"`
 	ProxyTicketTTL                  time.Duration            `mapstructure:"proxy_ticket_ttl"`
 	ProxyBodyPreviewSize            int                      `mapstructure:"proxy_body_preview_size"`
 	DefenseSSHEnabled               bool                     `mapstructure:"defense_ssh_enabled"`
@@ -161,6 +170,7 @@ type ContainerRegistryConfig struct {
 	Enabled          bool          `mapstructure:"enabled"`
 	Scheme           string        `mapstructure:"scheme"`
 	Server           string        `mapstructure:"server"`
+	AccessServer     string        `mapstructure:"access_server"`
 	Username         string        `mapstructure:"username"`
 	Password         string        `mapstructure:"password"`
 	IdentityToken    string        `mapstructure:"identity_token"`
@@ -171,11 +181,12 @@ type ContainerRegistryConfig struct {
 }
 
 type ContainerSchedulerConfig struct {
-	Enabled             bool          `mapstructure:"enabled"`
-	PollInterval        time.Duration `mapstructure:"poll_interval"`
-	BatchSize           int           `mapstructure:"batch_size"`
-	MaxConcurrentStarts int           `mapstructure:"max_concurrent_starts"`
-	MaxActiveInstances  int           `mapstructure:"max_active_instances"`
+	Enabled                  bool          `mapstructure:"enabled"`
+	PollInterval             time.Duration `mapstructure:"poll_interval"`
+	DesiredReconcileInterval time.Duration `mapstructure:"desired_reconcile_interval"`
+	BatchSize                int           `mapstructure:"batch_size"`
+	MaxConcurrentStarts      int           `mapstructure:"max_concurrent_starts"`
+	MaxActiveInstances       int           `mapstructure:"max_active_instances"`
 }
 
 type PaginationConfig struct {
@@ -408,9 +419,18 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("container.registry.build_concurrency must be greater than 0")
 		}
 	}
+	if (c.Container.Registry.Enabled || c.Container.Registry.BuildEnabled) &&
+		runningInContainer() &&
+		isLocalRegistryServer(c.Container.Registry.Server) &&
+		strings.TrimSpace(c.Container.Registry.AccessServer) == "" {
+		return fmt.Errorf("container.registry.access_server must not be empty when container.registry.server points to localhost and the backend runs inside a container")
+	}
 	if c.Container.Scheduler.Enabled {
 		if c.Container.Scheduler.PollInterval <= 0 {
 			return fmt.Errorf("container.scheduler.poll_interval must be greater than 0")
+		}
+		if c.Container.Scheduler.DesiredReconcileInterval <= 0 {
+			return fmt.Errorf("container.scheduler.desired_reconcile_interval must be greater than 0")
 		}
 		if c.Container.Scheduler.BatchSize <= 0 {
 			return fmt.Errorf("container.scheduler.batch_size must be greater than 0")
@@ -563,6 +583,21 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+func isLocalRegistryServer(server string) bool {
+	normalized := strings.TrimSpace(server)
+	normalized = strings.TrimPrefix(normalized, "https://")
+	normalized = strings.TrimPrefix(normalized, "http://")
+	normalized = strings.Trim(normalized, "/")
+	if slash := strings.Index(normalized, "/"); slash >= 0 {
+		normalized = normalized[:slash]
+	}
+	host := normalized
+	if colon := strings.Index(normalized, ":"); colon >= 0 {
+		host = normalized[:colon]
+	}
+	return host == "127.0.0.1" || host == "localhost"
+}
+
 func isProductionEnv(env string) bool {
 	switch strings.ToLower(strings.TrimSpace(env)) {
 	case "prod", "production":
@@ -666,6 +701,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.start_probe_attempts", 5)
 	v.SetDefault("container.flag_global_secret", "")
 	v.SetDefault("container.public_host", "localhost")
+	v.SetDefault("container.access_host", "")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
 	v.SetDefault("container.proxy_body_preview_size", 1024)
 	v.SetDefault("container.defense_ssh_enabled", false)
@@ -677,6 +713,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.scheme", "https")
 	v.SetDefault("container.registry.server", "")
+	v.SetDefault("container.registry.access_server", "")
 	v.SetDefault("container.registry.username", "")
 	v.SetDefault("container.registry.password", "")
 	v.SetDefault("container.registry.identity_token", "")
@@ -686,6 +723,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.registry.default_tag_policy", "latest")
 	v.SetDefault("container.scheduler.enabled", true)
 	v.SetDefault("container.scheduler.poll_interval", time.Second)
+	v.SetDefault("container.scheduler.desired_reconcile_interval", 15*time.Second)
 	v.SetDefault("container.scheduler.batch_size", 4)
 	v.SetDefault("container.scheduler.max_concurrent_starts", 4)
 	v.SetDefault("container.scheduler.max_active_instances", 60)

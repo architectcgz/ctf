@@ -13,8 +13,9 @@
 
 ## 当前设计
 
-- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`
-  - 负责：处理练习 / 竞赛 / AWD 开题链路中的作用域锁、实例占位、`pending -> creating -> running` 状态推进、端口与运行时补偿；普通实例 `expires_at` 继续走 `container.default_ttl`，AWD 队伍服务实例 `expires_at` 改由 `contest.end_time` owner
+- `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
+  - 负责：处理练习 / 竞赛 / AWD 开题链路中的作用域锁、实例占位、`pending -> creating -> running` 状态推进、端口与运行时补偿；普通实例 `expires_at` 继续走 `container.default_ttl`，AWD 队伍服务实例 `expires_at` 改由 `contestdomain.ContestEffectiveEndTime(contest)` owner
+  - 负责：按 `container.scheduler.desired_reconcile_interval` 周期性收敛 `running / frozen` AWD 比赛里“应该活着的 `team × visible service`”，缺失时优先复用已有实例行 / nonce，再交回现有 provisioning loop
   - 不负责：引入独立 Redis 队列或让 HTTP 请求直接等待完整 Docker 冷启动；当前排队事实仍落在 `instances` 表与调度器循环里
 
 - `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`instance_service.go`
@@ -77,6 +78,7 @@
 
 - HTTP 请求阶段只负责校验、预留端口、写入 `instances(status=pending)`；
 - 后台 `practice_instance_scheduler` 以受控并发推进 `pending -> creating -> running`；
+- 同一个 scheduler 循环还会按独立节流间隔执行 AWD desired runtime reconciliation，补齐 `running / frozen` 比赛里缺失的 `team × visible service`；
 - 如果显式关闭 `container.scheduler.enabled`，仍可回退到同步启动路径。
 
 这样可以把 Docker 冷启动从 HTTP 请求里剥离出来，避免 50 人同时开题时接口直接超时。
@@ -126,11 +128,12 @@ sequenceDiagram
 | 实例数限制 | 数据库 `COUNT(*) WHERE status IN ('pending','creating','running')` | 排队态也计入占位，防止一个用户在高峰期刷满队列 |
 | 启动节流 | `container.scheduler.max_concurrent_starts` | 显式限制同一时刻的 Docker 冷启动数 |
 | 宿主机容量保护 | `container.scheduler.max_active_instances` 控制 `creating + running` | 不再默认宿主机可以无限接单 |
+| AWD 期望调和节流 | `container.scheduler.desired_reconcile_interval` | 把“应该活着的队伍服务补齐”并到现有 scheduler 循环，同时避免高频全量扫描所有 AWD 比赛 |
 | Flag 生成算法 | `HMAC-SHA256(global_secret, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练/普通竞赛链路由全局密钥与实例随机 `nonce` 共同生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
 | 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
-| 实例有效期 | 普通实例 `expires_at = now() + container.default_ttl`；AWD 队伍服务实例 `expires_at = contest.end_time` | 让练习实例继续按通用 TTL 回收，同时避免 AWD 比赛中的队伍服务在比赛未结束前被 2 小时 TTL 提前销毁 |
+| 实例有效期 | 普通实例 `expires_at = now() + container.default_ttl`；AWD 队伍服务实例 `expires_at = contest.end_time + paused_seconds` | 让练习实例继续按通用 TTL 回收，同时避免 AWD 比赛中的队伍服务在比赛未结束前被 2 小时 TTL 提前销毁，且宿主机停机期间会跟随比赛暂停一起顺延 |
 
 ### 1.4 异常处理
 
@@ -621,26 +624,28 @@ sequenceDiagram
 
 ### 5.4.1 运行时丢失恢复
 
-Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务做主动对账：
+Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务和 practice 期望调和做主动对账：
 
-- 扫描未过期的 `running / creating` 实例。
-- 根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态。
-- 若单个实例 Docker inspect 失败，只记录日志并跳过该实例，本轮继续处理其他实例。
-- 若容器缺失或已退出，将实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
+- `maintenance_service.ReconcileLostActiveRuntimes` 负责扫描未过期的 `running / creating` 实例。
+- 它会根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态；若单个实例 Docker inspect 失败，只记录日志并跳过该实例，本轮继续处理其他实例。
+- 若 active instance 的容器缺失或已退出，就把该实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
 - 重新入队时保留 `user_id / contest_id / team_id / challenge_id / service_id / share_scope / nonce / host_port / expires_at`，只清空 `container_id / network_id / runtime_details / access_url` 这类运行时字段。
-- 多容器拓扑中任一容器丢失或退出时，整条实例重新入队，避免局部恢复破坏拓扑一致性。
+- `practice.ReconcileDesiredAWDInstances` 负责 `running / frozen` AWD 比赛的差集补齐：按 `teams × visible services` 推导应该活着的 scope，如果没有 active instance，就优先复用该 scope 下最近的 restartable / failed 实例，否则新建 `pending` 实例。
+- 多容器拓扑中任一容器丢失或退出时，active runtime recovery 会把整条实例重新入队，避免局部恢复破坏拓扑一致性。
+- 启动恢复顺序是：补 `paused_seconds`、刷新活跃实例 `expires_at`、执行 active runtime recovery、执行 desired runtime reconciliation、把恢复耗时继续累计到 `paused_seconds` 并保存 heartbeat。
 
-恢复任务不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
+这两层恢复都不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 
 ### 5.5 关键决策点
 
 | 决策点 | 方案 | 理由 |
 |--------|------|------|
 | 扫描频率 | 过期回收 30s，孤儿对账 5 分钟 | 过期回收需要及时释放资源；孤儿对账是兜底机制，频率可低 |
+| AWD 期望补齐频率 | `container.scheduler.desired_reconcile_interval` | 赛中差集补齐与实例 provisioning 共用同一 loop，但使用独立节流 |
 | 批量回收并发度 | 限制为 5 个并发 goroutine | 避免瞬间大量 Docker API 调用导致 daemon 压力过大 |
 | 行锁策略 | `SELECT ... FOR UPDATE SKIP LOCKED` | 多个回收 worker 不会争抢同一条记录，避免死锁 |
 | 容器停止超时 | 10s graceful shutdown，超时后 SIGKILL | 给容器内进程合理的清理时间 |
-| 崩溃重启策略 | 用户手动触发重启；运行时丢失由后台重新入队 | 容器进程自身崩溃不盲目重启；Docker daemon 重启造成的运行时丢失需要平台恢复 |
+| 崩溃重启策略 | 用户手动触发重启；active runtime 丢失由后台重新入队；缺失 scope 由 desired reconcile 补齐 | 容器进程自身崩溃不盲目重启；Docker daemon 重启或平台恢复后的差集补齐需要平台统一收敛 |
 | 孤儿容器识别 | Docker label `ctf=true` 过滤 | 只清理平台创建的容器，不误删其他容器 |
 | 恢复重建入口 | 复用 practice 实例调度器 | 避免绕过并发上限、动态 Flag、端口和就绪探测逻辑 |
 

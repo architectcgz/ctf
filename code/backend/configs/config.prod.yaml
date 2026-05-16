@@ -28,6 +28,8 @@ auth:
 container:
   # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost
   public_host: ctf.example.com
+  # 可选；仅当后端进程与题目发布端口不在同一网络视角时，才需要单独配置内部访问 host。
+  access_host: ""
   # 如需开启 AWD 防守 SSH 网关，请配置为可被选手访问的地址和端口。
   defense_ssh_enabled: false
   defense_ssh_host: ctf.example.com
@@ -42,6 +44,7 @@ container:
     enabled: false
     scheme: https
     server: "" # 生产环境如需私有仓库，使用 CTF_CONTAINER_REGISTRY_SERVER 注入
+    access_server: "" # 可选；仅给后端进程直连 registry API 使用，本地 compose dev 常用 ctf-registry:5000
     username: "" # 使用 CTF_CONTAINER_REGISTRY_USERNAME 注入
     password: "" # 使用 CTF_CONTAINER_REGISTRY_PASSWORD 注入
     identity_token: "" # 可选，使用 CTF_CONTAINER_REGISTRY_IDENTITY_TOKEN 注入
@@ -52,6 +55,7 @@ container:
   scheduler:
     enabled: true
     poll_interval: 1s
+    desired_reconcile_interval: 15s
     batch_size: 4
     max_concurrent_starts: 4
     max_active_instances: 60

@@ -27,9 +27,12 @@ type BackgroundTaskCloser interface {
 }
 
 type Module struct {
-	BackgroundJobs  []BackgroundJob
-	BackgroundTasks BackgroundTaskCloser
-	Handler         *practicehttp.Handler
+	BackgroundJobs              []BackgroundJob
+	BackgroundTasks             BackgroundTaskCloser
+	Handler                     *practicehttp.Handler
+	AWDDesiredRuntimeReconciler interface {
+		ReconcileDesiredAWDInstances(ctx context.Context) error
+	}
 }
 
 type Deps struct {
@@ -64,6 +67,7 @@ type moduleDeps struct {
 		practiceports.PracticeInstanceRestartTxRepository
 		practiceports.PracticeAWDServiceOperationTxRepository
 		practiceports.PracticeContestLookupRepository
+		practiceports.PracticeDesiredAWDContestRepository
 		practiceports.PracticeContestChallengeLookupRepository
 		practiceports.PracticeContestAWDServiceRepository
 		practiceports.PracticeContestAWDInstanceRepository
@@ -120,8 +124,9 @@ func Build(deps Deps) *Module {
 		BackgroundJobs: []BackgroundJob{
 			{Name: "practice_instance_scheduler", Run: service.RunProvisioningLoop},
 		},
-		BackgroundTasks: service,
-		Handler:         practicehttp.NewHandler(service, rankingService, progressTimelineService),
+		BackgroundTasks:             service,
+		Handler:                     practicehttp.NewHandler(service, rankingService, progressTimelineService),
+		AWDDesiredRuntimeReconciler: service,
 	}
 }
 

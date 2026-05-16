@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -51,14 +52,49 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	if err != nil {
 		return nil, err
 	}
-	scope = resolveEffectiveInstanceScope(&model.Challenge{}, scope)
+	return s.restartOrStartScopedAWDService(ctx, awdScopedRuntimeRequest{
+		OwnerUserID: userID,
+		ContestID:   contestID,
+		ChallengeID: challengeID,
+		Scope:       scope,
+		Audit: awdScopedRuntimeAudit{
+			StartOperationType:   model.AWDServiceOperationTypeRestart,
+			RestartOperationType: model.AWDServiceOperationTypeRestart,
+			RequestedBy:          model.AWDServiceOperationRequestedByUser,
+			RequestedByID:        &userID,
+			Reason:               "user_restart",
+			SLABillable:          true,
+		},
+	})
+}
+
+type awdScopedRuntimeAudit struct {
+	StartOperationType   string
+	RestartOperationType string
+	RequestedBy          string
+	RequestedByID        *int64
+	Reason               string
+	SLABillable          bool
+}
+
+type awdScopedRuntimeRequest struct {
+	OwnerUserID int64
+	ContestID   int64
+	ChallengeID int64
+	Scope       practiceports.InstanceScope
+	Audit       awdScopedRuntimeAudit
+	NoopIfActive bool
+}
+
+func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*dto.InstanceResp, error) {
+	scope := resolveEffectiveInstanceScope(&model.Challenge{}, req.Scope)
 
 	var instance *model.Instance
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
-		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
+		if err := txRepo.LockInstanceScope(ctx, req.OwnerUserID, req.ChallengeID, scope); err != nil {
 			return err
 		}
-		existing, err := txRepo.FindScopedRestartableInstance(ctx, userID, challengeID, scope)
+		existing, err := txRepo.FindScopedRestartableInstance(ctx, req.OwnerUserID, req.ChallengeID, scope)
 		if err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
@@ -69,19 +105,23 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	}
 
 	if instance == nil {
-		resp, err := s.startChallengeWithScope(ctx, userID, challengeID, scope)
+		resp, err := s.startChallengeWithScope(ctx, req.OwnerUserID, req.ChallengeID, scope)
 		if err != nil {
 			return nil, err
 		}
-		s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, model.AWDServiceOperationTypeRestart, awdOperationStatusForInstanceStatus(resp.Status), model.AWDServiceOperationRequestedByUser, &userID, "user_restart", true)
+		s.recordScopedAWDServiceOperation(ctx, resp.ID, req.ContestID, scope, req.Audit.StartOperationType, awdOperationStatusForInstanceStatus(resp.Status), req.Audit)
 		return resp, nil
 	}
-	if instance.Status == model.InstanceStatusPending || instance.Status == model.InstanceStatusCreating {
+
+	now := time.Now().UTC()
+	if req.NoopIfActive && isDesiredAWDInstanceActive(instance, now) {
 		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 
-	if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
-		return nil, errcode.ErrServiceUnavailable.WithCause(err)
+	if instance.Status != model.InstanceStatusPending && instance.Status != model.InstanceStatusCreating {
+		if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
+			return nil, errcode.ErrServiceUnavailable.WithCause(err)
+		}
 	}
 
 	nextStatus := model.InstanceStatusCreating
@@ -94,7 +134,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	}
 	preserveHostPort := requiresPublishedHostPort(scope, s.config.Container.AccessHost)
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
-		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
+		if err := txRepo.LockInstanceScope(ctx, req.OwnerUserID, req.ChallengeID, scope); err != nil {
 			return err
 		}
 		if preserveHostPort && instance.HostPort <= 0 {
@@ -114,7 +154,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		if nextStatus == model.InstanceStatusPending {
 			operationStatus = model.AWDServiceOperationStatusProvisioning
 		}
-		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, contestID, scope, model.AWDServiceOperationTypeRestart, operationStatus, model.AWDServiceOperationRequestedByUser, &userID, "user_restart", true); err != nil {
+		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, req.ContestID, scope, req.Audit.RestartOperationType, operationStatus, req.Audit.RequestedBy, req.Audit.RequestedByID, req.Audit.Reason, req.Audit.SLABillable); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		return nil
@@ -133,7 +173,7 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 	instance.ExpiresAt = nextExpiresAt
 	instance.DestroyedAt = nil
 	if !s.schedulerEnabled() {
-		chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
+		chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, req.ChallengeID)
 		if err != nil {
 			return nil, err
 		}
@@ -146,6 +186,13 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		}
 	}
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
+}
+
+func (s *Service) recordScopedAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status string, audit awdScopedRuntimeAudit) {
+	if strings.TrimSpace(operationType) == "" {
+		return
+	}
+	s.recordAWDServiceOperation(ctx, instanceID, contestID, scope, operationType, status, audit.RequestedBy, audit.RequestedByID, audit.Reason, audit.SLABillable)
 }
 
 func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error) {

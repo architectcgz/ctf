@@ -60,6 +60,8 @@ func TestLoadReadsContainerRegistryCredentialsFromEnv(t *testing.T) {
 	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
 	t.Setenv("CTF_CONTAINER_REGISTRY_ENABLED", "true")
 	t.Setenv("CTF_CONTAINER_REGISTRY_SERVER", "registry.example.edu")
+	t.Setenv("CTF_CONTAINER_REGISTRY_ACCESS_SERVER", "registry-internal:5000")
+	t.Setenv("CTF_CONTAINER_ACCESS_HOST", "host-gateway.internal")
 	t.Setenv("CTF_CONTAINER_REGISTRY_USERNAME", "ctf")
 	t.Setenv("CTF_CONTAINER_REGISTRY_PASSWORD", "registry-token")
 
@@ -73,6 +75,12 @@ func TestLoadReadsContainerRegistryCredentialsFromEnv(t *testing.T) {
 	}
 	if cfg.Container.Registry.Server != "registry.example.edu" {
 		t.Fatalf("registry server = %q, want registry.example.edu", cfg.Container.Registry.Server)
+	}
+	if cfg.Container.Registry.AccessServer != "registry-internal:5000" {
+		t.Fatalf("registry access server = %q, want registry-internal:5000", cfg.Container.Registry.AccessServer)
+	}
+	if cfg.Container.AccessHost != "host-gateway.internal" {
+		t.Fatalf("container access host = %q, want host-gateway.internal", cfg.Container.AccessHost)
 	}
 	if cfg.Container.Registry.Username != "ctf" {
 		t.Fatalf("registry username = %q, want ctf", cfg.Container.Registry.Username)
@@ -108,6 +116,46 @@ func TestValidateRejectsEnabledRegistryWithoutCredentials(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "container.registry requires username/password or identity_token") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsLocalRegistryServerInContainerWithoutAccessServer(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Registry.Enabled = true
+	cfg.Container.Registry.Server = "127.0.0.1:5000"
+	cfg.Container.Registry.Username = "ctf"
+	cfg.Container.Registry.Password = "registry-token"
+
+	previous := runningInContainer
+	runningInContainer = func() bool { return true }
+	t.Cleanup(func() {
+		runningInContainer = previous
+	})
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject localhost registry server in container without access_server, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.registry.access_server must not be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateAllowsLocalRegistryServerOutsideContainerWithoutAccessServer(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Registry.Enabled = true
+	cfg.Container.Registry.Server = "127.0.0.1:5000"
+	cfg.Container.Registry.Username = "ctf"
+	cfg.Container.Registry.Password = "registry-token"
+
+	previous := runningInContainer
+	runningInContainer = func() bool { return false }
+	t.Cleanup(func() {
+		runningInContainer = previous
+	})
+
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("expected Validate() to allow localhost registry server outside container, got %v", err)
 	}
 }
 

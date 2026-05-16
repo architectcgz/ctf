@@ -15,11 +15,35 @@ type startupRuntimeReconcilerStub struct {
 	callOrder int
 	err       error
 	assertFn  func() error
+	onCall    func()
 }
 
 func (s *startupRuntimeReconcilerStub) ReconcileLostActiveRuntimes(context.Context) error {
 	s.called = true
 	s.callOrder++
+	if s.onCall != nil {
+		s.onCall()
+	}
+	if s.assertFn != nil {
+		if err := s.assertFn(); err != nil {
+			return err
+		}
+	}
+	return s.err
+}
+
+type startupRuntimeDesiredReconcilerStub struct {
+	called   bool
+	err      error
+	assertFn func() error
+	onCall   func()
+}
+
+func (s *startupRuntimeDesiredReconcilerStub) ReconcileDesiredAWDInstances(context.Context) error {
+	s.called = true
+	if s.onCall != nil {
+		s.onCall()
+	}
 	if s.assertFn != nil {
 		if err := s.assertFn(); err != nil {
 			return err
@@ -137,12 +161,27 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 		},
 	}
 	instanceRepo := &startupRuntimeInstanceRepoStub{}
+	callSequence := make([]string, 0, 2)
 	reconciler := &startupRuntimeReconcilerStub{
+		onCall: func() {
+			callSequence = append(callSequence, "active")
+		},
 		assertFn: func() error {
 			if len(contestRepo.calls) != 1 {
 				return context.Canceled
 			}
 			if len(instanceRepo.calls) != 1 {
+				return context.Canceled
+			}
+			return nil
+		},
+	}
+	desired := &startupRuntimeDesiredReconcilerStub{
+		onCall: func() {
+			callSequence = append(callSequence, "desired")
+		},
+		assertFn: func() error {
+			if len(callSequence) != 2 || callSequence[0] != "active" {
 				return context.Canceled
 			}
 			return nil
@@ -155,6 +194,7 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 	}
 
 	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, time.Hour, nil)
+	service.SetDesiredRuntimeReconciler(desired)
 	service.now = newDeterministicNow(startedAt, recoveredAt)
 	service.bootIDPath = writeBootIDFile(t, "boot-new")
 
@@ -169,6 +209,12 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 
 	if !reconciler.called {
 		t.Fatal("expected runtime reconciler to be called")
+	}
+	if !desired.called {
+		t.Fatal("expected desired runtime reconciler to be called")
+	}
+	if len(callSequence) != 2 || callSequence[0] != "active" || callSequence[1] != "desired" {
+		t.Fatalf("unexpected recovery order: %+v", callSequence)
 	}
 	if len(contestRepo.calls) != 2 {
 		t.Fatalf("expected two contest extension calls, got %d", len(contestRepo.calls))
@@ -213,11 +259,11 @@ func TestStartupRuntimeRecoveryServiceSameBootOnlyRecordsHeartbeat(t *testing.T)
 	reconciler := &startupRuntimeReconcilerStub{}
 	stateStore := &startupRuntimeStateStoreStub{
 		loadBootID:      "boot-same",
-		loadHeartbeatAt: startedAt.Add(-time.Minute),
+		loadHeartbeatAt: startedAt.Add(-45 * time.Second),
 		loadOK:          true,
 	}
 
-	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
 	service.now = newDeterministicNow(startedAt)
 	service.bootIDPath = writeBootIDFile(t, "boot-same")
 
@@ -244,6 +290,73 @@ func TestStartupRuntimeRecoveryServiceSameBootOnlyRecordsHeartbeat(t *testing.T)
 	}
 	if !stateStore.saveCalls[0].heartbeatAt.Equal(startedAt) {
 		t.Fatalf("expected heartbeat saved at %s, got %s", startedAt, stateStore.saveCalls[0].heartbeatAt)
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatTriggersRecovery(t *testing.T) {
+	t.Parallel()
+
+	lastHeartbeat := time.Date(2026, 5, 16, 10, 0, 0, 0, time.UTC)
+	startedAt := time.Date(2026, 5, 16, 10, 2, 0, 0, time.UTC)
+	recoveredAt := startedAt.Add(20 * time.Second)
+
+	contestRepo := &startupRuntimeContestRepoStub{
+		contests: []*model.Contest{
+			{
+				ID:            61,
+				Mode:          model.ContestModeAWD,
+				Status:        model.ContestStatusRunning,
+				StartTime:     time.Date(2026, 5, 16, 9, 0, 0, 0, time.UTC),
+				EndTime:       time.Date(2026, 5, 16, 11, 0, 0, 0, time.UTC),
+				UpdatedAt:     lastHeartbeat,
+				CreatedAt:     lastHeartbeat,
+				PausedSeconds: 0,
+			},
+		},
+	}
+	instanceRepo := &startupRuntimeInstanceRepoStub{}
+	reconciler := &startupRuntimeReconcilerStub{}
+	stateStore := &startupRuntimeStateStoreStub{
+		loadBootID:      "boot-same",
+		loadHeartbeatAt: lastHeartbeat,
+		loadOK:          true,
+	}
+
+	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
+	service.now = newDeterministicNow(startedAt, recoveredAt)
+	service.bootIDPath = writeBootIDFile(t, "boot-same")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := service.Start(ctx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if !reconciler.called {
+		t.Fatal("expected runtime reconciler to run when heartbeat is stale")
+	}
+	if len(contestRepo.calls) != 2 {
+		t.Fatalf("expected two contest extension calls, got %d", len(contestRepo.calls))
+	}
+	if contestRepo.calls[0].targetPausedSeconds != 120 {
+		t.Fatalf("expected initial paused seconds target 120, got %d", contestRepo.calls[0].targetPausedSeconds)
+	}
+	if contestRepo.calls[1].targetPausedSeconds != 140 {
+		t.Fatalf("expected final paused seconds target 140, got %d", contestRepo.calls[1].targetPausedSeconds)
+	}
+	if len(instanceRepo.calls) != 2 {
+		t.Fatalf("expected two instance expiry refreshes, got %d", len(instanceRepo.calls))
+	}
+	expectedRecoveryKey := buildStartupRuntimeRecoveryKey("boot-same", lastHeartbeat)
+	if contestRepo.calls[0].recoveryKey != expectedRecoveryKey {
+		t.Fatalf("unexpected recovery key %q", contestRepo.calls[0].recoveryKey)
+	}
+	lastSave := stateStore.saveCalls[len(stateStore.saveCalls)-1]
+	if !lastSave.heartbeatAt.Equal(recoveredAt) {
+		t.Fatalf("expected recovered heartbeat %s, got %s", recoveredAt, lastSave.heartbeatAt)
 	}
 }
 
@@ -299,6 +412,83 @@ func TestStartupRuntimeRecoveryServiceRetryDoesNotDoubleCountPreviouslyAppliedPa
 	}
 	if contestRepo.contests[0].RuntimeRecoveryAppliedSeconds != 750 {
 		t.Fatalf("expected recorded applied seconds 750, got %d", contestRepo.contests[0].RuntimeRecoveryAppliedSeconds)
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceStartRetryAfterInitFailure(t *testing.T) {
+	t.Parallel()
+
+	startedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
+	stateStore := &startupRuntimeStateStoreStub{}
+	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
+	service.now = newDeterministicNow(startedAt)
+	service.bootIDPath = filepath.Join(t.TempDir(), "missing-boot-id")
+
+	if err := service.Start(context.Background()); err == nil {
+		t.Fatal("expected first Start() to fail")
+	}
+	if len(stateStore.saveCalls) != 0 {
+		t.Fatalf("expected no heartbeat save after failed start, got %d", len(stateStore.saveCalls))
+	}
+
+	service.bootIDPath = writeBootIDFile(t, "boot-retry-ok")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := service.Start(ctx); err != nil {
+		t.Fatalf("second Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if len(stateStore.saveCalls) != 1 {
+		t.Fatalf("expected second Start() to record heartbeat once, got %d", len(stateStore.saveCalls))
+	}
+	if stateStore.saveCalls[0].bootID != "boot-retry-ok" {
+		t.Fatalf("expected saved boot id boot-retry-ok, got %q", stateStore.saveCalls[0].bootID)
+	}
+	if !stateStore.saveCalls[0].heartbeatAt.Equal(startedAt) {
+		t.Fatalf("expected saved heartbeat at %s, got %s", startedAt, stateStore.saveCalls[0].heartbeatAt)
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
+	t.Parallel()
+
+	firstStartedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
+	secondStartedAt := time.Date(2026, 5, 16, 10, 12, 0, 0, time.UTC)
+	stateStore := &startupRuntimeStateStoreStub{}
+	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
+	service.now = newDeterministicNow(firstStartedAt, secondStartedAt)
+	service.bootIDPath = writeBootIDFile(t, "boot-restart-ok")
+
+	firstCtx, firstCancel := context.WithCancel(context.Background())
+	defer firstCancel()
+	if err := service.Start(firstCtx); err != nil {
+		t.Fatalf("first Start() error = %v", err)
+	}
+	if len(stateStore.saveCalls) != 1 {
+		t.Fatalf("expected first Start() to record heartbeat once, got %d", len(stateStore.saveCalls))
+	}
+
+	if err := service.Stop(context.Background()); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+
+	secondCtx, secondCancel := context.WithCancel(context.Background())
+	defer secondCancel()
+	if err := service.Start(secondCtx); err != nil {
+		t.Fatalf("second Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if len(stateStore.saveCalls) != 2 {
+		t.Fatalf("expected second Start() to record a second heartbeat, got %d", len(stateStore.saveCalls))
+	}
+	if !stateStore.saveCalls[1].heartbeatAt.Equal(secondStartedAt) {
+		t.Fatalf("expected second heartbeat at %s, got %s", secondStartedAt, stateStore.saveCalls[1].heartbeatAt)
 	}
 }
 

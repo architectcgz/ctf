@@ -21,8 +21,16 @@ func (s *Service) RunProvisioningLoop(ctx context.Context) {
 
 	ticker := time.NewTicker(s.schedulerPollInterval())
 	defer ticker.Stop()
+	var lastDesiredReconcileAt time.Time
 
 	for {
+		if nextAttemptAt := time.Now().UTC(); s.shouldRunDesiredAWDReconcile(lastDesiredReconcileAt, nextAttemptAt) {
+			lastDesiredReconcileAt = nextAttemptAt
+			if err := s.ReconcileDesiredAWDInstances(ctx); err != nil && !errors.Is(err, context.Canceled) {
+				s.logger.Warn("对账 AWD 期望运行态失败", zap.Error(err))
+			}
+		}
+
 		if err := s.dispatchPendingInstances(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Warn("调度待启动实例失败", zap.Error(err))
 		}
@@ -143,6 +151,23 @@ func (s *Service) schedulerPollInterval() time.Duration {
 		return time.Second
 	}
 	return s.config.Container.Scheduler.PollInterval
+}
+
+func (s *Service) desiredAWDReconcileInterval() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileInterval <= 0 {
+		return 15 * time.Second
+	}
+	return s.config.Container.Scheduler.DesiredReconcileInterval
+}
+
+func (s *Service) shouldRunDesiredAWDReconcile(lastAttemptAt, now time.Time) bool {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	if lastAttemptAt.IsZero() {
+		return true
+	}
+	return !now.Before(lastAttemptAt.Add(s.desiredAWDReconcileInterval()))
 }
 
 func (s *Service) schedulerBatchSize() int {
