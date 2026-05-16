@@ -24,7 +24,7 @@ const (
 
 type provisioningRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
-	ReleasePort(ctx context.Context, port int) error
+	ReleaseReservedPort(ctx context.Context, port int) error
 }
 
 type createdTopologyNetwork struct {
@@ -138,7 +138,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	}
 	defer func() {
 		if !success && allocatedHostPort > 0 {
-			_ = s.repo.ReleasePort(ctx, allocatedHostPort)
+			_ = s.repo.ReleaseReservedPort(ctx, allocatedHostPort)
 		}
 	}()
 
@@ -286,7 +286,8 @@ func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details
 	entry := details.Containers[entryNodeIndex]
 	scheme := normalizeServiceProtocol(entry.ServiceProtocol)
 	if publishEntryPort {
-		return fmt.Sprintf("%s://%s:%d", scheme, s.config.PublicHost, hostPort), nil
+		host := model.ResolveRuntimePublishedAccessHost(s.config.PublicHost, s.config.AccessHost)
+		return fmt.Sprintf("%s://%s:%d", scheme, host, hostPort), nil
 	}
 	if entry.ServicePort <= 0 {
 		return "", fmt.Errorf("entry service port is required for private access")

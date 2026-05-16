@@ -813,11 +813,22 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 		}).Error
 }
 
-func (r *Repository) ReleasePort(ctx context.Context, port int) error {
+func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {
 	if port <= 0 {
 		return nil
 	}
-	return r.dbWithContext(ctx).Where("port = ?", port).Delete(&model.PortAllocation{}).Error
+	return r.dbWithContext(ctx).
+		Where("port = ? AND instance_id IS NULL", port).
+		Delete(&model.PortAllocation{}).Error
+}
+
+func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
+	if port <= 0 || instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("port = ? AND instance_id = ?", port, instanceID).
+		Delete(&model.PortAllocation{}).Error
 }
 
 func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {

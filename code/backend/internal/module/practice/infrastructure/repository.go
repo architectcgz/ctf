@@ -376,12 +376,12 @@ func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceI
 		Where("port = ?", hostPort).
 		First(&allocation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return true, nil
+			return false, nil
 		}
 		return false, err
 	}
 	if allocation.InstanceID == nil {
-		return true, nil
+		return false, nil
 	}
 	return *allocation.InstanceID == instanceID, nil
 }
@@ -430,7 +430,14 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 }
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
+	return r.ReserveAvailablePortExcluding(ctx, start, end, 0)
+}
+
+func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error) {
 	for port := start; port < end; port++ {
+		if excludedPort > 0 && port == excludedPort {
+			continue
+		}
 		result := r.dbWithContext(ctx).
 			Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "port"}},
@@ -455,6 +462,24 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 			"instance_id": instanceID,
 			"updated_at":  time.Now().UTC(),
 		}).Error
+}
+
+func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {
+	if port <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("port = ? AND instance_id IS NULL", port).
+		Delete(&model.PortAllocation{}).Error
+}
+
+func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
+	if port <= 0 || instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("port = ? AND instance_id = ?", port, instanceID).
+		Delete(&model.PortAllocation{}).Error
 }
 
 // CreateSubmission 创建提交记录

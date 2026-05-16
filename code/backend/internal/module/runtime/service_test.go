@@ -331,6 +331,91 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	}
 }
 
+func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{}
+	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	now := time.Now()
+	instanceID := int64(3201)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30011,
+		InstanceID: &instanceID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create owned port allocation: %v", err)
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{
+				ContainerID:  "ctr-cleanup-owned",
+				HostPort:     30011,
+				IsEntryPoint: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+
+	if err := service.CleanupRuntime(context.Background(), &model.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
+		t.Fatalf("CleanupRuntime() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30011).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected owned runtime detail host port to be released, count=%d", count)
+	}
+}
+
+func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{}
+	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	now := time.Now()
+	ownerInstanceID := int64(3202)
+	otherInstanceID := int64(3203)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30012,
+		InstanceID: &otherInstanceID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create foreign-owned port allocation: %v", err)
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{
+				ContainerID:  "ctr-cleanup-foreign",
+				HostPort:     30012,
+				IsEntryPoint: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+
+	if err := service.CleanupRuntime(context.Background(), &model.Instance{ID: ownerInstanceID, RuntimeDetails: runtimeDetails}); err != nil {
+		t.Fatalf("CleanupRuntime() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30012).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected foreign-owned runtime detail host port to stay allocated, count=%d", count)
+	}
+}
+
 func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
@@ -378,6 +463,13 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	}
 	if engine.removedNetworkID != "net-456" {
 		t.Fatalf("expected network cleanup, got %s", engine.removedNetworkID)
+	}
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30000).Count(&count).Error; err != nil {
+		t.Fatalf("count released reserved port allocation: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected reserved port rollback cleanup, count=%d", count)
 	}
 }
 
@@ -1819,7 +1911,7 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	return &testRuntimeService{
 		commands: instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
-		queries:  instanceqry.NewInstanceService(repo),
+		queries:  instanceqry.NewInstanceService(repo, cfg),
 	}
 }
 

@@ -36,7 +36,10 @@ type stubPracticeRepository struct {
 	createAWDServiceOperationFn            func(ctx context.Context, operation *model.AWDServiceOperation) error
 	finishAWDServiceOperationFn            func(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
+	reserveAvailablePortExcludingFn        func(ctx context.Context, start, end, excludedPort int) (int, error)
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
+	releaseReservedPortFn                  func(ctx context.Context, port int) error
+	releasePortForInstanceFn               func(ctx context.Context, port int, instanceID int64) error
 	createSubmissionFn                     func(ctx context.Context, submission *model.Submission) error
 	findCorrectSubmissionFn                func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
 	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
@@ -208,9 +211,30 @@ func (s *stubPracticeRepository) ReserveAvailablePort(ctx context.Context, start
 	return start, nil
 }
 
+func (s *stubPracticeRepository) ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error) {
+	if s.reserveAvailablePortExcludingFn != nil {
+		return s.reserveAvailablePortExcludingFn(ctx, start, end, excludedPort)
+	}
+	return s.ReserveAvailablePort(ctx, start, end)
+}
+
 func (s *stubPracticeRepository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
 	if s.bindReservedPortFn != nil {
 		return s.bindReservedPortFn(ctx, port, instanceID)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) ReleaseReservedPort(ctx context.Context, port int) error {
+	if s.releaseReservedPortFn != nil {
+		return s.releaseReservedPortFn(ctx, port)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
+	if s.releasePortForInstanceFn != nil {
+		return s.releasePortForInstanceFn(ctx, port, instanceID)
 	}
 	return nil
 }

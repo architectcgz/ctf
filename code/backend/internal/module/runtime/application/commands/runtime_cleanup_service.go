@@ -14,7 +14,8 @@ import (
 )
 
 type runtimeCleanupRepository interface {
-	ReleasePort(ctx context.Context, port int) error
+	ReleaseReservedPort(ctx context.Context, port int) error
+	ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error
 }
 
 // RuntimeCleanupService 收口实例运行时资源清理能力。
@@ -69,7 +70,7 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *mo
 		}
 	}
 	for _, hostPort := range resources.HostPorts {
-		if err := s.releasePort(ctx, hostPort); err != nil {
+		if err := s.releasePort(ctx, instance.ID, hostPort); err != nil {
 			return err
 		}
 	}
@@ -132,14 +133,22 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 	return nil
 }
 
-func (s *RuntimeCleanupService) releasePort(ctx context.Context, port int) error {
+func (s *RuntimeCleanupService) releasePort(ctx context.Context, instanceID int64, port int) error {
 	if port <= 0 || s == nil || s.repo == nil {
 		return nil
 	}
-	if err := s.repo.ReleasePort(ctx, port); err != nil {
+	var err error
+	if instanceID > 0 {
+		err = s.repo.ReleasePortForInstance(ctx, port, instanceID)
+	} else {
+		err = s.repo.ReleaseReservedPort(ctx, port)
+	}
+	if err != nil {
 		return err
 	}
-	s.logger.Info("释放实例端口占用", zap.Int("host_port", port))
+	s.logger.Info("释放运行时端口占用",
+		zap.Int64("instance_id", instanceID),
+		zap.Int("host_port", port))
 	return nil
 }
 

@@ -95,7 +95,19 @@ func (ctxOnlyPracticeCommandTxRepository) ReserveAvailablePort(context.Context, 
 	return 0, nil
 }
 
+func (ctxOnlyPracticeCommandTxRepository) ReserveAvailablePortExcluding(context.Context, int, int, int) (int, error) {
+	return 0, nil
+}
+
 func (ctxOnlyPracticeCommandTxRepository) BindReservedPort(context.Context, int, int64) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) ReleaseReservedPort(context.Context, int) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) ReleasePortForInstance(context.Context, int, int64) error {
 	return nil
 }
 

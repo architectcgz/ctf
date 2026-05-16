@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -41,18 +44,18 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		applyAWDDefenseWorkspaceRuntimeMounts(request, awdWorkspacePlan.runtimeMounts)
 		applyAWDCheckerTokenToTopologyRequest(request, awdWorkspacePlan.checkerTokenEnv, awdWorkspacePlan.checkerToken)
 	}
-	result, err := s.runtimeService.CreateTopology(ctx, request)
-	if err != nil {
+	if err := s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
+		request.ReservedHostPort = instance.HostPort
+		result, err := s.runtimeService.CreateTopology(ctx, request)
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		return applyTopologyCreateResultToInstance(instance, result)
+	}); err != nil {
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
 			s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 		}
-		return errcode.ErrContainerCreateFailed.WithCause(err)
-	}
-	if err := applyTopologyCreateResultToInstance(instance, result); err != nil {
-		if awdWorkspacePlan != nil {
-			s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-		}
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		return err
 	}
 	if awdWorkspacePlan != nil {
 		workspaceContainerID := awdWorkspacePlan.workspaceContainerID
@@ -123,7 +126,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 			networks[0].Shared = true
 			nodeAliases = []string{buildAWDServiceAlias(instance)}
 		}
-		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
+		request := &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
 			ContainerName:              buildRuntimeContainerName(chal, instance),
@@ -141,18 +144,19 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 					Mounts:          runtimeMounts,
 				},
 			},
-		})
-		if err != nil {
+		}
+		if err := s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
+			request.ReservedHostPort = instance.HostPort
+			result, err := s.runtimeService.CreateTopology(ctx, request)
+			if err != nil {
+				return errcode.ErrContainerCreateFailed.WithCause(err)
+			}
+			return applyTopologyCreateResultToInstance(instance, result)
+		}); err != nil {
 			if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
 				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 			}
-			return errcode.ErrContainerCreateFailed.WithCause(err)
-		}
-		if err := applyTopologyCreateResultToInstance(instance, result); err != nil {
-			if awdWorkspacePlan != nil {
-				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-			}
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return err
 		}
 		if awdWorkspacePlan != nil {
 			workspaceContainerID := awdWorkspacePlan.workspaceContainerID
@@ -181,33 +185,36 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 		return nil
 	}
 
-	containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
-	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
-	}
+	return s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
+		containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
 
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
-			{
-				NodeKey:         "default",
-				ContainerID:     containerID,
-				ServicePort:     servicePort,
-				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
-				HostPort:        hostPort,
-				IsEntryPoint:    true,
+		runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{
+				{
+					NodeKey:         "default",
+					ContainerID:     containerID,
+					ServicePort:     servicePort,
+					ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+					HostPort:        hostPort,
+					IsEntryPoint:    true,
+				},
 			},
-		},
-	})
-	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
-	}
+		})
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
 
-	instance.ContainerID = containerID
-	instance.NetworkID = networkID
-	instance.RuntimeDetails = runtimeDetails
-	host := model.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
-	instance.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
-	return nil
+		instance.ContainerID = containerID
+		instance.NetworkID = networkID
+		instance.RuntimeDetails = runtimeDetails
+		instance.HostPort = hostPort
+		host := model.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
+		instance.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
+		return nil
+	})
 }
 
 func applyTopologyCreateResultToInstance(instance *model.Instance, result *practiceports.TopologyCreateResult) error {
@@ -222,7 +229,58 @@ func applyTopologyCreateResultToInstance(instance *model.Instance, result *pract
 	instance.NetworkID = result.NetworkID
 	instance.RuntimeDetails = runtimeDetails
 	instance.AccessURL = result.AccessURL
+	for _, container := range result.RuntimeDetails.Containers {
+		if container.IsEntryPoint && container.HostPort > 0 {
+			instance.HostPort = container.HostPort
+			break
+		}
+	}
 	return nil
+}
+
+func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance *model.Instance, create func() error) error {
+	err := create()
+	if err == nil || !shouldRebindProvisioningHostPort(instance, err) {
+		return err
+	}
+
+	conflictedPort := instance.HostPort
+	if err := s.reserveReboundProvisioningHostPort(ctx, instance, conflictedPort); err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if err := create(); err != nil {
+		return err
+	}
+	if err := s.repo.ReleasePortForInstance(ctx, conflictedPort, instance.ID); err != nil && s.logger != nil {
+		s.logger.Warn("释放冲突旧端口占用失败",
+			zap.Int64("instance_id", instance.ID),
+			zap.Int("host_port", conflictedPort),
+			zap.Error(err))
+	}
+	return nil
+}
+
+func (s *Service) reserveReboundProvisioningHostPort(ctx context.Context, instance *model.Instance, excludedPort int) error {
+	if s == nil || s.repo == nil {
+		return fmt.Errorf("practice repository is nil")
+	}
+	if s.config == nil {
+		return fmt.Errorf("practice config is nil")
+	}
+	hostPort, err := s.repo.ReserveAvailablePortExcluding(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd, excludedPort)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
+		_ = s.repo.ReleaseReservedPort(ctx, hostPort)
+		return err
+	}
+	instance.HostPort = hostPort
+	return nil
+}
+
+func shouldRebindProvisioningHostPort(instance *model.Instance, err error) bool {
+	return instance != nil && instance.HostPort > 0 && errors.Is(err, runtimeports.ErrPublishedHostPortConflict)
 }
 
 func normalizeChallengeTargetProtocol(protocol string) string {

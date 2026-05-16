@@ -38,6 +38,87 @@ func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 	}
 }
 
+func TestRepositoryReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.PortAllocation{})
+
+	repo := practiceinfra.NewRepository(db)
+	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 30000)
+	if err != nil {
+		t.Fatalf("ReserveAvailablePortExcluding() error = %v", err)
+	}
+	if port != 30001 {
+		t.Fatalf("expected excluded port 30000 to be skipped, got %d", port)
+	}
+}
+
+func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.PortAllocation{})
+
+	ownerInstanceID := int64(401)
+	otherInstanceID := int64(402)
+	if err := db.Create(&model.PortAllocation{Port: 30015, InstanceID: &ownerInstanceID}).Error; err != nil {
+		t.Fatalf("seed allocated port: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	if err := repo.ReleasePortForInstance(context.Background(), 30015, otherInstanceID); err != nil {
+		t.Fatalf("ReleasePortForInstance() with foreign owner error = %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
+		t.Fatalf("count preserved allocation: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected foreign release to keep allocation, got %d rows", count)
+	}
+
+	if err := repo.ReleasePortForInstance(context.Background(), 30015, ownerInstanceID); err != nil {
+		t.Fatalf("ReleasePortForInstance() with owner error = %v", err)
+	}
+	if err := db.Model(&model.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
+		t.Fatalf("count released allocation: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected owner release to delete allocation, got %d rows", count)
+	}
+}
+
+func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.PortAllocation{})
+
+	ownerInstanceID := int64(501)
+	if err := db.Create(&model.PortAllocation{Port: 30016}).Error; err != nil {
+		t.Fatalf("seed unbound port allocation: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30017, InstanceID: &ownerInstanceID}).Error; err != nil {
+		t.Fatalf("seed bound port allocation: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	if err := repo.ReleaseReservedPort(context.Background(), 30017); err != nil {
+		t.Fatalf("ReleaseReservedPort() with bound allocation error = %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.PortAllocation{}).Where("port = ?", 30017).Count(&count).Error; err != nil {
+		t.Fatalf("count bound allocation: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected bound allocation to stay, got %d rows", count)
+	}
+
+	if err := repo.ReleaseReservedPort(context.Background(), 30016); err != nil {
+		t.Fatalf("ReleaseReservedPort() with unbound allocation error = %v", err)
+	}
+	if err := db.Model(&model.PortAllocation{}).Where("port = ?", 30016).Count(&count).Error; err != nil {
+		t.Fatalf("count unbound allocation: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected unbound allocation to be deleted, got %d rows", count)
+	}
+}
+
 func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(t *testing.T) {
 	db := newRepositoryTestDB(t, &model.Instance{}, &model.PortAllocation{})
 
@@ -257,16 +338,16 @@ func TestRepositoryIsHostPortReusableForRestart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unbound IsHostPortReusableForRestart() error = %v", err)
 	}
-	if !reusable {
-		t.Fatal("expected unbound host port to be reusable")
+	if reusable {
+		t.Fatal("expected unbound host port allocation to be rejected")
 	}
 
 	reusable, err = repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30014)
 	if err != nil {
 		t.Fatalf("missing IsHostPortReusableForRestart() error = %v", err)
 	}
-	if !reusable {
-		t.Fatal("expected missing host port allocation to be reusable")
+	if reusable {
+		t.Fatal("expected missing host port allocation to be rejected")
 	}
 }
 
