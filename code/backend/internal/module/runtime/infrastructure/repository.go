@@ -476,6 +476,30 @@ func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*mod
 	return instances, err
 }
 
+func (r *Repository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error) {
+	if instanceID <= 0 {
+		return nil, nil
+	}
+
+	var workspace model.AWDDefenseWorkspace
+	err := r.dbWithContext(ctx).
+		Where("instance_id = ?", instanceID).
+		Where("status = ?", model.AWDDefenseWorkspaceStatusRunning).
+		Where("container_id <> ''").
+		First(&workspace).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		lowerErr := strings.ToLower(err.Error())
+		if strings.Contains(lowerErr, "no such table") || strings.Contains(lowerErr, "does not exist") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &workspace, nil
+}
+
 func (r *Repository) RefreshActiveAWDInstanceExpiryByContest(ctx context.Context, contestID int64, activeAt, expiresAt time.Time) error {
 	if contestID <= 0 || expiresAt.IsZero() {
 		return nil

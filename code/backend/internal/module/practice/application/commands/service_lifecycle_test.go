@@ -96,6 +96,55 @@ func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
 	service.markInstanceFailed(nil, &model.Instance{ID: 42})
 }
 
+func TestMarkInstanceFailedDetachesCanceledContext(t *testing.T) {
+	t.Parallel()
+
+	type ctxKey string
+	parent := context.WithValue(context.Background(), ctxKey("trace"), "failed-cleanup")
+	canceledCtx, cancel := context.WithCancel(parent)
+	cancel()
+
+	assertDetachedCtx := func(t *testing.T, ctx context.Context) {
+		t.Helper()
+		if ctx == nil {
+			t.Fatal("expected detached context, got nil")
+		}
+		if ctx.Err() != nil {
+			t.Fatalf("expected detached context without cancellation, got %v", ctx.Err())
+		}
+		if got := ctx.Value(ctxKey("trace")); got != "failed-cleanup" {
+			t.Fatalf("expected context values to be preserved, got %v", got)
+		}
+	}
+
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{
+			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+				assertDetachedCtx(t, ctx)
+				return nil
+			},
+			finishActiveAWDServiceOperationFn: func(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+				assertDetachedCtx(t, ctx)
+				return nil
+			},
+		},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+				assertDetachedCtx(t, ctx)
+				return nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil)
+
+	service.markInstanceFailed(canceledCtx, &model.Instance{ID: 43})
+}
+
 func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 	t.Parallel()
 

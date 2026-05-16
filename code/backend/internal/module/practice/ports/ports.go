@@ -95,6 +95,10 @@ type PracticeInstanceRestartRepository interface {
 	ResetInstanceRuntimeForRestart(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error
 }
 
+type PracticeInstanceRestartHostPortRepository interface {
+	IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error)
+}
+
 type PracticeInstanceCreateRepository interface {
 	CreateInstance(ctx context.Context, instance *model.Instance) error
 }
@@ -126,6 +130,7 @@ type PracticeInstanceRestartTxRepository interface {
 	PracticeInstanceScopeLockRepository
 	PracticeScopedRestartableInstanceRepository
 	PracticeInstanceRestartRepository
+	PracticeInstanceRestartHostPortRepository
 	PracticeAWDServiceOperationCreateRepository
 	PracticePortReservationRepository
 }

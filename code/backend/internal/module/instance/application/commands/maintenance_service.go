@@ -15,6 +15,7 @@ type instanceMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindExpired(ctx context.Context) ([]*model.Instance, error)
 	ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error)
+	FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error)
 	CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error
 	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
@@ -187,7 +188,10 @@ func (s *InstanceMaintenanceService) isInstanceRuntimeLost(ctx context.Context, 
 		return false, "", nil, nil
 	}
 
-	containerIDs := collectInstanceContainerIDs(instance)
+	containerIDs, err := s.collectRecoverableContainerIDs(ctx, instance)
+	if err != nil {
+		return false, "", nil, err
+	}
 	if len(containerIDs) == 0 {
 		return true, "missing_runtime_identity", nil, nil
 	}
@@ -209,6 +213,22 @@ func (s *InstanceMaintenanceService) isInstanceRuntimeLost(ctx context.Context, 
 		return true, "container_not_running", stoppedContainerIDs, nil
 	}
 	return false, "", nil, nil
+}
+
+func (s *InstanceMaintenanceService) collectRecoverableContainerIDs(ctx context.Context, instance *model.Instance) ([]string, error) {
+	containerIDs := collectInstanceContainerIDs(instance)
+	if s == nil || s.repo == nil || instance == nil || instance.ID <= 0 {
+		return containerIDs, nil
+	}
+
+	workspace, err := s.repo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instance.ID)
+	if err != nil {
+		return nil, err
+	}
+	if workspace == nil || workspace.ContainerID == "" {
+		return containerIDs, nil
+	}
+	return appendUniqueContainerID(containerIDs, workspace.ContainerID), nil
 }
 
 func (s *InstanceMaintenanceService) restartStoppedContainers(ctx context.Context, instance *model.Instance, containerIDs []string) error {
@@ -299,25 +319,25 @@ func collectInstanceContainerIDs(instance *model.Instance) []string {
 		return nil
 	}
 	ids := make([]string, 0, 1)
-	seen := make(map[string]struct{})
-	add := func(containerID string) {
-		if containerID == "" {
-			return
-		}
-		if _, exists := seen[containerID]; exists {
-			return
-		}
-		seen[containerID] = struct{}{}
-		ids = append(ids, containerID)
-	}
-
-	add(instance.ContainerID)
+	ids = appendUniqueContainerID(ids, instance.ContainerID)
 	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 	if err != nil {
 		return ids
 	}
 	for _, container := range details.Containers {
-		add(container.ContainerID)
+		ids = appendUniqueContainerID(ids, container.ContainerID)
 	}
 	return ids
+}
+
+func appendUniqueContainerID(ids []string, containerID string) []string {
+	if containerID == "" {
+		return ids
+	}
+	for _, existing := range ids {
+		if existing == containerID {
+			return ids
+		}
+	}
+	return append(ids, containerID)
 }

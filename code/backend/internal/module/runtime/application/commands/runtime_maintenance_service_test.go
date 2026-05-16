@@ -16,11 +16,13 @@ import (
 type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
 	recoverableActiveInstances              []*model.Instance
+	runningWorkspaceByInstanceID            map[int64]*model.AWDDefenseWorkspace
 	requeuedIDs                             []int64
 	operations                              []*model.AWDServiceOperation
 	finishedOperations                      []int64
 	findExpiredFn                           func(ctx context.Context) ([]*model.Instance, error)
 	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*model.Instance, error)
+	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error)
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
@@ -53,6 +55,16 @@ func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.C
 		return r.listRecoverableActiveInstancesFn(ctx)
 	}
 	return append([]*model.Instance(nil), r.recoverableActiveInstances...), nil
+}
+
+func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error) {
+	if r.findRunningWorkspaceByInstanceIDFn != nil {
+		return r.findRunningWorkspaceByInstanceIDFn(ctx, instanceID)
+	}
+	if r.runningWorkspaceByInstanceID == nil {
+		return nil, nil
+	}
+	return r.runningWorkspaceByInstanceID[instanceID], nil
 }
 
 func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *model.AWDServiceOperation) error {
@@ -339,6 +351,57 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 	}
 	if operation.Status != model.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
 		t.Fatalf("expected recovered operation to be finished, got %+v", operation)
+	}
+}
+
+func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue(t *testing.T) {
+	t.Parallel()
+
+	contestID := int64(9301)
+	teamID := int64(9401)
+	serviceID := int64(9501)
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:          48,
+				ContestID:   &contestID,
+				TeamID:      &teamID,
+				ServiceID:   &serviceID,
+				ContainerID: "entry",
+				Status:      model.InstanceStatusRunning,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+		runningWorkspaceByInstanceID: map[int64]*model.AWDDefenseWorkspace{
+			48: {
+				InstanceID:  48,
+				Status:      model.AWDDefenseWorkspaceStatusRunning,
+				ContainerID: "workspace-companion",
+			},
+		},
+	}
+	engine := &maintenanceTestEngine{
+		containerStates: map[string]*runtimeports.ManagedContainerState{
+			"entry":               {ID: "entry", Exists: true, Running: true, Status: "running"},
+			"workspace-companion": {ID: "workspace-companion", Exists: true, Running: false, Status: "exited"},
+		},
+	}
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(engine.startedIDs) != 1 || engine.startedIDs[0] != "workspace-companion" {
+		t.Fatalf("expected stopped workspace companion to be started first, got %v", engine.startedIDs)
+	}
+	if len(repo.requeuedIDs) != 0 {
+		t.Fatalf("expected no requeue when workspace companion starts, got %v", repo.requeuedIDs)
+	}
+	if len(repo.operations) != 1 {
+		t.Fatalf("expected one system recover operation, got %+v", repo.operations)
 	}
 }
 

@@ -148,6 +148,128 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 	}
 }
 
+func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPortMissing(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.Instance{}, &model.PortAllocation{})
+
+	instanceID := int64(102)
+	instance := model.Instance{
+		ID:          instanceID,
+		UserID:      3,
+		ChallengeID: 7,
+		HostPort:    0,
+		Status:      model.InstanceStatusFailed,
+		ShareScope:  model.InstanceSharingPerTeam,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30003, InstanceID: &instanceID}).Error; err != nil {
+		t.Fatalf("seed allocation: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
+		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
+	}
+
+	var stored model.Instance
+	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if stored.HostPort != 30003 {
+		t.Fatalf("expected host port to sync from bound allocation, got %d", stored.HostPort)
+	}
+}
+
+func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHostPortConflicts(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.Instance{}, &model.PortAllocation{})
+
+	instanceID := int64(103)
+	otherInstanceID := int64(104)
+	instance := model.Instance{
+		ID:          instanceID,
+		UserID:      3,
+		ChallengeID: 8,
+		HostPort:    30004,
+		Status:      model.InstanceStatusFailed,
+		ShareScope:  model.InstanceSharingPerTeam,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30004, InstanceID: &otherInstanceID}).Error; err != nil {
+		t.Fatalf("seed conflicting allocation: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30007, InstanceID: &instanceID}).Error; err != nil {
+		t.Fatalf("seed rebound allocation: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
+		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
+	}
+
+	var stored model.Instance
+	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if stored.HostPort != 30007 {
+		t.Fatalf("expected host port to switch to rebound allocation, got %d", stored.HostPort)
+	}
+}
+
+func TestRepositoryIsHostPortReusableForRestart(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.PortAllocation{})
+
+	currentInstanceID := int64(201)
+	otherInstanceID := int64(202)
+	if err := db.Create(&model.PortAllocation{Port: 30011, InstanceID: &currentInstanceID}).Error; err != nil {
+		t.Fatalf("seed owned allocation: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30012, InstanceID: &otherInstanceID}).Error; err != nil {
+		t.Fatalf("seed foreign allocation: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 30013}).Error; err != nil {
+		t.Fatalf("seed unbound allocation: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+
+	reusable, err := repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30011)
+	if err != nil {
+		t.Fatalf("owned IsHostPortReusableForRestart() error = %v", err)
+	}
+	if !reusable {
+		t.Fatal("expected owned host port to be reusable")
+	}
+
+	reusable, err = repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30012)
+	if err != nil {
+		t.Fatalf("foreign IsHostPortReusableForRestart() error = %v", err)
+	}
+	if reusable {
+		t.Fatal("expected foreign-owned host port to be rejected")
+	}
+
+	reusable, err = repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30013)
+	if err != nil {
+		t.Fatalf("unbound IsHostPortReusableForRestart() error = %v", err)
+	}
+	if !reusable {
+		t.Fatal("expected unbound host port to be reusable")
+	}
+
+	reusable, err = repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30014)
+	if err != nil {
+		t.Fatalf("missing IsHostPortReusableForRestart() error = %v", err)
+	}
+	if !reusable {
+		t.Fatal("expected missing host port allocation to be reusable")
+	}
+}
+
 func newRepositoryTestDB(t *testing.T, models ...any) *gorm.DB {
 	t.Helper()
 

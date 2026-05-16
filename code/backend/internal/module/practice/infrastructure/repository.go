@@ -301,30 +301,7 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			return err
 		}
 
-		if preserveHostPort && instance.HostPort > 0 {
-			allocation := &model.PortAllocation{
-				Port:       instance.HostPort,
-				InstanceID: &instance.ID,
-			}
-			if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(allocation).Error; err != nil {
-				return err
-			}
-			var stored model.PortAllocation
-			if err := tx.Where("port = ?", instance.HostPort).First(&stored).Error; err != nil {
-				return err
-			}
-			if stored.InstanceID != nil && *stored.InstanceID != instance.ID {
-				return fmt.Errorf("host port %d is allocated to instance %d", instance.HostPort, *stored.InstanceID)
-			}
-			if stored.InstanceID == nil {
-				if err := tx.Model(&model.PortAllocation{}).
-					Where("port = ?", instance.HostPort).
-					Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now().UTC()}).Error; err != nil {
-					return err
-				}
-			}
-		}
-		if preserveHostPort && instance.HostPort <= 0 {
+		if preserveHostPort {
 			var allocation model.PortAllocation
 			err := tx.Where("instance_id = ?", instance.ID).
 				Order("updated_at DESC, port DESC").
@@ -334,6 +311,30 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			}
 			if err == nil && allocation.Port > 0 {
 				instance.HostPort = allocation.Port
+			}
+
+			if instance.HostPort > 0 {
+				allocation := &model.PortAllocation{
+					Port:       instance.HostPort,
+					InstanceID: &instance.ID,
+				}
+				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(allocation).Error; err != nil {
+					return err
+				}
+				var stored model.PortAllocation
+				if err := tx.Where("port = ?", instance.HostPort).First(&stored).Error; err != nil {
+					return err
+				}
+				if stored.InstanceID != nil && *stored.InstanceID != instance.ID {
+					return fmt.Errorf("host port %d is allocated to instance %d", instance.HostPort, *stored.InstanceID)
+				}
+				if stored.InstanceID == nil {
+					if err := tx.Model(&model.PortAllocation{}).
+						Where("port = ?", instance.HostPort).
+						Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now().UTC()}).Error; err != nil {
+						return err
+					}
+				}
 			}
 		}
 		if !preserveHostPort {
@@ -362,6 +363,27 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			Where("id = ?", instanceID).
 			Updates(updates).Error
 	})
+}
+
+func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
+	if instanceID <= 0 || hostPort <= 0 {
+		return false, nil
+	}
+
+	var allocation model.PortAllocation
+	if err := r.dbWithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("port = ?", hostPort).
+		First(&allocation).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return true, nil
+		}
+		return false, err
+	}
+	if allocation.InstanceID == nil {
+		return true, nil
+	}
+	return *allocation.InstanceID == instanceID, nil
 }
 
 func (r *Repository) CreateInstance(ctx context.Context, instance *model.Instance) error {

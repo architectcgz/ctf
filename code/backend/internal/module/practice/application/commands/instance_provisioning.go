@@ -13,10 +13,18 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+func bestEffortFailureContext(ctx context.Context) context.Context {
+	if ctx == nil || ctx.Err() == nil {
+		return ctx
+	}
+	return context.WithoutCancel(ctx)
+}
+
 func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instance) {
 	if instance == nil {
 		return
 	}
+	ctx = bestEffortFailureContext(ctx)
 	failedAt := time.Now().UTC()
 	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
@@ -85,6 +93,7 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 	timeout := s.startProbeTimeout()
 	var lastErr error
 	for attempt := 0; attempt < attempts; attempt++ {
+		attemptStartedAt := time.Now()
 		lastErr = s.readinessProbe.ProbeAccessURL(ctx, accessURL, timeout)
 		if lastErr == nil {
 			return nil
@@ -96,7 +105,11 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 			break
 		}
 
-		timer := time.NewTimer(s.startProbeInterval())
+		waitDuration := s.startProbeInterval()
+		if remainingProbeBudget := timeout - time.Since(attemptStartedAt); remainingProbeBudget > 0 {
+			waitDuration += remainingProbeBudget
+		}
+		timer := time.NewTimer(waitDuration)
 		select {
 		case <-ctx.Done():
 			timer.Stop()

@@ -78,11 +78,11 @@ type awdScopedRuntimeAudit struct {
 }
 
 type awdScopedRuntimeRequest struct {
-	OwnerUserID int64
-	ContestID   int64
-	ChallengeID int64
-	Scope       practiceports.InstanceScope
-	Audit       awdScopedRuntimeAudit
+	OwnerUserID  int64
+	ContestID    int64
+	ChallengeID  int64
+	Scope        practiceports.InstanceScope
+	Audit        awdScopedRuntimeAudit
 	NoopIfActive bool
 }
 
@@ -136,6 +136,15 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, req.OwnerUserID, req.ChallengeID, scope); err != nil {
 			return err
+		}
+		if preserveHostPort && instance.HostPort > 0 {
+			reusable, err := txRepo.IsHostPortReusableForRestart(ctx, instance.ID, instance.HostPort)
+			if err != nil {
+				return errcode.ErrInternal.WithCause(err)
+			}
+			if !reusable {
+				instance.HostPort = 0
+			}
 		}
 		if preserveHostPort && instance.HostPort <= 0 {
 			hostPort, err := txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)

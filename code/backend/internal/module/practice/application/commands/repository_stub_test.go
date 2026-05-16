@@ -16,6 +16,7 @@ type stubPracticeRepository struct {
 	withinInstanceRestartTxFn              func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceRestartTxRepository) error) error
 	withinAWDServiceOperationTxFn          func(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error
 	findContestByIDFn                      func(ctx context.Context, contestID int64) (*model.Contest, error)
+	listDesiredRuntimeAWDContestsFn        func(ctx context.Context) ([]*model.Contest, error)
 	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
@@ -30,6 +31,7 @@ type stubPracticeRepository struct {
 	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error
+	isHostPortReusableForRestartFn         func(ctx context.Context, instanceID int64, hostPort int) (bool, error)
 	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
 	createAWDServiceOperationFn            func(ctx context.Context, operation *model.AWDServiceOperation) error
 	finishAWDServiceOperationFn            func(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
@@ -71,6 +73,13 @@ func (s *stubPracticeRepository) FindContestByID(ctx context.Context, contestID 
 		return s.findContestByIDFn(ctx, contestID)
 	}
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*model.Contest, error) {
+	if s.listDesiredRuntimeAWDContestsFn != nil {
+		return s.listDesiredRuntimeAWDContestsFn(ctx)
+	}
+	return []*model.Contest{}, nil
 }
 
 func (s *stubPracticeRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
@@ -162,6 +171,13 @@ func (s *stubPracticeRepository) ResetInstanceRuntimeForRestart(ctx context.Cont
 		return s.resetInstanceRuntimeForRestartFn(ctx, instanceID, status, expiresAt, preserveHostPort)
 	}
 	return nil
+}
+
+func (s *stubPracticeRepository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
+	if s.isHostPortReusableForRestartFn != nil {
+		return s.isHostPortReusableForRestartFn(ctx, instanceID, hostPort)
+	}
+	return true, nil
 }
 
 func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *model.Instance) error {
