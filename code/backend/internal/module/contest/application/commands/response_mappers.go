@@ -21,7 +21,7 @@ func contestRespFromModel(contest *model.Contest) *ContestResp {
 	return resp
 }
 
-func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
+func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *ContestChallengeResp {
 	resp := contestResponseMapperInst.ToContestChallengeRespBasePtr(cc)
 	if resp == nil {
 		return nil

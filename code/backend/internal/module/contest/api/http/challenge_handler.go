@@ -3,13 +3,12 @@ package http
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type challengeCommandService interface {
-	AddChallengeToContest(ctx context.Context, contestID int64, req contestcmd.AddContestChallengeInput) (*dto.ContestChallengeResp, error)
+	AddChallengeToContest(ctx context.Context, contestID int64, req contestcmd.AddContestChallengeInput) (*contestcmd.ContestChallengeResp, error)
 	RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error
 	UpdateChallenge(ctx context.Context, contestID, challengeID int64, req contestcmd.UpdateContestChallengeInput) error
 }

@@ -31,8 +31,8 @@ type contestResponseMapper interface {
 	// goverter:ignore Title
 	// goverter:ignore Category
 	// goverter:ignore Difficulty
-	ToContestChallengeRespBase(source model.ContestChallenge) dto.ContestChallengeResp
-	ToContestChallengeRespBasePtr(source *model.ContestChallenge) *dto.ContestChallengeResp
+	ToContestChallengeRespBase(source model.ContestChallenge) ContestChallengeResp
+	ToContestChallengeRespBasePtr(source *model.ContestChallenge) *ContestChallengeResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category

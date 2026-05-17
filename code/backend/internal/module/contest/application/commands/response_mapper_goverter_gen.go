@@ -116,24 +116,24 @@ func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *mod
 	}
 	return pDtoContestAnnouncementResp
 }
-func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source model.ContestChallenge) dto.ContestChallengeResp {
-	var dtoContestChallengeResp dto.ContestChallengeResp
-	dtoContestChallengeResp.ID = source.ID
-	dtoContestChallengeResp.ContestID = source.ContestID
-	dtoContestChallengeResp.ChallengeID = source.ChallengeID
-	dtoContestChallengeResp.Points = source.Points
-	dtoContestChallengeResp.Order = source.Order
-	dtoContestChallengeResp.IsVisible = source.IsVisible
-	dtoContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoContestChallengeResp
+func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source model.ContestChallenge) ContestChallengeResp {
+	var commandsContestChallengeResp ContestChallengeResp
+	commandsContestChallengeResp.ID = source.ID
+	commandsContestChallengeResp.ContestID = source.ContestID
+	commandsContestChallengeResp.ChallengeID = source.ChallengeID
+	commandsContestChallengeResp.Points = source.Points
+	commandsContestChallengeResp.Order = source.Order
+	commandsContestChallengeResp.IsVisible = source.IsVisible
+	commandsContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	return commandsContestChallengeResp
 }
-func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *model.ContestChallenge) *dto.ContestChallengeResp {
-	var pDtoContestChallengeResp *dto.ContestChallengeResp
+func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *model.ContestChallenge) *ContestChallengeResp {
+	var pCommandsContestChallengeResp *ContestChallengeResp
 	if source != nil {
-		dtoContestChallengeResp := c.ToContestChallengeRespBase((*source))
-		pDtoContestChallengeResp = &dtoContestChallengeResp
+		commandsContestChallengeResp := c.ToContestChallengeRespBase((*source))
+		pCommandsContestChallengeResp = &commandsContestChallengeResp
 	}
-	return pDtoContestChallengeResp
+	return pCommandsContestChallengeResp
 }
 func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp {
 	var dtoContestRegistrationResp dto.ContestRegistrationResp

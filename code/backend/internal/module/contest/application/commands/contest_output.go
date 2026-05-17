@@ -25,3 +25,16 @@ type TeamResp struct {
 	MemberCount int       `json:"member_count"`
 	CreatedAt   time.Time `json:"created_at"`
 }
+
+type ContestChallengeResp struct {
+	ID          int64     `json:"id"`
+	ContestID   int64     `json:"contest_id"`
+	ChallengeID int64     `json:"challenge_id"`
+	Title       string    `json:"title,omitempty"`
+	Category    string    `json:"category,omitempty"`
+	Difficulty  string    `json:"difficulty,omitempty"`
+	Points      int       `json:"points"`
+	Order       int       `json:"order"`
+	IsVisible   bool      `json:"is_visible"`
+	CreatedAt   time.Time `json:"created_at"`
+}

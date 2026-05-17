@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req AddContestChallengeInput) (*dto.ContestChallengeResp, error) {
+func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req AddContestChallengeInput) (*ContestChallengeResp, error) {
 	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
