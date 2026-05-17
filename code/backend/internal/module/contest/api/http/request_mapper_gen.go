@@ -41,6 +41,23 @@ func (c *ContestRequestMapperImpl) ToAWDAttackLogResps(source []queries.AWDAttac
 	}
 	return pDtoAWDAttackLogRespList
 }
+func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewCommandResp(source domain.AWDCheckerPreviewResult) commands.AWDCheckerPreviewResp {
+	var commandsAWDCheckerPreviewResp commands.AWDCheckerPreviewResp
+	commandsAWDCheckerPreviewResp.CheckerType = model.AWDCheckerType(source.CheckerType)
+	commandsAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
+	commandsAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
+	commandsAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp(source.PreviewContext)
+	commandsAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
+	return commandsAWDCheckerPreviewResp
+}
+func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewCommandRespPtr(source *domain.AWDCheckerPreviewResult) *commands.AWDCheckerPreviewResp {
+	var pCommandsAWDCheckerPreviewResp *commands.AWDCheckerPreviewResp
+	if source != nil {
+		commandsAWDCheckerPreviewResp := c.ToAWDCheckerPreviewCommandResp((*source))
+		pCommandsAWDCheckerPreviewResp = &commandsAWDCheckerPreviewResp
+	}
+	return pCommandsAWDCheckerPreviewResp
+}
 func (c *ContestRequestMapperImpl) ToAWDCheckerPreviewResp(source domain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp {
 	var dtoAWDCheckerPreviewResp dto.AWDCheckerPreviewResp
 	dtoAWDCheckerPreviewResp.CheckerType = model.AWDCheckerType(source.CheckerType)
@@ -423,6 +440,33 @@ func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source AddContestC
 		commandsAddContestChallengeInput.IsVisible = &xbool
 	}
 	return commandsAddContestChallengeInput
+}
+func (c *ContestRequestMapperImpl) ToContestAWDServiceCommandResp(source queries.ContestAWDServiceResult) commands.ContestAWDServiceResp {
+	var commandsContestAWDServiceResp commands.ContestAWDServiceResp
+	commandsContestAWDServiceResp.ID = source.ID
+	commandsContestAWDServiceResp.ContestID = source.ContestID
+	commandsContestAWDServiceResp.AWDChallengeID = source.AWDChallengeID
+	commandsContestAWDServiceResp.Title = source.Title
+	commandsContestAWDServiceResp.Category = source.Category
+	commandsContestAWDServiceResp.Difficulty = source.Difficulty
+	commandsContestAWDServiceResp.DisplayName = source.DisplayName
+	commandsContestAWDServiceResp.Order = source.Order
+	commandsContestAWDServiceResp.IsVisible = source.IsVisible
+	commandsContestAWDServiceResp.ScoreConfig = c.ToStringAnyMap(source.ScoreConfig)
+	commandsContestAWDServiceResp.RuntimeConfig = c.ToStringAnyMap(source.RuntimeConfig)
+	commandsContestAWDServiceResp.ValidationState = model.AWDCheckerValidationState(source.ValidationState)
+	commandsContestAWDServiceResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
+	commandsContestAWDServiceResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsContestAWDServiceResp
+}
+func (c *ContestRequestMapperImpl) ToContestAWDServiceCommandRespPtr(source *queries.ContestAWDServiceResult) *commands.ContestAWDServiceResp {
+	var pCommandsContestAWDServiceResp *commands.ContestAWDServiceResp
+	if source != nil {
+		commandsContestAWDServiceResp := c.ToContestAWDServiceCommandResp((*source))
+		pCommandsContestAWDServiceResp = &commandsContestAWDServiceResp
+	}
+	return pCommandsContestAWDServiceResp
 }
 func (c *ContestRequestMapperImpl) ToContestAWDServiceResp(source queries.ContestAWDServiceResult) dto.ContestAWDServiceResp {
 	var dtoContestAWDServiceResp dto.ContestAWDServiceResp
@@ -965,6 +1009,16 @@ func (c *ContestRequestMapperImpl) ToUpsertServiceCheckInput(source UpsertAWDSer
 	commandsUpsertServiceCheckInput.ServiceStatus = source.ServiceStatus
 	commandsUpsertServiceCheckInput.CheckResult = c.ToStringAnyMap(source.CheckResult)
 	return commandsUpsertServiceCheckInput
+}
+func (c *ContestRequestMapperImpl) domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp(source domain.AWDCheckerPreviewContext) commands.AWDCheckerPreviewContextResp {
+	var commandsAWDCheckerPreviewContextResp commands.AWDCheckerPreviewContextResp
+	commandsAWDCheckerPreviewContextResp.ServiceID = source.ServiceID
+	commandsAWDCheckerPreviewContextResp.AccessURL = source.AccessURL
+	commandsAWDCheckerPreviewContextResp.PreviewFlag = source.PreviewFlag
+	commandsAWDCheckerPreviewContextResp.RoundNumber = source.RoundNumber
+	commandsAWDCheckerPreviewContextResp.TeamID = source.TeamID
+	commandsAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
+	return commandsAWDCheckerPreviewContextResp
 }
 func (c *ContestRequestMapperImpl) domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source domain.AWDCheckerPreviewContext) dto.AWDCheckerPreviewContextResp {
 	var dtoAWDCheckerPreviewContextResp dto.AWDCheckerPreviewContextResp
