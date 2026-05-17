@@ -50,6 +50,7 @@
 - 2026-05-17 的 ops dashboard HTTP DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/admin/dashboard` 保持原路径与 JSON 字段不变，变化仅在内部 owner：dashboard response DTO 从全局 `internal/dto` 收回 `ops/api/http`，聚合查询继续由 `ops/application/queries` 提供快照。
 - 2026-05-17 的 practice progress / timeline HTTP DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/users/me/progress` 与 `GET /api/v1/users/me/timeline` 保持原路径、查询参数和 JSON 字段不变，变化仅在内部 owner：学生侧 progress / timeline response DTO 从全局 `internal/dto` 收回 `practice/api/http`，handler 只负责把 query snapshot 映射为本模块 HTTP DTO。
 - 2026-05-17 的 identity admin user HTTP mapper initialization fix 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/admin/users` 以及同组用户管理接口保持原路径和响应结构不变，变化仅在内部初始化：补齐 `identity/api/http` 的 response mapper 赋值，避免 admin 用户列表在运行时因 nil mapper 返回 500。
+- 2026-05-17 的 identity admin user HTTP DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/admin/users`、`POST /api/v1/admin/users`、`PUT /api/v1/admin/users/:id` 与 `POST /api/v1/admin/users/import` 保持原路径、form/json 字段和响应结构不变，变化仅在内部 owner：admin user HTTP request/response DTO 从全局 `internal/dto` 收回 `identity/api/http`，`identity/contracts` 继续只承接跨层稳定 contract。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail

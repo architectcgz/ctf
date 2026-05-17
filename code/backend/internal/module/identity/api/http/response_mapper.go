@@ -3,7 +3,6 @@ package http
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
@@ -14,11 +13,11 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :http
 type IdentityResponseMapper interface {
-	ToAdminUserResp(source identitycontracts.AdminUser) dto.AdminUserResp
-	ToAdminUserRespPtr(source *identitycontracts.AdminUser) *dto.AdminUserResp
-	ToAdminUserResps(source []identitycontracts.AdminUser) []dto.AdminUserResp
-	ToImportUsersResp(source identitycontracts.ImportUsersResult) dto.ImportUsersResp
-	ToImportUsersRespPtr(source *identitycontracts.ImportUsersResult) *dto.ImportUsersResp
+	ToAdminUserResp(source identitycontracts.AdminUser) AdminUserResp
+	ToAdminUserRespPtr(source *identitycontracts.AdminUser) *AdminUserResp
+	ToAdminUserResps(source []identitycontracts.AdminUser) []AdminUserResp
+	ToImportUsersResp(source identitycontracts.ImportUsersResult) ImportUsersResp
+	ToImportUsersRespPtr(source *identitycontracts.ImportUsersResult) *ImportUsersResp
 }
 
 var identityResponseMapper IdentityResponseMapper

@@ -3,14 +3,11 @@
 
 package http
 
-import (
-	dto "ctf-platform/internal/dto"
-	contracts "ctf-platform/internal/module/identity/contracts"
-)
+import contracts "ctf-platform/internal/module/identity/contracts"
 
 type IdentityRequestMapperImpl struct{}
 
-func (c *IdentityRequestMapperImpl) ToAdminUserListQuery(source dto.AdminUserQuery) contracts.AdminUserListQuery {
+func (c *IdentityRequestMapperImpl) ToAdminUserListQuery(source AdminUserQuery) contracts.AdminUserListQuery {
 	var contractsAdminUserListQuery contracts.AdminUserListQuery
 	contractsAdminUserListQuery.Keyword = source.Keyword
 	contractsAdminUserListQuery.StudentNo = source.StudentNo
@@ -22,7 +19,7 @@ func (c *IdentityRequestMapperImpl) ToAdminUserListQuery(source dto.AdminUserQue
 	contractsAdminUserListQuery.Size = source.Size
 	return contractsAdminUserListQuery
 }
-func (c *IdentityRequestMapperImpl) ToCreateUserInput(source dto.CreateAdminUserReq) contracts.CreateUserInput {
+func (c *IdentityRequestMapperImpl) ToCreateUserInput(source CreateAdminUserReq) contracts.CreateUserInput {
 	var contractsCreateUserInput contracts.CreateUserInput
 	contractsCreateUserInput.Username = source.Username
 	contractsCreateUserInput.Password = source.Password
@@ -35,7 +32,7 @@ func (c *IdentityRequestMapperImpl) ToCreateUserInput(source dto.CreateAdminUser
 	contractsCreateUserInput.Status = source.Status
 	return contractsCreateUserInput
 }
-func (c *IdentityRequestMapperImpl) ToUpdateUserInput(source dto.UpdateAdminUserReq) contracts.UpdateUserInput {
+func (c *IdentityRequestMapperImpl) ToUpdateUserInput(source UpdateAdminUserReq) contracts.UpdateUserInput {
 	var contractsUpdateUserInput contracts.UpdateUserInput
 	if source.Password != nil {
 		xstring := *source.Password

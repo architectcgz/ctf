@@ -21,6 +21,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -2275,7 +2276,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 
 	var createdUserWrap map[string]json.RawMessage
 	decodeFullRouterData(t, resp, &createdUserWrap)
-	createdUser := decodeFullRouterJSON[dto.AdminUserResp](t, createdUserWrap["user"])
+	createdUser := decodeFullRouterJSON[identityhttp.AdminUserResp](t, createdUserWrap["user"])
 	if createdUser.Username != "admin_created_student" {
 		t.Fatalf("unexpected created user: %+v", createdUser)
 	}
@@ -2298,7 +2299,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 
 	var updatedUserWrap map[string]json.RawMessage
 	decodeFullRouterData(t, resp, &updatedUserWrap)
-	updatedUser := decodeFullRouterJSON[dto.AdminUserResp](t, updatedUserWrap["user"])
+	updatedUser := decodeFullRouterJSON[identityhttp.AdminUserResp](t, updatedUserWrap["user"])
 	if updatedUser.TeacherNo == nil || *updatedUser.TeacherNo != updatedTeacherNo || updatedUser.StudentNo != nil {
 		t.Fatalf("unexpected updated user: %+v", updatedUser)
 	}
@@ -2312,7 +2313,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterMultipartRequest(t, env.router, http.MethodPost, "/api/v1/admin/users/import", "file", "users.csv", csvContent, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusCreated)
 
-	var importResult dto.ImportUsersResp
+	var importResult identityhttp.ImportUsersResp
 	decodeFullRouterData(t, resp, &importResult)
 	if importResult.Created != 1 || importResult.Updated != 1 || importResult.Failed != 1 {
 		t.Fatalf("unexpected import result: %+v", importResult)

@@ -4,92 +4,91 @@
 package http
 
 import (
-	dto "ctf-platform/internal/dto"
 	contracts "ctf-platform/internal/module/identity/contracts"
 	"time"
 )
 
 type IdentityResponseMapperImpl struct{}
 
-func (c *IdentityResponseMapperImpl) ToAdminUserResp(source contracts.AdminUser) dto.AdminUserResp {
-	var dtoAdminUserResp dto.AdminUserResp
-	dtoAdminUserResp.ID = source.ID
-	dtoAdminUserResp.Username = source.Username
+func (c *IdentityResponseMapperImpl) ToAdminUserResp(source contracts.AdminUser) AdminUserResp {
+	var httpAdminUserResp AdminUserResp
+	httpAdminUserResp.ID = source.ID
+	httpAdminUserResp.Username = source.Username
 	if source.Name != nil {
 		xstring := *source.Name
-		dtoAdminUserResp.Name = &xstring
+		httpAdminUserResp.Name = &xstring
 	}
 	if source.Email != nil {
 		xstring2 := *source.Email
-		dtoAdminUserResp.Email = &xstring2
+		httpAdminUserResp.Email = &xstring2
 	}
 	if source.StudentNo != nil {
 		xstring3 := *source.StudentNo
-		dtoAdminUserResp.StudentNo = &xstring3
+		httpAdminUserResp.StudentNo = &xstring3
 	}
 	if source.TeacherNo != nil {
 		xstring4 := *source.TeacherNo
-		dtoAdminUserResp.TeacherNo = &xstring4
+		httpAdminUserResp.TeacherNo = &xstring4
 	}
 	if source.ClassName != nil {
 		xstring5 := *source.ClassName
-		dtoAdminUserResp.ClassName = &xstring5
+		httpAdminUserResp.ClassName = &xstring5
 	}
-	dtoAdminUserResp.Status = source.Status
+	httpAdminUserResp.Status = source.Status
 	if source.Roles != nil {
-		dtoAdminUserResp.Roles = make([]string, len(source.Roles))
+		httpAdminUserResp.Roles = make([]string, len(source.Roles))
 		for i := 0; i < len(source.Roles); i++ {
-			dtoAdminUserResp.Roles[i] = source.Roles[i]
+			httpAdminUserResp.Roles[i] = source.Roles[i]
 		}
 	}
-	dtoAdminUserResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoAdminUserResp.UpdatedAt = c.pTimeTimeToPTimeTime(source.UpdatedAt)
-	return dtoAdminUserResp
+	httpAdminUserResp.CreatedAt = CopyTime(source.CreatedAt)
+	httpAdminUserResp.UpdatedAt = c.pTimeTimeToPTimeTime(source.UpdatedAt)
+	return httpAdminUserResp
 }
-func (c *IdentityResponseMapperImpl) ToAdminUserRespPtr(source *contracts.AdminUser) *dto.AdminUserResp {
-	var pDtoAdminUserResp *dto.AdminUserResp
+func (c *IdentityResponseMapperImpl) ToAdminUserRespPtr(source *contracts.AdminUser) *AdminUserResp {
+	var pHttpAdminUserResp *AdminUserResp
 	if source != nil {
-		dtoAdminUserResp := c.ToAdminUserResp((*source))
-		pDtoAdminUserResp = &dtoAdminUserResp
+		httpAdminUserResp := c.ToAdminUserResp((*source))
+		pHttpAdminUserResp = &httpAdminUserResp
 	}
-	return pDtoAdminUserResp
+	return pHttpAdminUserResp
 }
-func (c *IdentityResponseMapperImpl) ToAdminUserResps(source []contracts.AdminUser) []dto.AdminUserResp {
-	var dtoAdminUserRespList []dto.AdminUserResp
+func (c *IdentityResponseMapperImpl) ToAdminUserResps(source []contracts.AdminUser) []AdminUserResp {
+	var httpAdminUserRespList []AdminUserResp
 	if source != nil {
-		dtoAdminUserRespList = make([]dto.AdminUserResp, len(source))
+		httpAdminUserRespList = make([]AdminUserResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoAdminUserRespList[i] = c.ToAdminUserResp(source[i])
+			httpAdminUserRespList[i] = c.ToAdminUserResp(source[i])
 		}
 	}
-	return dtoAdminUserRespList
+	return httpAdminUserRespList
 }
-func (c *IdentityResponseMapperImpl) ToImportUsersResp(source contracts.ImportUsersResult) dto.ImportUsersResp {
-	var dtoImportUsersResp dto.ImportUsersResp
-	dtoImportUsersResp.Created = source.Created
-	dtoImportUsersResp.Updated = source.Updated
-	dtoImportUsersResp.Failed = source.Failed
+func (c *IdentityResponseMapperImpl) ToImportUsersResp(source contracts.ImportUsersResult) ImportUsersResp {
+	var httpImportUsersResp ImportUsersResp
+	httpImportUsersResp.Created = source.Created
+	httpImportUsersResp.Updated = source.Updated
+	httpImportUsersResp.Failed = source.Failed
 	if source.Errors != nil {
-		dtoImportUsersResp.Errors = make([]dto.ImportUserError, len(source.Errors))
+		httpImportUsersResp.Errors = make([]ImportUserError, len(source.Errors))
 		for i := 0; i < len(source.Errors); i++ {
-			dtoImportUsersResp.Errors[i] = c.contractsImportUserErrorToDtoImportUserError(source.Errors[i])
+			httpImportUsersResp.Errors[i] = c.contractsImportUserErrorToHttpImportUserError(source.Errors[i])
 		}
 	}
-	return dtoImportUsersResp
+	return httpImportUsersResp
 }
-func (c *IdentityResponseMapperImpl) ToImportUsersRespPtr(source *contracts.ImportUsersResult) *dto.ImportUsersResp {
-	var pDtoImportUsersResp *dto.ImportUsersResp
+func (c *IdentityResponseMapperImpl) ToImportUsersRespPtr(source *contracts.ImportUsersResult) *ImportUsersResp {
+	var pHttpImportUsersResp *ImportUsersResp
 	if source != nil {
-		dtoImportUsersResp := c.ToImportUsersResp((*source))
-		pDtoImportUsersResp = &dtoImportUsersResp
+		httpImportUsersResp := c.ToImportUsersResp((*source))
+		pHttpImportUsersResp = &httpImportUsersResp
 	}
-	return pDtoImportUsersResp
+	return pHttpImportUsersResp
 }
-func (c *IdentityResponseMapperImpl) contractsImportUserErrorToDtoImportUserError(source contracts.ImportUserError) dto.ImportUserError {
-	var dtoImportUserError dto.ImportUserError
-	dtoImportUserError.Row = source.Row
-	dtoImportUserError.Message = source.Message
-	return dtoImportUserError
+func (c *IdentityResponseMapperImpl) contractsImportUserErrorToHttpImportUserError(source contracts.ImportUserError) ImportUserError {
+	var httpImportUserError ImportUserError
+	httpImportUserError.Row = source.Row
+	httpImportUserError.Message = source.Message
+	return httpImportUserError
 }
 func (c *IdentityResponseMapperImpl) pTimeTimeToPTimeTime(source *time.Time) *time.Time {
 	var pTimeTime *time.Time

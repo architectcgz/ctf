@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
@@ -11,9 +10,9 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type IdentityRequestMapper interface {
-	ToAdminUserListQuery(source dto.AdminUserQuery) identitycontracts.AdminUserListQuery
-	ToCreateUserInput(source dto.CreateAdminUserReq) identitycontracts.CreateUserInput
-	ToUpdateUserInput(source dto.UpdateAdminUserReq) identitycontracts.UpdateUserInput
+	ToAdminUserListQuery(source AdminUserQuery) identitycontracts.AdminUserListQuery
+	ToCreateUserInput(source CreateAdminUserReq) identitycontracts.CreateUserInput
+	ToUpdateUserInput(source UpdateAdminUserReq) identitycontracts.UpdateUserInput
 }
 
 var identityRequestMapper IdentityRequestMapper

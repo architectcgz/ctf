@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
@@ -37,7 +36,7 @@ func NewHandler(commands adminCommandService, queries adminQueryService) *Handle
 }
 
 func (h *Handler) ListUsers(c *gin.Context) {
-	var query dto.AdminUserQuery
+	var query AdminUserQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -52,7 +51,7 @@ func (h *Handler) ListUsers(c *gin.Context) {
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {
-	var req dto.CreateAdminUserReq
+	var req CreateAdminUserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -68,7 +67,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 func (h *Handler) UpdateUser(c *gin.Context) {
 	userID := c.GetInt64("id")
-	var req dto.UpdateAdminUserReq
+	var req UpdateAdminUserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
