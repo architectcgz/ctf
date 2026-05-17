@@ -61,6 +61,7 @@ code/frontend/docs/
 /scripts/check-harness-consistency.sh
 
 # Local development artifacts
+/.claude/
 /.playwright-cli/
 /.tmp/
 /backups/
