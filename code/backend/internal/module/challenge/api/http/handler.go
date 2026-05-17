@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 	"fmt"
@@ -24,25 +24,25 @@ type Handler struct {
 }
 
 type challengeCommandService interface {
-	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*dto.ChallengeResp, error)
+	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*challengecontracts.ChallengeResp, error)
 	UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateChallengeInput) error
 	DeleteChallenge(ctx context.Context, id int64) error
-	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
-	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
-	ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
-	GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
-	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
-	ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*dto.ChallengePackageExportResp, error)
-	GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error)
+	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
+	SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error)
+	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.ChallengeImportPreviewResp, error)
+	ListChallengeImports(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error)
+	GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error)
+	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error)
+	ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*challengecontracts.ChallengePackageExportResp, error)
+	GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error)
 }
 
 type challengeQueryService interface {
-	GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error)
-	ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error)
-	ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error)
-	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
+	GetChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeResp, error)
+	ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error)
+	ListPublishedChallenges(ctx context.Context, userID int64, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeListItem], error)
+	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error)
 }
 
 func NewHandler(commands challengeCommandService, queries challengeQueryService) *Handler {

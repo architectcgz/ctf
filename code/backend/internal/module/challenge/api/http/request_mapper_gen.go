@@ -13,20 +13,20 @@ import (
 
 type ChallengeRequestMapperImpl struct{}
 
-func (c *ChallengeRequestMapperImpl) ToChallengeQuery(source ChallengeQuery) dto.ChallengeQuery {
-	var dtoChallengeQuery dto.ChallengeQuery
-	dtoChallengeQuery.Category = source.Category
-	dtoChallengeQuery.Difficulty = source.Difficulty
-	dtoChallengeQuery.Status = source.Status
+func (c *ChallengeRequestMapperImpl) ToChallengeQuery(source ChallengeQuery) contracts.ChallengeQuery {
+	var contractsChallengeQuery contracts.ChallengeQuery
+	contractsChallengeQuery.Category = source.Category
+	contractsChallengeQuery.Difficulty = source.Difficulty
+	contractsChallengeQuery.Status = source.Status
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
-		dtoChallengeQuery.CreatedBy = &xint64
+		contractsChallengeQuery.CreatedBy = &xint64
 	}
-	dtoChallengeQuery.Keyword = source.Keyword
-	dtoChallengeQuery.SortBy = source.SortBy
-	dtoChallengeQuery.Page = source.Page
-	dtoChallengeQuery.Size = source.Size
-	return dtoChallengeQuery
+	contractsChallengeQuery.Keyword = source.Keyword
+	contractsChallengeQuery.SortBy = source.SortBy
+	contractsChallengeQuery.Page = source.Page
+	contractsChallengeQuery.Size = source.Size
+	return contractsChallengeQuery
 }
 func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source CreateAWDChallengeReq) commands.CreateAWDChallengeInput {
 	var commandsCreateAWDChallengeInput commands.CreateAWDChallengeInput

@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
@@ -20,14 +19,14 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore Status
 	// goverter:ignore Active
 	// goverter:ignore Result
-	ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) dto.ChallengePublishCheckJobResp
-	ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *dto.ChallengePublishCheckJobResp
+	ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) challengecontracts.ChallengePublishCheckJobResp
+	ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp
 
-	ToChallengeImportAttachmentResps(source []challengedomain.ParsedChallengePackageAttachment) []dto.ChallengeImportAttachmentResp
+	ToChallengeImportAttachmentResps(source []challengedomain.ParsedChallengePackageAttachment) []challengecontracts.ChallengeImportAttachmentResp
 
 	// goverter:ignore ID
-	ToChallengeHintAdminRespFromParsed(source challengedomain.ParsedChallengePackageHint) dto.ChallengeHintAdminResp
-	ToChallengeHintAdminRespFromParseds(source []challengedomain.ParsedChallengePackageHint) []dto.ChallengeHintAdminResp
+	ToChallengeHintAdminRespFromParsed(source challengedomain.ParsedChallengePackageHint) challengecontracts.ChallengeHintAdminResp
+	ToChallengeHintAdminRespFromParseds(source []challengedomain.ParsedChallengePackageHint) []challengecontracts.ChallengeHintAdminResp
 
 	// goverter:ignore ID
 	// goverter:ignore FileName
@@ -41,8 +40,8 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore PackageFiles
 	// goverter:ignore Warnings
 	// goverter:ignore CreatedAt
-	ToChallengeImportPreviewRespBase(source challengedomain.ParsedChallengePackage) dto.ChallengeImportPreviewResp
-	ToChallengeImportPreviewRespBasePtr(source *challengedomain.ParsedChallengePackage) *dto.ChallengeImportPreviewResp
+	ToChallengeImportPreviewRespBase(source challengedomain.ParsedChallengePackage) challengecontracts.ChallengeImportPreviewResp
+	ToChallengeImportPreviewRespBasePtr(source *challengedomain.ParsedChallengePackage) *challengecontracts.ChallengeImportPreviewResp
 
 	// goverter:ignore ID
 	// goverter:ignore FileName
@@ -60,8 +59,8 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore ChallengeID
 	// goverter:ignore FileName
 	// goverter:ignore DownloadURL
-	ToChallengePackageExportRespBase(source model.ChallengePackageRevision) dto.ChallengePackageExportResp
-	ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *dto.ChallengePackageExportResp
+	ToChallengePackageExportRespBase(source model.ChallengePackageRevision) challengecontracts.ChallengePackageExportResp
+	ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *challengecontracts.ChallengePackageExportResp
 }
 
 var challengeCommandResponseMapperInst challengeCommandResponseMapper

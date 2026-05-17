@@ -19,8 +19,8 @@ import (
 // goverter:output:package :domain
 type ChallengeResponseMapper interface {
 	// goverter:ignore Hints
-	ToChallengeRespBase(source model.Challenge) dto.ChallengeResp
-	ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp
+	ToChallengeRespBase(source model.Challenge) challengecontracts.ChallengeResp
+	ToChallengeRespBasePtr(source *model.Challenge) *challengecontracts.ChallengeResp
 
 	// goverter:ignore Networks
 	// goverter:ignore Nodes
@@ -43,8 +43,8 @@ type ChallengeResponseMapper interface {
 	ToAWDChallengeRespBase(source model.AWDChallenge) challengecontracts.AWDChallengeResp
 	ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *challengecontracts.AWDChallengeResp
 
-	ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp
-	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp
+	ToChallengeHintAdminResp(source model.ChallengeHint) challengecontracts.ChallengeHintAdminResp
+	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *challengecontracts.ChallengeHintAdminResp
 
 	// goverter:ignore SizeFormatted
 	ToImageRespBase(source model.Image) challengecontracts.ImageResp

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"time"
 )
@@ -16,20 +15,20 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :http
 type ChallengeResponseMapper interface {
-	ToChallengeResp(source *dto.ChallengeResp) *ChallengeResp
-	ToChallengeRespList(source []*dto.ChallengeResp) []*ChallengeResp
-	ToChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp]
-	ToChallengeListItemResp(source *dto.ChallengeListItem) *ChallengeListItem
-	ToChallengeListItemRespList(source []*dto.ChallengeListItem) []*ChallengeListItem
-	ToChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem]
-	ToChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp
-	ToChallengePublishCheckJobResp(source *dto.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp
-	ToChallengeSelfCheckResp(source *dto.ChallengeSelfCheckResp) *ChallengeSelfCheckResp
-	ToChallengeImportPreviewResp(source *dto.ChallengeImportPreviewResp) *ChallengeImportPreviewResp
-	ToChallengeImportPreviewRespList(source []dto.ChallengeImportPreviewResp) []ChallengeImportPreviewResp
+	ToChallengeResp(source *challengecontracts.ChallengeResp) *ChallengeResp
+	ToChallengeRespList(source []*challengecontracts.ChallengeResp) []*ChallengeResp
+	ToChallengePageResult(source *challengecontracts.PageResult[*challengecontracts.ChallengeResp]) *PageResult[*ChallengeResp]
+	ToChallengeListItemResp(source *challengecontracts.ChallengeListItem) *ChallengeListItem
+	ToChallengeListItemRespList(source []*challengecontracts.ChallengeListItem) []*ChallengeListItem
+	ToChallengeListItemPageResult(source *challengecontracts.PageResult[*challengecontracts.ChallengeListItem]) *PageResult[*ChallengeListItem]
+	ToChallengeDetailResp(source *challengecontracts.ChallengeDetailResp) *ChallengeDetailResp
+	ToChallengePublishCheckJobResp(source *challengecontracts.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp
+	ToChallengeSelfCheckResp(source *challengecontracts.ChallengeSelfCheckResp) *ChallengeSelfCheckResp
+	ToChallengeImportPreviewResp(source *challengecontracts.ChallengeImportPreviewResp) *ChallengeImportPreviewResp
+	ToChallengeImportPreviewRespList(source []challengecontracts.ChallengeImportPreviewResp) []ChallengeImportPreviewResp
 	// goverter:map . Challenge
-	ToChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp
-	ToChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp
+	ToChallengeImportCommitResp(source *challengecontracts.ChallengeResp) *ChallengeImportCommitResp
+	ToChallengePackageExportResp(source *challengecontracts.ChallengePackageExportResp) *ChallengePackageExportResp
 	ToTagResp(source *challengecontracts.TagResp) *TagResp
 	ToTagRespList(source []*challengecontracts.TagResp) []*TagResp
 	ToImageResp(source *challengecontracts.ImageResp) *ImageResp
@@ -73,31 +72,31 @@ func CopyAnyMap(source map[string]any) map[string]any {
 	return cloned
 }
 
-func toChallengeResp(source *dto.ChallengeResp) *ChallengeResp {
+func toChallengeResp(source *challengecontracts.ChallengeResp) *ChallengeResp {
 	return challengeResponseMapper.ToChallengeResp(source)
 }
 
-func toChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp {
+func toChallengeDetailResp(source *challengecontracts.ChallengeDetailResp) *ChallengeDetailResp {
 	return challengeResponseMapper.ToChallengeDetailResp(source)
 }
 
-func toChallengePublishCheckJobResp(source *dto.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp {
+func toChallengePublishCheckJobResp(source *challengecontracts.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp {
 	return challengeResponseMapper.ToChallengePublishCheckJobResp(source)
 }
 
-func toChallengeSelfCheckResp(source *dto.ChallengeSelfCheckResp) *ChallengeSelfCheckResp {
+func toChallengeSelfCheckResp(source *challengecontracts.ChallengeSelfCheckResp) *ChallengeSelfCheckResp {
 	return challengeResponseMapper.ToChallengeSelfCheckResp(source)
 }
 
-func toChallengeImportPreviewResp(source *dto.ChallengeImportPreviewResp) *ChallengeImportPreviewResp {
+func toChallengeImportPreviewResp(source *challengecontracts.ChallengeImportPreviewResp) *ChallengeImportPreviewResp {
 	return challengeResponseMapper.ToChallengeImportPreviewResp(source)
 }
 
-func toChallengeImportPreviewRespList(source []dto.ChallengeImportPreviewResp) []ChallengeImportPreviewResp {
+func toChallengeImportPreviewRespList(source []challengecontracts.ChallengeImportPreviewResp) []ChallengeImportPreviewResp {
 	return challengeResponseMapper.ToChallengeImportPreviewRespList(source)
 }
 
-func toChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp {
+func toChallengePackageExportResp(source *challengecontracts.ChallengePackageExportResp) *ChallengePackageExportResp {
 	return challengeResponseMapper.ToChallengePackageExportResp(source)
 }
 
@@ -145,11 +144,11 @@ func toImagePageResult(source *challengecontracts.PageResult[*challengecontracts
 	return challengeResponseMapper.ToImagePageResult(source)
 }
 
-func toChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp] {
+func toChallengePageResult(source *challengecontracts.PageResult[*challengecontracts.ChallengeResp]) *PageResult[*ChallengeResp] {
 	return challengeResponseMapper.ToChallengePageResult(source)
 }
 
-func toChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem] {
+func toChallengeListItemPageResult(source *challengecontracts.PageResult[*challengecontracts.ChallengeListItem]) *PageResult[*ChallengeListItem] {
 	return challengeResponseMapper.ToChallengeListItemPageResult(source)
 }
 
@@ -161,6 +160,6 @@ func toAWDChallengeImportCommitResp(source *challengecontracts.AWDChallengeResp)
 	return challengeResponseMapper.ToAWDChallengeImportCommitResp(source)
 }
 
-func toChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp {
+func toChallengeImportCommitResp(source *challengecontracts.ChallengeResp) *ChallengeImportCommitResp {
 	return challengeResponseMapper.ToChallengeImportCommitResp(source)
 }

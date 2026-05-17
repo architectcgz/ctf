@@ -12,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -371,7 +372,7 @@ func TestServiceListChallengesHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.ListChallenges(ctx, &dto.ChallengeQuery{})
+	_, err := service.ListChallenges(ctx, &challengecontracts.ChallengeQuery{})
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

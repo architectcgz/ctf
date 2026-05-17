@@ -50,7 +50,7 @@ func (s *ChallengeService) publishWeakEvent(ctx context.Context, evt platformeve
 	}
 }
 
-func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*dto.ChallengeResp, error) {
+func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
 	if req.ImageID > 0 {
 		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
 			if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
@@ -229,7 +229,7 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 	return s.repo.Update(ctx, challenge)
 }
 
-func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
@@ -265,7 +265,7 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 	return s.buildPublishCheckJobResp(job), nil
 }
 
-func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 		return nil, errcode.ErrChallengeNotFound
@@ -371,7 +371,7 @@ func (s *ChallengeService) loadPublishCheckJob(ctx context.Context, id int64) (*
 	return s.repo.FindPublishCheckJobByID(ctx, id)
 }
 
-func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob, result *dto.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
+func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
 	if job == nil {
 		return
 	}
@@ -407,7 +407,7 @@ func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model
 	}
 }
 
-func buildPublishCheckFailureSummary(resp *dto.ChallengeSelfCheckResp) string {
+func buildPublishCheckFailureSummary(resp *challengecontracts.ChallengeSelfCheckResp) string {
 	if resp == nil {
 		return "平台自检失败"
 	}
@@ -430,7 +430,7 @@ func buildPublishCheckFailureSummary(resp *dto.ChallengeSelfCheckResp) string {
 	return ""
 }
 
-func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishCheckJob) *dto.ChallengePublishCheckJobResp {
+func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp {
 	resp := challengeCommandResponseMapperInst.ToChallengePublishCheckJobRespBasePtr(job)
 	if resp == nil {
 		return nil
@@ -438,7 +438,7 @@ func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishC
 	resp.Status = mapPublishCheckStatus(job.Status)
 	resp.Active = isActivePublishCheckStatus(job.Status)
 	if strings.TrimSpace(job.ResultJSON) != "" {
-		var result dto.ChallengeSelfCheckResp
+		var result challengecontracts.ChallengeSelfCheckResp
 		if err := json.Unmarshal([]byte(job.ResultJSON), &result); err == nil {
 			resp.Result = &result
 		}
@@ -470,7 +470,7 @@ type challengeSelfCheckRuntimeInput struct {
 	skipRuntime     bool
 }
 
-func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
+func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error) {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
@@ -479,7 +479,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 		return nil, err
 	}
 
-	resp := &dto.ChallengeSelfCheckResp{
+	resp := &challengecontracts.ChallengeSelfCheckResp{
 		ChallengeID: challenge.ID,
 	}
 
@@ -493,7 +493,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 
 	resp.Runtime.StartedAt = time.Now()
 	if !resp.Precheck.Passed {
-		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_startup",
 			Passed:  false,
 			Message: "预检未通过，已跳过真实拉起",
@@ -502,7 +502,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 		return resp, nil
 	}
 	if input.skipRuntime {
-		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_startup",
 			Passed:  true,
 			Message: "当前题目无需运行时，已跳过真实拉起",
@@ -512,7 +512,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 		return resp, nil
 	}
 	if s.runtimeProbe == nil {
-		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_startup",
 			Passed:  false,
 			Message: "运行时自测能力未配置",
@@ -528,13 +528,13 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	flag, flagErr := s.buildRuntimeFlag(challenge)
 	if flagErr != nil {
 		runtimePassed = false
-		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_flag",
 			Passed:  false,
 			Message: fmt.Sprintf("生成运行时 Flag 失败: %v", flagErr),
 		})
 	} else {
-		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_flag",
 			Passed:  true,
 			Message: "运行时 Flag 已准备",
@@ -550,7 +550,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 			req, buildErr := s.buildTopologyRuntimeRequest(input, flag)
 			if buildErr != nil {
 				runtimePassed = false
-				resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+				resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 					Name:    "runtime_startup",
 					Passed:  false,
 					Message: fmt.Sprintf("构建拓扑启动请求失败: %v", buildErr),
@@ -559,7 +559,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 				result, startupErr := s.runtimeProbe.CreateTopology(createCtx, req)
 				if startupErr != nil {
 					runtimePassed = false
-					resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+					resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 						Name:    "runtime_startup",
 						Passed:  false,
 						Message: fmt.Sprintf("拓扑拉起失败: %v", startupErr),
@@ -567,7 +567,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 				} else {
 					accessURL = result.AccessURL
 					runtimeDetails = result.RuntimeDetails
-					resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+					resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 						Name:    "runtime_startup",
 						Passed:  true,
 						Message: "拓扑实例拉起成功",
@@ -580,7 +580,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 			})
 			if startupErr != nil {
 				runtimePassed = false
-				resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+				resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 					Name:    "runtime_startup",
 					Passed:  false,
 					Message: fmt.Sprintf("单容器拉起失败: %v", startupErr),
@@ -588,7 +588,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 			} else {
 				accessURL = startupAccessURL
 				runtimeDetails = details
-				resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+				resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 					Name:    "runtime_startup",
 					Passed:  true,
 					Message: "单容器实例拉起成功",
@@ -600,13 +600,13 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	if runtimePassed {
 		if cleanupErr := s.runtimeProbe.CleanupRuntimeDetails(ctx, runtimeDetails); cleanupErr != nil {
 			runtimePassed = false
-			resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+			resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "runtime_cleanup",
 				Passed:  false,
 				Message: fmt.Sprintf("运行时资源清理失败: %v", cleanupErr),
 			})
 		} else {
-			resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+			resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "runtime_cleanup",
 				Passed:  true,
 				Message: "运行时资源已清理",
@@ -622,14 +622,14 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	return resp, nil
 }
 
-func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
+func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Challenge, steps *[]challengecontracts.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
 	input := challengeSelfCheckRuntimeInput{
 		nodeImageRefs: make(map[int64]string),
 	}
 	passed := true
 
 	flagOK, flagMessage := s.validateFlagConfig(challenge)
-	*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+	*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 		Name:    "flag_config",
 		Passed:  flagOK,
 		Message: flagMessage,
@@ -642,21 +642,21 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		imageRef, err := s.resolveAvailableImageRef(ctx, challenge.ImageID)
 		if err != nil {
 			passed = false
-			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+			*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "challenge_image",
 				Passed:  false,
 				Message: fmt.Sprintf("题目默认镜像不可用: %v", err),
 			})
 		} else {
 			input.defaultImageRef = imageRef
-			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+			*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "challenge_image",
 				Passed:  true,
 				Message: "题目默认镜像可用",
 			})
 		}
 	} else {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "challenge_image",
 			Passed:  true,
 			Message: "题目未配置默认镜像",
@@ -674,21 +674,21 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		if challenge.ImageID <= 0 {
 			if strings.TrimSpace(challenge.AttachmentURL) != "" {
 				input.skipRuntime = true
-				*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+				*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 					Name:    "topology_or_single_container",
 					Passed:  true,
 					Message: "题目仅提供附件内容，无需执行真实拉起",
 				})
 			} else {
 				passed = false
-				*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+				*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 					Name:    "topology_or_single_container",
 					Passed:  false,
 					Message: "未配置拓扑且题目默认镜像为空，无法执行真实拉起",
 				})
 			}
 		} else {
-			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+			*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "topology_or_single_container",
 				Passed:  true,
 				Message: "未配置拓扑，将按单容器模式自测",
@@ -699,7 +699,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 
 	spec, err := model.DecodeTopologySpec(topology.Spec)
 	if err != nil {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_spec",
 			Passed:  false,
 			Message: fmt.Sprintf("拓扑解码失败: %v", err),
@@ -707,7 +707,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		return input, false, nil
 	}
 	if len(spec.Nodes) == 0 {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_spec",
 			Passed:  false,
 			Message: "拓扑至少需要一个节点",
@@ -735,7 +735,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		nodeImageRef, resolveErr := s.resolveAvailableImageRef(ctx, node.ImageID)
 		if resolveErr != nil {
 			passed = false
-			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+			*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 				Name:    "topology_images",
 				Passed:  false,
 				Message: fmt.Sprintf("拓扑节点镜像不可用 (image_id=%d): %v", node.ImageID, resolveErr),
@@ -745,7 +745,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		input.nodeImageRefs[node.ImageID] = nodeImageRef
 	}
 	if passed {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_images",
 			Passed:  true,
 			Message: "拓扑节点镜像检查通过",
@@ -754,13 +754,13 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 
 	if needsDefaultImage && input.defaultImageRef == "" {
 		passed = false
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_default_image",
 			Passed:  false,
 			Message: "拓扑存在未指定 image_id 的节点，但题目默认镜像不可用",
 		})
 	} else {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_default_image",
 			Passed:  true,
 			Message: "拓扑默认镜像策略检查通过",
@@ -769,13 +769,13 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 
 	if !entryPortOK {
 		passed = false
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_entry",
 			Passed:  false,
 			Message: "拓扑入口节点不存在或未设置 service_port",
 		})
 	} else {
-		*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_entry",
 			Passed:  true,
 			Message: "拓扑入口节点配置有效",

@@ -9,16 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type challengeImportHandlerCommandStub struct {
-	listChallengeImportsFn func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
-	getChallengeImportFn   func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
+	listChallengeImportsFn func(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error)
+	getChallengeImportFn   func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error)
 }
 
-func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*dto.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
 	return nil, nil
 }
 
@@ -30,63 +30,63 @@ func (s challengeImportHandlerCommandStub) DeleteChallenge(ctx context.Context, 
 	return nil
 }
 
-func (s challengeImportHandlerCommandStub) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s challengeImportHandlerCommandStub) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s challengeImportHandlerCommandStub) GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
+func (s challengeImportHandlerCommandStub) SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error) {
+func (s challengeImportHandlerCommandStub) PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.ChallengeImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+func (s challengeImportHandlerCommandStub) ListChallengeImports(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error) {
 	if s.listChallengeImportsFn != nil {
 		return s.listChallengeImportsFn(ctx, actorUserID)
 	}
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+func (s challengeImportHandlerCommandStub) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error) {
 	if s.getChallengeImportFn != nil {
 		return s.getChallengeImportFn(ctx, actorUserID, id)
 	}
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*dto.ChallengePackageExportResp, error) {
+func (s challengeImportHandlerCommandStub) ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error) {
+func (s challengeImportHandlerCommandStub) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	return nil, nil
 }
 
 type challengeImportHandlerQueryStub struct{}
 
-func (challengeImportHandlerQueryStub) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+func (challengeImportHandlerQueryStub) GetChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
+func (challengeImportHandlerQueryStub) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
+func (challengeImportHandlerQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeListItem], error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+func (challengeImportHandlerQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error) {
 	return nil, nil
 }
 
@@ -100,7 +100,7 @@ func TestHandlerListChallengeImportsPropagatesRequestContextToCommandService(t *
 	called := false
 	handler := NewHandler(
 		challengeImportHandlerCommandStub{
-			listChallengeImportsFn: func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+			listChallengeImportsFn: func(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
@@ -108,7 +108,7 @@ func TestHandlerListChallengeImportsPropagatesRequestContextToCommandService(t *
 				if actorUserID != 1001 {
 					t.Fatalf("unexpected actor user id: %d", actorUserID)
 				}
-				return []dto.ChallengeImportPreviewResp{{ID: "preview-1", Slug: "web-source-audit-double-wrap-01"}}, nil
+				return []challengecontracts.ChallengeImportPreviewResp{{ID: "preview-1", Slug: "web-source-audit-double-wrap-01"}}, nil
 			},
 		},
 		challengeImportHandlerQueryStub{},
@@ -136,7 +136,7 @@ func TestHandlerGetChallengeImportPropagatesRequestContextToCommandService(t *te
 	called := false
 	handler := NewHandler(
 		challengeImportHandlerCommandStub{
-			getChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+			getChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)
@@ -147,7 +147,7 @@ func TestHandlerGetChallengeImportPropagatesRequestContextToCommandService(t *te
 				if id != "preview-1" {
 					t.Fatalf("unexpected import id: %s", id)
 				}
-				return &dto.ChallengeImportPreviewResp{ID: id, Slug: "web-source-audit-double-wrap-01"}, nil
+				return &challengecontracts.ChallengeImportPreviewResp{ID: id, Slug: "web-source-audit-double-wrap-01"}, nil
 			},
 		},
 		challengeImportHandlerQueryStub{},

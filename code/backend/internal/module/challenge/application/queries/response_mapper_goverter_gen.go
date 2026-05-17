@@ -4,78 +4,77 @@
 package queries
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type challengeQueryResponseMapperImpl struct{}
 
-func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source model.Challenge) dto.ChallengeDetailResp {
-	var dtoChallengeDetailResp dto.ChallengeDetailResp
-	dtoChallengeDetailResp.ID = source.ID
-	dtoChallengeDetailResp.Title = source.Title
-	dtoChallengeDetailResp.Description = source.Description
-	dtoChallengeDetailResp.Category = source.Category
-	dtoChallengeDetailResp.Difficulty = source.Difficulty
-	dtoChallengeDetailResp.Points = source.Points
-	dtoChallengeDetailResp.FlagType = source.FlagType
-	dtoChallengeDetailResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
-	dtoChallengeDetailResp.AttachmentURL = source.AttachmentURL
-	dtoChallengeDetailResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoChallengeDetailResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source model.Challenge) contracts.ChallengeDetailResp {
+	var contractsChallengeDetailResp contracts.ChallengeDetailResp
+	contractsChallengeDetailResp.ID = source.ID
+	contractsChallengeDetailResp.Title = source.Title
+	contractsChallengeDetailResp.Description = source.Description
+	contractsChallengeDetailResp.Category = source.Category
+	contractsChallengeDetailResp.Difficulty = source.Difficulty
+	contractsChallengeDetailResp.Points = source.Points
+	contractsChallengeDetailResp.FlagType = source.FlagType
+	contractsChallengeDetailResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	contractsChallengeDetailResp.AttachmentURL = source.AttachmentURL
+	contractsChallengeDetailResp.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsChallengeDetailResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBasePtr(source *model.Challenge) *dto.ChallengeDetailResp {
-	var pDtoChallengeDetailResp *dto.ChallengeDetailResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBasePtr(source *model.Challenge) *contracts.ChallengeDetailResp {
+	var pContractsChallengeDetailResp *contracts.ChallengeDetailResp
 	if source != nil {
-		dtoChallengeDetailResp := c.ToChallengeDetailRespBase((*source))
-		pDtoChallengeDetailResp = &dtoChallengeDetailResp
+		contractsChallengeDetailResp := c.ToChallengeDetailRespBase((*source))
+		pContractsChallengeDetailResp = &contractsChallengeDetailResp
 	}
-	return pDtoChallengeDetailResp
+	return pContractsChallengeDetailResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source model.ChallengeHint) dto.ChallengeHintResp {
-	var dtoChallengeHintResp dto.ChallengeHintResp
-	dtoChallengeHintResp.ID = source.ID
-	dtoChallengeHintResp.Level = source.Level
-	dtoChallengeHintResp.Title = source.Title
-	dtoChallengeHintResp.Content = source.Content
-	return dtoChallengeHintResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source model.ChallengeHint) contracts.ChallengeHintResp {
+	var contractsChallengeHintResp contracts.ChallengeHintResp
+	contractsChallengeHintResp.ID = source.ID
+	contractsChallengeHintResp.Level = source.Level
+	contractsChallengeHintResp.Title = source.Title
+	contractsChallengeHintResp.Content = source.Content
+	return contractsChallengeHintResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespPtr(source *model.ChallengeHint) *dto.ChallengeHintResp {
-	var pDtoChallengeHintResp *dto.ChallengeHintResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespPtr(source *model.ChallengeHint) *contracts.ChallengeHintResp {
+	var pContractsChallengeHintResp *contracts.ChallengeHintResp
 	if source != nil {
-		dtoChallengeHintResp := c.ToChallengeHintResp((*source))
-		pDtoChallengeHintResp = &dtoChallengeHintResp
+		contractsChallengeHintResp := c.ToChallengeHintResp((*source))
+		pContractsChallengeHintResp = &contractsChallengeHintResp
 	}
-	return pDtoChallengeHintResp
+	return pContractsChallengeHintResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*model.ChallengeHint) []*dto.ChallengeHintResp {
-	var pDtoChallengeHintRespList []*dto.ChallengeHintResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*model.ChallengeHint) []*contracts.ChallengeHintResp {
+	var pContractsChallengeHintRespList []*contracts.ChallengeHintResp
 	if source != nil {
-		pDtoChallengeHintRespList = make([]*dto.ChallengeHintResp, len(source))
+		pContractsChallengeHintRespList = make([]*contracts.ChallengeHintResp, len(source))
 		for i := 0; i < len(source); i++ {
-			pDtoChallengeHintRespList[i] = c.ToChallengeHintRespPtr(source[i])
+			pContractsChallengeHintRespList[i] = c.ToChallengeHintRespPtr(source[i])
 		}
 	}
-	return pDtoChallengeHintRespList
+	return pContractsChallengeHintRespList
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source model.Challenge) dto.ChallengeListItem {
-	var dtoChallengeListItem dto.ChallengeListItem
-	dtoChallengeListItem.ID = source.ID
-	dtoChallengeListItem.Title = source.Title
-	dtoChallengeListItem.Category = source.Category
-	dtoChallengeListItem.Difficulty = source.Difficulty
-	dtoChallengeListItem.Points = source.Points
-	dtoChallengeListItem.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoChallengeListItem
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source model.Challenge) contracts.ChallengeListItem {
+	var contractsChallengeListItem contracts.ChallengeListItem
+	contractsChallengeListItem.ID = source.ID
+	contractsChallengeListItem.Title = source.Title
+	contractsChallengeListItem.Category = source.Category
+	contractsChallengeListItem.Difficulty = source.Difficulty
+	contractsChallengeListItem.Points = source.Points
+	contractsChallengeListItem.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsChallengeListItem
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *model.Challenge) *dto.ChallengeListItem {
-	var pDtoChallengeListItem *dto.ChallengeListItem
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *model.Challenge) *contracts.ChallengeListItem {
+	var pContractsChallengeListItem *contracts.ChallengeListItem
 	if source != nil {
-		dtoChallengeListItem := c.ToChallengeListItemBase((*source))
-		pDtoChallengeListItem = &dtoChallengeListItem
+		contractsChallengeListItem := c.ToChallengeListItemBase((*source))
+		pContractsChallengeListItem = &contractsChallengeListItem
 	}
-	return pDtoChallengeListItem
+	return pContractsChallengeListItem
 }
 func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source model.ChallengeWriteup) contracts.ChallengeWriteupResp {
 	var contractsChallengeWriteupResp contracts.ChallengeWriteupResp

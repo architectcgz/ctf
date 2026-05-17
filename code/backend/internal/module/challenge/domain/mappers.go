@@ -44,13 +44,13 @@ func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHin
 	return hints, nil
 }
 
-func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *dto.ChallengeResp {
+func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *challengecontracts.ChallengeResp {
 	resp := challengeResponseMapperInst.ToChallengeRespBasePtr(challenge)
 	if resp == nil {
 		return nil
 	}
 
-	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
+	adminHints := make([]*challengecontracts.ChallengeHintAdminResp, 0, len(hints))
 	for _, hint := range hints {
 		adminHints = append(adminHints, challengeResponseMapperInst.ToChallengeHintAdminRespPtr(hint))
 	}

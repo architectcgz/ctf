@@ -4,7 +4,6 @@
 package http
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 )
@@ -118,7 +117,7 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespList(source []*contracts
 	}
 	return pHttpAWDChallengeRespList
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *contracts.ChallengeDetailResp) *ChallengeDetailResp {
 	var pHttpChallengeDetailResp *ChallengeDetailResp
 	if source != nil {
 		var httpChallengeDetailResp ChallengeDetailResp
@@ -135,7 +134,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *dto.Challeng
 		if (*source).Hints != nil {
 			httpChallengeDetailResp.Hints = make([]*ChallengeHintResp, len((*source).Hints))
 			for i := 0; i < len((*source).Hints); i++ {
-				httpChallengeDetailResp.Hints[i] = c.pDtoChallengeHintRespToPHttpChallengeHintResp((*source).Hints[i])
+				httpChallengeDetailResp.Hints[i] = c.pContractsChallengeHintRespToPHttpChallengeHintResp((*source).Hints[i])
 			}
 		}
 		httpChallengeDetailResp.SolvedCount = (*source).SolvedCount
@@ -146,16 +145,16 @@ func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *dto.Challeng
 	}
 	return pHttpChallengeDetailResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeImportCommitResp(source *contracts.ChallengeResp) *ChallengeImportCommitResp {
 	var pHttpChallengeImportCommitResp *ChallengeImportCommitResp
 	if source != nil {
 		var httpChallengeImportCommitResp ChallengeImportCommitResp
-		httpChallengeImportCommitResp.Challenge = c.dtoChallengeRespToPHttpChallengeResp((*source))
+		httpChallengeImportCommitResp.Challenge = c.contractsChallengeRespToPHttpChallengeResp((*source))
 		pHttpChallengeImportCommitResp = &httpChallengeImportCommitResp
 	}
 	return pHttpChallengeImportCommitResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewResp(source *dto.ChallengeImportPreviewResp) *ChallengeImportPreviewResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewResp(source *contracts.ChallengeImportPreviewResp) *ChallengeImportPreviewResp {
 	var pHttpChallengeImportPreviewResp *ChallengeImportPreviewResp
 	if source != nil {
 		var httpChallengeImportPreviewResp ChallengeImportPreviewResp
@@ -170,24 +169,24 @@ func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewResp(source *dto.C
 		if (*source).Attachments != nil {
 			httpChallengeImportPreviewResp.Attachments = make([]ChallengeImportAttachmentResp, len((*source).Attachments))
 			for i := 0; i < len((*source).Attachments); i++ {
-				httpChallengeImportPreviewResp.Attachments[i] = c.dtoChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp((*source).Attachments[i])
+				httpChallengeImportPreviewResp.Attachments[i] = c.contractsChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp((*source).Attachments[i])
 			}
 		}
 		if (*source).Hints != nil {
 			httpChallengeImportPreviewResp.Hints = make([]ChallengeHintAdminResp, len((*source).Hints))
 			for j := 0; j < len((*source).Hints); j++ {
-				httpChallengeImportPreviewResp.Hints[j] = c.dtoChallengeHintAdminRespToHttpChallengeHintAdminResp((*source).Hints[j])
+				httpChallengeImportPreviewResp.Hints[j] = c.contractsChallengeHintAdminRespToHttpChallengeHintAdminResp((*source).Hints[j])
 			}
 		}
-		httpChallengeImportPreviewResp.Flag = c.dtoChallengeImportFlagRespToHttpChallengeImportFlagResp((*source).Flag)
-		httpChallengeImportPreviewResp.Runtime = c.dtoChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp((*source).Runtime)
-		httpChallengeImportPreviewResp.ImageDelivery = c.dtoChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp((*source).ImageDelivery)
-		httpChallengeImportPreviewResp.Extensions = c.dtoChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp((*source).Extensions)
-		httpChallengeImportPreviewResp.Topology = c.pDtoChallengeImportTopologyRespToPHttpChallengeImportTopologyResp((*source).Topology)
+		httpChallengeImportPreviewResp.Flag = c.contractsChallengeImportFlagRespToHttpChallengeImportFlagResp((*source).Flag)
+		httpChallengeImportPreviewResp.Runtime = c.contractsChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp((*source).Runtime)
+		httpChallengeImportPreviewResp.ImageDelivery = c.contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp((*source).ImageDelivery)
+		httpChallengeImportPreviewResp.Extensions = c.contractsChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp((*source).Extensions)
+		httpChallengeImportPreviewResp.Topology = c.pContractsChallengeImportTopologyRespToPHttpChallengeImportTopologyResp((*source).Topology)
 		if (*source).PackageFiles != nil {
 			httpChallengeImportPreviewResp.PackageFiles = make([]ChallengePackageFileResp, len((*source).PackageFiles))
 			for k := 0; k < len((*source).PackageFiles); k++ {
-				httpChallengeImportPreviewResp.PackageFiles[k] = c.dtoChallengePackageFileRespToHttpChallengePackageFileResp((*source).PackageFiles[k])
+				httpChallengeImportPreviewResp.PackageFiles[k] = c.contractsChallengePackageFileRespToHttpChallengePackageFileResp((*source).PackageFiles[k])
 			}
 		}
 		if (*source).Warnings != nil {
@@ -201,17 +200,17 @@ func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewResp(source *dto.C
 	}
 	return pHttpChallengeImportPreviewResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewRespList(source []dto.ChallengeImportPreviewResp) []ChallengeImportPreviewResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeImportPreviewRespList(source []contracts.ChallengeImportPreviewResp) []ChallengeImportPreviewResp {
 	var httpChallengeImportPreviewRespList []ChallengeImportPreviewResp
 	if source != nil {
 		httpChallengeImportPreviewRespList = make([]ChallengeImportPreviewResp, len(source))
 		for i := 0; i < len(source); i++ {
-			httpChallengeImportPreviewRespList[i] = c.dtoChallengeImportPreviewRespToHttpChallengeImportPreviewResp(source[i])
+			httpChallengeImportPreviewRespList[i] = c.contractsChallengeImportPreviewRespToHttpChallengeImportPreviewResp(source[i])
 		}
 	}
 	return httpChallengeImportPreviewRespList
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem] {
+func (c *ChallengeResponseMapperImpl) ToChallengeListItemPageResult(source *contracts.PageResult[*contracts.ChallengeListItem]) *PageResult[*ChallengeListItem] {
 	var pHttpPageResult *PageResult[*ChallengeListItem]
 	if source != nil {
 		var httpPageResult PageResult[*ChallengeListItem]
@@ -223,7 +222,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeListItemPageResult(source *dto.
 	}
 	return pHttpPageResult
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeListItemResp(source *dto.ChallengeListItem) *ChallengeListItem {
+func (c *ChallengeResponseMapperImpl) ToChallengeListItemResp(source *contracts.ChallengeListItem) *ChallengeListItem {
 	var pHttpChallengeListItem *ChallengeListItem
 	if source != nil {
 		var httpChallengeListItem ChallengeListItem
@@ -240,7 +239,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeListItemResp(source *dto.Challe
 	}
 	return pHttpChallengeListItem
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeListItemRespList(source []*dto.ChallengeListItem) []*ChallengeListItem {
+func (c *ChallengeResponseMapperImpl) ToChallengeListItemRespList(source []*contracts.ChallengeListItem) []*ChallengeListItem {
 	var pHttpChallengeListItemList []*ChallengeListItem
 	if source != nil {
 		pHttpChallengeListItemList = make([]*ChallengeListItem, len(source))
@@ -250,7 +249,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeListItemRespList(source []*dto.
 	}
 	return pHttpChallengeListItemList
 }
-func (c *ChallengeResponseMapperImpl) ToChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageExportResp(source *contracts.ChallengePackageExportResp) *ChallengePackageExportResp {
 	var pHttpChallengePackageExportResp *ChallengePackageExportResp
 	if source != nil {
 		var httpChallengePackageExportResp ChallengePackageExportResp
@@ -265,7 +264,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePackageExportResp(source *dto.C
 	}
 	return pHttpChallengePackageExportResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp] {
+func (c *ChallengeResponseMapperImpl) ToChallengePageResult(source *contracts.PageResult[*contracts.ChallengeResp]) *PageResult[*ChallengeResp] {
 	var pHttpPageResult *PageResult[*ChallengeResp]
 	if source != nil {
 		var httpPageResult PageResult[*ChallengeResp]
@@ -277,7 +276,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePageResult(source *dto.PageResu
 	}
 	return pHttpPageResult
 }
-func (c *ChallengeResponseMapperImpl) ToChallengePublishCheckJobResp(source *dto.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePublishCheckJobResp(source *contracts.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp {
 	var pHttpChallengePublishCheckJobResp *ChallengePublishCheckJobResp
 	if source != nil {
 		var httpChallengePublishCheckJobResp ChallengePublishCheckJobResp
@@ -298,7 +297,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePublishCheckJobResp(source *dto
 	}
 	return pHttpChallengePublishCheckJobResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *dto.ChallengeResp) *ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *contracts.ChallengeResp) *ChallengeResp {
 	var pHttpChallengeResp *ChallengeResp
 	if source != nil {
 		var httpChallengeResp ChallengeResp
@@ -314,7 +313,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *dto.ChallengeResp)
 		if (*source).Hints != nil {
 			httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len((*source).Hints))
 			for i := 0; i < len((*source).Hints); i++ {
-				httpChallengeResp.Hints[i] = c.pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp((*source).Hints[i])
+				httpChallengeResp.Hints[i] = c.pContractsChallengeHintAdminRespToPHttpChallengeHintAdminResp((*source).Hints[i])
 			}
 		}
 		httpChallengeResp.Status = (*source).Status
@@ -328,7 +327,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *dto.ChallengeResp)
 	}
 	return pHttpChallengeResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeRespList(source []*dto.ChallengeResp) []*ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeRespList(source []*contracts.ChallengeResp) []*ChallengeResp {
 	var pHttpChallengeRespList []*ChallengeResp
 	if source != nil {
 		pHttpChallengeRespList = make([]*ChallengeResp, len(source))
@@ -338,13 +337,13 @@ func (c *ChallengeResponseMapperImpl) ToChallengeRespList(source []*dto.Challeng
 	}
 	return pHttpChallengeRespList
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeSelfCheckResp(source *dto.ChallengeSelfCheckResp) *ChallengeSelfCheckResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeSelfCheckResp(source *contracts.ChallengeSelfCheckResp) *ChallengeSelfCheckResp {
 	var pHttpChallengeSelfCheckResp *ChallengeSelfCheckResp
 	if source != nil {
 		var httpChallengeSelfCheckResp ChallengeSelfCheckResp
 		httpChallengeSelfCheckResp.ChallengeID = (*source).ChallengeID
-		httpChallengeSelfCheckResp.Precheck = c.dtoChallengeSelfCheckPhaseRespToHttpChallengeSelfCheckPhaseResp((*source).Precheck)
-		httpChallengeSelfCheckResp.Runtime = c.dtoChallengeSelfCheckRuntimeRespToHttpChallengeSelfCheckRuntimeResp((*source).Runtime)
+		httpChallengeSelfCheckResp.Precheck = c.contractsChallengeSelfCheckPhaseRespToHttpChallengeSelfCheckPhaseResp((*source).Precheck)
+		httpChallengeSelfCheckResp.Runtime = c.contractsChallengeSelfCheckRuntimeRespToHttpChallengeSelfCheckRuntimeResp((*source).Runtime)
 		pHttpChallengeSelfCheckResp = &httpChallengeSelfCheckResp
 	}
 	return pHttpChallengeSelfCheckResp
@@ -603,6 +602,31 @@ func (c *ChallengeResponseMapperImpl) contractsAWDChallengeRespToPHttpAWDChallen
 	httpAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return &httpAWDChallengeResp
 }
+func (c *ChallengeResponseMapperImpl) contractsChallengeHintAdminRespToHttpChallengeHintAdminResp(source contracts.ChallengeHintAdminResp) ChallengeHintAdminResp {
+	var httpChallengeHintAdminResp ChallengeHintAdminResp
+	httpChallengeHintAdminResp.ID = source.ID
+	httpChallengeHintAdminResp.Level = source.Level
+	httpChallengeHintAdminResp.Title = source.Title
+	httpChallengeHintAdminResp.Content = source.Content
+	return httpChallengeHintAdminResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp(source contracts.ChallengeImportAttachmentResp) ChallengeImportAttachmentResp {
+	var httpChallengeImportAttachmentResp ChallengeImportAttachmentResp
+	httpChallengeImportAttachmentResp.Name = source.Name
+	httpChallengeImportAttachmentResp.Path = source.Path
+	return httpChallengeImportAttachmentResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp(source contracts.ChallengeImportExtensionsResp) ChallengeImportExtensionsResp {
+	var httpChallengeImportExtensionsResp ChallengeImportExtensionsResp
+	httpChallengeImportExtensionsResp.Topology = c.contractsChallengeImportTopologyExtensionRespToHttpChallengeImportTopologyExtensionResp(source.Topology)
+	return httpChallengeImportExtensionsResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportFlagRespToHttpChallengeImportFlagResp(source contracts.ChallengeImportFlagResp) ChallengeImportFlagResp {
+	var httpChallengeImportFlagResp ChallengeImportFlagResp
+	httpChallengeImportFlagResp.Type = source.Type
+	httpChallengeImportFlagResp.Prefix = source.Prefix
+	return httpChallengeImportFlagResp
+}
 func (c *ChallengeResponseMapperImpl) contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source contracts.ChallengeImportImageDeliveryResp) ChallengeImportImageDeliveryResp {
 	var httpChallengeImportImageDeliveryResp ChallengeImportImageDeliveryResp
 	httpChallengeImportImageDeliveryResp.SourceType = source.SourceType
@@ -612,6 +636,82 @@ func (c *ChallengeResponseMapperImpl) contractsChallengeImportImageDeliveryRespT
 	httpChallengeImportImageDeliveryResp.Digest = source.Digest
 	httpChallengeImportImageDeliveryResp.LastError = source.LastError
 	return httpChallengeImportImageDeliveryResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportPreviewRespToHttpChallengeImportPreviewResp(source contracts.ChallengeImportPreviewResp) ChallengeImportPreviewResp {
+	var httpChallengeImportPreviewResp ChallengeImportPreviewResp
+	httpChallengeImportPreviewResp.ID = source.ID
+	httpChallengeImportPreviewResp.FileName = source.FileName
+	httpChallengeImportPreviewResp.Slug = source.Slug
+	httpChallengeImportPreviewResp.Title = source.Title
+	httpChallengeImportPreviewResp.Description = source.Description
+	httpChallengeImportPreviewResp.Category = source.Category
+	httpChallengeImportPreviewResp.Difficulty = source.Difficulty
+	httpChallengeImportPreviewResp.Points = source.Points
+	if source.Attachments != nil {
+		httpChallengeImportPreviewResp.Attachments = make([]ChallengeImportAttachmentResp, len(source.Attachments))
+		for i := 0; i < len(source.Attachments); i++ {
+			httpChallengeImportPreviewResp.Attachments[i] = c.contractsChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp(source.Attachments[i])
+		}
+	}
+	if source.Hints != nil {
+		httpChallengeImportPreviewResp.Hints = make([]ChallengeHintAdminResp, len(source.Hints))
+		for j := 0; j < len(source.Hints); j++ {
+			httpChallengeImportPreviewResp.Hints[j] = c.contractsChallengeHintAdminRespToHttpChallengeHintAdminResp(source.Hints[j])
+		}
+	}
+	httpChallengeImportPreviewResp.Flag = c.contractsChallengeImportFlagRespToHttpChallengeImportFlagResp(source.Flag)
+	httpChallengeImportPreviewResp.Runtime = c.contractsChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp(source.Runtime)
+	httpChallengeImportPreviewResp.ImageDelivery = c.contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source.ImageDelivery)
+	httpChallengeImportPreviewResp.Extensions = c.contractsChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp(source.Extensions)
+	httpChallengeImportPreviewResp.Topology = c.pContractsChallengeImportTopologyRespToPHttpChallengeImportTopologyResp(source.Topology)
+	if source.PackageFiles != nil {
+		httpChallengeImportPreviewResp.PackageFiles = make([]ChallengePackageFileResp, len(source.PackageFiles))
+		for k := 0; k < len(source.PackageFiles); k++ {
+			httpChallengeImportPreviewResp.PackageFiles[k] = c.contractsChallengePackageFileRespToHttpChallengePackageFileResp(source.PackageFiles[k])
+		}
+	}
+	if source.Warnings != nil {
+		httpChallengeImportPreviewResp.Warnings = make([]string, len(source.Warnings))
+		for l := 0; l < len(source.Warnings); l++ {
+			httpChallengeImportPreviewResp.Warnings[l] = source.Warnings[l]
+		}
+	}
+	httpChallengeImportPreviewResp.CreatedAt = CopyTime(source.CreatedAt)
+	return httpChallengeImportPreviewResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp(source contracts.ChallengeImportRuntimeResp) ChallengeImportRuntimeResp {
+	var httpChallengeImportRuntimeResp ChallengeImportRuntimeResp
+	httpChallengeImportRuntimeResp.Type = source.Type
+	httpChallengeImportRuntimeResp.ImageRef = source.ImageRef
+	return httpChallengeImportRuntimeResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportTopologyExtensionRespToHttpChallengeImportTopologyExtensionResp(source contracts.ChallengeImportTopologyExtensionResp) ChallengeImportTopologyExtensionResp {
+	var httpChallengeImportTopologyExtensionResp ChallengeImportTopologyExtensionResp
+	httpChallengeImportTopologyExtensionResp.Source = source.Source
+	httpChallengeImportTopologyExtensionResp.Enabled = source.Enabled
+	return httpChallengeImportTopologyExtensionResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportTopologyNodeRespToHttpChallengeImportTopologyNodeResp(source contracts.ChallengeImportTopologyNodeResp) ChallengeImportTopologyNodeResp {
+	var httpChallengeImportTopologyNodeResp ChallengeImportTopologyNodeResp
+	httpChallengeImportTopologyNodeResp.Key = source.Key
+	httpChallengeImportTopologyNodeResp.Name = source.Name
+	httpChallengeImportTopologyNodeResp.ImageRef = source.ImageRef
+	httpChallengeImportTopologyNodeResp.ServicePort = source.ServicePort
+	httpChallengeImportTopologyNodeResp.InjectFlag = source.InjectFlag
+	httpChallengeImportTopologyNodeResp.Tier = source.Tier
+	if source.NetworkKeys != nil {
+		httpChallengeImportTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
+		for i := 0; i < len(source.NetworkKeys); i++ {
+			httpChallengeImportTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
+		}
+	}
+	if source.Env != nil {
+		httpChallengeImportTopologyNodeResp.Env = make(map[string]string, len(source.Env))
+		for key, value := range source.Env {
+			httpChallengeImportTopologyNodeResp.Env[key] = value
+		}
+	}
+	return httpChallengeImportTopologyNodeResp
 }
 func (c *ChallengeResponseMapperImpl) contractsChallengePackageFileRespToHttpChallengePackageFileResp(source contracts.ChallengePackageFileResp) ChallengePackageFileResp {
 	var httpChallengePackageFileResp ChallengePackageFileResp
@@ -639,6 +739,68 @@ func (c *ChallengeResponseMapperImpl) contractsChallengePackageRevisionRespToHtt
 	httpChallengePackageRevisionResp.CreatedAt = CopyTime(source.CreatedAt)
 	httpChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return httpChallengePackageRevisionResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeRespToPHttpChallengeResp(source contracts.ChallengeResp) *ChallengeResp {
+	var httpChallengeResp ChallengeResp
+	httpChallengeResp.ID = source.ID
+	httpChallengeResp.Title = source.Title
+	httpChallengeResp.Description = source.Description
+	httpChallengeResp.Category = source.Category
+	httpChallengeResp.Difficulty = source.Difficulty
+	httpChallengeResp.Points = source.Points
+	httpChallengeResp.ImageID = source.ImageID
+	httpChallengeResp.AttachmentURL = source.AttachmentURL
+	httpChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	if source.Hints != nil {
+		httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len(source.Hints))
+		for i := 0; i < len(source.Hints); i++ {
+			httpChallengeResp.Hints[i] = c.pContractsChallengeHintAdminRespToPHttpChallengeHintAdminResp(source.Hints[i])
+		}
+	}
+	httpChallengeResp.Status = source.Status
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		httpChallengeResp.CreatedBy = &xint64
+	}
+	httpChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	httpChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return &httpChallengeResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeSelfCheckPhaseRespToHttpChallengeSelfCheckPhaseResp(source contracts.ChallengeSelfCheckPhaseResp) ChallengeSelfCheckPhaseResp {
+	var httpChallengeSelfCheckPhaseResp ChallengeSelfCheckPhaseResp
+	httpChallengeSelfCheckPhaseResp.Passed = source.Passed
+	httpChallengeSelfCheckPhaseResp.StartedAt = CopyTime(source.StartedAt)
+	httpChallengeSelfCheckPhaseResp.EndedAt = CopyTime(source.EndedAt)
+	if source.Steps != nil {
+		httpChallengeSelfCheckPhaseResp.Steps = make([]ChallengeSelfCheckStepResp, len(source.Steps))
+		for i := 0; i < len(source.Steps); i++ {
+			httpChallengeSelfCheckPhaseResp.Steps[i] = c.contractsChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source.Steps[i])
+		}
+	}
+	return httpChallengeSelfCheckPhaseResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeSelfCheckRuntimeRespToHttpChallengeSelfCheckRuntimeResp(source contracts.ChallengeSelfCheckRuntimeResp) ChallengeSelfCheckRuntimeResp {
+	var httpChallengeSelfCheckRuntimeResp ChallengeSelfCheckRuntimeResp
+	httpChallengeSelfCheckRuntimeResp.Passed = source.Passed
+	httpChallengeSelfCheckRuntimeResp.StartedAt = CopyTime(source.StartedAt)
+	httpChallengeSelfCheckRuntimeResp.EndedAt = CopyTime(source.EndedAt)
+	httpChallengeSelfCheckRuntimeResp.AccessURL = source.AccessURL
+	httpChallengeSelfCheckRuntimeResp.ContainerCount = source.ContainerCount
+	httpChallengeSelfCheckRuntimeResp.NetworkCount = source.NetworkCount
+	if source.Steps != nil {
+		httpChallengeSelfCheckRuntimeResp.Steps = make([]ChallengeSelfCheckStepResp, len(source.Steps))
+		for i := 0; i < len(source.Steps); i++ {
+			httpChallengeSelfCheckRuntimeResp.Steps[i] = c.contractsChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source.Steps[i])
+		}
+	}
+	return httpChallengeSelfCheckRuntimeResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source contracts.ChallengeSelfCheckStepResp) ChallengeSelfCheckStepResp {
+	var httpChallengeSelfCheckStepResp ChallengeSelfCheckStepResp
+	httpChallengeSelfCheckStepResp.Name = source.Name
+	httpChallengeSelfCheckStepResp.Passed = source.Passed
+	httpChallengeSelfCheckStepResp.Message = source.Message
+	return httpChallengeSelfCheckStepResp
 }
 func (c *ChallengeResponseMapperImpl) contractsTopologyLinkRespToHttpTopologyLinkResp(source contracts.TopologyLinkResp) TopologyLinkResp {
 	var httpTopologyLinkResp TopologyLinkResp
@@ -692,213 +854,6 @@ func (c *ChallengeResponseMapperImpl) contractsTopologyTrafficPolicyRespToHttpTo
 	}
 	return httpTopologyTrafficPolicyResp
 }
-func (c *ChallengeResponseMapperImpl) dtoChallengeHintAdminRespToHttpChallengeHintAdminResp(source dto.ChallengeHintAdminResp) ChallengeHintAdminResp {
-	var httpChallengeHintAdminResp ChallengeHintAdminResp
-	httpChallengeHintAdminResp.ID = source.ID
-	httpChallengeHintAdminResp.Level = source.Level
-	httpChallengeHintAdminResp.Title = source.Title
-	httpChallengeHintAdminResp.Content = source.Content
-	return httpChallengeHintAdminResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp(source dto.ChallengeImportAttachmentResp) ChallengeImportAttachmentResp {
-	var httpChallengeImportAttachmentResp ChallengeImportAttachmentResp
-	httpChallengeImportAttachmentResp.Name = source.Name
-	httpChallengeImportAttachmentResp.Path = source.Path
-	return httpChallengeImportAttachmentResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp(source dto.ChallengeImportExtensionsResp) ChallengeImportExtensionsResp {
-	var httpChallengeImportExtensionsResp ChallengeImportExtensionsResp
-	httpChallengeImportExtensionsResp.Topology = c.dtoChallengeImportTopologyExtensionRespToHttpChallengeImportTopologyExtensionResp(source.Topology)
-	return httpChallengeImportExtensionsResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportFlagRespToHttpChallengeImportFlagResp(source dto.ChallengeImportFlagResp) ChallengeImportFlagResp {
-	var httpChallengeImportFlagResp ChallengeImportFlagResp
-	httpChallengeImportFlagResp.Type = source.Type
-	httpChallengeImportFlagResp.Prefix = source.Prefix
-	return httpChallengeImportFlagResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source dto.ChallengeImportImageDeliveryResp) ChallengeImportImageDeliveryResp {
-	var httpChallengeImportImageDeliveryResp ChallengeImportImageDeliveryResp
-	httpChallengeImportImageDeliveryResp.SourceType = source.SourceType
-	httpChallengeImportImageDeliveryResp.SuggestedTag = source.SuggestedTag
-	httpChallengeImportImageDeliveryResp.TargetImageRef = source.TargetImageRef
-	httpChallengeImportImageDeliveryResp.BuildStatus = source.BuildStatus
-	httpChallengeImportImageDeliveryResp.Digest = source.Digest
-	httpChallengeImportImageDeliveryResp.LastError = source.LastError
-	return httpChallengeImportImageDeliveryResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportPreviewRespToHttpChallengeImportPreviewResp(source dto.ChallengeImportPreviewResp) ChallengeImportPreviewResp {
-	var httpChallengeImportPreviewResp ChallengeImportPreviewResp
-	httpChallengeImportPreviewResp.ID = source.ID
-	httpChallengeImportPreviewResp.FileName = source.FileName
-	httpChallengeImportPreviewResp.Slug = source.Slug
-	httpChallengeImportPreviewResp.Title = source.Title
-	httpChallengeImportPreviewResp.Description = source.Description
-	httpChallengeImportPreviewResp.Category = source.Category
-	httpChallengeImportPreviewResp.Difficulty = source.Difficulty
-	httpChallengeImportPreviewResp.Points = source.Points
-	if source.Attachments != nil {
-		httpChallengeImportPreviewResp.Attachments = make([]ChallengeImportAttachmentResp, len(source.Attachments))
-		for i := 0; i < len(source.Attachments); i++ {
-			httpChallengeImportPreviewResp.Attachments[i] = c.dtoChallengeImportAttachmentRespToHttpChallengeImportAttachmentResp(source.Attachments[i])
-		}
-	}
-	if source.Hints != nil {
-		httpChallengeImportPreviewResp.Hints = make([]ChallengeHintAdminResp, len(source.Hints))
-		for j := 0; j < len(source.Hints); j++ {
-			httpChallengeImportPreviewResp.Hints[j] = c.dtoChallengeHintAdminRespToHttpChallengeHintAdminResp(source.Hints[j])
-		}
-	}
-	httpChallengeImportPreviewResp.Flag = c.dtoChallengeImportFlagRespToHttpChallengeImportFlagResp(source.Flag)
-	httpChallengeImportPreviewResp.Runtime = c.dtoChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp(source.Runtime)
-	httpChallengeImportPreviewResp.ImageDelivery = c.dtoChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source.ImageDelivery)
-	httpChallengeImportPreviewResp.Extensions = c.dtoChallengeImportExtensionsRespToHttpChallengeImportExtensionsResp(source.Extensions)
-	httpChallengeImportPreviewResp.Topology = c.pDtoChallengeImportTopologyRespToPHttpChallengeImportTopologyResp(source.Topology)
-	if source.PackageFiles != nil {
-		httpChallengeImportPreviewResp.PackageFiles = make([]ChallengePackageFileResp, len(source.PackageFiles))
-		for k := 0; k < len(source.PackageFiles); k++ {
-			httpChallengeImportPreviewResp.PackageFiles[k] = c.dtoChallengePackageFileRespToHttpChallengePackageFileResp(source.PackageFiles[k])
-		}
-	}
-	if source.Warnings != nil {
-		httpChallengeImportPreviewResp.Warnings = make([]string, len(source.Warnings))
-		for l := 0; l < len(source.Warnings); l++ {
-			httpChallengeImportPreviewResp.Warnings[l] = source.Warnings[l]
-		}
-	}
-	httpChallengeImportPreviewResp.CreatedAt = CopyTime(source.CreatedAt)
-	return httpChallengeImportPreviewResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportRuntimeRespToHttpChallengeImportRuntimeResp(source dto.ChallengeImportRuntimeResp) ChallengeImportRuntimeResp {
-	var httpChallengeImportRuntimeResp ChallengeImportRuntimeResp
-	httpChallengeImportRuntimeResp.Type = source.Type
-	httpChallengeImportRuntimeResp.ImageRef = source.ImageRef
-	return httpChallengeImportRuntimeResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportTopologyExtensionRespToHttpChallengeImportTopologyExtensionResp(source dto.ChallengeImportTopologyExtensionResp) ChallengeImportTopologyExtensionResp {
-	var httpChallengeImportTopologyExtensionResp ChallengeImportTopologyExtensionResp
-	httpChallengeImportTopologyExtensionResp.Source = source.Source
-	httpChallengeImportTopologyExtensionResp.Enabled = source.Enabled
-	return httpChallengeImportTopologyExtensionResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeImportTopologyNodeRespToHttpChallengeImportTopologyNodeResp(source dto.ChallengeImportTopologyNodeResp) ChallengeImportTopologyNodeResp {
-	var httpChallengeImportTopologyNodeResp ChallengeImportTopologyNodeResp
-	httpChallengeImportTopologyNodeResp.Key = source.Key
-	httpChallengeImportTopologyNodeResp.Name = source.Name
-	httpChallengeImportTopologyNodeResp.ImageRef = source.ImageRef
-	httpChallengeImportTopologyNodeResp.ServicePort = source.ServicePort
-	httpChallengeImportTopologyNodeResp.InjectFlag = source.InjectFlag
-	httpChallengeImportTopologyNodeResp.Tier = source.Tier
-	if source.NetworkKeys != nil {
-		httpChallengeImportTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
-		for i := 0; i < len(source.NetworkKeys); i++ {
-			httpChallengeImportTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
-		}
-	}
-	if source.Env != nil {
-		httpChallengeImportTopologyNodeResp.Env = make(map[string]string, len(source.Env))
-		for key, value := range source.Env {
-			httpChallengeImportTopologyNodeResp.Env[key] = value
-		}
-	}
-	return httpChallengeImportTopologyNodeResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengePackageFileRespToHttpChallengePackageFileResp(source dto.ChallengePackageFileResp) ChallengePackageFileResp {
-	var httpChallengePackageFileResp ChallengePackageFileResp
-	httpChallengePackageFileResp.Path = source.Path
-	httpChallengePackageFileResp.Size = source.Size
-	return httpChallengePackageFileResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeRespToPHttpChallengeResp(source dto.ChallengeResp) *ChallengeResp {
-	var httpChallengeResp ChallengeResp
-	httpChallengeResp.ID = source.ID
-	httpChallengeResp.Title = source.Title
-	httpChallengeResp.Description = source.Description
-	httpChallengeResp.Category = source.Category
-	httpChallengeResp.Difficulty = source.Difficulty
-	httpChallengeResp.Points = source.Points
-	httpChallengeResp.ImageID = source.ImageID
-	httpChallengeResp.AttachmentURL = source.AttachmentURL
-	httpChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
-	if source.Hints != nil {
-		httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len(source.Hints))
-		for i := 0; i < len(source.Hints); i++ {
-			httpChallengeResp.Hints[i] = c.pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp(source.Hints[i])
-		}
-	}
-	httpChallengeResp.Status = source.Status
-	if source.CreatedBy != nil {
-		xint64 := *source.CreatedBy
-		httpChallengeResp.CreatedBy = &xint64
-	}
-	httpChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
-	httpChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return &httpChallengeResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeSelfCheckPhaseRespToHttpChallengeSelfCheckPhaseResp(source dto.ChallengeSelfCheckPhaseResp) ChallengeSelfCheckPhaseResp {
-	var httpChallengeSelfCheckPhaseResp ChallengeSelfCheckPhaseResp
-	httpChallengeSelfCheckPhaseResp.Passed = source.Passed
-	httpChallengeSelfCheckPhaseResp.StartedAt = CopyTime(source.StartedAt)
-	httpChallengeSelfCheckPhaseResp.EndedAt = CopyTime(source.EndedAt)
-	if source.Steps != nil {
-		httpChallengeSelfCheckPhaseResp.Steps = make([]ChallengeSelfCheckStepResp, len(source.Steps))
-		for i := 0; i < len(source.Steps); i++ {
-			httpChallengeSelfCheckPhaseResp.Steps[i] = c.dtoChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source.Steps[i])
-		}
-	}
-	return httpChallengeSelfCheckPhaseResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeSelfCheckRuntimeRespToHttpChallengeSelfCheckRuntimeResp(source dto.ChallengeSelfCheckRuntimeResp) ChallengeSelfCheckRuntimeResp {
-	var httpChallengeSelfCheckRuntimeResp ChallengeSelfCheckRuntimeResp
-	httpChallengeSelfCheckRuntimeResp.Passed = source.Passed
-	httpChallengeSelfCheckRuntimeResp.StartedAt = CopyTime(source.StartedAt)
-	httpChallengeSelfCheckRuntimeResp.EndedAt = CopyTime(source.EndedAt)
-	httpChallengeSelfCheckRuntimeResp.AccessURL = source.AccessURL
-	httpChallengeSelfCheckRuntimeResp.ContainerCount = source.ContainerCount
-	httpChallengeSelfCheckRuntimeResp.NetworkCount = source.NetworkCount
-	if source.Steps != nil {
-		httpChallengeSelfCheckRuntimeResp.Steps = make([]ChallengeSelfCheckStepResp, len(source.Steps))
-		for i := 0; i < len(source.Steps); i++ {
-			httpChallengeSelfCheckRuntimeResp.Steps[i] = c.dtoChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source.Steps[i])
-		}
-	}
-	return httpChallengeSelfCheckRuntimeResp
-}
-func (c *ChallengeResponseMapperImpl) dtoChallengeSelfCheckStepRespToHttpChallengeSelfCheckStepResp(source dto.ChallengeSelfCheckStepResp) ChallengeSelfCheckStepResp {
-	var httpChallengeSelfCheckStepResp ChallengeSelfCheckStepResp
-	httpChallengeSelfCheckStepResp.Name = source.Name
-	httpChallengeSelfCheckStepResp.Passed = source.Passed
-	httpChallengeSelfCheckStepResp.Message = source.Message
-	return httpChallengeSelfCheckStepResp
-}
-func (c *ChallengeResponseMapperImpl) dtoTopologyLinkRespToHttpTopologyLinkResp(source dto.TopologyLinkResp) TopologyLinkResp {
-	var httpTopologyLinkResp TopologyLinkResp
-	httpTopologyLinkResp.FromNodeKey = source.FromNodeKey
-	httpTopologyLinkResp.ToNodeKey = source.ToNodeKey
-	return httpTopologyLinkResp
-}
-func (c *ChallengeResponseMapperImpl) dtoTopologyNetworkRespToHttpTopologyNetworkResp(source dto.TopologyNetworkResp) TopologyNetworkResp {
-	var httpTopologyNetworkResp TopologyNetworkResp
-	httpTopologyNetworkResp.Key = source.Key
-	httpTopologyNetworkResp.Name = source.Name
-	httpTopologyNetworkResp.CIDR = source.CIDR
-	httpTopologyNetworkResp.Internal = source.Internal
-	return httpTopologyNetworkResp
-}
-func (c *ChallengeResponseMapperImpl) dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp(source dto.TopologyTrafficPolicyResp) TopologyTrafficPolicyResp {
-	var httpTopologyTrafficPolicyResp TopologyTrafficPolicyResp
-	httpTopologyTrafficPolicyResp.SourceNodeKey = source.SourceNodeKey
-	httpTopologyTrafficPolicyResp.TargetNodeKey = source.TargetNodeKey
-	httpTopologyTrafficPolicyResp.Action = source.Action
-	httpTopologyTrafficPolicyResp.Protocol = source.Protocol
-	if source.Ports != nil {
-		httpTopologyTrafficPolicyResp.Ports = make([]int, len(source.Ports))
-		for i := 0; i < len(source.Ports); i++ {
-			httpTopologyTrafficPolicyResp.Ports[i] = source.Ports[i]
-		}
-	}
-	return httpTopologyTrafficPolicyResp
-}
 func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
 	switch source {
@@ -914,6 +869,64 @@ func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing
 	default: // ignored
 	}
 	return modelInstanceSharing
+}
+func (c *ChallengeResponseMapperImpl) pContractsChallengeHintAdminRespToPHttpChallengeHintAdminResp(source *contracts.ChallengeHintAdminResp) *ChallengeHintAdminResp {
+	var pHttpChallengeHintAdminResp *ChallengeHintAdminResp
+	if source != nil {
+		var httpChallengeHintAdminResp ChallengeHintAdminResp
+		httpChallengeHintAdminResp.ID = (*source).ID
+		httpChallengeHintAdminResp.Level = (*source).Level
+		httpChallengeHintAdminResp.Title = (*source).Title
+		httpChallengeHintAdminResp.Content = (*source).Content
+		pHttpChallengeHintAdminResp = &httpChallengeHintAdminResp
+	}
+	return pHttpChallengeHintAdminResp
+}
+func (c *ChallengeResponseMapperImpl) pContractsChallengeHintRespToPHttpChallengeHintResp(source *contracts.ChallengeHintResp) *ChallengeHintResp {
+	var pHttpChallengeHintResp *ChallengeHintResp
+	if source != nil {
+		var httpChallengeHintResp ChallengeHintResp
+		httpChallengeHintResp.ID = (*source).ID
+		httpChallengeHintResp.Level = (*source).Level
+		httpChallengeHintResp.Title = (*source).Title
+		httpChallengeHintResp.Content = (*source).Content
+		pHttpChallengeHintResp = &httpChallengeHintResp
+	}
+	return pHttpChallengeHintResp
+}
+func (c *ChallengeResponseMapperImpl) pContractsChallengeImportTopologyRespToPHttpChallengeImportTopologyResp(source *contracts.ChallengeImportTopologyResp) *ChallengeImportTopologyResp {
+	var pHttpChallengeImportTopologyResp *ChallengeImportTopologyResp
+	if source != nil {
+		var httpChallengeImportTopologyResp ChallengeImportTopologyResp
+		httpChallengeImportTopologyResp.Source = (*source).Source
+		httpChallengeImportTopologyResp.EntryNodeKey = (*source).EntryNodeKey
+		if (*source).Networks != nil {
+			httpChallengeImportTopologyResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
+			for i := 0; i < len((*source).Networks); i++ {
+				httpChallengeImportTopologyResp.Networks[i] = c.contractsTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
+			}
+		}
+		if (*source).Nodes != nil {
+			httpChallengeImportTopologyResp.Nodes = make([]ChallengeImportTopologyNodeResp, len((*source).Nodes))
+			for j := 0; j < len((*source).Nodes); j++ {
+				httpChallengeImportTopologyResp.Nodes[j] = c.contractsChallengeImportTopologyNodeRespToHttpChallengeImportTopologyNodeResp((*source).Nodes[j])
+			}
+		}
+		if (*source).Links != nil {
+			httpChallengeImportTopologyResp.Links = make([]TopologyLinkResp, len((*source).Links))
+			for k := 0; k < len((*source).Links); k++ {
+				httpChallengeImportTopologyResp.Links[k] = c.contractsTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
+			}
+		}
+		if (*source).Policies != nil {
+			httpChallengeImportTopologyResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
+			for l := 0; l < len((*source).Policies); l++ {
+				httpChallengeImportTopologyResp.Policies[l] = c.contractsTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
+			}
+		}
+		pHttpChallengeImportTopologyResp = &httpChallengeImportTopologyResp
+	}
+	return pHttpChallengeImportTopologyResp
 }
 func (c *ChallengeResponseMapperImpl) pContractsTopologyResourcesRespToPHttpTopologyResourcesResp(source *contracts.TopologyResourcesResp) *TopologyResourcesResp {
 	var pHttpTopologyResourcesResp *TopologyResourcesResp
@@ -958,62 +971,4 @@ func (c *ChallengeResponseMapperImpl) pContractsTopologySpecRespToPHttpTopologyS
 		pHttpTopologySpecResp = &httpTopologySpecResp
 	}
 	return pHttpTopologySpecResp
-}
-func (c *ChallengeResponseMapperImpl) pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp(source *dto.ChallengeHintAdminResp) *ChallengeHintAdminResp {
-	var pHttpChallengeHintAdminResp *ChallengeHintAdminResp
-	if source != nil {
-		var httpChallengeHintAdminResp ChallengeHintAdminResp
-		httpChallengeHintAdminResp.ID = (*source).ID
-		httpChallengeHintAdminResp.Level = (*source).Level
-		httpChallengeHintAdminResp.Title = (*source).Title
-		httpChallengeHintAdminResp.Content = (*source).Content
-		pHttpChallengeHintAdminResp = &httpChallengeHintAdminResp
-	}
-	return pHttpChallengeHintAdminResp
-}
-func (c *ChallengeResponseMapperImpl) pDtoChallengeHintRespToPHttpChallengeHintResp(source *dto.ChallengeHintResp) *ChallengeHintResp {
-	var pHttpChallengeHintResp *ChallengeHintResp
-	if source != nil {
-		var httpChallengeHintResp ChallengeHintResp
-		httpChallengeHintResp.ID = (*source).ID
-		httpChallengeHintResp.Level = (*source).Level
-		httpChallengeHintResp.Title = (*source).Title
-		httpChallengeHintResp.Content = (*source).Content
-		pHttpChallengeHintResp = &httpChallengeHintResp
-	}
-	return pHttpChallengeHintResp
-}
-func (c *ChallengeResponseMapperImpl) pDtoChallengeImportTopologyRespToPHttpChallengeImportTopologyResp(source *dto.ChallengeImportTopologyResp) *ChallengeImportTopologyResp {
-	var pHttpChallengeImportTopologyResp *ChallengeImportTopologyResp
-	if source != nil {
-		var httpChallengeImportTopologyResp ChallengeImportTopologyResp
-		httpChallengeImportTopologyResp.Source = (*source).Source
-		httpChallengeImportTopologyResp.EntryNodeKey = (*source).EntryNodeKey
-		if (*source).Networks != nil {
-			httpChallengeImportTopologyResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
-			for i := 0; i < len((*source).Networks); i++ {
-				httpChallengeImportTopologyResp.Networks[i] = c.dtoTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
-			}
-		}
-		if (*source).Nodes != nil {
-			httpChallengeImportTopologyResp.Nodes = make([]ChallengeImportTopologyNodeResp, len((*source).Nodes))
-			for j := 0; j < len((*source).Nodes); j++ {
-				httpChallengeImportTopologyResp.Nodes[j] = c.dtoChallengeImportTopologyNodeRespToHttpChallengeImportTopologyNodeResp((*source).Nodes[j])
-			}
-		}
-		if (*source).Links != nil {
-			httpChallengeImportTopologyResp.Links = make([]TopologyLinkResp, len((*source).Links))
-			for k := 0; k < len((*source).Links); k++ {
-				httpChallengeImportTopologyResp.Links[k] = c.dtoTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
-			}
-		}
-		if (*source).Policies != nil {
-			httpChallengeImportTopologyResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
-			for l := 0; l < len((*source).Policies); l++ {
-				httpChallengeImportTopologyResp.Policies[l] = c.dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
-			}
-		}
-		pHttpChallengeImportTopologyResp = &httpChallengeImportTopologyResp
-	}
-	return pHttpChallengeImportTopologyResp
 }

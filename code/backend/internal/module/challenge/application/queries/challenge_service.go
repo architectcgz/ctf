@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -39,7 +40,7 @@ func NewChallengeService(repo challengeQueryRepository, solvedCountCache challen
 	}
 }
 
-func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeResp, error) {
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
@@ -54,27 +55,28 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.Cha
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
-	challenges, total, err := s.repo.List(ctx, query)
+func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
+	dtoQuery := toDTOChallengeQuery(query)
+	challenges, total, err := s.repo.List(ctx, dtoQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	list := make([]*dto.ChallengeResp, len(challenges))
+	list := make([]*challengecontracts.ChallengeResp, len(challenges))
 	for i, challenge := range challenges {
 		list[i] = domain.ChallengeRespFromModel(challenge, nil)
 	}
 
-	page := query.Page
+	page := dtoQuery.Page
 	if page < 1 {
 		page = 1
 	}
-	size := query.Size
+	size := dtoQuery.Size
 	if size < 1 {
 		size = 20
 	}
 
-	return &dto.PageResult[*dto.ChallengeResp]{
+	return &challengecontracts.PageResult[*challengecontracts.ChallengeResp]{
 		List:  list,
 		Total: total,
 		Page:  page,
@@ -82,17 +84,18 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.Challe
 	}, nil
 }
 
-func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
-	challenges, total, err := s.repo.ListPublished(ctx, query)
+func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeListItem], error) {
+	dtoQuery := toDTOChallengeQuery(query)
+	challenges, total, err := s.repo.ListPublished(ctx, dtoQuery)
 	if err != nil {
 		return nil, err
 	}
 	if len(challenges) == 0 {
-		return &dto.PageResult[*dto.ChallengeListItem]{
-			List:  []*dto.ChallengeListItem{},
+		return &challengecontracts.PageResult[*challengecontracts.ChallengeListItem]{
+			List:  []*challengecontracts.ChallengeListItem{},
 			Total: total,
-			Page:  query.Page,
-			Size:  query.Size,
+			Page:  dtoQuery.Page,
+			Size:  dtoQuery.Size,
 		}, nil
 	}
 
@@ -119,7 +122,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 		s.log.Error("failed to batch get total attempts", zap.Error(err))
 	}
 
-	list := make([]*dto.ChallengeListItem, 0, len(challenges))
+	list := make([]*challengecontracts.ChallengeListItem, 0, len(challenges))
 	for _, challenge := range challenges {
 		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(challenge)
 		item.IsSolved = solvedMap[challenge.ID]
@@ -128,15 +131,15 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 		list = append(list, item)
 	}
 
-	return &dto.PageResult[*dto.ChallengeListItem]{
+	return &challengecontracts.PageResult[*challengecontracts.ChallengeListItem]{
 		List:  list,
 		Total: total,
-		Page:  query.Page,
-		Size:  query.Size,
+		Page:  dtoQuery.Page,
+		Size:  dtoQuery.Size,
 	}, nil
 }
 
-func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
@@ -180,6 +183,22 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 	resp.TotalAttempts = attempts
 	resp.IsSolved = isSolved
 	return resp, nil
+}
+
+func toDTOChallengeQuery(query *challengecontracts.ChallengeQuery) *dto.ChallengeQuery {
+	if query == nil {
+		return &dto.ChallengeQuery{}
+	}
+	return &dto.ChallengeQuery{
+		Category:   query.Category,
+		Difficulty: query.Difficulty,
+		Status:     query.Status,
+		CreatedBy:  query.CreatedBy,
+		Keyword:    query.Keyword,
+		SortBy:     query.SortBy,
+		Page:       query.Page,
+		Size:       query.Size,
+	}
 }
 
 func buildChallengeAccessUnavailableError(status model.ChallengeStatus) error {

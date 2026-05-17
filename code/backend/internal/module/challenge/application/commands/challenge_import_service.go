@@ -19,8 +19,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -93,12 +93,12 @@ func NewChallengeService(
 }
 
 type storedChallengeImportPreview struct {
-	ID        string                         `json:"id"`
-	FileName  string                         `json:"file_name"`
-	SourceDir string                         `json:"source_dir"`
-	CreatedBy int64                          `json:"created_by"`
-	CreatedAt time.Time                      `json:"created_at"`
-	Preview   dto.ChallengeImportPreviewResp `json:"preview"`
+	ID        string                                        `json:"id"`
+	FileName  string                                        `json:"file_name"`
+	SourceDir string                                        `json:"source_dir"`
+	CreatedBy int64                                         `json:"created_by"`
+	CreatedAt time.Time                                     `json:"created_at"`
+	Preview   challengecontracts.ChallengeImportPreviewResp `json:"preview"`
 }
 
 func (s *ChallengeService) PreviewChallengeImport(
@@ -106,7 +106,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
-) (*dto.ChallengeImportPreviewResp, error) {
+) (*challengecontracts.ChallengeImportPreviewResp, error) {
 	_ = ctx
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "challenge-package.zip"
@@ -153,7 +153,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 	return preview, nil
 }
 
-func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error) {
 	_ = ctx
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
@@ -166,14 +166,14 @@ func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID i
 	return &preview, nil
 }
 
-func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error) {
 	_ = ctx
 	records, err := loadChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
 	}
 
-	previews := make([]dto.ChallengeImportPreviewResp, 0, len(records))
+	previews := make([]challengecontracts.ChallengeImportPreviewResp, 0, len(records))
 	for _, record := range records {
 		if record == nil {
 			continue
@@ -206,7 +206,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.ChallengeResp, error) {
+) (*challengecontracts.ChallengeResp, error) {
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -384,7 +384,7 @@ func (s *ChallengeService) buildChallengeImportPreview(
 	fileName string,
 	parsed *domain.ParsedChallengePackage,
 	createdAt time.Time,
-) *dto.ChallengeImportPreviewResp {
+) *challengecontracts.ChallengeImportPreviewResp {
 	var imageBuild *ImageBuildService
 	if s != nil {
 		imageBuild = s.imageBuild
@@ -394,24 +394,24 @@ func (s *ChallengeService) buildChallengeImportPreview(
 		logger = s.logger
 	}
 
-	attachments := make([]dto.ChallengeImportAttachmentResp, 0, len(parsed.Attachments))
+	attachments := make([]challengecontracts.ChallengeImportAttachmentResp, 0, len(parsed.Attachments))
 	for _, attachment := range parsed.Attachments {
-		attachments = append(attachments, dto.ChallengeImportAttachmentResp{
+		attachments = append(attachments, challengecontracts.ChallengeImportAttachmentResp{
 			Name: attachment.Name,
 			Path: attachment.Path,
 		})
 	}
 
-	hints := make([]dto.ChallengeHintAdminResp, 0, len(parsed.Hints))
+	hints := make([]challengecontracts.ChallengeHintAdminResp, 0, len(parsed.Hints))
 	for _, hint := range parsed.Hints {
-		hints = append(hints, dto.ChallengeHintAdminResp{
+		hints = append(hints, challengecontracts.ChallengeHintAdminResp{
 			Level:   hint.Level,
 			Title:   hint.Title,
 			Content: hint.Content,
 		})
 	}
 
-	imageDelivery := dto.ChallengeImportImageDeliveryResp{
+	imageDelivery := challengecontracts.ChallengeImportImageDeliveryResp{
 		SourceType:   parsed.ImageSourceType,
 		SuggestedTag: parsed.SuggestedImageTag,
 	}
@@ -427,7 +427,7 @@ func (s *ChallengeService) buildChallengeImportPreview(
 		warnings = appendChallengeImportImageBuildWarning(warnings, parsed.ImageSourceType)
 	}
 
-	return &dto.ChallengeImportPreviewResp{
+	return &challengecontracts.ChallengeImportPreviewResp{
 		ID:          id,
 		FileName:    fileName,
 		Slug:        parsed.Slug,
@@ -438,17 +438,17 @@ func (s *ChallengeService) buildChallengeImportPreview(
 		Points:      parsed.Points,
 		Attachments: attachments,
 		Hints:       hints,
-		Flag: dto.ChallengeImportFlagResp{
+		Flag: challengecontracts.ChallengeImportFlagResp{
 			Type:   parsed.FlagType,
 			Prefix: parsed.FlagPrefix,
 		},
-		Runtime: dto.ChallengeImportRuntimeResp{
+		Runtime: challengecontracts.ChallengeImportRuntimeResp{
 			Type:     parsed.Manifest.Runtime.Type,
 			ImageRef: parsed.RuntimeImageRef,
 		},
 		ImageDelivery: imageDelivery,
-		Extensions: dto.ChallengeImportExtensionsResp{
-			Topology: dto.ChallengeImportTopologyExtensionResp{
+		Extensions: challengecontracts.ChallengeImportExtensionsResp{
+			Topology: challengecontracts.ChallengeImportTopologyExtensionResp{
 				Source:  parsed.Manifest.Extensions.Topology.Source,
 				Enabled: parsed.Manifest.Extensions.Topology.Enabled,
 			},

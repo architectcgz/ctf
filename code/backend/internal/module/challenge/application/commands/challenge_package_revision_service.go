@@ -14,8 +14,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -77,8 +77,8 @@ func (s *ChallengeService) ExportChallengePackage(
 	ctx context.Context,
 	actorUserID int64,
 	challengeID int64,
-) (*dto.ChallengePackageExportResp, error) {
-	var response *dto.ChallengePackageExportResp
+) (*challengecontracts.ChallengePackageExportResp, error) {
+	var response *challengecontracts.ChallengePackageExportResp
 	cleanupPaths := make([]string, 0, 2)
 	if s.packageExportTxRunner == nil {
 		return nil, fmt.Errorf("challenge package export tx runner is not configured")
@@ -171,7 +171,7 @@ func (s *ChallengeService) ExportChallengePackage(
 			return err
 		}
 
-		response = &dto.ChallengePackageExportResp{
+		response = &challengecontracts.ChallengePackageExportResp{
 			ChallengeID: challengeID,
 			RevisionID:  revision.ID,
 			ArchivePath: archivePath,
@@ -193,7 +193,7 @@ func (s *ChallengeService) ExportChallengePackage(
 	return response, nil
 }
 
-func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error) {
+func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	if s.packageRepo == nil {
 		return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
 	}

@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -30,7 +30,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 		FileName:  "older.zip",
 		CreatedBy: 1001,
 		CreatedAt: time.Date(2026, 4, 6, 8, 0, 0, 0, time.UTC),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "older-owned",
 			FileName:   "older.zip",
 			Title:      "Older Owned",
@@ -38,7 +38,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 			Category:   "web",
 			Difficulty: "easy",
 			Points:     100,
-			Flag:       dto.ChallengeImportFlagResp{Type: "static"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static"},
 		},
 	})
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
@@ -46,7 +46,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 		FileName:  "newer.zip",
 		CreatedBy: 1001,
 		CreatedAt: time.Date(2026, 4, 6, 9, 0, 0, 0, time.UTC),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "newer-owned",
 			FileName:   "newer.zip",
 			Title:      "Newer Owned",
@@ -54,7 +54,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 			Category:   "misc",
 			Difficulty: "medium",
 			Points:     150,
-			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "dynamic"},
 		},
 	})
 	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
@@ -62,7 +62,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 		FileName:  "other.zip",
 		CreatedBy: 2002,
 		CreatedAt: time.Date(2026, 4, 6, 10, 0, 0, 0, time.UTC),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "other-user",
 			FileName:   "other.zip",
 			Title:      "Other User",
@@ -70,7 +70,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 			Category:   "crypto",
 			Difficulty: "hard",
 			Points:     300,
-			Flag:       dto.ChallengeImportFlagResp{Type: "static"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static"},
 		},
 	})
 
@@ -199,7 +199,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 		SourceDir: packageDir,
 		CreatedBy: 4,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "platform-build",
 			FileName:   "platform-build.zip",
 			Slug:       "web-platform-build",
@@ -207,7 +207,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 			Category:   "web",
 			Difficulty: "easy",
 			Points:     100,
-			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})
@@ -423,7 +423,7 @@ flag:
 		SourceDir: packageDir,
 		CreatedBy: 4,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "restore-soft-deleted",
 			FileName:   "restore-soft-deleted.zip",
 			Slug:       "web-source-audit-double-wrap-01",
@@ -431,7 +431,7 @@ flag:
 			Category:   "web",
 			Difficulty: "easy",
 			Points:     100,
-			Flag:       dto.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})
@@ -518,7 +518,7 @@ runtime:
 		SourceDir: packageDir,
 		CreatedBy: 4,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "tcp-target",
 			FileName:   "tcp-target.zip",
 			Slug:       "pwn-tcp-demo",
@@ -526,7 +526,7 @@ runtime:
 			Category:   "pwn",
 			Difficulty: "beginner",
 			Points:     100,
-			Flag:       dto.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})
@@ -620,7 +620,7 @@ flag:
 		SourceDir: packageDir,
 		CreatedBy: 4,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "clear-legacy-publish-check-jobs",
 			FileName:   "clear-legacy-publish-check-jobs.zip",
 			Slug:       "web-source-audit-double-wrap-01",
@@ -628,7 +628,7 @@ flag:
 			Category:   "web",
 			Difficulty: "easy",
 			Points:     100,
-			Flag:       dto.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})
@@ -672,7 +672,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 		SourceDir: packageDir,
 		CreatedBy: 7,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "import-with-topology",
 			FileName:   "import-with-topology.zip",
 			Slug:       "bank-portal",
@@ -680,7 +680,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 			Category:   "web",
 			Difficulty: "medium",
 			Points:     300,
-			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})
@@ -766,7 +766,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 		SourceDir: packageDir,
 		CreatedBy: 9,
 		CreatedAt: time.Now(),
-		Preview: dto.ChallengeImportPreviewResp{
+		Preview: challengecontracts.ChallengeImportPreviewResp{
 			ID:         "exportable-bank",
 			FileName:   "exportable-bank.zip",
 			Slug:       "exportable-bank",
@@ -774,7 +774,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 			Category:   "web",
 			Difficulty: "medium",
 			Points:     300,
-			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
 			CreatedAt:  time.Now(),
 		},
 	})

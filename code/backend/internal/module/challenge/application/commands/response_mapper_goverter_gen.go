@@ -4,7 +4,6 @@
 package commands
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	domain "ctf-platform/internal/module/challenge/domain"
@@ -35,92 +34,92 @@ func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBase
 	}
 	return pContractsAWDChallengeImportPreviewResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParsed(source domain.ParsedChallengePackageHint) dto.ChallengeHintAdminResp {
-	var dtoChallengeHintAdminResp dto.ChallengeHintAdminResp
-	dtoChallengeHintAdminResp.Level = source.Level
-	dtoChallengeHintAdminResp.Title = source.Title
-	dtoChallengeHintAdminResp.Content = source.Content
-	return dtoChallengeHintAdminResp
+func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParsed(source domain.ParsedChallengePackageHint) contracts.ChallengeHintAdminResp {
+	var contractsChallengeHintAdminResp contracts.ChallengeHintAdminResp
+	contractsChallengeHintAdminResp.Level = source.Level
+	contractsChallengeHintAdminResp.Title = source.Title
+	contractsChallengeHintAdminResp.Content = source.Content
+	return contractsChallengeHintAdminResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParseds(source []domain.ParsedChallengePackageHint) []dto.ChallengeHintAdminResp {
-	var dtoChallengeHintAdminRespList []dto.ChallengeHintAdminResp
+func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParseds(source []domain.ParsedChallengePackageHint) []contracts.ChallengeHintAdminResp {
+	var contractsChallengeHintAdminRespList []contracts.ChallengeHintAdminResp
 	if source != nil {
-		dtoChallengeHintAdminRespList = make([]dto.ChallengeHintAdminResp, len(source))
+		contractsChallengeHintAdminRespList = make([]contracts.ChallengeHintAdminResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoChallengeHintAdminRespList[i] = c.ToChallengeHintAdminRespFromParsed(source[i])
+			contractsChallengeHintAdminRespList[i] = c.ToChallengeHintAdminRespFromParsed(source[i])
 		}
 	}
-	return dtoChallengeHintAdminRespList
+	return contractsChallengeHintAdminRespList
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengeImportAttachmentResps(source []domain.ParsedChallengePackageAttachment) []dto.ChallengeImportAttachmentResp {
-	var dtoChallengeImportAttachmentRespList []dto.ChallengeImportAttachmentResp
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportAttachmentResps(source []domain.ParsedChallengePackageAttachment) []contracts.ChallengeImportAttachmentResp {
+	var contractsChallengeImportAttachmentRespList []contracts.ChallengeImportAttachmentResp
 	if source != nil {
-		dtoChallengeImportAttachmentRespList = make([]dto.ChallengeImportAttachmentResp, len(source))
+		contractsChallengeImportAttachmentRespList = make([]contracts.ChallengeImportAttachmentResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoChallengeImportAttachmentRespList[i] = c.domainParsedChallengePackageAttachmentToDtoChallengeImportAttachmentResp(source[i])
+			contractsChallengeImportAttachmentRespList[i] = c.domainParsedChallengePackageAttachmentToContractsChallengeImportAttachmentResp(source[i])
 		}
 	}
-	return dtoChallengeImportAttachmentRespList
+	return contractsChallengeImportAttachmentRespList
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBase(source domain.ParsedChallengePackage) dto.ChallengeImportPreviewResp {
-	var dtoChallengeImportPreviewResp dto.ChallengeImportPreviewResp
-	dtoChallengeImportPreviewResp.Slug = source.Slug
-	dtoChallengeImportPreviewResp.Title = source.Title
-	dtoChallengeImportPreviewResp.Description = source.Description
-	dtoChallengeImportPreviewResp.Category = source.Category
-	dtoChallengeImportPreviewResp.Difficulty = source.Difficulty
-	dtoChallengeImportPreviewResp.Points = source.Points
-	return dtoChallengeImportPreviewResp
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBase(source domain.ParsedChallengePackage) contracts.ChallengeImportPreviewResp {
+	var contractsChallengeImportPreviewResp contracts.ChallengeImportPreviewResp
+	contractsChallengeImportPreviewResp.Slug = source.Slug
+	contractsChallengeImportPreviewResp.Title = source.Title
+	contractsChallengeImportPreviewResp.Description = source.Description
+	contractsChallengeImportPreviewResp.Category = source.Category
+	contractsChallengeImportPreviewResp.Difficulty = source.Difficulty
+	contractsChallengeImportPreviewResp.Points = source.Points
+	return contractsChallengeImportPreviewResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBasePtr(source *domain.ParsedChallengePackage) *dto.ChallengeImportPreviewResp {
-	var pDtoChallengeImportPreviewResp *dto.ChallengeImportPreviewResp
+func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBasePtr(source *domain.ParsedChallengePackage) *contracts.ChallengeImportPreviewResp {
+	var pContractsChallengeImportPreviewResp *contracts.ChallengeImportPreviewResp
 	if source != nil {
-		dtoChallengeImportPreviewResp := c.ToChallengeImportPreviewRespBase((*source))
-		pDtoChallengeImportPreviewResp = &dtoChallengeImportPreviewResp
+		contractsChallengeImportPreviewResp := c.ToChallengeImportPreviewRespBase((*source))
+		pContractsChallengeImportPreviewResp = &contractsChallengeImportPreviewResp
 	}
-	return pDtoChallengeImportPreviewResp
+	return pContractsChallengeImportPreviewResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(source model.ChallengePackageRevision) dto.ChallengePackageExportResp {
-	var dtoChallengePackageExportResp dto.ChallengePackageExportResp
-	dtoChallengePackageExportResp.RevisionID = source.ID
-	dtoChallengePackageExportResp.ArchivePath = source.ArchivePath
-	dtoChallengePackageExportResp.SourceDir = source.SourceDir
-	dtoChallengePackageExportResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoChallengePackageExportResp
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(source model.ChallengePackageRevision) contracts.ChallengePackageExportResp {
+	var contractsChallengePackageExportResp contracts.ChallengePackageExportResp
+	contractsChallengePackageExportResp.RevisionID = source.ID
+	contractsChallengePackageExportResp.ArchivePath = source.ArchivePath
+	contractsChallengePackageExportResp.SourceDir = source.SourceDir
+	contractsChallengePackageExportResp.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsChallengePackageExportResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *dto.ChallengePackageExportResp {
-	var pDtoChallengePackageExportResp *dto.ChallengePackageExportResp
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *contracts.ChallengePackageExportResp {
+	var pContractsChallengePackageExportResp *contracts.ChallengePackageExportResp
 	if source != nil {
-		dtoChallengePackageExportResp := c.ToChallengePackageExportRespBase((*source))
-		pDtoChallengePackageExportResp = &dtoChallengePackageExportResp
+		contractsChallengePackageExportResp := c.ToChallengePackageExportRespBase((*source))
+		pContractsChallengePackageExportResp = &contractsChallengePackageExportResp
 	}
-	return pDtoChallengePackageExportResp
+	return pContractsChallengePackageExportResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) dto.ChallengePublishCheckJobResp {
-	var dtoChallengePublishCheckJobResp dto.ChallengePublishCheckJobResp
-	dtoChallengePublishCheckJobResp.ID = source.ID
-	dtoChallengePublishCheckJobResp.ChallengeID = source.ChallengeID
-	dtoChallengePublishCheckJobResp.RequestedBy = source.RequestedBy
-	dtoChallengePublishCheckJobResp.RequestSource = source.RequestSource
-	dtoChallengePublishCheckJobResp.FailureSummary = source.FailureSummary
-	dtoChallengePublishCheckJobResp.StartedAt = CopyTimePtr(source.StartedAt)
-	dtoChallengePublishCheckJobResp.FinishedAt = CopyTimePtr(source.FinishedAt)
-	dtoChallengePublishCheckJobResp.PublishedAt = CopyTimePtr(source.PublishedAt)
-	dtoChallengePublishCheckJobResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoChallengePublishCheckJobResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoChallengePublishCheckJobResp
+func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) contracts.ChallengePublishCheckJobResp {
+	var contractsChallengePublishCheckJobResp contracts.ChallengePublishCheckJobResp
+	contractsChallengePublishCheckJobResp.ID = source.ID
+	contractsChallengePublishCheckJobResp.ChallengeID = source.ChallengeID
+	contractsChallengePublishCheckJobResp.RequestedBy = source.RequestedBy
+	contractsChallengePublishCheckJobResp.RequestSource = source.RequestSource
+	contractsChallengePublishCheckJobResp.FailureSummary = source.FailureSummary
+	contractsChallengePublishCheckJobResp.StartedAt = CopyTimePtr(source.StartedAt)
+	contractsChallengePublishCheckJobResp.FinishedAt = CopyTimePtr(source.FinishedAt)
+	contractsChallengePublishCheckJobResp.PublishedAt = CopyTimePtr(source.PublishedAt)
+	contractsChallengePublishCheckJobResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsChallengePublishCheckJobResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsChallengePublishCheckJobResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *dto.ChallengePublishCheckJobResp {
-	var pDtoChallengePublishCheckJobResp *dto.ChallengePublishCheckJobResp
+func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *contracts.ChallengePublishCheckJobResp {
+	var pContractsChallengePublishCheckJobResp *contracts.ChallengePublishCheckJobResp
 	if source != nil {
-		dtoChallengePublishCheckJobResp := c.ToChallengePublishCheckJobRespBase((*source))
-		pDtoChallengePublishCheckJobResp = &dtoChallengePublishCheckJobResp
+		contractsChallengePublishCheckJobResp := c.ToChallengePublishCheckJobRespBase((*source))
+		pContractsChallengePublishCheckJobResp = &contractsChallengePublishCheckJobResp
 	}
-	return pDtoChallengePublishCheckJobResp
+	return pContractsChallengePublishCheckJobResp
 }
-func (c *challengeCommandResponseMapperImpl) domainParsedChallengePackageAttachmentToDtoChallengeImportAttachmentResp(source domain.ParsedChallengePackageAttachment) dto.ChallengeImportAttachmentResp {
-	var dtoChallengeImportAttachmentResp dto.ChallengeImportAttachmentResp
-	dtoChallengeImportAttachmentResp.Name = source.Name
-	dtoChallengeImportAttachmentResp.Path = source.Path
-	return dtoChallengeImportAttachmentResp
+func (c *challengeCommandResponseMapperImpl) domainParsedChallengePackageAttachmentToContractsChallengeImportAttachmentResp(source domain.ParsedChallengePackageAttachment) contracts.ChallengeImportAttachmentResp {
+	var contractsChallengeImportAttachmentResp contracts.ChallengeImportAttachmentResp
+	contractsChallengeImportAttachmentResp.Name = source.Name
+	contractsChallengeImportAttachmentResp.Path = source.Path
+	return contractsChallengeImportAttachmentResp
 }

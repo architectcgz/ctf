@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -23,7 +22,7 @@ type ChallengeRequestMapper interface {
 	ToUpsertEnvironmentTemplateInput(source UpsertEnvironmentTemplateReq) challengecmd.UpsertEnvironmentTemplateInput
 	ToUpsertOfficialWriteupInput(source challengecontracts.UpsertChallengeWriteupReq) challengecmd.UpsertOfficialWriteupInput
 	ToUpsertSubmissionWriteupInput(source challengecontracts.UpsertSubmissionWriteupReq) challengecmd.UpsertSubmissionWriteupInput
-	ToChallengeQuery(source ChallengeQuery) dto.ChallengeQuery
+	ToChallengeQuery(source ChallengeQuery) challengecontracts.ChallengeQuery
 	ToListAWDChallengesInput(source AWDChallengeQuery) challengeqry.ListAWDChallengesInput
 	ToCreateImageInput(source CreateImageReq) challengecmd.CreateImageInput
 	ToUpdateImageInput(source UpdateImageReq) challengecmd.UpdateImageInput
