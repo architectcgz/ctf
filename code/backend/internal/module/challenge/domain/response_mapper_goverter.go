@@ -3,7 +3,6 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -81,17 +80,17 @@ type ChallengeResponseMapper interface {
 	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) challengecontracts.ChallengePackageRevisionResp
 	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *challengecontracts.ChallengePackageRevisionResp
 
-	ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp
-	ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp
+	ToChallengePackageFileResp(source ParsedChallengePackageFile) challengecontracts.ChallengePackageFileResp
+	ToChallengePackageFileResps(source []ParsedChallengePackageFile) []challengecontracts.ChallengePackageFileResp
 
-	ToTopologyNetworkResp(source model.TopologyNetwork) dto.TopologyNetworkResp
-	ToTopologyNetworkResps(source []model.TopologyNetwork) []dto.TopologyNetworkResp
-	ToTopologyNodeResp(source model.TopologyNode) dto.TopologyNodeResp
-	ToTopologyNodeResps(source []model.TopologyNode) []dto.TopologyNodeResp
-	ToTopologyLinkResp(source model.TopologyLink) dto.TopologyLinkResp
-	ToTopologyLinkResps(source []model.TopologyLink) []dto.TopologyLinkResp
-	ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) dto.TopologyTrafficPolicyResp
-	ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp
+	ToTopologyNetworkResp(source model.TopologyNetwork) challengecontracts.TopologyNetworkResp
+	ToTopologyNetworkResps(source []model.TopologyNetwork) []challengecontracts.TopologyNetworkResp
+	ToTopologyNodeResp(source model.TopologyNode) challengecontracts.TopologyNodeResp
+	ToTopologyNodeResps(source []model.TopologyNode) []challengecontracts.TopologyNodeResp
+	ToTopologyLinkResp(source model.TopologyLink) challengecontracts.TopologyLinkResp
+	ToTopologyLinkResps(source []model.TopologyLink) []challengecontracts.TopologyLinkResp
+	ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) challengecontracts.TopologyTrafficPolicyResp
+	ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []challengecontracts.TopologyTrafficPolicyResp
 
 	ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork
 	ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork
@@ -101,8 +100,8 @@ type ChallengeResponseMapper interface {
 	ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy
 
 	// goverter:map Image.Ref ImageRef
-	ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) dto.ChallengeImportTopologyNodeResp
-	ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []dto.ChallengeImportTopologyNodeResp
+	ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) challengecontracts.ChallengeImportTopologyNodeResp
+	ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []challengecontracts.ChallengeImportTopologyNodeResp
 
 	// goverter:map Submission.ID ID
 	// goverter:map Submission.ChallengeID ChallengeID
