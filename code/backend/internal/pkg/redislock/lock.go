@@ -85,7 +85,7 @@ func (l *Lock) Refresh(ctx context.Context, ttl time.Duration) (bool, error) {
 	return ok && refreshed > 0, nil
 }
 
-func (l *Lock) Key() string {
+func (l *Lock) Key(context.Context) string {
 	if l == nil {
 		return ""
 	}

@@ -105,6 +105,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.AWDAttackLog{},
 	&model.AWDTrafficEvent{},
 	&model.AWDServiceOperation{},
+	&model.AWDScopeControl{},
 	&model.Report{},
 }
 
@@ -222,7 +223,148 @@ func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 	}
 }
 
-func TestFullRouter_TeacherCanBrowseAllChallengesButOnlyManageOwnChallenges(t *testing.T) {
+func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+	now := time.Now().UTC()
+
+	awdTeam := &model.Team{
+		ContestID:  env.awdContest.ID,
+		Name:       "AWD Control Team",
+		CaptainID:  env.student.ID,
+		InviteCode: "AWDCTRL1",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	if err := env.db.Create(awdTeam).Error; err != nil {
+		t.Fatalf("create awd team: %v", err)
+	}
+	if err := env.db.Create(&model.TeamMember{
+		ContestID: env.awdContest.ID,
+		TeamID:    awdTeam.ID,
+		UserID:    env.student.ID,
+		JoinedAt:  now,
+		CreatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create awd team member: %v", err)
+	}
+
+	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+		Name:       "AWD Web",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		RuntimeConfig: map[string]any{
+			"image_id":         env.image.ID,
+			"instance_sharing": string(model.InstanceSharingPerTeam),
+		},
+		FlagConfig: map[string]any{
+			"flag_type":   model.FlagTypeStatic,
+			"flag_prefix": "flag",
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode awd service snapshot: %v", err)
+	}
+	awdService := &model.ContestAWDService{
+		ContestID:       env.awdContest.ID,
+		AWDChallengeID:  env.challenge.ID,
+		DisplayName:     "AWD Web",
+		IsVisible:       true,
+		ServiceSnapshot: serviceSnapshot,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+	if err := env.db.Create(awdService).Error; err != nil {
+		t.Fatalf("create awd service: %v", err)
+	}
+
+	adminHeaders := sessionHeaders(loginForSession(t, env.router, env.admin.Username, env.adminPwd))
+
+	for _, tc := range []struct {
+		name    string
+		path    string
+		payload map[string]any
+		assert  func(*testing.T, *dto.AdminAWDScopeControlResp)
+	}{
+		{
+			name: "retire team",
+			path: fmt.Sprintf("/api/v1/admin/contests/%d/awd/teams/%d/retirement", env.awdContest.ID, awdTeam.ID),
+			payload: map[string]any{
+				"retired": true,
+				"reason":  "retired-by-admin",
+			},
+			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+				t.Helper()
+				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeRetired || resp.TeamID != awdTeam.ID {
+					t.Fatalf("unexpected retirement response: %+v", resp)
+				}
+			},
+		},
+		{
+			name: "disable service",
+			path: fmt.Sprintf("/api/v1/admin/contests/%d/awd/teams/%d/services/%d/disabled", env.awdContest.ID, awdTeam.ID, awdService.ID),
+			payload: map[string]any{
+				"disabled": true,
+				"reason":   "disabled-by-admin",
+			},
+			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+				t.Helper()
+				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
+					t.Fatalf("unexpected disable response: %+v", resp)
+				}
+			},
+		},
+		{
+			name: "suppress desired reconcile",
+			path: fmt.Sprintf("/api/v1/admin/contests/%d/awd/teams/%d/services/%d/suppression", env.awdContest.ID, awdTeam.ID, awdService.ID),
+			payload: map[string]any{
+				"suppressed": true,
+				"reason":     "manual-suppress",
+			},
+			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+				t.Helper()
+				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
+					t.Fatalf("unexpected suppress response: %+v", resp)
+				}
+			},
+		},
+	} {
+		resp := performFullRouterRequest(t, env.router, http.MethodPut, tc.path, tc.payload, adminHeaders)
+		assertFullRouterStatus(t, resp, http.StatusOK)
+
+		var result dto.AdminAWDScopeControlResp
+		decodeFullRouterData(t, resp, &result)
+		tc.assert(t, &result)
+	}
+
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/instances", env.awdContest.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var orchestration dto.AdminAWDInstanceOrchestrationResp
+	decodeFullRouterData(t, resp, &orchestration)
+	if len(orchestration.Controls) < 3 {
+		t.Fatalf("expected 3 awd controls in orchestration view, got %+v", orchestration.Controls)
+	}
+
+	seen := make(map[string]bool, len(orchestration.Controls))
+	for _, control := range orchestration.Controls {
+		if control == nil {
+			continue
+		}
+		seen[control.ControlType] = true
+	}
+	for _, controlType := range []string{
+		model.AWDScopeControlTypeRetired,
+		model.AWDScopeControlTypeServiceDisabled,
+		model.AWDScopeControlTypeDesiredReconcileSuppressed,
+	} {
+		if !seen[controlType] {
+			t.Fatalf("expected orchestration to include control %q, got %+v", controlType, orchestration.Controls)
+		}
+	}
+}
+
+func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnChallenges(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := sessionHeaders(loginForSession(t, env.router, env.admin.Username, env.adminPwd))
@@ -273,13 +415,160 @@ func TestFullRouter_TeacherCanBrowseAllChallengesButOnlyManageOwnChallenges(t *t
 		t.Fatalf("teacher should see admin challenge %d in list, got %+v", adminChallenge.ID, listResult.List)
 	}
 
+	resp := performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", adminChallenge.ID), map[string]any{
+		"template_id": env.template.ID,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID), map[string]any{
+		"title":      "admin writeup",
+		"content":    "admin writeup content",
+		"visibility": model.WriteupVisibilityPublic,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID), map[string]any{
+		"flag_type":   model.FlagTypeStatic,
+		"flag":        "flag{ownership-check}",
+		"flag_prefix": "flag",
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	packageArchiveDir := filepath.Join(t.TempDir(), "package-export")
+	if err := os.MkdirAll(packageArchiveDir, 0o755); err != nil {
+		t.Fatalf("mkdir package export dir: %v", err)
+	}
+	packageArchivePath := filepath.Join(packageArchiveDir, "challenge-package.zip")
+	if err := os.WriteFile(packageArchivePath, []byte("package export"), 0o644); err != nil {
+		t.Fatalf("write package export: %v", err)
+	}
+	now := time.Now().UTC()
+	packageRevision := &model.ChallengePackageRevision{
+		ChallengeID:      adminChallenge.ID,
+		RevisionNo:       1,
+		SourceType:       model.ChallengePackageRevisionSourceExported,
+		ArchivePath:      packageArchivePath,
+		SourceDir:        filepath.Join(packageArchiveDir, "source"),
+		ManifestSnapshot: "{}",
+		TopologySnapshot: "{}",
+		CreatedBy:        &env.admin.ID,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	if err := os.MkdirAll(packageRevision.SourceDir, 0o755); err != nil {
+		t.Fatalf("mkdir package source dir: %v", err)
+	}
+	if err := env.db.Create(packageRevision).Error; err != nil {
+		t.Fatalf("create package revision: %v", err)
+	}
+
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", adminChallenge.ID).
+		Update("status", model.ChallengeStatusArchived).Error; err != nil {
+		t.Fatalf("archive admin challenge: %v", err)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests", adminChallenge.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusAccepted)
+
+	var publishJob dto.ChallengePublishCheckJobResp
+	decodeFullRouterData(t, resp, &publishJob)
+	if publishJob.ChallengeID != adminChallenge.ID {
+		t.Fatalf("unexpected publish request payload: %+v", publishJob)
+	}
+
+	readChecks := []struct {
+		name    string
+		method  string
+		path    string
+		payload any
+		assert  func(*testing.T, *httptest.ResponseRecorder)
+	}{
+		{
+			name:   "get archived detail",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+				var detail dto.ChallengeResp
+				decodeFullRouterData(t, resp, &detail)
+				if detail.ID != adminChallenge.ID || detail.Status != string(model.ChallengeStatusArchived) {
+					t.Fatalf("unexpected archived challenge detail: %+v", detail)
+				}
+			},
+		},
+		{
+			name:   "get admin writeup",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+				var writeup dto.AdminChallengeWriteupResp
+				decodeFullRouterData(t, resp, &writeup)
+				if writeup.Title != "admin writeup" || writeup.Visibility != model.WriteupVisibilityPublic {
+					t.Fatalf("unexpected admin writeup: %+v", writeup)
+				}
+			},
+		},
+		{
+			name:   "get admin flag",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+				var flagResp dto.FlagResp
+				decodeFullRouterData(t, resp, &flagResp)
+				if !flagResp.Configured || flagResp.FlagType != model.FlagTypeStatic {
+					t.Fatalf("unexpected flag config: %+v", flagResp)
+				}
+			},
+		},
+		{
+			name:   "get admin topology",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", adminChallenge.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+				var topology dto.ChallengeTopologyResp
+				decodeFullRouterData(t, resp, &topology)
+				if topology.TemplateID == nil || *topology.TemplateID != env.template.ID {
+					t.Fatalf("unexpected topology template binding: %+v", topology)
+				}
+			},
+		},
+		{
+			name:   "get latest publish request",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests/latest", adminChallenge.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+				var latest dto.ChallengePublishCheckJobResp
+				decodeFullRouterData(t, resp, &latest)
+				if latest.ChallengeID != adminChallenge.ID || latest.Status != "queued" {
+					t.Fatalf("unexpected latest publish request: %+v", latest)
+				}
+			},
+		},
+		{
+			name:   "download package export",
+			method: http.MethodGet,
+			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/package-export/download?revision_id=%d", adminChallenge.ID, packageRevision.ID),
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				assertFullRouterStatus(t, resp, http.StatusOK)
+			},
+		},
+	}
+	for _, tc := range readChecks {
+		resp := performFullRouterRequest(t, env.router, tc.method, tc.path, tc.payload, teacherHeaders)
+		tc.assert(t, resp)
+	}
+
 	for _, tc := range []struct {
 		name    string
 		method  string
 		path    string
 		payload any
 	}{
-		{name: "get detail", method: http.MethodGet, path: fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID)},
 		{name: "update challenge", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID), payload: map[string]any{"title": "forbidden-update"}},
 		{name: "configure flag", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID), payload: map[string]any{
 			"flag_type":   model.FlagTypeStatic,
@@ -314,6 +603,12 @@ func TestFullRouter_TeacherCanBrowseAllChallengesButOnlyManageOwnChallenges(t *t
 
 	ownDetailResp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", teacherChallenge.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, ownDetailResp, http.StatusOK)
+
+	var ownDetail dto.ChallengeResp
+	decodeFullRouterData(t, ownDetailResp, &ownDetail)
+	if ownDetail.Status != string(model.ChallengeStatusDraft) {
+		t.Fatalf("expected own draft challenge to stay readable, got %+v", ownDetail)
+	}
 }
 
 func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {

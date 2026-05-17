@@ -72,7 +72,7 @@ func (stubRuntimeService) ProxyBodyPreviewSize() int {
 
 func TestHandlerContractsCompile(t *testing.T) {
 	var _ runtimeService = stubRuntimeService{}
-	_ = NewHandler(stubRuntimeService{}, nil, CookieConfig{}, nil)
+	_ = NewHandler(stubRuntimeService{}, "", "", nil, CookieConfig{}, nil)
 }
 
 type stubProxyRuntimeService struct {
@@ -119,6 +119,8 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 				ExpiresAt: "2026-04-28T10:00:00Z",
 			},
 		},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		nil,
@@ -199,6 +201,8 @@ func TestProxyInstanceTrafficRecorderFailureDoesNotAffectProxyResponse(t *testin
 				InstanceID: 42,
 			},
 		},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		recorder,
@@ -229,6 +233,8 @@ func TestAccessAWDTargetReturnsTargetProxyURL(t *testing.T) {
 
 	handler := NewHandler(
 		stubAWDProxyRuntimeService{issuedTicket: "ticket-awd"},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		nil,
@@ -291,6 +297,8 @@ func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
 				AWDChallengeID:    &challengeID,
 			},
 		},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		recorder,
@@ -354,6 +362,8 @@ func TestProxyAWDTargetRewritesRootRelativeHTMLLinks(t *testing.T) {
 				AWDChallengeID:    &challengeID,
 			},
 		},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		nil,
@@ -420,6 +430,8 @@ func TestProxyAWDTargetRewritesRootRelativeRedirectLocation(t *testing.T) {
 				AWDChallengeID:    &challengeID,
 			},
 		},
+		"",
+		"",
 		nil,
 		CookieConfig{},
 		nil,

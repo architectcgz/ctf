@@ -847,6 +847,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.Submission{},
 		&model.Instance{},
 		&model.PortAllocation{},
+		&model.AWDServiceOperation{},
+		&model.AWDScopeControl{},
 		&model.SkillProfile{},
 		&model.UserScore{},
 	); err != nil {
@@ -917,7 +919,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	instanceModule := composition.BuildInstanceModule(root, runtimeModule)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
-	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo)
+	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo, &cfg.Container)
 	runtimeProxyTicketService := instanceqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
@@ -964,7 +966,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		teachingQueryClassInsightService,
 		teachingQueryStudentReviewService,
 	)
-	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{}, nil)
+	runtimeHandler := runtimehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, runtimehttp.CookieConfig{}, nil)
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)

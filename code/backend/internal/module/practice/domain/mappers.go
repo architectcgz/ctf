@@ -5,12 +5,13 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func InstanceRespFromModel(inst *model.Instance) *dto.InstanceResp {
+func InstanceRespFromModel(inst *model.Instance, publicHost, accessHost string) *dto.InstanceResp {
 	resp := practiceResponseMapperInst.ToInstanceRespBasePtr(inst)
 	if resp == nil {
 		return nil
 	}
-	resp.Access = dto.BuildInstanceAccessInfo(inst.AccessURL)
+	resp.AccessURL = model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+	resp.Access = dto.BuildInstanceAccessInfo(resp.AccessURL)
 	resp.RemainingExtends = RemainingExtends(inst)
 	return resp
 }

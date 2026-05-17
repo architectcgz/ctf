@@ -96,6 +96,9 @@ func TestServiceStartContestAWDServiceResolvesServiceIDAndReusesTeamInstance(t *
 	seedContestInstanceRegistration(t, db, 3003, 5006, 4003, model.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3003, 4003, 5005, now)
 	seedContestInstanceTeamMember(t, db, 3003, 4003, 5006, now)
+	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
+		t.Fatalf("ensure instances.service_id column: %v", err)
+	}
 
 	service := newContestInstanceTestService(t, db)
 
@@ -117,7 +120,7 @@ func TestServiceStartContestAWDServiceResolvesServiceIDAndReusesTeamInstance(t *
 
 func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) {
 	db := newContestInstanceTestDB(t)
-	now := time.Now()
+	now := time.Now().UTC()
 
 	seedContestInstanceChallenge(t, db, 1004, 2004, now)
 	seedContestInstanceAWDContest(t, db, 3004, 2004, now)
@@ -136,13 +139,16 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 		t.Fatalf("StartContestAWDService() error = %v", err)
 	}
 
-	var persistedServiceID int64
-	if err := db.Raw("SELECT service_id FROM instances WHERE id = ?", resp.ID).
-		Scan(&persistedServiceID).Error; err != nil {
-		t.Fatalf("load persisted instance service_id: %v", err)
+	var instance model.Instance
+	if err := db.First(&instance, resp.ID).Error; err != nil {
+		t.Fatalf("load persisted instance: %v", err)
 	}
-	if persistedServiceID != 7003004 {
-		t.Fatalf("expected instance.service_id=7003004, got %d", persistedServiceID)
+	if instance.ServiceID == nil || *instance.ServiceID != 7003004 {
+		t.Fatalf("expected instance.service_id=7003004, got %+v", instance.ServiceID)
+	}
+	expectedExpiry := now.Add(time.Hour)
+	if !instance.ExpiresAt.Equal(expectedExpiry) {
+		t.Fatalf("expected awd instance expiry to follow contest end time %s, got %s", expectedExpiry, instance.ExpiresAt)
 	}
 }
 
@@ -526,6 +532,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.TeamMember{},
 		&model.Instance{},
 		&model.AWDServiceOperation{},
+		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},
 		&model.PortAllocation{},
 		&model.Submission{},

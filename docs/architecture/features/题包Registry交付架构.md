@@ -1,17 +1,32 @@
 # 题包 Registry 交付架构
 
-## 文档元信息
+> 状态：Current
+> 事实源：`code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`、`code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`
+> 替代：无
 
-- 状态：`implemented`
-- 事实源级别：`final`
-- 适用范围：`backend`、`frontend`、`contracts`
-- 关联模块：
-  - `internal/module/challenge/domain`
-  - `internal/module/challenge/application/commands`
-  - `internal/config`
-  - `frontend/src/components/platform/challenge`
-  - `frontend/src/components/platform/images`
-- 最后更新：`2026-05-09`
+## 定位
+
+本文档说明题包镜像交付的当前事实：平台怎样生成镜像 ref、怎样验证外部镜像、以及为什么本地 dev 需要区分 canonical registry server 和进程直连 access server。
+
+- 负责：说明 Jeopardy / AWD 题包导入到镜像可运行之间的当前交付语义、状态机和配置 owner。
+- 不负责：把未来 TLS registry、多架构构建、镜像扫描或多节点构建平台写成当前已落地事实。
+
+## 当前设计
+
+- `code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`
+  - 负责：生成 `<registry>/<mode>/<slug>:<tag>` 形式的 canonical image ref，驱动 `build / push / manifest / pull / inspect` 主状态机，并把 `images + image_build_jobs` 作为最终镜像交付事实源
+  - 不负责：知道 registry API 该从哪个网络地址直连、也不把 compose service 名写回 DB 或题包导出结果
+
+- `code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`
+  - 负责：对 `container.registry.server` 做 image ref 归属判断；若配置了 `container.registry.access_server`，则用它发起 `HEAD /v2/.../manifests/...` 直连请求
+  - 不负责：改写镜像 ref、影响 Docker daemon 的 push/pull 目标，或替代 image build service 决定状态推进
+
+- `code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`、`docker/ctf/infra/registry/ctf-platform-registry.env`
+  - 负责：把 registry 配置拆成两层含义
+    - `server`：镜像 ref 与 Docker daemon 看到的 canonical registry server
+    - `access_server`：仅给 `ctf-api` 进程直连 registry API 的可选 host:port
+    - 本地 compose dev 默认保持 `server=127.0.0.1:5000`，同时写出 `access_server=ctf-registry:5000`
+  - 不负责：要求现有题目、`images.name/tag` 或 AWD `runtime_config.image_ref` 批量迁移到 `ctf-registry:*`
 
 ## 1. 背景与问题
 
@@ -31,6 +46,7 @@
 - 平台生成的目标镜像命名规则统一为 `<registry>/<mode>/<slug>:<tag>`，其中 `mode` 当前为 `jeopardy` 或 `awd`。
 - 题包导入服务在事务内直接创建或更新 `images`、`image_build_jobs`；不会通过 HTTP 自调用镜像管理接口。
 - 镜像只有在 `manifest check + docker pull + docker image inspect` 全部通过后，才进入 `available`。
+- 本地 compose dev 下，`container.registry.server` 与 `container.registry.access_server` 可以不同：前者继续保持镜像 ref / Docker daemon 语义，后者只解决 `ctf-api` 容器内直连 registry API 的网络可达性。
 
 ## 3. 模块边界与职责
 
@@ -56,7 +72,7 @@
   - 负责：执行 `docker build/push/pull/inspect`
   - 不负责：决定目标镜像命名规则
 
-- `internal/module/challenge/application/commands/registry_client`
+- `internal/module/challenge/infrastructure/registry_client`
   - 负责：对配置的 registry 做 manifest 检查并返回 digest
   - 不负责：本地镜像构建
 
@@ -70,7 +86,7 @@
 
 ### 3.2 事实源与所有权
 
-- 平台 registry 配置事实源：`container.registry`
+- 平台 registry 配置事实源：`container.registry.server` + 可选 `container.registry.access_server`
 - 导入预览镜像交付事实源：`ChallengeImportImageDeliveryResp`
 - 镜像记录事实源：`images`
 - 构建任务事实源：`image_build_jobs`
@@ -123,6 +139,7 @@ pending -> building -> pushed -> verifying -> available
 
 - 平台构建路径下，最终镜像地址只能由服务端生成，题包中的 `runtime.image.ref` 最多提供 tag 建议。
 - `external_ref` 校验当前要求镜像属于已配置的 registry server，平台不会对外部引用静默改名。
+- registry verifier 先按 `container.registry.server` 判断 image ref 是否属于当前 registry；只有真正发 HTTP manifest 请求时才会改用 `container.registry.access_server`。
 - 导入服务创建内部镜像记录时不经过 `/authoring/images` HTTP 接口。
 - Docker registry 认证通过临时 `DOCKER_CONFIG` 注入，不把密码或 identity token 拼进 `docker` 命令参数。
 - 构建任务必须在隔离 builder 中执行，并受超时、并发和构建上下文范围约束；构建日志需要做凭据脱敏。
@@ -198,7 +215,7 @@ pending -> building -> pushed -> verifying -> available
 - `code/backend/internal/module/challenge/domain/image_delivery.go`
 - `code/backend/internal/module/challenge/application/commands/image_build_service.go`
 - `code/backend/internal/module/challenge/application/commands/docker_image_builder.go`
-- `code/backend/internal/module/challenge/application/commands/registry_client.go`
+- `code/backend/internal/module/challenge/infrastructure/registry_client.go`
 - `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
 - `code/backend/internal/config/config.go`

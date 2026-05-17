@@ -94,6 +94,21 @@ func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, chal *mode
 	}
 }
 
+func shouldUsePublishedAWDEntryAccess(accessHost string) bool {
+	return strings.TrimSpace(accessHost) != ""
+}
+
+func shouldDisableEntryPortPublishing(instance *model.Instance, accessHost string) bool {
+	return isAWDInstance(instance) && !shouldUsePublishedAWDEntryAccess(accessHost)
+}
+
+func requiresPublishedHostPort(scope practiceports.InstanceScope, accessHost string) bool {
+	if scope.ContestMode != model.ContestModeAWD {
+		return true
+	}
+	return shouldUsePublishedAWDEntryAccess(accessHost)
+}
+
 func appendUniqueString(items []string, item string) []string {
 	item = strings.TrimSpace(item)
 	if item == "" {

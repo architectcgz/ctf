@@ -56,11 +56,11 @@ func (u *AWDRoundUpdater) withSchedulerLock(ctx context.Context, fn func(context
 			defer releaseCancel()
 			released, releaseErr := lock.Release(releaseCtx)
 			if releaseErr != nil {
-				u.log.Error("release_awd_scheduler_lock_failed", zap.String("lock_key", lock.Key()), zap.Error(releaseErr))
+				u.log.Error("release_awd_scheduler_lock_failed", zap.String("lock_key", lock.Key(releaseCtx)), zap.Error(releaseErr))
 				return
 			}
 			if !released {
-				u.log.Warn("awd_scheduler_lock_expired_before_release", zap.String("lock_key", lock.Key()))
+				u.log.Warn("awd_scheduler_lock_expired_before_release", zap.String("lock_key", lock.Key(releaseCtx)))
 			}
 		}()
 	}

@@ -59,6 +59,8 @@ type runtimeProxyTrafficRecorder interface {
 
 type Handler struct {
 	service              runtimeService
+	publicHost           string
+	accessHost           string
 	auditRecorder        auditlog.Recorder
 	cookieConfig         CookieConfig
 	proxyTrafficRecorder runtimeProxyTrafficRecorder
@@ -66,12 +68,16 @@ type Handler struct {
 
 func NewHandler(
 	service runtimeService,
+	publicHost string,
+	accessHost string,
 	auditRecorder auditlog.Recorder,
 	cookieConfig CookieConfig,
 	proxyTrafficRecorder runtimeProxyTrafficRecorder,
 ) *Handler {
 	return &Handler{
 		service:              service,
+		publicHost:           publicHost,
+		accessHost:           accessHost,
 		auditRecorder:        auditRecorder,
 		cookieConfig:         cookieConfig,
 		proxyTrafficRecorder: proxyTrafficRecorder,
@@ -125,9 +131,10 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 	if isTCPAccessURL(accessURL) {
+		publicAccessURL := model.ResolveRuntimePublicAccessURL(accessURL, h.publicHost, h.accessHost)
 		response.Success(c, &dto.InstanceAccessResp{
-			AccessURL: accessURL,
-			Access:    dto.BuildInstanceAccessInfo(accessURL),
+			AccessURL: publicAccessURL,
+			Access:    dto.BuildInstanceAccessInfo(publicAccessURL),
 		})
 		return
 	}

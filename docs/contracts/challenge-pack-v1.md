@@ -666,7 +666,7 @@ checker:
 
 即使未来实现导入器，也必须先满足：
 
-- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问；若使用私有 registry，需要在后端 `container.registry` 配置匹配的 `server` 与凭据
+- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问；若使用私有 registry，需要在后端 `container.registry` 配置匹配的 `server` 与凭据。本地 compose dev 若 canonical server 仍是 `127.0.0.1:*`，可以额外配置 `access_server=ctf-registry:5000`，只给后端 verifier 直连 registry API 使用
 - 若要自动创建题目，导入器必须把 `runtime.image.ref` 先映射为平台 `images` 记录
 - 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
 - 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程

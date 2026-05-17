@@ -98,11 +98,11 @@ type challengeImportTxStore struct {
 	imageBuild *challengecmd.ImageBuildService
 }
 
-func (s *challengeImportTxStore) tx() *gorm.DB {
+func (s *challengeImportTxStore) tx(ctx context.Context) *gorm.DB {
 	if s == nil || s.rawRepo == nil {
 		return nil
 	}
-	return s.rawRepo.DB()
+	return s.rawRepo.DB(ctx)
 }
 
 func (s *challengeImportTxStore) RejectImportedChallengeSlugConflict(ctx context.Context, packageSlug string) error {
@@ -112,7 +112,7 @@ func (s *challengeImportTxStore) RejectImportedChallengeSlugConflict(ctx context
 	}
 
 	var existing model.Challenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Select("id", "title", "package_slug").
 		Where("package_slug = ?", slug).
 		First(&existing).Error
@@ -133,7 +133,7 @@ func (s *challengeImportTxStore) FindLegacyChallengeForImportedPackageCreate(
 	category string,
 ) (*model.Challenge, bool, error) {
 	var challenge model.Challenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(&challenge).Error
 	switch {
@@ -150,7 +150,7 @@ func (s *challengeImportTxStore) CreateImportedChallenge(ctx context.Context, ch
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	return s.tx().WithContext(ctx).Create(challenge).Error
+	return s.tx(ctx).Create(challenge).Error
 }
 
 func (s *challengeImportTxStore) UpdateImportedChallenge(
@@ -161,11 +161,11 @@ func (s *challengeImportTxStore) UpdateImportedChallenge(
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	return s.tx().WithContext(ctx).Unscoped().Model(challenge).Updates(updates).Error
+	return s.tx(ctx).Unscoped().Model(challenge).Updates(updates).Error
 }
 
 func (s *challengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {
-	return s.tx().WithContext(ctx).
+	return s.tx(ctx).
 		Where("challenge_id = ?", challengeID).
 		Delete(&model.ChallengePublishCheckJob{}).Error
 }
@@ -175,7 +175,7 @@ func (s *challengeImportTxStore) ReplaceImportedHints(
 	challengeID int64,
 	hints []model.ChallengeHint,
 ) error {
-	if err := s.tx().WithContext(ctx).
+	if err := s.tx(ctx).
 		Where("challenge_id = ?", challengeID).
 		Delete(&model.ChallengeHint{}).Error; err != nil {
 		return fmt.Errorf("delete hints for challenge %d: %w", challengeID, err)
@@ -183,7 +183,7 @@ func (s *challengeImportTxStore) ReplaceImportedHints(
 	if len(hints) == 0 {
 		return nil
 	}
-	return s.tx().WithContext(ctx).Create(&hints).Error
+	return s.tx(ctx).Create(&hints).Error
 }
 
 func (s *challengeImportTxStore) ApplyImportedFlagUpdates(
@@ -191,7 +191,7 @@ func (s *challengeImportTxStore) ApplyImportedFlagUpdates(
 	challengeID int64,
 	updates map[string]any,
 ) error {
-	return s.tx().WithContext(ctx).
+	return s.tx(ctx).
 		Model(&model.Challenge{}).
 		Where("id = ?", challengeID).
 		Updates(updates).Error
@@ -199,7 +199,7 @@ func (s *challengeImportTxStore) ApplyImportedFlagUpdates(
 
 func (s *challengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
 	var latest model.ChallengePackageRevision
-	err := s.tx().WithContext(ctx).
+	err := s.tx(ctx).
 		Where("challenge_id = ?", challengeID).
 		Order("revision_no DESC, id DESC").
 		First(&latest).Error
@@ -236,7 +236,7 @@ func (s *challengeImportTxStore) ResolvePlatformBuildImage(
 	}
 	result, err := s.imageBuild.CreatePlatformBuildJobInTx(
 		ctx,
-		&runtimeImageBuildTxStore{tx: s.tx()},
+		&runtimeImageBuildTxStore{tx: s.tx(ctx)},
 		challengecmd.CreatePlatformBuildJobRequest{
 			ChallengeMode:  req.ChallengeMode,
 			PackageSlug:    req.PackageSlug,
@@ -266,7 +266,7 @@ func (s *challengeImportTxStore) ResolveExternalImage(
 	}
 	result, err := s.imageBuild.VerifyExternalImageRefInTx(
 		ctx,
-		&runtimeImageBuildTxStore{tx: s.tx()},
+		&runtimeImageBuildTxStore{tx: s.tx(ctx)},
 		packageSlug,
 		imageRef,
 	)
@@ -293,7 +293,7 @@ func (s *challengeImportTxStore) ResolveExistingImageRef(
 		return nil, fmt.Errorf("invalid image ref for %s: %w", packageSlug, err)
 	}
 
-	tx := s.tx().WithContext(ctx)
+	tx := s.tx(ctx)
 	var image model.Image
 	findErr := tx.Unscoped().
 		Where("name = ? AND tag = ?", name, tag).

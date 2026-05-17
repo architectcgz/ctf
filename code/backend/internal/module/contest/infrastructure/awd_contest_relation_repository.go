@@ -33,31 +33,38 @@ func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, rec
 	var contests []model.Contest
 	query := r.dbWithContext(ctx).
 		Where("mode = ?", model.ContestModeAWD).
-		Where("status IN ?", []string{
-			model.ContestStatusRunning,
-			model.ContestStatusFrozen,
-			model.ContestStatusEnded,
-		}).
 		Where("start_time <= ?", now).
 		Where(`(
-			end_time > ?
-			OR NOT EXISTS (
-				SELECT 1 FROM awd_rounds ar
-				WHERE ar.contest_id = contests.id
+			status IN ?
+			OR (
+				status = ?
+				AND (
+					end_time > ?
+					OR NOT EXISTS (
+						SELECT 1 FROM awd_rounds ar
+						WHERE ar.contest_id = contests.id
+					)
+					OR EXISTS (
+						SELECT 1 FROM awd_rounds ar
+						WHERE ar.contest_id = contests.id
+							AND ar.status <> ?
+					)
+					OR NOT EXISTS (
+						SELECT 1 FROM awd_rounds ar
+						WHERE ar.contest_id = contests.id
+							AND ar.status = ?
+							AND ar.ended_at IS NOT NULL
+							AND ar.ended_at >= contests.end_time
+					)
+				)
 			)
-			OR EXISTS (
-				SELECT 1 FROM awd_rounds ar
-				WHERE ar.contest_id = contests.id
-					AND ar.status <> ?
-			)
-			OR NOT EXISTS (
-				SELECT 1 FROM awd_rounds ar
-				WHERE ar.contest_id = contests.id
-					AND ar.status = ?
-					AND ar.ended_at IS NOT NULL
-					AND ar.ended_at >= contests.end_time
-			)
-		)`, recentCutoff, model.AWDRoundStatusFinished, model.AWDRoundStatusFinished).
+		)`,
+			[]string{model.ContestStatusRunning, model.ContestStatusFrozen},
+			model.ContestStatusEnded,
+			recentCutoff,
+			model.AWDRoundStatusFinished,
+			model.AWDRoundStatusFinished,
+		).
 		Order("start_time ASC, id ASC")
 	if limit > 0 {
 		query = query.Limit(limit)

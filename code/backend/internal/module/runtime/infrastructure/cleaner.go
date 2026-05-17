@@ -99,12 +99,12 @@ func (c *Cleaner) runOnce() {
 			released, releaseErr := lock.Release(ctx)
 			if releaseErr != nil {
 				if !errors.Is(releaseErr, context.Canceled) {
-					c.logger.Error("释放实例清理任务锁失败", zap.String("lock_key", lock.Key()), zap.Error(releaseErr))
+					c.logger.Error("释放实例清理任务锁失败", zap.String("lock_key", lock.Key(ctx)), zap.Error(releaseErr))
 				}
 				return
 			}
 			if !released && ctx.Err() == nil {
-				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key()))
+				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key(ctx)))
 			}
 		}()
 	}

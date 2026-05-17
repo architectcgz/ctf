@@ -61,7 +61,7 @@ func TestRecordProxyAuditAlsoRecordsAWDTrafficEvent(t *testing.T) {
 
 	auditRecorder := &recordingAuditRecorder{}
 	trafficRecorder := &recordingProxyTrafficRecorder{}
-	h := NewHandler(stubRuntimeService{}, auditRecorder, CookieConfig{}, trafficRecorder)
+	h := NewHandler(stubRuntimeService{}, "", "", auditRecorder, CookieConfig{}, trafficRecorder)
 
 	h.recordProxyAudit(
 		ctx,
@@ -106,7 +106,7 @@ func TestRecordProxyAuditUsesExplicitAWDAttackScope(t *testing.T) {
 	serviceID := int64(30)
 	challengeID := int64(40)
 	trafficRecorder := &recordingProxyTrafficRecorder{}
-	h := NewHandler(stubRuntimeService{}, nil, CookieConfig{}, trafficRecorder)
+	h := NewHandler(stubRuntimeService{}, "", "", nil, CookieConfig{}, trafficRecorder)
 
 	h.recordProxyAudit(
 		ctx,

@@ -79,6 +79,10 @@ func (ctxOnlyPracticeCommandTxRepository) ResetInstanceRuntimeForRestart(context
 	return nil
 }
 
+func (ctxOnlyPracticeCommandTxRepository) IsHostPortReusableForRestart(context.Context, int64, int) (bool, error) {
+	return true, nil
+}
+
 func (ctxOnlyPracticeCommandTxRepository) CreateInstance(context.Context, *model.Instance) error {
 	return nil
 }

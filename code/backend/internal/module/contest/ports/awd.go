@@ -192,6 +192,9 @@ type AWDServiceInstance struct {
 	ServiceID      int64
 	TeamID         int64
 	AWDChallengeID int64
+	HostPort       int
+	ContainerID    string
+	NetworkID      string
 	Status         string
 	AccessURL      string
 	RuntimeDetails string

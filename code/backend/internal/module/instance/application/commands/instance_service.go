@@ -104,7 +104,7 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 		zap.Int("extend_count", instance.ExtendCount+1),
 		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
 
-	return toInstanceResp(updatedInstance), nil
+	return s.toInstanceResp(updatedInstance), nil
 }
 
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
@@ -157,16 +157,18 @@ func isAWDTeamServiceInstance(instance *model.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
 }
 
-func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
+func (s *InstanceService) toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 	if inst == nil {
 		return nil
 	}
+	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
 	return &dto.InstanceResp{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
 		Status:           inst.Status,
 		ShareScope:       inst.ShareScope,
-		AccessURL:        inst.AccessURL,
+		AccessURL:        accessURL,
+		Access:           dto.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,

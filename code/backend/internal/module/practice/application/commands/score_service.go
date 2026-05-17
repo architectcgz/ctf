@@ -73,12 +73,12 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 			if err != nil {
 				s.logger.Error("释放分布式锁失败",
 					zap.Int64("userID", userID),
-					zap.String("lockKey", lock.Key()),
+					zap.String("lockKey", lock.Key(ctx)),
 					zap.Error(err))
 			} else if !released {
 				s.logger.Warn("锁已被其他协程占用或已过期",
 					zap.Int64("userID", userID),
-					zap.String("lockKey", lock.Key()))
+					zap.String("lockKey", lock.Key(ctx)))
 			}
 		}()
 	}

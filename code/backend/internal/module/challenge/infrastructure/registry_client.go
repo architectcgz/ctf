@@ -20,6 +20,7 @@ var registryManifestAcceptHeader = strings.Join([]string{
 type RegistryClientConfig struct {
 	Scheme        string
 	Server        string
+	AccessServer  string
 	Username      string
 	Password      string
 	IdentityToken string
@@ -49,6 +50,10 @@ func (c *RegistryClient) CheckManifest(ctx context.Context, imageRef string) (st
 	if server == "" {
 		return "", fmt.Errorf("registry server is required")
 	}
+	accessServer := normalizeRegistryServerEndpoint(c.config.AccessServer)
+	if accessServer == "" {
+		accessServer = normalizeRegistryServerEndpoint(server)
+	}
 
 	name, tag, err := domain.SplitImageRef(imageRef)
 	if err != nil {
@@ -60,7 +65,7 @@ func (c *RegistryClient) CheckManifest(ctx context.Context, imageRef string) (st
 	}
 	manifestURL := url.URL{
 		Scheme: scheme,
-		Host:   server,
+		Host:   accessServer,
 		Path:   fmt.Sprintf("/v2/%s/manifests/%s", repository, tag),
 	}
 
@@ -88,4 +93,15 @@ func (c *RegistryClient) CheckManifest(ctx context.Context, imageRef string) (st
 		return "", fmt.Errorf("check registry manifest %s: missing Docker-Content-Digest", imageRef)
 	}
 	return digest, nil
+}
+
+func normalizeRegistryServerEndpoint(server string) string {
+	normalized := strings.TrimSpace(server)
+	normalized = strings.TrimPrefix(normalized, "https://")
+	normalized = strings.TrimPrefix(normalized, "http://")
+	normalized = strings.Trim(normalized, "/")
+	if slash := strings.Index(normalized, "/"); slash >= 0 {
+		normalized = normalized[:slash]
+	}
+	return normalized
 }

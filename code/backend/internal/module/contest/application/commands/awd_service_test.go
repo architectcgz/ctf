@@ -851,6 +851,9 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 	const contestID int64 = 291
 	const awdChallengeID int64 = 291001
 	createAWDContestFixture(t, db, contestID, now)
+	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Update("status", model.ContestStatusRegistration).Error; err != nil {
+		t.Fatalf("set contest status registration: %v", err)
+	}
 	createAWDChallengeFixture(t, db, awdChallengeID, now)
 	if err := db.Create(&model.AWDChallenge{
 		ID:             awdChallengeID,

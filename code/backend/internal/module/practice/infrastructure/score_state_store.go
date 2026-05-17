@@ -121,7 +121,7 @@ func (s *ScoreStateStore) SyncUserScoreState(ctx context.Context, info *dto.User
 	return nil
 }
 
-func (l *practiceScoreLockLease) Key() string {
+func (l *practiceScoreLockLease) Key(context.Context) string {
 	if l == nil {
 		return ""
 	}

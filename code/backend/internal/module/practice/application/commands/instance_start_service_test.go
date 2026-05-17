@@ -955,8 +955,11 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 			}
 			return false, nil
 		},
-		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+		reserveAvailablePortExcludingFn: func(ctx context.Context, start, end, excludedPort int) (int, error) {
 			reserved = true
+			if excludedPort != 32118 {
+				t.Fatalf("expected stale host port 32118 to be excluded, got %d", excludedPort)
+			}
 			return 32119, nil
 		},
 		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {

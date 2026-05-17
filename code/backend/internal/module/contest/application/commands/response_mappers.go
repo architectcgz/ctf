@@ -9,7 +9,7 @@ import (
 )
 
 func contestRespFromModel(contest *model.Contest) *dto.ContestResp {
-	resp := contestResponseMapperInst.ToContestRespBasePtr(contest)
+	resp := contestResponseMapperInst.ToContestRespBasePtr(contestdomain.CloneContestWithEffectiveSchedule(contest))
 	if resp == nil {
 		return nil
 	}

@@ -124,7 +124,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -215,7 +215,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -302,7 +302,7 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -310,6 +310,126 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 	}
 	if len(items) != 0 {
 		t.Fatalf("expected legacy awd instance without service_id to be filtered out, got %+v", items)
+	}
+}
+
+func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name        string
+		scopeType   string
+		controlType string
+		serviceID   int64
+	}{
+		{
+			name:        "team_retired",
+			scopeType:   model.AWDScopeControlScopeTeam,
+			controlType: model.AWDScopeControlTypeRetired,
+			serviceID:   0,
+		},
+		{
+			name:        "service_disabled",
+			scopeType:   model.AWDScopeControlScopeTeamService,
+			controlType: model.AWDScopeControlTypeServiceDisabled,
+			serviceID:   9703,
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			db := newInstanceServiceTestDB(t)
+			now := time.Now().UTC()
+			contestID := int64(704)
+			teamID := int64(804)
+			serviceID := int64(9703)
+
+			seedInstanceServiceChallenge(t, db, &model.Challenge{
+				ID:         223,
+				Title:      "Controlled AWD Runtime Challenge",
+				Category:   model.DimensionWeb,
+				Difficulty: model.ChallengeDifficultyMedium,
+				FlagType:   model.FlagTypeDynamic,
+				Status:     model.ChallengeStatusPublished,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			})
+			if err := db.Create(&model.Contest{
+				ID:        contestID,
+				Title:     "AWD Contest",
+				Mode:      model.ContestModeAWD,
+				Status:    model.ContestStatusRunning,
+				StartTime: now.Add(-time.Minute),
+				EndTime:   now.Add(time.Hour),
+				CreatedAt: now,
+				UpdatedAt: now,
+			}).Error; err != nil {
+				t.Fatalf("create contest: %v", err)
+			}
+			if err := db.Create(&model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  223,
+				DisplayName:     "Controlled Portal",
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"Controlled Portal","category":"web","difficulty":"medium","flag_config":{"flag_type":"dynamic","flag_prefix":"awd"}}`,
+				CreatedAt:       now,
+				UpdatedAt:       now,
+			}).Error; err != nil {
+				t.Fatalf("create contest awd service: %v", err)
+			}
+			seedInstanceServiceTeam(t, db, &model.Team{
+				ID:         teamID,
+				ContestID:  contestID,
+				Name:       "Runtime AWD Team",
+				CaptainID:  1,
+				InviteCode: "runtime-awd-controlled",
+				MaxMembers: 4,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			})
+			seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+				ContestID: contestID,
+				TeamID:    teamID,
+				UserID:    2,
+				JoinedAt:  now,
+				CreatedAt: now,
+			})
+			seedInstanceServiceInstance(t, db, &model.Instance{
+				ID:          1203,
+				UserID:      1,
+				ContestID:   &contestID,
+				TeamID:      &teamID,
+				ChallengeID: 223,
+				ServiceID:   &serviceID,
+				Status:      model.InstanceStatusRunning,
+				AccessURL:   "http://127.0.0.1:31203",
+				ExpiresAt:   now.Add(time.Hour),
+				MaxExtends:  2,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			})
+			if err := db.Create(&model.AWDScopeControl{
+				ContestID:   contestID,
+				TeamID:      teamID,
+				ScopeType:   tc.scopeType,
+				ServiceID:   tc.serviceID,
+				ControlType: tc.controlType,
+				Reason:      tc.name,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			}).Error; err != nil {
+				t.Fatalf("create awd scope control: %v", err)
+			}
+
+			service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
+			items, err := service.GetUserInstances(context.Background(), 2)
+			if err != nil {
+				t.Fatalf("GetUserInstances() error = %v", err)
+			}
+			if len(items) != 0 {
+				t.Fatalf("expected controlled awd instance to be hidden, got %+v", items)
+			}
+		})
 	}
 }
 
@@ -341,7 +461,7 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -380,7 +500,7 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -420,7 +540,7 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
@@ -463,11 +583,105 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	_, err := service.GetAccessURL(context.Background(), 1006, 2)
 	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
 		t.Fatalf("expected instance expired error, got %v", err)
+	}
+}
+
+func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now().UTC()
+	contestID := int64(705)
+	teamID := int64(805)
+	serviceID := int64(9705)
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         225,
+		Title:      "Controlled Access",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		AWDChallengeID:  225,
+		DisplayName:     "Controlled Access",
+		IsVisible:       true,
+		ServiceSnapshot: `{"name":"Controlled Access","category":"web","difficulty":"easy","flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+	seedInstanceServiceTeam(t, db, &model.Team{
+		ID:         teamID,
+		ContestID:  contestID,
+		Name:       "Runtime AWD Team",
+		CaptainID:  1,
+		InviteCode: "runtime-awd-access",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+		ContestID: contestID,
+		TeamID:    teamID,
+		UserID:    2,
+		JoinedAt:  now,
+		CreatedAt: now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1205,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 225,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:31205",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	if err := db.Create(&model.AWDScopeControl{
+		ContestID:   contestID,
+		TeamID:      teamID,
+		ScopeType:   model.AWDScopeControlScopeTeamService,
+		ServiceID:   serviceID,
+		ControlType: model.AWDScopeControlTypeServiceDisabled,
+		Reason:      "disabled",
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create awd scope control: %v", err)
+	}
+
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
+	_, err := service.GetAccessURL(context.Background(), 1205, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected controlled awd instance access to be forbidden, got %v", err)
 	}
 }
 
@@ -485,7 +699,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -573,7 +787,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -622,7 +836,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 		UpdatedAt:   now,
 	})
 
-	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -688,6 +902,9 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(&model.Contest{}, &model.ContestAWDService{}); err != nil {
 		t.Fatalf("migrate awd tables: %v", err)
+	}
+	if err := db.AutoMigrate(&model.AWDScopeControl{}); err != nil {
+		t.Fatalf("migrate awd scope control tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.AWDServiceOperation{}); err != nil {
 		t.Fatalf("migrate awd operation tables: %v", err)
@@ -817,7 +1034,7 @@ func TestInstanceQueryServiceDoesNotCreateBackgroundContext(t *testing.T) {
 			return []runtimeports.UserVisibleInstanceRow{}, nil
 		},
 	}
-	service := instanceqry.NewInstanceService(repo)
+	service := instanceqry.NewInstanceService(repo, &config.ContainerConfig{})
 
 	if _, err := service.GetUserInstances(nil, 2); err != nil {
 		t.Fatalf("GetUserInstances() error = %v", err)

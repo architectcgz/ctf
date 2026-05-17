@@ -137,6 +137,7 @@ var (
 		return challengeinfra.NewRegistryClient(challengeinfra.RegistryClientConfig{
 			Scheme:        registry.Scheme,
 			Server:        registry.Server,
+			AccessServer:  registry.AccessServer,
 			Username:      registry.Username,
 			Password:      registry.Password,
 			IdentityToken: registry.IdentityToken,

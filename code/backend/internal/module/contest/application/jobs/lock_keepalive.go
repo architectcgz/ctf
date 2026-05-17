@@ -41,7 +41,7 @@ func startRedisLockKeepalive(ctx context.Context, log *zap.Logger, lock contestp
 				refreshed, err := lock.Refresh(keepaliveCtx, cfg.TTL)
 				if err != nil {
 					if keepaliveCtx.Err() == nil {
-						log.Error("scheduler_lock_refresh_failed", zap.String("lock_name", cfg.Name), zap.String("lock_key", lock.Key()), zap.Error(err))
+						log.Error("scheduler_lock_refresh_failed", zap.String("lock_name", cfg.Name), zap.String("lock_key", lock.Key(keepaliveCtx)), zap.Error(err))
 					}
 					continue
 				}
@@ -49,7 +49,7 @@ func startRedisLockKeepalive(ctx context.Context, log *zap.Logger, lock contestp
 					continue
 				}
 				// Losing the token means another instance may continue the same job, so this run must stop making progress.
-				log.Warn("scheduler_lock_lost_during_run", zap.String("lock_name", cfg.Name), zap.String("lock_key", lock.Key()))
+				log.Warn("scheduler_lock_lost_during_run", zap.String("lock_name", cfg.Name), zap.String("lock_key", lock.Key(keepaliveCtx)))
 				runCancel()
 				return
 			}

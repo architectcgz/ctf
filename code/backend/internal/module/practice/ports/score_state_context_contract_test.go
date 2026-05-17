@@ -10,7 +10,7 @@ import (
 
 type ctxOnlyPracticeScoreLockLease struct{}
 
-func (ctxOnlyPracticeScoreLockLease) Key() string { return "practice:score:lock" }
+func (ctxOnlyPracticeScoreLockLease) Key(context.Context) string { return "practice:score:lock" }
 
 func (ctxOnlyPracticeScoreLockLease) Release(context.Context) (bool, error) { return true, nil }
 

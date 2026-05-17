@@ -74,6 +74,33 @@ func TestRegistryClientCheckManifestAcceptsOCIIndexResponses(t *testing.T) {
 	}
 }
 
+func TestRegistryClientCheckManifestUsesAccessServerOverride(t *testing.T) {
+	var sawPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sawPath = r.URL.Path
+		w.Header().Set("Docker-Content-Digest", "sha256:override")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewRegistryClient(RegistryClientConfig{
+		Scheme:       "http",
+		Server:       "127.0.0.1:5000",
+		AccessServer: strings.TrimPrefix(server.URL, "http://"),
+	}, server.Client())
+
+	digest, err := client.CheckManifest(context.Background(), "127.0.0.1:5000/jeopardy/web-demo:v1")
+	if err != nil {
+		t.Fatalf("CheckManifest() error = %v", err)
+	}
+	if digest != "sha256:override" {
+		t.Fatalf("digest = %q, want sha256:override", digest)
+	}
+	if sawPath != "/v2/jeopardy/web-demo/manifests/v1" {
+		t.Fatalf("path = %s", sawPath)
+	}
+}
+
 func TestRegistryClientCheckManifestRejectsMismatchedRegistry(t *testing.T) {
 	client := NewRegistryClient(RegistryClientConfig{Scheme: "http", Server: "registry.example.edu"}, nil)
 

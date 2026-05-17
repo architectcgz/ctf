@@ -38,7 +38,7 @@ type ContestResult struct {
 }
 
 func contestResultFromModel(contest *model.Contest) *ContestResult {
-	resp := contestQueryResponseMapperInst.ToContestResultBasePtr(contest)
+	resp := contestQueryResponseMapperInst.ToContestResultBasePtr(domain.CloneContestWithEffectiveSchedule(contest))
 	if resp == nil {
 		return nil
 	}

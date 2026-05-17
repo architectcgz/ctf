@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -69,17 +70,17 @@ func cloneRuntimeResourceLimits(input *model.ResourceLimits) *model.ResourceLimi
 type runtimeChallengeServiceAdapter struct {
 	cleaner     *runtimecmd.RuntimeCleanupService
 	provisioner *runtimecmd.ProvisioningService
-	publicHost  string
+	accessHost  string
 }
 
-func newRuntimeChallengeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, publicHost string) challengeports.ChallengeRuntimeProbe {
+func newRuntimeChallengeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, accessHost string) challengeports.ChallengeRuntimeProbe {
 	if cleaner == nil && provisioner == nil {
 		return nil
 	}
 	return &runtimeChallengeServiceAdapter{
 		cleaner:     cleaner,
 		provisioner: provisioner,
-		publicHost:  publicHost,
+		accessHost:  accessHost,
 	}
 }
 
@@ -90,7 +91,7 @@ func (a *runtimeChallengeServiceAdapter) CreateTopology(ctx context.Context, req
 	if req == nil {
 		return nil, fmt.Errorf("runtime topology create request is nil")
 	}
-	result, err := a.provisioner.CreateTopology(ctx, toRuntimeChallengeTopologyCreateRequest(req))
+	result, err := a.provisioner.CreateTopology(ctx, toRuntimeChallengeTopologyCreateRequest(req, a.accessHost))
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +111,7 @@ func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, im
 		return "", model.InstanceRuntimeDetails{}, err
 	}
 
-	accessURL := fmt.Sprintf("http://%s:%d", a.publicHost, hostPort)
+	accessURL := fmt.Sprintf("http://%s:%d", a.accessHost, hostPort)
 	return accessURL, model.InstanceRuntimeDetails{
 		Networks: []model.InstanceRuntimeNetwork{
 			{
@@ -148,7 +149,7 @@ func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Conte
 	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
-func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopologyCreateRequest) *runtimeports.TopologyCreateRequest {
+func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimeports.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
@@ -177,6 +178,6 @@ func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopology
 		Networks:                   networks,
 		Nodes:                      nodes,
 		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		DisableEntryPortPublishing: true,
+		DisableEntryPortPublishing: strings.TrimSpace(publishedAccessHost) == "",
 	}
 }

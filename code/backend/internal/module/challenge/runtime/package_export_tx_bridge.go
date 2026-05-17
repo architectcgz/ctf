@@ -41,7 +41,7 @@ func (r *challengePackageExportTxRunner) WithinChallengePackageExportTransaction
 			challengeRepo: challengeinfra.NewChallengeCommandRepository(txRepo),
 			topologyRepo:  challengeinfra.NewTopologyServiceRepository(txRepo),
 			packageRepo:   challengeinfra.NewTopologyPackageRevisionRepository(txRepo),
-			imageRepo:     challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(txRepo.DB())),
+			imageRepo:     challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(txRepo.DB(ctx))),
 		}
 		return fn(store)
 	})
@@ -72,7 +72,7 @@ func (s *challengePackageExportTxStore) FindPackageRevisionByID(
 
 func (s *challengePackageExportTxStore) NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
 	var latest model.ChallengePackageRevision
-	err := s.rawRepo.DB().WithContext(ctx).
+	err := s.rawRepo.DB(ctx).
 		Where("challenge_id = ?", challengeID).
 		Order("revision_no DESC, id DESC").
 		First(&latest).Error
@@ -135,7 +135,7 @@ func (s *challengePackageExportTxStore) MarkTopologyExported(
 	baselineSpec string,
 	updatedAt time.Time,
 ) error {
-	return s.rawRepo.DB().WithContext(ctx).
+	return s.rawRepo.DB(ctx).
 		Model(&model.ChallengeTopology{}).
 		Where("id = ?", topologyID).
 		Updates(map[string]any{

@@ -249,6 +249,7 @@ export interface InstanceData {
 ```
 
 > 说明：若挑战绑定了带 `protocol` / `ports` 的链路策略，实例启动会按 `source_node_key -> target_node_key` 方向把规则下发到宿主机 `DOCKER-USER` 链；其中细粒度 `allow` 会进入 allow-list 模式，未命中的同方向流量会被兜底拒绝。
+> - `InstanceData.access_url` 和由它派生的 `access` 结构都面向学生侧可访问地址；如果后端为了容器内探测、HTTP 代理或运行时自检临时保存了内部可达 host，返回 API 前会重写回对外发布 host，不暴露内部 runtime access host。
 
 ### 3.4 DELETE `/api/v1/instances/:id`
 
@@ -281,8 +282,9 @@ export interface InstanceAccessData {
 ```
 
 > 说明：
-> - 返回的是平台代理入口地址，不再直接暴露容器真实访问入口给浏览器新窗口。
-> - 浏览器首次打开该地址时，会以短时票据换取平台代理 Cookie；后续同窗口内对靶机的 HTTP 请求将继续经平台代理转发。
+> - 对 `tcp://` 类实例，返回的是学生侧可直接连接的 `tcp://<public-host>:<published-port>`。
+> - 对 `http://` / `https://` 类实例，返回的是平台代理入口地址，不直接暴露浏览器打开时使用的内部 runtime access host。
+> - 浏览器首次打开 HTTP 代理地址时，会以短时票据换取平台代理 Cookie；后续同窗口内对靶机的 HTTP 请求将继续经平台代理转发。
 > - 平台会记录请求方法、路径、状态码和有限请求摘要，用于训练时间线和教学复盘。
 
 ### 3.6 GET `/api/v1/instances`

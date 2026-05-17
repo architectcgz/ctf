@@ -101,7 +101,7 @@ func (s *challengeQueryRepositoryStub) BatchGetTotalAttempts(ctx context.Context
 	return map[int64]int64{}, nil
 }
 
-func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
+func TestServiceGetPublishedChallengeDraftChallengeReturnsDraftAccessError(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
@@ -111,8 +111,43 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
-		t.Fatalf("expected not published error, got %v", err)
+	if err == nil {
+		t.Fatal("expected draft access error")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected app error, got %v", err)
+	}
+	if appErr.Code != errcode.ErrChallengeNotPublish.Code {
+		t.Fatalf("expected challenge not publish code, got %+v", appErr)
+	}
+	if appErr.Message != "题目为草稿，无法访问" {
+		t.Fatalf("expected draft access message, got %+v", appErr)
+	}
+}
+
+func TestServiceGetPublishedChallengeArchivedChallengeReturnsArchivedAccessError(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusArchived}
+	db.Create(challenge)
+
+	repo := challengeinfra.NewRepository(db)
+	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+
+	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
+	if err == nil {
+		t.Fatal("expected archived access error")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected app error, got %v", err)
+	}
+	if appErr.Code != errcode.ErrChallengeNotPublish.Code {
+		t.Fatalf("expected challenge not publish code, got %+v", appErr)
+	}
+	if appErr.Message != "题目已归档，无法访问" {
+		t.Fatalf("expected archived access message, got %+v", appErr)
 	}
 }
 

@@ -233,6 +233,52 @@ func ResolveRuntimeAliasAccessURL(accessURL, rawRuntimeDetails string) string {
 	return parsed.String()
 }
 
+func ResolveRuntimeInternalAccessURL(accessURL, publicHost, accessHost string) string {
+	internalHost := strings.TrimSpace(accessHost)
+	if internalHost == "" {
+		return accessURL
+	}
+	return rewriteAccessURLHost(accessURL, publicHost, internalHost)
+}
+
+func ResolveRuntimePublicAccessURL(accessURL, publicHost, accessHost string) string {
+	internalHost := strings.TrimSpace(accessHost)
+	if internalHost == "" {
+		return accessURL
+	}
+	return rewriteAccessURLHost(accessURL, internalHost, publicHost)
+}
+
+func ResolveRuntimePublishedAccessHost(publicHost, accessHost string) string {
+	if trimmed := strings.TrimSpace(accessHost); trimmed != "" {
+		return trimmed
+	}
+	return strings.TrimSpace(publicHost)
+}
+
+func rewriteAccessURLHost(accessURL, fromHost, toHost string) string {
+	trimmed := strings.TrimSpace(accessURL)
+	fromHost = strings.TrimSpace(fromHost)
+	toHost = strings.TrimSpace(toHost)
+	if trimmed == "" || fromHost == "" || toHost == "" {
+		return accessURL
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return accessURL
+	}
+	if !strings.EqualFold(parsed.Hostname(), fromHost) {
+		return accessURL
+	}
+	if port := parsed.Port(); port != "" {
+		parsed.Host = net.JoinHostPort(toHost, port)
+	} else {
+		parsed.Host = toHost
+	}
+	return parsed.String()
+}
+
 func resolveRuntimeEntryNetworkIP(rawRuntimeDetails string) string {
 	details, err := DecodeInstanceRuntimeDetails(rawRuntimeDetails)
 	if err != nil {

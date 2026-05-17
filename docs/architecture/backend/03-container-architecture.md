@@ -20,6 +20,7 @@
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
   - 负责：在 `practice_instance_scheduler` 循环里按 `container.scheduler.desired_reconcile_interval` 周期性收敛 AWD `running / frozen` 比赛的期望运行态，补齐“应该活着的 `team × visible service`”，并优先复用已有实例行 / nonce，而不是直接扩展成新的批量重启控制面
+  - 负责：对同一 `contest_id + team_id + service_id` scope 的坏配置或 provisioning 失败，把 `failure_count / last_failure_at / next_attempt_at / suppressed_until / last_error` 落到 Redis `DesiredAWDReconcileStateKey(...)`；backoff 或 suppress 窗口内直接跳过自动 operation 与重复告警，scope 一旦恢复 active 会清掉这份状态
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
   - 本地 Docker Compose 部署补充：当前 runtime 已区分 `container.public_host` 与 `container.access_host`。`public_host` 继续作为学生看到的宿主发布地址；`access_host` 只给 `ctf-api` 容器内部的实例就绪探测与 HTTP 代理使用。compose dev 需要把 `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1`、`CTF_CONTAINER_ACCESS_HOST=host-gateway.internal` 成对配置，并通过 `host-gateway.internal:host-gateway` 回到宿主机发布端口。
 
@@ -31,6 +32,11 @@
   - 负责：把 AWD 比赛的有效时间窗统一收口到 `effectiveNow = now - pausedDuration` 与 `effectiveEnd = end_time + pausedDuration`；`pausedDuration` 来自 `contests.paused_seconds`，会同时作用到 round 推进、封榜时间、Flag 读取窗口、榜单结束时间和 `until_contest_end` 实例过期时间
   - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化或 heartbeat 长时间停滞时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
+
+- `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/ctf/docker-compose.dev.yml`
+  - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
+  - 负责：当环境变量未注入时优先读取持久化文件；文件不存在时自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
+  - 不负责：跨多副本分发 secret、对接外部 KMS，或替部署层实现 secret rotation
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
@@ -44,6 +50,8 @@
 
 - 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
+- AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
+- AWD dynamic flag 的稳定密钥事实最终落在 `container.flag_global_secret_file` 指向的本地文件或持久化卷里；`container.flag_global_secret` 只是当前进程加载后的内存值。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
 - 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`contest.awd.scheduler_*`，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
@@ -51,8 +59,9 @@
 
 - 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
 - runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
-- 练习实例创建与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`
+- 练习实例创建、desired reconcile 与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`、`awd_desired_runtime_reconciler_test.go`
 - AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/runtime/infrastructure/repository_awd_expiry_refresh_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`
+- AWD global secret 恢复与持久化：`code/backend/internal/config/config_test.go`
 - 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
 - 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`

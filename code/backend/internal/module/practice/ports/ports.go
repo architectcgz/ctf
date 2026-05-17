@@ -328,7 +328,7 @@ type PracticeUserDirectoryRepository interface {
 }
 
 type PracticeScoreLockLease interface {
-	Key() string
+	Key(ctx context.Context) string
 	Release(ctx context.Context) (bool, error)
 }
 

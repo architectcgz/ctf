@@ -36,11 +36,11 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 			defer releaseCancel()
 			released, releaseErr := lock.Release(releaseCtx)
 			if releaseErr != nil {
-				u.log.Error("release_contest_status_update_lock_failed", zap.String("lock_key", lock.Key()), zap.Error(releaseErr))
+				u.log.Error("release_contest_status_update_lock_failed", zap.String("lock_key", lock.Key(releaseCtx)), zap.Error(releaseErr))
 				return
 			}
 			if !released {
-				u.log.Warn("contest_status_update_lock_expired_before_release", zap.String("lock_key", lock.Key()))
+				u.log.Warn("contest_status_update_lock_expired_before_release", zap.String("lock_key", lock.Key(releaseCtx)))
 			}
 		}()
 	}

@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -32,9 +33,9 @@ type Module struct {
 	OpsRuntimeQuery         opsports.RuntimeQuery
 	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
 	ContestContainerFiles   contestports.AWDContainerFileWriter
-
 	ProvisioningService     *runtimecmd.ProvisioningService
 	CleanupService          *runtimecmd.RuntimeCleanupService
+
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
 	FileRuntime               runtimeports.ContainerFileRuntime
@@ -93,9 +94,9 @@ func Build(deps Deps) *Module {
 		OpsRuntimeQuery:           opsDeps.query,
 		OpsRuntimeStatsProvider:   opsDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
-		ProvisioningRuntime:       deps.ProvisioningRuntime,
 		ProvisioningService:       internalDeps.provisioningService,
 		CleanupService:            internalDeps.cleanupService,
+		ProvisioningRuntime:       deps.ProvisioningRuntime,
 		CleanupRuntime:            deps.CleanupRuntime,
 		FileRuntime:               deps.FileRuntime,
 		ManagedContainerInventory: deps.ManagedContainerInventory,
@@ -129,7 +130,7 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 		containerStatsService: containerStatsService,
 		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.ImageRuntime),
 		containerFiles:        runtimeapp.NewContainerFileService(deps.FileRuntime, log.Named("runtime_container_file_service")),
-		containerPublicHost:   cfg.Container.PublicHost,
+		containerPublicHost:   model.ResolveRuntimePublishedAccessHost(cfg.Container.PublicHost, cfg.Container.AccessHost),
 	}
 }
 

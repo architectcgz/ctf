@@ -142,7 +142,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.Handler.CreateChallenge,
 	)
 	adminAuthoring.GET("/challenges", deps.challenge.Handler.ListChallenges)
-	adminAuthoring.GET("/challenges/:id", ownerGuard, deps.challenge.Handler.GetChallenge)
+	adminAuthoring.GET("/challenges/:id", deps.challenge.Handler.GetChallenge)
 	adminAuthoring.PUT("/challenges/:id",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -170,10 +170,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.RequestPublishCheck,
 	)
-	adminAuthoring.GET("/challenges/:id/publish-requests/latest",
-		ownerGuard,
-		deps.challenge.Handler.GetLatestPublishCheck,
-	)
+	adminAuthoring.GET("/challenges/:id/publish-requests/latest", deps.challenge.Handler.GetLatestPublishCheck)
 	adminAuthoring.POST("/challenges/:id/self-check",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -183,7 +180,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.SelfCheckChallenge,
 	)
-	adminAuthoring.GET("/challenges/:id/writeup", ownerGuard, deps.challenge.WriteupHandler.GetAdmin)
+	adminAuthoring.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetAdmin)
 	adminAuthoring.PUT("/challenges/:id/writeup",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -220,7 +217,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.WriteupHandler.Delete,
 	)
-	adminAuthoring.GET("/challenges/:id/topology", ownerGuard, deps.challenge.TopologyHandler.GetChallengeTopology)
+	adminAuthoring.GET("/challenges/:id/topology", deps.challenge.TopologyHandler.GetChallengeTopology)
 	adminAuthoring.PUT("/challenges/:id/topology",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -239,10 +236,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.ExportChallengePackage,
 	)
-	adminAuthoring.GET("/challenges/:id/package-export/download",
-		ownerGuard,
-		deps.challenge.Handler.DownloadChallengePackageExport,
-	)
+	adminAuthoring.GET("/challenges/:id/package-export/download", deps.challenge.Handler.DownloadChallengePackageExport)
 	adminAuthoring.DELETE("/challenges/:id/topology",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -330,7 +324,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.FlagHandler.ConfigureFlag,
 	)
-	adminAuthoring.GET("/challenges/:id/flag", ownerGuard, deps.challenge.FlagHandler.GetFlagConfig)
+	adminAuthoring.GET("/challenges/:id/flag", deps.challenge.FlagHandler.GetFlagConfig)
 }
 
 func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
@@ -518,6 +512,11 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
 			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_awd_instance_prewarm",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.practice.Handler.PrewarmAdminContestAWDInstances,
+	)
 	adminOnly.PUT("/contests/:id/awd/teams/:team_id/retirement",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("team_id"),
@@ -549,10 +548,6 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			DetailBuilder: middleware.DetailFromParams("id", "team_id", "sid"),
 		}),
 		deps.practice.Handler.SetAdminContestAWDDesiredReconcileSuppressed,
-			ResourceType:  "contest_awd_instance_prewarm",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}),
-		deps.practice.Handler.PrewarmAdminContestAWDInstances,
 	)
 	adminOnly.POST("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),

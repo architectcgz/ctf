@@ -85,8 +85,8 @@ type testChallengeImportTxStore struct {
 	getter  imageBuildServiceGetter
 }
 
-func (s *testChallengeImportTxStore) tx() *gorm.DB {
-	return s.rawRepo.DB()
+func (s *testChallengeImportTxStore) tx(ctx context.Context) *gorm.DB {
+	return s.rawRepo.DB(ctx)
 }
 
 func (s *testChallengeImportTxStore) imageBuild() *ImageBuildService {
@@ -102,7 +102,7 @@ func (s *testChallengeImportTxStore) RejectImportedChallengeSlugConflict(ctx con
 		return nil
 	}
 	var existing model.Challenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Select("id", "title", "package_slug").
 		Where("package_slug = ?", slug).
 		First(&existing).Error
@@ -123,7 +123,7 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 	category string,
 ) (*model.Challenge, bool, error) {
 	var challenge model.Challenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(&challenge).Error
 	switch {
@@ -137,34 +137,34 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 }
 
 func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error {
-	return s.tx().WithContext(ctx).Create(challenge).Error
+	return s.tx(ctx).Create(challenge).Error
 }
 
 func (s *testChallengeImportTxStore) UpdateImportedChallenge(ctx context.Context, challenge *model.Challenge, updates map[string]any) error {
-	return s.tx().WithContext(ctx).Unscoped().Model(challenge).Updates(updates).Error
+	return s.tx(ctx).Unscoped().Model(challenge).Updates(updates).Error
 }
 
 func (s *testChallengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {
-	return s.tx().WithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengePublishCheckJob{}).Error
+	return s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengePublishCheckJob{}).Error
 }
 
 func (s *testChallengeImportTxStore) ReplaceImportedHints(ctx context.Context, challengeID int64, hints []model.ChallengeHint) error {
-	if err := s.tx().WithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeHint{}).Error; err != nil {
+	if err := s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeHint{}).Error; err != nil {
 		return err
 	}
 	if len(hints) == 0 {
 		return nil
 	}
-	return s.tx().WithContext(ctx).Create(&hints).Error
+	return s.tx(ctx).Create(&hints).Error
 }
 
 func (s *testChallengeImportTxStore) ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error {
-	return s.tx().WithContext(ctx).Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error
+	return s.tx(ctx).Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error
 }
 
 func (s *testChallengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
 	var latest model.ChallengePackageRevision
-	err := s.tx().WithContext(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
+	err := s.tx(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return 1, nil
@@ -191,7 +191,7 @@ func (s *testChallengeImportTxStore) ResolvePlatformBuildImage(
 	if imageBuild == nil {
 		return nil, fmt.Errorf("image build service is not configured")
 	}
-	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, &testImageBuildTxStore{tx: s.tx()}, CreatePlatformBuildJobRequest{
+	result, err := imageBuild.CreatePlatformBuildJobInTx(ctx, &testImageBuildTxStore{tx: s.tx(ctx)}, CreatePlatformBuildJobRequest{
 		ChallengeMode:  req.ChallengeMode,
 		PackageSlug:    req.PackageSlug,
 		SuggestedTag:   req.SuggestedTag,
@@ -215,7 +215,7 @@ func (s *testChallengeImportTxStore) ResolveExternalImage(
 	if imageBuild == nil {
 		return nil, fmt.Errorf("image build service is not configured")
 	}
-	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, &testImageBuildTxStore{tx: s.tx()}, packageSlug, imageRef)
+	result, err := imageBuild.VerifyExternalImageRefInTx(ctx, &testImageBuildTxStore{tx: s.tx(ctx)}, packageSlug, imageRef)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (s *testChallengeImportTxStore) ResolveExistingImageRef(
 	if err != nil {
 		return nil, fmt.Errorf("invalid image ref for %s: %w", packageSlug, err)
 	}
-	tx := s.tx().WithContext(ctx)
+	tx := s.tx(ctx)
 	var image model.Image
 	findErr := tx.Unscoped().Where("name = ? AND tag = ?", name, tag).First(&image).Error
 	switch {
@@ -293,8 +293,8 @@ type testAWDChallengeImportTxStore struct {
 	getter  imageBuildServiceGetter
 }
 
-func (s *testAWDChallengeImportTxStore) tx() *gorm.DB {
-	return s.rawRepo.DB()
+func (s *testAWDChallengeImportTxStore) tx(ctx context.Context) *gorm.DB {
+	return s.rawRepo.DB(ctx)
 }
 
 func (s *testAWDChallengeImportTxStore) imageBuild() *ImageBuildService {
@@ -310,7 +310,7 @@ func (s *testAWDChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(c
 		return nil
 	}
 	var existing model.AWDChallenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Select("id", "slug", "name").
 		Where("slug = ?", normalizedSlug).
 		First(&existing).Error
@@ -376,7 +376,7 @@ func (r *testChallengePackageExportTxRunner) WithinChallengePackageExportTransac
 			challengeRepo: challengeinfra.NewChallengeCommandRepository(txRepo),
 			topologyRepo:  challengeinfra.NewTopologyServiceRepository(txRepo),
 			packageRepo:   challengeinfra.NewTopologyPackageRevisionRepository(txRepo),
-			imageRepo:     challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(txRepo.DB())),
+			imageRepo:     challengeinfra.NewImageQueryRepository(challengeinfra.NewImageRepository(txRepo.DB(ctx))),
 		}
 		return fn(store)
 	})
@@ -404,7 +404,7 @@ func (s *testChallengePackageExportTxStore) FindPackageRevisionByID(ctx context.
 
 func (s *testChallengePackageExportTxStore) NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
 	var latest model.ChallengePackageRevision
-	err := s.rawRepo.DB().WithContext(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
+	err := s.rawRepo.DB(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return 1, nil
@@ -458,7 +458,7 @@ func (s *testChallengePackageExportTxStore) MarkTopologyExported(
 	baselineSpec string,
 	updatedAt time.Time,
 ) error {
-	return s.rawRepo.DB().WithContext(ctx).
+	return s.rawRepo.DB(ctx).
 		Model(&model.ChallengeTopology{}).
 		Where("id = ?", topologyID).
 		Updates(map[string]any{

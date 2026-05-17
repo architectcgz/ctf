@@ -34,3 +34,21 @@ func TestResolveRuntimeAliasAccessURLKeepsStableURLWhenIPMissing(t *testing.T) {
 		t.Fatalf("expected stable alias url to remain unchanged, got %s", got)
 	}
 }
+
+func TestResolveRuntimeInternalAccessURLRewritesPublishedHost(t *testing.T) {
+	t.Parallel()
+
+	got := ResolveRuntimeInternalAccessURL("http://127.0.0.1:30003", "127.0.0.1", "host-gateway.internal")
+	if got != "http://host-gateway.internal:30003" {
+		t.Fatalf("unexpected internal access url: %s", got)
+	}
+}
+
+func TestResolveRuntimePublicAccessURLRewritesInternalHost(t *testing.T) {
+	t.Parallel()
+
+	got := ResolveRuntimePublicAccessURL("tcp://host-gateway.internal:30002", "127.0.0.1", "host-gateway.internal")
+	if got != "tcp://127.0.0.1:30002" {
+		t.Fatalf("unexpected public access url: %s", got)
+	}
+}

@@ -14,6 +14,7 @@ CONFIG_FILE_EXPLICIT=false
 REGISTRY_NAME="${REGISTRY_NAME:-ctf-registry}"
 REGISTRY_PORT="${REGISTRY_PORT:-5000}"
 REGISTRY_SERVER="${REGISTRY_SERVER:-}"
+REGISTRY_ACCESS_SERVER="${REGISTRY_ACCESS_SERVER:-}"
 REGISTRY_SCHEME="${REGISTRY_SCHEME:-http}"
 REGISTRY_USERNAME="${REGISTRY_USERNAME:-ctf}"
 REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-}"
@@ -40,6 +41,8 @@ usage() {
   --name NAME             Registry 容器名，默认 ctf-registry
   --port PORT             宿主机端口，默认 5000
   --server HOST:PORT      平台配置中的 registry server，默认 127.0.0.1:<port>
+  --access-server HOST:PORT
+                         可选；仅给 ctf-api 进程直连 registry API 使用
   --scheme http|https     供构建脚本访问 registry API 使用的协议，默认 http
   --username USER         Registry 用户名，默认 ctf
   --password PASSWORD     Registry 密码；未提供时自动生成
@@ -67,6 +70,7 @@ usage() {
   CTF_CONTAINER_REGISTRY_ENABLED=true
   CTF_CONTAINER_REGISTRY_BUILD_ENABLED=true
   CTF_CONTAINER_REGISTRY_SERVER=127.0.0.1:5000
+  CTF_CONTAINER_REGISTRY_ACCESS_SERVER=ctf-registry:5000
   CTF_CONTAINER_REGISTRY_SCHEME=http
   CTF_CONTAINER_REGISTRY_USERNAME=ctf
   CTF_CONTAINER_REGISTRY_PASSWORD=...
@@ -149,6 +153,7 @@ write_platform_env() {
 CTF_CONTAINER_REGISTRY_ENABLED=true
 CTF_CONTAINER_REGISTRY_BUILD_ENABLED=true
 CTF_CONTAINER_REGISTRY_SERVER=${REGISTRY_SERVER}
+CTF_CONTAINER_REGISTRY_ACCESS_SERVER=${REGISTRY_ACCESS_SERVER}
 CTF_CONTAINER_REGISTRY_SCHEME=${REGISTRY_SCHEME}
 CTF_CONTAINER_REGISTRY_USERNAME=${REGISTRY_USERNAME}
 CTF_CONTAINER_REGISTRY_PASSWORD=${REGISTRY_PASSWORD}
@@ -158,10 +163,11 @@ EOF
 
 merge_platform_env_file() {
   local env_file="$1"
-  local current_server current_username current_password current_scheme
-  local file_server file_username file_password file_scheme
+  local current_server current_access_server current_username current_password current_scheme
+  local file_server file_access_server file_username file_password file_scheme
 
   current_server="${REGISTRY_SERVER}"
+  current_access_server="${REGISTRY_ACCESS_SERVER}"
   current_username="${REGISTRY_USERNAME}"
   current_password="${REGISTRY_PASSWORD}"
   current_scheme="${REGISTRY_SCHEME}"
@@ -170,14 +176,25 @@ merge_platform_env_file() {
   source "${env_file}"
 
   file_server="${CTF_CONTAINER_REGISTRY_SERVER:-${REGISTRY_SERVER:-}}"
+  file_access_server="${CTF_CONTAINER_REGISTRY_ACCESS_SERVER:-${REGISTRY_ACCESS_SERVER:-}}"
   file_username="${CTF_CONTAINER_REGISTRY_USERNAME:-${REGISTRY_USERNAME:-}}"
   file_password="${CTF_CONTAINER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}"
   file_scheme="${CTF_CONTAINER_REGISTRY_SCHEME:-${REGISTRY_SCHEME:-}}"
 
   REGISTRY_SERVER="${current_server:-${file_server}}"
+  REGISTRY_ACCESS_SERVER="${current_access_server:-${file_access_server}}"
   REGISTRY_USERNAME="${current_username:-${file_username}}"
   REGISTRY_PASSWORD="${current_password:-${file_password}}"
   REGISTRY_SCHEME="${current_scheme:-${file_scheme}}"
+}
+
+is_local_registry_server() {
+  local server="$1"
+  local authority host
+
+  authority="$(printf '%s' "${server}" | sed -e 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##' -e 's#/.*$##')"
+  host="${authority%%:*}"
+  [[ "${host}" == "127.0.0.1" || "${host}" == "localhost" ]]
 }
 
 load_existing_platform_env() {
@@ -285,6 +302,10 @@ while [[ $# -gt 0 ]]; do
       REGISTRY_SERVER="${2:-}"
       shift 2
       ;;
+    --access-server)
+      REGISTRY_ACCESS_SERVER="${2:-}"
+      shift 2
+      ;;
     --scheme)
       REGISTRY_SCHEME="${2:-}"
       shift 2
@@ -350,6 +371,9 @@ ensure_positive_port "${REGISTRY_PORT}"
 if [[ -z "${REGISTRY_SERVER}" ]]; then
   REGISTRY_SERVER="127.0.0.1:${REGISTRY_PORT}"
 fi
+if [[ -z "${REGISTRY_ACCESS_SERVER}" ]] && is_local_registry_server "${REGISTRY_SERVER}"; then
+  REGISTRY_ACCESS_SERVER="${REGISTRY_COMPOSE_SERVICE}:5000"
+fi
 
 if [[ -z "${REGISTRY_PASSWORD}" ]]; then
   log_info "未提供 registry 密码，自动生成随机密码"
@@ -361,6 +385,9 @@ log_info "  container: ${REGISTRY_NAME}"
 log_info "  compose:   ctf/${REGISTRY_COMPOSE_SERVICE}"
 log_info "  listen:    127.0.0.1:${REGISTRY_PORT}"
 log_info "  server:    ${REGISTRY_SERVER}"
+if [[ -n "${REGISTRY_ACCESS_SERVER}" ]]; then
+  log_info "  access:    ${REGISTRY_ACCESS_SERVER}"
+fi
 log_info "  scheme:    ${REGISTRY_SCHEME}"
 log_info "  username:  ${REGISTRY_USERNAME}"
 log_info "  data_dir:  ${REGISTRY_DATA_DIR}"
@@ -423,6 +450,7 @@ Registry 已部署:
   compose:   ctf/${REGISTRY_COMPOSE_SERVICE}
   listen:    127.0.0.1:${REGISTRY_PORT}
   server:    ${REGISTRY_SERVER}
+$(if [[ -n "${REGISTRY_ACCESS_SERVER}" ]]; then printf '  access:    %s\n' "${REGISTRY_ACCESS_SERVER}"; fi)
   scheme:    ${REGISTRY_SCHEME}
   data_dir:  ${REGISTRY_DATA_DIR}
   auth_dir:  ${REGISTRY_AUTH_DIR}
@@ -432,6 +460,7 @@ $(if [[ -n "${PLATFORM_ENV_FILE}" ]]; then printf '\n平台后端 registry 环�
   container.registry.enabled=true
   container.registry.build_enabled=true
   container.registry.server=${REGISTRY_SERVER}
+$(if [[ -n "${REGISTRY_ACCESS_SERVER}" ]]; then printf '  container.registry.access_server=%s\n' "${REGISTRY_ACCESS_SERVER}"; fi)
   container.registry.username=${REGISTRY_USERNAME}
   container.registry.password=<见 ${PLATFORM_ENV_FILE:-自定义注入}>
 

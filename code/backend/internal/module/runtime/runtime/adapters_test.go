@@ -29,7 +29,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 		},
 	}
 
-	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts())
+	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "host-gateway.internal")
 	if len(got.Networks) != 1 || !got.Networks[0].Internal {
 		t.Fatalf("expected challenge runtime network fields to be preserved, got %+v", got.Networks)
 	}
@@ -44,6 +44,32 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 	}
 	if len(got.Policies) != 1 || len(got.Policies[0].Ports) != 1 || got.Policies[0].Ports[0] != 8080 {
 		t.Fatalf("expected policies preserved, got %+v", got.Policies)
+	}
+	if got.DisableEntryPortPublishing {
+		t.Fatalf("expected published entry port when runtime access host is configured, got %+v", got)
+	}
+}
+
+func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessHost(t *testing.T) {
+	req := &challengeTopologyCreateRequestStub{
+		Networks: []challengeTopologyCreateNetworkStub{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []challengeTopologyCreateNodeStub{
+			{
+				Key:             "web",
+				Image:           "ctf/web:latest",
+				ServicePort:     8080,
+				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+			},
+		},
+	}
+
+	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "")
+	if !got.DisableEntryPortPublishing {
+		t.Fatalf("expected private entry access without published access host, got %+v", got)
 	}
 }
 

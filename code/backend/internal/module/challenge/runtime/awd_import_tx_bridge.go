@@ -54,11 +54,11 @@ type awdChallengeImportTxStore struct {
 	imageBuild *challengecmd.ImageBuildService
 }
 
-func (s *awdChallengeImportTxStore) tx() *gorm.DB {
+func (s *awdChallengeImportTxStore) tx(ctx context.Context) *gorm.DB {
 	if s == nil || s.rawRepo == nil {
 		return nil
 	}
-	return s.rawRepo.DB()
+	return s.rawRepo.DB(ctx)
 }
 
 func (s *awdChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(ctx context.Context, slug string) error {
@@ -68,7 +68,7 @@ func (s *awdChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(ctx c
 	}
 
 	var existing model.AWDChallenge
-	err := s.tx().WithContext(ctx).Unscoped().
+	err := s.tx(ctx).Unscoped().
 		Select("id", "slug", "name").
 		Where("slug = ?", normalizedSlug).
 		First(&existing).Error
@@ -99,7 +99,7 @@ func (s *awdChallengeImportTxStore) ResolvePlatformBuildImage(
 	}
 	result, err := s.imageBuild.CreatePlatformBuildJobInTx(
 		ctx,
-		&runtimeImageBuildTxStore{tx: s.tx()},
+		&runtimeImageBuildTxStore{tx: s.tx(ctx)},
 		challengecmd.CreatePlatformBuildJobRequest{
 			ChallengeMode:  req.ChallengeMode,
 			PackageSlug:    req.PackageSlug,
@@ -129,7 +129,7 @@ func (s *awdChallengeImportTxStore) ResolveExternalImage(
 	}
 	result, err := s.imageBuild.VerifyExternalImageRefInTx(
 		ctx,
-		&runtimeImageBuildTxStore{tx: s.tx()},
+		&runtimeImageBuildTxStore{tx: s.tx(ctx)},
 		packageSlug,
 		imageRef,
 	)

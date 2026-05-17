@@ -9,7 +9,7 @@ import (
 
 type ctxOnlyContestSchedulerLockLease struct{}
 
-func (ctxOnlyContestSchedulerLockLease) Key() string { return "" }
+func (ctxOnlyContestSchedulerLockLease) Key(context.Context) string { return "" }
 
 func (ctxOnlyContestSchedulerLockLease) Refresh(context.Context, time.Duration) (bool, error) {
 	return true, nil

@@ -24,7 +24,17 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) DB() *gorm.DB {
+func (r *Repository) DB(ctx context.Context) *gorm.DB {
+	if r == nil {
+		return nil
+	}
+	if ctx == nil {
+		return r.db
+	}
+	return r.db.WithContext(ctx)
+}
+
+func (r *Repository) rawDB() *gorm.DB {
 	if r == nil {
 		return nil
 	}
@@ -32,7 +42,10 @@ func (r *Repository) DB() *gorm.DB {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	return r.db.WithContext(ctx)
+	if ctx == nil {
+		return r.rawDB()
+	}
+	return r.rawDB().WithContext(ctx)
 }
 
 func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repository) error) error {

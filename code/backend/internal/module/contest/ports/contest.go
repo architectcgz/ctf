@@ -197,7 +197,7 @@ type ContestStatusSideEffectStore interface {
 }
 
 type ContestSchedulerLockLease interface {
-	Key() string
+	Key(ctx context.Context) string
 	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
 	Release(ctx context.Context) (bool, error)
 }

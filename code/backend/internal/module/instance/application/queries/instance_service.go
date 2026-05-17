@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancedomain "ctf-platform/internal/module/instance/domain"
@@ -14,6 +15,7 @@ import (
 
 type InstanceService struct {
 	repo instanceQueryRepository
+	cfg  *config.ContainerConfig
 }
 
 type instanceQueryRepository interface {
@@ -23,8 +25,11 @@ type instanceQueryRepository interface {
 	instanceports.TeacherInstanceQueryRepository
 }
 
-func NewInstanceService(repo instanceQueryRepository) *InstanceService {
-	return &InstanceService{repo: repo}
+func NewInstanceService(repo instanceQueryRepository, cfg *config.ContainerConfig) *InstanceService {
+	if cfg == nil {
+		cfg = &config.ContainerConfig{}
+	}
+	return &InstanceService{repo: repo, cfg: cfg}
 }
 
 func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
@@ -55,7 +60,7 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 	now := time.Now()
 	result := make([]*dto.InstanceInfo, len(instances))
 	for idx, inst := range instances {
-		result[idx] = toInstanceInfo(inst, now)
+		result[idx] = toInstanceInfo(inst, now, s.cfg.PublicHost, s.cfg.AccessHost)
 	}
 	return result, nil
 }
@@ -97,14 +102,14 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	now := time.Now()
 	result := make([]dto.TeacherInstanceItem, len(items))
 	for idx, item := range items {
-		result[idx] = toTeacherInstanceItem(item, now)
+		result[idx] = toTeacherInstanceItem(item, now, s.cfg.PublicHost, s.cfg.AccessHost)
 	}
 
 	return result, nil
 }
 
-func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
-	accessURL := inst.AccessURL
+func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *dto.InstanceInfo {
+	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	if inst.ContestMode == model.ContestModeAWD {
 		accessURL = ""
 	}
@@ -129,7 +134,8 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time) *d
 	}
 }
 
-func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time) dto.TeacherInstanceItem {
+func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time, publicHost, accessHost string) dto.TeacherInstanceItem {
+	accessURL := model.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
 	return dto.TeacherInstanceItem{
 		ID:              item.ID,
 		StudentID:       item.StudentID,
@@ -140,8 +146,8 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time)
 		ChallengeID:     item.ChallengeID,
 		ChallengeTitle:  item.ChallengeTitle,
 		Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
-		AccessURL:       item.AccessURL,
-		Access:          dto.BuildInstanceAccessInfo(item.AccessURL),
+		AccessURL:       accessURL,
+		Access:          dto.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:       item.ExpiresAt,
 		RemainingTime:   instancedomain.RemainingTime(item.ExpiresAt, now),
 		ExtendCount:     item.ExtendCount,

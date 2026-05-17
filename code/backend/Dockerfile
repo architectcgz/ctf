@@ -18,13 +18,13 @@ FROM alpine:3.22
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata docker-cli
 
 COPY --from=builder /out/ctf-api /app/ctf-api
 COPY configs /app/configs
 COPY migrations /app/migrations
 
-RUN mkdir -p /app/storage/exports
+RUN mkdir -p /app/storage/exports /app/storage/runtime
 
 EXPOSE 8080
 
