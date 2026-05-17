@@ -2,11 +2,9 @@ package commands
 
 import (
 	"context"
-
-	"ctf-platform/internal/dto"
 )
 
-func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
+func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*SubmissionResp, error) {
 	attempt, err := s.validateContestSubmission(ctx, userID, contestID, challengeID, flag)
 	if err != nil {
 		return nil, err
@@ -24,6 +22,7 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 
 	return contestResponseMapperInst.ToSubmissionRespPtr(submissionRespSource{
 		IsCorrect:   true,
+		Status:      SubmissionStatusCorrect,
 		Points:      finalScore,
 		SubmittedAt: submission.SubmittedAt,
 	}), nil

@@ -70,8 +70,8 @@ type contestResponseMapper interface {
 
 	// goverter:ignore Message
 	// goverter:ignore InstanceShutdownAt
-	ToSubmissionResp(source submissionRespSource) dto.SubmissionResp
-	ToSubmissionRespPtr(source submissionRespSource) *dto.SubmissionResp
+	ToSubmissionResp(source submissionRespSource) SubmissionResp
+	ToSubmissionRespPtr(source submissionRespSource) *SubmissionResp
 }
 
 var contestResponseMapperInst contestResponseMapper
