@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -893,7 +894,7 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/users/me/recommendations", nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var selfRecommendations dto.RecommendationResp
+	var selfRecommendations assessmenthttp.RecommendationResp
 	decodeFullRouterData(t, resp, &selfRecommendations)
 	if len(selfRecommendations.Challenges) == 0 {
 		t.Fatalf("expected self recommendations, got %+v", selfRecommendations)

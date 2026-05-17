@@ -3,70 +3,67 @@
 
 package http
 
-import (
-	dto "ctf-platform/internal/dto"
-	contracts "ctf-platform/internal/module/assessment/contracts"
-)
+import contracts "ctf-platform/internal/module/assessment/contracts"
 
 type assessmentResponseMapperContractImpl struct{}
 
-func (c *assessmentResponseMapperContractImpl) ToChallengeRecommendation(source contracts.ChallengeRecommendation) dto.ChallengeRecommendation {
-	var dtoChallengeRecommendation dto.ChallengeRecommendation
-	dtoChallengeRecommendation.ID = source.ID
-	dtoChallengeRecommendation.Title = source.Title
-	dtoChallengeRecommendation.Category = source.Category
-	dtoChallengeRecommendation.Difficulty = source.Difficulty
-	dtoChallengeRecommendation.Points = source.Points
-	dtoChallengeRecommendation.Dimension = source.Dimension
-	dtoChallengeRecommendation.DifficultyBand = source.DifficultyBand
-	dtoChallengeRecommendation.Severity = source.Severity
+func (c *assessmentResponseMapperContractImpl) ToChallengeRecommendation(source contracts.ChallengeRecommendation) ChallengeRecommendation {
+	var httpChallengeRecommendation ChallengeRecommendation
+	httpChallengeRecommendation.ID = source.ID
+	httpChallengeRecommendation.Title = source.Title
+	httpChallengeRecommendation.Category = source.Category
+	httpChallengeRecommendation.Difficulty = source.Difficulty
+	httpChallengeRecommendation.Points = source.Points
+	httpChallengeRecommendation.Dimension = source.Dimension
+	httpChallengeRecommendation.DifficultyBand = source.DifficultyBand
+	httpChallengeRecommendation.Severity = source.Severity
 	if source.ReasonCodes != nil {
-		dtoChallengeRecommendation.ReasonCodes = make([]string, len(source.ReasonCodes))
+		httpChallengeRecommendation.ReasonCodes = make([]string, len(source.ReasonCodes))
 		for i := 0; i < len(source.ReasonCodes); i++ {
-			dtoChallengeRecommendation.ReasonCodes[i] = source.ReasonCodes[i]
+			httpChallengeRecommendation.ReasonCodes[i] = source.ReasonCodes[i]
 		}
 	}
-	dtoChallengeRecommendation.Summary = source.Summary
-	dtoChallengeRecommendation.Evidence = source.Evidence
-	return dtoChallengeRecommendation
+	httpChallengeRecommendation.Summary = source.Summary
+	httpChallengeRecommendation.Evidence = source.Evidence
+	return httpChallengeRecommendation
 }
-func (c *assessmentResponseMapperContractImpl) ToChallengeRecommendationPtr(source *contracts.ChallengeRecommendation) *dto.ChallengeRecommendation {
-	var pDtoChallengeRecommendation *dto.ChallengeRecommendation
+func (c *assessmentResponseMapperContractImpl) ToChallengeRecommendationPtr(source *contracts.ChallengeRecommendation) *ChallengeRecommendation {
+	var pHttpChallengeRecommendation *ChallengeRecommendation
 	if source != nil {
-		dtoChallengeRecommendation := c.ToChallengeRecommendation((*source))
-		pDtoChallengeRecommendation = &dtoChallengeRecommendation
+		httpChallengeRecommendation := c.ToChallengeRecommendation((*source))
+		pHttpChallengeRecommendation = &httpChallengeRecommendation
 	}
-	return pDtoChallengeRecommendation
+	return pHttpChallengeRecommendation
 }
-func (c *assessmentResponseMapperContractImpl) ToRecommendationResp(source contracts.Recommendation) dto.RecommendationResp {
-	var dtoRecommendationResp dto.RecommendationResp
+func (c *assessmentResponseMapperContractImpl) ToRecommendationResp(source contracts.Recommendation) RecommendationResp {
+	var httpRecommendationResp RecommendationResp
 	if source.WeakDimensions != nil {
-		dtoRecommendationResp.WeakDimensions = make([]dto.RecommendationWeakDimension, len(source.WeakDimensions))
+		httpRecommendationResp.WeakDimensions = make([]RecommendationWeakDimension, len(source.WeakDimensions))
 		for i := 0; i < len(source.WeakDimensions); i++ {
-			dtoRecommendationResp.WeakDimensions[i] = c.ToRecommendationWeakDimension(source.WeakDimensions[i])
+			httpRecommendationResp.WeakDimensions[i] = c.ToRecommendationWeakDimension(source.WeakDimensions[i])
 		}
 	}
 	if source.Challenges != nil {
-		dtoRecommendationResp.Challenges = make([]*dto.ChallengeRecommendation, len(source.Challenges))
+		httpRecommendationResp.Challenges = make([]*ChallengeRecommendation, len(source.Challenges))
 		for j := 0; j < len(source.Challenges); j++ {
-			dtoRecommendationResp.Challenges[j] = c.ToChallengeRecommendationPtr(source.Challenges[j])
+			httpRecommendationResp.Challenges[j] = c.ToChallengeRecommendationPtr(source.Challenges[j])
 		}
 	}
-	return dtoRecommendationResp
+	return httpRecommendationResp
 }
-func (c *assessmentResponseMapperContractImpl) ToRecommendationRespPtr(source *contracts.Recommendation) *dto.RecommendationResp {
-	var pDtoRecommendationResp *dto.RecommendationResp
+func (c *assessmentResponseMapperContractImpl) ToRecommendationRespPtr(source *contracts.Recommendation) *RecommendationResp {
+	var pHttpRecommendationResp *RecommendationResp
 	if source != nil {
-		dtoRecommendationResp := c.ToRecommendationResp((*source))
-		pDtoRecommendationResp = &dtoRecommendationResp
+		httpRecommendationResp := c.ToRecommendationResp((*source))
+		pHttpRecommendationResp = &httpRecommendationResp
 	}
-	return pDtoRecommendationResp
+	return pHttpRecommendationResp
 }
-func (c *assessmentResponseMapperContractImpl) ToRecommendationWeakDimension(source contracts.RecommendationWeakDimension) dto.RecommendationWeakDimension {
-	var dtoRecommendationWeakDimension dto.RecommendationWeakDimension
-	dtoRecommendationWeakDimension.Dimension = source.Dimension
-	dtoRecommendationWeakDimension.Severity = source.Severity
-	dtoRecommendationWeakDimension.Confidence = source.Confidence
-	dtoRecommendationWeakDimension.Evidence = source.Evidence
-	return dtoRecommendationWeakDimension
+func (c *assessmentResponseMapperContractImpl) ToRecommendationWeakDimension(source contracts.RecommendationWeakDimension) RecommendationWeakDimension {
+	var httpRecommendationWeakDimension RecommendationWeakDimension
+	httpRecommendationWeakDimension.Dimension = source.Dimension
+	httpRecommendationWeakDimension.Severity = source.Severity
+	httpRecommendationWeakDimension.Confidence = source.Confidence
+	httpRecommendationWeakDimension.Evidence = source.Evidence
+	return httpRecommendationWeakDimension
 }

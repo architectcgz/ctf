@@ -44,6 +44,7 @@
 - 2026-05-13 的 teaching query student review query surface phase 4 / slice 4 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/teacher/students/:id/{progress,recommendations,timeline,evidence,attack-sessions}` 保持原路径、响应结构和权限口径不变，内部 owner 从剩余宽 `teaching_query/application/queries.Service` 收口到独立 `StudentReviewService`，handler 改为分别依赖目录查询、overview、class insight 和 student review 四类 query owner。
 - 2026-05-13 的 auth CAS validator phase 5 / slice 16 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/auth/cas/status`、`GET /api/v1/auth/cas/login`、`GET /api/v1/auth/cas/callback` 保持原路径、响应结构和错误码口径不变，内部仅把 CAS ticket 校验从 auth command service 直接持有的 HTTP client 收口到 `auth/ports.CASTicketValidator` 与 `auth/infrastructure/cas_ticket_validator.go`。
 - 2026-05-17 的 assessment recommendation contract convergence 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/recommendations` 与 `GET /api/v1/teacher/students/:id/recommendations` 保持原路径、查询参数和响应结构不变，内部 owner 改为由 `assessment/contracts` 输出 recommendation contract，再分别在 `assessment/api/http` 与 `teaching_query/application/queries` 映射回现有 DTO。
+- 2026-05-17 的 assessment recommendation HTTP DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`GET /api/v1/recommendations` 保持原路径和 JSON 字段不变，变化仅在内部 owner：学生端 recommendation response DTO 从全局 `internal/dto` 收回 `assessment/api/http`，教师端 recommendation DTO 仍暂留在 `teaching_query` 消费边界。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail

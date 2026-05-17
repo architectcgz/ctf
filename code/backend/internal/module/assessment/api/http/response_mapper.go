@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 )
 
@@ -11,11 +10,11 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :http
 type assessmentResponseMapperContract interface {
-	ToRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) dto.RecommendationWeakDimension
-	ToRecommendationResp(source assessmentcontracts.Recommendation) dto.RecommendationResp
-	ToRecommendationRespPtr(source *assessmentcontracts.Recommendation) *dto.RecommendationResp
-	ToChallengeRecommendation(source assessmentcontracts.ChallengeRecommendation) dto.ChallengeRecommendation
-	ToChallengeRecommendationPtr(source *assessmentcontracts.ChallengeRecommendation) *dto.ChallengeRecommendation
+	ToRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) RecommendationWeakDimension
+	ToRecommendationResp(source assessmentcontracts.Recommendation) RecommendationResp
+	ToRecommendationRespPtr(source *assessmentcontracts.Recommendation) *RecommendationResp
+	ToChallengeRecommendation(source assessmentcontracts.ChallengeRecommendation) ChallengeRecommendation
+	ToChallengeRecommendationPtr(source *assessmentcontracts.ChallengeRecommendation) *ChallengeRecommendation
 }
 
 var assessmentResponseMapper assessmentResponseMapperContract
