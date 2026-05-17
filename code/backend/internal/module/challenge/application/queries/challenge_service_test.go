@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
-
 	miniredis "github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
@@ -21,8 +19,8 @@ import (
 
 type challengeQueryRepositoryStub struct {
 	findByIDFn             func(context.Context, int64) (*model.Challenge, error)
-	listFn                 func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
-	listPublishedFn        func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listFn                 func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listPublishedFn        func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
 	listHintsByChallengeID func(context.Context, int64) ([]*model.ChallengeHint, error)
 	getSolvedStatusFn      func(context.Context, int64, int64) (bool, error)
 	getSolvedCountFn       func(context.Context, int64) (int64, error)
@@ -39,14 +37,14 @@ func (s *challengeQueryRepositoryStub) FindByID(ctx context.Context, id int64) (
 	return nil, nil
 }
 
-func (s *challengeQueryRepositoryStub) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s *challengeQueryRepositoryStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	if s.listPublishedFn != nil {
 		return s.listPublishedFn(ctx, query)
 	}

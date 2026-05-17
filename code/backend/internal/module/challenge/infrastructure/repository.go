@@ -2,8 +2,8 @@ package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"errors"
 	"fmt"
 	"strings"
@@ -126,7 +126,7 @@ func (r *Repository) DeleteAWDChallenge(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.AWDChallenge{}, id).Error
 }
 
-func (r *Repository) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *Repository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	var challenges []*model.AWDChallenge
 	var total int64
 
@@ -166,7 +166,7 @@ func (r *Repository) ListAWDChallenges(ctx context.Context, query *dto.AWDChalle
 	return challenges, total, err
 }
 
-func (r *Repository) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
@@ -292,7 +292,7 @@ func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）
-func (r *Repository) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 

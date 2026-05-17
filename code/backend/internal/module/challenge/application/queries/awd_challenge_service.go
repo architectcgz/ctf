@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -31,7 +30,7 @@ func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (
 }
 
 func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error) {
-	query := &dto.AWDChallengeQuery{
+	query := &challengecontracts.AWDChallengeQuery{
 		Keyword:     req.Keyword,
 		ServiceType: req.ServiceType,
 		Status:      req.Status,

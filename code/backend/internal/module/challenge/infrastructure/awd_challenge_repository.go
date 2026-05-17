@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -48,7 +48,7 @@ func (r *AWDChallengeRepository) DeleteAWDChallenge(ctx context.Context, id int6
 	return r.source.DeleteAWDChallenge(ctx, id)
 }
 
-func (r *AWDChallengeRepository) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *AWDChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	return r.source.ListAWDChallenges(ctx, query)
 }
 

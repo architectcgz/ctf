@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type awdChallengeQueryContextRepoStub struct {
 	findByIDFn func(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	listFn     func(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
+	listFn     func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
 }
 
 func (s *awdChallengeQueryContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
@@ -20,7 +20,7 @@ func (s *awdChallengeQueryContextRepoStub) FindAWDChallengeByID(ctx context.Cont
 	return nil, nil
 }
 
-func (s *awdChallengeQueryContextRepoStub) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s *awdChallengeQueryContextRepoStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
@@ -66,7 +66,7 @@ func TestAWDChallengeQueryServiceListChallengesPropagatesContextToRepository(t *
 	expectedCtxValue := "ctx-list"
 	listCalled := false
 	repo := &awdChallengeQueryContextRepoStub{
-		listFn: func(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+		listFn: func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list ctx value %v, got %v", expectedCtxValue, got)

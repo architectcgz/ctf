@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -37,7 +37,7 @@ func (r *ChallengeQueryRepository) FindByID(ctx context.Context, id int64) (*mod
 	return challenge, err
 }
 
-func (r *ChallengeQueryRepository) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return r.source.List(ctx, query)
 }
 
@@ -45,7 +45,7 @@ func (r *ChallengeQueryRepository) ListHintsByChallengeID(ctx context.Context, c
 	return r.source.ListHintsByChallengeID(ctx, challengeID)
 }
 
-func (r *ChallengeQueryRepository) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *ChallengeQueryRepository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return r.source.ListPublished(ctx, query)
 }
 

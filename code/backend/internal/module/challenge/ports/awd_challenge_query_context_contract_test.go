@@ -3,8 +3,8 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -14,7 +14,7 @@ func (ctxOnlyAWDChallengeQueryRepository) FindAWDChallengeByID(context.Context, 
 	return nil, nil
 }
 
-func (ctxOnlyAWDChallengeQueryRepository) ListAWDChallenges(context.Context, *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (ctxOnlyAWDChallengeQueryRepository) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 

@@ -2,6 +2,14 @@ package contracts
 
 import "time"
 
+type AWDChallengeQuery struct {
+	Keyword     string
+	ServiceType string
+	Status      string
+	Page        int
+	Size        int
+}
+
 type AWDChallengeResp struct {
 	ID               int64          `json:"id"`
 	Name             string         `json:"name"`

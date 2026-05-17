@@ -6,7 +6,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
@@ -56,8 +55,8 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*challen
 }
 
 func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
-	dtoQuery := toDTOChallengeQuery(query)
-	challenges, total, err := s.repo.List(ctx, dtoQuery)
+	query = normalizeChallengeQuery(query)
+	challenges, total, err := s.repo.List(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -67,11 +66,11 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengec
 		list[i] = domain.ChallengeRespFromModel(challenge, nil)
 	}
 
-	page := dtoQuery.Page
+	page := query.Page
 	if page < 1 {
 		page = 1
 	}
-	size := dtoQuery.Size
+	size := query.Size
 	if size < 1 {
 		size = 20
 	}
@@ -85,8 +84,8 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengec
 }
 
 func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeListItem], error) {
-	dtoQuery := toDTOChallengeQuery(query)
-	challenges, total, err := s.repo.ListPublished(ctx, dtoQuery)
+	query = normalizeChallengeQuery(query)
+	challenges, total, err := s.repo.ListPublished(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +93,8 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 		return &challengecontracts.PageResult[*challengecontracts.ChallengeListItem]{
 			List:  []*challengecontracts.ChallengeListItem{},
 			Total: total,
-			Page:  dtoQuery.Page,
-			Size:  dtoQuery.Size,
+			Page:  query.Page,
+			Size:  query.Size,
 		}, nil
 	}
 
@@ -134,8 +133,8 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 	return &challengecontracts.PageResult[*challengecontracts.ChallengeListItem]{
 		List:  list,
 		Total: total,
-		Page:  dtoQuery.Page,
-		Size:  dtoQuery.Size,
+		Page:  query.Page,
+		Size:  query.Size,
 	}, nil
 }
 
@@ -185,11 +184,11 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 	return resp, nil
 }
 
-func toDTOChallengeQuery(query *challengecontracts.ChallengeQuery) *dto.ChallengeQuery {
+func normalizeChallengeQuery(query *challengecontracts.ChallengeQuery) *challengecontracts.ChallengeQuery {
 	if query == nil {
-		return &dto.ChallengeQuery{}
+		return &challengecontracts.ChallengeQuery{}
 	}
-	return &dto.ChallengeQuery{
+	return &challengecontracts.ChallengeQuery{
 		Category:   query.Category,
 		Difficulty: query.Difficulty,
 		Status:     query.Status,

@@ -2,8 +2,8 @@ package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"reflect"
 	"testing"
@@ -47,7 +47,7 @@ func TestRepositoryList(t *testing.T) {
 	db.Create(&model.Challenge{Title: "C1", Category: "web"})
 	db.Create(&model.Challenge{Title: "C2", Category: "pwn"})
 
-	challenges, total, err := repo.List(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
+	challenges, total, err := repo.List(context.Background(), &challengecontracts.ChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -97,7 +97,7 @@ func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 		t.Fatalf("create awd service: %v", err)
 	}
 
-	challenges, total, err := repo.ListPublished(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
+	challenges, total, err := repo.ListPublished(context.Background(), &challengecontracts.ChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("ListPublished() error = %v", err)
 	}
@@ -370,7 +370,7 @@ func TestRepositoryCreateAndListAWDChallenges(t *testing.T) {
 		t.Fatal("template ID should be set")
 	}
 
-	items, total, err := repo.ListAWDChallenges(context.Background(), &dto.AWDChallengeQuery{
+	items, total, err := repo.ListAWDChallenges(context.Background(), &challengecontracts.AWDChallengeQuery{
 		Page: 1,
 		Size: 10,
 	})

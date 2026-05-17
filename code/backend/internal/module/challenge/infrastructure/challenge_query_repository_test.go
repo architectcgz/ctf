@@ -7,15 +7,15 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeQueryRepositorySourceStub struct {
 	findByIDFn          func(context.Context, int64) (*model.Challenge, error)
-	listFn              func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
-	listPublishedFn     func(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listFn              func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	listPublishedFn     func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
 	listHintsFn         func(context.Context, int64) ([]*model.ChallengeHint, error)
 	getSolvedStatusFn   func(context.Context, int64, int64) (bool, error)
 	getSolvedCountFn    func(context.Context, int64) (int64, error)
@@ -29,14 +29,14 @@ func (s challengeQueryRepositorySourceStub) FindByID(ctx context.Context, id int
 	return s.findByIDFn(ctx, id)
 }
 
-func (s challengeQueryRepositorySourceStub) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s challengeQueryRepositorySourceStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s challengeQueryRepositorySourceStub) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s challengeQueryRepositorySourceStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	if s.listPublishedFn != nil {
 		return s.listPublishedFn(ctx, query)
 	}

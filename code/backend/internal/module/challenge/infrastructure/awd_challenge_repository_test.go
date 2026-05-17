@@ -7,14 +7,14 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type awdChallengeRepositorySourceStub struct {
 	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
-	listFn     func(context.Context, *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
+	listFn     func(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
 	createFn   func(context.Context, *model.AWDChallenge) error
 	updateFn   func(context.Context, *model.AWDChallenge) error
 	deleteFn   func(context.Context, int64) error
@@ -45,7 +45,7 @@ func (s awdChallengeRepositorySourceStub) DeleteAWDChallenge(ctx context.Context
 	return nil
 }
 
-func (s awdChallengeRepositorySourceStub) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s awdChallengeRepositorySourceStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}

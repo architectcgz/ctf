@@ -3,8 +3,8 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -14,7 +14,7 @@ func (ctxOnlyChallengeQueryRepository) FindByID(context.Context, int64) (*model.
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) List(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) List(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return nil, 0, nil
 }
 
@@ -46,7 +46,7 @@ func (ctxOnlyChallengeQueryRepository) BatchGetTotalAttempts(context.Context, []
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return nil, 0, nil
 }
 

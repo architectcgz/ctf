@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
@@ -60,12 +59,12 @@ type ChallengeFlagRepository interface {
 
 type ChallengeReadRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
 }
 
 type ChallengePublishedRepository interface {
-	ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 
 type ChallengeStatsRepository interface {
@@ -94,7 +93,7 @@ type AWDChallengeCommandRepository interface {
 
 type AWDChallengeQueryRepository interface {
 	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
+	ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
 }
 
 type ChallengeImageUsageRepository interface {
