@@ -236,6 +236,18 @@ func TestAWDServiceManageHandlerFlowDoesNotDependOnGlobalContestAWDServiceDTO(t 
 	}
 }
 
+func TestContestQueryHandlerFlowDoesNotDependOnGlobalContestDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("api", "http", "contest_query_handler.go"),
+		filepath.Join("api", "http", "request_mapper_contest_support.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

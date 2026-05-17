@@ -41,6 +41,9 @@ type ContestRequestMapper interface {
 	// goverter:ignore LastPreviewResult
 	ToContestAWDServiceCommandResp(source contestqry.ContestAWDServiceResult) contestcmd.ContestAWDServiceResp
 	ToContestAWDServiceCommandRespPtr(source *contestqry.ContestAWDServiceResult) *contestcmd.ContestAWDServiceResp
+	ToContestCommandResp(source contestqry.ContestResult) contestcmd.ContestResp
+	ToContestCommandRespPtr(source *contestqry.ContestResult) *contestcmd.ContestResp
+	ToContestCommandResps(source []*contestqry.ContestResult) []*contestcmd.ContestResp
 	ToContestResp(source contestqry.ContestResult) dto.ContestResp
 	ToContestRespPtr(source *contestqry.ContestResult) *dto.ContestResp
 	ToContestResps(source []*contestqry.ContestResult) []*dto.ContestResp

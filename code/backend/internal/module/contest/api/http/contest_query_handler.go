@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
@@ -18,7 +17,7 @@ func (h *Handler) GetContest(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToContestRespPtr(resp))
+	response.Success(c, contestResultToResp(resp))
 }
 
 func (h *Handler) ListContests(c *gin.Context) {
@@ -54,28 +53,7 @@ func (h *Handler) ListContests(c *gin.Context) {
 		return
 	}
 
-	page := req.Page
-	if page < 1 {
-		page = 1
-	}
-	size := req.Size
-	if size < 1 {
-		size = 20
-	}
-
-	response.Success(c, dto.ContestPageResp{
-		List:     contestRequestMapper.ToContestResps(contests),
-		Total:    total,
-		Page:     page,
-		PageSize: size,
-		Summary: dto.ContestListSummaryResp{
-			DraftCount:       summary.DraftCount,
-			RegisteringCount: summary.RegistrationCount,
-			RunningCount:     summary.RunningCount,
-			FrozenCount:      summary.FrozenCount,
-			EndedCount:       summary.EndedCount,
-		},
-	})
+	response.Success(c, buildContestPageResp(req, contests, total, summary))
 }
 
 var allowedContestStatuses = map[string]struct{}{

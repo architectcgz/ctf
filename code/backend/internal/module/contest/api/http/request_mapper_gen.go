@@ -524,6 +524,38 @@ func (c *ContestRequestMapperImpl) ToContestChallengeResps(source []*queries.Con
 	}
 	return pDtoContestChallengeRespList
 }
+func (c *ContestRequestMapperImpl) ToContestCommandResp(source queries.ContestResult) commands.ContestResp {
+	var commandsContestResp commands.ContestResp
+	commandsContestResp.ID = source.ID
+	commandsContestResp.Title = source.Title
+	commandsContestResp.Description = source.Description
+	commandsContestResp.Mode = source.Mode
+	commandsContestResp.StartTime = CopyTime(source.StartTime)
+	commandsContestResp.EndTime = CopyTime(source.EndTime)
+	commandsContestResp.FreezeTime = CopyTimePtr(source.FreezeTime)
+	commandsContestResp.Status = source.Status
+	commandsContestResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsContestResp
+}
+func (c *ContestRequestMapperImpl) ToContestCommandRespPtr(source *queries.ContestResult) *commands.ContestResp {
+	var pCommandsContestResp *commands.ContestResp
+	if source != nil {
+		commandsContestResp := c.ToContestCommandResp((*source))
+		pCommandsContestResp = &commandsContestResp
+	}
+	return pCommandsContestResp
+}
+func (c *ContestRequestMapperImpl) ToContestCommandResps(source []*queries.ContestResult) []*commands.ContestResp {
+	var pCommandsContestRespList []*commands.ContestResp
+	if source != nil {
+		pCommandsContestRespList = make([]*commands.ContestResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pCommandsContestRespList[i] = c.ToContestCommandRespPtr(source[i])
+		}
+	}
+	return pCommandsContestRespList
+}
 func (c *ContestRequestMapperImpl) ToContestMyProgressResp(source queries.ParticipationProgressResult) dto.ContestMyProgressResp {
 	var dtoContestMyProgressResp dto.ContestMyProgressResp
 	dtoContestMyProgressResp.ContestID = source.ContestID
