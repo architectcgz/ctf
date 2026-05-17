@@ -75,3 +75,16 @@ type AWDAttackLogResp struct {
 	ScoreGained    int       `json:"score_gained"`
 	CreatedAt      time.Time `json:"created_at"`
 }
+
+type AWDRoundResp struct {
+	ID           int64      `json:"id"`
+	ContestID    int64      `json:"contest_id"`
+	RoundNumber  int        `json:"round_number"`
+	Status       string     `json:"status"`
+	StartedAt    *time.Time `json:"started_at,omitempty"`
+	EndedAt      *time.Time `json:"ended_at,omitempty"`
+	AttackScore  int        `json:"attack_score"`
+	DefenseScore int        `json:"defense_score"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+}

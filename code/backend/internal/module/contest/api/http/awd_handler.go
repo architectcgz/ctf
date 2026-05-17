@@ -9,7 +9,7 @@ import (
 )
 
 type awdCommandService interface {
-	CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error)
+	CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error)
 	RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
 	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
 	PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)

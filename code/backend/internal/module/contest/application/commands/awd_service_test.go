@@ -191,7 +191,7 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 	}
 }
 
-func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
+func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error) {
 	return s.commands.CreateRound(ctx, contestID, req)
 }
 

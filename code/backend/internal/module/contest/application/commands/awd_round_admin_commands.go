@@ -3,13 +3,12 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req CreateAWDRoundInput) (*dto.AWDRoundResp, error) {
+func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req CreateAWDRoundInput) (*AWDRoundResp, error) {
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -45,5 +44,20 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req Creat
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return contestResponseMapperInst.ToAWDRoundRespBasePtr(round), nil
+	roundResp := contestResponseMapperInst.ToAWDRoundRespBasePtr(round)
+	if roundResp == nil {
+		return nil, nil
+	}
+	return &AWDRoundResp{
+		ID:           roundResp.ID,
+		ContestID:    roundResp.ContestID,
+		RoundNumber:  roundResp.RoundNumber,
+		Status:       roundResp.Status,
+		StartedAt:    roundResp.StartedAt,
+		EndedAt:      roundResp.EndedAt,
+		AttackScore:  roundResp.AttackScore,
+		DefenseScore: roundResp.DefenseScore,
+		CreatedAt:    roundResp.CreatedAt,
+		UpdatedAt:    roundResp.UpdatedAt,
+	}, nil
 }

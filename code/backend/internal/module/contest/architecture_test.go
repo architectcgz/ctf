@@ -152,6 +152,17 @@ func TestAWDAttackLogFlowDoesNotDependOnGlobalAWDAttackLogDTO(t *testing.T) {
 	}
 }
 
+func TestAWDRoundCreateFlowDoesNotDependOnGlobalAWDRoundDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "awd_round_admin_commands.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
