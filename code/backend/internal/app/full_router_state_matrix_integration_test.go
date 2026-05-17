@@ -25,6 +25,7 @@ import (
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
+	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -863,10 +864,14 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/timeline", env.student.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var timeline dto.TimelineResp
+	var timeline teachingqueryqueries.TimelineResp
 	decodeFullRouterData(t, resp, &timeline)
 	if len(timeline.Events) == 0 {
 		t.Fatalf("expected timeline events, got %+v", timeline)
+	}
+	firstTimelineEvent := timeline.Events[0]
+	if firstTimelineEvent.ChallengeID == 0 || firstTimelineEvent.Timestamp.IsZero() {
+		t.Fatalf("expected populated timeline event fields, got %+v", firstTimelineEvent)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/recommendations", env.student.ID), nil, teacherHeaders)

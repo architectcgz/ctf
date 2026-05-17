@@ -172,6 +172,93 @@ func TestStudentReviewQueryServiceGetStudentRecommendationsMapsResult(t *testing
 	}
 }
 
+func TestStudentReviewQueryServiceGetStudentTimelineMapsFields(t *testing.T) {
+	t.Parallel()
+
+	correct := true
+	points := 120
+	timestamp := time.Date(2026, 5, 12, 9, 30, 0, 0, time.UTC)
+	repo := &studentReviewRepoStub{
+		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+			switch userID {
+			case 11:
+				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			case 101:
+				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+			default:
+				return nil, nil
+			}
+		},
+		getStudentTimelineFn: func(_ context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error) {
+			if userID != 101 || limit != 50 || offset != 5 {
+				t.Fatalf("unexpected timeline query user=%d limit=%d offset=%d", userID, limit, offset)
+			}
+			return []queryports.TimelineEventRecord{{
+				Type:        "flag_submit",
+				ChallengeID: 8,
+				Title:       "web-101",
+				Timestamp:   timestamp,
+				IsCorrect:   &correct,
+				Points:      &points,
+				Detail:      "submit flag",
+			}}, nil
+		},
+	}
+
+	service := NewStudentReviewService(repo, repo, nil)
+
+	resp, err := service.GetStudentTimeline(context.Background(), 11, model.RoleTeacher, 101, 50, 5)
+	if err != nil {
+		t.Fatalf("GetStudentTimeline() error = %v", err)
+	}
+	if len(resp.Events) != 1 {
+		t.Fatalf("expected one timeline event, got %+v", resp.Events)
+	}
+	event := resp.Events[0]
+	if event.ChallengeID != 8 || event.Title != "web-101" || event.Timestamp != timestamp {
+		t.Fatalf("unexpected timeline event identity fields: %+v", event)
+	}
+	if event.IsCorrect == nil || !*event.IsCorrect {
+		t.Fatalf("expected is_correct=true, got %+v", event.IsCorrect)
+	}
+	if event.Points == nil || *event.Points != points {
+		t.Fatalf("expected points=%d, got %+v", points, event.Points)
+	}
+}
+
+func TestStudentReviewQueryServiceGetStudentTimelineNormalizesNilEventsToEmptySlice(t *testing.T) {
+	t.Parallel()
+
+	repo := &studentReviewRepoStub{
+		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+			switch userID {
+			case 11:
+				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			case 101:
+				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+			default:
+				return nil, nil
+			}
+		},
+		getStudentTimelineFn: func(_ context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error) {
+			return nil, nil
+		},
+	}
+
+	service := NewStudentReviewService(repo, repo, nil)
+
+	resp, err := service.GetStudentTimeline(context.Background(), 11, model.RoleTeacher, 101, 20, 0)
+	if err != nil {
+		t.Fatalf("GetStudentTimeline() error = %v", err)
+	}
+	if resp.Events == nil {
+		t.Fatalf("expected empty events slice, got nil")
+	}
+	if len(resp.Events) != 0 {
+		t.Fatalf("expected no timeline events, got %+v", resp.Events)
+	}
+}
+
 func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testing.T) {
 	t.Parallel()
 

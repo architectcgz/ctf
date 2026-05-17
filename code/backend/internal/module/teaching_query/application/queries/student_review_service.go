@@ -101,7 +101,7 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 	return resp, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error) {
+func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*TimelineResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
+	return &TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
 }
 
 func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {

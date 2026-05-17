@@ -137,15 +137,15 @@ func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(
 	}
 	return dtoTeacherRecommendationWeakDimensionList
 }
-func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []dto.TimelineEvent {
-	var dtoTimelineEventList []dto.TimelineEvent
+func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []TimelineEvent {
+	var queriesTimelineEventList []TimelineEvent
 	if source != nil {
-		dtoTimelineEventList = make([]dto.TimelineEvent, len(source))
+		queriesTimelineEventList = make([]TimelineEvent, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTimelineEventList[i] = c.portsTimelineEventRecordToDtoTimelineEvent(source[i])
+			queriesTimelineEventList[i] = c.portsTimelineEventRecordToQueriesTimelineEvent(source[i])
 		}
 	}
-	return dtoTimelineEventList
+	return queriesTimelineEventList
 }
 func (c *teachingQueryResponseMapperImpl) dtoTeacherStudentItemToDtoTeacherReviewStudentRef(source dto.TeacherStudentItem) dto.TeacherReviewStudentRef {
 	var dtoTeacherReviewStudentRef dto.TeacherReviewStudentRef
@@ -196,20 +196,20 @@ func (c *teachingQueryResponseMapperImpl) portsStudentItemToDtoTeacherStudentIte
 	}
 	return dtoTeacherStudentItem
 }
-func (c *teachingQueryResponseMapperImpl) portsTimelineEventRecordToDtoTimelineEvent(source ports.TimelineEventRecord) dto.TimelineEvent {
-	var dtoTimelineEvent dto.TimelineEvent
-	dtoTimelineEvent.Type = source.Type
-	dtoTimelineEvent.ChallengeID = source.ChallengeID
-	dtoTimelineEvent.Title = source.Title
-	dtoTimelineEvent.Timestamp = CopyTime(source.Timestamp)
+func (c *teachingQueryResponseMapperImpl) portsTimelineEventRecordToQueriesTimelineEvent(source ports.TimelineEventRecord) TimelineEvent {
+	var queriesTimelineEvent TimelineEvent
+	queriesTimelineEvent.Type = source.Type
+	queriesTimelineEvent.ChallengeID = source.ChallengeID
+	queriesTimelineEvent.Title = source.Title
+	queriesTimelineEvent.Timestamp = CopyTime(source.Timestamp)
 	if source.IsCorrect != nil {
 		xbool := *source.IsCorrect
-		dtoTimelineEvent.IsCorrect = &xbool
+		queriesTimelineEvent.IsCorrect = &xbool
 	}
 	if source.Points != nil {
 		xint := *source.Points
-		dtoTimelineEvent.Points = &xint
+		queriesTimelineEvent.Points = &xint
 	}
-	dtoTimelineEvent.Detail = source.Detail
-	return dtoTimelineEvent
+	queriesTimelineEvent.Detail = source.Detail
+	return queriesTimelineEvent
 }

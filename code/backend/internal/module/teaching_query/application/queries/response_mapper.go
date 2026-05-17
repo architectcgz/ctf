@@ -22,7 +22,7 @@ type teachingQueryResponseMapper interface {
 	ToClassSummaryPtr(source *queryports.ClassSummary) *dto.TeacherClassSummaryResp
 	ToClassTrendResp(source queryports.ClassTrend) dto.TeacherClassTrendResp
 	ToClassTrendRespPtr(source *queryports.ClassTrend) *dto.TeacherClassTrendResp
-	ToTimelineEvents(source []queryports.TimelineEventRecord) []dto.TimelineEvent
+	ToTimelineEvents(source []queryports.TimelineEventRecord) []TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
 	ToTeacherRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
 	ToTeacherRecommendationWeakDimensions(source []assessmentcontracts.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
