@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -97,18 +97,18 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 		Name:         "双节点模板",
 		Description:  "web + db",
 		EntryNodeKey: "web",
-		Networks: []dto.TopologyNetworkReq{
+		Networks: []challengecontracts.TopologyNetworkReq{
 			{Key: "public", Name: "Public"},
 			{Key: "backend", Name: "Backend", Internal: true},
 		},
-		Nodes: []dto.TopologyNodeReq{
+		Nodes: []challengecontracts.TopologyNodeReq{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, Tier: model.TopologyTierPublic, NetworkKeys: []string{"public", "backend"}},
 			{Key: "db", Name: "DB", ImageID: 2, Tier: model.TopologyTierInternal, NetworkKeys: []string{"backend"}},
 		},
-		Links: []dto.TopologyLinkReq{
+		Links: []challengecontracts.TopologyLinkReq{
 			{FromNodeKey: "web", ToNodeKey: "db"},
 		},
-		Policies: []dto.TopologyTrafficPolicyReq{
+		Policies: []challengecontracts.TopologyTrafficPolicyReq{
 			{SourceNodeKey: "web", TargetNodeKey: "db", Action: model.TopologyPolicyActionAllow},
 			{SourceNodeKey: "db", TargetNodeKey: "web", Action: model.TopologyPolicyActionDeny},
 		},
@@ -180,10 +180,10 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	)
 	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, SaveChallengeTopologyInput{
 		EntryNodeKey: "web",
-		Networks: []dto.TopologyNetworkReq{
+		Networks: []challengecontracts.TopologyNetworkReq{
 			{Key: "public", Name: "Public"},
 		},
-		Nodes: []dto.TopologyNodeReq{
+		Nodes: []challengecontracts.TopologyNodeReq{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, NetworkKeys: []string{"missing"}},
 		},
 	})
@@ -221,7 +221,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	)
 	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, SaveChallengeTopologyInput{
 		EntryNodeKey: "web",
-		Nodes: []dto.TopologyNodeReq{
+		Nodes: []challengecontracts.TopologyNodeReq{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, InjectFlag: true},
 		},
 	})
@@ -248,10 +248,10 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 	saved, err := service.CreateTemplate(context.Background(), UpsertEnvironmentTemplateInput{
 		Name:         "细粒度策略模板",
 		EntryNodeKey: "web",
-		Nodes: []dto.TopologyNodeReq{
+		Nodes: []challengecontracts.TopologyNodeReq{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080},
 		},
-		Policies: []dto.TopologyTrafficPolicyReq{
+		Policies: []challengecontracts.TopologyTrafficPolicyReq{
 			{SourceNodeKey: "web", TargetNodeKey: "web", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
 	})

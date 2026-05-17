@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
 )
@@ -337,10 +337,10 @@ func BuildTopologySpecFromImportedPackage(
 	return raw, strings.TrimSpace(topology.EntryNodeKey), nil
 }
 
-func toTopologyNetworkReqs(items []ChallengePackageTopologyNetwork) []dto.TopologyNetworkReq {
-	reqs := make([]dto.TopologyNetworkReq, 0, len(items))
+func toTopologyNetworkReqs(items []ChallengePackageTopologyNetwork) []challengecontracts.TopologyNetworkReq {
+	reqs := make([]challengecontracts.TopologyNetworkReq, 0, len(items))
 	for _, item := range items {
-		reqs = append(reqs, dto.TopologyNetworkReq{
+		reqs = append(reqs, challengecontracts.TopologyNetworkReq{
 			Key:      item.Key,
 			Name:     item.Name,
 			CIDR:     item.CIDR,

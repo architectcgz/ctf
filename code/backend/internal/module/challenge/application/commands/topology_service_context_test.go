@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -358,7 +358,7 @@ func TestTopologyServiceCreateTemplateTreatsChallengeImageNotFoundAsInvalidParam
 	_, err := service.CreateTemplate(context.Background(), UpsertEnvironmentTemplateInput{
 		Name:         "Base Web",
 		EntryNodeKey: "web",
-		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 11}},
+		Nodes:        []challengecontracts.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 11}},
 	})
 	if err == nil {
 		t.Fatal("expected invalid params")
@@ -421,7 +421,7 @@ func TestTopologyServiceCreateTemplatePropagatesContextToRepositories(t *testing
 	resp, err := service.CreateTemplate(ctx, UpsertEnvironmentTemplateInput{
 		Name:         "Base Web",
 		EntryNodeKey: "web",
-		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
+		Nodes:        []challengecontracts.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
 	})
 	if err != nil {
 		t.Fatalf("CreateTemplate() error = %v", err)
@@ -476,7 +476,7 @@ func TestTopologyServiceUpdateTemplatePropagatesContextToRepositories(t *testing
 	resp, err := service.UpdateTemplate(ctx, 8, UpsertEnvironmentTemplateInput{
 		Name:         "New Web",
 		EntryNodeKey: "web",
-		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
+		Nodes:        []challengecontracts.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
 	})
 	if err != nil {
 		t.Fatalf("UpdateTemplate() error = %v", err)

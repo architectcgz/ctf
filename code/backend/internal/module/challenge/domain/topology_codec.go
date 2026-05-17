@@ -4,13 +4,12 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
-func BuildTopologySpec(entryNodeKey string, networks []dto.TopologyNetworkReq, nodes []dto.TopologyNodeReq, links []dto.TopologyLinkReq, policies []dto.TopologyTrafficPolicyReq) (string, string, error) {
+func BuildTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (string, string, error) {
 	spec, normalizedEntryNodeKey, err := normalizeTopologySpec(entryNodeKey, networks, nodes, links, policies)
 	if err != nil {
 		return "", "", err
@@ -22,7 +21,7 @@ func BuildTopologySpec(entryNodeKey string, networks []dto.TopologyNetworkReq, n
 	return raw, normalizedEntryNodeKey, nil
 }
 
-func normalizeTopologySpec(entryNodeKey string, networks []dto.TopologyNetworkReq, nodes []dto.TopologyNodeReq, links []dto.TopologyLinkReq, policies []dto.TopologyTrafficPolicyReq) (model.TopologySpec, string, error) {
+func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (model.TopologySpec, string, error) {
 	if len(nodes) == 0 {
 		return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑至少需要一个节点"))
 	}
@@ -262,7 +261,7 @@ func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []model.
 	return challengeResponseMapperInst.ToImportedTopologyPolicies(items)
 }
 
-func normalizeTopologyNetworks(networks []dto.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {
+func normalizeTopologyNetworks(networks []challengecontracts.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {
 	if len(networks) == 0 {
 		return []model.TopologyNetwork{
 				{

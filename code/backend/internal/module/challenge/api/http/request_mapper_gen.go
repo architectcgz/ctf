@@ -4,7 +4,6 @@
 package http
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	commands "ctf-platform/internal/module/challenge/application/commands"
 	queries "ctf-platform/internal/module/challenge/application/queries"
@@ -96,27 +95,27 @@ func (c *ChallengeRequestMapperImpl) ToSaveChallengeTopologyInput(source SaveCha
 	}
 	commandsSaveChallengeTopologyInput.EntryNodeKey = source.EntryNodeKey
 	if source.Networks != nil {
-		commandsSaveChallengeTopologyInput.Networks = make([]dto.TopologyNetworkReq, len(source.Networks))
+		commandsSaveChallengeTopologyInput.Networks = make([]contracts.TopologyNetworkReq, len(source.Networks))
 		for i := 0; i < len(source.Networks); i++ {
-			commandsSaveChallengeTopologyInput.Networks[i] = c.httpTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
+			commandsSaveChallengeTopologyInput.Networks[i] = c.httpTopologyNetworkReqToContractsTopologyNetworkReq(source.Networks[i])
 		}
 	}
 	if source.Nodes != nil {
-		commandsSaveChallengeTopologyInput.Nodes = make([]dto.TopologyNodeReq, len(source.Nodes))
+		commandsSaveChallengeTopologyInput.Nodes = make([]contracts.TopologyNodeReq, len(source.Nodes))
 		for j := 0; j < len(source.Nodes); j++ {
-			commandsSaveChallengeTopologyInput.Nodes[j] = c.httpTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
+			commandsSaveChallengeTopologyInput.Nodes[j] = c.httpTopologyNodeReqToContractsTopologyNodeReq(source.Nodes[j])
 		}
 	}
 	if source.Links != nil {
-		commandsSaveChallengeTopologyInput.Links = make([]dto.TopologyLinkReq, len(source.Links))
+		commandsSaveChallengeTopologyInput.Links = make([]contracts.TopologyLinkReq, len(source.Links))
 		for k := 0; k < len(source.Links); k++ {
-			commandsSaveChallengeTopologyInput.Links[k] = c.httpTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
+			commandsSaveChallengeTopologyInput.Links[k] = c.httpTopologyLinkReqToContractsTopologyLinkReq(source.Links[k])
 		}
 	}
 	if source.Policies != nil {
-		commandsSaveChallengeTopologyInput.Policies = make([]dto.TopologyTrafficPolicyReq, len(source.Policies))
+		commandsSaveChallengeTopologyInput.Policies = make([]contracts.TopologyTrafficPolicyReq, len(source.Policies))
 		for l := 0; l < len(source.Policies); l++ {
-			commandsSaveChallengeTopologyInput.Policies[l] = c.httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
+			commandsSaveChallengeTopologyInput.Policies[l] = c.httpTopologyTrafficPolicyReqToContractsTopologyTrafficPolicyReq(source.Policies[l])
 		}
 	}
 	return commandsSaveChallengeTopologyInput
@@ -172,27 +171,27 @@ func (c *ChallengeRequestMapperImpl) ToUpsertEnvironmentTemplateInput(source Ups
 	commandsUpsertEnvironmentTemplateInput.Description = source.Description
 	commandsUpsertEnvironmentTemplateInput.EntryNodeKey = source.EntryNodeKey
 	if source.Networks != nil {
-		commandsUpsertEnvironmentTemplateInput.Networks = make([]dto.TopologyNetworkReq, len(source.Networks))
+		commandsUpsertEnvironmentTemplateInput.Networks = make([]contracts.TopologyNetworkReq, len(source.Networks))
 		for i := 0; i < len(source.Networks); i++ {
-			commandsUpsertEnvironmentTemplateInput.Networks[i] = c.httpTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
+			commandsUpsertEnvironmentTemplateInput.Networks[i] = c.httpTopologyNetworkReqToContractsTopologyNetworkReq(source.Networks[i])
 		}
 	}
 	if source.Nodes != nil {
-		commandsUpsertEnvironmentTemplateInput.Nodes = make([]dto.TopologyNodeReq, len(source.Nodes))
+		commandsUpsertEnvironmentTemplateInput.Nodes = make([]contracts.TopologyNodeReq, len(source.Nodes))
 		for j := 0; j < len(source.Nodes); j++ {
-			commandsUpsertEnvironmentTemplateInput.Nodes[j] = c.httpTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
+			commandsUpsertEnvironmentTemplateInput.Nodes[j] = c.httpTopologyNodeReqToContractsTopologyNodeReq(source.Nodes[j])
 		}
 	}
 	if source.Links != nil {
-		commandsUpsertEnvironmentTemplateInput.Links = make([]dto.TopologyLinkReq, len(source.Links))
+		commandsUpsertEnvironmentTemplateInput.Links = make([]contracts.TopologyLinkReq, len(source.Links))
 		for k := 0; k < len(source.Links); k++ {
-			commandsUpsertEnvironmentTemplateInput.Links[k] = c.httpTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
+			commandsUpsertEnvironmentTemplateInput.Links[k] = c.httpTopologyLinkReqToContractsTopologyLinkReq(source.Links[k])
 		}
 	}
 	if source.Policies != nil {
-		commandsUpsertEnvironmentTemplateInput.Policies = make([]dto.TopologyTrafficPolicyReq, len(source.Policies))
+		commandsUpsertEnvironmentTemplateInput.Policies = make([]contracts.TopologyTrafficPolicyReq, len(source.Policies))
 		for l := 0; l < len(source.Policies); l++ {
-			commandsUpsertEnvironmentTemplateInput.Policies[l] = c.httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
+			commandsUpsertEnvironmentTemplateInput.Policies[l] = c.httpTopologyTrafficPolicyReqToContractsTopologyTrafficPolicyReq(source.Policies[l])
 		}
 	}
 	return commandsUpsertEnvironmentTemplateInput
@@ -218,57 +217,57 @@ func (c *ChallengeRequestMapperImpl) httpChallengeHintReqToCommandsChallengeHint
 	commandsChallengeHintInput.Content = source.Content
 	return commandsChallengeHintInput
 }
-func (c *ChallengeRequestMapperImpl) httpTopologyLinkReqToDtoTopologyLinkReq(source TopologyLinkReq) dto.TopologyLinkReq {
-	var dtoTopologyLinkReq dto.TopologyLinkReq
-	dtoTopologyLinkReq.FromNodeKey = source.FromNodeKey
-	dtoTopologyLinkReq.ToNodeKey = source.ToNodeKey
-	return dtoTopologyLinkReq
+func (c *ChallengeRequestMapperImpl) httpTopologyLinkReqToContractsTopologyLinkReq(source TopologyLinkReq) contracts.TopologyLinkReq {
+	var contractsTopologyLinkReq contracts.TopologyLinkReq
+	contractsTopologyLinkReq.FromNodeKey = source.FromNodeKey
+	contractsTopologyLinkReq.ToNodeKey = source.ToNodeKey
+	return contractsTopologyLinkReq
 }
-func (c *ChallengeRequestMapperImpl) httpTopologyNetworkReqToDtoTopologyNetworkReq(source TopologyNetworkReq) dto.TopologyNetworkReq {
-	var dtoTopologyNetworkReq dto.TopologyNetworkReq
-	dtoTopologyNetworkReq.Key = source.Key
-	dtoTopologyNetworkReq.Name = source.Name
-	dtoTopologyNetworkReq.CIDR = source.CIDR
-	dtoTopologyNetworkReq.Internal = source.Internal
-	return dtoTopologyNetworkReq
+func (c *ChallengeRequestMapperImpl) httpTopologyNetworkReqToContractsTopologyNetworkReq(source TopologyNetworkReq) contracts.TopologyNetworkReq {
+	var contractsTopologyNetworkReq contracts.TopologyNetworkReq
+	contractsTopologyNetworkReq.Key = source.Key
+	contractsTopologyNetworkReq.Name = source.Name
+	contractsTopologyNetworkReq.CIDR = source.CIDR
+	contractsTopologyNetworkReq.Internal = source.Internal
+	return contractsTopologyNetworkReq
 }
-func (c *ChallengeRequestMapperImpl) httpTopologyNodeReqToDtoTopologyNodeReq(source TopologyNodeReq) dto.TopologyNodeReq {
-	var dtoTopologyNodeReq dto.TopologyNodeReq
-	dtoTopologyNodeReq.Key = source.Key
-	dtoTopologyNodeReq.Name = source.Name
-	dtoTopologyNodeReq.ImageID = source.ImageID
-	dtoTopologyNodeReq.ServicePort = source.ServicePort
-	dtoTopologyNodeReq.ServiceProtocol = source.ServiceProtocol
-	dtoTopologyNodeReq.InjectFlag = source.InjectFlag
-	dtoTopologyNodeReq.Tier = source.Tier
+func (c *ChallengeRequestMapperImpl) httpTopologyNodeReqToContractsTopologyNodeReq(source TopologyNodeReq) contracts.TopologyNodeReq {
+	var contractsTopologyNodeReq contracts.TopologyNodeReq
+	contractsTopologyNodeReq.Key = source.Key
+	contractsTopologyNodeReq.Name = source.Name
+	contractsTopologyNodeReq.ImageID = source.ImageID
+	contractsTopologyNodeReq.ServicePort = source.ServicePort
+	contractsTopologyNodeReq.ServiceProtocol = source.ServiceProtocol
+	contractsTopologyNodeReq.InjectFlag = source.InjectFlag
+	contractsTopologyNodeReq.Tier = source.Tier
 	if source.NetworkKeys != nil {
-		dtoTopologyNodeReq.NetworkKeys = make([]string, len(source.NetworkKeys))
+		contractsTopologyNodeReq.NetworkKeys = make([]string, len(source.NetworkKeys))
 		for i := 0; i < len(source.NetworkKeys); i++ {
-			dtoTopologyNodeReq.NetworkKeys[i] = source.NetworkKeys[i]
+			contractsTopologyNodeReq.NetworkKeys[i] = source.NetworkKeys[i]
 		}
 	}
 	if source.Env != nil {
-		dtoTopologyNodeReq.Env = make(map[string]string, len(source.Env))
+		contractsTopologyNodeReq.Env = make(map[string]string, len(source.Env))
 		for key, value := range source.Env {
-			dtoTopologyNodeReq.Env[key] = value
+			contractsTopologyNodeReq.Env[key] = value
 		}
 	}
-	dtoTopologyNodeReq.Resources = c.pHttpTopologyResourcesReqToPDtoTopologyResourcesReq(source.Resources)
-	return dtoTopologyNodeReq
+	contractsTopologyNodeReq.Resources = c.pHttpTopologyResourcesReqToPContractsTopologyResourcesReq(source.Resources)
+	return contractsTopologyNodeReq
 }
-func (c *ChallengeRequestMapperImpl) httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source TopologyTrafficPolicyReq) dto.TopologyTrafficPolicyReq {
-	var dtoTopologyTrafficPolicyReq dto.TopologyTrafficPolicyReq
-	dtoTopologyTrafficPolicyReq.SourceNodeKey = source.SourceNodeKey
-	dtoTopologyTrafficPolicyReq.TargetNodeKey = source.TargetNodeKey
-	dtoTopologyTrafficPolicyReq.Action = source.Action
-	dtoTopologyTrafficPolicyReq.Protocol = source.Protocol
+func (c *ChallengeRequestMapperImpl) httpTopologyTrafficPolicyReqToContractsTopologyTrafficPolicyReq(source TopologyTrafficPolicyReq) contracts.TopologyTrafficPolicyReq {
+	var contractsTopologyTrafficPolicyReq contracts.TopologyTrafficPolicyReq
+	contractsTopologyTrafficPolicyReq.SourceNodeKey = source.SourceNodeKey
+	contractsTopologyTrafficPolicyReq.TargetNodeKey = source.TargetNodeKey
+	contractsTopologyTrafficPolicyReq.Action = source.Action
+	contractsTopologyTrafficPolicyReq.Protocol = source.Protocol
 	if source.Ports != nil {
-		dtoTopologyTrafficPolicyReq.Ports = make([]int, len(source.Ports))
+		contractsTopologyTrafficPolicyReq.Ports = make([]int, len(source.Ports))
 		for i := 0; i < len(source.Ports); i++ {
-			dtoTopologyTrafficPolicyReq.Ports[i] = source.Ports[i]
+			contractsTopologyTrafficPolicyReq.Ports[i] = source.Ports[i]
 		}
 	}
-	return dtoTopologyTrafficPolicyReq
+	return contractsTopologyTrafficPolicyReq
 }
 func (c *ChallengeRequestMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
@@ -286,14 +285,14 @@ func (c *ChallengeRequestMapperImpl) modelInstanceSharingToModelInstanceSharing(
 	}
 	return modelInstanceSharing
 }
-func (c *ChallengeRequestMapperImpl) pHttpTopologyResourcesReqToPDtoTopologyResourcesReq(source *TopologyResourcesReq) *dto.TopologyResourcesReq {
-	var pDtoTopologyResourcesReq *dto.TopologyResourcesReq
+func (c *ChallengeRequestMapperImpl) pHttpTopologyResourcesReqToPContractsTopologyResourcesReq(source *TopologyResourcesReq) *contracts.TopologyResourcesReq {
+	var pContractsTopologyResourcesReq *contracts.TopologyResourcesReq
 	if source != nil {
-		var dtoTopologyResourcesReq dto.TopologyResourcesReq
-		dtoTopologyResourcesReq.CPUQuota = (*source).CPUQuota
-		dtoTopologyResourcesReq.MemoryMB = (*source).MemoryMB
-		dtoTopologyResourcesReq.PidsLimit = (*source).PidsLimit
-		pDtoTopologyResourcesReq = &dtoTopologyResourcesReq
+		var contractsTopologyResourcesReq contracts.TopologyResourcesReq
+		contractsTopologyResourcesReq.CPUQuota = (*source).CPUQuota
+		contractsTopologyResourcesReq.MemoryMB = (*source).MemoryMB
+		contractsTopologyResourcesReq.PidsLimit = (*source).PidsLimit
+		pContractsTopologyResourcesReq = &contractsTopologyResourcesReq
 	}
-	return pDtoTopologyResourcesReq
+	return pContractsTopologyResourcesReq
 }

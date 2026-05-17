@@ -2,6 +2,45 @@ package contracts
 
 import "time"
 
+type TopologyResourcesReq struct {
+	CPUQuota  float64 `json:"cpu_quota"`
+	MemoryMB  int64   `json:"memory_mb"`
+	PidsLimit int64   `json:"pids_limit"`
+}
+
+type TopologyNetworkReq struct {
+	Key      string `json:"key"`
+	Name     string `json:"name"`
+	CIDR     string `json:"cidr"`
+	Internal bool   `json:"internal"`
+}
+
+type TopologyNodeReq struct {
+	Key             string                `json:"key"`
+	Name            string                `json:"name"`
+	ImageID         int64                 `json:"image_id"`
+	ServicePort     int                   `json:"service_port"`
+	ServiceProtocol string                `json:"service_protocol"`
+	InjectFlag      bool                  `json:"inject_flag"`
+	Tier            string                `json:"tier"`
+	NetworkKeys     []string              `json:"network_keys"`
+	Env             map[string]string     `json:"env"`
+	Resources       *TopologyResourcesReq `json:"resources"`
+}
+
+type TopologyLinkReq struct {
+	FromNodeKey string `json:"from_node_key"`
+	ToNodeKey   string `json:"to_node_key"`
+}
+
+type TopologyTrafficPolicyReq struct {
+	SourceNodeKey string `json:"source_node_key"`
+	TargetNodeKey string `json:"target_node_key"`
+	Action        string `json:"action"`
+	Protocol      string `json:"protocol"`
+	Ports         []int  `json:"ports"`
+}
+
 type TopologyResourcesResp struct {
 	CPUQuota  float64 `json:"cpu_quota,omitempty"`
 	MemoryMB  int64   `json:"memory_mb,omitempty"`
