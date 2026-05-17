@@ -45,6 +45,7 @@ frontend/dist/
 frontend/node_modules/
 code/backend/bin/
 code/backend/tmp/
+code/backend/api
 code/frontend/dist/
 code/frontend/node_modules/
 code/frontend/docs/
