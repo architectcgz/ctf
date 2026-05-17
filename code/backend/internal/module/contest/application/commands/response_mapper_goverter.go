@@ -61,8 +61,8 @@ type contestResponseMapper interface {
 	// goverter:ignore AttackerTeam
 	// goverter:ignore VictimTeam
 	// goverter:ignore Source
-	ToAWDAttackLogRespBase(source model.AWDAttackLog) dto.AWDAttackLogResp
-	ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *dto.AWDAttackLogResp
+	ToAWDAttackLogRespBase(source model.AWDAttackLog) AWDAttackLogResp
+	ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *AWDAttackLogResp
 
 	// goverter:ignore Username
 	ToContestRegistrationRespBase(source model.ContestRegistration) ContestRegistrationResp

@@ -206,11 +206,11 @@ func (stubAWDCommandService) UpsertServiceCheck(ctx context.Context, contestID, 
 	return nil, nil
 }
 
-func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*contestcmd.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
-func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*contestcmd.AWDAttackLogResp, error) {
 	return nil, nil
 }
 

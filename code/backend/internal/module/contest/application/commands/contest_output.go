@@ -58,3 +58,20 @@ type ContestAnnouncementResp struct {
 	Content   string    `json:"content,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type AWDAttackLogResp struct {
+	ID             int64     `json:"id"`
+	RoundID        int64     `json:"round_id"`
+	AttackerTeamID int64     `json:"attacker_team_id"`
+	AttackerTeam   string    `json:"attacker_team"`
+	VictimTeamID   int64     `json:"victim_team_id"`
+	VictimTeam     string    `json:"victim_team"`
+	ServiceID      int64     `json:"service_id"`
+	AWDChallengeID int64     `json:"awd_challenge_id"`
+	AttackType     string    `json:"attack_type"`
+	Source         string    `json:"source"`
+	SubmittedFlag  string    `json:"submitted_flag,omitempty"`
+	IsSuccess      bool      `json:"is_success"`
+	ScoreGained    int       `json:"score_gained"`
+	CreatedAt      time.Time `json:"created_at"`
+}

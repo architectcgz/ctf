@@ -139,6 +139,19 @@ func TestParticipationAnnouncementFlowDoesNotDependOnGlobalContestAnnouncementDT
 	}
 }
 
+func TestAWDAttackLogFlowDoesNotDependOnGlobalAWDAttackLogDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "awd_attack_log_commands.go"),
+		filepath.Join("application", "commands", "awd_attack_submit_commands.go"),
+		filepath.Join("application", "commands", "awd_attack_log_response_support.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

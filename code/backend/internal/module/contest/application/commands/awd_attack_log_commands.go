@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -13,7 +12,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
+func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*AWDAttackLogResp, error) {
 	return s.createAttackLog(ctx, contestID, roundID, req, model.AWDAttackSourceManual, nil)
 }
 
@@ -23,7 +22,7 @@ func (s *AWDService) createAttackLog(
 	req CreateAttackLogInput,
 	source string,
 	submittedByUserID *int64,
-) (*dto.AWDAttackLogResp, error) {
+) (*AWDAttackLogResp, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
 		return nil, err

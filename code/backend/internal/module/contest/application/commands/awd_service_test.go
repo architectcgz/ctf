@@ -242,11 +242,11 @@ func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, r
 	return s.commands.UpsertServiceCheck(ctx, contestID, roundID, req)
 }
 
-func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*dto.AWDAttackLogResp, error) {
+func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*contestcmd.AWDAttackLogResp, error) {
 	return s.commands.CreateAttackLog(ctx, contestID, roundID, req)
 }
 
-func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
+func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*contestcmd.AWDAttackLogResp, error) {
 	return s.commands.SubmitAttack(ctx, userID, contestID, serviceID, req)
 }
 

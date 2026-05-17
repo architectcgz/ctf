@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
@@ -14,7 +13,7 @@ func (s *AWDService) buildAttackLogResponse(
 	req CreateAttackLogInput,
 	logRecord *model.AWDAttackLog,
 	teams map[int64]*model.Team,
-) (*dto.AWDAttackLogResp, error) {
+) (*AWDAttackLogResp, error) {
 	if s.scoreboardCache != nil {
 		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)

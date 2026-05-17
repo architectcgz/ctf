@@ -20,7 +20,7 @@ func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 	return resp
 }
 
-func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *dto.AWDAttackLogResp {
+func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *AWDAttackLogResp {
 	resp := contestResponseMapperInst.ToAWDAttackLogRespBasePtr(record)
 	if resp == nil {
 		return nil

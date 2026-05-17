@@ -10,28 +10,28 @@ import (
 
 type contestResponseMapperImpl struct{}
 
-func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source model.AWDAttackLog) dto.AWDAttackLogResp {
-	var dtoAWDAttackLogResp dto.AWDAttackLogResp
-	dtoAWDAttackLogResp.ID = source.ID
-	dtoAWDAttackLogResp.RoundID = source.RoundID
-	dtoAWDAttackLogResp.AttackerTeamID = source.AttackerTeamID
-	dtoAWDAttackLogResp.VictimTeamID = source.VictimTeamID
-	dtoAWDAttackLogResp.ServiceID = source.ServiceID
-	dtoAWDAttackLogResp.AWDChallengeID = source.AWDChallengeID
-	dtoAWDAttackLogResp.AttackType = source.AttackType
-	dtoAWDAttackLogResp.SubmittedFlag = source.SubmittedFlag
-	dtoAWDAttackLogResp.IsSuccess = source.IsSuccess
-	dtoAWDAttackLogResp.ScoreGained = source.ScoreGained
-	dtoAWDAttackLogResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoAWDAttackLogResp
+func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source model.AWDAttackLog) AWDAttackLogResp {
+	var commandsAWDAttackLogResp AWDAttackLogResp
+	commandsAWDAttackLogResp.ID = source.ID
+	commandsAWDAttackLogResp.RoundID = source.RoundID
+	commandsAWDAttackLogResp.AttackerTeamID = source.AttackerTeamID
+	commandsAWDAttackLogResp.VictimTeamID = source.VictimTeamID
+	commandsAWDAttackLogResp.ServiceID = source.ServiceID
+	commandsAWDAttackLogResp.AWDChallengeID = source.AWDChallengeID
+	commandsAWDAttackLogResp.AttackType = source.AttackType
+	commandsAWDAttackLogResp.SubmittedFlag = source.SubmittedFlag
+	commandsAWDAttackLogResp.IsSuccess = source.IsSuccess
+	commandsAWDAttackLogResp.ScoreGained = source.ScoreGained
+	commandsAWDAttackLogResp.CreatedAt = CopyTime(source.CreatedAt)
+	return commandsAWDAttackLogResp
 }
-func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *dto.AWDAttackLogResp {
-	var pDtoAWDAttackLogResp *dto.AWDAttackLogResp
+func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *AWDAttackLogResp {
+	var pCommandsAWDAttackLogResp *AWDAttackLogResp
 	if source != nil {
-		dtoAWDAttackLogResp := c.ToAWDAttackLogRespBase((*source))
-		pDtoAWDAttackLogResp = &dtoAWDAttackLogResp
+		commandsAWDAttackLogResp := c.ToAWDAttackLogRespBase((*source))
+		pCommandsAWDAttackLogResp = &commandsAWDAttackLogResp
 	}
-	return pDtoAWDAttackLogResp
+	return pCommandsAWDAttackLogResp
 }
 func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp {
 	var dtoAWDRoundResp dto.AWDRoundResp

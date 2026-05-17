@@ -3,11 +3,10 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
-func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*dto.AWDAttackLogResp, error) {
+func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*AWDAttackLogResp, error) {
 	attackContext, err := s.prepareSubmitAttackContext(ctx, userID, contestID, serviceID, req)
 	if err != nil {
 		return nil, err
