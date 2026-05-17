@@ -8,7 +8,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-func contestRespFromModel(contest *model.Contest) *dto.ContestResp {
+func contestRespFromModel(contest *model.Contest) *ContestResp {
 	resp := contestResponseMapperInst.ToContestRespBasePtr(contestdomain.CloneContestWithEffectiveSchedule(contest))
 	if resp == nil {
 		return nil

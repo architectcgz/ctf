@@ -5,13 +5,12 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) CreateContest(ctx context.Context, req CreateContestInput) (*dto.ContestResp, error) {
+func (s *ContestService) CreateContest(ctx context.Context, req CreateContestInput) (*ContestResp, error) {
 	startTime := domain.NormalizeContestTime(req.StartTime)
 	endTime := domain.NormalizeContestTime(req.EndTime)
 	if !endTime.After(startTime) {

@@ -23,8 +23,8 @@ type submissionRespSource struct {
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :commands
 type contestResponseMapper interface {
-	ToContestRespBase(source model.Contest) dto.ContestResp
-	ToContestRespBasePtr(source *model.Contest) *dto.ContestResp
+	ToContestRespBase(source model.Contest) ContestResp
+	ToContestRespBasePtr(source *model.Contest) *ContestResp
 	ToContestAnnouncementRespBase(source model.ContestAnnouncement) dto.ContestAnnouncementResp
 	ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *dto.ContestAnnouncementResp
 

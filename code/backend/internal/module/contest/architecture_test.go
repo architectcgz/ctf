@@ -78,6 +78,19 @@ func TestSubmissionFlowDoesNotDependOnGlobalSubmissionDTO(t *testing.T) {
 	}
 }
 
+func TestContestCreateUpdateFlowDoesNotDependOnGlobalContestDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("api", "http", "handler.go"),
+		filepath.Join("application", "commands", "contest_create_commands.go"),
+		filepath.Join("application", "commands", "contest_update_commands.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

@@ -8,13 +8,12 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) UpdateContest(ctx context.Context, id int64, req UpdateContestInput) (*dto.ContestResp, error) {
+func (s *ContestService) UpdateContest(ctx context.Context, id int64, req UpdateContestInput) (*ContestResp, error) {
 	contest, err := s.loadContestForUpdate(ctx, id)
 	if err != nil {
 		return nil, err

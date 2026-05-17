@@ -162,27 +162,27 @@ func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *mod
 	}
 	return pDtoContestRegistrationResp
 }
-func (c *contestResponseMapperImpl) ToContestRespBase(source model.Contest) dto.ContestResp {
-	var dtoContestResp dto.ContestResp
-	dtoContestResp.ID = source.ID
-	dtoContestResp.Title = source.Title
-	dtoContestResp.Description = source.Description
-	dtoContestResp.Mode = source.Mode
-	dtoContestResp.StartTime = CopyTime(source.StartTime)
-	dtoContestResp.EndTime = CopyTime(source.EndTime)
-	dtoContestResp.FreezeTime = CopyTimePtr(source.FreezeTime)
-	dtoContestResp.Status = source.Status
-	dtoContestResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoContestResp
+func (c *contestResponseMapperImpl) ToContestRespBase(source model.Contest) ContestResp {
+	var commandsContestResp ContestResp
+	commandsContestResp.ID = source.ID
+	commandsContestResp.Title = source.Title
+	commandsContestResp.Description = source.Description
+	commandsContestResp.Mode = source.Mode
+	commandsContestResp.StartTime = CopyTime(source.StartTime)
+	commandsContestResp.EndTime = CopyTime(source.EndTime)
+	commandsContestResp.FreezeTime = CopyTimePtr(source.FreezeTime)
+	commandsContestResp.Status = source.Status
+	commandsContestResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsContestResp
 }
-func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *model.Contest) *dto.ContestResp {
-	var pDtoContestResp *dto.ContestResp
+func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *model.Contest) *ContestResp {
+	var pCommandsContestResp *ContestResp
 	if source != nil {
-		dtoContestResp := c.ToContestRespBase((*source))
-		pDtoContestResp = &dtoContestResp
+		commandsContestResp := c.ToContestRespBase((*source))
+		pCommandsContestResp = &commandsContestResp
 	}
-	return pDtoContestResp
+	return pCommandsContestResp
 }
 func (c *contestResponseMapperImpl) ToSubmissionResp(source submissionRespSource) SubmissionResp {
 	var commandsSubmissionResp SubmissionResp

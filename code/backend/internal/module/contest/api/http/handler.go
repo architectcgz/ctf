@@ -3,14 +3,13 @@ package http
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type contestService interface {
-	CreateContest(ctx context.Context, req contestcmd.CreateContestInput) (*dto.ContestResp, error)
-	UpdateContest(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*dto.ContestResp, error)
+	CreateContest(ctx context.Context, req contestcmd.CreateContestInput) (*contestcmd.ContestResp, error)
+	UpdateContest(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*contestcmd.ContestResp, error)
 }
 
 type contestQueryService interface {
