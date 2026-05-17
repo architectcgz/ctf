@@ -42,7 +42,7 @@ func (s *QueryService) ListClasses(
 	ctx context.Context,
 	requesterID int64,
 	requesterRole string,
-	query *dto.TeacherClassQuery,
+	query *TeacherClassListInput,
 ) ([]dto.TeacherClassItem, int64, int, int, error) {
 	page, size := s.normalizeClassPagination(query)
 
@@ -90,7 +90,7 @@ func (s *QueryService) ListClasses(
 	}}, 1, page, size, nil
 }
 
-func (s *QueryService) normalizeClassPagination(query *dto.TeacherClassQuery) (int, int) {
+func (s *QueryService) normalizeClassPagination(query *TeacherClassListInput) (int, int) {
 	page := 1
 	size := s.pagination.DefaultPageSize
 
@@ -117,7 +117,7 @@ func (s *QueryService) ListStudents(
 	ctx context.Context,
 	requesterID int64,
 	requesterRole string,
-	query *dto.TeacherStudentDirectoryQuery,
+	query *TeacherStudentDirectoryInput,
 ) ([]dto.TeacherStudentItem, int64, int, int, error) {
 	page, size := s.normalizeStudentPagination(query)
 
@@ -171,7 +171,7 @@ func (s *QueryService) ListStudents(
 	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), total, page, size, nil
 }
 
-func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirectoryQuery) (int, int) {
+func (s *QueryService) normalizeStudentPagination(query *TeacherStudentDirectoryInput) (int, int) {
 	page := 1
 	size := s.pagination.DefaultPageSize
 
@@ -194,7 +194,7 @@ func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirec
 	return page, size
 }
 
-func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error) {
+func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]dto.TeacherStudentItem, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)

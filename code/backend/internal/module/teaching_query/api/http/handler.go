@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"ctf-platform/pkg/response"
 )
@@ -34,13 +33,13 @@ func NewHandler(
 
 func (h *Handler) ListClasses(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherClassQuery
+	var query TeacherClassQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	items, total, page, pageSize, err := h.service.ListClasses(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	items, total, page, pageSize, err := h.service.ListClasses(c.Request.Context(), currentUser.UserID, currentUser.Role, toTeacherClassListInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -51,13 +50,13 @@ func (h *Handler) ListClasses(c *gin.Context) {
 
 func (h *Handler) ListStudents(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherStudentDirectoryQuery
+	var query TeacherStudentDirectoryQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	items, total, page, pageSize, err := h.service.ListStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	items, total, page, pageSize, err := h.service.ListStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, toTeacherStudentDirectoryInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -68,13 +67,13 @@ func (h *Handler) ListStudents(c *gin.Context) {
 
 func (h *Handler) ListClassStudents(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherStudentQuery
+	var query TeacherStudentQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	items, err := h.service.ListClassStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
+	items, err := h.service.ListClassStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), toTeacherStudentListInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -97,13 +96,13 @@ func (h *Handler) GetOverview(c *gin.Context) {
 
 func (h *Handler) GetClassSummary(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherClassInsightQuery
+	var query TeacherClassInsightQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	summary, err := h.classInsightService.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
+	summary, err := h.classInsightService.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), toTeacherClassInsightInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -114,13 +113,13 @@ func (h *Handler) GetClassSummary(c *gin.Context) {
 
 func (h *Handler) GetClassTrend(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherClassInsightQuery
+	var query TeacherClassInsightQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	trend, err := h.classInsightService.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
+	trend, err := h.classInsightService.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), toTeacherClassInsightInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -131,13 +130,13 @@ func (h *Handler) GetClassTrend(c *gin.Context) {
 
 func (h *Handler) GetClassReview(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherClassInsightQuery
+	var query TeacherClassInsightQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	review, err := h.classInsightService.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
+	review, err := h.classInsightService.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), toTeacherClassInsightInput(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -225,13 +224,13 @@ func (h *Handler) GetStudentEvidence(c *gin.Context) {
 		return
 	}
 
-	var req dto.TeacherEvidenceQuery
+	var req TeacherEvidenceQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	evidence, err := h.studentReviewService.GetStudentEvidence(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
+	evidence, err := h.studentReviewService.GetStudentEvidence(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, toTeacherEvidenceInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -248,13 +247,13 @@ func (h *Handler) GetStudentAttackSessions(c *gin.Context) {
 		return
 	}
 
-	var req dto.TeacherAttackSessionQuery
+	var req TeacherAttackSessionQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	sessions, err := h.studentReviewService.GetStudentAttackSessions(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, &req)
+	sessions, err := h.studentReviewService.GetStudentAttackSessions(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, toTeacherAttackSessionInput(req))
 	if err != nil {
 		response.FromError(c, err)
 		return

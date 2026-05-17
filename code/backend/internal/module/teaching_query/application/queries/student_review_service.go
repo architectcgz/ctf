@@ -115,7 +115,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 	return &TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
+func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*dto.TeacherEvidenceResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -162,19 +162,21 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 	return resp, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherAttackSessionQuery) (*dto.TeacherAttackSessionResp, error) {
+func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherAttackSessionInput) (*dto.TeacherAttackSessionResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
 
-	evidenceQuery := buildEvidenceQuery(&dto.TeacherEvidenceQuery{
-		ChallengeID: query.ChallengeID,
-		ContestID:   query.ContestID,
-		RoundID:     query.RoundID,
-		Limit:       0,
-		Offset:      0,
-	})
+	var evidenceInput *TeacherEvidenceInput
+	if query != nil {
+		evidenceInput = &TeacherEvidenceInput{
+			ChallengeID: query.ChallengeID,
+			ContestID:   query.ContestID,
+			RoundID:     query.RoundID,
+		}
+	}
+	evidenceQuery := buildEvidenceQuery(evidenceInput)
 	events, err := s.repo.GetStudentEvidence(ctx, student.ID, evidenceQuery)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -207,7 +209,7 @@ func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context
 
 const attackSessionGap = time.Hour
 
-func buildEvidenceQuery(query *dto.TeacherEvidenceQuery) teachingevidence.Query {
+func buildEvidenceQuery(query *TeacherEvidenceInput) teachingevidence.Query {
 	if query == nil {
 		return teachingevidence.Query{}
 	}
@@ -278,7 +280,7 @@ func paginateEvidenceEvents(events []queryports.EvidenceEventRecord, query teach
 	return events[offset:end]
 }
 
-func filterAttackSessionEvents(events []queryports.EvidenceEventRecord, query *dto.TeacherAttackSessionQuery) []queryports.EvidenceEventRecord {
+func filterAttackSessionEvents(events []queryports.EvidenceEventRecord, query *TeacherAttackSessionInput) []queryports.EvidenceEventRecord {
 	if query == nil {
 		return events
 	}
@@ -412,7 +414,7 @@ func summarizeAttackSessions(sessions []dto.TeacherAttackSession) dto.TeacherAtt
 	return summary
 }
 
-func paginateAttackSessions(sessions []dto.TeacherAttackSession, query *dto.TeacherAttackSessionQuery) []dto.TeacherAttackSession {
+func paginateAttackSessions(sessions []dto.TeacherAttackSession, query *TeacherAttackSessionInput) []dto.TeacherAttackSession {
 	limit := 20
 	offset := 0
 	if query != nil {

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -288,7 +287,7 @@ func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testi
 
 	service := NewStudentReviewService(repo, repo, nil)
 
-	resp, err := service.GetStudentAttackSessions(context.Background(), 11, model.RoleTeacher, 101, &dto.TeacherAttackSessionQuery{
+	resp, err := service.GetStudentAttackSessions(context.Background(), 11, model.RoleTeacher, 101, &TeacherAttackSessionInput{
 		WithEvents: &withEvents,
 	})
 	if err != nil {

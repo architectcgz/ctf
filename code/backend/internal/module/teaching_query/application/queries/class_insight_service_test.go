@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -276,7 +275,7 @@ func TestClassInsightQueryServiceUsesSharedCustomWindow(t *testing.T) {
 	}
 
 	service := NewClassInsightService(repo, repo, nil, nil)
-	_, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", &dto.TeacherClassInsightQuery{
+	_, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", &TeacherClassInsightInput{
 		FromDate: "2026-05-01",
 		ToDate:   "2026-05-03",
 	})

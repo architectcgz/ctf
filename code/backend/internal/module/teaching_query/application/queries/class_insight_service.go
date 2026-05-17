@@ -45,7 +45,7 @@ func NewClassInsightService(
 	}
 }
 
-func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassSummaryResp, error) {
+func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassSummaryResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -66,7 +66,7 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 	return teachingQueryMapper.ToClassSummaryPtr(summary), nil
 }
 
-func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassTrendResp, error) {
+func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassTrendResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -87,7 +87,7 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 	return teachingQueryMapper.ToClassTrendRespPtr(trend), nil
 }
 
-func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherClassInsightQuery) (*dto.TeacherClassReviewResp, error) {
+func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassReviewResp, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -135,7 +135,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 	}, classreview.RecommendationResolverFunc(s.matchingStudentRecommendation)), nil
 }
 
-func (s *ClassInsightQueryService) parseWindow(query *dto.TeacherClassInsightQuery) (classwindow.Range, error) {
+func (s *ClassInsightQueryService) parseWindow(query *TeacherClassInsightInput) (classwindow.Range, error) {
 	if query == nil {
 		return classwindow.Parse(queryNow(), "", "")
 	}
