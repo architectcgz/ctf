@@ -10,6 +10,7 @@ handler / service / cache / contract / api
 - `code/backend/internal/module/practice/api/http/progress_dto.go`
 - `code/backend/internal/module/practice/api/http/response_mapper.go`
 - `code/backend/internal/module/practice/api/http/response_mapper_assign.go`
+- `code/backend/internal/module/practice/api/http/response_mapper_gen.go`
 - `code/backend/internal/module/practice/application/queries/*.go`
 - `code/backend/internal/module/practice/ports/*.go`
 - `code/backend/internal/module/practice/infrastructure/progress_cache.go`
@@ -47,6 +48,7 @@ refactor_existing
 - `code/backend/internal/module/practice/api/http/progress_dto.go`
 - `code/backend/internal/module/practice/api/http/response_mapper.go`
 - `code/backend/internal/module/practice/api/http/response_mapper_assign.go`
+- `code/backend/internal/module/practice/api/http/response_mapper_gen.go`
 - `code/backend/internal/module/practice/application/queries/*.go`
 - `code/backend/internal/module/practice/ports/*.go`
 - `code/backend/internal/module/practice/infrastructure/progress_cache.go`
