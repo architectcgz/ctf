@@ -31,8 +31,3 @@ hints:
     title: Hint 2
     cost_points: 40
     content: "有些可疑变量的值不是只编码了一层。"
-
-runtime:
-  type: container
-  image:
-    ref: 127.0.0.1:5000/jeopardy/web-source-audit-double-wrap-01:20260409

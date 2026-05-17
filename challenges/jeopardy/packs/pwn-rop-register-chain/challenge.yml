@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-rop-register-chain
+  title: "Pwn 训练：寄存器调用链"
+  category: pwn
+  difficulty: hard
+  points: 300
+  tags:
+    - topic:rop-register-chain
+    - kp:sysv-abi
+    - stack:linux
+    - tool:nm
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{pwn_rop_register_chain}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "这题不是直接 ret2win，要按 x86_64 SysV 调用约定把参数放进寄存器。"
+  - level: 2
+    title: Hint 2
+    content: "二进制里留了几段很短的 gadget，先把它们和目标函数地址都找出来。"
+
+runtime:
+  type: none

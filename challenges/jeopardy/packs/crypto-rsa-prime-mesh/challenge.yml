@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-rsa-prime-mesh
+  title: "Crypto 训练：共享素数网格"
+  category: crypto
+  difficulty: insane
+  points: 500
+  tags:
+    - topic:rsa-shared-prime
+    - kp:gcd-graph
+    - kp:rsa-factorization
+    - tool:python
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/mesh.json
+      name: mesh.json
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_rsa_prime_mesh}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "几份公钥不是独立生成的，先检查模数之间是否存在公共因子。"
+  - level: 2
+    title: Hint 2
+    content: "解密之后拿到的还不是最终明文，真正的拼接顺序藏在 shared prime 的指纹里。"
+
+runtime:
+  type: none

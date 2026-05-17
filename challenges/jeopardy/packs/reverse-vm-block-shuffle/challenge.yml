@@ -1,0 +1,38 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-vm-block-shuffle
+  title: "Reverse 训练：乱序基本块虚拟机"
+  category: reverse
+  difficulty: insane
+  points: 500
+  tags:
+    - topic:vm-obfuscation
+    - kp:block-reorder
+    - kp:bytecode-inversion
+    - tool:objdump
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+    - path: attachments/program.blk
+      name: program.blk
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_vm_block_shuffle}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "校验逻辑不在代码段里完整展开，而是被搬进了外部 block blob。"
+  - level: 2
+    title: Hint 2
+    content: "先搞清记录解码方式，再按 next 指针恢复执行顺序，最后逆向每一步变换。"
+
+runtime:
+  type: none

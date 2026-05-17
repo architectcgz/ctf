@@ -1,0 +1,36 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-mobile-timeline-fusion
+  title: "取证训练：移动时间线拼接"
+  category: forensics
+  difficulty: hard
+  points: 300
+  tags:
+    - topic:mobile-timeline
+    - kp:artifact-correlation
+    - kp:timezone-normalization
+    - tool:sqlite3
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/case-evidence.zip
+      name: case-evidence.zip
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_mobile_timeline_fusion}
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: "先找出被删聊天里留下的 incident 标记和时间窗口。"
+  - level: 2
+    title: Hint 2
+    content: "几份证据的时区不一致，必须统一到 UTC 再排序。"
+
+runtime:
+  type: none

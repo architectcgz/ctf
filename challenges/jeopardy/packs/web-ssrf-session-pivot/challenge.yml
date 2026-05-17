@@ -1,0 +1,38 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-ssrf-session-pivot
+  title: "Web 训练：内网会话接力"
+  category: web
+  difficulty: insane
+  points: 500
+  tags:
+    - topic:ssrf
+    - topic:session-forgery
+    - stack:python
+    - kp:url-parser
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 支持系统的抓取器做的是字符串前缀检查，不是真正的主机校验。
+  - level: 2
+    title: Hint 2
+    content: 如果能拿到会话签名密钥，管理员导出接口本身没有第二层防线。
+
+runtime:
+  type: container
+  image:
+    tag: 20260514-insane
+  service:
+    protocol: http
+    port: 8080

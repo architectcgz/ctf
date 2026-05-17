@@ -1,0 +1,40 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-rop-register-vault
+  title: "Pwn 训练：寄存器金库"
+  category: pwn
+  difficulty: hard
+  points: 300
+  tags:
+    - topic:tcp-service
+    - kp:rop
+    - kp:sysv-abi
+    - stack:linux
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.bin
+      name: challenge.bin
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 先从附件里把 `reveal` 和几段 `pop reg ; ret` gadget 的地址找出来。
+  - level: 2
+    title: Hint 2
+    content: 这题不是单纯 ret2win，目标函数会检查 `rdi`、`rsi`、`rdx` 三个寄存器参数。
+
+runtime:
+  type: container
+  image:
+    tag: 20260514-hard
+  service:
+    protocol: tcp
+    port: 8080
