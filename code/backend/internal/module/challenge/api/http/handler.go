@@ -62,7 +62,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, challengeResponseMapper.ToChallengeResp(resp))
 }
 
 func (h *Handler) UpdateChallenge(c *gin.Context) {
@@ -114,7 +114,7 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, challengeResponseMapper.ToChallengeResp(resp))
 }
 
 func (h *Handler) ListChallenges(c *gin.Context) {
@@ -131,7 +131,7 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, mapChallengePageResult(result))
 }
 
 func (h *Handler) PreviewChallengeImport(c *gin.Context) {
@@ -192,7 +192,7 @@ func (h *Handler) CommitChallengeImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, &dto.ChallengeImportCommitResp{Challenge: resp})
+	response.Success(c, mapChallengeImportCommitResp(resp))
 }
 
 func (h *Handler) ExportChallengePackage(c *gin.Context) {
@@ -294,7 +294,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, mapChallengeListItemPageResult(result))
 }
 
 // GetPublishedChallenge 靶场详情（学员视图）
@@ -311,7 +311,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, detail)
+	response.Success(c, challengeResponseMapper.ToChallengeDetailResp(detail))
 }
 
 // DownloadAttachment 下载导入题包中的附件文件。

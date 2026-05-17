@@ -1,6 +1,9 @@
 package http
 
-import "time"
+import (
+	"ctf-platform/internal/model"
+	"time"
+)
 
 type PageResult[T any] struct {
 	List  []T   `json:"list"`
@@ -39,6 +42,71 @@ type FlagResp struct {
 	FlagRegex  string `json:"flag_regex,omitempty"`
 	FlagPrefix string `json:"flag_prefix,omitempty"`
 	Configured bool   `json:"configured"`
+}
+
+type ChallengeHintAdminResp struct {
+	ID      int64  `json:"id"`
+	Level   int    `json:"level"`
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content"`
+}
+
+type ChallengeResp struct {
+	ID              int64                     `json:"id"`
+	Title           string                    `json:"title"`
+	Description     string                    `json:"description"`
+	Category        string                    `json:"category"`
+	Difficulty      string                    `json:"difficulty"`
+	Points          int                       `json:"points"`
+	ImageID         int64                     `json:"image_id"`
+	AttachmentURL   string                    `json:"attachment_url,omitempty"`
+	InstanceSharing model.InstanceSharing     `json:"instance_sharing"`
+	Hints           []*ChallengeHintAdminResp `json:"hints,omitempty"`
+	Status          string                    `json:"status"`
+	CreatedBy       *int64                    `json:"created_by,omitempty"`
+	CreatedAt       time.Time                 `json:"created_at"`
+	UpdatedAt       time.Time                 `json:"updated_at"`
+}
+
+type ChallengeListItem struct {
+	ID            int64     `json:"id"`
+	Title         string    `json:"title"`
+	Category      string    `json:"category"`
+	Difficulty    string    `json:"difficulty"`
+	Points        int       `json:"points"`
+	SolvedCount   int64     `json:"solved_count"`
+	TotalAttempts int64     `json:"total_attempts"`
+	IsSolved      bool      `json:"is_solved"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type ChallengeHintResp struct {
+	ID      int64  `json:"id"`
+	Level   int    `json:"level"`
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+type ChallengeDetailResp struct {
+	ID              int64                 `json:"id"`
+	Title           string                `json:"title"`
+	Description     string                `json:"description"`
+	Category        string                `json:"category"`
+	Difficulty      string                `json:"difficulty"`
+	Points          int                   `json:"points"`
+	NeedTarget      bool                  `json:"need_target"`
+	FlagType        string                `json:"flag_type"`
+	InstanceSharing model.InstanceSharing `json:"instance_sharing"`
+	AttachmentURL   string                `json:"attachment_url,omitempty"`
+	Hints           []*ChallengeHintResp  `json:"hints"`
+	SolvedCount     int64                 `json:"solved_count"`
+	TotalAttempts   int64                 `json:"total_attempts"`
+	IsSolved        bool                  `json:"is_solved"`
+	CreatedAt       time.Time             `json:"created_at"`
+}
+
+type ChallengeImportCommitResp struct {
+	Challenge *ChallengeResp `json:"challenge"`
 }
 
 type ChallengeImportImageDeliveryResp struct {

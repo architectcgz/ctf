@@ -3,7 +3,10 @@
 
 package http
 
-import dto "ctf-platform/internal/dto"
+import (
+	dto "ctf-platform/internal/dto"
+	model "ctf-platform/internal/model"
+)
 
 type ChallengeResponseMapperImpl struct{}
 
@@ -92,6 +95,101 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespList(source []*dto.AWDCh
 		}
 	}
 	return pHttpAWDChallengeRespList
+}
+func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp {
+	var pHttpChallengeDetailResp *ChallengeDetailResp
+	if source != nil {
+		var httpChallengeDetailResp ChallengeDetailResp
+		httpChallengeDetailResp.ID = (*source).ID
+		httpChallengeDetailResp.Title = (*source).Title
+		httpChallengeDetailResp.Description = (*source).Description
+		httpChallengeDetailResp.Category = (*source).Category
+		httpChallengeDetailResp.Difficulty = (*source).Difficulty
+		httpChallengeDetailResp.Points = (*source).Points
+		httpChallengeDetailResp.NeedTarget = (*source).NeedTarget
+		httpChallengeDetailResp.FlagType = (*source).FlagType
+		httpChallengeDetailResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing((*source).InstanceSharing)
+		httpChallengeDetailResp.AttachmentURL = (*source).AttachmentURL
+		if (*source).Hints != nil {
+			httpChallengeDetailResp.Hints = make([]*ChallengeHintResp, len((*source).Hints))
+			for i := 0; i < len((*source).Hints); i++ {
+				httpChallengeDetailResp.Hints[i] = c.pDtoChallengeHintRespToPHttpChallengeHintResp((*source).Hints[i])
+			}
+		}
+		httpChallengeDetailResp.SolvedCount = (*source).SolvedCount
+		httpChallengeDetailResp.TotalAttempts = (*source).TotalAttempts
+		httpChallengeDetailResp.IsSolved = (*source).IsSolved
+		httpChallengeDetailResp.CreatedAt = CopyTime((*source).CreatedAt)
+		pHttpChallengeDetailResp = &httpChallengeDetailResp
+	}
+	return pHttpChallengeDetailResp
+}
+func (c *ChallengeResponseMapperImpl) ToChallengeListItemResp(source *dto.ChallengeListItem) *ChallengeListItem {
+	var pHttpChallengeListItem *ChallengeListItem
+	if source != nil {
+		var httpChallengeListItem ChallengeListItem
+		httpChallengeListItem.ID = (*source).ID
+		httpChallengeListItem.Title = (*source).Title
+		httpChallengeListItem.Category = (*source).Category
+		httpChallengeListItem.Difficulty = (*source).Difficulty
+		httpChallengeListItem.Points = (*source).Points
+		httpChallengeListItem.SolvedCount = (*source).SolvedCount
+		httpChallengeListItem.TotalAttempts = (*source).TotalAttempts
+		httpChallengeListItem.IsSolved = (*source).IsSolved
+		httpChallengeListItem.CreatedAt = CopyTime((*source).CreatedAt)
+		pHttpChallengeListItem = &httpChallengeListItem
+	}
+	return pHttpChallengeListItem
+}
+func (c *ChallengeResponseMapperImpl) ToChallengeListItemRespList(source []*dto.ChallengeListItem) []*ChallengeListItem {
+	var pHttpChallengeListItemList []*ChallengeListItem
+	if source != nil {
+		pHttpChallengeListItemList = make([]*ChallengeListItem, len(source))
+		for i := 0; i < len(source); i++ {
+			pHttpChallengeListItemList[i] = c.ToChallengeListItemResp(source[i])
+		}
+	}
+	return pHttpChallengeListItemList
+}
+func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *dto.ChallengeResp) *ChallengeResp {
+	var pHttpChallengeResp *ChallengeResp
+	if source != nil {
+		var httpChallengeResp ChallengeResp
+		httpChallengeResp.ID = (*source).ID
+		httpChallengeResp.Title = (*source).Title
+		httpChallengeResp.Description = (*source).Description
+		httpChallengeResp.Category = (*source).Category
+		httpChallengeResp.Difficulty = (*source).Difficulty
+		httpChallengeResp.Points = (*source).Points
+		httpChallengeResp.ImageID = (*source).ImageID
+		httpChallengeResp.AttachmentURL = (*source).AttachmentURL
+		httpChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing((*source).InstanceSharing)
+		if (*source).Hints != nil {
+			httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len((*source).Hints))
+			for i := 0; i < len((*source).Hints); i++ {
+				httpChallengeResp.Hints[i] = c.pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp((*source).Hints[i])
+			}
+		}
+		httpChallengeResp.Status = (*source).Status
+		if (*source).CreatedBy != nil {
+			xint64 := *(*source).CreatedBy
+			httpChallengeResp.CreatedBy = &xint64
+		}
+		httpChallengeResp.CreatedAt = CopyTime((*source).CreatedAt)
+		httpChallengeResp.UpdatedAt = CopyTime((*source).UpdatedAt)
+		pHttpChallengeResp = &httpChallengeResp
+	}
+	return pHttpChallengeResp
+}
+func (c *ChallengeResponseMapperImpl) ToChallengeRespList(source []*dto.ChallengeResp) []*ChallengeResp {
+	var pHttpChallengeRespList []*ChallengeResp
+	if source != nil {
+		pHttpChallengeRespList = make([]*ChallengeResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pHttpChallengeRespList[i] = c.ToChallengeResp(source[i])
+		}
+	}
+	return pHttpChallengeRespList
 }
 func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp {
 	var pHttpChallengeTopologyResp *ChallengeTopologyResp
@@ -394,6 +492,46 @@ func (c *ChallengeResponseMapperImpl) dtoTopologyTrafficPolicyRespToHttpTopology
 		}
 	}
 	return httpTopologyTrafficPolicyResp
+}
+func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
+	var modelInstanceSharing model.InstanceSharing
+	switch source {
+	case model.InstanceSharingPerTeam:
+		modelInstanceSharing = model.InstanceSharingPerTeam
+	case model.InstanceSharingPerUser:
+		modelInstanceSharing = model.InstanceSharingPerUser
+	case model.InstanceSharingShared:
+		modelInstanceSharing = model.InstanceSharingShared
+	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
+	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
+	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
+	default: // ignored
+	}
+	return modelInstanceSharing
+}
+func (c *ChallengeResponseMapperImpl) pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp(source *dto.ChallengeHintAdminResp) *ChallengeHintAdminResp {
+	var pHttpChallengeHintAdminResp *ChallengeHintAdminResp
+	if source != nil {
+		var httpChallengeHintAdminResp ChallengeHintAdminResp
+		httpChallengeHintAdminResp.ID = (*source).ID
+		httpChallengeHintAdminResp.Level = (*source).Level
+		httpChallengeHintAdminResp.Title = (*source).Title
+		httpChallengeHintAdminResp.Content = (*source).Content
+		pHttpChallengeHintAdminResp = &httpChallengeHintAdminResp
+	}
+	return pHttpChallengeHintAdminResp
+}
+func (c *ChallengeResponseMapperImpl) pDtoChallengeHintRespToPHttpChallengeHintResp(source *dto.ChallengeHintResp) *ChallengeHintResp {
+	var pHttpChallengeHintResp *ChallengeHintResp
+	if source != nil {
+		var httpChallengeHintResp ChallengeHintResp
+		httpChallengeHintResp.ID = (*source).ID
+		httpChallengeHintResp.Level = (*source).Level
+		httpChallengeHintResp.Title = (*source).Title
+		httpChallengeHintResp.Content = (*source).Content
+		pHttpChallengeHintResp = &httpChallengeHintResp
+	}
+	return pHttpChallengeHintResp
 }
 func (c *ChallengeResponseMapperImpl) pDtoTopologyResourcesRespToPHttpTopologyResourcesResp(source *dto.TopologyResourcesResp) *TopologyResourcesResp {
 	var pHttpTopologyResourcesResp *TopologyResourcesResp
