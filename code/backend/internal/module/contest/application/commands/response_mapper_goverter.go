@@ -25,8 +25,8 @@ type submissionRespSource struct {
 type contestResponseMapper interface {
 	ToContestRespBase(source model.Contest) ContestResp
 	ToContestRespBasePtr(source *model.Contest) *ContestResp
-	ToContestAnnouncementRespBase(source model.ContestAnnouncement) dto.ContestAnnouncementResp
-	ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *dto.ContestAnnouncementResp
+	ToContestAnnouncementRespBase(source model.ContestAnnouncement) ContestAnnouncementResp
+	ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *ContestAnnouncementResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category

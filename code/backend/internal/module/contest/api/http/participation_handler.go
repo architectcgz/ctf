@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
@@ -11,7 +10,7 @@ import (
 type participationCommandService interface {
 	RegisterContest(ctx context.Context, contestID, userID int64) error
 	ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req contestcmd.ReviewRegistrationInput) (*contestcmd.ContestRegistrationResp, error)
-	CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req contestcmd.CreateAnnouncementInput) (*dto.ContestAnnouncementResp, error)
+	CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req contestcmd.CreateAnnouncementInput) (*contestcmd.ContestAnnouncementResp, error)
 	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error
 }
 

@@ -100,21 +100,21 @@ func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *model
 	}
 	return pDtoContestAWDServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.ContestAnnouncement) dto.ContestAnnouncementResp {
-	var dtoContestAnnouncementResp dto.ContestAnnouncementResp
-	dtoContestAnnouncementResp.ID = source.ID
-	dtoContestAnnouncementResp.Title = source.Title
-	dtoContestAnnouncementResp.Content = source.Content
-	dtoContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoContestAnnouncementResp
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.ContestAnnouncement) ContestAnnouncementResp {
+	var commandsContestAnnouncementResp ContestAnnouncementResp
+	commandsContestAnnouncementResp.ID = source.ID
+	commandsContestAnnouncementResp.Title = source.Title
+	commandsContestAnnouncementResp.Content = source.Content
+	commandsContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
+	return commandsContestAnnouncementResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *dto.ContestAnnouncementResp {
-	var pDtoContestAnnouncementResp *dto.ContestAnnouncementResp
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *ContestAnnouncementResp {
+	var pCommandsContestAnnouncementResp *ContestAnnouncementResp
 	if source != nil {
-		dtoContestAnnouncementResp := c.ToContestAnnouncementRespBase((*source))
-		pDtoContestAnnouncementResp = &dtoContestAnnouncementResp
+		commandsContestAnnouncementResp := c.ToContestAnnouncementRespBase((*source))
+		pCommandsContestAnnouncementResp = &commandsContestAnnouncementResp
 	}
-	return pDtoContestAnnouncementResp
+	return pCommandsContestAnnouncementResp
 }
 func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source model.ContestChallenge) ContestChallengeResp {
 	var commandsContestChallengeResp ContestChallengeResp
