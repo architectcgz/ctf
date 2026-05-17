@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -21,7 +20,7 @@ func storeAWDCheckerPreviewToken(
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
-	result *dto.AWDCheckerPreviewResp,
+	result *AWDCheckerPreviewResp,
 ) (string, error) {
 	if result == nil {
 		return "", nil

@@ -12,7 +12,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -661,13 +660,13 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
-		&dto.AWDCheckerPreviewResp{
+		&AWDCheckerPreviewResp{
 			CheckerType:   model.AWDCheckerTypeHTTPStandard,
 			ServiceStatus: model.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
-			PreviewContext: dto.AWDCheckerPreviewContextResp{
+			PreviewContext: AWDCheckerPreviewContextResp{
 				AccessURL:      "http://preview.internal",
 				PreviewFlag:    "flag{preview}",
 				AWDChallengeID: 1006,
@@ -867,13 +866,13 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
-		&dto.AWDCheckerPreviewResp{
+		&AWDCheckerPreviewResp{
 			CheckerType:   model.AWDCheckerTypeHTTPStandard,
 			ServiceStatus: model.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
-			PreviewContext: dto.AWDCheckerPreviewContextResp{
+			PreviewContext: AWDCheckerPreviewContextResp{
 				ServiceID:      resp.ID,
 				AccessURL:      "http://preview-update.internal",
 				PreviewFlag:    "flag{preview}",
@@ -1120,13 +1119,13 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
-		&dto.AWDCheckerPreviewResp{
+		&AWDCheckerPreviewResp{
 			CheckerType:   model.AWDCheckerTypeHTTPStandard,
 			ServiceStatus: model.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
-			PreviewContext: dto.AWDCheckerPreviewContextResp{
+			PreviewContext: AWDCheckerPreviewContextResp{
 				AccessURL:      "http://preview-token-env.internal",
 				PreviewFlag:    "flag{preview}",
 				AWDChallengeID: 2106,

@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
@@ -14,10 +13,10 @@ import (
 // goverter:output:package :commands
 type awdCheckerPreviewResultMapper interface {
 	ToStringAnyMap(source map[string]any) map[string]any
-	ToDomain(source dto.AWDCheckerPreviewResp) contestdomain.AWDCheckerPreviewResult
-	ToDomainPtr(source *dto.AWDCheckerPreviewResp) *contestdomain.AWDCheckerPreviewResult
-	ToDTO(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
-	ToDTOPtr(source *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp
+	ToDomain(source AWDCheckerPreviewResp) contestdomain.AWDCheckerPreviewResult
+	ToDomainPtr(source *AWDCheckerPreviewResp) *contestdomain.AWDCheckerPreviewResult
+	ToDTO(source contestdomain.AWDCheckerPreviewResult) AWDCheckerPreviewResp
+	ToDTOPtr(source *contestdomain.AWDCheckerPreviewResult) *AWDCheckerPreviewResp
 }
 
 var awdPreviewResultMapper awdCheckerPreviewResultMapper

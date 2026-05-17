@@ -4,40 +4,39 @@
 package commands
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	domain "ctf-platform/internal/module/contest/domain"
 )
 
 type awdCheckerPreviewResultMapperImpl struct{}
 
-func (c *awdCheckerPreviewResultMapperImpl) ToDTO(source domain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp {
-	var dtoAWDCheckerPreviewResp dto.AWDCheckerPreviewResp
-	dtoAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
-	dtoAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
-	dtoAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
-	dtoAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source.PreviewContext)
-	dtoAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
-	return dtoAWDCheckerPreviewResp
+func (c *awdCheckerPreviewResultMapperImpl) ToDTO(source domain.AWDCheckerPreviewResult) AWDCheckerPreviewResp {
+	var commandsAWDCheckerPreviewResp AWDCheckerPreviewResp
+	commandsAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	commandsAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
+	commandsAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
+	commandsAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp(source.PreviewContext)
+	commandsAWDCheckerPreviewResp.PreviewToken = source.PreviewToken
+	return commandsAWDCheckerPreviewResp
 }
-func (c *awdCheckerPreviewResultMapperImpl) ToDTOPtr(source *domain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp {
-	var pDtoAWDCheckerPreviewResp *dto.AWDCheckerPreviewResp
+func (c *awdCheckerPreviewResultMapperImpl) ToDTOPtr(source *domain.AWDCheckerPreviewResult) *AWDCheckerPreviewResp {
+	var pCommandsAWDCheckerPreviewResp *AWDCheckerPreviewResp
 	if source != nil {
-		dtoAWDCheckerPreviewResp := c.ToDTO((*source))
-		pDtoAWDCheckerPreviewResp = &dtoAWDCheckerPreviewResp
+		commandsAWDCheckerPreviewResp := c.ToDTO((*source))
+		pCommandsAWDCheckerPreviewResp = &commandsAWDCheckerPreviewResp
 	}
-	return pDtoAWDCheckerPreviewResp
+	return pCommandsAWDCheckerPreviewResp
 }
-func (c *awdCheckerPreviewResultMapperImpl) ToDomain(source dto.AWDCheckerPreviewResp) domain.AWDCheckerPreviewResult {
+func (c *awdCheckerPreviewResultMapperImpl) ToDomain(source AWDCheckerPreviewResp) domain.AWDCheckerPreviewResult {
 	var domainAWDCheckerPreviewResult domain.AWDCheckerPreviewResult
 	domainAWDCheckerPreviewResult.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
 	domainAWDCheckerPreviewResult.ServiceStatus = source.ServiceStatus
 	domainAWDCheckerPreviewResult.CheckResult = c.ToStringAnyMap(source.CheckResult)
-	domainAWDCheckerPreviewResult.PreviewContext = c.dtoAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source.PreviewContext)
+	domainAWDCheckerPreviewResult.PreviewContext = c.commandsAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source.PreviewContext)
 	domainAWDCheckerPreviewResult.PreviewToken = source.PreviewToken
 	return domainAWDCheckerPreviewResult
 }
-func (c *awdCheckerPreviewResultMapperImpl) ToDomainPtr(source *dto.AWDCheckerPreviewResp) *domain.AWDCheckerPreviewResult {
+func (c *awdCheckerPreviewResultMapperImpl) ToDomainPtr(source *AWDCheckerPreviewResp) *domain.AWDCheckerPreviewResult {
 	var pDomainAWDCheckerPreviewResult *domain.AWDCheckerPreviewResult
 	if source != nil {
 		domainAWDCheckerPreviewResult := c.ToDomain((*source))
@@ -55,17 +54,7 @@ func (c *awdCheckerPreviewResultMapperImpl) ToStringAnyMap(source map[string]int
 	}
 	return mapStringUnknown
 }
-func (c *awdCheckerPreviewResultMapperImpl) domainAWDCheckerPreviewContextToDtoAWDCheckerPreviewContextResp(source domain.AWDCheckerPreviewContext) dto.AWDCheckerPreviewContextResp {
-	var dtoAWDCheckerPreviewContextResp dto.AWDCheckerPreviewContextResp
-	dtoAWDCheckerPreviewContextResp.ServiceID = source.ServiceID
-	dtoAWDCheckerPreviewContextResp.AccessURL = source.AccessURL
-	dtoAWDCheckerPreviewContextResp.PreviewFlag = source.PreviewFlag
-	dtoAWDCheckerPreviewContextResp.RoundNumber = source.RoundNumber
-	dtoAWDCheckerPreviewContextResp.TeamID = source.TeamID
-	dtoAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
-	return dtoAWDCheckerPreviewContextResp
-}
-func (c *awdCheckerPreviewResultMapperImpl) dtoAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source dto.AWDCheckerPreviewContextResp) domain.AWDCheckerPreviewContext {
+func (c *awdCheckerPreviewResultMapperImpl) commandsAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source AWDCheckerPreviewContextResp) domain.AWDCheckerPreviewContext {
 	var domainAWDCheckerPreviewContext domain.AWDCheckerPreviewContext
 	domainAWDCheckerPreviewContext.ServiceID = source.ServiceID
 	domainAWDCheckerPreviewContext.AccessURL = source.AccessURL
@@ -74,6 +63,16 @@ func (c *awdCheckerPreviewResultMapperImpl) dtoAWDCheckerPreviewContextRespToDom
 	domainAWDCheckerPreviewContext.TeamID = source.TeamID
 	domainAWDCheckerPreviewContext.AWDChallengeID = source.AWDChallengeID
 	return domainAWDCheckerPreviewContext
+}
+func (c *awdCheckerPreviewResultMapperImpl) domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp(source domain.AWDCheckerPreviewContext) AWDCheckerPreviewContextResp {
+	var commandsAWDCheckerPreviewContextResp AWDCheckerPreviewContextResp
+	commandsAWDCheckerPreviewContextResp.ServiceID = source.ServiceID
+	commandsAWDCheckerPreviewContextResp.AccessURL = source.AccessURL
+	commandsAWDCheckerPreviewContextResp.PreviewFlag = source.PreviewFlag
+	commandsAWDCheckerPreviewContextResp.RoundNumber = source.RoundNumber
+	commandsAWDCheckerPreviewContextResp.TeamID = source.TeamID
+	commandsAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
+	return commandsAWDCheckerPreviewContextResp
 }
 func (c *awdCheckerPreviewResultMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
 	var modelAWDCheckerType model.AWDCheckerType

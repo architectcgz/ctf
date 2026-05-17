@@ -18,7 +18,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -199,11 +198,11 @@ func (s *awdServiceForTest) ListRounds(ctx context.Context, contestID int64) ([]
 	return s.queries.ListRounds(ctx, contestID)
 }
 
-func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
+func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*contestcmd.AWDCheckerRunResp, error) {
 	return s.commands.RunCurrentRoundChecks(ctx, contestID, req)
 }
 
-func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error) {
+func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*contestcmd.AWDCheckerRunResp, error) {
 	return s.commands.RunRoundChecks(ctx, contestID, roundID)
 }
 

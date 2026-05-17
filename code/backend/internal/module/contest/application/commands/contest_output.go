@@ -147,3 +147,8 @@ type ContestAWDServiceResp struct {
 	CreatedAt         time.Time                       `json:"created_at"`
 	UpdatedAt         time.Time                       `json:"updated_at"`
 }
+
+type AWDCheckerRunResp struct {
+	Round    *AWDRoundResp       `json:"round"`
+	Services []*AWDTeamServiceResp `json:"services"`
+}

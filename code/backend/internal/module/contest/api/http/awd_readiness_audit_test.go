@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
@@ -69,7 +68,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 
 	handler := NewAWDHandler(
 		stubAWDCommandService{
-			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
+			runCurrentRoundChecksFunc: func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*contestcmd.AWDCheckerRunResp, error) {
 				trace := contestcmd.AWDReadinessGateTraceFromContext(ctx)
 				if trace == nil {
 					t.Fatal("expected readiness gate trace in command context")
@@ -169,9 +168,9 @@ func (s stubAWDReadinessQueryService) GetReadiness(ctx context.Context, contestI
 
 type stubAWDCommandService struct {
 	createRoundFunc           func(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error)
-	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
-	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
-	previewCheckerFunc        func(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)
+	runCurrentRoundChecksFunc func(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*contestcmd.AWDCheckerRunResp, error)
+	runRoundChecksFunc        func(ctx context.Context, contestID, roundID int64) (*contestcmd.AWDCheckerRunResp, error)
+	previewCheckerFunc        func(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*contestcmd.AWDCheckerPreviewResp, error)
 }
 
 func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error) {
@@ -181,21 +180,21 @@ func (s stubAWDCommandService) CreateRound(ctx context.Context, contestID int64,
 	return nil, nil
 }
 
-func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
+func (s stubAWDCommandService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*contestcmd.AWDCheckerRunResp, error) {
 	if s.runCurrentRoundChecksFunc != nil {
 		return s.runCurrentRoundChecksFunc(ctx, contestID, req)
 	}
 	return nil, nil
 }
 
-func (s stubAWDCommandService) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error) {
+func (s stubAWDCommandService) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*contestcmd.AWDCheckerRunResp, error) {
 	if s.runRoundChecksFunc != nil {
 		return s.runRoundChecksFunc(ctx, contestID, roundID)
 	}
 	return nil, nil
 }
 
-func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
+func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*contestcmd.AWDCheckerPreviewResp, error) {
 	if s.previewCheckerFunc != nil {
 		return s.previewCheckerFunc(ctx, contestID, req)
 	}

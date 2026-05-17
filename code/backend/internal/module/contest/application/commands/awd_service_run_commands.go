@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -16,7 +15,7 @@ import (
 
 const awdCheckerPreviewAttemptCount = 3
 
-func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error) {
+func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64, req RunCurrentRoundChecksInput) (*AWDCheckerRunResp, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -45,7 +44,7 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
 
-func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error) {
+func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*AWDCheckerRunResp, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -64,7 +63,7 @@ func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
 
-func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error) {
+func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req PreviewCheckerInput) (*AWDCheckerPreviewResp, error) {
 	s.reportAWDPreviewProgress(ctx, contestID, req.PreviewRequestID, "prepare", "准备预览环境", "正在校验当前 Checker 草稿，并准备目标访问上下文。", 0, awdCheckerPreviewAttemptCount, "running", nil)
 
 	contest, err := s.ensureAWDContest(ctx, contestID)
@@ -146,11 +145,11 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := &dto.AWDCheckerPreviewResp{
+	resp := &AWDCheckerPreviewResp{
 		CheckerType:   preview.CheckerType,
 		ServiceStatus: preview.ServiceStatus,
 		CheckResult:   contestdomain.ParseAWDCheckResult(preview.CheckResult),
-		PreviewContext: dto.AWDCheckerPreviewContextResp{
+		PreviewContext: AWDCheckerPreviewContextResp{
 			ServiceID:      preview.PreviewContext.ServiceID,
 			AccessURL:      preview.PreviewContext.AccessURL,
 			PreviewFlag:    preview.PreviewContext.PreviewFlag,

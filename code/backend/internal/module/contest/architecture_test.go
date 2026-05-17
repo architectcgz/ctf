@@ -187,6 +187,30 @@ func TestContestAWDServiceCreateFlowDoesNotDependOnGlobalContestAWDServiceDTO(t 
 	}
 }
 
+func TestAWDCheckerRunFlowDoesNotDependOnGlobalAWDCheckerRunDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "awd_service_run_commands.go"),
+		filepath.Join("application", "commands", "awd_service_run_support.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
+func TestAWDCheckerPreviewFlowDoesNotDependOnGlobalAWDCheckerPreviewDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "awd_checker_preview_token_support.go"),
+		filepath.Join("application", "commands", "awd_checker_preview_result_goverter.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

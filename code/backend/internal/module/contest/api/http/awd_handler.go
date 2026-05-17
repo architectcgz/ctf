@@ -3,16 +3,15 @@ package http
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
 type awdCommandService interface {
 	CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error)
-	RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*dto.AWDCheckerRunResp, error)
-	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
-	PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*dto.AWDCheckerPreviewResp, error)
+	RunCurrentRoundChecks(ctx context.Context, contestID int64, req contestcmd.RunCurrentRoundChecksInput) (*contestcmd.AWDCheckerRunResp, error)
+	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*contestcmd.AWDCheckerRunResp, error)
+	PreviewChecker(ctx context.Context, contestID int64, req contestcmd.PreviewCheckerInput) (*contestcmd.AWDCheckerPreviewResp, error)
 	UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*contestcmd.AWDTeamServiceResp, error)
 	CreateAttackLog(ctx context.Context, contestID, roundID int64, req contestcmd.CreateAttackLogInput) (*contestcmd.AWDAttackLogResp, error)
 	SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req contestcmd.SubmitAttackInput) (*contestcmd.AWDAttackLogResp, error)
