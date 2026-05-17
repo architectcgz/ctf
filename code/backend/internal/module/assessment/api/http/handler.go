@@ -7,15 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	"ctf-platform/pkg/response"
 )
 
 type skillProfileService interface {
-	GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
-	GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error)
+	GetSkillProfile(ctx context.Context, userID int64) (*assessmentcontracts.SkillProfile, error)
+	GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*assessmentcontracts.SkillProfile, error)
 }
 
 type recommendationProvider interface {
@@ -44,7 +43,7 @@ func (h *Handler) GetMySkillProfile(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, profile)
+	response.Success(c, assessmentResponseMapper.ToSkillProfileRespPtr(profile))
 }
 
 // GetStudentSkillProfile 教师查看学员能力画像
@@ -62,7 +61,7 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, profile)
+	response.Success(c, assessmentResponseMapper.ToSkillProfileRespPtr(profile))
 }
 
 func (h *Handler) GetRecommendations(c *gin.Context) {

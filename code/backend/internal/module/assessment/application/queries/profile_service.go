@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	"ctf-platform/pkg/errcode"
@@ -24,18 +24,18 @@ func NewProfileService(repo profileQueryRepository) *ProfileService {
 	return &ProfileService{repo: repo}
 }
 
-func (s *ProfileService) GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+func (s *ProfileService) GetSkillProfile(ctx context.Context, userID int64) (*assessmentcontracts.SkillProfile, error) {
 	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if len(profiles) == 0 {
-		return assessmentdomain.BuildEmptyProfile(userID), nil
+		return assessmentdomain.BuildEmptyProfileContract(userID), nil
 	}
-	return assessmentdomain.BuildSkillProfile(userID, profiles), nil
+	return assessmentdomain.BuildSkillProfileContract(userID, profiles), nil
 }
 
-func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {
+func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*assessmentcontracts.SkillProfile, error) {
 	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)

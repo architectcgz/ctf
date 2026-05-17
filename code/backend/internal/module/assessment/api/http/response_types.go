@@ -1,5 +1,16 @@
 package http
 
+type SkillDimension struct {
+	Dimension string  `json:"dimension"`
+	Score     float64 `json:"score"`
+}
+
+type SkillProfileResp struct {
+	UserID     int64             `json:"user_id"`
+	Dimensions []*SkillDimension `json:"dimensions"`
+	UpdatedAt  string            `json:"updated_at"`
+}
+
 type RecommendationWeakDimension struct {
 	Dimension  string  `json:"dimension"`
 	Severity   string  `json:"severity"`

@@ -8,6 +8,17 @@ type ProfileService interface {
 	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
 }
 
+type SkillDimension struct {
+	Dimension string
+	Score     float64
+}
+
+type SkillProfile struct {
+	UserID     int64
+	Dimensions []*SkillDimension
+	UpdatedAt  string
+}
+
 type RecommendationWeakDimension struct {
 	Dimension  string
 	Severity   string

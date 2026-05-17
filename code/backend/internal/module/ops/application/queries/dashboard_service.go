@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
 
@@ -38,7 +37,7 @@ func NewDashboardService(
 	}
 }
 
-func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.DashboardStats, error) {
+func (s *DashboardService) GetDashboardStats(ctx context.Context) (*opsports.DashboardStatsSnapshot, error) {
 	cached, err := s.getFromCache(ctx)
 	if err == nil && cached != nil {
 		return cached, nil
@@ -47,9 +46,9 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 		s.logger.Error("读取仪表盘缓存失败，降级到实时查询", zap.Error(err))
 	}
 
-	stats := &dto.DashboardStats{
-		ContainerStats: []dto.ContainerStat{},
-		Alerts:         []dto.ResourceAlert{},
+	stats := &opsports.DashboardStatsSnapshot{
+		ContainerStats: []opsports.DashboardContainerStat{},
+		Alerts:         []opsports.DashboardResourceAlert{},
 	}
 
 	onlineUsers, err := s.countOnlineUsers(ctx)
@@ -81,18 +80,18 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 	return stats, nil
 }
 
-func (s *DashboardService) getContainerStats(ctx context.Context) ([]dto.ContainerStat, error) {
+func (s *DashboardService) getContainerStats(ctx context.Context) ([]opsports.DashboardContainerStat, error) {
 	if s.runtime == nil {
-		return []dto.ContainerStat{}, nil
+		return []opsports.DashboardContainerStat{}, nil
 	}
 	stats, err := s.runtime.ListManagedContainerStats(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]dto.ContainerStat, 0, len(stats))
+	result := make([]opsports.DashboardContainerStat, 0, len(stats))
 	for _, stat := range stats {
-		result = append(result, dto.ContainerStat{
+		result = append(result, opsports.DashboardContainerStat{
 			ContainerID:   stat.ContainerID,
 			ContainerName: stat.ContainerName,
 			CPUPercent:    stat.CPUPercent,
@@ -104,7 +103,7 @@ func (s *DashboardService) getContainerStats(ctx context.Context) ([]dto.Contain
 	return result, nil
 }
 
-func (s *DashboardService) calculateAverageUsage(stats []dto.ContainerStat) (float64, float64) {
+func (s *DashboardService) calculateAverageUsage(stats []opsports.DashboardContainerStat) (float64, float64) {
 	if len(stats) == 0 {
 		return 0, 0
 	}
@@ -116,12 +115,12 @@ func (s *DashboardService) calculateAverageUsage(stats []dto.ContainerStat) (flo
 	return totalCPU / float64(len(stats)), totalMem / float64(len(stats))
 }
 
-func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.ResourceAlert {
-	alerts := []dto.ResourceAlert{}
+func (s *DashboardService) checkAlerts(stats []opsports.DashboardContainerStat) []opsports.DashboardResourceAlert {
+	alerts := []opsports.DashboardResourceAlert{}
 	threshold := s.config.Dashboard.AlertThreshold
 	for _, stat := range stats {
 		if stat.CPUPercent > threshold {
-			alerts = append(alerts, dto.ResourceAlert{
+			alerts = append(alerts, opsports.DashboardResourceAlert{
 				ContainerID: stat.ContainerID,
 				Type:        "cpu",
 				Value:       stat.CPUPercent,
@@ -130,7 +129,7 @@ func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.Resource
 			})
 		}
 		if stat.MemoryPercent > threshold {
-			alerts = append(alerts, dto.ResourceAlert{
+			alerts = append(alerts, opsports.DashboardResourceAlert{
 				ContainerID: stat.ContainerID,
 				Type:        "memory",
 				Value:       stat.MemoryPercent,
@@ -149,7 +148,7 @@ func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) 
 	return s.state.CountOnlineUsers(ctx)
 }
 
-func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStats, error) {
+func (s *DashboardService) getFromCache(ctx context.Context) (*opsports.DashboardStatsSnapshot, error) {
 	if s.state == nil {
 		return nil, nil
 	}
@@ -160,92 +159,29 @@ func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStat
 	if snapshot == nil {
 		return nil, nil
 	}
-	return dashboardStatsFromSnapshot(snapshot), nil
+	return normalizeDashboardSnapshot(snapshot), nil
 }
 
-func (s *DashboardService) saveToCache(ctx context.Context, stats *dto.DashboardStats) {
+func (s *DashboardService) saveToCache(ctx context.Context, stats *opsports.DashboardStatsSnapshot) {
 	if s.state == nil || stats == nil {
 		return
 	}
-	if err := s.state.SaveDashboardStats(ctx, dashboardSnapshotFromStats(stats)); err != nil {
+	if err := s.state.SaveDashboardStats(ctx, stats); err != nil {
 		s.logger.Error("缓存统计数据失败", zap.Error(err))
 		return
 	}
 	s.logger.Debug("仪表盘缓存已更新")
 }
 
-func dashboardStatsFromSnapshot(snapshot *opsports.DashboardStatsSnapshot) *dto.DashboardStats {
+func normalizeDashboardSnapshot(snapshot *opsports.DashboardStatsSnapshot) *opsports.DashboardStatsSnapshot {
 	if snapshot == nil {
 		return nil
 	}
-
-	containerStats := make([]dto.ContainerStat, 0, len(snapshot.ContainerStats))
-	for _, item := range snapshot.ContainerStats {
-		containerStats = append(containerStats, dto.ContainerStat{
-			ContainerID:   item.ContainerID,
-			ContainerName: item.ContainerName,
-			CPUPercent:    item.CPUPercent,
-			MemoryPercent: item.MemoryPercent,
-			MemoryUsage:   item.MemoryUsage,
-			MemoryLimit:   item.MemoryLimit,
-		})
+	if snapshot.ContainerStats == nil {
+		snapshot.ContainerStats = []opsports.DashboardContainerStat{}
 	}
-
-	alerts := make([]dto.ResourceAlert, 0, len(snapshot.Alerts))
-	for _, item := range snapshot.Alerts {
-		alerts = append(alerts, dto.ResourceAlert{
-			ContainerID: item.ContainerID,
-			Type:        item.Type,
-			Value:       item.Value,
-			Threshold:   item.Threshold,
-			Message:     item.Message,
-		})
+	if snapshot.Alerts == nil {
+		snapshot.Alerts = []opsports.DashboardResourceAlert{}
 	}
-
-	return &dto.DashboardStats{
-		OnlineUsers:      snapshot.OnlineUsers,
-		ActiveContainers: snapshot.ActiveContainers,
-		CPUUsage:         snapshot.CPUUsage,
-		MemoryUsage:      snapshot.MemoryUsage,
-		ContainerStats:   containerStats,
-		Alerts:           alerts,
-	}
-}
-
-func dashboardSnapshotFromStats(stats *dto.DashboardStats) *opsports.DashboardStatsSnapshot {
-	if stats == nil {
-		return nil
-	}
-
-	containerStats := make([]opsports.DashboardContainerStat, 0, len(stats.ContainerStats))
-	for _, item := range stats.ContainerStats {
-		containerStats = append(containerStats, opsports.DashboardContainerStat{
-			ContainerID:   item.ContainerID,
-			ContainerName: item.ContainerName,
-			CPUPercent:    item.CPUPercent,
-			MemoryPercent: item.MemoryPercent,
-			MemoryUsage:   item.MemoryUsage,
-			MemoryLimit:   item.MemoryLimit,
-		})
-	}
-
-	alerts := make([]opsports.DashboardResourceAlert, 0, len(stats.Alerts))
-	for _, item := range stats.Alerts {
-		alerts = append(alerts, opsports.DashboardResourceAlert{
-			ContainerID: item.ContainerID,
-			Type:        item.Type,
-			Value:       item.Value,
-			Threshold:   item.Threshold,
-			Message:     item.Message,
-		})
-	}
-
-	return &opsports.DashboardStatsSnapshot{
-		OnlineUsers:      stats.OnlineUsers,
-		ActiveContainers: stats.ActiveContainers,
-		CPUUsage:         stats.CPUUsage,
-		MemoryUsage:      stats.MemoryUsage,
-		ContainerStats:   containerStats,
-		Alerts:           alerts,
-	}
+	return snapshot
 }

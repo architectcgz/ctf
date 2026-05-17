@@ -21,6 +21,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -879,7 +880,7 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/users/%d/skill-profile", env.student.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var skillProfile dto.SkillProfileResp
+	var skillProfile assessmenthttp.SkillProfileResp
 	decodeFullRouterData(t, resp, &skillProfile)
 	if skillProfile.UserID != env.student.ID {
 		t.Fatalf("expected skill profile for student %d, got %+v", env.student.ID, skillProfile)
@@ -2326,7 +2327,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/dashboard", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var dashboard dto.DashboardStats
+	var dashboard opshttp.DashboardStats
 	decodeFullRouterData(t, resp, &dashboard)
 	if dashboard.OnlineUsers < 1 || dashboard.ActiveContainers < 1 {
 		t.Fatalf("unexpected dashboard stats: %+v", dashboard)

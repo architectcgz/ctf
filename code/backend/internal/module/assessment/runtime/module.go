@@ -72,7 +72,7 @@ func Build(deps Deps) *Module {
 	recommendationService.RegisterPracticeEventConsumers(deps.Events)
 	recommendationService.RegisterContestEventConsumers(deps.Events)
 
-	reportService, reportHandler := buildReportHandler(internalDeps, profileQueryService)
+	reportService, reportHandler := buildReportHandler(internalDeps, profileCommandService)
 	teacherAWDReviewHandler := buildTeacherAWDReviewHandler(internalDeps, reportService)
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, deps.Logger.Named("assessment_cleaner"))
 

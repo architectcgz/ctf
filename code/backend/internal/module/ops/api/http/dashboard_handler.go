@@ -5,12 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
+	opsports "ctf-platform/internal/module/ops/ports"
 	"ctf-platform/pkg/response"
 )
 
 type dashboardQueryService interface {
-	GetDashboardStats(ctx context.Context) (*dto.DashboardStats, error)
+	GetDashboardStats(ctx context.Context) (*opsports.DashboardStatsSnapshot, error)
 }
 
 type DashboardHandler struct {
@@ -27,7 +27,7 @@ func NewDashboardHandler(service dashboardQueryService) *DashboardHandler {
 // @Summary 获取仪表盘数据
 // @Tags 系统管理
 // @Security sessionCookieAuth
-// @Success 200 {object} dto.DashboardStats
+// @Success 200 {object} DashboardStats
 // @Router /api/v1/admin/dashboard [get]
 func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	stats, err := h.service.GetDashboardStats(c.Request.Context())
@@ -35,5 +35,5 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, stats)
+	response.Success(c, dashboardResponseMapper.ToDashboardStatsPtr(stats))
 }

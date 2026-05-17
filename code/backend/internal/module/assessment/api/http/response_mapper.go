@@ -10,6 +10,10 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :http
 type assessmentResponseMapperContract interface {
+	ToSkillDimension(source assessmentcontracts.SkillDimension) SkillDimension
+	ToSkillDimensionPtr(source *assessmentcontracts.SkillDimension) *SkillDimension
+	ToSkillProfileResp(source assessmentcontracts.SkillProfile) SkillProfileResp
+	ToSkillProfileRespPtr(source *assessmentcontracts.SkillProfile) *SkillProfileResp
 	ToRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) RecommendationWeakDimension
 	ToRecommendationResp(source assessmentcontracts.Recommendation) RecommendationResp
 	ToRecommendationRespPtr(source *assessmentcontracts.Recommendation) *RecommendationResp

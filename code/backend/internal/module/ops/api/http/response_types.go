@@ -1,4 +1,4 @@
-package dto
+package http
 
 // DashboardStats 仪表盘统计数据
 type DashboardStats struct {

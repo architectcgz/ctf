@@ -43,6 +43,13 @@ func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 	}
 }
 
+func TestSkillProfileQueryAndHTTPDoNotDependOnGlobalDTO(t *testing.T) {
+	t.Parallel()
+
+	assertFileDoesNotImport(t, filepath.Join("api", "http", "handler.go"), "ctf-platform/internal/dto")
+	assertFileDoesNotImport(t, filepath.Join("application", "queries", "profile_service.go"), "ctf-platform/internal/dto")
+}
+
 func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

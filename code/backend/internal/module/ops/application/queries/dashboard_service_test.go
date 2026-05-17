@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -106,19 +105,19 @@ func TestDashboardServiceGetDashboardStatsUsesCache(t *testing.T) {
 	t.Cleanup(func() { _ = redis.Close() })
 
 	service := newDashboardTestService(t, setupDashboardTestDB(t), redis)
-	expected := dto.DashboardStats{
+	expected := opsports.DashboardStatsSnapshot{
 		OnlineUsers:      9,
 		ActiveContainers: 4,
 		CPUUsage:         71.5,
 		MemoryUsage:      58.25,
-		ContainerStats: []dto.ContainerStat{
+		ContainerStats: []opsports.DashboardContainerStat{
 			{ContainerID: "abc123", ContainerName: "practice-1", CPUPercent: 71.5, MemoryPercent: 58.25},
 		},
-		Alerts: []dto.ResourceAlert{
+		Alerts: []opsports.DashboardResourceAlert{
 			{ContainerID: "abc123", Type: "cpu", Value: 71.5, Threshold: 70, Message: "cached"},
 		},
 	}
-	if err := service.state.SaveDashboardStats(context.Background(), dashboardSnapshotFromStats(&expected)); err != nil {
+	if err := service.state.SaveDashboardStats(context.Background(), &expected); err != nil {
 		t.Fatalf("seed cache: %v", err)
 	}
 
@@ -131,6 +130,32 @@ func TestDashboardServiceGetDashboardStatsUsesCache(t *testing.T) {
 	}
 	if len(got.ContainerStats) != 1 || got.ContainerStats[0].ContainerName != "practice-1" {
 		t.Fatalf("expected cached container stats, got %+v", got.ContainerStats)
+	}
+}
+
+func TestDashboardServiceGetDashboardStatsNormalizesCachedNilSlices(t *testing.T) {
+	mr := miniredis.RunT(t)
+	redis := redislib.NewClient(&redislib.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redis.Close() })
+
+	service := newDashboardTestService(t, setupDashboardTestDB(t), redis)
+	expected := opsports.DashboardStatsSnapshot{
+		OnlineUsers:      3,
+		ActiveContainers: 1,
+	}
+	if err := service.state.SaveDashboardStats(context.Background(), &expected); err != nil {
+		t.Fatalf("seed cache: %v", err)
+	}
+
+	got, err := service.GetDashboardStats(context.Background())
+	if err != nil {
+		t.Fatalf("GetDashboardStats() error = %v", err)
+	}
+	if got.ContainerStats == nil || got.Alerts == nil {
+		t.Fatalf("expected normalized empty slices, got %+v", got)
+	}
+	if len(got.ContainerStats) != 0 || len(got.Alerts) != 0 {
+		t.Fatalf("expected empty normalized slices, got %+v", got)
 	}
 }
 
@@ -207,7 +232,7 @@ func TestDashboardServiceCountOnlineUsersIgnoresInvalidSessions(t *testing.T) {
 func TestDashboardServiceCheckAlertsReturnsCPUAndMemoryAlerts(t *testing.T) {
 	service := newDashboardTestService(t, setupDashboardTestDB(t), nil)
 
-	alerts := service.checkAlerts([]dto.ContainerStat{
+	alerts := service.checkAlerts([]opsports.DashboardContainerStat{
 		{ContainerID: "abc123", ContainerName: "practice-1", CPUPercent: 91, MemoryPercent: 83},
 		{ContainerID: "def456", ContainerName: "practice-2", CPUPercent: 45, MemoryPercent: 30},
 	})
