@@ -408,22 +408,22 @@ func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *model.S
 	}
 	return pContractsSubmissionWriteupResp
 }
-func (c *ChallengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
-	var dtoTagResp dto.TagResp
-	dtoTagResp.ID = source.ID
-	dtoTagResp.Name = source.Name
-	dtoTagResp.Type = source.Type
-	dtoTagResp.Description = source.Description
-	dtoTagResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoTagResp
+func (c *ChallengeResponseMapperImpl) ToTagResp(source model.Tag) contracts.TagResp {
+	var contractsTagResp contracts.TagResp
+	contractsTagResp.ID = source.ID
+	contractsTagResp.Name = source.Name
+	contractsTagResp.Type = source.Type
+	contractsTagResp.Description = source.Description
+	contractsTagResp.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsTagResp
 }
-func (c *ChallengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagResp {
-	var pDtoTagResp *dto.TagResp
+func (c *ChallengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *contracts.TagResp {
+	var pContractsTagResp *contracts.TagResp
 	if source != nil {
-		dtoTagResp := c.ToTagResp((*source))
-		pDtoTagResp = &dtoTagResp
+		contractsTagResp := c.ToTagResp((*source))
+		pContractsTagResp = &contractsTagResp
 	}
-	return pDtoTagResp
+	return pContractsTagResp
 }
 func (c *ChallengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailResp(source ports.TeacherSubmissionWriteupRecord) contracts.TeacherSubmissionWriteupDetailResp {
 	var contractsTeacherSubmissionWriteupDetailResp contracts.TeacherSubmissionWriteupDetailResp

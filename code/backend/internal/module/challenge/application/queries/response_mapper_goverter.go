@@ -36,8 +36,8 @@ type challengeQueryResponseMapper interface {
 	ToChallengeDetailRespBasePtr(source *model.Challenge) *dto.ChallengeDetailResp
 
 	// goverter:ignore Configured
-	ToFlagRespBase(source model.Challenge) dto.FlagResp
-	ToFlagRespBasePtr(source *model.Challenge) *dto.FlagResp
+	ToFlagRespBase(source model.Challenge) challengecontracts.FlagResp
+	ToFlagRespBasePtr(source *model.Challenge) *challengecontracts.FlagResp
 
 	// goverter:ignore RequiresSpoilerWarning
 	ToChallengeWriteupRespBase(source model.ChallengeWriteup) challengecontracts.ChallengeWriteupResp

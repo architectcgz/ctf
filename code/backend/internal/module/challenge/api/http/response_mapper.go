@@ -30,12 +30,12 @@ type ChallengeResponseMapper interface {
 	// goverter:map . Challenge
 	ToChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp
 	ToChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp
-	ToTagResp(source *dto.TagResp) *TagResp
-	ToTagRespList(source []*dto.TagResp) []*TagResp
+	ToTagResp(source *challengecontracts.TagResp) *TagResp
+	ToTagRespList(source []*challengecontracts.TagResp) []*TagResp
 	ToImageResp(source *challengecontracts.ImageResp) *ImageResp
 	ToImageRespList(source []*challengecontracts.ImageResp) []*ImageResp
 	ToImagePageResult(source *challengecontracts.PageResult[*challengecontracts.ImageResp]) *PageResult[*ImageResp]
-	ToFlagResp(source *dto.FlagResp) *FlagResp
+	ToFlagResp(source *challengecontracts.FlagResp) *FlagResp
 	ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp
 	ToEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp
 	ToEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp
@@ -101,11 +101,11 @@ func toChallengePackageExportResp(source *dto.ChallengePackageExportResp) *Chall
 	return challengeResponseMapper.ToChallengePackageExportResp(source)
 }
 
-func toTagResp(source *dto.TagResp) *TagResp {
+func toTagResp(source *challengecontracts.TagResp) *TagResp {
 	return challengeResponseMapper.ToTagResp(source)
 }
 
-func toTagRespList(source []*dto.TagResp) []*TagResp {
+func toTagRespList(source []*challengecontracts.TagResp) []*TagResp {
 	return challengeResponseMapper.ToTagRespList(source)
 }
 
@@ -113,7 +113,7 @@ func toImageResp(source *challengecontracts.ImageResp) *ImageResp {
 	return challengeResponseMapper.ToImageResp(source)
 }
 
-func toFlagResp(source *dto.FlagResp) *FlagResp {
+func toFlagResp(source *challengecontracts.FlagResp) *FlagResp {
 	return challengeResponseMapper.ToFlagResp(source)
 }
 

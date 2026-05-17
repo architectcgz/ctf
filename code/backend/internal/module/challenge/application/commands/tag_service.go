@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -22,7 +22,7 @@ func NewTagService(repo tagCommandRepository) *TagService {
 	return &TagService{repo: repo}
 }
 
-func (s *TagService) CreateTag(ctx context.Context, req CreateTagInput) (*dto.TagResp, error) {
+func (s *TagService) CreateTag(ctx context.Context, req CreateTagInput) (*challengecontracts.TagResp, error) {
 	tag := &model.Tag{
 		Name:        req.Name,
 		Type:        req.Type,

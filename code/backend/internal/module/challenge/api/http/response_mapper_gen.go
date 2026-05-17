@@ -463,7 +463,7 @@ func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespList(source []*dt
 	}
 	return pHttpEnvironmentTemplateRespList
 }
-func (c *ChallengeResponseMapperImpl) ToFlagResp(source *dto.FlagResp) *FlagResp {
+func (c *ChallengeResponseMapperImpl) ToFlagResp(source *contracts.FlagResp) *FlagResp {
 	var pHttpFlagResp *FlagResp
 	if source != nil {
 		var httpFlagResp FlagResp
@@ -522,7 +522,7 @@ func (c *ChallengeResponseMapperImpl) ToImageRespList(source []*contracts.ImageR
 	}
 	return pHttpImageRespList
 }
-func (c *ChallengeResponseMapperImpl) ToTagResp(source *dto.TagResp) *TagResp {
+func (c *ChallengeResponseMapperImpl) ToTagResp(source *contracts.TagResp) *TagResp {
 	var pHttpTagResp *TagResp
 	if source != nil {
 		var httpTagResp TagResp
@@ -535,7 +535,7 @@ func (c *ChallengeResponseMapperImpl) ToTagResp(source *dto.TagResp) *TagResp {
 	}
 	return pHttpTagResp
 }
-func (c *ChallengeResponseMapperImpl) ToTagRespList(source []*dto.TagResp) []*TagResp {
+func (c *ChallengeResponseMapperImpl) ToTagRespList(source []*contracts.TagResp) []*TagResp {
 	var pHttpTagRespList []*TagResp
 	if source != nil {
 		pHttpTagRespList = make([]*TagResp, len(source))

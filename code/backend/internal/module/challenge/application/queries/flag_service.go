@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -70,7 +70,7 @@ func (s *FlagService) ValidateFlag(ctx context.Context, userID, challengeID int6
 	}
 }
 
-func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
+func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*challengecontracts.FlagResp, error) {
 	challenge, err := s.loadChallenge(ctx, challengeID)
 	if err != nil {
 		return nil, err

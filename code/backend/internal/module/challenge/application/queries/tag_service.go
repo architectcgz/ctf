@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -17,13 +17,13 @@ func NewTagService(repo challengeports.TagQueryRepository) *TagService {
 	return &TagService{repo: repo}
 }
 
-func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*dto.TagResp, error) {
+func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*challengecontracts.TagResp, error) {
 	tags, err := s.repo.List(ctx, tagType)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]*dto.TagResp, len(tags))
+	result := make([]*challengecontracts.TagResp, len(tags))
 	for index, tag := range tags {
 		result[index] = domain.ResponseMapper().ToTagRespPtr(tag)
 	}

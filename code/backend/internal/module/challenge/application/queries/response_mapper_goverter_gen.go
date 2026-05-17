@@ -102,20 +102,20 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source 
 	}
 	return pContractsChallengeWriteupResp
 }
-func (c *challengeQueryResponseMapperImpl) ToFlagRespBase(source model.Challenge) dto.FlagResp {
-	var dtoFlagResp dto.FlagResp
-	dtoFlagResp.FlagType = source.FlagType
-	dtoFlagResp.FlagRegex = source.FlagRegex
-	dtoFlagResp.FlagPrefix = source.FlagPrefix
-	return dtoFlagResp
+func (c *challengeQueryResponseMapperImpl) ToFlagRespBase(source model.Challenge) contracts.FlagResp {
+	var contractsFlagResp contracts.FlagResp
+	contractsFlagResp.FlagType = source.FlagType
+	contractsFlagResp.FlagRegex = source.FlagRegex
+	contractsFlagResp.FlagPrefix = source.FlagPrefix
+	return contractsFlagResp
 }
-func (c *challengeQueryResponseMapperImpl) ToFlagRespBasePtr(source *model.Challenge) *dto.FlagResp {
-	var pDtoFlagResp *dto.FlagResp
+func (c *challengeQueryResponseMapperImpl) ToFlagRespBasePtr(source *model.Challenge) *contracts.FlagResp {
+	var pContractsFlagResp *contracts.FlagResp
 	if source != nil {
-		dtoFlagResp := c.ToFlagRespBase((*source))
-		pDtoFlagResp = &dtoFlagResp
+		contractsFlagResp := c.ToFlagRespBase((*source))
+		pContractsFlagResp = &contractsFlagResp
 	}
-	return pDtoFlagResp
+	return pContractsFlagResp
 }
 func (c *challengeQueryResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing

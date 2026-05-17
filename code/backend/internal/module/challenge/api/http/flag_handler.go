@@ -4,8 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 
@@ -25,7 +25,7 @@ type flagCommandService interface {
 }
 
 type flagQueryService interface {
-	GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
+	GetFlagConfig(ctx context.Context, challengeID int64) (*challengecontracts.FlagResp, error)
 }
 
 func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {

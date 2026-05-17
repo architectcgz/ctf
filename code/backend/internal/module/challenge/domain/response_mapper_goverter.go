@@ -50,8 +50,8 @@ type ChallengeResponseMapper interface {
 	ToImageRespBase(source model.Image) challengecontracts.ImageResp
 	ToImageRespBasePtr(source *model.Image) *challengecontracts.ImageResp
 
-	ToTagResp(source model.Tag) dto.TagResp
-	ToTagRespPtr(source *model.Tag) *dto.TagResp
+	ToTagResp(source model.Tag) challengecontracts.TagResp
+	ToTagRespPtr(source *model.Tag) *challengecontracts.TagResp
 	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) challengecontracts.AdminChallengeWriteupResp
 	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *challengecontracts.AdminChallengeWriteupResp
 	ToSubmissionWriteupResp(source model.SubmissionWriteup) challengecontracts.SubmissionWriteupResp
