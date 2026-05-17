@@ -11,7 +11,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
@@ -151,13 +150,13 @@ func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing
 	}
 }
 
-func toChallengeHintReqs(hints []ChallengeHintInput) []dto.ChallengeHintReq {
+func toChallengeHintReqs(hints []ChallengeHintInput) []challengecontracts.ChallengeHintReq {
 	if hints == nil {
 		return nil
 	}
-	resp := make([]dto.ChallengeHintReq, 0, len(hints))
+	resp := make([]challengecontracts.ChallengeHintReq, 0, len(hints))
 	for _, hint := range hints {
-		resp = append(resp, dto.ChallengeHintReq{
+		resp = append(resp, challengecontracts.ChallengeHintReq{
 			Level:   hint.Level,
 			Title:   hint.Title,
 			Content: hint.Content,

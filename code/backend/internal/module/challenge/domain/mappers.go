@@ -8,14 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHint, error) {
+func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*model.ChallengeHint, error) {
 	if reqHints == nil {
 		return nil, nil
 	}

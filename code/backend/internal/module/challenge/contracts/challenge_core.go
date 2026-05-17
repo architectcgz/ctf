@@ -13,6 +13,12 @@ type ChallengeHintAdminResp struct {
 	Content string `json:"content"`
 }
 
+type ChallengeHintReq struct {
+	Level   int
+	Title   string
+	Content string
+}
+
 type ChallengeResp struct {
 	ID              int64                     `json:"id"`
 	Title           string                    `json:"title"`
