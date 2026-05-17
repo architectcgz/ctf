@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/response"
 )
 
@@ -20,14 +20,14 @@ type ImageHandler struct {
 }
 
 type imageCommandService interface {
-	CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*dto.ImageResp, error)
+	CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*challengecontracts.ImageResp, error)
 	UpdateImage(ctx context.Context, id int64, req challengecmd.UpdateImageInput) error
 	DeleteImage(ctx context.Context, id int64) error
 }
 
 type imageQueryService interface {
-	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*dto.PageResult[*dto.ImageResp], error)
+	GetImage(ctx context.Context, id int64) (*challengecontracts.ImageResp, error)
+	ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*challengecontracts.PageResult[*challengecontracts.ImageResp], error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {

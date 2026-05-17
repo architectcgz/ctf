@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -23,7 +23,7 @@ func NewImageService(repo challengeports.ImageQueryRepository, config *config.Co
 	}
 }
 
-func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
+func (s *ImageService) GetImage(ctx context.Context, id int64) (*challengecontracts.ImageResp, error) {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
@@ -34,7 +34,7 @@ func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, 
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) ListImages(ctx context.Context, query ListImagesInput) (*dto.PageResult[*dto.ImageResp], error) {
+func (s *ImageService) ListImages(ctx context.Context, query ListImagesInput) (*challengecontracts.PageResult[*challengecontracts.ImageResp], error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -53,12 +53,12 @@ func (s *ImageService) ListImages(ctx context.Context, query ListImagesInput) (*
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]*dto.ImageResp, len(images))
+	items := make([]*challengecontracts.ImageResp, len(images))
 	for index, image := range images {
 		items[index] = domain.ImageRespFromModel(image)
 	}
 
-	return &dto.PageResult[*dto.ImageResp]{
+	return &challengecontracts.PageResult[*challengecontracts.ImageResp]{
 		List:  items,
 		Total: total,
 		Page:  page,

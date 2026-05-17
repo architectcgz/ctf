@@ -269,33 +269,33 @@ func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *m
 	}
 	return pDtoEnvironmentTemplateResp
 }
-func (c *ChallengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.ImageResp {
-	var dtoImageResp dto.ImageResp
-	dtoImageResp.ID = source.ID
-	dtoImageResp.Name = source.Name
-	dtoImageResp.Tag = source.Tag
-	dtoImageResp.Description = source.Description
-	dtoImageResp.Size = source.Size
-	dtoImageResp.Status = source.Status
-	dtoImageResp.Digest = source.Digest
-	dtoImageResp.SourceType = source.SourceType
+func (c *ChallengeResponseMapperImpl) ToImageRespBase(source model.Image) contracts.ImageResp {
+	var contractsImageResp contracts.ImageResp
+	contractsImageResp.ID = source.ID
+	contractsImageResp.Name = source.Name
+	contractsImageResp.Tag = source.Tag
+	contractsImageResp.Description = source.Description
+	contractsImageResp.Size = source.Size
+	contractsImageResp.Status = source.Status
+	contractsImageResp.Digest = source.Digest
+	contractsImageResp.SourceType = source.SourceType
 	if source.BuildJobID != nil {
 		xint64 := *source.BuildJobID
-		dtoImageResp.BuildJobID = &xint64
+		contractsImageResp.BuildJobID = &xint64
 	}
-	dtoImageResp.LastError = source.LastError
-	dtoImageResp.VerifiedAt = CopyTimePtr(source.VerifiedAt)
-	dtoImageResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoImageResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoImageResp
+	contractsImageResp.LastError = source.LastError
+	contractsImageResp.VerifiedAt = CopyTimePtr(source.VerifiedAt)
+	contractsImageResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsImageResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsImageResp
 }
-func (c *ChallengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *dto.ImageResp {
-	var pDtoImageResp *dto.ImageResp
+func (c *ChallengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *contracts.ImageResp {
+	var pContractsImageResp *contracts.ImageResp
 	if source != nil {
-		dtoImageResp := c.ToImageRespBase((*source))
-		pDtoImageResp = &dtoImageResp
+		contractsImageResp := c.ToImageRespBase((*source))
+		pContractsImageResp = &contractsImageResp
 	}
-	return pDtoImageResp
+	return pContractsImageResp
 }
 func (c *ChallengeResponseMapperImpl) ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink {
 	var modelTopologyLink model.TopologyLink

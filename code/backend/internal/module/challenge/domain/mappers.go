@@ -87,7 +87,7 @@ func parseTemplateConfigMap(raw string) map[string]any {
 	return result
 }
 
-func ImageRespFromModel(image *model.Image) *dto.ImageResp {
+func ImageRespFromModel(image *model.Image) *challengecontracts.ImageResp {
 	resp := challengeResponseMapperInst.ToImageRespBasePtr(image)
 	if resp == nil {
 		return nil

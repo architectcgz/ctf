@@ -47,8 +47,8 @@ type ChallengeResponseMapper interface {
 	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp
 
 	// goverter:ignore SizeFormatted
-	ToImageRespBase(source model.Image) dto.ImageResp
-	ToImageRespBasePtr(source *model.Image) *dto.ImageResp
+	ToImageRespBase(source model.Image) challengecontracts.ImageResp
+	ToImageRespBasePtr(source *model.Image) *challengecontracts.ImageResp
 
 	ToTagResp(source model.Tag) dto.TagResp
 	ToTagRespPtr(source *model.Tag) *dto.TagResp

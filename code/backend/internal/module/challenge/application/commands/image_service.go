@@ -9,8 +9,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -53,7 +53,7 @@ func (s *ImageService) StartBackgroundTasks(ctx context.Context) {
 	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
-func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*dto.ImageResp, error) {
+func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*challengecontracts.ImageResp, error) {
 	existing, err := s.repo.FindByNameTag(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists

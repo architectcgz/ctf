@@ -2,6 +2,7 @@ package http
 
 import (
 	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"time"
 )
 
@@ -31,9 +32,9 @@ type ChallengeResponseMapper interface {
 	ToChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp
 	ToTagResp(source *dto.TagResp) *TagResp
 	ToTagRespList(source []*dto.TagResp) []*TagResp
-	ToImageResp(source *dto.ImageResp) *ImageResp
-	ToImageRespList(source []*dto.ImageResp) []*ImageResp
-	ToImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp]
+	ToImageResp(source *challengecontracts.ImageResp) *ImageResp
+	ToImageRespList(source []*challengecontracts.ImageResp) []*ImageResp
+	ToImagePageResult(source *challengecontracts.PageResult[*challengecontracts.ImageResp]) *PageResult[*ImageResp]
 	ToFlagResp(source *dto.FlagResp) *FlagResp
 	ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp
 	ToEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp
@@ -108,7 +109,7 @@ func toTagRespList(source []*dto.TagResp) []*TagResp {
 	return challengeResponseMapper.ToTagRespList(source)
 }
 
-func toImageResp(source *dto.ImageResp) *ImageResp {
+func toImageResp(source *challengecontracts.ImageResp) *ImageResp {
 	return challengeResponseMapper.ToImageResp(source)
 }
 
@@ -140,7 +141,7 @@ func toAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewR
 	return challengeResponseMapper.ToAWDChallengeImportPreviewRespList(source)
 }
 
-func toImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp] {
+func toImagePageResult(source *challengecontracts.PageResult[*challengecontracts.ImageResp]) *PageResult[*ImageResp] {
 	return challengeResponseMapper.ToImagePageResult(source)
 }
 

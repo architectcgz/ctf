@@ -6,6 +6,7 @@ package http
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type ChallengeResponseMapperImpl struct{}
@@ -474,7 +475,7 @@ func (c *ChallengeResponseMapperImpl) ToFlagResp(source *dto.FlagResp) *FlagResp
 	}
 	return pHttpFlagResp
 }
-func (c *ChallengeResponseMapperImpl) ToImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp] {
+func (c *ChallengeResponseMapperImpl) ToImagePageResult(source *contracts.PageResult[*contracts.ImageResp]) *PageResult[*ImageResp] {
 	var pHttpPageResult *PageResult[*ImageResp]
 	if source != nil {
 		var httpPageResult PageResult[*ImageResp]
@@ -486,7 +487,7 @@ func (c *ChallengeResponseMapperImpl) ToImagePageResult(source *dto.PageResult[*
 	}
 	return pHttpPageResult
 }
-func (c *ChallengeResponseMapperImpl) ToImageResp(source *dto.ImageResp) *ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageResp(source *contracts.ImageResp) *ImageResp {
 	var pHttpImageResp *ImageResp
 	if source != nil {
 		var httpImageResp ImageResp
@@ -511,7 +512,7 @@ func (c *ChallengeResponseMapperImpl) ToImageResp(source *dto.ImageResp) *ImageR
 	}
 	return pHttpImageResp
 }
-func (c *ChallengeResponseMapperImpl) ToImageRespList(source []*dto.ImageResp) []*ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageRespList(source []*contracts.ImageResp) []*ImageResp {
 	var pHttpImageRespList []*ImageResp
 	if source != nil {
 		pHttpImageRespList = make([]*ImageResp, len(source))

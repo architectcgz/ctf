@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/validation"
 )
 
@@ -19,9 +19,9 @@ type stubImageCommandService struct {
 	createCalled bool
 }
 
-func (s *stubImageCommandService) CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*dto.ImageResp, error) {
+func (s *stubImageCommandService) CreateImage(ctx context.Context, req challengecmd.CreateImageInput) (*challengecontracts.ImageResp, error) {
 	s.createCalled = true
-	return &dto.ImageResp{}, nil
+	return &challengecontracts.ImageResp{}, nil
 }
 
 func (s *stubImageCommandService) UpdateImage(ctx context.Context, id int64, req challengecmd.UpdateImageInput) error {
@@ -34,12 +34,12 @@ func (s *stubImageCommandService) DeleteImage(ctx context.Context, id int64) err
 
 type stubImageQueryService struct{}
 
-func (s stubImageQueryService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
-	return &dto.ImageResp{}, nil
+func (s stubImageQueryService) GetImage(ctx context.Context, id int64) (*challengecontracts.ImageResp, error) {
+	return &challengecontracts.ImageResp{}, nil
 }
 
-func (s stubImageQueryService) ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*dto.PageResult[*dto.ImageResp], error) {
-	return &dto.PageResult[*dto.ImageResp]{}, nil
+func (s stubImageQueryService) ListImages(ctx context.Context, query challengeqry.ListImagesInput) (*challengecontracts.PageResult[*challengecontracts.ImageResp], error) {
+	return &challengecontracts.PageResult[*challengecontracts.ImageResp]{}, nil
 }
 
 func TestImageHandlerCreateImageRejectsInvalidImageName(t *testing.T) {
