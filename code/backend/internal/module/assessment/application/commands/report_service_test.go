@@ -1,10 +1,13 @@
 package commands
 
 import (
+	"archive/zip"
 	"bytes"
+	"compress/zlib"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,8 +19,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -245,10 +248,10 @@ func (r *testAssessmentProfileReader) GetSkillProfile(context.Context, int64) (*
 
 type testAWDReviewExportBuilder struct {
 	wait    <-chan struct{}
-	archive *dto.TeacherAWDReviewArchiveResp
+	archive *assessmentqry.TeacherAWDReviewArchiveResp
 }
 
-func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*dto.TeacherAWDReviewArchiveResp, error) {
+func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*assessmentqry.TeacherAWDReviewArchiveResp, error) {
 	if b != nil && b.wait != nil {
 		select {
 		case <-b.wait:
@@ -269,14 +272,14 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 		selectedRoundNumber = 1
 	}
 
-	return &dto.TeacherAWDReviewArchiveResp{
+	return &assessmentqry.TeacherAWDReviewArchiveResp{
 		GeneratedAt: generatedAt,
-		Scope: dto.TeacherAWDReviewScopeResp{
+		Scope: assessmentqry.TeacherAWDReviewScopeResp{
 			SnapshotType: "final",
 			RequestedBy:  requesterID,
 			RequestedID:  contestID,
 		},
-		Contest: dto.TeacherAWDReviewContestMetaResp{
+		Contest: assessmentqry.TeacherAWDReviewContestMetaResp{
 			ID:         contestID,
 			Title:      "awd-review",
 			Mode:       model.ContestModeAWD,
@@ -284,14 +287,14 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 			RoundCount: 1,
 			TeamCount:  1,
 		},
-		Overview: &dto.TeacherAWDReviewOverviewResp{
+		Overview: &assessmentqry.TeacherAWDReviewOverviewResp{
 			RoundCount:   1,
 			TeamCount:    1,
 			ServiceCount: 1,
 			AttackCount:  1,
 			TrafficCount: 1,
 		},
-		Rounds: []dto.TeacherAWDReviewRoundResp{{
+		Rounds: []assessmentqry.TeacherAWDReviewRoundResp{{
 			ID:           1,
 			ContestID:    contestID,
 			RoundNumber:  selectedRoundNumber,
@@ -300,8 +303,8 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 			AttackCount:  1,
 			TrafficCount: 1,
 		}},
-		SelectedRound: &dto.TeacherAWDSelectedRoundResp{
-			Round: dto.TeacherAWDReviewRoundResp{
+		SelectedRound: &assessmentqry.TeacherAWDSelectedRoundResp{
+			Round: assessmentqry.TeacherAWDReviewRoundResp{
 				ID:           1,
 				ContestID:    contestID,
 				RoundNumber:  selectedRoundNumber,
@@ -310,14 +313,14 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				AttackCount:  1,
 				TrafficCount: 1,
 			},
-			Teams: []dto.TeacherAWDReviewTeamResp{{
+			Teams: []assessmentqry.TeacherAWDReviewTeamResp{{
 				TeamID:      1,
 				TeamName:    "blue",
 				CaptainID:   1,
 				TotalScore:  100,
 				MemberCount: 1,
 			}},
-			Services: []dto.TeacherAWDReviewServiceResp{{
+			Services: []assessmentqry.TeacherAWDReviewServiceResp{{
 				ID:                1,
 				RoundID:           1,
 				TeamID:            1,
@@ -326,7 +329,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				AWDChallengeTitle: "web",
 				ServiceStatus:     model.AWDServiceStatusUp,
 			}},
-			Attacks: []dto.TeacherAWDReviewAttackResp{{
+			Attacks: []assessmentqry.TeacherAWDReviewAttackResp{{
 				ID:                1,
 				RoundID:           1,
 				AttackerTeamID:    1,
@@ -338,7 +341,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				AttackType:        model.AWDAttackTypeFlagCapture,
 				Source:            model.AWDAttackSourceManual,
 			}},
-			Traffic: []dto.TeacherAWDReviewTrafficResp{{
+			Traffic: []assessmentqry.TeacherAWDReviewTrafficResp{{
 				ID:                1,
 				ContestID:         contestID,
 				RoundID:           1,
@@ -371,6 +374,65 @@ func newTestSQLiteDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	return db
+}
+
+func readTestZIPEntry(t *testing.T, archive *zip.Reader, name string) []byte {
+	t.Helper()
+
+	for _, file := range archive.File {
+		if file.Name != name {
+			continue
+		}
+		reader, err := file.Open()
+		if err != nil {
+			t.Fatalf("open zip entry %s: %v", name, err)
+		}
+		defer reader.Close()
+
+		content, err := io.ReadAll(reader)
+		if err != nil {
+			t.Fatalf("read zip entry %s: %v", name, err)
+		}
+		return content
+	}
+
+	t.Fatalf("zip entry %s not found", name)
+	return nil
+}
+
+func pdfContainsText(content []byte, token string) bool {
+	needle := []byte(token)
+	if bytes.Contains(content, needle) {
+		return true
+	}
+
+	for pos := 0; pos < len(content); {
+		idx := bytes.Index(content[pos:], []byte("stream"))
+		if idx < 0 {
+			return false
+		}
+		start := pos + idx + len("stream")
+		for start < len(content) && (content[start] == '\n' || content[start] == '\r' || content[start] == ' ') {
+			start++
+		}
+
+		endOffset := bytes.Index(content[start:], []byte("endstream"))
+		if endOffset < 0 {
+			return false
+		}
+		streamData := bytes.TrimRight(content[start:start+endOffset], "\r\n")
+		reader, err := zlib.NewReader(bytes.NewReader(streamData))
+		if err == nil {
+			decoded, readErr := io.ReadAll(reader)
+			reader.Close()
+			if readErr == nil && bytes.Contains(decoded, needle) {
+				return true
+			}
+		}
+		pos = start + endOffset + len("endstream")
+	}
+
+	return false
 }
 
 func findObservation(items []assessmentdomain.ReviewArchiveObservation, code string) *assessmentdomain.ReviewArchiveObservation {
@@ -1205,6 +1267,92 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	}
 	if report.UserID == nil || *report.UserID != teacher.ID {
 		t.Fatalf("expected report user_id %d, got %+v", teacher.ID, report)
+	}
+}
+
+func TestRenderAWDReviewArchiveZipPreservesTeacherAWDReviewJSONFields(t *testing.T) {
+	t.Parallel()
+
+	archive, err := (&testAWDReviewExportBuilder{}).BuildArchive(context.Background(), 11, 21, intPtr(2))
+	if err != nil {
+		t.Fatalf("BuildArchive() error = %v", err)
+	}
+
+	path := filepath.Join(t.TempDir(), "awd-review.zip")
+	if err := RenderAWDReviewArchiveZip(path, archive); err != nil {
+		t.Fatalf("RenderAWDReviewArchiveZip() error = %v", err)
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	reader, err := zip.NewReader(bytes.NewReader(content), int64(len(content)))
+	if err != nil {
+		t.Fatalf("zip.NewReader() error = %v", err)
+	}
+
+	manifestJSON := readTestZIPEntry(t, reader, "manifest.json")
+	if !bytes.Contains(manifestJSON, []byte(`"snapshot_type"`)) || !bytes.Contains(manifestJSON, []byte(`"selected_round"`)) {
+		t.Fatalf("expected manifest json tags to be preserved, got %s", manifestJSON)
+	}
+	var manifest map[string]any
+	if err := json.Unmarshal(manifestJSON, &manifest); err != nil {
+		t.Fatalf("Unmarshal(manifest.json) error = %v", err)
+	}
+	if got := int(manifest["contest_id"].(float64)); got != 21 {
+		t.Fatalf("expected contest_id=21, got %v", manifest["contest_id"])
+	}
+	if got := int(manifest["selected_round"].(float64)); got != 2 {
+		t.Fatalf("expected selected_round=2, got %v", manifest["selected_round"])
+	}
+
+	selectedRoundJSON := readTestZIPEntry(t, reader, "selected-round.json")
+	for _, key := range []string{`"round_number"`, `"team_id"`, `"service_status"`, `"attack_type"`, `"status_code"`} {
+		if !bytes.Contains(selectedRoundJSON, []byte(key)) {
+			t.Fatalf("expected selected-round.json to contain key %s, got %s", key, selectedRoundJSON)
+		}
+	}
+	var selectedRound assessmentqry.TeacherAWDSelectedRoundResp
+	if err := json.Unmarshal(selectedRoundJSON, &selectedRound); err != nil {
+		t.Fatalf("Unmarshal(selected-round.json) error = %v", err)
+	}
+	if selectedRound.Round.RoundNumber != 2 {
+		t.Fatalf("expected selected round number 2, got %+v", selectedRound.Round)
+	}
+	if len(selectedRound.Teams) != 1 || selectedRound.Teams[0].TeamID != 1 {
+		t.Fatalf("expected selected round teams to be preserved, got %+v", selectedRound.Teams)
+	}
+}
+
+func TestRenderAWDReviewReportPDFIncludesSelectedRoundSummary(t *testing.T) {
+	t.Parallel()
+
+	archive, err := (&testAWDReviewExportBuilder{}).BuildArchive(context.Background(), 11, 21, intPtr(2))
+	if err != nil {
+		t.Fatalf("BuildArchive() error = %v", err)
+	}
+
+	path := filepath.Join(t.TempDir(), "awd-review.pdf")
+	if err := RenderAWDReviewReportPDF(path, archive); err != nil {
+		t.Fatalf("RenderAWDReviewReportPDF() error = %v", err)
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if len(content) < 4 || string(content[:4]) != "%PDF" {
+		t.Fatalf("expected PDF header, got %q", string(content[:min(4, len(content))]))
+	}
+	for _, token := range [][]byte{
+		[]byte("Teacher AWD Review Report"),
+		[]byte("Selected Round"),
+		[]byte("awd-review"),
+	} {
+		if !pdfContainsText(content, string(token)) {
+			t.Fatalf("expected PDF to contain %q", token)
+		}
 	}
 }
 

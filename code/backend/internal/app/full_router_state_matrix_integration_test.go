@@ -3,6 +3,7 @@ package app
 import (
 	"archive/zip"
 	"bytes"
+	"compress/zlib"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
@@ -661,7 +663,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/awd/reviews", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewList dto.TeacherAWDReviewContestPageResp
+	var reviewList assessmentqry.TeacherAWDReviewContestPageResp
 	decodeFullRouterData(t, resp, &reviewList)
 	if reviewList.Page != 1 || reviewList.PageSize != 20 {
 		t.Fatalf("expected review list default pagination page=1 page_size=20, got %+v", reviewList)
@@ -686,7 +688,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/awd/reviews/%d?round=2", reviewContest.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewDetail dto.TeacherAWDReviewArchiveResp
+	var reviewDetail assessmentqry.TeacherAWDReviewArchiveResp
 	decodeFullRouterData(t, resp, &reviewDetail)
 	if reviewDetail.Scope.SnapshotType != "live" {
 		t.Fatalf("expected live snapshot, got %+v", reviewDetail.Scope)
@@ -739,6 +741,26 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 			t.Fatalf("expected zip entry %s, got %+v", required, archiveEntries)
 		}
 	}
+	manifestJSON := readFullRouterZIPEntry(t, archiveReader, "manifest.json")
+	manifest := decodeFullRouterJSON[map[string]any](t, manifestJSON)
+	if manifest["snapshot_type"] != "live" {
+		t.Fatalf("expected manifest snapshot_type=live, got %+v", manifest)
+	}
+	if selectedRound, ok := manifest["selected_round"].(float64); !ok || int(selectedRound) != 2 {
+		t.Fatalf("expected manifest selected_round=2, got %+v", manifest)
+	}
+
+	selectedRoundJSON := readFullRouterZIPEntry(t, archiveReader, "selected-round.json")
+	if !bytes.Contains(selectedRoundJSON, []byte(`"round_number"`)) || !bytes.Contains(selectedRoundJSON, []byte(`"team_id"`)) {
+		t.Fatalf("expected selected-round.json field names to be preserved, got %s", selectedRoundJSON)
+	}
+	selectedRoundPayload := decodeFullRouterJSON[assessmentqry.TeacherAWDSelectedRoundResp](t, selectedRoundJSON)
+	if selectedRoundPayload.Round.RoundNumber != 2 {
+		t.Fatalf("expected selected-round.json round_number=2, got %+v", selectedRoundPayload.Round)
+	}
+	if len(selectedRoundPayload.Teams) != 2 || len(selectedRoundPayload.Services) == 0 {
+		t.Fatalf("expected selected-round.json teams/services payload, got %+v", selectedRoundPayload)
+	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/awd/reviews/%d/export/report", reviewContest.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
@@ -779,6 +801,14 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 	if !bytes.HasPrefix(resp.Body.Bytes(), []byte("%PDF")) {
 		t.Fatalf("expected pdf body prefix, got %q", resp.Body.Bytes())
+	}
+	for _, token := range [][]byte{
+		[]byte("Teacher AWD Review Report"),
+		[]byte("Selected Round"),
+	} {
+		if !fullRouterPDFContainsText(resp.Body.Bytes(), string(token)) {
+			t.Fatalf("expected pdf body to contain %q", token)
+		}
 	}
 }
 
@@ -2536,6 +2566,63 @@ func decodeFullRouterJSON[T any](t *testing.T, data []byte) T {
 		t.Fatalf("decode nested json: %v payload=%s", err, string(data))
 	}
 	return value
+}
+
+func readFullRouterZIPEntry(t *testing.T, archive *zip.Reader, name string) []byte {
+	t.Helper()
+	for _, file := range archive.File {
+		if file.Name != name {
+			continue
+		}
+		reader, err := file.Open()
+		if err != nil {
+			t.Fatalf("open zip entry %s: %v", name, err)
+		}
+		defer reader.Close()
+
+		content, err := io.ReadAll(reader)
+		if err != nil {
+			t.Fatalf("read zip entry %s: %v", name, err)
+		}
+		return content
+	}
+	t.Fatalf("zip entry %s not found", name)
+	return nil
+}
+
+func fullRouterPDFContainsText(content []byte, token string) bool {
+	needle := []byte(token)
+	if bytes.Contains(content, needle) {
+		return true
+	}
+
+	for pos := 0; pos < len(content); {
+		idx := bytes.Index(content[pos:], []byte("stream"))
+		if idx < 0 {
+			return false
+		}
+		start := pos + idx + len("stream")
+		for start < len(content) && (content[start] == '\n' || content[start] == '\r' || content[start] == ' ') {
+			start++
+		}
+
+		endOffset := bytes.Index(content[start:], []byte("endstream"))
+		if endOffset < 0 {
+			return false
+		}
+		streamData := bytes.TrimRight(content[start:start+endOffset], "\r\n")
+		reader, err := zlib.NewReader(bytes.NewReader(streamData))
+		if err == nil {
+			decoded, readErr := io.ReadAll(reader)
+			reader.Close()
+			if readErr == nil && bytes.Contains(decoded, needle) {
+				return true
+			}
+		}
+		pos = start + endOffset + len("endstream")
+	}
+
+	return false
 }
 
 type fullRouterWSEnvelope struct {

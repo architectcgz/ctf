@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -648,7 +649,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 	return filePath, time.Now().Add(s.config.FileTTL), nil
 }
 
-func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *dto.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
+func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
 	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewArchive, model.ReportFormatZIP)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
@@ -659,7 +660,7 @@ func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive 
 	return filePath, time.Now().Add(s.config.FileTTL), nil
 }
 
-func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *dto.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
+func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
 	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewReport, model.ReportFormatPDF)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)

@@ -3,7 +3,6 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 )
 
@@ -15,17 +14,17 @@ import (
 // goverter:output:file ./response_mapper_gen.go
 // goverter:output:package :queries
 type teacherAWDReviewResponseMapper interface {
-	ToTeacherAWDReviewContestResp(source assessmentdomain.TeacherAWDReviewContestCard) dto.TeacherAWDReviewContestResp
-	ToTeacherAWDReviewContestResps(source []assessmentdomain.TeacherAWDReviewContestCard) []dto.TeacherAWDReviewContestResp
-	ToTeacherAWDReviewContestMetaResp(source assessmentdomain.TeacherAWDReviewContestMeta) dto.TeacherAWDReviewContestMetaResp
+	ToTeacherAWDReviewContestResp(source assessmentdomain.TeacherAWDReviewContestCard) TeacherAWDReviewContestResp
+	ToTeacherAWDReviewContestResps(source []assessmentdomain.TeacherAWDReviewContestCard) []TeacherAWDReviewContestResp
+	ToTeacherAWDReviewContestMetaResp(source assessmentdomain.TeacherAWDReviewContestMeta) TeacherAWDReviewContestMetaResp
 	// goverter:ignore ServiceCount
 	// goverter:ignore AttackCount
 	// goverter:ignore TrafficCount
-	ToTeacherAWDReviewRoundResp(source assessmentdomain.TeacherAWDReviewRoundSummary) dto.TeacherAWDReviewRoundResp
-	ToTeacherAWDReviewTeamResps(source []assessmentdomain.TeacherAWDReviewTeamSummary) []dto.TeacherAWDReviewTeamResp
-	ToTeacherAWDReviewServiceResps(source []assessmentdomain.TeacherAWDReviewServiceRecord) []dto.TeacherAWDReviewServiceResp
-	ToTeacherAWDReviewAttackResps(source []assessmentdomain.TeacherAWDReviewAttackRecord) []dto.TeacherAWDReviewAttackResp
-	ToTeacherAWDReviewTrafficResps(source []assessmentdomain.TeacherAWDReviewTrafficRecord) []dto.TeacherAWDReviewTrafficResp
+	ToTeacherAWDReviewRoundResp(source assessmentdomain.TeacherAWDReviewRoundSummary) TeacherAWDReviewRoundResp
+	ToTeacherAWDReviewTeamResps(source []assessmentdomain.TeacherAWDReviewTeamSummary) []TeacherAWDReviewTeamResp
+	ToTeacherAWDReviewServiceResps(source []assessmentdomain.TeacherAWDReviewServiceRecord) []TeacherAWDReviewServiceResp
+	ToTeacherAWDReviewAttackResps(source []assessmentdomain.TeacherAWDReviewAttackRecord) []TeacherAWDReviewAttackResp
+	ToTeacherAWDReviewTrafficResps(source []assessmentdomain.TeacherAWDReviewTrafficRecord) []TeacherAWDReviewTrafficResp
 }
 
 var teacherAWDReviewMapper teacherAWDReviewResponseMapper

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -25,7 +24,7 @@ func NewTeacherAWDReviewService(repo assessmentports.TeacherAWDReviewRepository,
 	}
 }
 
-func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID int64, query ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error) {
+func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID int64, query ListTeacherAWDReviewContestsInput) (*TeacherAWDReviewContestPageResp, error) {
 	_ = requesterID
 	page := query.Page
 	if page < 1 {
@@ -58,12 +57,12 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := &dto.TeacherAWDReviewContestPageResp{
+	resp := &TeacherAWDReviewContestPageResp{
 		List:     teacherAWDReviewMapper.ToTeacherAWDReviewContestResps(contests),
 		Total:    total,
 		Page:     page,
 		PageSize: size,
-		Summary: dto.TeacherAWDReviewContestListSummaryResp{
+		Summary: TeacherAWDReviewContestListSummaryResp{
 			RunningCount:     summary.RunningCount,
 			ExportReadyCount: summary.ExportReadyCount,
 		},
@@ -71,7 +70,7 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 	return resp, nil
 }
 
-func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error) {
+func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req GetTeacherAWDReviewArchiveInput) (*TeacherAWDReviewArchiveResp, error) {
 	if req.TeamID != nil && req.RoundNumber == nil {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 需要配合 round 使用", errcode.ErrInvalidParams.HTTPStatus)
 	}
@@ -97,16 +96,16 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 无效", errcode.ErrInvalidParams.HTTPStatus)
 	}
 
-	resp := &dto.TeacherAWDReviewArchiveResp{
+	resp := &TeacherAWDReviewArchiveResp{
 		GeneratedAt: time.Now().UTC(),
-		Scope: dto.TeacherAWDReviewScopeResp{
+		Scope: TeacherAWDReviewScopeResp{
 			SnapshotType: snapshotTypeForContest(contest.Status),
 			RequestedBy:  requesterID,
 			RequestedID:  contestID,
 		},
 		Contest: teacherAWDReviewMapper.ToTeacherAWDReviewContestMetaResp(*contest),
-		Rounds:  make([]dto.TeacherAWDReviewRoundResp, 0, len(rounds)),
-		Overview: &dto.TeacherAWDReviewOverviewResp{
+		Rounds:  make([]TeacherAWDReviewRoundResp, 0, len(rounds)),
+		Overview: &TeacherAWDReviewOverviewResp{
 			RoundCount:       len(rounds),
 			TeamCount:        len(teams),
 			LatestEvidenceAt: contest.LatestEvidenceAt,
@@ -115,7 +114,7 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 
 	var (
 		selectedRound     *assessmentdomain.TeacherAWDReviewRoundSummary
-		selectedRoundResp dto.TeacherAWDReviewRoundResp
+		selectedRoundResp TeacherAWDReviewRoundResp
 		selectedServices  []assessmentdomain.TeacherAWDReviewServiceRecord
 		selectedAttacks   []assessmentdomain.TeacherAWDReviewAttackRecord
 		selectedTraffic   []assessmentdomain.TeacherAWDReviewTrafficRecord
@@ -170,7 +169,7 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 		if req.TeamID != nil {
 			selectedTeams = []assessmentdomain.TeacherAWDReviewTeamSummary{*selectedTeam}
 		}
-		resp.SelectedRound = &dto.TeacherAWDSelectedRoundResp{
+		resp.SelectedRound = &TeacherAWDSelectedRoundResp{
 			Round:    selectedRoundResp,
 			Teams:    teacherAWDReviewMapper.ToTeacherAWDReviewTeamResps(selectedTeams),
 			Services: teacherAWDReviewMapper.ToTeacherAWDReviewServiceResps(selectedServices),

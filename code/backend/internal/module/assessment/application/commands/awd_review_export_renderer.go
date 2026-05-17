@@ -10,7 +10,7 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 
-	"ctf-platform/internal/dto"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -26,7 +26,7 @@ type awdReviewArchiveManifest struct {
 	RequestedByUserID int64     `json:"requested_by_user_id"`
 }
 
-func RenderAWDReviewArchiveZip(targetPath string, archive *dto.TeacherAWDReviewArchiveResp) error {
+func RenderAWDReviewArchiveZip(targetPath string, archive *assessmentqry.TeacherAWDReviewArchiveResp) error {
 	if archive == nil {
 		return errcode.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
 	}
@@ -78,7 +78,7 @@ func RenderAWDReviewArchiveZip(targetPath string, archive *dto.TeacherAWDReviewA
 	return nil
 }
 
-func RenderAWDReviewReportPDF(targetPath string, archive *dto.TeacherAWDReviewArchiveResp) error {
+func RenderAWDReviewReportPDF(targetPath string, archive *assessmentqry.TeacherAWDReviewArchiveResp) error {
 	if archive == nil {
 		return errcode.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
 	}
@@ -88,7 +88,7 @@ func RenderAWDReviewReportPDF(targetPath string, archive *dto.TeacherAWDReviewAr
 
 	overview := archive.Overview
 	if overview == nil {
-		overview = &dto.TeacherAWDReviewOverviewResp{}
+		overview = &assessmentqry.TeacherAWDReviewOverviewResp{}
 	}
 
 	addSummaryBlock(pdf, []summaryLine{
@@ -127,14 +127,14 @@ func writeZIPJSONFile(writer *zip.Writer, name string, payload any) error {
 	return nil
 }
 
-func extractAWDReviewTeams(archive *dto.TeacherAWDReviewArchiveResp) []dto.TeacherAWDReviewTeamResp {
+func extractAWDReviewTeams(archive *assessmentqry.TeacherAWDReviewArchiveResp) []assessmentqry.TeacherAWDReviewTeamResp {
 	if archive == nil || archive.SelectedRound == nil {
-		return []dto.TeacherAWDReviewTeamResp{}
+		return []assessmentqry.TeacherAWDReviewTeamResp{}
 	}
 	return archive.SelectedRound.Teams
 }
 
-func addAWDReviewRoundsTable(pdf *gofpdf.Fpdf, rounds []dto.TeacherAWDReviewRoundResp) {
+func addAWDReviewRoundsTable(pdf *gofpdf.Fpdf, rounds []assessmentqry.TeacherAWDReviewRoundResp) {
 	if len(rounds) == 0 {
 		return
 	}
@@ -170,7 +170,7 @@ func addAWDReviewRoundsTable(pdf *gofpdf.Fpdf, rounds []dto.TeacherAWDReviewRoun
 	pdf.Ln(4)
 }
 
-func addAWDReviewSelectedRoundBlock(pdf *gofpdf.Fpdf, selected *dto.TeacherAWDSelectedRoundResp) {
+func addAWDReviewSelectedRoundBlock(pdf *gofpdf.Fpdf, selected *assessmentqry.TeacherAWDSelectedRoundResp) {
 	if selected == nil {
 		return
 	}

@@ -13,8 +13,8 @@ import (
 )
 
 type teacherAWDReviewService interface {
-	ListContests(ctx context.Context, requesterID int64, query assessmentqueries.ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error)
-	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqueries.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error)
+	ListContests(ctx context.Context, requesterID int64, query assessmentqueries.ListTeacherAWDReviewContestsInput) (*assessmentqueries.TeacherAWDReviewContestPageResp, error)
+	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqueries.GetTeacherAWDReviewArchiveInput) (*assessmentqueries.TeacherAWDReviewArchiveResp, error)
 	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
 	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
 }

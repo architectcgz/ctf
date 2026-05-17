@@ -167,11 +167,11 @@ type teacherAWDReviewHandlerService struct {
 	reportService *assessmentcmd.ReportService
 }
 
-func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64, query assessmentqry.ListTeacherAWDReviewContestsInput) (*dto.TeacherAWDReviewContestPageResp, error) {
+func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64, query assessmentqry.ListTeacherAWDReviewContestsInput) (*assessmentqry.TeacherAWDReviewContestPageResp, error) {
 	return s.queryService.ListContests(ctx, requesterID, query)
 }
 
-func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*dto.TeacherAWDReviewArchiveResp, error) {
+func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*assessmentqry.TeacherAWDReviewArchiveResp, error) {
 	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
 }
 

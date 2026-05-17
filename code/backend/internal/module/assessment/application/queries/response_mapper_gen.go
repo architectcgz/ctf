@@ -3,169 +3,166 @@
 
 package queries
 
-import (
-	dto "ctf-platform/internal/dto"
-	domain "ctf-platform/internal/module/assessment/domain"
-)
+import domain "ctf-platform/internal/module/assessment/domain"
 
 type teacherAWDReviewResponseMapperImpl struct{}
 
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewAttackResps(source []domain.TeacherAWDReviewAttackRecord) []dto.TeacherAWDReviewAttackResp {
-	var dtoTeacherAWDReviewAttackRespList []dto.TeacherAWDReviewAttackResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewAttackResps(source []domain.TeacherAWDReviewAttackRecord) []TeacherAWDReviewAttackResp {
+	var queriesTeacherAWDReviewAttackRespList []TeacherAWDReviewAttackResp
 	if source != nil {
-		dtoTeacherAWDReviewAttackRespList = make([]dto.TeacherAWDReviewAttackResp, len(source))
+		queriesTeacherAWDReviewAttackRespList = make([]TeacherAWDReviewAttackResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherAWDReviewAttackRespList[i] = c.domainTeacherAWDReviewAttackRecordToDtoTeacherAWDReviewAttackResp(source[i])
+			queriesTeacherAWDReviewAttackRespList[i] = c.domainTeacherAWDReviewAttackRecordToQueriesTeacherAWDReviewAttackResp(source[i])
 		}
 	}
-	return dtoTeacherAWDReviewAttackRespList
+	return queriesTeacherAWDReviewAttackRespList
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestMetaResp(source domain.TeacherAWDReviewContestMeta) dto.TeacherAWDReviewContestMetaResp {
-	var dtoTeacherAWDReviewContestMetaResp dto.TeacherAWDReviewContestMetaResp
-	dtoTeacherAWDReviewContestMetaResp.ID = source.ID
-	dtoTeacherAWDReviewContestMetaResp.Title = source.Title
-	dtoTeacherAWDReviewContestMetaResp.Mode = source.Mode
-	dtoTeacherAWDReviewContestMetaResp.Status = source.Status
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestMetaResp(source domain.TeacherAWDReviewContestMeta) TeacherAWDReviewContestMetaResp {
+	var queriesTeacherAWDReviewContestMetaResp TeacherAWDReviewContestMetaResp
+	queriesTeacherAWDReviewContestMetaResp.ID = source.ID
+	queriesTeacherAWDReviewContestMetaResp.Title = source.Title
+	queriesTeacherAWDReviewContestMetaResp.Mode = source.Mode
+	queriesTeacherAWDReviewContestMetaResp.Status = source.Status
 	if source.CurrentRound != nil {
 		xint := *source.CurrentRound
-		dtoTeacherAWDReviewContestMetaResp.CurrentRound = &xint
+		queriesTeacherAWDReviewContestMetaResp.CurrentRound = &xint
 	}
-	dtoTeacherAWDReviewContestMetaResp.RoundCount = source.RoundCount
-	dtoTeacherAWDReviewContestMetaResp.TeamCount = source.TeamCount
-	dtoTeacherAWDReviewContestMetaResp.LatestEvidenceAt = CopyTimePtr(source.LatestEvidenceAt)
-	dtoTeacherAWDReviewContestMetaResp.ExportReady = source.ExportReady
-	return dtoTeacherAWDReviewContestMetaResp
+	queriesTeacherAWDReviewContestMetaResp.RoundCount = source.RoundCount
+	queriesTeacherAWDReviewContestMetaResp.TeamCount = source.TeamCount
+	queriesTeacherAWDReviewContestMetaResp.LatestEvidenceAt = CopyTimePtr(source.LatestEvidenceAt)
+	queriesTeacherAWDReviewContestMetaResp.ExportReady = source.ExportReady
+	return queriesTeacherAWDReviewContestMetaResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestResp(source domain.TeacherAWDReviewContestCard) dto.TeacherAWDReviewContestResp {
-	var dtoTeacherAWDReviewContestResp dto.TeacherAWDReviewContestResp
-	dtoTeacherAWDReviewContestResp.ID = source.ID
-	dtoTeacherAWDReviewContestResp.Title = source.Title
-	dtoTeacherAWDReviewContestResp.Mode = source.Mode
-	dtoTeacherAWDReviewContestResp.Status = source.Status
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestResp(source domain.TeacherAWDReviewContestCard) TeacherAWDReviewContestResp {
+	var queriesTeacherAWDReviewContestResp TeacherAWDReviewContestResp
+	queriesTeacherAWDReviewContestResp.ID = source.ID
+	queriesTeacherAWDReviewContestResp.Title = source.Title
+	queriesTeacherAWDReviewContestResp.Mode = source.Mode
+	queriesTeacherAWDReviewContestResp.Status = source.Status
 	if source.CurrentRound != nil {
 		xint := *source.CurrentRound
-		dtoTeacherAWDReviewContestResp.CurrentRound = &xint
+		queriesTeacherAWDReviewContestResp.CurrentRound = &xint
 	}
-	dtoTeacherAWDReviewContestResp.RoundCount = source.RoundCount
-	dtoTeacherAWDReviewContestResp.TeamCount = source.TeamCount
-	dtoTeacherAWDReviewContestResp.LatestEvidenceAt = CopyTimePtr(source.LatestEvidenceAt)
-	dtoTeacherAWDReviewContestResp.ExportReady = source.ExportReady
-	return dtoTeacherAWDReviewContestResp
+	queriesTeacherAWDReviewContestResp.RoundCount = source.RoundCount
+	queriesTeacherAWDReviewContestResp.TeamCount = source.TeamCount
+	queriesTeacherAWDReviewContestResp.LatestEvidenceAt = CopyTimePtr(source.LatestEvidenceAt)
+	queriesTeacherAWDReviewContestResp.ExportReady = source.ExportReady
+	return queriesTeacherAWDReviewContestResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestResps(source []domain.TeacherAWDReviewContestCard) []dto.TeacherAWDReviewContestResp {
-	var dtoTeacherAWDReviewContestRespList []dto.TeacherAWDReviewContestResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewContestResps(source []domain.TeacherAWDReviewContestCard) []TeacherAWDReviewContestResp {
+	var queriesTeacherAWDReviewContestRespList []TeacherAWDReviewContestResp
 	if source != nil {
-		dtoTeacherAWDReviewContestRespList = make([]dto.TeacherAWDReviewContestResp, len(source))
+		queriesTeacherAWDReviewContestRespList = make([]TeacherAWDReviewContestResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherAWDReviewContestRespList[i] = c.ToTeacherAWDReviewContestResp(source[i])
+			queriesTeacherAWDReviewContestRespList[i] = c.ToTeacherAWDReviewContestResp(source[i])
 		}
 	}
-	return dtoTeacherAWDReviewContestRespList
+	return queriesTeacherAWDReviewContestRespList
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewRoundResp(source domain.TeacherAWDReviewRoundSummary) dto.TeacherAWDReviewRoundResp {
-	var dtoTeacherAWDReviewRoundResp dto.TeacherAWDReviewRoundResp
-	dtoTeacherAWDReviewRoundResp.ID = source.ID
-	dtoTeacherAWDReviewRoundResp.ContestID = source.ContestID
-	dtoTeacherAWDReviewRoundResp.RoundNumber = source.RoundNumber
-	dtoTeacherAWDReviewRoundResp.Status = source.Status
-	dtoTeacherAWDReviewRoundResp.StartedAt = CopyTimePtr(source.StartedAt)
-	dtoTeacherAWDReviewRoundResp.EndedAt = CopyTimePtr(source.EndedAt)
-	dtoTeacherAWDReviewRoundResp.AttackScore = source.AttackScore
-	dtoTeacherAWDReviewRoundResp.DefenseScore = source.DefenseScore
-	return dtoTeacherAWDReviewRoundResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewRoundResp(source domain.TeacherAWDReviewRoundSummary) TeacherAWDReviewRoundResp {
+	var queriesTeacherAWDReviewRoundResp TeacherAWDReviewRoundResp
+	queriesTeacherAWDReviewRoundResp.ID = source.ID
+	queriesTeacherAWDReviewRoundResp.ContestID = source.ContestID
+	queriesTeacherAWDReviewRoundResp.RoundNumber = source.RoundNumber
+	queriesTeacherAWDReviewRoundResp.Status = source.Status
+	queriesTeacherAWDReviewRoundResp.StartedAt = CopyTimePtr(source.StartedAt)
+	queriesTeacherAWDReviewRoundResp.EndedAt = CopyTimePtr(source.EndedAt)
+	queriesTeacherAWDReviewRoundResp.AttackScore = source.AttackScore
+	queriesTeacherAWDReviewRoundResp.DefenseScore = source.DefenseScore
+	return queriesTeacherAWDReviewRoundResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewServiceResps(source []domain.TeacherAWDReviewServiceRecord) []dto.TeacherAWDReviewServiceResp {
-	var dtoTeacherAWDReviewServiceRespList []dto.TeacherAWDReviewServiceResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewServiceResps(source []domain.TeacherAWDReviewServiceRecord) []TeacherAWDReviewServiceResp {
+	var queriesTeacherAWDReviewServiceRespList []TeacherAWDReviewServiceResp
 	if source != nil {
-		dtoTeacherAWDReviewServiceRespList = make([]dto.TeacherAWDReviewServiceResp, len(source))
+		queriesTeacherAWDReviewServiceRespList = make([]TeacherAWDReviewServiceResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherAWDReviewServiceRespList[i] = c.domainTeacherAWDReviewServiceRecordToDtoTeacherAWDReviewServiceResp(source[i])
+			queriesTeacherAWDReviewServiceRespList[i] = c.domainTeacherAWDReviewServiceRecordToQueriesTeacherAWDReviewServiceResp(source[i])
 		}
 	}
-	return dtoTeacherAWDReviewServiceRespList
+	return queriesTeacherAWDReviewServiceRespList
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewTeamResps(source []domain.TeacherAWDReviewTeamSummary) []dto.TeacherAWDReviewTeamResp {
-	var dtoTeacherAWDReviewTeamRespList []dto.TeacherAWDReviewTeamResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewTeamResps(source []domain.TeacherAWDReviewTeamSummary) []TeacherAWDReviewTeamResp {
+	var queriesTeacherAWDReviewTeamRespList []TeacherAWDReviewTeamResp
 	if source != nil {
-		dtoTeacherAWDReviewTeamRespList = make([]dto.TeacherAWDReviewTeamResp, len(source))
+		queriesTeacherAWDReviewTeamRespList = make([]TeacherAWDReviewTeamResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherAWDReviewTeamRespList[i] = c.domainTeacherAWDReviewTeamSummaryToDtoTeacherAWDReviewTeamResp(source[i])
+			queriesTeacherAWDReviewTeamRespList[i] = c.domainTeacherAWDReviewTeamSummaryToQueriesTeacherAWDReviewTeamResp(source[i])
 		}
 	}
-	return dtoTeacherAWDReviewTeamRespList
+	return queriesTeacherAWDReviewTeamRespList
 }
-func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewTrafficResps(source []domain.TeacherAWDReviewTrafficRecord) []dto.TeacherAWDReviewTrafficResp {
-	var dtoTeacherAWDReviewTrafficRespList []dto.TeacherAWDReviewTrafficResp
+func (c *teacherAWDReviewResponseMapperImpl) ToTeacherAWDReviewTrafficResps(source []domain.TeacherAWDReviewTrafficRecord) []TeacherAWDReviewTrafficResp {
+	var queriesTeacherAWDReviewTrafficRespList []TeacherAWDReviewTrafficResp
 	if source != nil {
-		dtoTeacherAWDReviewTrafficRespList = make([]dto.TeacherAWDReviewTrafficResp, len(source))
+		queriesTeacherAWDReviewTrafficRespList = make([]TeacherAWDReviewTrafficResp, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherAWDReviewTrafficRespList[i] = c.domainTeacherAWDReviewTrafficRecordToDtoTeacherAWDReviewTrafficResp(source[i])
+			queriesTeacherAWDReviewTrafficRespList[i] = c.domainTeacherAWDReviewTrafficRecordToQueriesTeacherAWDReviewTrafficResp(source[i])
 		}
 	}
-	return dtoTeacherAWDReviewTrafficRespList
+	return queriesTeacherAWDReviewTrafficRespList
 }
-func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewAttackRecordToDtoTeacherAWDReviewAttackResp(source domain.TeacherAWDReviewAttackRecord) dto.TeacherAWDReviewAttackResp {
-	var dtoTeacherAWDReviewAttackResp dto.TeacherAWDReviewAttackResp
-	dtoTeacherAWDReviewAttackResp.ID = source.ID
-	dtoTeacherAWDReviewAttackResp.RoundID = source.RoundID
-	dtoTeacherAWDReviewAttackResp.AttackerTeamID = source.AttackerTeamID
-	dtoTeacherAWDReviewAttackResp.AttackerTeamName = source.AttackerTeamName
-	dtoTeacherAWDReviewAttackResp.VictimTeamID = source.VictimTeamID
-	dtoTeacherAWDReviewAttackResp.VictimTeamName = source.VictimTeamName
-	dtoTeacherAWDReviewAttackResp.ServiceID = source.ServiceID
-	dtoTeacherAWDReviewAttackResp.AWDChallengeID = source.AWDChallengeID
-	dtoTeacherAWDReviewAttackResp.AWDChallengeTitle = source.AWDChallengeTitle
-	dtoTeacherAWDReviewAttackResp.AttackType = source.AttackType
-	dtoTeacherAWDReviewAttackResp.Source = source.Source
-	dtoTeacherAWDReviewAttackResp.SubmittedFlag = source.SubmittedFlag
-	dtoTeacherAWDReviewAttackResp.IsSuccess = source.IsSuccess
-	dtoTeacherAWDReviewAttackResp.ScoreGained = source.ScoreGained
-	dtoTeacherAWDReviewAttackResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoTeacherAWDReviewAttackResp
+func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewAttackRecordToQueriesTeacherAWDReviewAttackResp(source domain.TeacherAWDReviewAttackRecord) TeacherAWDReviewAttackResp {
+	var queriesTeacherAWDReviewAttackResp TeacherAWDReviewAttackResp
+	queriesTeacherAWDReviewAttackResp.ID = source.ID
+	queriesTeacherAWDReviewAttackResp.RoundID = source.RoundID
+	queriesTeacherAWDReviewAttackResp.AttackerTeamID = source.AttackerTeamID
+	queriesTeacherAWDReviewAttackResp.AttackerTeamName = source.AttackerTeamName
+	queriesTeacherAWDReviewAttackResp.VictimTeamID = source.VictimTeamID
+	queriesTeacherAWDReviewAttackResp.VictimTeamName = source.VictimTeamName
+	queriesTeacherAWDReviewAttackResp.ServiceID = source.ServiceID
+	queriesTeacherAWDReviewAttackResp.AWDChallengeID = source.AWDChallengeID
+	queriesTeacherAWDReviewAttackResp.AWDChallengeTitle = source.AWDChallengeTitle
+	queriesTeacherAWDReviewAttackResp.AttackType = source.AttackType
+	queriesTeacherAWDReviewAttackResp.Source = source.Source
+	queriesTeacherAWDReviewAttackResp.SubmittedFlag = source.SubmittedFlag
+	queriesTeacherAWDReviewAttackResp.IsSuccess = source.IsSuccess
+	queriesTeacherAWDReviewAttackResp.ScoreGained = source.ScoreGained
+	queriesTeacherAWDReviewAttackResp.CreatedAt = CopyTime(source.CreatedAt)
+	return queriesTeacherAWDReviewAttackResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewServiceRecordToDtoTeacherAWDReviewServiceResp(source domain.TeacherAWDReviewServiceRecord) dto.TeacherAWDReviewServiceResp {
-	var dtoTeacherAWDReviewServiceResp dto.TeacherAWDReviewServiceResp
-	dtoTeacherAWDReviewServiceResp.ID = source.ID
-	dtoTeacherAWDReviewServiceResp.RoundID = source.RoundID
-	dtoTeacherAWDReviewServiceResp.TeamID = source.TeamID
-	dtoTeacherAWDReviewServiceResp.TeamName = source.TeamName
-	dtoTeacherAWDReviewServiceResp.ServiceID = source.ServiceID
-	dtoTeacherAWDReviewServiceResp.AWDChallengeID = source.AWDChallengeID
-	dtoTeacherAWDReviewServiceResp.AWDChallengeTitle = source.AWDChallengeTitle
-	dtoTeacherAWDReviewServiceResp.ServiceStatus = source.ServiceStatus
-	dtoTeacherAWDReviewServiceResp.AttackReceived = source.AttackReceived
-	dtoTeacherAWDReviewServiceResp.SLAScore = source.SLAScore
-	dtoTeacherAWDReviewServiceResp.DefenseScore = source.DefenseScore
-	dtoTeacherAWDReviewServiceResp.AttackScore = source.AttackScore
-	dtoTeacherAWDReviewServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoTeacherAWDReviewServiceResp
+func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewServiceRecordToQueriesTeacherAWDReviewServiceResp(source domain.TeacherAWDReviewServiceRecord) TeacherAWDReviewServiceResp {
+	var queriesTeacherAWDReviewServiceResp TeacherAWDReviewServiceResp
+	queriesTeacherAWDReviewServiceResp.ID = source.ID
+	queriesTeacherAWDReviewServiceResp.RoundID = source.RoundID
+	queriesTeacherAWDReviewServiceResp.TeamID = source.TeamID
+	queriesTeacherAWDReviewServiceResp.TeamName = source.TeamName
+	queriesTeacherAWDReviewServiceResp.ServiceID = source.ServiceID
+	queriesTeacherAWDReviewServiceResp.AWDChallengeID = source.AWDChallengeID
+	queriesTeacherAWDReviewServiceResp.AWDChallengeTitle = source.AWDChallengeTitle
+	queriesTeacherAWDReviewServiceResp.ServiceStatus = source.ServiceStatus
+	queriesTeacherAWDReviewServiceResp.AttackReceived = source.AttackReceived
+	queriesTeacherAWDReviewServiceResp.SLAScore = source.SLAScore
+	queriesTeacherAWDReviewServiceResp.DefenseScore = source.DefenseScore
+	queriesTeacherAWDReviewServiceResp.AttackScore = source.AttackScore
+	queriesTeacherAWDReviewServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return queriesTeacherAWDReviewServiceResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewTeamSummaryToDtoTeacherAWDReviewTeamResp(source domain.TeacherAWDReviewTeamSummary) dto.TeacherAWDReviewTeamResp {
-	var dtoTeacherAWDReviewTeamResp dto.TeacherAWDReviewTeamResp
-	dtoTeacherAWDReviewTeamResp.TeamID = source.TeamID
-	dtoTeacherAWDReviewTeamResp.TeamName = source.TeamName
-	dtoTeacherAWDReviewTeamResp.CaptainID = source.CaptainID
-	dtoTeacherAWDReviewTeamResp.TotalScore = source.TotalScore
-	dtoTeacherAWDReviewTeamResp.MemberCount = source.MemberCount
-	dtoTeacherAWDReviewTeamResp.LastSolveAt = CopyTimePtr(source.LastSolveAt)
-	return dtoTeacherAWDReviewTeamResp
+func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewTeamSummaryToQueriesTeacherAWDReviewTeamResp(source domain.TeacherAWDReviewTeamSummary) TeacherAWDReviewTeamResp {
+	var queriesTeacherAWDReviewTeamResp TeacherAWDReviewTeamResp
+	queriesTeacherAWDReviewTeamResp.TeamID = source.TeamID
+	queriesTeacherAWDReviewTeamResp.TeamName = source.TeamName
+	queriesTeacherAWDReviewTeamResp.CaptainID = source.CaptainID
+	queriesTeacherAWDReviewTeamResp.TotalScore = source.TotalScore
+	queriesTeacherAWDReviewTeamResp.MemberCount = source.MemberCount
+	queriesTeacherAWDReviewTeamResp.LastSolveAt = CopyTimePtr(source.LastSolveAt)
+	return queriesTeacherAWDReviewTeamResp
 }
-func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewTrafficRecordToDtoTeacherAWDReviewTrafficResp(source domain.TeacherAWDReviewTrafficRecord) dto.TeacherAWDReviewTrafficResp {
-	var dtoTeacherAWDReviewTrafficResp dto.TeacherAWDReviewTrafficResp
-	dtoTeacherAWDReviewTrafficResp.ID = source.ID
-	dtoTeacherAWDReviewTrafficResp.ContestID = source.ContestID
-	dtoTeacherAWDReviewTrafficResp.RoundID = source.RoundID
-	dtoTeacherAWDReviewTrafficResp.AttackerTeamID = source.AttackerTeamID
-	dtoTeacherAWDReviewTrafficResp.AttackerTeamName = source.AttackerTeamName
-	dtoTeacherAWDReviewTrafficResp.VictimTeamID = source.VictimTeamID
-	dtoTeacherAWDReviewTrafficResp.VictimTeamName = source.VictimTeamName
-	dtoTeacherAWDReviewTrafficResp.ServiceID = source.ServiceID
-	dtoTeacherAWDReviewTrafficResp.AWDChallengeID = source.AWDChallengeID
-	dtoTeacherAWDReviewTrafficResp.AWDChallengeTitle = source.AWDChallengeTitle
-	dtoTeacherAWDReviewTrafficResp.Method = source.Method
-	dtoTeacherAWDReviewTrafficResp.Path = source.Path
-	dtoTeacherAWDReviewTrafficResp.StatusCode = source.StatusCode
-	dtoTeacherAWDReviewTrafficResp.Source = source.Source
-	dtoTeacherAWDReviewTrafficResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoTeacherAWDReviewTrafficResp
+func (c *teacherAWDReviewResponseMapperImpl) domainTeacherAWDReviewTrafficRecordToQueriesTeacherAWDReviewTrafficResp(source domain.TeacherAWDReviewTrafficRecord) TeacherAWDReviewTrafficResp {
+	var queriesTeacherAWDReviewTrafficResp TeacherAWDReviewTrafficResp
+	queriesTeacherAWDReviewTrafficResp.ID = source.ID
+	queriesTeacherAWDReviewTrafficResp.ContestID = source.ContestID
+	queriesTeacherAWDReviewTrafficResp.RoundID = source.RoundID
+	queriesTeacherAWDReviewTrafficResp.AttackerTeamID = source.AttackerTeamID
+	queriesTeacherAWDReviewTrafficResp.AttackerTeamName = source.AttackerTeamName
+	queriesTeacherAWDReviewTrafficResp.VictimTeamID = source.VictimTeamID
+	queriesTeacherAWDReviewTrafficResp.VictimTeamName = source.VictimTeamName
+	queriesTeacherAWDReviewTrafficResp.ServiceID = source.ServiceID
+	queriesTeacherAWDReviewTrafficResp.AWDChallengeID = source.AWDChallengeID
+	queriesTeacherAWDReviewTrafficResp.AWDChallengeTitle = source.AWDChallengeTitle
+	queriesTeacherAWDReviewTrafficResp.Method = source.Method
+	queriesTeacherAWDReviewTrafficResp.Path = source.Path
+	queriesTeacherAWDReviewTrafficResp.StatusCode = source.StatusCode
+	queriesTeacherAWDReviewTrafficResp.Source = source.Source
+	queriesTeacherAWDReviewTrafficResp.CreatedAt = CopyTime(source.CreatedAt)
+	return queriesTeacherAWDReviewTrafficResp
 }
