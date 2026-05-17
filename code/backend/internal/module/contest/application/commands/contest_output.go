@@ -14,3 +14,14 @@ type ContestResp struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
+
+type TeamResp struct {
+	ID          int64     `json:"id"`
+	ContestID   int64     `json:"contest_id"`
+	Name        string    `json:"name"`
+	CaptainID   int64     `json:"captain_id"`
+	InviteCode  string    `json:"invite_code"`
+	MaxMembers  int       `json:"max_members"`
+	MemberCount int       `json:"member_count"`
+	CreatedAt   time.Time `json:"created_at"`
+}

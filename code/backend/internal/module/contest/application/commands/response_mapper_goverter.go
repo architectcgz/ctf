@@ -45,8 +45,8 @@ type contestResponseMapper interface {
 	ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *dto.ContestAWDServiceResp
 
 	// goverter:ignore MemberCount
-	ToTeamRespBase(source model.Team) dto.TeamResp
-	ToTeamRespBasePtr(source *model.Team) *dto.TeamResp
+	ToTeamRespBase(source model.Team) TeamResp
+	ToTeamRespBasePtr(source *model.Team) *TeamResp
 
 	ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp
 	ToAWDRoundRespBasePtr(source *model.AWDRound) *dto.AWDRoundResp

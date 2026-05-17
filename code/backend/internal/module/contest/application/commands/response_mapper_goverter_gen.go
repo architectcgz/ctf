@@ -196,24 +196,24 @@ func (c *contestResponseMapperImpl) ToSubmissionRespPtr(source submissionRespSou
 	commandsSubmissionResp := c.ToSubmissionResp(source)
 	return &commandsSubmissionResp
 }
-func (c *contestResponseMapperImpl) ToTeamRespBase(source model.Team) dto.TeamResp {
-	var dtoTeamResp dto.TeamResp
-	dtoTeamResp.ID = source.ID
-	dtoTeamResp.ContestID = source.ContestID
-	dtoTeamResp.Name = source.Name
-	dtoTeamResp.CaptainID = source.CaptainID
-	dtoTeamResp.InviteCode = source.InviteCode
-	dtoTeamResp.MaxMembers = source.MaxMembers
-	dtoTeamResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoTeamResp
+func (c *contestResponseMapperImpl) ToTeamRespBase(source model.Team) TeamResp {
+	var commandsTeamResp TeamResp
+	commandsTeamResp.ID = source.ID
+	commandsTeamResp.ContestID = source.ContestID
+	commandsTeamResp.Name = source.Name
+	commandsTeamResp.CaptainID = source.CaptainID
+	commandsTeamResp.InviteCode = source.InviteCode
+	commandsTeamResp.MaxMembers = source.MaxMembers
+	commandsTeamResp.CreatedAt = CopyTime(source.CreatedAt)
+	return commandsTeamResp
 }
-func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *model.Team) *dto.TeamResp {
-	var pDtoTeamResp *dto.TeamResp
+func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *model.Team) *TeamResp {
+	var pCommandsTeamResp *TeamResp
 	if source != nil {
-		dtoTeamResp := c.ToTeamRespBase((*source))
-		pDtoTeamResp = &dtoTeamResp
+		commandsTeamResp := c.ToTeamRespBase((*source))
+		pCommandsTeamResp = &commandsTeamResp
 	}
-	return pDtoTeamResp
+	return pCommandsTeamResp
 }
 func (c *contestResponseMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
 	var modelAWDCheckerType model.AWDCheckerType

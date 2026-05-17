@@ -51,7 +51,7 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	return resp
 }
 
-func teamRespFromModel(team *model.Team, memberCount int) *dto.TeamResp {
+func teamRespFromModel(team *model.Team, memberCount int) *TeamResp {
 	resp := contestResponseMapperInst.ToTeamRespBasePtr(team)
 	if resp == nil {
 		return nil

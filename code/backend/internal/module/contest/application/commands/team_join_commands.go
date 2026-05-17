@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*dto.TeamResp, error) {
+func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*TeamResp, error) {
 	if err := s.ensureTeamJoinableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
