@@ -11,9 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 func TestAWDChallengeHandlerListChallenges(t *testing.T) {
@@ -22,9 +22,9 @@ func TestAWDChallengeHandlerListChallenges(t *testing.T) {
 	handler := NewAWDChallengeHandler(
 		stubAWDChallengeCommandService{},
 		stubAWDChallengeQueryService{
-			listWithContextFunc: func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
-				return &dto.AWDChallengePageResp{
-					Items: []*dto.AWDChallengeResp{
+			listWithContextFunc: func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error) {
+				return &challengecontracts.AWDChallengePageResp{
+					Items: []*challengecontracts.AWDChallengeResp{
 						{ID: 1, Name: "Bank Portal AWD", Slug: "bank-portal-awd"},
 					},
 					Total: 1,
@@ -53,15 +53,15 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 }
 
 type stubAWDChallengeCommandService struct {
-	listImportsFunc func(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error)
-	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error)
+	listImportsFunc func(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error)
+	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error)
 }
 
-func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
 	return nil, nil
 }
 
-func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
 	return nil, nil
 }
 
@@ -69,41 +69,41 @@ func (stubAWDChallengeCommandService) DeleteChallenge(ctx context.Context, id in
 	return nil
 }
 
-func (stubAWDChallengeCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDChallengeImportPreviewResp, error) {
+func (stubAWDChallengeCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDChallengeCommandService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error) {
+func (s stubAWDChallengeCommandService) ListImports(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error) {
 	if s.listImportsFunc != nil {
 		return s.listImportsFunc(ctx, actorUserID)
 	}
 	return nil, nil
 }
 
-func (s stubAWDChallengeCommandService) GetImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error) {
+func (s stubAWDChallengeCommandService) GetImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	if s.getImportFunc != nil {
 		return s.getImportFunc(ctx, actorUserID, id)
 	}
 	return nil, nil
 }
 
-func (stubAWDChallengeCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeResp, error) {
+func (stubAWDChallengeCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error) {
 	return nil, nil
 }
 
 type stubAWDChallengeQueryService struct {
-	listWithContextFunc func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error)
+	listWithContextFunc func(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error)
 }
 
-func (s stubAWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error) {
+func (s stubAWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*challengecontracts.AWDChallengeResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDChallengeQueryService) ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
+func (s stubAWDChallengeQueryService) ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error) {
 	if s.listWithContextFunc != nil {
 		return s.listWithContextFunc(ctx, req)
 	}
-	return &dto.AWDChallengePageResp{}, nil
+	return &challengecontracts.AWDChallengePageResp{}, nil
 }
 
 type awdChallengeHandlerContextKey string
@@ -116,7 +116,7 @@ func TestAWDChallengeHandlerListImportsPropagatesRequestContextToCommandService(
 	called := false
 	handler := NewAWDChallengeHandler(
 		stubAWDChallengeCommandService{
-			listImportsFunc: func(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error) {
+			listImportsFunc: func(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
@@ -124,7 +124,7 @@ func TestAWDChallengeHandlerListImportsPropagatesRequestContextToCommandService(
 				if actorUserID != 2001 {
 					t.Fatalf("unexpected actor user id: %d", actorUserID)
 				}
-				return []dto.AWDChallengeImportPreviewResp{{ID: "preview-1", Slug: "awd-bank-portal-01"}}, nil
+				return []challengecontracts.AWDChallengeImportPreviewResp{{ID: "preview-1", Slug: "awd-bank-portal-01"}}, nil
 			},
 		},
 		stubAWDChallengeQueryService{},
@@ -152,7 +152,7 @@ func TestAWDChallengeHandlerGetImportPropagatesRequestContextToCommandService(t 
 	called := false
 	handler := NewAWDChallengeHandler(
 		stubAWDChallengeCommandService{
-			getImportFunc: func(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error) {
+			getImportFunc: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)
@@ -163,7 +163,7 @@ func TestAWDChallengeHandlerGetImportPropagatesRequestContextToCommandService(t 
 				if id != "preview-1" {
 					t.Fatalf("unexpected import id: %s", id)
 				}
-				return &dto.AWDChallengeImportPreviewResp{ID: id, Slug: "awd-bank-portal-01"}, nil
+				return &challengecontracts.AWDChallengeImportPreviewResp{ID: id, Slug: "awd-bank-portal-01"}, nil
 			},
 		},
 		stubAWDChallengeQueryService{},

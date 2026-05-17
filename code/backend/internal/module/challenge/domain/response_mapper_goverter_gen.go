@@ -12,38 +12,38 @@ import (
 
 type ChallengeResponseMapperImpl struct{}
 
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp {
-	var dtoAWDChallengeResp dto.AWDChallengeResp
-	dtoAWDChallengeResp.ID = source.ID
-	dtoAWDChallengeResp.Name = source.Name
-	dtoAWDChallengeResp.Slug = source.Slug
-	dtoAWDChallengeResp.Category = source.Category
-	dtoAWDChallengeResp.Difficulty = source.Difficulty
-	dtoAWDChallengeResp.Description = source.Description
-	dtoAWDChallengeResp.ServiceType = string(source.ServiceType)
-	dtoAWDChallengeResp.DeploymentMode = string(source.DeploymentMode)
-	dtoAWDChallengeResp.Version = source.Version
-	dtoAWDChallengeResp.Status = string(source.Status)
-	dtoAWDChallengeResp.ReadinessStatus = string(source.ReadinessStatus)
-	dtoAWDChallengeResp.CheckerType = string(source.CheckerType)
-	dtoAWDChallengeResp.FlagMode = source.FlagMode
-	dtoAWDChallengeResp.DefenseEntryMode = source.DefenseEntryMode
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) contracts.AWDChallengeResp {
+	var contractsAWDChallengeResp contracts.AWDChallengeResp
+	contractsAWDChallengeResp.ID = source.ID
+	contractsAWDChallengeResp.Name = source.Name
+	contractsAWDChallengeResp.Slug = source.Slug
+	contractsAWDChallengeResp.Category = source.Category
+	contractsAWDChallengeResp.Difficulty = source.Difficulty
+	contractsAWDChallengeResp.Description = source.Description
+	contractsAWDChallengeResp.ServiceType = string(source.ServiceType)
+	contractsAWDChallengeResp.DeploymentMode = string(source.DeploymentMode)
+	contractsAWDChallengeResp.Version = source.Version
+	contractsAWDChallengeResp.Status = string(source.Status)
+	contractsAWDChallengeResp.ReadinessStatus = string(source.ReadinessStatus)
+	contractsAWDChallengeResp.CheckerType = string(source.CheckerType)
+	contractsAWDChallengeResp.FlagMode = source.FlagMode
+	contractsAWDChallengeResp.DefenseEntryMode = source.DefenseEntryMode
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
-		dtoAWDChallengeResp.CreatedBy = &xint64
+		contractsAWDChallengeResp.CreatedBy = &xint64
 	}
-	dtoAWDChallengeResp.LastVerifiedAt = CopyTimePtr(source.LastVerifiedAt)
-	dtoAWDChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	dtoAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoAWDChallengeResp
+	contractsAWDChallengeResp.LastVerifiedAt = CopyTimePtr(source.LastVerifiedAt)
+	contractsAWDChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	contractsAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsAWDChallengeResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp {
-	var pDtoAWDChallengeResp *dto.AWDChallengeResp
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *contracts.AWDChallengeResp {
+	var pContractsAWDChallengeResp *contracts.AWDChallengeResp
 	if source != nil {
-		dtoAWDChallengeResp := c.ToAWDChallengeRespBase((*source))
-		pDtoAWDChallengeResp = &dtoAWDChallengeResp
+		contractsAWDChallengeResp := c.ToAWDChallengeRespBase((*source))
+		pContractsAWDChallengeResp = &contractsAWDChallengeResp
 	}
-	return pDtoAWDChallengeResp
+	return pContractsAWDChallengeResp
 }
 func (c *ChallengeResponseMapperImpl) ToAdminChallengeWriteupResp(source model.ChallengeWriteup) contracts.AdminChallengeWriteupResp {
 	var contractsAdminChallengeWriteupResp contracts.AdminChallengeWriteupResp

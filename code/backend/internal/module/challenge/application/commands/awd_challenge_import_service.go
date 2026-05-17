@@ -16,8 +16,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -27,12 +27,12 @@ const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previe
 const defaultAWDCheckerArtifactRoot = "./data/awd-checker-artifacts"
 
 type storedAWDChallengeImportPreview struct {
-	ID        string                            `json:"id"`
-	FileName  string                            `json:"file_name"`
-	SourceDir string                            `json:"source_dir"`
-	CreatedBy int64                             `json:"created_by"`
-	CreatedAt time.Time                         `json:"created_at"`
-	Preview   dto.AWDChallengeImportPreviewResp `json:"preview"`
+	ID        string                                           `json:"id"`
+	FileName  string                                           `json:"file_name"`
+	SourceDir string                                           `json:"source_dir"`
+	CreatedBy int64                                            `json:"created_by"`
+	CreatedAt time.Time                                        `json:"created_at"`
+	Preview   challengecontracts.AWDChallengeImportPreviewResp `json:"preview"`
 }
 
 type AWDChallengeImportService struct {
@@ -72,7 +72,7 @@ func (s *AWDChallengeImportService) PreviewImport(
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
-) (*dto.AWDChallengeImportPreviewResp, error) {
+) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "awd-challenge-package.zip"
 	}
@@ -118,14 +118,14 @@ func (s *AWDChallengeImportService) PreviewImport(
 	return preview, nil
 }
 
-func (s *AWDChallengeImportService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error) {
+func (s *AWDChallengeImportService) ListImports(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error) {
 	_ = ctx
 	records, err := loadAWDChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
 	}
 
-	previews := make([]dto.AWDChallengeImportPreviewResp, 0, len(records))
+	previews := make([]challengecontracts.AWDChallengeImportPreviewResp, 0, len(records))
 	for _, record := range records {
 		if record == nil {
 			continue
@@ -142,7 +142,7 @@ func (s *AWDChallengeImportService) GetImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDChallengeImportPreviewResp, error) {
+) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	_ = ctx
 	record, err := loadAWDChallengeImportPreviewRecord(id)
 	if err != nil {
@@ -159,7 +159,7 @@ func (s *AWDChallengeImportService) CommitImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDChallengeResp, error) {
+) (*challengecontracts.AWDChallengeResp, error) {
 	record, err := loadAWDChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -273,7 +273,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 	fileName string,
 	parsed *domain.ParsedAWDChallengePackage,
 	createdAt time.Time,
-) *dto.AWDChallengeImportPreviewResp {
+) *challengecontracts.AWDChallengeImportPreviewResp {
 	if parsed == nil {
 		return nil
 	}
@@ -284,7 +284,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 		logger = s.logger
 	}
 
-	imageDelivery := dto.ChallengeImportImageDeliveryResp{
+	imageDelivery := challengecontracts.ChallengeImportImageDeliveryResp{
 		SourceType:   parsed.ImageSourceType,
 		SuggestedTag: parsed.SuggestedImageTag,
 	}
@@ -299,7 +299,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "preview")
 		warnings = appendChallengeImportImageBuildWarning(warnings, parsed.ImageSourceType)
 	}
-	return &dto.AWDChallengeImportPreviewResp{
+	return &challengecontracts.AWDChallengeImportPreviewResp{
 		ID:               id,
 		FileName:         fileName,
 		Slug:             parsed.Slug,

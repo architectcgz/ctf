@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -35,7 +35,7 @@ func (s *AWDChallengeCommandFacade) CreateChallenge(
 	ctx context.Context,
 	actorUserID int64,
 	req CreateAWDChallengeInput,
-) (*dto.AWDChallengeResp, error) {
+) (*challengecontracts.AWDChallengeResp, error) {
 	return s.core.CreateChallenge(ctx, actorUserID, req)
 }
 
@@ -43,7 +43,7 @@ func (s *AWDChallengeCommandFacade) UpdateChallenge(
 	ctx context.Context,
 	id int64,
 	req UpdateAWDChallengeInput,
-) (*dto.AWDChallengeResp, error) {
+) (*challengecontracts.AWDChallengeResp, error) {
 	return s.core.UpdateChallenge(ctx, id, req)
 }
 
@@ -56,11 +56,11 @@ func (s *AWDChallengeCommandFacade) PreviewImport(
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
-) (*dto.AWDChallengeImportPreviewResp, error) {
+) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	return s.imports.PreviewImport(ctx, actorUserID, fileName, reader)
 }
 
-func (s *AWDChallengeCommandFacade) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error) {
+func (s *AWDChallengeCommandFacade) ListImports(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error) {
 	return s.imports.ListImports(ctx, actorUserID)
 }
 
@@ -68,7 +68,7 @@ func (s *AWDChallengeCommandFacade) GetImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDChallengeImportPreviewResp, error) {
+) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
 	return s.imports.GetImport(ctx, actorUserID, id)
 }
 
@@ -76,6 +76,6 @@ func (s *AWDChallengeCommandFacade) CommitImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDChallengeResp, error) {
+) (*challengecontracts.AWDChallengeResp, error) {
 	return s.imports.CommitImport(ctx, actorUserID, id)
 }

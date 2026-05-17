@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/response"
 )
 
@@ -22,18 +22,18 @@ type AWDChallengeHandler struct {
 }
 
 type awdChallengeCommandService interface {
-	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*dto.AWDChallengeResp, error)
-	UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error)
+	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error)
+	UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error)
 	DeleteChallenge(ctx context.Context, id int64) error
-	PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDChallengeImportPreviewResp, error)
-	ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error)
-	GetImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeImportPreviewResp, error)
-	CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDChallengeResp, error)
+	PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error)
+	ListImports(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error)
+	GetImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error)
+	CommitImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error)
 }
 
 type awdChallengeQueryService interface {
-	GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error)
-	ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*dto.AWDChallengePageResp, error)
+	GetChallenge(ctx context.Context, id int64) (*challengecontracts.AWDChallengeResp, error)
+	ListChallenges(ctx context.Context, req challengeqry.ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error)
 }
 
 func NewAWDChallengeHandler(commands awdChallengeCommandService, queries awdChallengeQueryService) *AWDChallengeHandler {

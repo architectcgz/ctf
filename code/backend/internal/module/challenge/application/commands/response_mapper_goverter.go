@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
 )
 
@@ -34,6 +35,7 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore Hints
 	// goverter:ignore Flag
 	// goverter:ignore Runtime
+	// goverter:ignore ImageDelivery
 	// goverter:ignore Extensions
 	// goverter:ignore Topology
 	// goverter:ignore PackageFiles
@@ -48,10 +50,11 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore FlagConfig
 	// goverter:ignore AccessConfig
 	// goverter:ignore RuntimeConfig
+	// goverter:ignore ImageDelivery
 	// goverter:ignore Warnings
 	// goverter:ignore CreatedAt
-	ToAWDChallengeImportPreviewRespBase(source challengedomain.ParsedAWDChallengePackage) dto.AWDChallengeImportPreviewResp
-	ToAWDChallengeImportPreviewRespBasePtr(source *challengedomain.ParsedAWDChallengePackage) *dto.AWDChallengeImportPreviewResp
+	ToAWDChallengeImportPreviewRespBase(source challengedomain.ParsedAWDChallengePackage) challengecontracts.AWDChallengeImportPreviewResp
+	ToAWDChallengeImportPreviewRespBasePtr(source *challengedomain.ParsedAWDChallengePackage) *challengecontracts.AWDChallengeImportPreviewResp
 
 	// goverter:map ID RevisionID
 	// goverter:ignore ChallengeID

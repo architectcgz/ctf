@@ -6,33 +6,34 @@ package commands
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/challenge/contracts"
 	domain "ctf-platform/internal/module/challenge/domain"
 )
 
 type challengeCommandResponseMapperImpl struct{}
 
-func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBase(source domain.ParsedAWDChallengePackage) dto.AWDChallengeImportPreviewResp {
-	var dtoAWDChallengeImportPreviewResp dto.AWDChallengeImportPreviewResp
-	dtoAWDChallengeImportPreviewResp.Slug = source.Slug
-	dtoAWDChallengeImportPreviewResp.Title = source.Title
-	dtoAWDChallengeImportPreviewResp.Category = source.Category
-	dtoAWDChallengeImportPreviewResp.Difficulty = source.Difficulty
-	dtoAWDChallengeImportPreviewResp.Description = source.Description
-	dtoAWDChallengeImportPreviewResp.ServiceType = source.ServiceType
-	dtoAWDChallengeImportPreviewResp.DeploymentMode = source.DeploymentMode
-	dtoAWDChallengeImportPreviewResp.Version = source.Version
-	dtoAWDChallengeImportPreviewResp.CheckerType = source.CheckerType
-	dtoAWDChallengeImportPreviewResp.FlagMode = source.FlagMode
-	dtoAWDChallengeImportPreviewResp.DefenseEntryMode = source.DefenseEntryMode
-	return dtoAWDChallengeImportPreviewResp
+func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBase(source domain.ParsedAWDChallengePackage) contracts.AWDChallengeImportPreviewResp {
+	var contractsAWDChallengeImportPreviewResp contracts.AWDChallengeImportPreviewResp
+	contractsAWDChallengeImportPreviewResp.Slug = source.Slug
+	contractsAWDChallengeImportPreviewResp.Title = source.Title
+	contractsAWDChallengeImportPreviewResp.Category = source.Category
+	contractsAWDChallengeImportPreviewResp.Difficulty = source.Difficulty
+	contractsAWDChallengeImportPreviewResp.Description = source.Description
+	contractsAWDChallengeImportPreviewResp.ServiceType = source.ServiceType
+	contractsAWDChallengeImportPreviewResp.DeploymentMode = source.DeploymentMode
+	contractsAWDChallengeImportPreviewResp.Version = source.Version
+	contractsAWDChallengeImportPreviewResp.CheckerType = source.CheckerType
+	contractsAWDChallengeImportPreviewResp.FlagMode = source.FlagMode
+	contractsAWDChallengeImportPreviewResp.DefenseEntryMode = source.DefenseEntryMode
+	return contractsAWDChallengeImportPreviewResp
 }
-func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBasePtr(source *domain.ParsedAWDChallengePackage) *dto.AWDChallengeImportPreviewResp {
-	var pDtoAWDChallengeImportPreviewResp *dto.AWDChallengeImportPreviewResp
+func (c *challengeCommandResponseMapperImpl) ToAWDChallengeImportPreviewRespBasePtr(source *domain.ParsedAWDChallengePackage) *contracts.AWDChallengeImportPreviewResp {
+	var pContractsAWDChallengeImportPreviewResp *contracts.AWDChallengeImportPreviewResp
 	if source != nil {
-		dtoAWDChallengeImportPreviewResp := c.ToAWDChallengeImportPreviewRespBase((*source))
-		pDtoAWDChallengeImportPreviewResp = &dtoAWDChallengeImportPreviewResp
+		contractsAWDChallengeImportPreviewResp := c.ToAWDChallengeImportPreviewRespBase((*source))
+		pContractsAWDChallengeImportPreviewResp = &contractsAWDChallengeImportPreviewResp
 	}
-	return pDtoAWDChallengeImportPreviewResp
+	return pContractsAWDChallengeImportPreviewResp
 }
 func (c *challengeCommandResponseMapperImpl) ToChallengeHintAdminRespFromParsed(source domain.ParsedChallengePackageHint) dto.ChallengeHintAdminResp {
 	var dtoChallengeHintAdminResp dto.ChallengeHintAdminResp

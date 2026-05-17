@@ -40,8 +40,8 @@ type ChallengeResponseMapper interface {
 	ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *challengecontracts.EnvironmentTemplateResp
 
 	// goverter:ignore CheckerConfig FlagConfig AccessConfig RuntimeConfig
-	ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp
-	ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp
+	ToAWDChallengeRespBase(source model.AWDChallenge) challengecontracts.AWDChallengeResp
+	ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *challengecontracts.AWDChallengeResp
 
 	ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp
 	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp

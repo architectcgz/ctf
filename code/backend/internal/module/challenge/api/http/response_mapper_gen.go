@@ -11,16 +11,16 @@ import (
 
 type ChallengeResponseMapperImpl struct{}
 
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportCommitResp(source *contracts.AWDChallengeResp) *AWDChallengeImportCommitResp {
 	var pHttpAWDChallengeImportCommitResp *AWDChallengeImportCommitResp
 	if source != nil {
 		var httpAWDChallengeImportCommitResp AWDChallengeImportCommitResp
-		httpAWDChallengeImportCommitResp.Challenge = c.dtoAWDChallengeRespToPHttpAWDChallengeResp((*source))
+		httpAWDChallengeImportCommitResp.Challenge = c.contractsAWDChallengeRespToPHttpAWDChallengeResp((*source))
 		pHttpAWDChallengeImportCommitResp = &httpAWDChallengeImportCommitResp
 	}
 	return pHttpAWDChallengeImportCommitResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewResp(source *dto.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewResp(source *contracts.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp {
 	var pHttpAWDChallengeImportPreviewResp *AWDChallengeImportPreviewResp
 	if source != nil {
 		var httpAWDChallengeImportPreviewResp AWDChallengeImportPreviewResp
@@ -41,7 +41,7 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewResp(source *dt
 		httpAWDChallengeImportPreviewResp.DefenseEntryMode = (*source).DefenseEntryMode
 		httpAWDChallengeImportPreviewResp.AccessConfig = CopyAnyMap((*source).AccessConfig)
 		httpAWDChallengeImportPreviewResp.RuntimeConfig = CopyAnyMap((*source).RuntimeConfig)
-		httpAWDChallengeImportPreviewResp.ImageDelivery = c.dtoChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp((*source).ImageDelivery)
+		httpAWDChallengeImportPreviewResp.ImageDelivery = c.contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp((*source).ImageDelivery)
 		if (*source).Warnings != nil {
 			httpAWDChallengeImportPreviewResp.Warnings = make([]string, len((*source).Warnings))
 			for i := 0; i < len((*source).Warnings); i++ {
@@ -53,17 +53,17 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewResp(source *dt
 	}
 	return pHttpAWDChallengeImportPreviewResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeImportPreviewRespList(source []contracts.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp {
 	var httpAWDChallengeImportPreviewRespList []AWDChallengeImportPreviewResp
 	if source != nil {
 		httpAWDChallengeImportPreviewRespList = make([]AWDChallengeImportPreviewResp, len(source))
 		for i := 0; i < len(source); i++ {
-			httpAWDChallengeImportPreviewRespList[i] = c.dtoAWDChallengeImportPreviewRespToHttpAWDChallengeImportPreviewResp(source[i])
+			httpAWDChallengeImportPreviewRespList[i] = c.contractsAWDChallengeImportPreviewRespToHttpAWDChallengeImportPreviewResp(source[i])
 		}
 	}
 	return httpAWDChallengeImportPreviewRespList
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengePageResult(source *contracts.AWDChallengePageResp) *AWDChallengePageResp {
 	var pHttpAWDChallengePageResp *AWDChallengePageResp
 	if source != nil {
 		var httpAWDChallengePageResp AWDChallengePageResp
@@ -75,7 +75,7 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengePageResult(source *dto.AWDCh
 	}
 	return pHttpAWDChallengePageResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeResp(source *contracts.AWDChallengeResp) *AWDChallengeResp {
 	var pHttpAWDChallengeResp *AWDChallengeResp
 	if source != nil {
 		var httpAWDChallengeResp AWDChallengeResp
@@ -108,7 +108,7 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeResp(source *dto.AWDChalleng
 	}
 	return pHttpAWDChallengeResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespList(source []*dto.AWDChallengeResp) []*AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespList(source []*contracts.AWDChallengeResp) []*AWDChallengeResp {
 	var pHttpAWDChallengeRespList []*AWDChallengeResp
 	if source != nil {
 		pHttpAWDChallengeRespList = make([]*AWDChallengeResp, len(source))
@@ -545,6 +545,74 @@ func (c *ChallengeResponseMapperImpl) ToTagRespList(source []*contracts.TagResp)
 	}
 	return pHttpTagRespList
 }
+func (c *ChallengeResponseMapperImpl) contractsAWDChallengeImportPreviewRespToHttpAWDChallengeImportPreviewResp(source contracts.AWDChallengeImportPreviewResp) AWDChallengeImportPreviewResp {
+	var httpAWDChallengeImportPreviewResp AWDChallengeImportPreviewResp
+	httpAWDChallengeImportPreviewResp.ID = source.ID
+	httpAWDChallengeImportPreviewResp.FileName = source.FileName
+	httpAWDChallengeImportPreviewResp.Slug = source.Slug
+	httpAWDChallengeImportPreviewResp.Title = source.Title
+	httpAWDChallengeImportPreviewResp.Category = source.Category
+	httpAWDChallengeImportPreviewResp.Difficulty = source.Difficulty
+	httpAWDChallengeImportPreviewResp.Description = source.Description
+	httpAWDChallengeImportPreviewResp.ServiceType = source.ServiceType
+	httpAWDChallengeImportPreviewResp.DeploymentMode = source.DeploymentMode
+	httpAWDChallengeImportPreviewResp.Version = source.Version
+	httpAWDChallengeImportPreviewResp.CheckerType = source.CheckerType
+	httpAWDChallengeImportPreviewResp.CheckerConfig = CopyAnyMap(source.CheckerConfig)
+	httpAWDChallengeImportPreviewResp.FlagMode = source.FlagMode
+	httpAWDChallengeImportPreviewResp.FlagConfig = CopyAnyMap(source.FlagConfig)
+	httpAWDChallengeImportPreviewResp.DefenseEntryMode = source.DefenseEntryMode
+	httpAWDChallengeImportPreviewResp.AccessConfig = CopyAnyMap(source.AccessConfig)
+	httpAWDChallengeImportPreviewResp.RuntimeConfig = CopyAnyMap(source.RuntimeConfig)
+	httpAWDChallengeImportPreviewResp.ImageDelivery = c.contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source.ImageDelivery)
+	if source.Warnings != nil {
+		httpAWDChallengeImportPreviewResp.Warnings = make([]string, len(source.Warnings))
+		for i := 0; i < len(source.Warnings); i++ {
+			httpAWDChallengeImportPreviewResp.Warnings[i] = source.Warnings[i]
+		}
+	}
+	httpAWDChallengeImportPreviewResp.CreatedAt = CopyTime(source.CreatedAt)
+	return httpAWDChallengeImportPreviewResp
+}
+func (c *ChallengeResponseMapperImpl) contractsAWDChallengeRespToPHttpAWDChallengeResp(source contracts.AWDChallengeResp) *AWDChallengeResp {
+	var httpAWDChallengeResp AWDChallengeResp
+	httpAWDChallengeResp.ID = source.ID
+	httpAWDChallengeResp.Name = source.Name
+	httpAWDChallengeResp.Slug = source.Slug
+	httpAWDChallengeResp.Category = source.Category
+	httpAWDChallengeResp.Difficulty = source.Difficulty
+	httpAWDChallengeResp.Description = source.Description
+	httpAWDChallengeResp.ServiceType = source.ServiceType
+	httpAWDChallengeResp.DeploymentMode = source.DeploymentMode
+	httpAWDChallengeResp.Version = source.Version
+	httpAWDChallengeResp.Status = source.Status
+	httpAWDChallengeResp.ReadinessStatus = source.ReadinessStatus
+	httpAWDChallengeResp.CheckerType = source.CheckerType
+	httpAWDChallengeResp.CheckerConfig = CopyAnyMap(source.CheckerConfig)
+	httpAWDChallengeResp.FlagMode = source.FlagMode
+	httpAWDChallengeResp.FlagConfig = CopyAnyMap(source.FlagConfig)
+	httpAWDChallengeResp.DefenseEntryMode = source.DefenseEntryMode
+	httpAWDChallengeResp.AccessConfig = CopyAnyMap(source.AccessConfig)
+	httpAWDChallengeResp.RuntimeConfig = CopyAnyMap(source.RuntimeConfig)
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		httpAWDChallengeResp.CreatedBy = &xint64
+	}
+	httpAWDChallengeResp.LastVerifiedAt = CopyTimePtr(source.LastVerifiedAt)
+	httpAWDChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	httpAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	return &httpAWDChallengeResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source contracts.ChallengeImportImageDeliveryResp) ChallengeImportImageDeliveryResp {
+	var httpChallengeImportImageDeliveryResp ChallengeImportImageDeliveryResp
+	httpChallengeImportImageDeliveryResp.SourceType = source.SourceType
+	httpChallengeImportImageDeliveryResp.SuggestedTag = source.SuggestedTag
+	httpChallengeImportImageDeliveryResp.TargetImageRef = source.TargetImageRef
+	httpChallengeImportImageDeliveryResp.BuildStatus = source.BuildStatus
+	httpChallengeImportImageDeliveryResp.Digest = source.Digest
+	httpChallengeImportImageDeliveryResp.LastError = source.LastError
+	return httpChallengeImportImageDeliveryResp
+}
 func (c *ChallengeResponseMapperImpl) contractsChallengePackageFileRespToHttpChallengePackageFileResp(source contracts.ChallengePackageFileResp) ChallengePackageFileResp {
 	var httpChallengePackageFileResp ChallengePackageFileResp
 	httpChallengePackageFileResp.Path = source.Path
@@ -623,64 +691,6 @@ func (c *ChallengeResponseMapperImpl) contractsTopologyTrafficPolicyRespToHttpTo
 		}
 	}
 	return httpTopologyTrafficPolicyResp
-}
-func (c *ChallengeResponseMapperImpl) dtoAWDChallengeImportPreviewRespToHttpAWDChallengeImportPreviewResp(source dto.AWDChallengeImportPreviewResp) AWDChallengeImportPreviewResp {
-	var httpAWDChallengeImportPreviewResp AWDChallengeImportPreviewResp
-	httpAWDChallengeImportPreviewResp.ID = source.ID
-	httpAWDChallengeImportPreviewResp.FileName = source.FileName
-	httpAWDChallengeImportPreviewResp.Slug = source.Slug
-	httpAWDChallengeImportPreviewResp.Title = source.Title
-	httpAWDChallengeImportPreviewResp.Category = source.Category
-	httpAWDChallengeImportPreviewResp.Difficulty = source.Difficulty
-	httpAWDChallengeImportPreviewResp.Description = source.Description
-	httpAWDChallengeImportPreviewResp.ServiceType = source.ServiceType
-	httpAWDChallengeImportPreviewResp.DeploymentMode = source.DeploymentMode
-	httpAWDChallengeImportPreviewResp.Version = source.Version
-	httpAWDChallengeImportPreviewResp.CheckerType = source.CheckerType
-	httpAWDChallengeImportPreviewResp.CheckerConfig = CopyAnyMap(source.CheckerConfig)
-	httpAWDChallengeImportPreviewResp.FlagMode = source.FlagMode
-	httpAWDChallengeImportPreviewResp.FlagConfig = CopyAnyMap(source.FlagConfig)
-	httpAWDChallengeImportPreviewResp.DefenseEntryMode = source.DefenseEntryMode
-	httpAWDChallengeImportPreviewResp.AccessConfig = CopyAnyMap(source.AccessConfig)
-	httpAWDChallengeImportPreviewResp.RuntimeConfig = CopyAnyMap(source.RuntimeConfig)
-	httpAWDChallengeImportPreviewResp.ImageDelivery = c.dtoChallengeImportImageDeliveryRespToHttpChallengeImportImageDeliveryResp(source.ImageDelivery)
-	if source.Warnings != nil {
-		httpAWDChallengeImportPreviewResp.Warnings = make([]string, len(source.Warnings))
-		for i := 0; i < len(source.Warnings); i++ {
-			httpAWDChallengeImportPreviewResp.Warnings[i] = source.Warnings[i]
-		}
-	}
-	httpAWDChallengeImportPreviewResp.CreatedAt = CopyTime(source.CreatedAt)
-	return httpAWDChallengeImportPreviewResp
-}
-func (c *ChallengeResponseMapperImpl) dtoAWDChallengeRespToPHttpAWDChallengeResp(source dto.AWDChallengeResp) *AWDChallengeResp {
-	var httpAWDChallengeResp AWDChallengeResp
-	httpAWDChallengeResp.ID = source.ID
-	httpAWDChallengeResp.Name = source.Name
-	httpAWDChallengeResp.Slug = source.Slug
-	httpAWDChallengeResp.Category = source.Category
-	httpAWDChallengeResp.Difficulty = source.Difficulty
-	httpAWDChallengeResp.Description = source.Description
-	httpAWDChallengeResp.ServiceType = source.ServiceType
-	httpAWDChallengeResp.DeploymentMode = source.DeploymentMode
-	httpAWDChallengeResp.Version = source.Version
-	httpAWDChallengeResp.Status = source.Status
-	httpAWDChallengeResp.ReadinessStatus = source.ReadinessStatus
-	httpAWDChallengeResp.CheckerType = source.CheckerType
-	httpAWDChallengeResp.CheckerConfig = CopyAnyMap(source.CheckerConfig)
-	httpAWDChallengeResp.FlagMode = source.FlagMode
-	httpAWDChallengeResp.FlagConfig = CopyAnyMap(source.FlagConfig)
-	httpAWDChallengeResp.DefenseEntryMode = source.DefenseEntryMode
-	httpAWDChallengeResp.AccessConfig = CopyAnyMap(source.AccessConfig)
-	httpAWDChallengeResp.RuntimeConfig = CopyAnyMap(source.RuntimeConfig)
-	if source.CreatedBy != nil {
-		xint64 := *source.CreatedBy
-		httpAWDChallengeResp.CreatedBy = &xint64
-	}
-	httpAWDChallengeResp.LastVerifiedAt = CopyTimePtr(source.LastVerifiedAt)
-	httpAWDChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	httpAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
-	return &httpAWDChallengeResp
 }
 func (c *ChallengeResponseMapperImpl) dtoChallengeHintAdminRespToHttpChallengeHintAdminResp(source dto.ChallengeHintAdminResp) ChallengeHintAdminResp {
 	var httpChallengeHintAdminResp ChallengeHintAdminResp

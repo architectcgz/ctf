@@ -39,13 +39,13 @@ type ChallengeResponseMapper interface {
 	ToChallengeTopologyResp(source *challengecontracts.ChallengeTopologyResp) *ChallengeTopologyResp
 	ToEnvironmentTemplateResp(source *challengecontracts.EnvironmentTemplateResp) *EnvironmentTemplateResp
 	ToEnvironmentTemplateRespList(source []*challengecontracts.EnvironmentTemplateResp) []*EnvironmentTemplateResp
-	ToAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp
-	ToAWDChallengeRespList(source []*dto.AWDChallengeResp) []*AWDChallengeResp
-	ToAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp
-	ToAWDChallengeImportPreviewResp(source *dto.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp
-	ToAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp
+	ToAWDChallengeResp(source *challengecontracts.AWDChallengeResp) *AWDChallengeResp
+	ToAWDChallengeRespList(source []*challengecontracts.AWDChallengeResp) []*AWDChallengeResp
+	ToAWDChallengePageResult(source *challengecontracts.AWDChallengePageResp) *AWDChallengePageResp
+	ToAWDChallengeImportPreviewResp(source *challengecontracts.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp
+	ToAWDChallengeImportPreviewRespList(source []challengecontracts.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp
 	// goverter:map . Challenge
-	ToAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp
+	ToAWDChallengeImportCommitResp(source *challengecontracts.AWDChallengeResp) *AWDChallengeImportCommitResp
 }
 
 var challengeResponseMapper ChallengeResponseMapper
@@ -129,15 +129,15 @@ func toEnvironmentTemplateRespList(source []*challengecontracts.EnvironmentTempl
 	return challengeResponseMapper.ToEnvironmentTemplateRespList(source)
 }
 
-func toAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp {
+func toAWDChallengeResp(source *challengecontracts.AWDChallengeResp) *AWDChallengeResp {
 	return challengeResponseMapper.ToAWDChallengeResp(source)
 }
 
-func toAWDChallengeImportPreviewResp(source *dto.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp {
+func toAWDChallengeImportPreviewResp(source *challengecontracts.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp {
 	return challengeResponseMapper.ToAWDChallengeImportPreviewResp(source)
 }
 
-func toAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp {
+func toAWDChallengeImportPreviewRespList(source []challengecontracts.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp {
 	return challengeResponseMapper.ToAWDChallengeImportPreviewRespList(source)
 }
 
@@ -153,11 +153,11 @@ func toChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem
 	return challengeResponseMapper.ToChallengeListItemPageResult(source)
 }
 
-func toAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp {
+func toAWDChallengePageResult(source *challengecontracts.AWDChallengePageResp) *AWDChallengePageResp {
 	return challengeResponseMapper.ToAWDChallengePageResult(source)
 }
 
-func toAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp {
+func toAWDChallengeImportCommitResp(source *challengecontracts.AWDChallengeResp) *AWDChallengeImportCommitResp {
 	return challengeResponseMapper.ToAWDChallengeImportCommitResp(source)
 }
 

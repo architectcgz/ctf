@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -20,7 +20,7 @@ func NewAWDChallengeService(repo challengeports.AWDChallengeCommandRepository) *
 	return &AWDChallengeService{repo: repo}
 }
 
-func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
+func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
 	challenge := &model.AWDChallenge{
 		Name:            strings.TrimSpace(req.Name),
 		Slug:            strings.TrimSpace(req.Slug),
@@ -40,7 +40,7 @@ func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID i
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
 
-func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateAWDChallengeInput) (*dto.AWDChallengeResp, error) {
+func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
 	challenge, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {

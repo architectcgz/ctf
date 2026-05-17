@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -18,7 +19,7 @@ func NewAWDChallengeQueryService(repo challengeports.AWDChallengeQueryRepository
 	return &AWDChallengeQueryService{repo: repo}
 }
 
-func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*dto.AWDChallengeResp, error) {
+func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (*challengecontracts.AWDChallengeResp, error) {
 	item, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
@@ -29,7 +30,7 @@ func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (
 	return domain.AWDChallengeRespFromModel(item), nil
 }
 
-func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListAWDChallengesInput) (*dto.AWDChallengePageResp, error) {
+func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListAWDChallengesInput) (*challengecontracts.AWDChallengePageResp, error) {
 	query := &dto.AWDChallengeQuery{
 		Keyword:     req.Keyword,
 		ServiceType: req.ServiceType,
@@ -50,8 +51,8 @@ func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListA
 	if req.Size > 0 {
 		size = req.Size
 	}
-	resp := &dto.AWDChallengePageResp{
-		Items: make([]*dto.AWDChallengeResp, 0, len(items)),
+	resp := &challengecontracts.AWDChallengePageResp{
+		Items: make([]*challengecontracts.AWDChallengeResp, 0, len(items)),
 		Total: total,
 		Page:  page,
 		Size:  size,
