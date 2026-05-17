@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -71,10 +72,10 @@ func (s *studentReviewRepoStub) GetStudentEvidence(ctx context.Context, userID i
 }
 
 type studentReviewRecommendationStub struct {
-	recommendFn func(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	recommendFn func(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error)
 }
 
-func (s *studentReviewRecommendationStub) Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+func (s *studentReviewRecommendationStub) Recommend(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
 	if s.recommendFn != nil {
 		return s.recommendFn(ctx, userID, limit)
 	}
@@ -142,15 +143,15 @@ func TestStudentReviewQueryServiceGetStudentRecommendationsMapsResult(t *testing
 		},
 	}
 	recommendations := &studentReviewRecommendationStub{
-		recommendFn: func(_ context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+		recommendFn: func(_ context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
 			if userID != 101 || limit != 3 {
 				return nil, nil
 			}
-			return &dto.RecommendationResp{
-				WeakDimensions: []dto.RecommendationWeakDimension{
+			return &assessmentcontracts.Recommendation{
+				WeakDimensions: []assessmentcontracts.RecommendationWeakDimension{
 					{Dimension: "web", Severity: "medium", Confidence: 0.3},
 				},
-				Challenges: []*dto.ChallengeRecommendation{
+				Challenges: []*assessmentcontracts.ChallengeRecommendation{
 					{ID: 7, Title: "web-101", Category: "web", Difficulty: "easy"},
 				},
 			}, nil

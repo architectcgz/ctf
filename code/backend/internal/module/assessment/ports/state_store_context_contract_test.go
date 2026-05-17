@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 )
 
@@ -26,11 +26,11 @@ func (ctxOnlyAssessmentProfileLockStore) AcquireFullProfileRebuildLock(context.C
 
 type ctxOnlyAssessmentRecommendationCacheStore struct{}
 
-func (ctxOnlyAssessmentRecommendationCacheStore) LoadRecommendations(context.Context, int64) ([]*dto.ChallengeRecommendation, bool, error) {
+func (ctxOnlyAssessmentRecommendationCacheStore) LoadRecommendations(context.Context, int64) ([]*assessmentcontracts.ChallengeRecommendation, bool, error) {
 	return nil, false, nil
 }
 
-func (ctxOnlyAssessmentRecommendationCacheStore) StoreRecommendations(context.Context, int64, []*dto.ChallengeRecommendation, time.Duration) error {
+func (ctxOnlyAssessmentRecommendationCacheStore) StoreRecommendations(context.Context, int64, []*assessmentcontracts.ChallengeRecommendation, time.Duration) error {
 	return nil
 }
 

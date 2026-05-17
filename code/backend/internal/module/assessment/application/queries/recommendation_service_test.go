@@ -15,9 +15,9 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -93,7 +93,7 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
 
-	cached := []*dto.ChallengeRecommendation{
+	cached := []*assessmentcontracts.ChallengeRecommendation{
 		{ID: 1, Title: "cached-web", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Summary: "cached"},
 	}
 	payload, err := json.Marshal(cached)

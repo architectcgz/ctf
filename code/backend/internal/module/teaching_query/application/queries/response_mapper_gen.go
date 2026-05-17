@@ -5,6 +5,7 @@ package queries
 
 import (
 	dto "ctf-platform/internal/dto"
+	contracts "ctf-platform/internal/module/assessment/contracts"
 	ports "ctf-platform/internal/module/teaching_query/ports"
 )
 
@@ -77,7 +78,7 @@ func (c *teachingQueryResponseMapperImpl) ToStudentItems(source []ports.StudentI
 	}
 	return dtoTeacherStudentItemList
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source contracts.ChallengeRecommendation) dto.TeacherRecommendationItem {
 	var dtoTeacherRecommendationItem dto.TeacherRecommendationItem
 	dtoTeacherRecommendationItem.ChallengeID = source.ID
 	dtoTeacherRecommendationItem.Title = source.Title
@@ -96,7 +97,7 @@ func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source dto
 	dtoTeacherRecommendationItem.Evidence = source.Evidence
 	return dtoTeacherRecommendationItem
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source *contracts.ChallengeRecommendation) *dto.TeacherRecommendationItem {
 	var pDtoTeacherRecommendationItem *dto.TeacherRecommendationItem
 	if source != nil {
 		dtoTeacherRecommendationItem := c.ToTeacherRecommendationItem((*source))
@@ -104,13 +105,13 @@ func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source 
 	}
 	return pDtoTeacherRecommendationItem
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationResp(source contracts.Recommendation) dto.TeacherRecommendationResp {
 	var dtoTeacherRecommendationResp dto.TeacherRecommendationResp
 	dtoTeacherRecommendationResp.WeakDimensions = c.ToTeacherRecommendationWeakDimensions(source.WeakDimensions)
 	dtoTeacherRecommendationResp.Challenges = MapTeacherRecommendationItems(source.Challenges)
 	return dtoTeacherRecommendationResp
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source *contracts.Recommendation) *dto.TeacherRecommendationResp {
 	var pDtoTeacherRecommendationResp *dto.TeacherRecommendationResp
 	if source != nil {
 		dtoTeacherRecommendationResp := c.ToTeacherRecommendationResp((*source))
@@ -118,7 +119,7 @@ func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source 
 	}
 	return pDtoTeacherRecommendationResp
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(source contracts.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
 	var dtoTeacherRecommendationWeakDimension dto.TeacherRecommendationWeakDimension
 	dtoTeacherRecommendationWeakDimension.Dimension = source.Dimension
 	dtoTeacherRecommendationWeakDimension.Severity = source.Severity
@@ -126,7 +127,7 @@ func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(s
 	dtoTeacherRecommendationWeakDimension.Evidence = source.Evidence
 	return dtoTeacherRecommendationWeakDimension
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []contracts.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
 	var dtoTeacherRecommendationWeakDimensionList []dto.TeacherRecommendationWeakDimension
 	if source != nil {
 		dtoTeacherRecommendationWeakDimensionList = make([]dto.TeacherRecommendationWeakDimension, len(source))

@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
@@ -47,10 +48,10 @@ func (s *classInsightRepoStub) ListClassTeachingFactSnapshots(ctx context.Contex
 }
 
 type classInsightRecommendationStub struct {
-	recommendFn func(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	recommendFn func(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error)
 }
 
-func (s *classInsightRecommendationStub) Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+func (s *classInsightRecommendationStub) Recommend(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
 	if s.recommendFn != nil {
 		return s.recommendFn(ctx, userID, limit)
 	}
@@ -163,12 +164,12 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 		},
 	}
 	recommendations := &classInsightRecommendationStub{
-		recommendFn: func(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+		recommendFn: func(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
 			if userID != 1 || limit != 6 {
 				return nil, nil
 			}
-			return &dto.RecommendationResp{
-				Challenges: []*dto.ChallengeRecommendation{
+			return &assessmentcontracts.Recommendation{
+				Challenges: []*assessmentcontracts.ChallengeRecommendation{
 					{
 						ID:         99,
 						Title:      "crypto-001",

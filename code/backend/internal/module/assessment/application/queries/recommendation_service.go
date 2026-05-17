@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -92,7 +91,7 @@ func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Conte
 	return s.cache.DeleteRecommendations(ctx, payload.UserID)
 }
 
-func (s *RecommendationService) Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+func (s *RecommendationService) Recommend(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
 	snapshot, evaluation, err := s.evaluateUser(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -103,13 +102,13 @@ func (s *RecommendationService) Recommend(ctx context.Context, userID int64, lim
 		return nil, err
 	}
 
-	return &dto.RecommendationResp{
+	return &assessmentcontracts.Recommendation{
 		WeakDimensions: toWeakDimensionDTOs(evaluation.WeakDimensions),
 		Challenges:     recommendations,
 	}, nil
 }
 
-func (s *RecommendationService) RecommendChallenges(ctx context.Context, userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
+func (s *RecommendationService) RecommendChallenges(ctx context.Context, userID int64, limit int) ([]*assessmentcontracts.ChallengeRecommendation, error) {
 	snapshot, evaluation, err := s.evaluateUser(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -123,7 +122,7 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 	limit int,
 	snapshot *teachingadvice.StudentFactSnapshot,
 	evaluation teachingadvice.StudentEvaluation,
-) ([]*dto.ChallengeRecommendation, error) {
+) ([]*assessmentcontracts.ChallengeRecommendation, error) {
 	if limit <= 0 {
 		limit = s.config.DefaultLimit
 	}
@@ -144,7 +143,7 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 
 	targetDimensions := recommendationTargetDimensions(evaluation)
 	if len(targetDimensions) == 0 {
-		return []*dto.ChallengeRecommendation{}, nil
+		return []*assessmentcontracts.ChallengeRecommendation{}, nil
 	}
 
 	solvedIDs, err := s.getSolvedChallengeIDs(ctx, userID)
@@ -166,7 +165,7 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 	}
 
 	if snapshot == nil {
-		return []*dto.ChallengeRecommendation{}, nil
+		return []*assessmentcontracts.ChallengeRecommendation{}, nil
 	}
 	candidates := make([]teachingadvice.ChallengeCandidate, 0, len(challenges))
 	for _, challenge := range challenges {
@@ -192,13 +191,13 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		reasonsByChallengeID[candidates[index].ID] = reason
 	}
 
-	recommendations := make([]*dto.ChallengeRecommendation, 0, len(challenges))
+	recommendations := make([]*assessmentcontracts.ChallengeRecommendation, 0, len(challenges))
 	for _, challenge := range challenges {
 		if challenge == nil {
 			continue
 		}
 		reason := reasonsByChallengeID[challenge.ID]
-		recommendations = append(recommendations, &dto.ChallengeRecommendation{
+		recommendations = append(recommendations, &assessmentcontracts.ChallengeRecommendation{
 			ID:             challenge.ID,
 			Title:          challenge.Title,
 			Category:       challenge.Category,
@@ -262,10 +261,10 @@ func recommendationTargetDimensions(evaluation teachingadvice.StudentEvaluation)
 	return targets
 }
 
-func toWeakDimensionDTOs(items []teachingadvice.DimensionAdvice) []dto.RecommendationWeakDimension {
-	result := make([]dto.RecommendationWeakDimension, 0, len(items))
+func toWeakDimensionDTOs(items []teachingadvice.DimensionAdvice) []assessmentcontracts.RecommendationWeakDimension {
+	result := make([]assessmentcontracts.RecommendationWeakDimension, 0, len(items))
 	for _, item := range items {
-		result = append(result, dto.RecommendationWeakDimension{
+		result = append(result, assessmentcontracts.RecommendationWeakDimension{
 			Dimension:  item.Dimension,
 			Severity:   string(item.Severity),
 			Confidence: item.Confidence,

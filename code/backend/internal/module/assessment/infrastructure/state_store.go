@@ -11,7 +11,7 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -106,7 +106,7 @@ func (l *profileLockLease) Release(ctx context.Context) (bool, error) {
 	return ok && released > 0, nil
 }
 
-func (s *RecommendationCacheStore) LoadRecommendations(ctx context.Context, userID int64) ([]*dto.ChallengeRecommendation, bool, error) {
+func (s *RecommendationCacheStore) LoadRecommendations(ctx context.Context, userID int64) ([]*assessmentcontracts.ChallengeRecommendation, bool, error) {
 	if s == nil || s.cache == nil || userID <= 0 {
 		return nil, false, nil
 	}
@@ -119,14 +119,14 @@ func (s *RecommendationCacheStore) LoadRecommendations(ctx context.Context, user
 		return nil, false, fmt.Errorf("load recommendation cache: %w", err)
 	}
 
-	var recommendations []*dto.ChallengeRecommendation
+	var recommendations []*assessmentcontracts.ChallengeRecommendation
 	if err := json.Unmarshal([]byte(cached), &recommendations); err != nil {
 		return nil, false, fmt.Errorf("decode recommendation cache: %w", err)
 	}
 	return recommendations, true, nil
 }
 
-func (s *RecommendationCacheStore) StoreRecommendations(ctx context.Context, userID int64, recommendations []*dto.ChallengeRecommendation, ttl time.Duration) error {
+func (s *RecommendationCacheStore) StoreRecommendations(ctx context.Context, userID int64, recommendations []*assessmentcontracts.ChallengeRecommendation, ttl time.Duration) error {
 	if s == nil || s.cache == nil || userID <= 0 {
 		return nil
 	}

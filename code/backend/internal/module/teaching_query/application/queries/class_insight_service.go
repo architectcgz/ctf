@@ -182,7 +182,7 @@ var queryNow = func() time.Time {
 	return time.Now().UTC()
 }
 
-func recommendationMatchesDimension(challenge *dto.ChallengeRecommendation, dimension string) bool {
+func recommendationMatchesDimension(challenge *assessmentcontracts.ChallengeRecommendation, dimension string) bool {
 	if challenge == nil {
 		return false
 	}

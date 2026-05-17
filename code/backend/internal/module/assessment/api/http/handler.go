@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	"ctf-platform/pkg/response"
 )
 
@@ -18,7 +19,7 @@ type skillProfileService interface {
 }
 
 type recommendationProvider interface {
-	Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	Recommend(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error)
 }
 
 type Handler struct {
@@ -79,5 +80,5 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, assessmentResponseMapper.ToRecommendationRespPtr(result))
 }

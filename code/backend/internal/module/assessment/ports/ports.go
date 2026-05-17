@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
@@ -64,8 +65,8 @@ type RecommendationChallengeRepository interface {
 }
 
 type AssessmentRecommendationCacheStore interface {
-	LoadRecommendations(ctx context.Context, userID int64) ([]*dto.ChallengeRecommendation, bool, error)
-	StoreRecommendations(ctx context.Context, userID int64, recommendations []*dto.ChallengeRecommendation, ttl time.Duration) error
+	LoadRecommendations(ctx context.Context, userID int64) ([]*assessmentcontracts.ChallengeRecommendation, bool, error)
+	StoreRecommendations(ctx context.Context, userID int64, recommendations []*assessmentcontracts.ChallengeRecommendation, ttl time.Duration) error
 	DeleteRecommendations(ctx context.Context, userID int64) error
 }
 

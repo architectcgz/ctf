@@ -90,6 +90,20 @@ func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 	}
 }
 
+func TestContractsDoNotDependOnDTOGinOrGORM(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("contracts", "*.go"))
+	if err != nil {
+		t.Fatalf("glob contracts files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+	}
+}
+
 func TestRuntimeOwnsAssessmentWiring(t *testing.T) {
 	t.Parallel()
 

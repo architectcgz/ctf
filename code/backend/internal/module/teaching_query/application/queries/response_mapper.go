@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/dto"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 )
 
@@ -23,13 +24,13 @@ type teachingQueryResponseMapper interface {
 	ToClassTrendRespPtr(source *queryports.ClassTrend) *dto.TeacherClassTrendResp
 	ToTimelineEvents(source []queryports.TimelineEventRecord) []dto.TimelineEvent
 	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
-	ToTeacherRecommendationWeakDimension(source dto.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
-	ToTeacherRecommendationWeakDimensions(source []dto.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
-	ToTeacherRecommendationResp(source dto.RecommendationResp) dto.TeacherRecommendationResp
-	ToTeacherRecommendationRespPtr(source *dto.RecommendationResp) *dto.TeacherRecommendationResp
+	ToTeacherRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
+	ToTeacherRecommendationWeakDimensions(source []assessmentcontracts.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
+	ToTeacherRecommendationResp(source assessmentcontracts.Recommendation) dto.TeacherRecommendationResp
+	ToTeacherRecommendationRespPtr(source *assessmentcontracts.Recommendation) *dto.TeacherRecommendationResp
 	// goverter:map ID ChallengeID
-	ToTeacherRecommendationItem(source dto.ChallengeRecommendation) dto.TeacherRecommendationItem
-	ToTeacherRecommendationItemPtr(source *dto.ChallengeRecommendation) *dto.TeacherRecommendationItem
+	ToTeacherRecommendationItem(source assessmentcontracts.ChallengeRecommendation) dto.TeacherRecommendationItem
+	ToTeacherRecommendationItemPtr(source *assessmentcontracts.ChallengeRecommendation) *dto.TeacherRecommendationItem
 }
 
 var teachingQueryMapper teachingQueryResponseMapper
@@ -38,7 +39,7 @@ func CopyTime(value time.Time) time.Time {
 	return value
 }
 
-func MapTeacherRecommendationItems(source []*dto.ChallengeRecommendation) []dto.TeacherRecommendationItem {
+func MapTeacherRecommendationItems(source []*assessmentcontracts.ChallengeRecommendation) []dto.TeacherRecommendationItem {
 	items := make([]dto.TeacherRecommendationItem, 0, len(source))
 	for _, item := range source {
 		if item == nil {
