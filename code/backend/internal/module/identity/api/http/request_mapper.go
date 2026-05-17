@@ -11,6 +11,7 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type IdentityRequestMapper interface {
+	ToAdminUserListQuery(source dto.AdminUserQuery) identitycontracts.AdminUserListQuery
 	ToCreateUserInput(source dto.CreateAdminUserReq) identitycontracts.CreateUserInput
 	ToUpdateUserInput(source dto.UpdateAdminUserReq) identitycontracts.UpdateUserInput
 }

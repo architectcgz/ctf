@@ -10,6 +10,18 @@ import (
 
 type IdentityRequestMapperImpl struct{}
 
+func (c *IdentityRequestMapperImpl) ToAdminUserListQuery(source dto.AdminUserQuery) contracts.AdminUserListQuery {
+	var contractsAdminUserListQuery contracts.AdminUserListQuery
+	contractsAdminUserListQuery.Keyword = source.Keyword
+	contractsAdminUserListQuery.StudentNo = source.StudentNo
+	contractsAdminUserListQuery.TeacherNo = source.TeacherNo
+	contractsAdminUserListQuery.Role = source.Role
+	contractsAdminUserListQuery.Status = source.Status
+	contractsAdminUserListQuery.ClassName = source.ClassName
+	contractsAdminUserListQuery.Page = source.Page
+	contractsAdminUserListQuery.Size = source.Size
+	return contractsAdminUserListQuery
+}
 func (c *IdentityRequestMapperImpl) ToCreateUserInput(source dto.CreateAdminUserReq) contracts.CreateUserInput {
 	var contractsCreateUserInput contracts.CreateUserInput
 	contractsCreateUserInput.Username = source.Username

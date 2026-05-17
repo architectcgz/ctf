@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 )
 
@@ -50,7 +50,7 @@ func TestAdminServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
-	list, total, _, _, err := service.ListUsers(context.Background(), &dto.AdminUserQuery{
+	list, total, _, _, err := service.ListUsers(context.Background(), identitycontracts.AdminUserListQuery{
 		StudentNo: "20240001",
 	})
 	if err != nil {

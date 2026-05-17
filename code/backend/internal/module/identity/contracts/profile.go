@@ -1,13 +1,18 @@
 package contracts
 
-import (
-	"context"
+import "context"
 
-	"ctf-platform/internal/dto"
-)
+type ProfileUser struct {
+	ID        int64
+	Username  string
+	Role      string
+	Avatar    *string
+	Name      *string
+	ClassName *string
+}
 
 type ProfileQueryService interface {
-	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
+	GetProfile(ctx context.Context, userID int64) (*ProfileUser, error)
 }
 
 type ChangePasswordInput struct {

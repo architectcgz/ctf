@@ -10,7 +10,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
@@ -38,7 +37,7 @@ func NewAdminService(repo adminCommandRepository, log *zap.Logger) *AdminService
 	}
 }
 
-func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*dto.AdminUserResp, error) {
+func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*identitycontracts.AdminUser, error) {
 	username := strings.TrimSpace(req.Username)
 	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
 		return nil, errcode.ErrUsernameExists
@@ -68,7 +67,7 @@ func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.Cre
 	return &resp, nil
 }
 
-func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*dto.AdminUserResp, error) {
+func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*identitycontracts.AdminUser, error) {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, mapServiceError(err)
@@ -120,13 +119,13 @@ func (s *AdminService) DeleteUser(ctx context.Context, userID int64) error {
 	return nil
 }
 
-func (s *AdminService) ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error) {
+func (s *AdminService) ImportUsers(ctx context.Context, reader io.Reader) (*identitycontracts.ImportUsersResult, error) {
 	csvReader := csv.NewReader(reader)
 	csvReader.TrimLeadingSpace = true
 	csvReader.FieldsPerRecord = -1
 
-	result := &dto.ImportUsersResp{
-		Errors: make([]dto.ImportUserError, 0),
+	result := &identitycontracts.ImportUsersResult{
+		Errors: make([]identitycontracts.ImportUserError, 0),
 	}
 
 	rowIndex := 0
@@ -149,7 +148,7 @@ func (s *AdminService) ImportUsers(ctx context.Context, reader io.Reader) (*dto.
 		created, err := s.importRow(ctx, record)
 		if err != nil {
 			result.Failed++
-			result.Errors = append(result.Errors, dto.ImportUserError{
+			result.Errors = append(result.Errors, identitycontracts.ImportUserError{
 				Row:     rowIndex,
 				Message: err.Error(),
 			})

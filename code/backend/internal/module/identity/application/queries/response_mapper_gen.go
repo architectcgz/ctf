@@ -4,40 +4,40 @@
 package queries
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type adminUserResponseMapperImpl struct{}
 
-func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) dto.AdminUserResp {
-	var dtoAdminUserResp dto.AdminUserResp
-	dtoAdminUserResp.ID = source.ID
-	dtoAdminUserResp.Username = source.Username
-	dtoAdminUserResp.Status = source.Status
-	dtoAdminUserResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoAdminUserResp
+func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) contracts.AdminUser {
+	var contractsAdminUser contracts.AdminUser
+	contractsAdminUser.ID = source.ID
+	contractsAdminUser.Username = source.Username
+	contractsAdminUser.Status = source.Status
+	contractsAdminUser.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsAdminUser
 }
-func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *dto.AdminUserResp {
-	var pDtoAdminUserResp *dto.AdminUserResp
+func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *contracts.AdminUser {
+	var pContractsAdminUser *contracts.AdminUser
 	if source != nil {
-		dtoAdminUserResp := c.ToAdminUserResp((*source))
-		pDtoAdminUserResp = &dtoAdminUserResp
+		contractsAdminUser := c.ToAdminUserResp((*source))
+		pContractsAdminUser = &contractsAdminUser
 	}
-	return pDtoAdminUserResp
+	return pContractsAdminUser
 }
-func (c *adminUserResponseMapperImpl) ToAuthUserBase(source model.User) dto.AuthUser {
-	var dtoAuthUser dto.AuthUser
-	dtoAuthUser.ID = source.ID
-	dtoAuthUser.Username = source.Username
-	dtoAuthUser.Role = source.Role
-	return dtoAuthUser
+func (c *adminUserResponseMapperImpl) ToProfileUserBase(source model.User) contracts.ProfileUser {
+	var contractsProfileUser contracts.ProfileUser
+	contractsProfileUser.ID = source.ID
+	contractsProfileUser.Username = source.Username
+	contractsProfileUser.Role = source.Role
+	return contractsProfileUser
 }
-func (c *adminUserResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *dto.AuthUser {
-	var pDtoAuthUser *dto.AuthUser
+func (c *adminUserResponseMapperImpl) ToProfileUserBasePtr(source *model.User) *contracts.ProfileUser {
+	var pContractsProfileUser *contracts.ProfileUser
 	if source != nil {
-		dtoAuthUser := c.ToAuthUserBase((*source))
-		pDtoAuthUser = &dtoAuthUser
+		contractsProfileUser := c.ToProfileUserBase((*source))
+		pContractsProfileUser = &contractsProfileUser
 	}
-	return pDtoAuthUser
+	return pContractsProfileUser
 }

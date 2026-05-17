@@ -14,14 +14,14 @@ import (
 )
 
 type adminCommandService interface {
-	CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*dto.AdminUserResp, error)
-	UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*dto.AdminUserResp, error)
+	CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*identitycontracts.AdminUser, error)
+	UpdateUser(ctx context.Context, userID int64, req identitycontracts.UpdateUserInput) (*identitycontracts.AdminUser, error)
 	DeleteUser(ctx context.Context, userID int64) error
-	ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error)
+	ImportUsers(ctx context.Context, reader io.Reader) (*identitycontracts.ImportUsersResult, error)
 }
 
 type adminQueryService interface {
-	ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]dto.AdminUserResp, int64, int, int, error)
+	ListUsers(ctx context.Context, query identitycontracts.AdminUserListQuery) ([]identitycontracts.AdminUser, int64, int, int, error)
 }
 
 type Handler struct {
@@ -43,12 +43,12 @@ func (h *Handler) ListUsers(c *gin.Context) {
 		return
 	}
 
-	list, total, page, size, err := h.queries.ListUsers(c.Request.Context(), &query)
+	list, total, page, size, err := h.queries.ListUsers(c.Request.Context(), identityRequestMapper.ToAdminUserListQuery(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.Page(c, list, total, page, size)
+	response.Page(c, identityResponseMapper.ToAdminUserResps(list), total, page, size)
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {
@@ -63,7 +63,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, gin.H{"user": user})
+	response.Success(c, gin.H{"user": identityResponseMapper.ToAdminUserRespPtr(user)})
 }
 
 func (h *Handler) UpdateUser(c *gin.Context) {
@@ -79,7 +79,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, gin.H{"user": user})
+	response.Success(c, gin.H{"user": identityResponseMapper.ToAdminUserRespPtr(user)})
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {
@@ -110,5 +110,5 @@ func (h *Handler) ImportUsers(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.SuccessWithStatus(c, nethttp.StatusCreated, result)
+	response.SuccessWithStatus(c, nethttp.StatusCreated, identityResponseMapper.ToImportUsersRespPtr(result))
 }

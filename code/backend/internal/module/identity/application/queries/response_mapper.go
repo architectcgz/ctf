@@ -3,8 +3,8 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -17,8 +17,8 @@ type adminUserResponseMapper interface {
 	// goverter:ignore Avatar
 	// goverter:ignore Name
 	// goverter:ignore ClassName
-	ToAuthUserBase(source model.User) dto.AuthUser
-	ToAuthUserBasePtr(source *model.User) *dto.AuthUser
+	ToProfileUserBase(source model.User) identitycontracts.ProfileUser
+	ToProfileUserBasePtr(source *model.User) *identitycontracts.ProfileUser
 
 	// goverter:ignore Name
 	// goverter:ignore Email
@@ -27,8 +27,8 @@ type adminUserResponseMapper interface {
 	// goverter:ignore ClassName
 	// goverter:ignore Roles
 	// goverter:ignore UpdatedAt
-	ToAdminUserResp(source model.User) dto.AdminUserResp
-	ToAdminUserRespPtr(source *model.User) *dto.AdminUserResp
+	ToAdminUserResp(source model.User) identitycontracts.AdminUser
+	ToAdminUserRespPtr(source *model.User) *identitycontracts.AdminUser
 }
 
 var adminUserMapper adminUserResponseMapper

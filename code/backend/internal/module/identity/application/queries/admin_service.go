@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
@@ -31,7 +30,7 @@ func NewAdminService(repo identitycontracts.UserListRepository, pagination confi
 	}
 }
 
-func (s *AdminService) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]dto.AdminUserResp, int64, int, int, error) {
+func (s *AdminService) ListUsers(ctx context.Context, query identitycontracts.AdminUserListQuery) ([]identitycontracts.AdminUser, int64, int, int, error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -58,7 +57,7 @@ func (s *AdminService) ListUsers(ctx context.Context, query *dto.AdminUserQuery)
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]dto.AdminUserResp, 0, len(users))
+	items := make([]identitycontracts.AdminUser, 0, len(users))
 	for _, user := range users {
 		items = append(items, toAdminUserResp(user))
 	}

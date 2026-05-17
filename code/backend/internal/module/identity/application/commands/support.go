@@ -4,14 +4,13 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
-func toAdminUserResp(user *model.User) dto.AdminUserResp {
+func toAdminUserResp(user *model.User) identitycontracts.AdminUser {
 	resp := adminUserMapper.ToAdminUserRespPtr(user)
 	resp.Name = commonmapper.NormalizeOptionalTrimmedString(user.Name)
 	resp.Email = commonmapper.NormalizeOptionalTrimmedString(user.Email)

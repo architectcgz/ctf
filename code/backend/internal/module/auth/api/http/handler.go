@@ -32,7 +32,7 @@ type profileCommandService interface {
 }
 
 type profileQueryService interface {
-	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
+	GetProfile(ctx context.Context, userID int64) (*identitycontracts.ProfileUser, error)
 }
 
 type casCommandService interface {
@@ -187,7 +187,7 @@ func (h *Handler) Profile(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, profile)
+	response.Success(c, toAuthUser(profile))
 }
 
 func (h *Handler) ChangePassword(c *gin.Context) {
