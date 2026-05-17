@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -41,22 +40,22 @@ type contestResponseMapper interface {
 	// goverter:ignore RuntimeConfig
 	// goverter:ignore ValidationState
 	// goverter:ignore LastPreviewResult
-	ToContestAWDServiceRespBase(source model.ContestAWDService) dto.ContestAWDServiceResp
-	ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *dto.ContestAWDServiceResp
+	ToContestAWDServiceRespBase(source model.ContestAWDService) ContestAWDServiceResp
+	ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *ContestAWDServiceResp
 
 	// goverter:ignore MemberCount
 	ToTeamRespBase(source model.Team) TeamResp
 	ToTeamRespBasePtr(source *model.Team) *TeamResp
 
-	ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp
-	ToAWDRoundRespBasePtr(source *model.AWDRound) *dto.AWDRoundResp
+	ToAWDRoundRespBase(source model.AWDRound) AWDRoundResp
+	ToAWDRoundRespBasePtr(source *model.AWDRound) *AWDRoundResp
 
 	// goverter:ignore TeamName
 	// goverter:ignore ServiceName
 	// goverter:ignore AWDChallengeTitle
 	// goverter:ignore CheckResult
-	ToAWDTeamServiceRespBase(source model.AWDTeamService) dto.AWDTeamServiceResp
-	ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *dto.AWDTeamServiceResp
+	ToAWDTeamServiceRespBase(source model.AWDTeamService) AWDTeamServiceResp
+	ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *AWDTeamServiceResp
 
 	// goverter:ignore AttackerTeam
 	// goverter:ignore VictimTeam

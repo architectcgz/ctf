@@ -3,10 +3,7 @@
 
 package commands
 
-import (
-	dto "ctf-platform/internal/dto"
-	model "ctf-platform/internal/model"
-)
+import model "ctf-platform/internal/model"
 
 type contestResponseMapperImpl struct{}
 
@@ -33,72 +30,72 @@ func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *model.AWDA
 	}
 	return pCommandsAWDAttackLogResp
 }
-func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source model.AWDRound) dto.AWDRoundResp {
-	var dtoAWDRoundResp dto.AWDRoundResp
-	dtoAWDRoundResp.ID = source.ID
-	dtoAWDRoundResp.ContestID = source.ContestID
-	dtoAWDRoundResp.RoundNumber = source.RoundNumber
-	dtoAWDRoundResp.Status = source.Status
-	dtoAWDRoundResp.StartedAt = CopyTimePtr(source.StartedAt)
-	dtoAWDRoundResp.EndedAt = CopyTimePtr(source.EndedAt)
-	dtoAWDRoundResp.AttackScore = source.AttackScore
-	dtoAWDRoundResp.DefenseScore = source.DefenseScore
-	dtoAWDRoundResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoAWDRoundResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoAWDRoundResp
+func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source model.AWDRound) AWDRoundResp {
+	var commandsAWDRoundResp AWDRoundResp
+	commandsAWDRoundResp.ID = source.ID
+	commandsAWDRoundResp.ContestID = source.ContestID
+	commandsAWDRoundResp.RoundNumber = source.RoundNumber
+	commandsAWDRoundResp.Status = source.Status
+	commandsAWDRoundResp.StartedAt = CopyTimePtr(source.StartedAt)
+	commandsAWDRoundResp.EndedAt = CopyTimePtr(source.EndedAt)
+	commandsAWDRoundResp.AttackScore = source.AttackScore
+	commandsAWDRoundResp.DefenseScore = source.DefenseScore
+	commandsAWDRoundResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsAWDRoundResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsAWDRoundResp
 }
-func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *model.AWDRound) *dto.AWDRoundResp {
-	var pDtoAWDRoundResp *dto.AWDRoundResp
+func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *model.AWDRound) *AWDRoundResp {
+	var pCommandsAWDRoundResp *AWDRoundResp
 	if source != nil {
-		dtoAWDRoundResp := c.ToAWDRoundRespBase((*source))
-		pDtoAWDRoundResp = &dtoAWDRoundResp
+		commandsAWDRoundResp := c.ToAWDRoundRespBase((*source))
+		pCommandsAWDRoundResp = &commandsAWDRoundResp
 	}
-	return pDtoAWDRoundResp
+	return pCommandsAWDRoundResp
 }
-func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source model.AWDTeamService) dto.AWDTeamServiceResp {
-	var dtoAWDTeamServiceResp dto.AWDTeamServiceResp
-	dtoAWDTeamServiceResp.ID = source.ID
-	dtoAWDTeamServiceResp.RoundID = source.RoundID
-	dtoAWDTeamServiceResp.TeamID = source.TeamID
-	dtoAWDTeamServiceResp.ServiceID = source.ServiceID
-	dtoAWDTeamServiceResp.AWDChallengeID = source.AWDChallengeID
-	dtoAWDTeamServiceResp.ServiceStatus = source.ServiceStatus
-	dtoAWDTeamServiceResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
-	dtoAWDTeamServiceResp.AttackReceived = source.AttackReceived
-	dtoAWDTeamServiceResp.SLAScore = source.SLAScore
-	dtoAWDTeamServiceResp.DefenseScore = source.DefenseScore
-	dtoAWDTeamServiceResp.AttackScore = source.AttackScore
-	dtoAWDTeamServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoAWDTeamServiceResp
+func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source model.AWDTeamService) AWDTeamServiceResp {
+	var commandsAWDTeamServiceResp AWDTeamServiceResp
+	commandsAWDTeamServiceResp.ID = source.ID
+	commandsAWDTeamServiceResp.RoundID = source.RoundID
+	commandsAWDTeamServiceResp.TeamID = source.TeamID
+	commandsAWDTeamServiceResp.ServiceID = source.ServiceID
+	commandsAWDTeamServiceResp.AWDChallengeID = source.AWDChallengeID
+	commandsAWDTeamServiceResp.ServiceStatus = source.ServiceStatus
+	commandsAWDTeamServiceResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	commandsAWDTeamServiceResp.AttackReceived = source.AttackReceived
+	commandsAWDTeamServiceResp.SLAScore = source.SLAScore
+	commandsAWDTeamServiceResp.DefenseScore = source.DefenseScore
+	commandsAWDTeamServiceResp.AttackScore = source.AttackScore
+	commandsAWDTeamServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsAWDTeamServiceResp
 }
-func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *dto.AWDTeamServiceResp {
-	var pDtoAWDTeamServiceResp *dto.AWDTeamServiceResp
+func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *AWDTeamServiceResp {
+	var pCommandsAWDTeamServiceResp *AWDTeamServiceResp
 	if source != nil {
-		dtoAWDTeamServiceResp := c.ToAWDTeamServiceRespBase((*source))
-		pDtoAWDTeamServiceResp = &dtoAWDTeamServiceResp
+		commandsAWDTeamServiceResp := c.ToAWDTeamServiceRespBase((*source))
+		pCommandsAWDTeamServiceResp = &commandsAWDTeamServiceResp
 	}
-	return pDtoAWDTeamServiceResp
+	return pCommandsAWDTeamServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source model.ContestAWDService) dto.ContestAWDServiceResp {
-	var dtoContestAWDServiceResp dto.ContestAWDServiceResp
-	dtoContestAWDServiceResp.ID = source.ID
-	dtoContestAWDServiceResp.ContestID = source.ContestID
-	dtoContestAWDServiceResp.AWDChallengeID = source.AWDChallengeID
-	dtoContestAWDServiceResp.DisplayName = source.DisplayName
-	dtoContestAWDServiceResp.Order = source.Order
-	dtoContestAWDServiceResp.IsVisible = source.IsVisible
-	dtoContestAWDServiceResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
-	dtoContestAWDServiceResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoContestAWDServiceResp
+func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source model.ContestAWDService) ContestAWDServiceResp {
+	var commandsContestAWDServiceResp ContestAWDServiceResp
+	commandsContestAWDServiceResp.ID = source.ID
+	commandsContestAWDServiceResp.ContestID = source.ContestID
+	commandsContestAWDServiceResp.AWDChallengeID = source.AWDChallengeID
+	commandsContestAWDServiceResp.DisplayName = source.DisplayName
+	commandsContestAWDServiceResp.Order = source.Order
+	commandsContestAWDServiceResp.IsVisible = source.IsVisible
+	commandsContestAWDServiceResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
+	commandsContestAWDServiceResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsContestAWDServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *dto.ContestAWDServiceResp {
-	var pDtoContestAWDServiceResp *dto.ContestAWDServiceResp
+func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *ContestAWDServiceResp {
+	var pCommandsContestAWDServiceResp *ContestAWDServiceResp
 	if source != nil {
-		dtoContestAWDServiceResp := c.ToContestAWDServiceRespBase((*source))
-		pDtoContestAWDServiceResp = &dtoContestAWDServiceResp
+		commandsContestAWDServiceResp := c.ToContestAWDServiceRespBase((*source))
+		pCommandsContestAWDServiceResp = &commandsContestAWDServiceResp
 	}
-	return pDtoContestAWDServiceResp
+	return pCommandsContestAWDServiceResp
 }
 func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.ContestAnnouncement) ContestAnnouncementResp {
 	var commandsContestAnnouncementResp ContestAnnouncementResp

@@ -1,12 +1,11 @@
 package commands
 
 import (
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
+func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *AWDTeamServiceResp {
 	resp := contestResponseMapperInst.ToAWDTeamServiceRespBasePtr(record)
 	if resp == nil {
 		return nil
