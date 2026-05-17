@@ -135,32 +135,32 @@ func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *model.
 	}
 	return pCommandsContestChallengeResp
 }
-func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp {
-	var dtoContestRegistrationResp dto.ContestRegistrationResp
-	dtoContestRegistrationResp.ID = source.ID
-	dtoContestRegistrationResp.ContestID = source.ContestID
-	dtoContestRegistrationResp.UserID = source.UserID
+func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source model.ContestRegistration) ContestRegistrationResp {
+	var commandsContestRegistrationResp ContestRegistrationResp
+	commandsContestRegistrationResp.ID = source.ID
+	commandsContestRegistrationResp.ContestID = source.ContestID
+	commandsContestRegistrationResp.UserID = source.UserID
 	if source.TeamID != nil {
 		xint64 := *source.TeamID
-		dtoContestRegistrationResp.TeamID = &xint64
+		commandsContestRegistrationResp.TeamID = &xint64
 	}
-	dtoContestRegistrationResp.Status = source.Status
+	commandsContestRegistrationResp.Status = source.Status
 	if source.ReviewedBy != nil {
 		xint642 := *source.ReviewedBy
-		dtoContestRegistrationResp.ReviewedBy = &xint642
+		commandsContestRegistrationResp.ReviewedBy = &xint642
 	}
-	dtoContestRegistrationResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
-	dtoContestRegistrationResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoContestRegistrationResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoContestRegistrationResp
+	commandsContestRegistrationResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
+	commandsContestRegistrationResp.CreatedAt = CopyTime(source.CreatedAt)
+	commandsContestRegistrationResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return commandsContestRegistrationResp
 }
-func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *dto.ContestRegistrationResp {
-	var pDtoContestRegistrationResp *dto.ContestRegistrationResp
+func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *ContestRegistrationResp {
+	var pCommandsContestRegistrationResp *ContestRegistrationResp
 	if source != nil {
-		dtoContestRegistrationResp := c.ToContestRegistrationRespBase((*source))
-		pDtoContestRegistrationResp = &dtoContestRegistrationResp
+		commandsContestRegistrationResp := c.ToContestRegistrationRespBase((*source))
+		pCommandsContestRegistrationResp = &commandsContestRegistrationResp
 	}
-	return pDtoContestRegistrationResp
+	return pCommandsContestRegistrationResp
 }
 func (c *contestResponseMapperImpl) ToContestRespBase(source model.Contest) ContestResp {
 	var commandsContestResp ContestResp

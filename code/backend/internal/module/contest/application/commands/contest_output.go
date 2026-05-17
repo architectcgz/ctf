@@ -38,3 +38,16 @@ type ContestChallengeResp struct {
 	IsVisible   bool      `json:"is_visible"`
 	CreatedAt   time.Time `json:"created_at"`
 }
+
+type ContestRegistrationResp struct {
+	ID         int64      `json:"id"`
+	ContestID  int64      `json:"contest_id"`
+	UserID     int64      `json:"user_id"`
+	Username   string     `json:"username"`
+	TeamID     *int64     `json:"team_id,omitempty"`
+	Status     string     `json:"status"`
+	ReviewedBy *int64     `json:"reviewed_by,omitempty"`
+	ReviewedAt *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+}

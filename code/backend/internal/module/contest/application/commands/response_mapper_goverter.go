@@ -65,8 +65,8 @@ type contestResponseMapper interface {
 	ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *dto.AWDAttackLogResp
 
 	// goverter:ignore Username
-	ToContestRegistrationRespBase(source model.ContestRegistration) dto.ContestRegistrationResp
-	ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *dto.ContestRegistrationResp
+	ToContestRegistrationRespBase(source model.ContestRegistration) ContestRegistrationResp
+	ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *ContestRegistrationResp
 
 	// goverter:ignore Message
 	// goverter:ignore InstanceShutdownAt
