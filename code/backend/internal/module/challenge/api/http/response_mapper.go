@@ -17,21 +17,34 @@ import (
 type ChallengeResponseMapper interface {
 	ToChallengeResp(source *dto.ChallengeResp) *ChallengeResp
 	ToChallengeRespList(source []*dto.ChallengeResp) []*ChallengeResp
+	ToChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp]
 	ToChallengeListItemResp(source *dto.ChallengeListItem) *ChallengeListItem
 	ToChallengeListItemRespList(source []*dto.ChallengeListItem) []*ChallengeListItem
+	ToChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem]
 	ToChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp
+	ToChallengePublishCheckJobResp(source *dto.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp
+	ToChallengeSelfCheckResp(source *dto.ChallengeSelfCheckResp) *ChallengeSelfCheckResp
+	ToChallengeImportPreviewResp(source *dto.ChallengeImportPreviewResp) *ChallengeImportPreviewResp
+	ToChallengeImportPreviewRespList(source []dto.ChallengeImportPreviewResp) []ChallengeImportPreviewResp
+	// goverter:map . Challenge
+	ToChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp
+	ToChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp
 	ToTagResp(source *dto.TagResp) *TagResp
 	ToTagRespList(source []*dto.TagResp) []*TagResp
 	ToImageResp(source *dto.ImageResp) *ImageResp
 	ToImageRespList(source []*dto.ImageResp) []*ImageResp
+	ToImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp]
 	ToFlagResp(source *dto.FlagResp) *FlagResp
 	ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp
 	ToEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp
 	ToEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp
 	ToAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp
 	ToAWDChallengeRespList(source []*dto.AWDChallengeResp) []*AWDChallengeResp
+	ToAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp
 	ToAWDChallengeImportPreviewResp(source *dto.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp
 	ToAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp
+	// goverter:map . Challenge
+	ToAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp
 }
 
 var challengeResponseMapper ChallengeResponseMapper
@@ -59,62 +72,94 @@ func CopyAnyMap(source map[string]any) map[string]any {
 	return cloned
 }
 
-func mapImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp] {
-	if source == nil {
-		return nil
-	}
-
-	return &PageResult[*ImageResp]{
-		List:  challengeResponseMapper.ToImageRespList(source.List),
-		Total: source.Total,
-		Page:  source.Page,
-		Size:  source.Size,
-	}
+func toChallengeResp(source *dto.ChallengeResp) *ChallengeResp {
+	return challengeResponseMapper.ToChallengeResp(source)
 }
 
-func mapChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp] {
-	if source == nil {
-		return nil
-	}
-
-	return &PageResult[*ChallengeResp]{
-		List:  challengeResponseMapper.ToChallengeRespList(source.List),
-		Total: source.Total,
-		Page:  source.Page,
-		Size:  source.Size,
-	}
+func toChallengeDetailResp(source *dto.ChallengeDetailResp) *ChallengeDetailResp {
+	return challengeResponseMapper.ToChallengeDetailResp(source)
 }
 
-func mapChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem] {
-	if source == nil {
-		return nil
-	}
-
-	return &PageResult[*ChallengeListItem]{
-		List:  challengeResponseMapper.ToChallengeListItemRespList(source.List),
-		Total: source.Total,
-		Page:  source.Page,
-		Size:  source.Size,
-	}
+func toChallengePublishCheckJobResp(source *dto.ChallengePublishCheckJobResp) *ChallengePublishCheckJobResp {
+	return challengeResponseMapper.ToChallengePublishCheckJobResp(source)
 }
 
-func mapAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp {
-	if source == nil {
-		return nil
-	}
-
-	return &AWDChallengePageResp{
-		Items: challengeResponseMapper.ToAWDChallengeRespList(source.Items),
-		Total: source.Total,
-		Page:  source.Page,
-		Size:  source.Size,
-	}
+func toChallengeSelfCheckResp(source *dto.ChallengeSelfCheckResp) *ChallengeSelfCheckResp {
+	return challengeResponseMapper.ToChallengeSelfCheckResp(source)
 }
 
-func mapAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp {
-	return &AWDChallengeImportCommitResp{Challenge: challengeResponseMapper.ToAWDChallengeResp(source)}
+func toChallengeImportPreviewResp(source *dto.ChallengeImportPreviewResp) *ChallengeImportPreviewResp {
+	return challengeResponseMapper.ToChallengeImportPreviewResp(source)
 }
 
-func mapChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp {
-	return &ChallengeImportCommitResp{Challenge: challengeResponseMapper.ToChallengeResp(source)}
+func toChallengeImportPreviewRespList(source []dto.ChallengeImportPreviewResp) []ChallengeImportPreviewResp {
+	return challengeResponseMapper.ToChallengeImportPreviewRespList(source)
+}
+
+func toChallengePackageExportResp(source *dto.ChallengePackageExportResp) *ChallengePackageExportResp {
+	return challengeResponseMapper.ToChallengePackageExportResp(source)
+}
+
+func toTagResp(source *dto.TagResp) *TagResp {
+	return challengeResponseMapper.ToTagResp(source)
+}
+
+func toTagRespList(source []*dto.TagResp) []*TagResp {
+	return challengeResponseMapper.ToTagRespList(source)
+}
+
+func toImageResp(source *dto.ImageResp) *ImageResp {
+	return challengeResponseMapper.ToImageResp(source)
+}
+
+func toFlagResp(source *dto.FlagResp) *FlagResp {
+	return challengeResponseMapper.ToFlagResp(source)
+}
+
+func toChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp {
+	return challengeResponseMapper.ToChallengeTopologyResp(source)
+}
+
+func toEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp {
+	return challengeResponseMapper.ToEnvironmentTemplateResp(source)
+}
+
+func toEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp {
+	return challengeResponseMapper.ToEnvironmentTemplateRespList(source)
+}
+
+func toAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp {
+	return challengeResponseMapper.ToAWDChallengeResp(source)
+}
+
+func toAWDChallengeImportPreviewResp(source *dto.AWDChallengeImportPreviewResp) *AWDChallengeImportPreviewResp {
+	return challengeResponseMapper.ToAWDChallengeImportPreviewResp(source)
+}
+
+func toAWDChallengeImportPreviewRespList(source []dto.AWDChallengeImportPreviewResp) []AWDChallengeImportPreviewResp {
+	return challengeResponseMapper.ToAWDChallengeImportPreviewRespList(source)
+}
+
+func toImagePageResult(source *dto.PageResult[*dto.ImageResp]) *PageResult[*ImageResp] {
+	return challengeResponseMapper.ToImagePageResult(source)
+}
+
+func toChallengePageResult(source *dto.PageResult[*dto.ChallengeResp]) *PageResult[*ChallengeResp] {
+	return challengeResponseMapper.ToChallengePageResult(source)
+}
+
+func toChallengeListItemPageResult(source *dto.PageResult[*dto.ChallengeListItem]) *PageResult[*ChallengeListItem] {
+	return challengeResponseMapper.ToChallengeListItemPageResult(source)
+}
+
+func toAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp {
+	return challengeResponseMapper.ToAWDChallengePageResult(source)
+}
+
+func toAWDChallengeImportCommitResp(source *dto.AWDChallengeResp) *AWDChallengeImportCommitResp {
+	return challengeResponseMapper.ToAWDChallengeImportCommitResp(source)
+}
+
+func toChallengeImportCommitResp(source *dto.ChallengeResp) *ChallengeImportCommitResp {
+	return challengeResponseMapper.ToChallengeImportCommitResp(source)
 }

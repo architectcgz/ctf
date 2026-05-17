@@ -62,7 +62,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, challengeResponseMapper.ToChallengeResp(resp))
+	response.Success(c, toChallengeResp(resp))
 }
 
 func (h *Handler) UpdateChallenge(c *gin.Context) {
@@ -114,7 +114,7 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, challengeResponseMapper.ToChallengeResp(resp))
+	response.Success(c, toChallengeResp(resp))
 }
 
 func (h *Handler) ListChallenges(c *gin.Context) {
@@ -131,7 +131,7 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, mapChallengePageResult(result))
+	response.Success(c, toChallengePageResult(result))
 }
 
 func (h *Handler) PreviewChallengeImport(c *gin.Context) {
@@ -159,7 +159,7 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+	response.SuccessWithStatus(c, nethttp.StatusCreated, toChallengeImportPreviewResp(resp))
 }
 
 func (h *Handler) ListChallengeImports(c *gin.Context) {
@@ -168,7 +168,7 @@ func (h *Handler) ListChallengeImports(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, resp)
+	response.Success(c, toChallengeImportPreviewRespList(resp))
 }
 
 func (h *Handler) GetChallengeImport(c *gin.Context) {
@@ -177,7 +177,7 @@ func (h *Handler) GetChallengeImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, resp)
+	response.Success(c, toChallengeImportPreviewResp(resp))
 }
 
 func (h *Handler) CommitChallengeImport(c *gin.Context) {
@@ -192,7 +192,7 @@ func (h *Handler) CommitChallengeImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, mapChallengeImportCommitResp(resp))
+	response.Success(c, toChallengeImportCommitResp(resp))
 }
 
 func (h *Handler) ExportChallengePackage(c *gin.Context) {
@@ -207,7 +207,7 @@ func (h *Handler) ExportChallengePackage(c *gin.Context) {
 		return
 	}
 	resp.DownloadURL = fmt.Sprintf("/api/v1/authoring/challenges/%d/package-export/download?revision_id=%d", id, resp.RevisionID)
-	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+	response.SuccessWithStatus(c, nethttp.StatusCreated, toChallengePackageExportResp(resp))
 }
 
 func (h *Handler) DownloadChallengePackageExport(c *gin.Context) {
@@ -246,7 +246,7 @@ func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, toChallengeSelfCheckResp(resp))
 }
 
 func (h *Handler) RequestPublishCheck(c *gin.Context) {
@@ -261,7 +261,7 @@ func (h *Handler) RequestPublishCheck(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.SuccessWithStatus(c, nethttp.StatusAccepted, resp)
+	response.SuccessWithStatus(c, nethttp.StatusAccepted, toChallengePublishCheckJobResp(resp))
 }
 
 func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
@@ -276,7 +276,7 @@ func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, resp)
+	response.Success(c, toChallengePublishCheckJobResp(resp))
 }
 
 // ListPublishedChallenges 靶场列表（学员视图）
@@ -294,7 +294,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, mapChallengeListItemPageResult(result))
+	response.Success(c, toChallengeListItemPageResult(result))
 }
 
 // GetPublishedChallenge 靶场详情（学员视图）
@@ -311,7 +311,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, challengeResponseMapper.ToChallengeDetailResp(detail))
+	response.Success(c, toChallengeDetailResp(detail))
 }
 
 // DownloadAttachment 下载导入题包中的附件文件。

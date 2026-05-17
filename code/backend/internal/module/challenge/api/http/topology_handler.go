@@ -50,7 +50,7 @@ func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToChallengeTopologyResp(resp))
+	response.Success(c, toChallengeTopologyResp(resp))
 }
 
 func (h *TopologyHandler) GetChallengeTopology(c *gin.Context) {
@@ -64,7 +64,7 @@ func (h *TopologyHandler) GetChallengeTopology(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToChallengeTopologyResp(resp))
+	response.Success(c, toChallengeTopologyResp(resp))
 }
 
 func (h *TopologyHandler) DeleteChallengeTopology(c *gin.Context) {
@@ -91,7 +91,7 @@ func (h *TopologyHandler) CreateTemplate(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToEnvironmentTemplateResp(resp))
+	response.Success(c, toEnvironmentTemplateResp(resp))
 }
 
 func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
@@ -110,7 +110,7 @@ func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToEnvironmentTemplateResp(resp))
+	response.Success(c, toEnvironmentTemplateResp(resp))
 }
 
 func (h *TopologyHandler) GetTemplate(c *gin.Context) {
@@ -124,7 +124,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToEnvironmentTemplateResp(resp))
+	response.Success(c, toEnvironmentTemplateResp(resp))
 }
 
 func (h *TopologyHandler) ListTemplates(c *gin.Context) {
@@ -133,7 +133,7 @@ func (h *TopologyHandler) ListTemplates(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToEnvironmentTemplateRespList(resp))
+	response.Success(c, toEnvironmentTemplateRespList(resp))
 }
 
 func (h *TopologyHandler) DeleteTemplate(c *gin.Context) {

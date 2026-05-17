@@ -51,7 +51,7 @@ func (h *AWDChallengeHandler) CreateChallenge(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToAWDChallengeResp(resp))
+	response.Success(c, toAWDChallengeResp(resp))
 }
 
 func (h *AWDChallengeHandler) GetChallenge(c *gin.Context) {
@@ -65,7 +65,7 @@ func (h *AWDChallengeHandler) GetChallenge(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToAWDChallengeResp(resp))
+	response.Success(c, toAWDChallengeResp(resp))
 }
 
 func (h *AWDChallengeHandler) ListChallenges(c *gin.Context) {
@@ -79,7 +79,7 @@ func (h *AWDChallengeHandler) ListChallenges(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, mapAWDChallengePageResult(resp))
+	response.Success(c, toAWDChallengePageResult(resp))
 }
 
 func (h *AWDChallengeHandler) UpdateChallenge(c *gin.Context) {
@@ -98,7 +98,7 @@ func (h *AWDChallengeHandler) UpdateChallenge(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToAWDChallengeResp(resp))
+	response.Success(c, toAWDChallengeResp(resp))
 }
 
 func (h *AWDChallengeHandler) DeleteChallenge(c *gin.Context) {
@@ -138,7 +138,7 @@ func (h *AWDChallengeHandler) PreviewImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.SuccessWithStatus(c, nethttp.StatusCreated, challengeResponseMapper.ToAWDChallengeImportPreviewResp(resp))
+	response.SuccessWithStatus(c, nethttp.StatusCreated, toAWDChallengeImportPreviewResp(resp))
 }
 
 func (h *AWDChallengeHandler) ListImports(c *gin.Context) {
@@ -147,7 +147,7 @@ func (h *AWDChallengeHandler) ListImports(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToAWDChallengeImportPreviewRespList(resp))
+	response.Success(c, toAWDChallengeImportPreviewRespList(resp))
 }
 
 func (h *AWDChallengeHandler) GetImport(c *gin.Context) {
@@ -156,7 +156,7 @@ func (h *AWDChallengeHandler) GetImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, challengeResponseMapper.ToAWDChallengeImportPreviewResp(resp))
+	response.Success(c, toAWDChallengeImportPreviewResp(resp))
 }
 
 func (h *AWDChallengeHandler) CommitImport(c *gin.Context) {
@@ -171,5 +171,5 @@ func (h *AWDChallengeHandler) CommitImport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, mapAWDChallengeImportCommitResp(resp))
+	response.Success(c, toAWDChallengeImportCommitResp(resp))
 }

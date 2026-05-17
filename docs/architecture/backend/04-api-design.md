@@ -29,6 +29,11 @@
   - 负责：在各模块内完成参数绑定、DTO 映射、Session / WebSocket ticket、实例访问 proxy ticket 和通知推送接入
   - 不负责：让前端直接依赖底层 Redis / Docker / SQL 结构，或回退到无 Envelope、无 request id 的散装接口风格
 
+- `code/backend/internal/module/*/api/http/{request_mapper.go,response_mapper.go}`
+  - 负责：把 HTTP 输入输出与 application / query 输出之间的结构转换收口到 mapper 边界；`To...` 方法只承担纯字段映射，分页壳、commit 包装等组合结构由同文件内的包级 helper 收口，并继续复用 `To...` 方法完成内部对象转换
+  - 负责：handler 统一只调用包内收口入口，不直接散落生成器实现细节；新代码默认使用 `to...` 作为收口 helper 名称。历史上已经存在的 `map...` helper 暂按同层薄包装看待，但只允许承担分页壳或包装体组装
+  - 不负责：在 helper 中写业务判断、权限分支、错误语义转换，或把“字段映射”和“业务编排”重新混回 handler
+
 ## 接口或数据影响
 
 - 当前统一响应结构以 `ApiEnvelopeBase` 为根，核心字段是 `code`、`message`、`data`、`request_id`；见 `docs/contracts/openapi-v1.yaml`。
