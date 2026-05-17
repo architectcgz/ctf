@@ -111,3 +111,39 @@ type AWDTeamServiceResp struct {
 	AttackScore       int                  `json:"attack_score"`
 	UpdatedAt         time.Time            `json:"updated_at"`
 }
+
+type AWDCheckerPreviewContextResp struct {
+	ServiceID      int64  `json:"service_id"`
+	AccessURL      string `json:"access_url"`
+	PreviewFlag    string `json:"preview_flag"`
+	RoundNumber    int    `json:"round_number"`
+	TeamID         int64  `json:"team_id"`
+	AWDChallengeID int64  `json:"awd_challenge_id"`
+}
+
+type AWDCheckerPreviewResp struct {
+	CheckerType    model.AWDCheckerType         `json:"checker_type,omitempty"`
+	ServiceStatus  string                       `json:"service_status"`
+	CheckResult    map[string]any               `json:"check_result"`
+	PreviewContext AWDCheckerPreviewContextResp `json:"preview_context"`
+	PreviewToken   string                       `json:"preview_token,omitempty"`
+}
+
+type ContestAWDServiceResp struct {
+	ID                int64                           `json:"id"`
+	ContestID         int64                           `json:"contest_id"`
+	AWDChallengeID    int64                           `json:"awd_challenge_id"`
+	Title             string                          `json:"title,omitempty"`
+	Category          string                          `json:"category,omitempty"`
+	Difficulty        string                          `json:"difficulty,omitempty"`
+	DisplayName       string                          `json:"display_name"`
+	Order             int                             `json:"order"`
+	IsVisible         bool                            `json:"is_visible"`
+	ScoreConfig       map[string]any                  `json:"score_config,omitempty"`
+	RuntimeConfig     map[string]any                  `json:"runtime_config,omitempty"`
+	ValidationState   model.AWDCheckerValidationState `json:"validation_state"`
+	LastPreviewAt     *time.Time                      `json:"last_preview_at,omitempty"`
+	LastPreviewResult *AWDCheckerPreviewResp          `json:"last_preview_result,omitempty"`
+	CreatedAt         time.Time                       `json:"created_at"`
+	UpdatedAt         time.Time                       `json:"updated_at"`
+}

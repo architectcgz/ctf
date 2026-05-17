@@ -3,7 +3,6 @@ package commands
 import (
 	"encoding/json"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
@@ -34,10 +33,22 @@ func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.
 	return resp
 }
 
-func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestAWDServiceResp {
-	resp := contestResponseMapperInst.ToContestAWDServiceRespBasePtr(item)
-	if resp == nil {
+func contestAWDServiceRespFromModel(item *model.ContestAWDService) *ContestAWDServiceResp {
+	baseResp := contestResponseMapperInst.ToContestAWDServiceRespBasePtr(item)
+	if baseResp == nil {
 		return nil
+	}
+	resp := &ContestAWDServiceResp{
+		ID:              baseResp.ID,
+		ContestID:       baseResp.ContestID,
+		AWDChallengeID:  baseResp.AWDChallengeID,
+		DisplayName:     baseResp.DisplayName,
+		Order:           baseResp.Order,
+		IsVisible:       baseResp.IsVisible,
+		LastPreviewAt:   baseResp.LastPreviewAt,
+		CreatedAt:       baseResp.CreatedAt,
+		UpdatedAt:       baseResp.UpdatedAt,
+		ValidationState: baseResp.ValidationState,
 	}
 	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig))
 	snapshot, _ := model.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
@@ -47,7 +58,23 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	resp.ScoreConfig = contestdomain.ParseAWDCheckerConfig(item.ScoreConfig)
 	resp.RuntimeConfig = runtimeConfig
 	resp.ValidationState = contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))
-	resp.LastPreviewResult = awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
+	previewResult := awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
+	if previewResult != nil {
+		resp.LastPreviewResult = &AWDCheckerPreviewResp{
+			CheckerType:   previewResult.CheckerType,
+			ServiceStatus: previewResult.ServiceStatus,
+			CheckResult:   previewResult.CheckResult,
+			PreviewContext: AWDCheckerPreviewContextResp{
+				ServiceID:      previewResult.PreviewContext.ServiceID,
+				AccessURL:      previewResult.PreviewContext.AccessURL,
+				PreviewFlag:    previewResult.PreviewContext.PreviewFlag,
+				RoundNumber:    previewResult.PreviewContext.RoundNumber,
+				TeamID:         previewResult.PreviewContext.TeamID,
+				AWDChallengeID: previewResult.PreviewContext.AWDChallengeID,
+			},
+			PreviewToken: previewResult.PreviewToken,
+		}
+	}
 	return resp
 }
 

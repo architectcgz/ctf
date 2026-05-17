@@ -19,7 +19,7 @@ type awdCommandService interface {
 }
 
 type awdServiceCommandService interface {
-	CreateContestAWDService(ctx context.Context, contestID int64, req contestcmd.CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error)
+	CreateContestAWDService(ctx context.Context, contestID int64, req contestcmd.CreateContestAWDServiceInput) (*contestcmd.ContestAWDServiceResp, error)
 	UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req contestcmd.UpdateContestAWDServiceInput) error
 	DeleteContestAWDService(ctx context.Context, contestID, serviceID int64) error
 }

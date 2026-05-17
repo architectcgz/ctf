@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -46,7 +45,7 @@ func NewContestAWDServiceService(
 	}
 }
 
-func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, contestID int64, req CreateContestAWDServiceInput) (*dto.ContestAWDServiceResp, error) {
+func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, contestID int64, req CreateContestAWDServiceInput) (*ContestAWDServiceResp, error) {
 	contest, err := s.ensureMutableAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
