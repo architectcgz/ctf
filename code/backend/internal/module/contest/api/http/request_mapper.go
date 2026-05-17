@@ -44,9 +44,6 @@ type ContestRequestMapper interface {
 	ToContestCommandResp(source contestqry.ContestResult) contestcmd.ContestResp
 	ToContestCommandRespPtr(source *contestqry.ContestResult) *contestcmd.ContestResp
 	ToContestCommandResps(source []*contestqry.ContestResult) []*contestcmd.ContestResp
-	ToContestResp(source contestqry.ContestResult) dto.ContestResp
-	ToContestRespPtr(source *contestqry.ContestResult) *dto.ContestResp
-	ToContestResps(source []*contestqry.ContestResult) []*dto.ContestResp
 	ToTeamResp(source contestqry.TeamResult) dto.TeamResp
 	ToTeamRespPtr(source *contestqry.TeamResult) *dto.TeamResp
 	ToTeamResps(source []*contestqry.TeamResult) []*dto.TeamResp

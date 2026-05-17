@@ -609,38 +609,6 @@ func (c *ContestRequestMapperImpl) ToContestRegistrationResps(source []*queries.
 	}
 	return pDtoContestRegistrationRespList
 }
-func (c *ContestRequestMapperImpl) ToContestResp(source queries.ContestResult) dto.ContestResp {
-	var dtoContestResp dto.ContestResp
-	dtoContestResp.ID = source.ID
-	dtoContestResp.Title = source.Title
-	dtoContestResp.Description = source.Description
-	dtoContestResp.Mode = source.Mode
-	dtoContestResp.StartTime = CopyTime(source.StartTime)
-	dtoContestResp.EndTime = CopyTime(source.EndTime)
-	dtoContestResp.FreezeTime = CopyTimePtr(source.FreezeTime)
-	dtoContestResp.Status = source.Status
-	dtoContestResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoContestResp
-}
-func (c *ContestRequestMapperImpl) ToContestRespPtr(source *queries.ContestResult) *dto.ContestResp {
-	var pDtoContestResp *dto.ContestResp
-	if source != nil {
-		dtoContestResp := c.ToContestResp((*source))
-		pDtoContestResp = &dtoContestResp
-	}
-	return pDtoContestResp
-}
-func (c *ContestRequestMapperImpl) ToContestResps(source []*queries.ContestResult) []*dto.ContestResp {
-	var pDtoContestRespList []*dto.ContestResp
-	if source != nil {
-		pDtoContestRespList = make([]*dto.ContestResp, len(source))
-		for i := 0; i < len(source); i++ {
-			pDtoContestRespList[i] = c.ToContestRespPtr(source[i])
-		}
-	}
-	return pDtoContestRespList
-}
 func (c *ContestRequestMapperImpl) ToContestSolvedProgressItem(source queries.ContestSolvedProgressResult) dto.ContestSolvedProgressItem {
 	var dtoContestSolvedProgressItem dto.ContestSolvedProgressItem
 	dtoContestSolvedProgressItem.ContestChallengeID = source.ContestChallengeID
