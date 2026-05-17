@@ -36,13 +36,8 @@ type ContestRequestMapper interface {
 	ToCreateContestAWDServiceInput(source CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput
 	ToUpdateContestAWDServiceInput(source UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput
 	ToListAWDTrafficEventsInput(source ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput
-	ToAWDCheckerPreviewResp(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
-	ToAWDCheckerPreviewRespPtr(source *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp
 	ToAWDCheckerPreviewCommandResp(source contestdomain.AWDCheckerPreviewResult) contestcmd.AWDCheckerPreviewResp
 	ToAWDCheckerPreviewCommandRespPtr(source *contestdomain.AWDCheckerPreviewResult) *contestcmd.AWDCheckerPreviewResp
-	// goverter:ignore LastPreviewResult
-	ToContestAWDServiceResp(source contestqry.ContestAWDServiceResult) dto.ContestAWDServiceResp
-	ToContestAWDServiceRespPtr(source *contestqry.ContestAWDServiceResult) *dto.ContestAWDServiceResp
 	// goverter:ignore LastPreviewResult
 	ToContestAWDServiceCommandResp(source contestqry.ContestAWDServiceResult) contestcmd.ContestAWDServiceResp
 	ToContestAWDServiceCommandRespPtr(source *contestqry.ContestAWDServiceResult) *contestcmd.ContestAWDServiceResp
