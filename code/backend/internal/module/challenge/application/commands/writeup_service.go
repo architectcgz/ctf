@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -30,7 +30,7 @@ func NewWriteupService(repo writeupCommandRepository) *WriteupService {
 	return &WriteupService{repo: repo}
 }
 
-func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req UpsertOfficialWriteupInput) (*dto.AdminChallengeWriteupResp, error) {
+func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req UpsertOfficialWriteupInput) (*challengecontracts.AdminChallengeWriteupResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -78,7 +78,7 @@ func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
 	return s.repo.DeleteWriteupByChallengeID(ctx, challengeID)
 }
 
-func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req UpsertSubmissionWriteupInput) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req UpsertSubmissionWriteupInput) (*challengecontracts.SubmissionWriteupResp, error) {
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
@@ -146,7 +146,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(item), nil
 }
 
-func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error) {
+func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*challengecontracts.AdminChallengeWriteupResp, error) {
 	item, err := s.loadOfficialWriteupForModeration(ctx, challengeID)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, act
 	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _ int64) (*dto.AdminChallengeWriteupResp, error) {
+func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _ int64) (*challengecontracts.AdminChallengeWriteupResp, error) {
 	item, err := s.loadOfficialWriteupForModeration(ctx, challengeID)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _
 	return domain.ResponseMapper().ToAdminChallengeWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error) {
 	record, err := s.loadCommunityWriteupForModeration(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, r
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error) {
 	record, err := s.loadCommunityWriteupForModeration(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID,
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error) {
 	record, err := s.loadCommunityWriteupForModeration(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
@@ -262,7 +262,7 @@ func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, reques
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error) {
 	record, err := s.loadCommunityWriteupForModeration(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 var (
@@ -130,12 +131,12 @@ type ChallengeSubmissionWriteupRepository interface {
 
 type ChallengeTeacherSubmissionWriteupRepository interface {
 	GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
-	ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+	ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
 }
 
 type ChallengeSolutionQueryRepository interface {
 	ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
-	ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
+	ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
 
 type TeacherSubmissionWriteupRecord struct {

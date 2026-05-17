@@ -4,14 +4,13 @@
 package http
 
 import (
-	dto "ctf-platform/internal/dto"
 	commands "ctf-platform/internal/module/assessment/application/commands"
 	queries "ctf-platform/internal/module/assessment/application/queries"
 )
 
 type AssessmentRequestMapperImpl struct{}
 
-func (c *AssessmentRequestMapperImpl) ToCreateClassReportInput(source dto.CreateClassReportReq) commands.CreateClassReportInput {
+func (c *AssessmentRequestMapperImpl) ToCreateClassReportInput(source CreateClassReportReq) commands.CreateClassReportInput {
 	var commandsCreateClassReportInput commands.CreateClassReportInput
 	commandsCreateClassReportInput.ClassName = source.ClassName
 	commandsCreateClassReportInput.Format = source.Format
@@ -19,22 +18,22 @@ func (c *AssessmentRequestMapperImpl) ToCreateClassReportInput(source dto.Create
 	commandsCreateClassReportInput.ToDate = source.ToDate
 	return commandsCreateClassReportInput
 }
-func (c *AssessmentRequestMapperImpl) ToCreateContestExportInput(source dto.CreateContestExportReq) commands.CreateContestExportInput {
+func (c *AssessmentRequestMapperImpl) ToCreateContestExportInput(source CreateContestExportReq) commands.CreateContestExportInput {
 	var commandsCreateContestExportInput commands.CreateContestExportInput
 	commandsCreateContestExportInput.Format = source.Format
 	return commandsCreateContestExportInput
 }
-func (c *AssessmentRequestMapperImpl) ToCreatePersonalReportInput(source dto.CreatePersonalReportReq) commands.CreatePersonalReportInput {
+func (c *AssessmentRequestMapperImpl) ToCreatePersonalReportInput(source CreatePersonalReportReq) commands.CreatePersonalReportInput {
 	var commandsCreatePersonalReportInput commands.CreatePersonalReportInput
 	commandsCreatePersonalReportInput.Format = source.Format
 	return commandsCreatePersonalReportInput
 }
-func (c *AssessmentRequestMapperImpl) ToCreateStudentReviewArchiveInput(source dto.CreateStudentReviewArchiveReq) commands.CreateStudentReviewArchiveInput {
+func (c *AssessmentRequestMapperImpl) ToCreateStudentReviewArchiveInput(source CreateStudentReviewArchiveReq) commands.CreateStudentReviewArchiveInput {
 	var commandsCreateStudentReviewArchiveInput commands.CreateStudentReviewArchiveInput
 	commandsCreateStudentReviewArchiveInput.Format = source.Format
 	return commandsCreateStudentReviewArchiveInput
 }
-func (c *AssessmentRequestMapperImpl) ToCreateTeacherAWDReviewExportInput(source dto.CreateTeacherAWDReviewExportReq) commands.CreateTeacherAWDReviewExportInput {
+func (c *AssessmentRequestMapperImpl) ToCreateTeacherAWDReviewExportInput(source CreateTeacherAWDReviewExportReq) commands.CreateTeacherAWDReviewExportInput {
 	var commandsCreateTeacherAWDReviewExportInput commands.CreateTeacherAWDReviewExportInput
 	if source.RoundNumber != nil {
 		xint := *source.RoundNumber

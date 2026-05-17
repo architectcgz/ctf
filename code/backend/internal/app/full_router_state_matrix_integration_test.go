@@ -22,10 +22,12 @@ import (
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
@@ -1096,7 +1098,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var publicWriteup dto.ChallengeWriteupResp
+	var publicWriteup challengecontracts.ChallengeWriteupResp
 	decodeFullRouterData(t, resp, &publicWriteup)
 	if publicWriteup.Visibility != model.WriteupVisibilityPublic {
 		t.Fatalf("unexpected public writeup visibility: %+v", publicWriteup)
@@ -1110,7 +1112,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var solvedWriteup dto.ChallengeWriteupResp
+	var solvedWriteup challengecontracts.ChallengeWriteupResp
 	decodeFullRouterData(t, resp, &solvedWriteup)
 	if solvedWriteup.RequiresSpoilerWarning {
 		t.Fatalf("expected spoiler warning to clear after solve, got %+v", solvedWriteup)
@@ -1133,7 +1135,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var draftSubmission dto.SubmissionWriteupResp
+	var draftSubmission challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &draftSubmission)
 	if draftSubmission.SubmissionStatus != model.SubmissionWriteupStatusDraft || draftSubmission.PublishedAt != nil {
 		t.Fatalf("unexpected draft submission response: %+v", draftSubmission)
@@ -1142,7 +1144,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions/me", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var mySubmission dto.SubmissionWriteupResp
+	var mySubmission challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &mySubmission)
 	if mySubmission.Title != "首版草稿" {
 		t.Fatalf("unexpected my submission payload: %+v", mySubmission)
@@ -1155,7 +1157,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var submittedWriteup dto.SubmissionWriteupResp
+	var submittedWriteup challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &submittedWriteup)
 	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusPublished || submittedWriteup.PublishedAt == nil {
 		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
@@ -1177,10 +1179,10 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var teacherSubmissionList struct {
-		List     []dto.TeacherSubmissionWriteupItemResp `json:"list"`
-		Total    int64                                  `json:"total"`
-		Page     int                                    `json:"page"`
-		PageSize int                                    `json:"page_size"`
+		List     []challengecontracts.TeacherSubmissionWriteupItemResp `json:"list"`
+		Total    int64                                                 `json:"total"`
+		Page     int                                                   `json:"page"`
+		PageSize int                                                   `json:"page_size"`
 	}
 	decodeFullRouterData(t, resp, &teacherSubmissionList)
 	if teacherSubmissionList.Total != 1 || len(teacherSubmissionList.List) != 1 {
@@ -1203,8 +1205,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var inaccessibleList struct {
-		List  []dto.TeacherSubmissionWriteupItemResp `json:"list"`
-		Total int64                                  `json:"total"`
+		List  []challengecontracts.TeacherSubmissionWriteupItemResp `json:"list"`
+		Total int64                                                 `json:"total"`
 	}
 	decodeFullRouterData(t, resp, &inaccessibleList)
 	if inaccessibleList.Total != 0 || len(inaccessibleList.List) != 0 {
@@ -1214,7 +1216,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/writeup-submissions/%d", submittedWriteup.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherSubmissionDetail dto.TeacherSubmissionWriteupDetailResp
+	var teacherSubmissionDetail challengecontracts.TeacherSubmissionWriteupDetailResp
 	decodeFullRouterData(t, resp, &teacherSubmissionDetail)
 	if teacherSubmissionDetail.StudentUsername != env.peerStudent.Username ||
 		teacherSubmissionDetail.StudentNo != peerStudentNo ||
@@ -1267,10 +1269,10 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var manualReviewList struct {
-		List     []dto.TeacherManualReviewSubmissionItemResp `json:"list"`
-		Total    int64                                       `json:"total"`
-		Page     int                                         `json:"page"`
-		PageSize int                                         `json:"page_size"`
+		List     []practicecontracts.TeacherManualReviewSubmissionItemResp `json:"list"`
+		Total    int64                                                     `json:"total"`
+		Page     int                                                       `json:"page"`
+		PageSize int                                                       `json:"page_size"`
 	}
 	decodeFullRouterData(t, resp, &manualReviewList)
 	if manualReviewList.Total != 1 || len(manualReviewList.List) != 1 {
@@ -1291,8 +1293,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var otherTeacherManualList struct {
-		List  []dto.TeacherManualReviewSubmissionItemResp `json:"list"`
-		Total int64                                       `json:"total"`
+		List  []practicecontracts.TeacherManualReviewSubmissionItemResp `json:"list"`
+		Total int64                                                     `json:"total"`
 	}
 	decodeFullRouterData(t, resp, &otherTeacherManualList)
 	if otherTeacherManualList.Total != 0 || len(otherTeacherManualList.List) != 0 {
@@ -1304,7 +1306,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/manual-review-submissions/%d", manualSubmissionID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var manualReviewDetail dto.TeacherManualReviewSubmissionDetailResp
+	var manualReviewDetail practicecontracts.TeacherManualReviewSubmissionDetailResp
 	decodeFullRouterData(t, resp, &manualReviewDetail)
 	if manualReviewDetail.Answer == "" || manualReviewDetail.ChallengeID != manualChallenge.ID {
 		t.Fatalf("unexpected manual review detail: %+v", manualReviewDetail)
@@ -1316,7 +1318,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewedManualSubmission dto.TeacherManualReviewSubmissionDetailResp
+	var reviewedManualSubmission practicecontracts.TeacherManualReviewSubmissionDetailResp
 	decodeFullRouterData(t, resp, &reviewedManualSubmission)
 	if reviewedManualSubmission.ReviewStatus != model.SubmissionReviewStatusApproved || !reviewedManualSubmission.IsCorrect || reviewedManualSubmission.Score != 120 {
 		t.Fatalf("unexpected reviewed manual submission: %+v", reviewedManualSubmission)
@@ -1736,7 +1738,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup/recommend", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var recommendedOfficial dto.AdminChallengeWriteupResp
+	var recommendedOfficial challengecontracts.AdminChallengeWriteupResp
 	decodeFullRouterData(t, resp, &recommendedOfficial)
 	if !recommendedOfficial.IsRecommended {
 		t.Fatalf("expected official writeup to become recommended, got %+v", recommendedOfficial)
@@ -1745,7 +1747,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/recommend", submissionID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var recommendedCommunity dto.SubmissionWriteupResp
+	var recommendedCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &recommendedCommunity)
 	if !recommendedCommunity.IsRecommended {
 		t.Fatalf("expected community writeup to become recommended, got %+v", recommendedCommunity)
@@ -1754,7 +1756,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/hide", submissionID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var hiddenCommunity dto.SubmissionWriteupResp
+	var hiddenCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &hiddenCommunity)
 	if hiddenCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityHidden {
 		t.Fatalf("expected hidden community writeup, got %+v", hiddenCommunity)
@@ -1774,7 +1776,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/restore", submissionID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var restoredCommunity dto.SubmissionWriteupResp
+	var restoredCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &restoredCommunity)
 	if restoredCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("expected restored community writeup, got %+v", restoredCommunity)
@@ -1808,7 +1810,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/recommend", submissionID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var unrecommendedCommunity dto.SubmissionWriteupResp
+	var unrecommendedCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &unrecommendedCommunity)
 	if unrecommendedCommunity.IsRecommended {
 		t.Fatalf("expected community writeup recommendation to be cleared, got %+v", unrecommendedCommunity)
@@ -1817,7 +1819,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup/recommend", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var unrecommendedOfficial dto.AdminChallengeWriteupResp
+	var unrecommendedOfficial challengecontracts.AdminChallengeWriteupResp
 	decodeFullRouterData(t, resp, &unrecommendedOfficial)
 	if unrecommendedOfficial.IsRecommended {
 		t.Fatalf("expected official writeup recommendation to be cleared, got %+v", unrecommendedOfficial)

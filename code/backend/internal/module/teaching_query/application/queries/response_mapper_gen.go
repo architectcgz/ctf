@@ -21,53 +21,6 @@ func (c *teachingQueryResponseMapperImpl) ToClassItems(source []ports.ClassItem)
 	}
 	return dtoTeacherClassItemList
 }
-func (c *teachingQueryResponseMapperImpl) ToClassSummary(source ports.ClassSummary) dto.TeacherClassSummaryResp {
-	var dtoTeacherClassSummaryResp dto.TeacherClassSummaryResp
-	dtoTeacherClassSummaryResp.ClassName = source.ClassName
-	dtoTeacherClassSummaryResp.StudentCount = source.StudentCount
-	dtoTeacherClassSummaryResp.AverageSolved = source.AverageSolved
-	dtoTeacherClassSummaryResp.ActiveStudentCount = source.ActiveStudentCount
-	dtoTeacherClassSummaryResp.ActiveRate = source.ActiveRate
-	dtoTeacherClassSummaryResp.RecentEventCount = source.RecentEventCount
-	return dtoTeacherClassSummaryResp
-}
-func (c *teachingQueryResponseMapperImpl) ToClassSummaryPtr(source *ports.ClassSummary) *dto.TeacherClassSummaryResp {
-	var pDtoTeacherClassSummaryResp *dto.TeacherClassSummaryResp
-	if source != nil {
-		dtoTeacherClassSummaryResp := c.ToClassSummary((*source))
-		pDtoTeacherClassSummaryResp = &dtoTeacherClassSummaryResp
-	}
-	return pDtoTeacherClassSummaryResp
-}
-func (c *teachingQueryResponseMapperImpl) ToClassTrendResp(source ports.ClassTrend) dto.TeacherClassTrendResp {
-	var dtoTeacherClassTrendResp dto.TeacherClassTrendResp
-	dtoTeacherClassTrendResp.ClassName = source.ClassName
-	if source.Points != nil {
-		dtoTeacherClassTrendResp.Points = make([]dto.TeacherClassTrendPoint, len(source.Points))
-		for i := 0; i < len(source.Points); i++ {
-			dtoTeacherClassTrendResp.Points[i] = c.portsClassTrendPointToDtoTeacherClassTrendPoint(source.Points[i])
-		}
-	}
-	return dtoTeacherClassTrendResp
-}
-func (c *teachingQueryResponseMapperImpl) ToClassTrendRespPtr(source *ports.ClassTrend) *dto.TeacherClassTrendResp {
-	var pDtoTeacherClassTrendResp *dto.TeacherClassTrendResp
-	if source != nil {
-		dtoTeacherClassTrendResp := c.ToClassTrendResp((*source))
-		pDtoTeacherClassTrendResp = &dtoTeacherClassTrendResp
-	}
-	return pDtoTeacherClassTrendResp
-}
-func (c *teachingQueryResponseMapperImpl) ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef {
-	var dtoTeacherReviewStudentRefList []dto.TeacherReviewStudentRef
-	if source != nil {
-		dtoTeacherReviewStudentRefList = make([]dto.TeacherReviewStudentRef, len(source))
-		for i := 0; i < len(source); i++ {
-			dtoTeacherReviewStudentRefList[i] = c.dtoTeacherStudentItemToDtoTeacherReviewStudentRef(source[i])
-		}
-	}
-	return dtoTeacherReviewStudentRefList
-}
 func (c *teachingQueryResponseMapperImpl) ToStudentItems(source []ports.StudentItem) []dto.TeacherStudentItem {
 	var dtoTeacherStudentItemList []dto.TeacherStudentItem
 	if source != nil {
@@ -147,29 +100,11 @@ func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.Timeli
 	}
 	return queriesTimelineEventList
 }
-func (c *teachingQueryResponseMapperImpl) dtoTeacherStudentItemToDtoTeacherReviewStudentRef(source dto.TeacherStudentItem) dto.TeacherReviewStudentRef {
-	var dtoTeacherReviewStudentRef dto.TeacherReviewStudentRef
-	dtoTeacherReviewStudentRef.ID = source.ID
-	dtoTeacherReviewStudentRef.Username = source.Username
-	if source.Name != nil {
-		xstring := *source.Name
-		dtoTeacherReviewStudentRef.Name = &xstring
-	}
-	return dtoTeacherReviewStudentRef
-}
 func (c *teachingQueryResponseMapperImpl) portsClassItemToDtoTeacherClassItem(source ports.ClassItem) dto.TeacherClassItem {
 	var dtoTeacherClassItem dto.TeacherClassItem
 	dtoTeacherClassItem.Name = source.Name
 	dtoTeacherClassItem.StudentCount = source.StudentCount
 	return dtoTeacherClassItem
-}
-func (c *teachingQueryResponseMapperImpl) portsClassTrendPointToDtoTeacherClassTrendPoint(source ports.ClassTrendPoint) dto.TeacherClassTrendPoint {
-	var dtoTeacherClassTrendPoint dto.TeacherClassTrendPoint
-	dtoTeacherClassTrendPoint.Date = source.Date
-	dtoTeacherClassTrendPoint.ActiveStudentCount = source.ActiveStudentCount
-	dtoTeacherClassTrendPoint.EventCount = source.EventCount
-	dtoTeacherClassTrendPoint.SolveCount = source.SolveCount
-	return dtoTeacherClassTrendPoint
 }
 func (c *teachingQueryResponseMapperImpl) portsStudentItemToDtoTeacherStudentItem(source ports.StudentItem) dto.TeacherStudentItem {
 	var dtoTeacherStudentItem dto.TeacherStudentItem

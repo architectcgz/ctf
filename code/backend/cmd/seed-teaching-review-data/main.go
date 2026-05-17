@@ -26,6 +26,7 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
@@ -251,7 +252,7 @@ type seedResult struct {
 	PracticeSessionCount int
 	AWDAttackCount       int
 	Students             []seededStudentResult
-	ClassReview          *dto.TeacherClassReviewResp
+	ClassReview          *teachingquerycontracts.TeacherClassReview
 	Coverage             seedCoverageSummary
 }
 

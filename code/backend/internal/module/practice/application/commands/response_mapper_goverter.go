@@ -31,23 +31,6 @@ type practiceCommandResponseMapper interface {
 	ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp
 	ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *dto.AdminAWDInstanceServiceResp
 
-	// goverter:ignore StudentUsername
-	// goverter:ignore StudentName
-	// goverter:ignore ClassName
-	// goverter:ignore ChallengeTitle
-	// goverter:ignore Answer
-	// goverter:ignore ReviewerName
-	ToTeacherManualReviewSubmissionDetailRespBase(source model.Submission) dto.TeacherManualReviewSubmissionDetailResp
-	ToTeacherManualReviewSubmissionDetailRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionDetailResp
-
-	// goverter:ignore StudentUsername
-	// goverter:ignore StudentName
-	// goverter:ignore ClassName
-	// goverter:ignore ChallengeTitle
-	// goverter:ignore AnswerPreview
-	ToTeacherManualReviewSubmissionItemRespBase(source model.Submission) dto.TeacherManualReviewSubmissionItemResp
-	ToTeacherManualReviewSubmissionItemRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionItemResp
-
 	// goverter:ignore Status
 	// goverter:ignore Answer
 	ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp

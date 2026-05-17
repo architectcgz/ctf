@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -34,12 +34,12 @@ type stubChallengeWriteupRepository struct {
 	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	getTeacherSubmissionWriteupByIDWithContextFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
-	listTeacherSubmissionWriteupsFn                    func(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
-	listTeacherSubmissionWriteupsWithContextFn         func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsFn                    func(query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsWithContextFn         func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
 	listRecommendedSolutionsByChallengeIDFn            func(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
 	listRecommendedSolutionsByChallengeIDWithContextFn func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
-	listCommunitySolutionsByChallengeIDFn              func(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
-	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDFn              func(challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
 func (s *stubChallengeWriteupRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -119,7 +119,7 @@ func (s *stubChallengeWriteupRepository) GetTeacherSubmissionWriteupByID(ctx con
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (s *stubChallengeWriteupRepository) ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
 		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
 	}
@@ -133,7 +133,7 @@ func (s *stubChallengeWriteupRepository) ListRecommendedSolutionsByChallengeID(c
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
 		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
 	}
@@ -280,7 +280,7 @@ func TestWriteupServiceListTeacherSubmissionsPropagatesContextToRepository(t *te
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		listTeacherSubmissionWriteupsWithContextFn: func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+		listTeacherSubmissionWriteupsWithContextFn: func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-teacher-submissions ctx value %v, got %v", expectedCtxValue, got)
@@ -294,7 +294,7 @@ func TestWriteupServiceListTeacherSubmissionsPropagatesContextToRepository(t *te
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherSubmissionWriteupQuery{}); err != nil {
+	if _, err := service.ListTeacherSubmissions(ctx, 1001, model.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{}); err != nil {
 		t.Fatalf("ListTeacherSubmissions() error = %v", err)
 	}
 	if !listCalled {
@@ -415,7 +415,7 @@ func TestWriteupServiceListCommunitySolutionsPropagatesContextToRepository(t *te
 			}
 			return true, nil
 		},
-		listCommunitySolutionsByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+		listCommunitySolutionsByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 			listCommunityCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-community ctx value %v, got %v", expectedCtxValue, got)
@@ -429,7 +429,7 @@ func TestWriteupServiceListCommunitySolutionsPropagatesContextToRepository(t *te
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListCommunitySolutions(ctx, 7, 11, &dto.CommunityChallengeSolutionQuery{})
+	resp, err := service.ListCommunitySolutions(ctx, 7, 11, &challengecontracts.CommunityChallengeSolutionQuery{})
 	if err != nil {
 		t.Fatalf("ListCommunitySolutions() error = %v", err)
 	}
@@ -504,7 +504,7 @@ func TestWriteupServiceListTeacherSubmissionsTreatsRequesterNotFoundSentinelAsUn
 		},
 	})
 
-	_, err := service.ListTeacherSubmissions(context.Background(), 1001, model.RoleTeacher, &dto.TeacherSubmissionWriteupQuery{})
+	_, err := service.ListTeacherSubmissions(context.Background(), 1001, model.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{})
 	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
 		t.Fatalf("expected unauthorized, got %v", err)
 	}

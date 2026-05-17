@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
@@ -35,9 +36,9 @@ type practiceService interface {
 	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
-	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error)
-	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
-	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
+	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
+	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *practicecontracts.ReviewManualReviewSubmissionReq) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
 }
 
 type practiceRankingService interface {
@@ -451,7 +452,7 @@ func (h *Handler) GetTimeline(c *gin.Context) {
 
 func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherManualReviewSubmissionQuery
+	var query practicecontracts.TeacherManualReviewSubmissionQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -486,7 +487,7 @@ func (h *Handler) ReviewManualReviewSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	var req dto.ReviewManualReviewSubmissionReq
+	var req practicecontracts.ReviewManualReviewSubmissionReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

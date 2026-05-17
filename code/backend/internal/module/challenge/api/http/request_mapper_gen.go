@@ -8,6 +8,7 @@ import (
 	model "ctf-platform/internal/model"
 	commands "ctf-platform/internal/module/challenge/application/commands"
 	queries "ctf-platform/internal/module/challenge/application/queries"
+	contracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type ChallengeRequestMapperImpl struct{}
@@ -181,14 +182,14 @@ func (c *ChallengeRequestMapperImpl) ToUpsertEnvironmentTemplateInput(source dto
 	}
 	return commandsUpsertEnvironmentTemplateInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpsertOfficialWriteupInput(source dto.UpsertChallengeWriteupReq) commands.UpsertOfficialWriteupInput {
+func (c *ChallengeRequestMapperImpl) ToUpsertOfficialWriteupInput(source contracts.UpsertChallengeWriteupReq) commands.UpsertOfficialWriteupInput {
 	var commandsUpsertOfficialWriteupInput commands.UpsertOfficialWriteupInput
 	commandsUpsertOfficialWriteupInput.Title = source.Title
 	commandsUpsertOfficialWriteupInput.Content = source.Content
 	commandsUpsertOfficialWriteupInput.Visibility = source.Visibility
 	return commandsUpsertOfficialWriteupInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpsertSubmissionWriteupInput(source dto.UpsertSubmissionWriteupReq) commands.UpsertSubmissionWriteupInput {
+func (c *ChallengeRequestMapperImpl) ToUpsertSubmissionWriteupInput(source contracts.UpsertSubmissionWriteupReq) commands.UpsertSubmissionWriteupInput {
 	var commandsUpsertSubmissionWriteupInput commands.UpsertSubmissionWriteupInput
 	commandsUpsertSubmissionWriteupInput.Title = source.Title
 	commandsUpsertSubmissionWriteupInput.Content = source.Content

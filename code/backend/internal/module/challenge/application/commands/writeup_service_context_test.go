@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -34,12 +34,12 @@ type writeupCommandContextStub struct {
 	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	getTeacherSubmissionWriteupByIDWithContextFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
-	listTeacherSubmissionWriteupsFn                    func(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
-	listTeacherSubmissionWriteupsWithContextFn         func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsFn                    func(query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsWithContextFn         func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
 	listRecommendedSolutionsByChallengeIDFn            func(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
 	listRecommendedSolutionsByChallengeIDWithContextFn func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
-	listCommunitySolutionsByChallengeIDFn              func(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
-	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDFn              func(challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
 func (s *writeupCommandContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -119,7 +119,7 @@ func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByID(ctx context.
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (s *writeupCommandContextStub) ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
 		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
 	}
@@ -133,7 +133,7 @@ func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeID(ctx co
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
 		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
 	}

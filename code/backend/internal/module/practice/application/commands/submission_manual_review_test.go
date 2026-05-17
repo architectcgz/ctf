@@ -239,7 +239,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		submissionID,
 		reviewerID,
 		model.RoleTeacher,
-		&dto.ReviewManualReviewSubmissionReq{
+		&practicecontracts.ReviewManualReviewSubmissionReq{
 			ReviewStatus:  model.SubmissionReviewStatusApproved,
 			ReviewComment: "答案链路完整",
 		},
@@ -1009,7 +1009,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		91,
 		1001,
 		model.RoleTeacher,
-		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
 	); err != nil {
 		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
@@ -1040,7 +1040,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-review ctx value %v, got %v", expectedCtxValue, got)
@@ -1058,7 +1058,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
+	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &practicecontracts.TeacherManualReviewSubmissionQuery{}); err != nil {
 		t.Fatalf("ListTeacherManualReviewSubmissions() error = %v", err)
 	}
 	if !listCalled {
@@ -1074,7 +1074,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for student role")
 			return nil, 0, nil
 		},
@@ -1085,7 +1085,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
+	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &practicecontracts.TeacherManualReviewSubmissionQuery{})
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
@@ -1103,7 +1103,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for invalid review status")
 			return nil, 0, nil
 		},
@@ -1118,7 +1118,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 		context.Background(),
 		1001,
 		model.RoleTeacher,
-		&dto.TeacherManualReviewSubmissionQuery{ReviewStatus: "archived"},
+		&practicecontracts.TeacherManualReviewSubmissionQuery{ReviewStatus: "archived"},
 	)
 	if err == nil {
 		t.Fatal("expected invalid review status to be rejected")
@@ -1137,7 +1137,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 			t.Fatal("did not expect requester lookup for oversized page size")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for oversized page size")
 			return nil, 0, nil
 		},
@@ -1152,7 +1152,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 		context.Background(),
 		1001,
 		model.RoleTeacher,
-		&dto.TeacherManualReviewSubmissionQuery{Size: 101},
+		&practicecontracts.TeacherManualReviewSubmissionQuery{Size: 101},
 	)
 	if err == nil {
 		t.Fatal("expected oversized page size to be rejected")
@@ -1171,7 +1171,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 			t.Fatal("did not expect requester lookup for non-positive student id")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for non-positive student id")
 			return nil, 0, nil
 		},
@@ -1187,7 +1187,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 		context.Background(),
 		1001,
 		model.RoleTeacher,
-		&dto.TeacherManualReviewSubmissionQuery{StudentID: &studentID},
+		&practicecontracts.TeacherManualReviewSubmissionQuery{StudentID: &studentID},
 	)
 	if err == nil {
 		t.Fatal("expected non-positive student id to be rejected")
@@ -1206,7 +1206,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 			t.Fatal("did not expect requester lookup for non-positive challenge id")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for non-positive challenge id")
 			return nil, 0, nil
 		},
@@ -1218,7 +1218,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 		context.Background(),
 		1001,
 		model.RoleTeacher,
-		&dto.TeacherManualReviewSubmissionQuery{ChallengeID: &challengeID},
+		&practicecontracts.TeacherManualReviewSubmissionQuery{ChallengeID: &challengeID},
 	)
 	if err == nil {
 		t.Fatal("expected non-positive challenge id to be rejected")
@@ -1237,7 +1237,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 			t.Fatal("did not expect requester lookup for oversized class name")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for oversized class name")
 			return nil, 0, nil
 		},
@@ -1248,7 +1248,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 		context.Background(),
 		1001,
 		model.RoleAdmin,
-		&dto.TeacherManualReviewSubmissionQuery{ClassName: strings.Repeat("A", 129)},
+		&practicecontracts.TeacherManualReviewSubmissionQuery{ClassName: strings.Repeat("A", 129)},
 	)
 	if err == nil {
 		t.Fatal("expected oversized class name to be rejected")
@@ -1356,7 +1356,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 		91,
 		1001,
 		model.RoleStudent,
-		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
@@ -1391,7 +1391,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 		91,
 		1001,
 		model.RoleTeacher,
-		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusPending},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusPending},
 	)
 	if err == nil {
 		t.Fatal("expected invalid review status to be rejected")
@@ -1426,7 +1426,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 		91,
 		1001,
 		model.RoleTeacher,
-		&dto.ReviewManualReviewSubmissionReq{
+		&practicecontracts.ReviewManualReviewSubmissionReq{
 			ReviewStatus:  model.SubmissionReviewStatusApproved,
 			ReviewComment: strings.Repeat("a", 4001),
 		},
@@ -1512,7 +1512,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		91,
 		1001,
 		model.RoleTeacher,
-		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
 		t.Fatal("expected already solved approval to be rejected")

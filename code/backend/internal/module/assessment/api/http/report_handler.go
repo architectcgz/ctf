@@ -32,7 +32,7 @@ func NewReportHandler(service reportService) *ReportHandler {
 }
 
 func (h *ReportHandler) CreatePersonalReport(c *gin.Context) {
-	var req dto.CreatePersonalReportReq
+	var req CreatePersonalReportReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
@@ -50,7 +50,7 @@ func (h *ReportHandler) CreatePersonalReport(c *gin.Context) {
 }
 
 func (h *ReportHandler) CreateClassReport(c *gin.Context) {
-	var req dto.CreateClassReportReq
+	var req CreateClassReportReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
@@ -74,7 +74,7 @@ func (h *ReportHandler) CreateContestExport(c *gin.Context) {
 		return
 	}
 
-	var req dto.CreateContestExportReq
+	var req CreateContestExportReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
@@ -98,7 +98,7 @@ func (h *ReportHandler) CreateStudentReviewArchive(c *gin.Context) {
 		return
 	}
 
-	var req dto.CreateStudentReviewArchiveReq
+	var req CreateStudentReviewArchiveReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)

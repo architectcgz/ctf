@@ -8,8 +8,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -25,9 +25,9 @@ type writeupServiceRepositoryStub struct {
 	findSubmissionWriteupByIDFn             func(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
 	upsertSubmissionWriteupFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
-	listTeacherSubmissionWriteupsFn         func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsFn         func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
 	listRecommendedSolutionsByChallengeIDFn func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
-	listCommunitySolutionsByChallengeIDFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDFn   func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
 func (s *writeupServiceRepositoryStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -74,7 +74,7 @@ func (s *writeupServiceRepositoryStub) GetTeacherSubmissionWriteupByID(ctx conte
 	return s.getTeacherSubmissionWriteupByIDFn(ctx, id)
 }
 
-func (s *writeupServiceRepositoryStub) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (s *writeupServiceRepositoryStub) ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return s.listTeacherSubmissionWriteupsFn(ctx, query)
 }
 
@@ -82,7 +82,7 @@ func (s *writeupServiceRepositoryStub) ListRecommendedSolutionsByChallengeID(ctx
 	return s.listRecommendedSolutionsByChallengeIDFn(ctx, challengeID, now)
 }
 
-func (s *writeupServiceRepositoryStub) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (s *writeupServiceRepositoryStub) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	return s.listCommunitySolutionsByChallengeIDFn(ctx, challengeID, query)
 }
 
@@ -124,13 +124,13 @@ func TestWriteupRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) {
 		getTeacherSubmissionWriteupByIDFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		listTeacherSubmissionWriteupsFn: func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+		listTeacherSubmissionWriteupsFn: func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 			return nil, 0, nil
 		},
 		listRecommendedSolutionsByChallengeIDFn: func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 			return nil, nil
 		},
-		listCommunitySolutionsByChallengeIDFn: func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+		listCommunitySolutionsByChallengeIDFn: func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 			return nil, 0, nil
 		},
 	})

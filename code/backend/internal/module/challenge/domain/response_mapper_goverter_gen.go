@@ -6,12 +6,13 @@ package domain
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/challenge/contracts"
 	ports "ctf-platform/internal/module/challenge/ports"
 )
 
-type challengeResponseMapperImpl struct{}
+type ChallengeResponseMapperImpl struct{}
 
-func (c *challengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp {
 	var dtoAWDChallengeResp dto.AWDChallengeResp
 	dtoAWDChallengeResp.ID = source.ID
 	dtoAWDChallengeResp.Name = source.Name
@@ -36,7 +37,7 @@ func (c *challengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDCha
 	dtoAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoAWDChallengeResp
 }
-func (c *challengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *dto.AWDChallengeResp {
 	var pDtoAWDChallengeResp *dto.AWDChallengeResp
 	if source != nil {
 		dtoAWDChallengeResp := c.ToAWDChallengeRespBase((*source))
@@ -44,36 +45,36 @@ func (c *challengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AW
 	}
 	return pDtoAWDChallengeResp
 }
-func (c *challengeResponseMapperImpl) ToAdminChallengeWriteupResp(source model.ChallengeWriteup) dto.AdminChallengeWriteupResp {
-	var dtoAdminChallengeWriteupResp dto.AdminChallengeWriteupResp
-	dtoAdminChallengeWriteupResp.ID = source.ID
-	dtoAdminChallengeWriteupResp.ChallengeID = source.ChallengeID
-	dtoAdminChallengeWriteupResp.Title = source.Title
-	dtoAdminChallengeWriteupResp.Content = source.Content
-	dtoAdminChallengeWriteupResp.Visibility = source.Visibility
+func (c *ChallengeResponseMapperImpl) ToAdminChallengeWriteupResp(source model.ChallengeWriteup) contracts.AdminChallengeWriteupResp {
+	var contractsAdminChallengeWriteupResp contracts.AdminChallengeWriteupResp
+	contractsAdminChallengeWriteupResp.ID = source.ID
+	contractsAdminChallengeWriteupResp.ChallengeID = source.ChallengeID
+	contractsAdminChallengeWriteupResp.Title = source.Title
+	contractsAdminChallengeWriteupResp.Content = source.Content
+	contractsAdminChallengeWriteupResp.Visibility = source.Visibility
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
-		dtoAdminChallengeWriteupResp.CreatedBy = &xint64
+		contractsAdminChallengeWriteupResp.CreatedBy = &xint64
 	}
-	dtoAdminChallengeWriteupResp.IsRecommended = source.IsRecommended
-	dtoAdminChallengeWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
+	contractsAdminChallengeWriteupResp.IsRecommended = source.IsRecommended
+	contractsAdminChallengeWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
 	if source.RecommendedBy != nil {
 		xint642 := *source.RecommendedBy
-		dtoAdminChallengeWriteupResp.RecommendedBy = &xint642
+		contractsAdminChallengeWriteupResp.RecommendedBy = &xint642
 	}
-	dtoAdminChallengeWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoAdminChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoAdminChallengeWriteupResp
+	contractsAdminChallengeWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsAdminChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsAdminChallengeWriteupResp
 }
-func (c *challengeResponseMapperImpl) ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
-	var pDtoAdminChallengeWriteupResp *dto.AdminChallengeWriteupResp
+func (c *ChallengeResponseMapperImpl) ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *contracts.AdminChallengeWriteupResp {
+	var pContractsAdminChallengeWriteupResp *contracts.AdminChallengeWriteupResp
 	if source != nil {
-		dtoAdminChallengeWriteupResp := c.ToAdminChallengeWriteupResp((*source))
-		pDtoAdminChallengeWriteupResp = &dtoAdminChallengeWriteupResp
+		contractsAdminChallengeWriteupResp := c.ToAdminChallengeWriteupResp((*source))
+		pContractsAdminChallengeWriteupResp = &contractsAdminChallengeWriteupResp
 	}
-	return pDtoAdminChallengeWriteupResp
+	return pContractsAdminChallengeWriteupResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminResp(source model.ChallengeHint) dto.ChallengeHintAdminResp {
 	var dtoChallengeHintAdminResp dto.ChallengeHintAdminResp
 	dtoChallengeHintAdminResp.ID = source.ID
 	dtoChallengeHintAdminResp.Level = source.Level
@@ -81,7 +82,7 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminResp(source model.Chal
 	dtoChallengeHintAdminResp.Content = source.Content
 	return dtoChallengeHintAdminResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *dto.ChallengeHintAdminResp {
 	var pDtoChallengeHintAdminResp *dto.ChallengeHintAdminResp
 	if source != nil {
 		dtoChallengeHintAdminResp := c.ToChallengeHintAdminResp((*source))
@@ -89,7 +90,7 @@ func (c *challengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.
 	}
 	return pDtoChallengeHintAdminResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) dto.ChallengeImportTopologyNodeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) dto.ChallengeImportTopologyNodeResp {
 	var dtoChallengeImportTopologyNodeResp dto.ChallengeImportTopologyNodeResp
 	dtoChallengeImportTopologyNodeResp.Key = source.Key
 	dtoChallengeImportTopologyNodeResp.Name = source.Name
@@ -111,7 +112,7 @@ func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBase(sour
 	}
 	return dtoChallengeImportTopologyNodeResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []dto.ChallengeImportTopologyNodeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBases(source []ChallengePackageTopologyNode) []dto.ChallengeImportTopologyNodeResp {
 	var dtoChallengeImportTopologyNodeRespList []dto.ChallengeImportTopologyNodeResp
 	if source != nil {
 		dtoChallengeImportTopologyNodeRespList = make([]dto.ChallengeImportTopologyNodeResp, len(source))
@@ -121,13 +122,13 @@ func (c *challengeResponseMapperImpl) ToChallengeImportTopologyNodeRespBases(sou
 	}
 	return dtoChallengeImportTopologyNodeRespList
 }
-func (c *challengeResponseMapperImpl) ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp {
 	var dtoChallengePackageFileResp dto.ChallengePackageFileResp
 	dtoChallengePackageFileResp.Path = source.Path
 	dtoChallengePackageFileResp.Size = source.Size
 	return dtoChallengePackageFileResp
 }
-func (c *challengeResponseMapperImpl) ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
 	var dtoChallengePackageFileRespList []dto.ChallengePackageFileResp
 	if source != nil {
 		dtoChallengePackageFileRespList = make([]dto.ChallengePackageFileResp, len(source))
@@ -137,7 +138,7 @@ func (c *challengeResponseMapperImpl) ToChallengePackageFileResps(source []Parse
 	}
 	return dtoChallengePackageFileRespList
 }
-func (c *challengeResponseMapperImpl) ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
 	var dtoChallengePackageRevisionResp dto.ChallengePackageRevisionResp
 	dtoChallengePackageRevisionResp.ID = source.ID
 	dtoChallengePackageRevisionResp.RevisionNo = source.RevisionNo
@@ -158,7 +159,7 @@ func (c *challengeResponseMapperImpl) ToChallengePackageRevisionResp(source mode
 	dtoChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoChallengePackageRevisionResp
 }
-func (c *challengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp {
 	var pDtoChallengePackageRevisionResp *dto.ChallengePackageRevisionResp
 	if source != nil {
 		dtoChallengePackageRevisionResp := c.ToChallengePackageRevisionResp((*source))
@@ -166,7 +167,7 @@ func (c *challengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *
 	}
 	return pDtoChallengePackageRevisionResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge) dto.ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge) dto.ChallengeResp {
 	var dtoChallengeResp dto.ChallengeResp
 	dtoChallengeResp.ID = source.ID
 	dtoChallengeResp.Title = source.Title
@@ -186,7 +187,7 @@ func (c *challengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge
 	dtoChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoChallengeResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Challenge) *dto.ChallengeResp {
 	var pDtoChallengeResp *dto.ChallengeResp
 	if source != nil {
 		dtoChallengeResp := c.ToChallengeRespBase((*source))
@@ -194,7 +195,7 @@ func (c *challengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Chall
 	}
 	return pDtoChallengeResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBase(source model.ChallengeTopology) dto.ChallengeTopologyResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeTopologyRespBase(source model.ChallengeTopology) dto.ChallengeTopologyResp {
 	var dtoChallengeTopologyResp dto.ChallengeTopologyResp
 	dtoChallengeTopologyResp.ID = source.ID
 	dtoChallengeTopologyResp.ChallengeID = source.ChallengeID
@@ -218,7 +219,7 @@ func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBase(source model.C
 	dtoChallengeTopologyResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoChallengeTopologyResp
 }
-func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *dto.ChallengeTopologyResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *dto.ChallengeTopologyResp {
 	var pDtoChallengeTopologyResp *dto.ChallengeTopologyResp
 	if source != nil {
 		dtoChallengeTopologyResp := c.ToChallengeTopologyRespBase((*source))
@@ -226,30 +227,30 @@ func (c *challengeResponseMapperImpl) ToChallengeTopologyRespBasePtr(source *mod
 	}
 	return pDtoChallengeTopologyResp
 }
-func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBase(source ports.CommunitySolutionRecord) dto.CommunityChallengeSolutionResp {
-	var dtoCommunityChallengeSolutionResp dto.CommunityChallengeSolutionResp
-	dtoCommunityChallengeSolutionResp.ID = source.Submission.ID
-	dtoCommunityChallengeSolutionResp.ChallengeID = source.Submission.ChallengeID
-	dtoCommunityChallengeSolutionResp.UserID = source.Submission.UserID
-	dtoCommunityChallengeSolutionResp.Title = source.Submission.Title
-	dtoCommunityChallengeSolutionResp.Content = source.Submission.Content
-	dtoCommunityChallengeSolutionResp.AuthorName = source.AuthorName
-	dtoCommunityChallengeSolutionResp.SubmissionStatus = source.Submission.SubmissionStatus
-	dtoCommunityChallengeSolutionResp.VisibilityStatus = source.Submission.VisibilityStatus
-	dtoCommunityChallengeSolutionResp.IsRecommended = source.Submission.IsRecommended
-	dtoCommunityChallengeSolutionResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
-	dtoCommunityChallengeSolutionResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
-	return dtoCommunityChallengeSolutionResp
+func (c *ChallengeResponseMapperImpl) ToCommunityChallengeSolutionRespBase(source ports.CommunitySolutionRecord) contracts.CommunityChallengeSolutionResp {
+	var contractsCommunityChallengeSolutionResp contracts.CommunityChallengeSolutionResp
+	contractsCommunityChallengeSolutionResp.ID = source.Submission.ID
+	contractsCommunityChallengeSolutionResp.ChallengeID = source.Submission.ChallengeID
+	contractsCommunityChallengeSolutionResp.UserID = source.Submission.UserID
+	contractsCommunityChallengeSolutionResp.Title = source.Submission.Title
+	contractsCommunityChallengeSolutionResp.Content = source.Submission.Content
+	contractsCommunityChallengeSolutionResp.AuthorName = source.AuthorName
+	contractsCommunityChallengeSolutionResp.SubmissionStatus = source.Submission.SubmissionStatus
+	contractsCommunityChallengeSolutionResp.VisibilityStatus = source.Submission.VisibilityStatus
+	contractsCommunityChallengeSolutionResp.IsRecommended = source.Submission.IsRecommended
+	contractsCommunityChallengeSolutionResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
+	contractsCommunityChallengeSolutionResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
+	return contractsCommunityChallengeSolutionResp
 }
-func (c *challengeResponseMapperImpl) ToCommunityChallengeSolutionRespBasePtr(source *ports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp {
-	var pDtoCommunityChallengeSolutionResp *dto.CommunityChallengeSolutionResp
+func (c *ChallengeResponseMapperImpl) ToCommunityChallengeSolutionRespBasePtr(source *ports.CommunitySolutionRecord) *contracts.CommunityChallengeSolutionResp {
+	var pContractsCommunityChallengeSolutionResp *contracts.CommunityChallengeSolutionResp
 	if source != nil {
-		dtoCommunityChallengeSolutionResp := c.ToCommunityChallengeSolutionRespBase((*source))
-		pDtoCommunityChallengeSolutionResp = &dtoCommunityChallengeSolutionResp
+		contractsCommunityChallengeSolutionResp := c.ToCommunityChallengeSolutionRespBase((*source))
+		pContractsCommunityChallengeSolutionResp = &contractsCommunityChallengeSolutionResp
 	}
-	return pDtoCommunityChallengeSolutionResp
+	return pContractsCommunityChallengeSolutionResp
 }
-func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) dto.EnvironmentTemplateResp {
+func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) dto.EnvironmentTemplateResp {
 	var dtoEnvironmentTemplateResp dto.EnvironmentTemplateResp
 	dtoEnvironmentTemplateResp.ID = source.ID
 	dtoEnvironmentTemplateResp.Name = source.Name
@@ -260,7 +261,7 @@ func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBase(source model
 	dtoEnvironmentTemplateResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoEnvironmentTemplateResp
 }
-func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *dto.EnvironmentTemplateResp {
+func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *dto.EnvironmentTemplateResp {
 	var pDtoEnvironmentTemplateResp *dto.EnvironmentTemplateResp
 	if source != nil {
 		dtoEnvironmentTemplateResp := c.ToEnvironmentTemplateRespBase((*source))
@@ -268,7 +269,7 @@ func (c *challengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *m
 	}
 	return pDtoEnvironmentTemplateResp
 }
-func (c *challengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.ImageResp {
 	var dtoImageResp dto.ImageResp
 	dtoImageResp.ID = source.ID
 	dtoImageResp.Name = source.Name
@@ -276,11 +277,19 @@ func (c *challengeResponseMapperImpl) ToImageRespBase(source model.Image) dto.Im
 	dtoImageResp.Description = source.Description
 	dtoImageResp.Size = source.Size
 	dtoImageResp.Status = source.Status
+	dtoImageResp.Digest = source.Digest
+	dtoImageResp.SourceType = source.SourceType
+	if source.BuildJobID != nil {
+		xint64 := *source.BuildJobID
+		dtoImageResp.BuildJobID = &xint64
+	}
+	dtoImageResp.LastError = source.LastError
+	dtoImageResp.VerifiedAt = CopyTimePtr(source.VerifiedAt)
 	dtoImageResp.CreatedAt = CopyTime(source.CreatedAt)
 	dtoImageResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return dtoImageResp
 }
-func (c *challengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *dto.ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *dto.ImageResp {
 	var pDtoImageResp *dto.ImageResp
 	if source != nil {
 		dtoImageResp := c.ToImageRespBase((*source))
@@ -288,13 +297,13 @@ func (c *challengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *d
 	}
 	return pDtoImageResp
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink {
 	var modelTopologyLink model.TopologyLink
 	modelTopologyLink.FromNodeKey = source.FromNodeKey
 	modelTopologyLink.ToNodeKey = source.ToNodeKey
 	return modelTopologyLink
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []model.TopologyLink {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []model.TopologyLink {
 	var modelTopologyLinkList []model.TopologyLink
 	if source != nil {
 		modelTopologyLinkList = make([]model.TopologyLink, len(source))
@@ -304,7 +313,7 @@ func (c *challengeResponseMapperImpl) ToImportedTopologyLinks(source []Challenge
 	}
 	return modelTopologyLinkList
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork {
 	var modelTopologyNetwork model.TopologyNetwork
 	modelTopologyNetwork.Key = source.Key
 	modelTopologyNetwork.Name = source.Name
@@ -312,7 +321,7 @@ func (c *challengeResponseMapperImpl) ToImportedTopologyNetwork(source Challenge
 	modelTopologyNetwork.Internal = source.Internal
 	return modelTopologyNetwork
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
 	var modelTopologyNetworkList []model.TopologyNetwork
 	if source != nil {
 		modelTopologyNetworkList = make([]model.TopologyNetwork, len(source))
@@ -322,7 +331,7 @@ func (c *challengeResponseMapperImpl) ToImportedTopologyNetworks(source []Challe
 	}
 	return modelTopologyNetworkList
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
 	var modelTopologyTrafficPolicyList []model.TopologyTrafficPolicy
 	if source != nil {
 		modelTopologyTrafficPolicyList = make([]model.TopologyTrafficPolicy, len(source))
@@ -332,7 +341,7 @@ func (c *challengeResponseMapperImpl) ToImportedTopologyPolicies(source []Challe
 	}
 	return modelTopologyTrafficPolicyList
 }
-func (c *challengeResponseMapperImpl) ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) model.TopologyTrafficPolicy {
+func (c *ChallengeResponseMapperImpl) ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) model.TopologyTrafficPolicy {
 	var modelTopologyTrafficPolicy model.TopologyTrafficPolicy
 	modelTopologyTrafficPolicy.SourceNodeKey = source.SourceNodeKey
 	modelTopologyTrafficPolicy.TargetNodeKey = source.TargetNodeKey
@@ -346,60 +355,60 @@ func (c *challengeResponseMapperImpl) ToImportedTopologyPolicy(source ChallengeP
 	}
 	return modelTopologyTrafficPolicy
 }
-func (c *challengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBase(source ports.RecommendedSolutionRecord) dto.RecommendedChallengeSolutionResp {
-	var dtoRecommendedChallengeSolutionResp dto.RecommendedChallengeSolutionResp
-	dtoRecommendedChallengeSolutionResp.SourceType = source.SourceType
-	dtoRecommendedChallengeSolutionResp.SourceID = source.SourceID
-	dtoRecommendedChallengeSolutionResp.ChallengeID = source.ChallengeID
-	dtoRecommendedChallengeSolutionResp.Title = source.Title
-	dtoRecommendedChallengeSolutionResp.Content = source.Content
-	dtoRecommendedChallengeSolutionResp.AuthorName = source.AuthorName
-	dtoRecommendedChallengeSolutionResp.IsRecommended = source.IsRecommended
-	dtoRecommendedChallengeSolutionResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
-	dtoRecommendedChallengeSolutionResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoRecommendedChallengeSolutionResp
+func (c *ChallengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBase(source ports.RecommendedSolutionRecord) contracts.RecommendedChallengeSolutionResp {
+	var contractsRecommendedChallengeSolutionResp contracts.RecommendedChallengeSolutionResp
+	contractsRecommendedChallengeSolutionResp.SourceType = source.SourceType
+	contractsRecommendedChallengeSolutionResp.SourceID = source.SourceID
+	contractsRecommendedChallengeSolutionResp.ChallengeID = source.ChallengeID
+	contractsRecommendedChallengeSolutionResp.Title = source.Title
+	contractsRecommendedChallengeSolutionResp.Content = source.Content
+	contractsRecommendedChallengeSolutionResp.AuthorName = source.AuthorName
+	contractsRecommendedChallengeSolutionResp.IsRecommended = source.IsRecommended
+	contractsRecommendedChallengeSolutionResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
+	contractsRecommendedChallengeSolutionResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsRecommendedChallengeSolutionResp
 }
-func (c *challengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBasePtr(source *ports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp {
-	var pDtoRecommendedChallengeSolutionResp *dto.RecommendedChallengeSolutionResp
+func (c *ChallengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBasePtr(source *ports.RecommendedSolutionRecord) *contracts.RecommendedChallengeSolutionResp {
+	var pContractsRecommendedChallengeSolutionResp *contracts.RecommendedChallengeSolutionResp
 	if source != nil {
-		dtoRecommendedChallengeSolutionResp := c.ToRecommendedChallengeSolutionRespBase((*source))
-		pDtoRecommendedChallengeSolutionResp = &dtoRecommendedChallengeSolutionResp
+		contractsRecommendedChallengeSolutionResp := c.ToRecommendedChallengeSolutionRespBase((*source))
+		pContractsRecommendedChallengeSolutionResp = &contractsRecommendedChallengeSolutionResp
 	}
-	return pDtoRecommendedChallengeSolutionResp
+	return pContractsRecommendedChallengeSolutionResp
 }
-func (c *challengeResponseMapperImpl) ToSubmissionWriteupResp(source model.SubmissionWriteup) dto.SubmissionWriteupResp {
-	var dtoSubmissionWriteupResp dto.SubmissionWriteupResp
-	dtoSubmissionWriteupResp.ID = source.ID
-	dtoSubmissionWriteupResp.UserID = source.UserID
-	dtoSubmissionWriteupResp.ChallengeID = source.ChallengeID
+func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupResp(source model.SubmissionWriteup) contracts.SubmissionWriteupResp {
+	var contractsSubmissionWriteupResp contracts.SubmissionWriteupResp
+	contractsSubmissionWriteupResp.ID = source.ID
+	contractsSubmissionWriteupResp.UserID = source.UserID
+	contractsSubmissionWriteupResp.ChallengeID = source.ChallengeID
 	if source.ContestID != nil {
 		xint64 := *source.ContestID
-		dtoSubmissionWriteupResp.ContestID = &xint64
+		contractsSubmissionWriteupResp.ContestID = &xint64
 	}
-	dtoSubmissionWriteupResp.Title = source.Title
-	dtoSubmissionWriteupResp.Content = source.Content
-	dtoSubmissionWriteupResp.SubmissionStatus = source.SubmissionStatus
-	dtoSubmissionWriteupResp.VisibilityStatus = source.VisibilityStatus
-	dtoSubmissionWriteupResp.IsRecommended = source.IsRecommended
-	dtoSubmissionWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
+	contractsSubmissionWriteupResp.Title = source.Title
+	contractsSubmissionWriteupResp.Content = source.Content
+	contractsSubmissionWriteupResp.SubmissionStatus = source.SubmissionStatus
+	contractsSubmissionWriteupResp.VisibilityStatus = source.VisibilityStatus
+	contractsSubmissionWriteupResp.IsRecommended = source.IsRecommended
+	contractsSubmissionWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
 	if source.RecommendedBy != nil {
 		xint642 := *source.RecommendedBy
-		dtoSubmissionWriteupResp.RecommendedBy = &xint642
+		contractsSubmissionWriteupResp.RecommendedBy = &xint642
 	}
-	dtoSubmissionWriteupResp.PublishedAt = CopyTimePtr(source.PublishedAt)
-	dtoSubmissionWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoSubmissionWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoSubmissionWriteupResp
+	contractsSubmissionWriteupResp.PublishedAt = CopyTimePtr(source.PublishedAt)
+	contractsSubmissionWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsSubmissionWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsSubmissionWriteupResp
 }
-func (c *challengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
-	var pDtoSubmissionWriteupResp *dto.SubmissionWriteupResp
+func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *contracts.SubmissionWriteupResp {
+	var pContractsSubmissionWriteupResp *contracts.SubmissionWriteupResp
 	if source != nil {
-		dtoSubmissionWriteupResp := c.ToSubmissionWriteupResp((*source))
-		pDtoSubmissionWriteupResp = &dtoSubmissionWriteupResp
+		contractsSubmissionWriteupResp := c.ToSubmissionWriteupResp((*source))
+		pContractsSubmissionWriteupResp = &contractsSubmissionWriteupResp
 	}
-	return pDtoSubmissionWriteupResp
+	return pContractsSubmissionWriteupResp
 }
-func (c *challengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
+func (c *ChallengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
 	var dtoTagResp dto.TagResp
 	dtoTagResp.ID = source.ID
 	dtoTagResp.Name = source.Name
@@ -408,7 +417,7 @@ func (c *challengeResponseMapperImpl) ToTagResp(source model.Tag) dto.TagResp {
 	dtoTagResp.CreatedAt = CopyTime(source.CreatedAt)
 	return dtoTagResp
 }
-func (c *challengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagResp {
+func (c *ChallengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagResp {
 	var pDtoTagResp *dto.TagResp
 	if source != nil {
 		dtoTagResp := c.ToTagResp((*source))
@@ -416,53 +425,53 @@ func (c *challengeResponseMapperImpl) ToTagRespPtr(source *model.Tag) *dto.TagRe
 	}
 	return pDtoTagResp
 }
-func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailResp(source ports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupDetailResp {
-	var dtoTeacherSubmissionWriteupDetailResp dto.TeacherSubmissionWriteupDetailResp
-	dtoTeacherSubmissionWriteupDetailResp.SubmissionWriteupResp = c.ToSubmissionWriteupResp(source.Submission)
-	dtoTeacherSubmissionWriteupDetailResp.StudentUsername = source.StudentUsername
-	dtoTeacherSubmissionWriteupDetailResp.StudentName = source.StudentName
-	dtoTeacherSubmissionWriteupDetailResp.StudentNo = source.StudentNo
-	dtoTeacherSubmissionWriteupDetailResp.ClassName = source.ClassName
-	dtoTeacherSubmissionWriteupDetailResp.ChallengeTitle = source.ChallengeTitle
-	return dtoTeacherSubmissionWriteupDetailResp
+func (c *ChallengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailResp(source ports.TeacherSubmissionWriteupRecord) contracts.TeacherSubmissionWriteupDetailResp {
+	var contractsTeacherSubmissionWriteupDetailResp contracts.TeacherSubmissionWriteupDetailResp
+	contractsTeacherSubmissionWriteupDetailResp.SubmissionWriteupResp = c.ToSubmissionWriteupResp(source.Submission)
+	contractsTeacherSubmissionWriteupDetailResp.StudentUsername = source.StudentUsername
+	contractsTeacherSubmissionWriteupDetailResp.StudentName = source.StudentName
+	contractsTeacherSubmissionWriteupDetailResp.StudentNo = source.StudentNo
+	contractsTeacherSubmissionWriteupDetailResp.ClassName = source.ClassName
+	contractsTeacherSubmissionWriteupDetailResp.ChallengeTitle = source.ChallengeTitle
+	return contractsTeacherSubmissionWriteupDetailResp
 }
-func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailRespPtr(source ports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp {
-	dtoTeacherSubmissionWriteupDetailResp := c.ToTeacherSubmissionWriteupDetailResp(source)
-	return &dtoTeacherSubmissionWriteupDetailResp
+func (c *ChallengeResponseMapperImpl) ToTeacherSubmissionWriteupDetailRespPtr(source ports.TeacherSubmissionWriteupRecord) *contracts.TeacherSubmissionWriteupDetailResp {
+	contractsTeacherSubmissionWriteupDetailResp := c.ToTeacherSubmissionWriteupDetailResp(source)
+	return &contractsTeacherSubmissionWriteupDetailResp
 }
-func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBase(source ports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupItemResp {
-	var dtoTeacherSubmissionWriteupItemResp dto.TeacherSubmissionWriteupItemResp
-	dtoTeacherSubmissionWriteupItemResp.ID = source.Submission.ID
-	dtoTeacherSubmissionWriteupItemResp.UserID = source.Submission.UserID
-	dtoTeacherSubmissionWriteupItemResp.StudentUsername = source.StudentUsername
-	dtoTeacherSubmissionWriteupItemResp.StudentName = source.StudentName
-	dtoTeacherSubmissionWriteupItemResp.StudentNo = source.StudentNo
-	dtoTeacherSubmissionWriteupItemResp.ClassName = source.ClassName
-	dtoTeacherSubmissionWriteupItemResp.ChallengeID = source.Submission.ChallengeID
-	dtoTeacherSubmissionWriteupItemResp.ChallengeTitle = source.ChallengeTitle
-	dtoTeacherSubmissionWriteupItemResp.Title = source.Submission.Title
-	dtoTeacherSubmissionWriteupItemResp.SubmissionStatus = source.Submission.SubmissionStatus
-	dtoTeacherSubmissionWriteupItemResp.VisibilityStatus = source.Submission.VisibilityStatus
-	dtoTeacherSubmissionWriteupItemResp.IsRecommended = source.Submission.IsRecommended
-	dtoTeacherSubmissionWriteupItemResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
-	dtoTeacherSubmissionWriteupItemResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
-	return dtoTeacherSubmissionWriteupItemResp
+func (c *ChallengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBase(source ports.TeacherSubmissionWriteupRecord) contracts.TeacherSubmissionWriteupItemResp {
+	var contractsTeacherSubmissionWriteupItemResp contracts.TeacherSubmissionWriteupItemResp
+	contractsTeacherSubmissionWriteupItemResp.ID = source.Submission.ID
+	contractsTeacherSubmissionWriteupItemResp.UserID = source.Submission.UserID
+	contractsTeacherSubmissionWriteupItemResp.StudentUsername = source.StudentUsername
+	contractsTeacherSubmissionWriteupItemResp.StudentName = source.StudentName
+	contractsTeacherSubmissionWriteupItemResp.StudentNo = source.StudentNo
+	contractsTeacherSubmissionWriteupItemResp.ClassName = source.ClassName
+	contractsTeacherSubmissionWriteupItemResp.ChallengeID = source.Submission.ChallengeID
+	contractsTeacherSubmissionWriteupItemResp.ChallengeTitle = source.ChallengeTitle
+	contractsTeacherSubmissionWriteupItemResp.Title = source.Submission.Title
+	contractsTeacherSubmissionWriteupItemResp.SubmissionStatus = source.Submission.SubmissionStatus
+	contractsTeacherSubmissionWriteupItemResp.VisibilityStatus = source.Submission.VisibilityStatus
+	contractsTeacherSubmissionWriteupItemResp.IsRecommended = source.Submission.IsRecommended
+	contractsTeacherSubmissionWriteupItemResp.PublishedAt = CopyTimePtr(source.Submission.PublishedAt)
+	contractsTeacherSubmissionWriteupItemResp.UpdatedAt = CopyTime(source.Submission.UpdatedAt)
+	return contractsTeacherSubmissionWriteupItemResp
 }
-func (c *challengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBasePtr(source *ports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
-	var pDtoTeacherSubmissionWriteupItemResp *dto.TeacherSubmissionWriteupItemResp
+func (c *ChallengeResponseMapperImpl) ToTeacherSubmissionWriteupItemRespBasePtr(source *ports.TeacherSubmissionWriteupRecord) *contracts.TeacherSubmissionWriteupItemResp {
+	var pContractsTeacherSubmissionWriteupItemResp *contracts.TeacherSubmissionWriteupItemResp
 	if source != nil {
-		dtoTeacherSubmissionWriteupItemResp := c.ToTeacherSubmissionWriteupItemRespBase((*source))
-		pDtoTeacherSubmissionWriteupItemResp = &dtoTeacherSubmissionWriteupItemResp
+		contractsTeacherSubmissionWriteupItemResp := c.ToTeacherSubmissionWriteupItemRespBase((*source))
+		pContractsTeacherSubmissionWriteupItemResp = &contractsTeacherSubmissionWriteupItemResp
 	}
-	return pDtoTeacherSubmissionWriteupItemResp
+	return pContractsTeacherSubmissionWriteupItemResp
 }
-func (c *challengeResponseMapperImpl) ToTopologyLinkResp(source model.TopologyLink) dto.TopologyLinkResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyLinkResp(source model.TopologyLink) dto.TopologyLinkResp {
 	var dtoTopologyLinkResp dto.TopologyLinkResp
 	dtoTopologyLinkResp.FromNodeKey = source.FromNodeKey
 	dtoTopologyLinkResp.ToNodeKey = source.ToNodeKey
 	return dtoTopologyLinkResp
 }
-func (c *challengeResponseMapperImpl) ToTopologyLinkResps(source []model.TopologyLink) []dto.TopologyLinkResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyLinkResps(source []model.TopologyLink) []dto.TopologyLinkResp {
 	var dtoTopologyLinkRespList []dto.TopologyLinkResp
 	if source != nil {
 		dtoTopologyLinkRespList = make([]dto.TopologyLinkResp, len(source))
@@ -472,7 +481,7 @@ func (c *challengeResponseMapperImpl) ToTopologyLinkResps(source []model.Topolog
 	}
 	return dtoTopologyLinkRespList
 }
-func (c *challengeResponseMapperImpl) ToTopologyNetworkResp(source model.TopologyNetwork) dto.TopologyNetworkResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyNetworkResp(source model.TopologyNetwork) dto.TopologyNetworkResp {
 	var dtoTopologyNetworkResp dto.TopologyNetworkResp
 	dtoTopologyNetworkResp.Key = source.Key
 	dtoTopologyNetworkResp.Name = source.Name
@@ -480,7 +489,7 @@ func (c *challengeResponseMapperImpl) ToTopologyNetworkResp(source model.Topolog
 	dtoTopologyNetworkResp.Internal = source.Internal
 	return dtoTopologyNetworkResp
 }
-func (c *challengeResponseMapperImpl) ToTopologyNetworkResps(source []model.TopologyNetwork) []dto.TopologyNetworkResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyNetworkResps(source []model.TopologyNetwork) []dto.TopologyNetworkResp {
 	var dtoTopologyNetworkRespList []dto.TopologyNetworkResp
 	if source != nil {
 		dtoTopologyNetworkRespList = make([]dto.TopologyNetworkResp, len(source))
@@ -490,7 +499,7 @@ func (c *challengeResponseMapperImpl) ToTopologyNetworkResps(source []model.Topo
 	}
 	return dtoTopologyNetworkRespList
 }
-func (c *challengeResponseMapperImpl) ToTopologyNodeResp(source model.TopologyNode) dto.TopologyNodeResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyNodeResp(source model.TopologyNode) dto.TopologyNodeResp {
 	var dtoTopologyNodeResp dto.TopologyNodeResp
 	dtoTopologyNodeResp.Key = source.Key
 	dtoTopologyNodeResp.Name = source.Name
@@ -514,7 +523,7 @@ func (c *challengeResponseMapperImpl) ToTopologyNodeResp(source model.TopologyNo
 	dtoTopologyNodeResp.Resources = c.pModelTopologyResourcesToPDtoTopologyResourcesResp(source.Resources)
 	return dtoTopologyNodeResp
 }
-func (c *challengeResponseMapperImpl) ToTopologyNodeResps(source []model.TopologyNode) []dto.TopologyNodeResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyNodeResps(source []model.TopologyNode) []dto.TopologyNodeResp {
 	var dtoTopologyNodeRespList []dto.TopologyNodeResp
 	if source != nil {
 		dtoTopologyNodeRespList = make([]dto.TopologyNodeResp, len(source))
@@ -524,7 +533,7 @@ func (c *challengeResponseMapperImpl) ToTopologyNodeResps(source []model.Topolog
 	}
 	return dtoTopologyNodeRespList
 }
-func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) dto.TopologyTrafficPolicyResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) dto.TopologyTrafficPolicyResp {
 	var dtoTopologyTrafficPolicyResp dto.TopologyTrafficPolicyResp
 	dtoTopologyTrafficPolicyResp.SourceNodeKey = source.SourceNodeKey
 	dtoTopologyTrafficPolicyResp.TargetNodeKey = source.TargetNodeKey
@@ -538,7 +547,7 @@ func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResp(source model.T
 	}
 	return dtoTopologyTrafficPolicyResp
 }
-func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp {
+func (c *ChallengeResponseMapperImpl) ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []dto.TopologyTrafficPolicyResp {
 	var dtoTopologyTrafficPolicyRespList []dto.TopologyTrafficPolicyResp
 	if source != nil {
 		dtoTopologyTrafficPolicyRespList = make([]dto.TopologyTrafficPolicyResp, len(source))
@@ -548,7 +557,7 @@ func (c *challengeResponseMapperImpl) ToTopologyTrafficPolicyResps(source []mode
 	}
 	return dtoTopologyTrafficPolicyRespList
 }
-func (c *challengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
+func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
 	switch source {
 	case model.InstanceSharingPerTeam:
@@ -564,7 +573,7 @@ func (c *challengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing
 	}
 	return modelInstanceSharing
 }
-func (c *challengeResponseMapperImpl) pModelTopologyResourcesToPDtoTopologyResourcesResp(source *model.TopologyResources) *dto.TopologyResourcesResp {
+func (c *ChallengeResponseMapperImpl) pModelTopologyResourcesToPDtoTopologyResourcesResp(source *model.TopologyResources) *dto.TopologyResourcesResp {
 	var pDtoTopologyResourcesResp *dto.TopologyResourcesResp
 	if source != nil {
 		var dtoTopologyResourcesResp dto.TopologyResourcesResp

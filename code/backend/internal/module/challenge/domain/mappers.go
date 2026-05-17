@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -113,23 +114,23 @@ func FormatImageSize(size int64) string {
 	return fmt.Sprintf("%.1f %s", value, units[unitIndex])
 }
 
-func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
+func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *challengecontracts.TeacherSubmissionWriteupItemResp {
 	resp := challengeResponseMapperInst.ToTeacherSubmissionWriteupItemRespBasePtr(&item)
 	resp.ContentPreview = buildContentPreview(item.Submission.Content)
 	return resp
 }
 
-func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp {
+func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *challengecontracts.TeacherSubmissionWriteupDetailResp {
 	return challengeResponseMapperInst.ToTeacherSubmissionWriteupDetailRespPtr(item)
 }
 
-func RecommendedSolutionRespFromRecord(item challengeports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp {
+func RecommendedSolutionRespFromRecord(item challengeports.RecommendedSolutionRecord) *challengecontracts.RecommendedChallengeSolutionResp {
 	resp := challengeResponseMapperInst.ToRecommendedChallengeSolutionRespBasePtr(&item)
 	resp.ID = item.SourceType + "-" + strconv.FormatInt(item.SourceID, 10)
 	return resp
 }
 
-func CommunitySolutionRespFromRecord(item challengeports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp {
+func CommunitySolutionRespFromRecord(item challengeports.CommunitySolutionRecord) *challengecontracts.CommunityChallengeSolutionResp {
 	resp := challengeResponseMapperInst.ToCommunityChallengeSolutionRespBasePtr(&item)
 	resp.ContentPreview = buildContentPreview(item.Submission.Content)
 	return resp

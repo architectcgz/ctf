@@ -24,6 +24,7 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/mapperutil"
 	teachingadvice "ctf-platform/internal/teaching/advice"
@@ -66,9 +67,9 @@ type classReportData struct {
 	AverageScore           float64                                       `json:"average_score"`
 	DimensionAverages      []assessmentdomain.ClassDimensionAverage      `json:"dimension_averages"`
 	TopStudents            []assessmentdomain.ClassTopStudent            `json:"top_students"`
-	Summary                *dto.TeacherClassSummaryResp                  `json:"summary,omitempty"`
-	Trend                  *dto.TeacherClassTrendResp                    `json:"trend,omitempty"`
-	Review                 *dto.TeacherClassReviewResp                   `json:"review,omitempty"`
+	Summary                *teachingquerycontracts.TeacherClassSummary   `json:"summary,omitempty"`
+	Trend                  *teachingquerycontracts.TeacherClassTrend     `json:"trend,omitempty"`
+	Review                 *teachingquerycontracts.TeacherClassReview    `json:"review,omitempty"`
 	CategoryDistribution   []assessmentdomain.ClassDistributionStat      `json:"category_distribution"`
 	DifficultyDistribution []assessmentdomain.ClassDistributionStat      `json:"difficulty_distribution"`
 	ContestMigration       assessmentdomain.ClassContestMigrationSummary `json:"contest_migration"`
@@ -729,9 +730,9 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	var summaryResp *dto.TeacherClassSummaryResp
-	var trendResp *dto.TeacherClassTrendResp
-	var reviewResp *dto.TeacherClassReviewResp
+	var summaryResp *teachingquerycontracts.TeacherClassSummary
+	var trendResp *teachingquerycontracts.TeacherClassTrend
+	var reviewResp *teachingquerycontracts.TeacherClassReview
 	if s.classInsightRepo != nil {
 		summary, err := s.classInsightRepo.GetClassSummary(ctx, className, window.Since)
 		if err != nil {
@@ -759,7 +760,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 			trendEventDelta = last.EventCount - first.EventCount
 			trendSolveDelta = last.SolveCount - first.SolveCount
 		}
-		reviewResp = classreview.BuildResponse(ctx, classreview.Input{
+		reviewResp = mapClassReview(classreview.BuildResponse(ctx, classreview.Input{
 			ClassName:        className,
 			ActiveRate:       summary.ActiveRate,
 			RecentEventCount: summary.RecentEventCount,
@@ -767,7 +768,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 			TrendEventDelta:  trendEventDelta,
 			TrendSolveDelta:  trendSolveDelta,
 			Snapshots:        snapshots,
-		}, nil)
+		}, nil))
 	}
 
 	return &classReportData{
@@ -1438,11 +1439,11 @@ func (s *ReportService) parseClassWindow(req CreateClassReportInput) (classwindo
 	return window, nil
 }
 
-func mapClassSummary(summary *queryports.ClassSummary) *dto.TeacherClassSummaryResp {
+func mapClassSummary(summary *queryports.ClassSummary) *teachingquerycontracts.TeacherClassSummary {
 	if summary == nil {
 		return nil
 	}
-	return &dto.TeacherClassSummaryResp{
+	return &teachingquerycontracts.TeacherClassSummary{
 		ClassName:          summary.ClassName,
 		StudentCount:       summary.StudentCount,
 		AverageSolved:      summary.AverageSolved,
@@ -1452,22 +1453,76 @@ func mapClassSummary(summary *queryports.ClassSummary) *dto.TeacherClassSummaryR
 	}
 }
 
-func mapClassTrend(trend *queryports.ClassTrend) *dto.TeacherClassTrendResp {
+func mapClassTrend(trend *queryports.ClassTrend) *teachingquerycontracts.TeacherClassTrend {
 	if trend == nil {
 		return nil
 	}
-	points := make([]dto.TeacherClassTrendPoint, 0, len(trend.Points))
+	points := make([]teachingquerycontracts.TeacherClassTrendPoint, 0, len(trend.Points))
 	for _, point := range trend.Points {
-		points = append(points, dto.TeacherClassTrendPoint{
+		points = append(points, teachingquerycontracts.TeacherClassTrendPoint{
 			Date:               point.Date,
 			ActiveStudentCount: point.ActiveStudentCount,
 			EventCount:         point.EventCount,
 			SolveCount:         point.SolveCount,
 		})
 	}
-	return &dto.TeacherClassTrendResp{
+	return &teachingquerycontracts.TeacherClassTrend{
 		ClassName: trend.ClassName,
 		Points:    points,
+	}
+}
+
+func mapClassReview(review *classreview.Response) *teachingquerycontracts.TeacherClassReview {
+	if review == nil {
+		return nil
+	}
+	items := make([]teachingquerycontracts.TeacherClassReviewItem, 0, len(review.Items))
+	for _, item := range review.Items {
+		items = append(items, teachingquerycontracts.TeacherClassReviewItem{
+			Code:           item.Code,
+			Severity:       item.Severity,
+			Summary:        item.Summary,
+			Evidence:       item.Evidence,
+			Action:         item.Action,
+			ReasonCodes:    append([]string(nil), item.ReasonCodes...),
+			Dimension:      item.Dimension,
+			Students:       mapReviewStudents(item.Students),
+			Recommendation: mapReviewRecommendation(item.Recommendation),
+		})
+	}
+	return &teachingquerycontracts.TeacherClassReview{
+		ClassName: review.ClassName,
+		Items:     items,
+	}
+}
+
+func mapReviewStudents(students []classreview.ReviewStudentRef) []teachingquerycontracts.TeacherReviewStudentRef {
+	items := make([]teachingquerycontracts.TeacherReviewStudentRef, 0, len(students))
+	for _, student := range students {
+		items = append(items, teachingquerycontracts.TeacherReviewStudentRef{
+			ID:       student.ID,
+			Username: student.Username,
+			Name:     student.Name,
+		})
+	}
+	return items
+}
+
+func mapReviewRecommendation(item *classreview.RecommendationItem) *dto.TeacherRecommendationItem {
+	if item == nil {
+		return nil
+	}
+	return &dto.TeacherRecommendationItem{
+		ChallengeID:    item.ChallengeID,
+		Title:          item.Title,
+		Category:       item.Category,
+		Difficulty:     item.Difficulty,
+		Dimension:      item.Dimension,
+		DifficultyBand: item.DifficultyBand,
+		Severity:       item.Severity,
+		ReasonCodes:    append([]string(nil), item.ReasonCodes...),
+		Summary:        item.Summary,
+		Evidence:       item.Evidence,
 	}
 }
 
@@ -1851,7 +1906,7 @@ func addTopStudentsTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain
 	}
 }
 
-func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *dto.TeacherClassTrendResp) {
+func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *teachingquerycontracts.TeacherClassTrend) {
 	points := safeTrendPoints(trend)
 	if len(points) == 0 {
 		return
@@ -1902,7 +1957,7 @@ func addContestMigrationSection(pdf *gofpdf.Fpdf, summary assessmentdomain.Class
 	})
 }
 
-func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *dto.TeacherClassReviewResp) {
+func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *teachingquerycontracts.TeacherClassReview) {
 	items := safeReviewItems(review)
 	if len(items) == 0 {
 		return
@@ -2028,7 +2083,7 @@ func writeDistributionSheet(file *excelize.File, sheet string, headerStyle int, 
 	}
 }
 
-func writeReviewSheet(file *excelize.File, sheet string, headerStyle int, review *dto.TeacherClassReviewResp) {
+func writeReviewSheet(file *excelize.File, sheet string, headerStyle int, review *teachingquerycontracts.TeacherClassReview) {
 	file.SetCellValue(sheet, "A1", "Code")
 	file.SetCellValue(sheet, "B1", "Severity")
 	file.SetCellValue(sheet, "C1", "Dimension")
@@ -2059,21 +2114,21 @@ func writeContestMigrationSheet(file *excelize.File, sheet string, headerStyle i
 	}, headerStyle)
 }
 
-func safeTrendPoints(trend *dto.TeacherClassTrendResp) []dto.TeacherClassTrendPoint {
+func safeTrendPoints(trend *teachingquerycontracts.TeacherClassTrend) []teachingquerycontracts.TeacherClassTrendPoint {
 	if trend == nil {
-		return []dto.TeacherClassTrendPoint{}
+		return []teachingquerycontracts.TeacherClassTrendPoint{}
 	}
 	return trend.Points
 }
 
-func safeReviewItems(review *dto.TeacherClassReviewResp) []dto.TeacherClassReviewItem {
+func safeReviewItems(review *teachingquerycontracts.TeacherClassReview) []teachingquerycontracts.TeacherClassReviewItem {
 	if review == nil {
-		return []dto.TeacherClassReviewItem{}
+		return []teachingquerycontracts.TeacherClassReviewItem{}
 	}
 	return review.Items
 }
 
-func reviewStudentNames(students []dto.TeacherReviewStudentRef) string {
+func reviewStudentNames(students []teachingquerycontracts.TeacherReviewStudentRef) string {
 	names := make([]string, 0, len(students))
 	for _, student := range students {
 		if student.Name != nil && strings.TrimSpace(*student.Name) != "" {
@@ -2087,14 +2142,14 @@ func reviewStudentNames(students []dto.TeacherReviewStudentRef) string {
 	return strings.Join(names, ", ")
 }
 
-func reviewSummaryActiveRate(summary *dto.TeacherClassSummaryResp) float64 {
+func reviewSummaryActiveRate(summary *teachingquerycontracts.TeacherClassSummary) float64 {
 	if summary == nil {
 		return 0
 	}
 	return summary.ActiveRate
 }
 
-func reviewSummaryRecentEvents(summary *dto.TeacherClassSummaryResp) int64 {
+func reviewSummaryRecentEvents(summary *teachingquerycontracts.TeacherClassSummary) int64 {
 	if summary == nil {
 		return 0
 	}

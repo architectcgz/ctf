@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -38,7 +38,7 @@ func (r *ManualReviewRepository) GetTeacherManualReviewSubmissionByID(ctx contex
 	return record, err
 }
 
-func (r *ManualReviewRepository) ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+func (r *ManualReviewRepository) ListTeacherManualReviewSubmissions(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	return r.source.ListTeacherManualReviewSubmissions(ctx, query)
 }
 

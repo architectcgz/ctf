@@ -4,6 +4,7 @@ import (
 	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -20,8 +21,8 @@ type ChallengeRequestMapper interface {
 	ToCreateTagInput(source dto.CreateTagReq) challengecmd.CreateTagInput
 	ToSaveChallengeTopologyInput(source dto.SaveChallengeTopologyReq) challengecmd.SaveChallengeTopologyInput
 	ToUpsertEnvironmentTemplateInput(source dto.UpsertEnvironmentTemplateReq) challengecmd.UpsertEnvironmentTemplateInput
-	ToUpsertOfficialWriteupInput(source dto.UpsertChallengeWriteupReq) challengecmd.UpsertOfficialWriteupInput
-	ToUpsertSubmissionWriteupInput(source dto.UpsertSubmissionWriteupReq) challengecmd.UpsertSubmissionWriteupInput
+	ToUpsertOfficialWriteupInput(source challengecontracts.UpsertChallengeWriteupReq) challengecmd.UpsertOfficialWriteupInput
+	ToUpsertSubmissionWriteupInput(source challengecontracts.UpsertSubmissionWriteupReq) challengecmd.UpsertSubmissionWriteupInput
 	ToListAWDChallengesInput(source dto.AWDChallengeQuery) challengeqry.ListAWDChallengesInput
 	ToCreateImageInput(source dto.CreateImageReq) challengecmd.CreateImageInput
 	ToUpdateImageInput(source dto.UpdateImageReq) challengecmd.UpdateImageInput

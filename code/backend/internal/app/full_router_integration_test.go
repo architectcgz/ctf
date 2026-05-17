@@ -29,6 +29,7 @@ import (
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -503,7 +504,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID),
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				assertFullRouterStatus(t, resp, http.StatusOK)
-				var writeup dto.AdminChallengeWriteupResp
+				var writeup challengecontracts.AdminChallengeWriteupResp
 				decodeFullRouterData(t, resp, &writeup)
 				if writeup.Title != "admin writeup" || writeup.Visibility != model.WriteupVisibilityPublic {
 					t.Fatalf("unexpected admin writeup: %+v", writeup)

@@ -18,12 +18,7 @@ import (
 type teachingQueryResponseMapper interface {
 	ToClassItems(source []queryports.ClassItem) []dto.TeacherClassItem
 	ToStudentItems(source []queryports.StudentItem) []dto.TeacherStudentItem
-	ToClassSummary(source queryports.ClassSummary) dto.TeacherClassSummaryResp
-	ToClassSummaryPtr(source *queryports.ClassSummary) *dto.TeacherClassSummaryResp
-	ToClassTrendResp(source queryports.ClassTrend) dto.TeacherClassTrendResp
-	ToClassTrendRespPtr(source *queryports.ClassTrend) *dto.TeacherClassTrendResp
 	ToTimelineEvents(source []queryports.TimelineEventRecord) []TimelineEvent
-	ToReviewStudentRefs(source []dto.TeacherStudentItem) []dto.TeacherReviewStudentRef
 	ToTeacherRecommendationWeakDimension(source assessmentcontracts.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension
 	ToTeacherRecommendationWeakDimensions(source []assessmentcontracts.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension
 	ToTeacherRecommendationResp(source assessmentcontracts.Recommendation) dto.TeacherRecommendationResp

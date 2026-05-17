@@ -7,8 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -82,7 +82,7 @@ func (r *WriteupServiceRepository) GetTeacherSubmissionWriteupByID(ctx context.C
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound)
 }
 
-func (r *WriteupServiceRepository) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (r *WriteupServiceRepository) ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return r.raw.ListTeacherSubmissionWriteups(ctx, query)
 }
 
@@ -90,7 +90,7 @@ func (r *WriteupServiceRepository) ListRecommendedSolutionsByChallengeID(ctx con
 	return r.raw.ListRecommendedSolutionsByChallengeID(ctx, challengeID, now)
 }
 
-func (r *WriteupServiceRepository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (r *WriteupServiceRepository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	return r.raw.ListCommunitySolutionsByChallengeID(ctx, challengeID, query)
 }
 

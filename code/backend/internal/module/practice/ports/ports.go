@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -239,7 +240,7 @@ type PracticeUserLookupRepository interface {
 }
 
 type PracticeManualReviewListRepository interface {
-	ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
 }
 
 type PracticeManualReviewLookupRepository interface {

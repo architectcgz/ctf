@@ -66,51 +66,6 @@ func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBaseP
 	}
 	return pDtoChallengeSubmissionRecordResp
 }
-func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionDetailRespBase(source model.Submission) dto.TeacherManualReviewSubmissionDetailResp {
-	var dtoTeacherManualReviewSubmissionDetailResp dto.TeacherManualReviewSubmissionDetailResp
-	dtoTeacherManualReviewSubmissionDetailResp.ID = source.ID
-	dtoTeacherManualReviewSubmissionDetailResp.UserID = source.UserID
-	dtoTeacherManualReviewSubmissionDetailResp.ChallengeID = source.ChallengeID
-	dtoTeacherManualReviewSubmissionDetailResp.IsCorrect = source.IsCorrect
-	dtoTeacherManualReviewSubmissionDetailResp.Score = source.Score
-	dtoTeacherManualReviewSubmissionDetailResp.ReviewStatus = source.ReviewStatus
-	if source.ReviewedBy != nil {
-		xint64 := *source.ReviewedBy
-		dtoTeacherManualReviewSubmissionDetailResp.ReviewedBy = &xint64
-	}
-	dtoTeacherManualReviewSubmissionDetailResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
-	dtoTeacherManualReviewSubmissionDetailResp.ReviewComment = source.ReviewComment
-	dtoTeacherManualReviewSubmissionDetailResp.SubmittedAt = CopyTime(source.SubmittedAt)
-	dtoTeacherManualReviewSubmissionDetailResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoTeacherManualReviewSubmissionDetailResp
-}
-func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionDetailRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionDetailResp {
-	var pDtoTeacherManualReviewSubmissionDetailResp *dto.TeacherManualReviewSubmissionDetailResp
-	if source != nil {
-		dtoTeacherManualReviewSubmissionDetailResp := c.ToTeacherManualReviewSubmissionDetailRespBase((*source))
-		pDtoTeacherManualReviewSubmissionDetailResp = &dtoTeacherManualReviewSubmissionDetailResp
-	}
-	return pDtoTeacherManualReviewSubmissionDetailResp
-}
-func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemRespBase(source model.Submission) dto.TeacherManualReviewSubmissionItemResp {
-	var dtoTeacherManualReviewSubmissionItemResp dto.TeacherManualReviewSubmissionItemResp
-	dtoTeacherManualReviewSubmissionItemResp.ID = source.ID
-	dtoTeacherManualReviewSubmissionItemResp.UserID = source.UserID
-	dtoTeacherManualReviewSubmissionItemResp.ChallengeID = source.ChallengeID
-	dtoTeacherManualReviewSubmissionItemResp.ReviewStatus = source.ReviewStatus
-	dtoTeacherManualReviewSubmissionItemResp.SubmittedAt = CopyTime(source.SubmittedAt)
-	dtoTeacherManualReviewSubmissionItemResp.ReviewedAt = CopyTimePtr(source.ReviewedAt)
-	dtoTeacherManualReviewSubmissionItemResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoTeacherManualReviewSubmissionItemResp
-}
-func (c *practiceCommandResponseMapperImpl) ToTeacherManualReviewSubmissionItemRespBasePtr(source *model.Submission) *dto.TeacherManualReviewSubmissionItemResp {
-	var pDtoTeacherManualReviewSubmissionItemResp *dto.TeacherManualReviewSubmissionItemResp
-	if source != nil {
-		dtoTeacherManualReviewSubmissionItemResp := c.ToTeacherManualReviewSubmissionItemRespBase((*source))
-		pDtoTeacherManualReviewSubmissionItemResp = &dtoTeacherManualReviewSubmissionItemResp
-	}
-	return pDtoTeacherManualReviewSubmissionItemResp
-}
 func (c *practiceCommandResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing
 	switch source {

@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/classreview"
@@ -45,7 +44,7 @@ func NewClassInsightService(
 	}
 }
 
-func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassSummaryResp, error) {
+func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassSummary, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -63,10 +62,10 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return teachingQueryMapper.ToClassSummaryPtr(summary), nil
+	return toTeacherClassSummary(summary), nil
 }
 
-func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassTrendResp, error) {
+func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassTrend, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -84,10 +83,10 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return teachingQueryMapper.ToClassTrendRespPtr(trend), nil
+	return toTeacherClassTrend(trend), nil
 }
 
-func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*dto.TeacherClassReviewResp, error) {
+func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassReview, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -124,7 +123,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 		trendSolveDelta = last.SolveCount - first.SolveCount
 	}
 
-	return classreview.BuildResponse(ctx, classreview.Input{
+	return toTeacherClassReview(classreview.BuildResponse(ctx, classreview.Input{
 		ClassName:        normalized,
 		ActiveRate:       summary.ActiveRate,
 		RecentEventCount: summary.RecentEventCount,
@@ -132,7 +131,7 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 		TrendEventDelta:  trendEventDelta,
 		TrendSolveDelta:  trendSolveDelta,
 		Snapshots:        snapshots,
-	}, classreview.RecommendationResolverFunc(s.matchingStudentRecommendation)), nil
+	}, classreview.RecommendationResolverFunc(s.matchingStudentRecommendation))), nil
 }
 
 func (s *ClassInsightQueryService) parseWindow(query *TeacherClassInsightInput) (classwindow.Range, error) {
@@ -151,7 +150,7 @@ func (s *ClassInsightQueryService) matchingStudentRecommendation(
 	studentIDs []int64,
 	dimension string,
 	limit int,
-) *dto.TeacherRecommendationItem {
+) *classreview.RecommendationItem {
 	if s.recommendationService == nil {
 		return nil
 	}
@@ -172,7 +171,7 @@ func (s *ClassInsightQueryService) matchingStudentRecommendation(
 			if challenge == nil || !recommendationMatchesDimension(challenge, targetDimension) {
 				continue
 			}
-			return teachingQueryMapper.ToTeacherRecommendationItemPtr(challenge)
+			return toClassReviewRecommendation(challenge)
 		}
 	}
 	return nil
@@ -190,4 +189,22 @@ func recommendationMatchesDimension(challenge *assessmentcontracts.ChallengeReco
 		return true
 	}
 	return strings.EqualFold(strings.TrimSpace(challenge.Category), dimension)
+}
+
+func toClassReviewRecommendation(source *assessmentcontracts.ChallengeRecommendation) *classreview.RecommendationItem {
+	if source == nil {
+		return nil
+	}
+	return &classreview.RecommendationItem{
+		ChallengeID:    source.ID,
+		Title:          source.Title,
+		Category:       source.Category,
+		Difficulty:     source.Difficulty,
+		Dimension:      source.Dimension,
+		DifficultyBand: source.DifficultyBand,
+		Severity:       source.Severity,
+		ReasonCodes:    append([]string(nil), source.ReasonCodes...),
+		Summary:        source.Summary,
+		Evidence:       source.Evidence,
+	}
 }

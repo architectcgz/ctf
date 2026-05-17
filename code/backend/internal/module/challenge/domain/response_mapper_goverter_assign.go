@@ -3,5 +3,5 @@
 package domain
 
 func init() {
-	challengeResponseMapperInst = &challengeResponseMapperImpl{}
+	challengeResponseMapperInst = &ChallengeResponseMapperImpl{}
 }

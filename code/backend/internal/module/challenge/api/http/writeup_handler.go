@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/response"
 )
 
@@ -18,25 +19,25 @@ type WriteupHandler struct {
 }
 
 type writeupCommandService interface {
-	Upsert(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertOfficialWriteupInput) (*dto.AdminChallengeWriteupResp, error)
-	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertSubmissionWriteupInput) (*dto.SubmissionWriteupResp, error)
-	RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	UnrecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	Upsert(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertOfficialWriteupInput) (*challengecontracts.AdminChallengeWriteupResp, error)
+	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req challengecmd.UpsertSubmissionWriteupInput) (*challengecontracts.SubmissionWriteupResp, error)
+	RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*challengecontracts.AdminChallengeWriteupResp, error)
+	UnrecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*challengecontracts.AdminChallengeWriteupResp, error)
+	RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error)
+	UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error)
+	HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error)
+	RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.SubmissionWriteupResp, error)
 	Delete(ctx context.Context, challengeID int64) error
 }
 
 type writeupQueryService interface {
-	GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error)
-	GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
-	GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
-	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*dto.RecommendedChallengeSolutionResp], error)
-	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult[*dto.CommunityChallengeSolutionResp], error)
-	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult[*dto.TeacherSubmissionWriteupItemResp], error)
-	GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error)
+	GetAdmin(ctx context.Context, challengeID int64) (*challengecontracts.AdminChallengeWriteupResp, error)
+	GetPublished(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeWriteupResp, error)
+	GetMySubmission(ctx context.Context, userID, challengeID int64) (*challengecontracts.SubmissionWriteupResp, error)
+	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*challengecontracts.RecommendedChallengeSolutionResp], error)
+	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) (*dto.PageResult[*challengecontracts.CommunityChallengeSolutionResp], error)
+	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *challengecontracts.TeacherSubmissionWriteupQuery) (*dto.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp], error)
+	GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.TeacherSubmissionWriteupDetailResp, error)
 }
 
 func NewWriteupHandler(commands writeupCommandService, queries writeupQueryService) *WriteupHandler {
@@ -49,7 +50,7 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	var req dto.UpsertChallengeWriteupReq
+	var req challengecontracts.UpsertChallengeWriteupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -137,7 +138,7 @@ func (h *WriteupHandler) UpsertSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	var req dto.UpsertSubmissionWriteupReq
+	var req challengecontracts.UpsertSubmissionWriteupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -184,7 +185,7 @@ func (h *WriteupHandler) ListCommunitySolutions(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	var query dto.CommunityChallengeSolutionQuery
+	var query challengecontracts.CommunityChallengeSolutionQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -199,7 +200,7 @@ func (h *WriteupHandler) ListCommunitySolutions(c *gin.Context) {
 
 func (h *WriteupHandler) ListTeacherSubmissions(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherSubmissionWriteupQuery
+	var query challengecontracts.TeacherSubmissionWriteupQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -228,32 +229,32 @@ func (h *WriteupHandler) GetTeacherSubmission(c *gin.Context) {
 }
 
 func (h *WriteupHandler) RecommendCommunity(c *gin.Context) {
-	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
+	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*challengecontracts.SubmissionWriteupResp, error) {
 		return h.commands.RecommendCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) UnrecommendCommunity(c *gin.Context) {
-	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
+	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*challengecontracts.SubmissionWriteupResp, error) {
 		return h.commands.UnrecommendCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) HideCommunity(c *gin.Context) {
-	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
+	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*challengecontracts.SubmissionWriteupResp, error) {
 		return h.commands.HideCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) RestoreCommunity(c *gin.Context) {
-	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
+	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*challengecontracts.SubmissionWriteupResp, error) {
 		return h.commands.RestoreCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) respondCommunityModeration(
 	c *gin.Context,
-	action func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error),
+	action func(submissionID int64, currentUser authctx.CurrentUser) (*challengecontracts.SubmissionWriteupResp, error),
 ) {
 	currentUser := authctx.MustCurrentUser(c)
 	submissionID, err := strconv.ParseInt(c.Param("id"), 10, 64)

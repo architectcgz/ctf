@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -49,7 +49,7 @@ type stubPracticeRepository struct {
 	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	updateSubmissionFn                     func(ctx context.Context, submission *model.Submission) error
 	findUserByIDFn                         func(ctx context.Context, userID int64) (*model.User, error)
-	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
+	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
 	getTeacherManualReviewSubmissionByIDFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
 	isUniqueViolationFn                    func(err error) bool
 }
@@ -306,7 +306,7 @@ func (s *stubPracticeRepository) FindUserByID(ctx context.Context, userID int64)
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+func (s *stubPracticeRepository) ListTeacherManualReviewSubmissions(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	if s.listTeacherManualReviewSubmissionsFn != nil {
 		return s.listTeacherManualReviewSubmissionsFn(ctx, query)
 	}

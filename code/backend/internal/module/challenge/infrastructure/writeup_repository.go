@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 
 	"gorm.io/gorm"
@@ -140,7 +140,7 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 }
 
 func (r *Repository) GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
-	rows, _, err := r.listTeacherSubmissionWriteups(ctx, &dto.TeacherSubmissionWriteupQuery{
+	rows, _, err := r.listTeacherSubmissionWriteups(ctx, &challengecontracts.TeacherSubmissionWriteupQuery{
 		Page: 1,
 		Size: 1,
 	}, func(db *gorm.DB) *gorm.DB {
@@ -156,7 +156,7 @@ func (r *Repository) GetTeacherSubmissionWriteupByID(ctx context.Context, id int
 	return &record, nil
 }
 
-func (r *Repository) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (r *Repository) ListTeacherSubmissionWriteups(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return r.listTeacherSubmissionWriteups(ctx, query, nil)
 }
 
@@ -299,7 +299,7 @@ func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord 
 	}
 }
 
-func (r *Repository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (r *Repository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	base := r.dbWithContext(ctx).Table("submission_writeups AS sw").
 		Select(strings.TrimSpace(`
 			sw.id,
@@ -370,7 +370,7 @@ func (r *Repository) ListCommunitySolutionsByChallengeID(ctx context.Context, ch
 
 func (r *Repository) listTeacherSubmissionWriteups(
 	ctx context.Context,
-	query *dto.TeacherSubmissionWriteupQuery,
+	query *challengecontracts.TeacherSubmissionWriteupQuery,
 	extra func(db *gorm.DB) *gorm.DB,
 ) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	base := r.dbWithContext(ctx).Table("submission_writeups AS sw").

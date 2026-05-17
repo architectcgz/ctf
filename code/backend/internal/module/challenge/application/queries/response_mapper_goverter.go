@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -39,8 +40,8 @@ type challengeQueryResponseMapper interface {
 	ToFlagRespBasePtr(source *model.Challenge) *dto.FlagResp
 
 	// goverter:ignore RequiresSpoilerWarning
-	ToChallengeWriteupRespBase(source model.ChallengeWriteup) dto.ChallengeWriteupResp
-	ToChallengeWriteupRespBasePtr(source *model.ChallengeWriteup) *dto.ChallengeWriteupResp
+	ToChallengeWriteupRespBase(source model.ChallengeWriteup) challengecontracts.ChallengeWriteupResp
+	ToChallengeWriteupRespBasePtr(source *model.ChallengeWriteup) *challengecontracts.ChallengeWriteupResp
 }
 
 var challengeQueryResponseMapperInst challengeQueryResponseMapper

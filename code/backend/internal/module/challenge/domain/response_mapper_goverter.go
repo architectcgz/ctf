@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -51,10 +52,10 @@ type ChallengeResponseMapper interface {
 
 	ToTagResp(source model.Tag) dto.TagResp
 	ToTagRespPtr(source *model.Tag) *dto.TagResp
-	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) dto.AdminChallengeWriteupResp
-	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp
-	ToSubmissionWriteupResp(source model.SubmissionWriteup) dto.SubmissionWriteupResp
-	ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *dto.SubmissionWriteupResp
+	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) challengecontracts.AdminChallengeWriteupResp
+	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *challengecontracts.AdminChallengeWriteupResp
+	ToSubmissionWriteupResp(source model.SubmissionWriteup) challengecontracts.SubmissionWriteupResp
+	ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *challengecontracts.SubmissionWriteupResp
 
 	// goverter:map Submission.ID ID
 	// goverter:map Submission.UserID UserID
@@ -66,16 +67,16 @@ type ChallengeResponseMapper interface {
 	// goverter:map Submission.PublishedAt PublishedAt
 	// goverter:map Submission.UpdatedAt UpdatedAt
 	// goverter:ignore ContentPreview
-	ToTeacherSubmissionWriteupItemRespBase(source challengeports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupItemResp
-	ToTeacherSubmissionWriteupItemRespBasePtr(source *challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp
+	ToTeacherSubmissionWriteupItemRespBase(source challengeports.TeacherSubmissionWriteupRecord) challengecontracts.TeacherSubmissionWriteupItemResp
+	ToTeacherSubmissionWriteupItemRespBasePtr(source *challengeports.TeacherSubmissionWriteupRecord) *challengecontracts.TeacherSubmissionWriteupItemResp
 
 	// goverter:map Submission SubmissionWriteupResp
-	ToTeacherSubmissionWriteupDetailResp(source challengeports.TeacherSubmissionWriteupRecord) dto.TeacherSubmissionWriteupDetailResp
-	ToTeacherSubmissionWriteupDetailRespPtr(source challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp
+	ToTeacherSubmissionWriteupDetailResp(source challengeports.TeacherSubmissionWriteupRecord) challengecontracts.TeacherSubmissionWriteupDetailResp
+	ToTeacherSubmissionWriteupDetailRespPtr(source challengeports.TeacherSubmissionWriteupRecord) *challengecontracts.TeacherSubmissionWriteupDetailResp
 
 	// goverter:ignore ID
-	ToRecommendedChallengeSolutionRespBase(source challengeports.RecommendedSolutionRecord) dto.RecommendedChallengeSolutionResp
-	ToRecommendedChallengeSolutionRespBasePtr(source *challengeports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp
+	ToRecommendedChallengeSolutionRespBase(source challengeports.RecommendedSolutionRecord) challengecontracts.RecommendedChallengeSolutionResp
+	ToRecommendedChallengeSolutionRespBasePtr(source *challengeports.RecommendedSolutionRecord) *challengecontracts.RecommendedChallengeSolutionResp
 
 	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp
 	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp
@@ -114,8 +115,8 @@ type ChallengeResponseMapper interface {
 	// goverter:map Submission.PublishedAt PublishedAt
 	// goverter:map Submission.UpdatedAt UpdatedAt
 	// goverter:ignore ContentPreview
-	ToCommunityChallengeSolutionRespBase(source challengeports.CommunitySolutionRecord) dto.CommunityChallengeSolutionResp
-	ToCommunityChallengeSolutionRespBasePtr(source *challengeports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp
+	ToCommunityChallengeSolutionRespBase(source challengeports.CommunitySolutionRecord) challengecontracts.CommunityChallengeSolutionResp
+	ToCommunityChallengeSolutionRespBasePtr(source *challengeports.CommunitySolutionRecord) *challengecontracts.CommunityChallengeSolutionResp
 }
 
 var challengeResponseMapperInst ChallengeResponseMapper

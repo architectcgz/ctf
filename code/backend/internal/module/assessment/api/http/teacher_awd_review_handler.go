@@ -71,7 +71,7 @@ func (h *TeacherAWDReviewHandler) ExportArchive(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 	contestID := c.GetInt64("id")
 
-	var req dto.CreateTeacherAWDReviewExportReq
+	var req CreateTeacherAWDReviewExportReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
@@ -91,7 +91,7 @@ func (h *TeacherAWDReviewHandler) ExportReport(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 	contestID := c.GetInt64("id")
 
-	var req dto.CreateTeacherAWDReviewExportReq
+	var req CreateTeacherAWDReviewExportReq
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)

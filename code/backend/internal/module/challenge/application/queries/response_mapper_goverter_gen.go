@@ -6,6 +6,7 @@ package queries
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type challengeQueryResponseMapperImpl struct{}
@@ -76,30 +77,30 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *mo
 	}
 	return pDtoChallengeListItem
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source model.ChallengeWriteup) dto.ChallengeWriteupResp {
-	var dtoChallengeWriteupResp dto.ChallengeWriteupResp
-	dtoChallengeWriteupResp.ID = source.ID
-	dtoChallengeWriteupResp.ChallengeID = source.ChallengeID
-	dtoChallengeWriteupResp.Title = source.Title
-	dtoChallengeWriteupResp.Content = source.Content
-	dtoChallengeWriteupResp.Visibility = source.Visibility
-	dtoChallengeWriteupResp.IsRecommended = source.IsRecommended
-	dtoChallengeWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
+func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source model.ChallengeWriteup) contracts.ChallengeWriteupResp {
+	var contractsChallengeWriteupResp contracts.ChallengeWriteupResp
+	contractsChallengeWriteupResp.ID = source.ID
+	contractsChallengeWriteupResp.ChallengeID = source.ChallengeID
+	contractsChallengeWriteupResp.Title = source.Title
+	contractsChallengeWriteupResp.Content = source.Content
+	contractsChallengeWriteupResp.Visibility = source.Visibility
+	contractsChallengeWriteupResp.IsRecommended = source.IsRecommended
+	contractsChallengeWriteupResp.RecommendedAt = CopyTimePtr(source.RecommendedAt)
 	if source.RecommendedBy != nil {
 		xint64 := *source.RecommendedBy
-		dtoChallengeWriteupResp.RecommendedBy = &xint64
+		contractsChallengeWriteupResp.RecommendedBy = &xint64
 	}
-	dtoChallengeWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
-	dtoChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return dtoChallengeWriteupResp
+	contractsChallengeWriteupResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsChallengeWriteupResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source *model.ChallengeWriteup) *dto.ChallengeWriteupResp {
-	var pDtoChallengeWriteupResp *dto.ChallengeWriteupResp
+func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source *model.ChallengeWriteup) *contracts.ChallengeWriteupResp {
+	var pContractsChallengeWriteupResp *contracts.ChallengeWriteupResp
 	if source != nil {
-		dtoChallengeWriteupResp := c.ToChallengeWriteupRespBase((*source))
-		pDtoChallengeWriteupResp = &dtoChallengeWriteupResp
+		contractsChallengeWriteupResp := c.ToChallengeWriteupRespBase((*source))
+		pContractsChallengeWriteupResp = &contractsChallengeWriteupResp
 	}
-	return pDtoChallengeWriteupResp
+	return pContractsChallengeWriteupResp
 }
 func (c *challengeQueryResponseMapperImpl) ToFlagRespBase(source model.Challenge) dto.FlagResp {
 	var dtoFlagResp dto.FlagResp

@@ -3,7 +3,6 @@ package classreview
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -19,25 +18,61 @@ type Input struct {
 	Snapshots        []teachingadvice.StudentFactSnapshot
 }
 
-type RecommendationResolver interface {
-	Resolve(ctx context.Context, candidateIDs []int64, dimension string, limit int) *dto.TeacherRecommendationItem
+type ReviewStudentRef struct {
+	ID       int64
+	Username string
+	Name     *string
 }
 
-type RecommendationResolverFunc func(ctx context.Context, candidateIDs []int64, dimension string, limit int) *dto.TeacherRecommendationItem
+type RecommendationItem struct {
+	ChallengeID    int64
+	Title          string
+	Category       string
+	Difficulty     string
+	Dimension      string
+	DifficultyBand string
+	Severity       string
+	ReasonCodes    []string
+	Summary        string
+	Evidence       string
+}
 
-func (f RecommendationResolverFunc) Resolve(ctx context.Context, candidateIDs []int64, dimension string, limit int) *dto.TeacherRecommendationItem {
+type ClassReviewItem struct {
+	Code           string
+	Severity       string
+	Summary        string
+	Evidence       string
+	Action         string
+	ReasonCodes    []string
+	Dimension      string
+	Students       []ReviewStudentRef
+	Recommendation *RecommendationItem
+}
+
+type Response struct {
+	ClassName string
+	Items     []ClassReviewItem
+}
+
+type RecommendationResolver interface {
+	Resolve(ctx context.Context, candidateIDs []int64, dimension string, limit int) *RecommendationItem
+}
+
+type RecommendationResolverFunc func(ctx context.Context, candidateIDs []int64, dimension string, limit int) *RecommendationItem
+
+func (f RecommendationResolverFunc) Resolve(ctx context.Context, candidateIDs []int64, dimension string, limit int) *RecommendationItem {
 	if f == nil {
 		return nil
 	}
 	return f(ctx, candidateIDs, dimension, limit)
 }
 
-func BuildResponse(ctx context.Context, input Input, resolver RecommendationResolver) *dto.TeacherClassReviewResp {
+func BuildResponse(ctx context.Context, input Input, resolver RecommendationResolver) *Response {
 	evaluations := make(map[int64]teachingadvice.StudentEvaluation, len(input.Snapshots))
-	studentRefs := make(map[int64]dto.TeacherReviewStudentRef, len(input.Snapshots))
+	studentRefs := make(map[int64]ReviewStudentRef, len(input.Snapshots))
 	for _, snapshot := range input.Snapshots {
 		evaluations[snapshot.UserID] = teachingadvice.EvaluateStudent(snapshot)
-		studentRefs[snapshot.UserID] = dto.TeacherReviewStudentRef{
+		studentRefs[snapshot.UserID] = ReviewStudentRef{
 			ID:       snapshot.UserID,
 			Username: snapshot.Username,
 			Name:     snapshot.Name,
@@ -65,9 +100,9 @@ func BuildResponse(ctx context.Context, input Input, resolver RecommendationReso
 		evaluations,
 	)
 
-	items := make([]dto.TeacherClassReviewItem, 0, len(adviceItems))
+	items := make([]ClassReviewItem, 0, len(adviceItems))
 	for _, adviceItem := range adviceItems {
-		item := dto.TeacherClassReviewItem{
+		item := ClassReviewItem{
 			Code:        adviceItem.Code,
 			Severity:    string(adviceItem.Severity),
 			Summary:     adviceItem.Summary,
@@ -90,7 +125,7 @@ func BuildResponse(ctx context.Context, input Input, resolver RecommendationReso
 		items = append(items, item)
 	}
 
-	return &dto.TeacherClassReviewResp{
+	return &Response{
 		ClassName: input.ClassName,
 		Items:     items,
 	}
@@ -118,10 +153,10 @@ func prioritizedStudentIDs(primary int64, studentIDs []int64) []int64 {
 }
 
 func reviewStudentRefsByIDs(
-	refsByID map[int64]dto.TeacherReviewStudentRef,
+	refsByID map[int64]ReviewStudentRef,
 	studentIDs []int64,
-) []dto.TeacherReviewStudentRef {
-	refs := make([]dto.TeacherReviewStudentRef, 0, len(studentIDs))
+) []ReviewStudentRef {
+	refs := make([]ReviewStudentRef, 0, len(studentIDs))
 	for _, studentID := range studentIDs {
 		ref, ok := refsByID[studentID]
 		if !ok {

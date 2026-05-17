@@ -18,8 +18,8 @@ func (s *Service) ReviewManualReviewSubmission(
 	ctx context.Context,
 	submissionID, reviewerID int64,
 	reviewerRole string,
-	req *dto.ReviewManualReviewSubmissionReq,
-) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
+	req *practicecontracts.ReviewManualReviewSubmissionReq,
+) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error) {
 	if err := ensureManualReviewRequesterRole(reviewerRole); err != nil {
 		return nil, err
 	}
@@ -104,13 +104,13 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	ctx context.Context,
 	requesterID int64,
 	requesterRole string,
-	query *dto.TeacherManualReviewSubmissionQuery,
-) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error) {
+	query *practicecontracts.TeacherManualReviewSubmissionQuery,
+) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error) {
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
 	if query == nil {
-		query = &dto.TeacherManualReviewSubmissionQuery{}
+		query = &practicecontracts.TeacherManualReviewSubmissionQuery{}
 	}
 	if err := ensureManualReviewQuery(query); err != nil {
 		return nil, err
@@ -128,12 +128,12 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 		return nil, err
 	}
 
-	respItems := make([]*dto.TeacherManualReviewSubmissionItemResp, 0, len(items))
+	respItems := make([]*practicecontracts.TeacherManualReviewSubmissionItemResp, 0, len(items))
 	for _, item := range items {
 		respItems = append(respItems, manualReviewListItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp]{
+	return &dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
@@ -145,7 +145,7 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	ctx context.Context,
 	submissionID, requesterID int64,
 	requesterRole string,
-) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
+) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error) {
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
@@ -223,8 +223,8 @@ func normalizeTeacherManualReviewQuery(
 	repo practiceports.PracticeUserLookupRepository,
 	requesterID int64,
 	requesterRole string,
-	query *dto.TeacherManualReviewSubmissionQuery,
-) (*dto.TeacherManualReviewSubmissionQuery, error) {
+	query *practicecontracts.TeacherManualReviewSubmissionQuery,
+) (*practicecontracts.TeacherManualReviewSubmissionQuery, error) {
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func ensureManualReviewRequesterRole(role string) error {
 	return errcode.ErrForbidden
 }
 
-func ensureManualReviewDecisionStatus(req *dto.ReviewManualReviewSubmissionReq) error {
+func ensureManualReviewDecisionStatus(req *practicecontracts.ReviewManualReviewSubmissionReq) error {
 	if req == nil {
 		return errcode.ErrInvalidParams.WithCause(errors.New("评阅请求不能为空"))
 	}
@@ -279,7 +279,7 @@ func ensureManualReviewDecisionStatus(req *dto.ReviewManualReviewSubmissionReq) 
 	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
 }
 
-func ensureManualReviewQuery(query *dto.TeacherManualReviewSubmissionQuery) error {
+func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmissionQuery) error {
 	if query == nil {
 		return nil
 	}
@@ -307,29 +307,51 @@ func ensureManualReviewQuery(query *dto.TeacherManualReviewSubmissionQuery) erro
 func manualReviewDetailRespFromRecord(
 	record practiceports.TeacherManualReviewSubmissionRecord,
 	submission model.Submission,
-) *dto.TeacherManualReviewSubmissionDetailResp {
-	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionDetailRespBasePtr(&submission)
-	resp.StudentUsername = record.StudentUsername
-	resp.StudentName = record.StudentName
-	resp.ClassName = record.ClassName
-	resp.ChallengeTitle = record.ChallengeTitle
-	resp.Answer = submission.Flag
-	resp.ReviewerName = record.ReviewerName
+) *practicecontracts.TeacherManualReviewSubmissionDetailResp {
+	resp := &practicecontracts.TeacherManualReviewSubmissionDetailResp{
+		ID:              submission.ID,
+		UserID:          submission.UserID,
+		StudentUsername: record.StudentUsername,
+		StudentName:     record.StudentName,
+		ClassName:       record.ClassName,
+		ChallengeID:     submission.ChallengeID,
+		ChallengeTitle:  record.ChallengeTitle,
+		Answer:          submission.Flag,
+		IsCorrect:       submission.IsCorrect,
+		Score:           submission.Score,
+		ReviewStatus:    submission.ReviewStatus,
+		ReviewedAt:      CopyTimePtr(submission.ReviewedAt),
+		ReviewComment:   submission.ReviewComment,
+		SubmittedAt:     CopyTime(submission.SubmittedAt),
+		UpdatedAt:       CopyTime(submission.UpdatedAt),
+		ReviewerName:    record.ReviewerName,
+	}
+	if submission.ReviewedBy != nil {
+		reviewedBy := *submission.ReviewedBy
+		resp.ReviewedBy = &reviewedBy
+	}
 	return resp
 }
 
-func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReviewSubmissionRecord) *dto.TeacherManualReviewSubmissionItemResp {
+func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReviewSubmissionRecord) *practicecontracts.TeacherManualReviewSubmissionItemResp {
 	answerPreview := strings.TrimSpace(record.Submission.Flag)
 	if len([]rune(answerPreview)) > 80 {
 		answerPreview = string([]rune(answerPreview)[:80]) + "..."
 	}
-	resp := practiceCommandResponseMapperInst.ToTeacherManualReviewSubmissionItemRespBasePtr(&record.Submission)
-	resp.StudentUsername = record.StudentUsername
-	resp.StudentName = record.StudentName
-	resp.ClassName = record.ClassName
-	resp.ChallengeTitle = record.ChallengeTitle
-	resp.AnswerPreview = answerPreview
-	return resp
+	return &practicecontracts.TeacherManualReviewSubmissionItemResp{
+		ID:              record.Submission.ID,
+		UserID:          record.Submission.UserID,
+		StudentUsername: record.StudentUsername,
+		StudentName:     record.StudentName,
+		ClassName:       record.ClassName,
+		ChallengeID:     record.Submission.ChallengeID,
+		ChallengeTitle:  record.ChallengeTitle,
+		AnswerPreview:   answerPreview,
+		ReviewStatus:    record.Submission.ReviewStatus,
+		SubmittedAt:     CopyTime(record.Submission.SubmittedAt),
+		ReviewedAt:      CopyTimePtr(record.Submission.ReviewedAt),
+		UpdatedAt:       CopyTime(record.Submission.UpdatedAt),
+	}
 }
 
 func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.ChallengeSubmissionRecordResp {

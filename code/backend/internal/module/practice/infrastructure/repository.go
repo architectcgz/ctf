@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -650,7 +650,7 @@ func (r teacherManualReviewSubmissionRow) toRecord() practiceports.TeacherManual
 }
 
 func (r *Repository) GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
-	rows, _, err := r.listTeacherManualReviewSubmissions(ctx, &dto.TeacherManualReviewSubmissionQuery{
+	rows, _, err := r.listTeacherManualReviewSubmissions(ctx, &practicecontracts.TeacherManualReviewSubmissionQuery{
 		Page: 1,
 		Size: 1,
 	}, func(db *gorm.DB) *gorm.DB {
@@ -666,13 +666,13 @@ func (r *Repository) GetTeacherManualReviewSubmissionByID(ctx context.Context, i
 	return &record, nil
 }
 
-func (r *Repository) ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+func (r *Repository) ListTeacherManualReviewSubmissions(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	return r.listTeacherManualReviewSubmissions(ctx, query, nil)
 }
 
 func (r *Repository) listTeacherManualReviewSubmissions(
 	ctx context.Context,
-	query *dto.TeacherManualReviewSubmissionQuery,
+	query *practicecontracts.TeacherManualReviewSubmissionQuery,
 	extra func(db *gorm.DB) *gorm.DB,
 ) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	base := r.dbWithContext(ctx).Table("submissions AS s").

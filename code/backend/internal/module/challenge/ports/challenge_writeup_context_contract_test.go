@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -55,7 +55,7 @@ func (ctxOnlyChallengeWriteupRepository) GetTeacherSubmissionWriteupByID(context
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) ListTeacherSubmissionWriteups(context.Context, *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (ctxOnlyChallengeWriteupRepository) ListTeacherSubmissionWriteups(context.Context, *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return nil, 0, nil
 }
 
@@ -63,7 +63,7 @@ func (ctxOnlyChallengeWriteupRepository) ListRecommendedSolutionsByChallengeID(c
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(context.Context, int64, *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (ctxOnlyChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(context.Context, int64, *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	return nil, 0, nil
 }
 
