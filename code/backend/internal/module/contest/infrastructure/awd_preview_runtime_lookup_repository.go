@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -32,7 +31,7 @@ func (r *AWDPreviewRuntimeChallengeRepository) FindAWDChallengeByID(ctx context.
 	return challenge, err
 }
 
-func (r *AWDPreviewRuntimeChallengeRepository) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *AWDPreviewRuntimeChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	return r.source.ListAWDChallenges(ctx, query)
 }
 

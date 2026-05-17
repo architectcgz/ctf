@@ -7,8 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -23,7 +23,7 @@ func (s awdPreviewRuntimeChallengeSourceStub) FindAWDChallengeByID(ctx context.C
 	return &model.AWDChallenge{ID: id}, nil
 }
 
-func (s awdPreviewRuntimeChallengeSourceStub) ListAWDChallenges(context.Context, *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s awdPreviewRuntimeChallengeSourceStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 

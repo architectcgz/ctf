@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -126,7 +125,7 @@ func (s contestAWDChallengeLookupStub) FindAWDChallengeByID(ctx context.Context,
 	}, nil
 }
 
-func (s contestAWDChallengeLookupStub) ListAWDChallenges(context.Context, *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s contestAWDChallengeLookupStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 
