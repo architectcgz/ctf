@@ -238,7 +238,7 @@ func setReflectedField(t *testing.T, target reflect.Value, field string, value a
 	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
 }
 
-func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
+func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*contestcmd.AWDTeamServiceResp, error) {
 	return s.commands.UpsertServiceCheck(ctx, contestID, roundID, req)
 }
 
@@ -360,7 +360,7 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	createAWDTeamFixture(t, db, 211, 2, "Alpha", now)
 	serviceID := defaultAWDContestServiceID(2, 201)
 
-	var resp *dto.AWDTeamServiceResp
+	var resp *contestcmd.AWDTeamServiceResp
 	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, contestcmd.UpsertServiceCheckInput{
 		TeamID:        211,
 		ServiceID:     serviceID,

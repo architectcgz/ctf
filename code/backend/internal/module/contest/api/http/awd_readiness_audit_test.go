@@ -202,7 +202,7 @@ func (s stubAWDCommandService) PreviewChecker(ctx context.Context, contestID int
 	return nil, nil
 }
 
-func (stubAWDCommandService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
+func (stubAWDCommandService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req contestcmd.UpsertServiceCheckInput) (*contestcmd.AWDTeamServiceResp, error) {
 	return nil, nil
 }
 

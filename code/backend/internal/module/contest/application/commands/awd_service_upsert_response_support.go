@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
@@ -15,7 +14,7 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 	req UpsertServiceCheckInput,
 	team *model.Team,
 	record *model.AWDTeamService,
-) (*dto.AWDTeamServiceResp, error) {
+) (*AWDTeamServiceResp, error) {
 	if s.scoreboardCache != nil {
 		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
@@ -38,5 +37,26 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return awdTeamServiceRespFromModel(record, team.Name), nil
+	serviceResp := awdTeamServiceRespFromModel(record, team.Name)
+	if serviceResp == nil {
+		return nil, nil
+	}
+	return &AWDTeamServiceResp{
+		ID:                serviceResp.ID,
+		RoundID:           serviceResp.RoundID,
+		TeamID:            serviceResp.TeamID,
+		TeamName:          serviceResp.TeamName,
+		ServiceID:         serviceResp.ServiceID,
+		ServiceName:       serviceResp.ServiceName,
+		AWDChallengeID:    serviceResp.AWDChallengeID,
+		AWDChallengeTitle: serviceResp.AWDChallengeTitle,
+		ServiceStatus:     serviceResp.ServiceStatus,
+		CheckResult:       serviceResp.CheckResult,
+		CheckerType:       serviceResp.CheckerType,
+		AttackReceived:    serviceResp.AttackReceived,
+		SLAScore:          serviceResp.SLAScore,
+		DefenseScore:      serviceResp.DefenseScore,
+		AttackScore:       serviceResp.AttackScore,
+		UpdatedAt:         serviceResp.UpdatedAt,
+	}, nil
 }

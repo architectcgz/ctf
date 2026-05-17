@@ -4,13 +4,12 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req UpsertServiceCheckInput) (*dto.AWDTeamServiceResp, error) {
+func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req UpsertServiceCheckInput) (*AWDTeamServiceResp, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
 		return nil, err

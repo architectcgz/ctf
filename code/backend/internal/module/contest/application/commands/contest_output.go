@@ -1,6 +1,10 @@
 package commands
 
-import "time"
+import (
+	"time"
+
+	"ctf-platform/internal/model"
+)
 
 type ContestResp struct {
 	ID          int64      `json:"id"`
@@ -87,4 +91,23 @@ type AWDRoundResp struct {
 	DefenseScore int        `json:"defense_score"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+type AWDTeamServiceResp struct {
+	ID                int64                `json:"id"`
+	RoundID           int64                `json:"round_id"`
+	TeamID            int64                `json:"team_id"`
+	TeamName          string               `json:"team_name"`
+	ServiceID         int64                `json:"service_id"`
+	ServiceName       string               `json:"service_name,omitempty"`
+	AWDChallengeID    int64                `json:"awd_challenge_id"`
+	AWDChallengeTitle string               `json:"awd_challenge_title,omitempty"`
+	ServiceStatus     string               `json:"service_status"`
+	CheckResult       map[string]any       `json:"check_result"`
+	CheckerType       model.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived    int                  `json:"attack_received"`
+	SLAScore          int                  `json:"sla_score"`
+	DefenseScore      int                  `json:"defense_score"`
+	AttackScore       int                  `json:"attack_score"`
+	UpdatedAt         time.Time            `json:"updated_at"`
 }
