@@ -28,6 +28,13 @@
           解出题目后可查看推荐题解与社区题解。
         </div>
 
+        <div
+          v-else-if="solutionsLoading"
+          class="inline-note"
+        >
+          正在加载题解...
+        </div>
+
         <template v-else>
           <div class="solution-layout">
             <div class="solution-nav">
@@ -164,6 +171,7 @@ import type {
 
 interface Props {
   challengeSolved: boolean
+  solutionsLoading: boolean
   recommendedSolutionCount: number
   communitySolutionCount: number
   activeSolutionTab: ChallengeSolutionTab

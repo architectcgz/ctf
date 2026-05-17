@@ -657,13 +657,12 @@ describe('ScoreboardView', () => {
     expect(scoreboardDetailSource).toContain('<Shield class="h-4 w-4" />')
   })
 
-  it('tabs 应直接位于页面顶部，points 页签不应重复渲染局部页头', () => {
+  it('tabs 应直接位于页面顶部，面板内容应补齐统一 eyebrow', () => {
     expect(scoreboardSource).not.toContain('<header class="scoreboard-topbar">')
     expect(scoreboardSource).not.toContain('<h2 class="scoreboard-directory-title">积分排行榜</h2>')
-    expect(scoreboardSource).not.toContain('Contest Scoreboard')
-    expect(scoreboardSource).not.toContain('Points Scoreboard')
-    expect(scoreboardSource).not.toContain('Contest Scoreboard Directory')
-    expect(scoreboardSource).not.toContain('Points Scoreboard Directory')
+    expect(scoreboardSource).toContain('<div class="workspace-overline scoreboard-panel-overline">')
+    expect(scoreboardSource).toContain('Contest Scoreboard')
+    expect(scoreboardSource).toContain('Points Scoreboard')
     expect(scoreboardSource).not.toContain(
       'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
     )
@@ -885,6 +884,7 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('4')
     expect(wrapper.text()).toContain('Class A')
+    expect(wrapper.text()).toContain('Points Scoreboard')
     expect(scoreboardSource).toContain('scoreboard-tab-points')
   })
 })

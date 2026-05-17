@@ -98,6 +98,7 @@ const {
   --workspace-brand: var(--journal-accent);
   --workspace-brand-ink: var(--journal-accent-strong);
   --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  --workspace-tabs-panel-gap: var(--space-2-5);
   --workspace-page: var(--color-bg-base);
   --workspace-shell-bg: var(--journal-surface);
   --workspace-danger: var(--color-danger);

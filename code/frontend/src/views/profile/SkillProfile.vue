@@ -161,6 +161,9 @@ const skillRadarHeightClass = 'skill-radar-height'
               <div class="skill-analysis-stack">
                 <div>
                   <div class="skill-overview-head">
+                    <div class="workspace-overline">
+                      Analysis
+                    </div>
                     <h1 class="journal-page-title workspace-page-title skill-page-title">
                       能力画像
                     </h1>
@@ -238,6 +241,9 @@ const skillRadarHeightClass = 'skill-radar-height'
               :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
             >
               <div class="skill-weak-wrap">
+                <div class="workspace-overline">
+                  Weakness
+                </div>
                 <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
                   <Flame class="skill-weak-title__icon h-5 w-5" />
                   薄弱项提示
@@ -274,6 +280,9 @@ const skillRadarHeightClass = 'skill-radar-height'
               aria-labelledby="skill-profile-tab-recommendations"
               :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
             >
+              <div class="workspace-overline">
+                Recommendations
+              </div>
               <h3 class="workspace-tab-heading__title">推荐靶场</h3>
               <p class="skill-section-copy mt-2 text-sm leading-6">优先从当前最匹配的题目开始。</p>
 
@@ -346,6 +355,7 @@ const skillRadarHeightClass = 'skill-radar-height'
     var(--color-primary-hover) 82%,
     var(--journal-ink)
   );
+  --workspace-tabs-panel-gap: var(--space-4);
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-shell-surface-subtle: color-mix(
     in srgb,

@@ -232,7 +232,16 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
   })
 
-  it('不应渲染能力画像页级眉标', () => {
+  it('带顶部 tab 的能力画像内容区应补齐面板眉标', () => {
+    expect(skillProfileSource).toMatch(
+      /<div class="workspace-overline">\s*Analysis\s*<\/div>/s
+    )
+    expect(skillProfileSource).toMatch(
+      /<div class="workspace-overline">\s*Weakness\s*<\/div>/s
+    )
+    expect(skillProfileSource).toMatch(
+      /<div class="workspace-overline">\s*Recommendations\s*<\/div>/s
+    )
     expect(skillProfileSource).not.toContain('<div class="workspace-overline">Skill Profile</div>')
     expect(skillProfileSource).not.toContain('<div class="journal-eyebrow">Skill Profile</div>')
     expect(skillProfileSource).not.toContain('journal-eyebrow-text')
@@ -288,7 +297,7 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).toContain('skill-dimension-legend__name')
     expect(skillProfileSource).toContain('skill-dimension-legend__hint')
     expect(skillProfileSource).toContain('skill-dimension-legend__score')
-    expect(skillProfileSource).toContain('skill-difficulty-pill')
+    expect(skillProfileSource).toContain('ChallengeCategoryDifficultyPills')
   })
 
   it('应该把能力画像页错误态、弱项提示和推荐区的文字色收敛为语义类', () => {

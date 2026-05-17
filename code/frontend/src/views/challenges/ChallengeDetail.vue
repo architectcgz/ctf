@@ -10,6 +10,37 @@
     </div>
 
     <div
+      v-else-if="challengeLoadState"
+      class="challenge-detail-state"
+    >
+      <AppEmpty
+        :icon="challengeLoadState.icon"
+        :title="challengeLoadState.title"
+        :description="challengeLoadState.description"
+      >
+        <template #action>
+          <div class="challenge-detail-state__actions">
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              @click="goBackToChallengeList"
+            >
+              返回题目列表
+            </button>
+            <button
+              v-if="challengeLoadState.retryable"
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="retryChallengeLoad"
+            >
+              重新加载
+            </button>
+          </div>
+        </template>
+      </AppEmpty>
+    </div>
+
+    <div
       v-else-if="challenge"
       class="detail-content"
     >
@@ -56,6 +87,7 @@
           <ChallengeSolutionsPanel
             v-else-if="activeWorkspaceTab === 'solution'"
             :challenge-solved="Boolean(challenge?.is_solved)"
+            :solutions-loading="solutionsLoading"
             :recommended-solution-count="recommendedSolutions.length"
             :community-solution-count="communitySolutions.length"
             :active-solution-tab="activeSolutionTab"
@@ -71,6 +103,7 @@
 
           <ChallengeSubmissionRecordsPanel
             v-else-if="activeWorkspaceTab === 'records'"
+            :submission-records-loading="submissionRecordsLoading"
             :submission-records="submissionRecords"
             :paginated-submission-records="paginatedSubmissionRecords"
             :submission-record-page="submissionRecordPage"
@@ -130,6 +163,7 @@
 </template>
 
 <script setup lang="ts">
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import ChallengeActionAside from '@/components/challenge/ChallengeActionAside.vue'
 import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'
 import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
@@ -141,6 +175,7 @@ const {
   activeSolutionTab,
   activeWorkspaceTab,
   challenge,
+  challengeLoadState,
   changeSubmissionRecordPage,
   displayedSolutionCards,
   destroyChallengeInstance,
@@ -149,6 +184,7 @@ const {
   flagInput,
   formatSubmissionTime,
   formatWriteupTime,
+  goBackToChallengeList,
   handleScoreRailProbe,
   handleSolutionTabKeydown,
   handleWorkspaceTabKeydown,
@@ -166,6 +202,7 @@ const {
   communitySolutions,
   paginatedSubmissionRecords,
   recommendedSolutions,
+  retryChallengeLoad,
   sanitizedActiveSolutionContent,
   sanitizedDescription,
   scoreRailProbeMessage,
@@ -178,6 +215,7 @@ const {
   submissionLoading,
   submissionRecordMessage,
   submissionRecordPage,
+  submissionRecordsLoading,
   submissionRecordTotal,
   submissionRecordTotalPages,
   submissionRecords,
@@ -192,6 +230,7 @@ const {
   submitPlaceholder,
   submitResult,
   submitting,
+  solutionsLoading,
   toggleHint,
   workspaceTabs,
   writeupContent,
@@ -295,6 +334,8 @@ const {
   --workspace-shadow-shell: var(--journal-shadow);
   --workspace-radius-xl: var(--radius-xl);
   --workspace-font-sans: var(--font-sans);
+  --workspace-tabs-panel-gap: var(--space-2);
+  --workspace-panel-padding-top: var(--workspace-tabs-panel-gap);
   min-height: max(100%, calc(100vh - 5rem));
   flex: 1 1 auto;
   color: var(--text-main);
@@ -319,6 +360,17 @@ const {
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+}
+
+.challenge-detail-state {
+  padding: var(--space-7);
+}
+
+.challenge-detail-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
 }
 
 
@@ -349,14 +401,17 @@ const {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--space-7);
+  padding: 0 var(--space-workspace-content-padding, var(--space-7))
+    var(--space-workspace-content-padding, var(--space-7));
 }
 
 .tool-pane {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--space-7);
+  padding: var(--workspace-tabs-panel-gap, var(--space-2))
+    var(--space-workspace-content-padding, var(--space-7))
+    var(--space-workspace-content-padding, var(--space-7));
   border-left: 1px solid var(--line-soft);
   background: linear-gradient(
     180deg,

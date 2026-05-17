@@ -191,6 +191,8 @@
 }
 
 .journal-soft-surface .journal-soft-panel-item {
+  display: block;
+  width: 100%;
   border: 1px solid var(--journal-soft-panel-item-border, var(--journal-soft-border));
   border-radius: var(--journal-soft-panel-item-radius, 18px);
   background: var(

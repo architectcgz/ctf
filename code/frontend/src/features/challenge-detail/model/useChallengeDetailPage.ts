@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { ApiError } from '@/api/request'
 import type {
   ChallengeDetailData,
   CommunityChallengeSolutionData,
@@ -22,6 +23,13 @@ import { useChallengeInstance } from './useChallengeInstance'
 
 type WorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
 
+interface ChallengeLoadState {
+  icon: 'AlertTriangle' | 'Flag' | 'Inbox'
+  title: string
+  description: string
+  retryable: boolean
+}
+
 export function useChallengeDetailPage() {
   const route = useRoute()
   const router = useRouter()
@@ -31,12 +39,17 @@ export function useChallengeDetailPage() {
 
   const challengeId = computed(() => String(route.params.id ?? ''))
   const challenge = ref<ChallengeDetailData | null>(null)
+  const challengeLoadState = ref<ChallengeLoadState | null>(null)
   const loading = ref(false)
+  const solutionsLoading = ref(false)
   const scoreRailProbeMessage = ref('')
   const recommendedSolutions = ref<RecommendedChallengeSolutionData[]>([])
   const communitySolutions = ref<CommunityChallengeSolutionData[]>([])
   const selectedSolutionId = ref<string | null>(null)
   const submissionRecordPage = ref(1)
+  const hasLoadedSolutions = ref(false)
+  const hasLoadedSubmissionRecords = ref(false)
+  const hasLoadedWriteup = ref(false)
 
   let scoreRailProbeTimer: number | null = null
 
@@ -76,14 +89,14 @@ export function useChallengeDetailPage() {
     challengeId,
     challenge,
     loading,
+    solutionsLoading,
     recommendedSolutions,
     communitySolutions,
     onSolutionsLoadFailed: () => {
       toast.error('加载题解失败')
     },
-    onChallengeLoadFailed: () => {
-      toast.error('加载题目详情失败')
-      void router.push('/challenges')
+    onChallengeLoadFailed: (error) => {
+      challengeLoadState.value = resolveChallengeLoadState(error)
     },
   })
 
@@ -97,6 +110,7 @@ export function useChallengeDetailPage() {
     flagInput,
     submitResult,
     submissionRecords,
+    submissionRecordsLoading,
     resetChallengeInteractions,
     loadMyWriteupSubmission,
     loadSubmissionRecords,
@@ -108,7 +122,6 @@ export function useChallengeDetailPage() {
   } = useChallengeDetailInteractions({
     challengeId,
     challenge,
-    loadSolutions,
   })
 
   const submissionRecordTotal = computed(() => submissionRecords.value.length)
@@ -178,22 +191,147 @@ export function useChallengeDetailPage() {
     activeSolutionTab.value = tab
   }
 
+  function resolveChallengeLoadState(error: unknown): ChallengeLoadState {
+    if (error instanceof ApiError) {
+      if (error.code === 13004) {
+        return {
+          icon: 'Inbox',
+          title: '题目不存在',
+          description: '该题目可能已被删除，或当前链接已失效。',
+          retryable: false,
+        }
+      }
+      if (error.code === 13005) {
+        if (error.message.includes('草稿')) {
+          return {
+            icon: 'Flag',
+            title: '草稿题目暂不可访问',
+            description: '当前题目还处于草稿状态，尚未开放访问。',
+            retryable: false,
+          }
+        }
+        if (error.message.includes('归档')) {
+          return {
+            icon: 'Flag',
+            title: '已归档题目不可访问',
+            description: '当前题目已归档，不再提供访问入口。',
+            retryable: false,
+          }
+        }
+        return {
+          icon: 'Flag',
+          title: '题目暂不可访问',
+          description: '当前题目尚未发布，暂时不能进入详情页。',
+          retryable: false,
+        }
+      }
+      return {
+        icon: 'AlertTriangle',
+        title: '题目详情加载失败',
+        description: error.message.trim() || '当前无法读取题目详情，请稍后重试。',
+        retryable: true,
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return {
+        icon: 'AlertTriangle',
+        title: '题目详情加载失败',
+        description: error.message.trim(),
+        retryable: true,
+      }
+    }
+
+    return {
+      icon: 'AlertTriangle',
+      title: '题目详情加载失败',
+      description: '当前无法读取题目详情，请稍后重试。',
+      retryable: true,
+    }
+  }
+
   function changeSubmissionRecordPage(page: number): void {
     submissionRecordPage.value = page
+  }
+
+  function goBackToChallengeList(): void {
+    void router.push('/challenges')
+  }
+
+  function resetChallengePageState(resetWorkspaceTab = false): void {
+    challenge.value = null
+    challengeLoadState.value = null
+    submissionRecordPage.value = 1
+    hasLoadedSolutions.value = false
+    hasLoadedSubmissionRecords.value = false
+    hasLoadedWriteup.value = false
+    resetChallengeInteractions()
+    clearSolutions()
+    if (resetWorkspaceTab) {
+      selectWorkspaceTab('question')
+    }
+  }
+
+  async function ensureWorkspaceTabData(tab: WorkspaceTab): Promise<void> {
+    if (!challenge.value || challengeLoadState.value) {
+      return
+    }
+
+    if (tab === 'solution') {
+      if (!challenge.value.is_solved || hasLoadedSolutions.value || solutionsLoading.value) {
+        return
+      }
+      const loaded = await loadSolutions(challenge.value.id)
+      hasLoadedSolutions.value = loaded
+      return
+    }
+
+    if (tab === 'records') {
+      if (hasLoadedSubmissionRecords.value || submissionRecordsLoading.value) {
+        return
+      }
+      const loaded = await loadSubmissionRecords()
+      hasLoadedSubmissionRecords.value = loaded
+      return
+    }
+
+    if (tab === 'writeup') {
+      if (hasLoadedWriteup.value || submissionLoading.value) {
+        return
+      }
+      const loaded = await loadMyWriteupSubmission()
+      hasLoadedWriteup.value = loaded
+    }
+  }
+
+  async function initializeChallengePage(): Promise<void> {
+    const loaded = await loadChallenge()
+    if (!loaded || !challenge.value) {
+      return
+    }
+    await ensureWorkspaceTabData(activeWorkspaceTab.value)
+  }
+
+  async function retryChallengeLoad(): Promise<void> {
+    if (loading.value) {
+      return
+    }
+    resetChallengePageState()
+    await initializeChallengePage()
   }
 
   watch(
     challengeId,
     () => {
-      challenge.value = null
-      submissionRecordPage.value = 1
-      resetChallengeInteractions()
-      clearSolutions()
-      selectWorkspaceTab('question')
-      void Promise.all([loadChallenge(), loadMyWriteupSubmission(), loadSubmissionRecords()])
+      resetChallengePageState(true)
+      void initializeChallengePage()
     },
     { immediate: true }
   )
+
+  watch(activeWorkspaceTab, (tab) => {
+    void ensureWorkspaceTabData(tab)
+  })
 
   watch(
     submissionRecords,
@@ -214,6 +352,7 @@ export function useChallengeDetailPage() {
     activeSolutionTab,
     activeWorkspaceTab,
     challenge,
+    challengeLoadState,
     changeSubmissionRecordPage,
     displayedSolutionCards,
     downloadAttachment,
@@ -221,6 +360,7 @@ export function useChallengeDetailPage() {
     flagInput,
     formatSubmissionTime,
     formatWriteupTime,
+    goBackToChallengeList,
     handleScoreRailProbe,
     handleSolutionTabKeydown,
     handleWorkspaceTabKeydown,
@@ -241,6 +381,7 @@ export function useChallengeDetailPage() {
     paginatedSubmissionRecords,
     communitySolutions,
     recommendedSolutions,
+    retryChallengeLoad,
     saveWriteup,
     sanitizedActiveSolutionContent,
     sanitizedDescription,
@@ -254,6 +395,7 @@ export function useChallengeDetailPage() {
     submissionLoading,
     submissionRecordMessage,
     submissionRecordPage,
+    submissionRecordsLoading,
     submissionRecordTotal,
     submissionRecordTotalPages,
     submissionRecords,
@@ -269,6 +411,7 @@ export function useChallengeDetailPage() {
     submitResult,
     submitting,
     toggleHint,
+    solutionsLoading,
     workspaceTabs,
     writeupContent,
     writeupTitle,

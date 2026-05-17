@@ -15,10 +15,11 @@ interface UseChallengeDetailDataLoaderOptions {
   challengeId: ComputedRef<string>
   challenge: Ref<ChallengeDetailData | null>
   loading: Ref<boolean>
+  solutionsLoading: Ref<boolean>
   recommendedSolutions: Ref<RecommendedChallengeSolutionData[]>
   communitySolutions: Ref<CommunityChallengeSolutionData[]>
   onSolutionsLoadFailed: () => void
-  onChallengeLoadFailed: () => void
+  onChallengeLoadFailed: (error: unknown) => void
 }
 
 export function useChallengeDetailDataLoader(options: UseChallengeDetailDataLoaderOptions) {
@@ -26,6 +27,7 @@ export function useChallengeDetailDataLoader(options: UseChallengeDetailDataLoad
     challengeId,
     challenge,
     loading,
+    solutionsLoading,
     recommendedSolutions,
     communitySolutions,
     onSolutionsLoadFailed,
@@ -39,27 +41,34 @@ export function useChallengeDetailDataLoader(options: UseChallengeDetailDataLoad
     communitySolutions.value = []
   }
 
-  async function loadSolutions(id: string, requestId = latestChallengeRequestId): Promise<void> {
+  async function loadSolutions(id: string, requestId = latestChallengeRequestId): Promise<boolean> {
+    solutionsLoading.value = true
     try {
       const [recommended, communityPage] = await Promise.all([
         getRecommendedChallengeSolutions(id),
         getCommunityChallengeSolutions(id),
       ])
       if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
+        return false
       }
       recommendedSolutions.value = recommended
       communitySolutions.value = communityPage.list
+      return true
     } catch {
       if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
+        return false
       }
       clearSolutions()
       onSolutionsLoadFailed()
+      return false
+    } finally {
+      if (requestId === latestChallengeRequestId && id === challengeId.value) {
+        solutionsLoading.value = false
+      }
     }
   }
 
-  async function loadChallenge(): Promise<void> {
+  async function loadChallenge(): Promise<boolean> {
     const id = challengeId.value
     const requestId = ++latestChallengeRequestId
     loading.value = true
@@ -67,20 +76,17 @@ export function useChallengeDetailDataLoader(options: UseChallengeDetailDataLoad
     try {
       const detail = await getChallengeDetail(id)
       if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
+        return false
       }
       challenge.value = detail
-
-      if (detail.is_solved) {
-        await loadSolutions(id, requestId)
-      } else {
-        clearSolutions()
-      }
-    } catch {
+      clearSolutions()
+      return true
+    } catch (error) {
       if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
-        return
+        return false
       }
-      onChallengeLoadFailed()
+      onChallengeLoadFailed(error)
+      return false
     } finally {
       if (requestId === latestChallengeRequestId && id === challengeId.value) {
         loading.value = false

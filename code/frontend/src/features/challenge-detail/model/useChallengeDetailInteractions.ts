@@ -19,13 +19,11 @@ interface SubmissionRecordItem {
 interface UseChallengeDetailInteractionsOptions {
   challengeId: Ref<string>
   challenge: Ref<ChallengeDetailData | null>
-  loadSolutions: (challengeId: string) => Promise<void>
 }
 
 export function useChallengeDetailInteractions({
   challengeId,
   challenge,
-  loadSolutions,
 }: UseChallengeDetailInteractionsOptions) {
   const toast = useToast()
 
@@ -37,6 +35,7 @@ export function useChallengeDetailInteractions({
     message: string
   } | null>(null)
   const submissionRecords = ref<SubmissionRecordItem[]>([])
+  const submissionRecordsLoading = ref(false)
   let latestSubmissionRecordsRequestId = 0
   const {
     myWriteup,
@@ -59,20 +58,22 @@ export function useChallengeDetailInteractions({
     expandedHintLevels.value = []
     submitResult.value = null
     submissionRecords.value = []
+    submissionRecordsLoading.value = false
   }
 
-  async function loadSubmissionRecords(): Promise<void> {
+  async function loadSubmissionRecords(): Promise<boolean> {
     const currentChallengeId = challengeId.value
-    if (!currentChallengeId) return
+    if (!currentChallengeId) return false
 
     const requestId = ++latestSubmissionRecordsRequestId
+    submissionRecordsLoading.value = true
     try {
       const records = await getMyChallengeSubmissionRecords(currentChallengeId)
       if (
         requestId !== latestSubmissionRecordsRequestId ||
         currentChallengeId !== challengeId.value
       ) {
-        return
+        return false
       }
       submissionRecords.value = records.map((item) => ({
         id: item.id,
@@ -80,14 +81,23 @@ export function useChallengeDetailInteractions({
         status: item.status,
         submittedAt: item.submitted_at,
       }))
+      return true
     } catch {
       if (
         requestId !== latestSubmissionRecordsRequestId ||
         currentChallengeId !== challengeId.value
       ) {
-        return
+        return false
       }
       toast.error('加载提交记录失败')
+      return false
+    } finally {
+      if (
+        requestId === latestSubmissionRecordsRequestId &&
+        currentChallengeId === challengeId.value
+      ) {
+        submissionRecordsLoading.value = false
+      }
     }
   }
 
@@ -147,7 +157,6 @@ export function useChallengeDetailInteractions({
     if (submitting.value || !currentChallenge || !flagInput.value.trim()) return
 
     const answer = flagInput.value.trim()
-    const alreadySolved = currentChallenge.is_solved
     submitting.value = true
     submitResult.value = null
     try {
@@ -170,9 +179,6 @@ export function useChallengeDetailInteractions({
           }
           toast.success(submitMessage)
           currentChallenge.is_solved = true
-          if (!alreadySolved) {
-            await loadSolutions(currentChallenge.id)
-          }
           break
         case 'pending_review':
           submitResult.value = {
@@ -240,6 +246,7 @@ export function useChallengeDetailInteractions({
     expandedHintLevels,
     submitResult,
     submissionRecords,
+    submissionRecordsLoading,
     resetChallengeInteractions,
     loadMyWriteupSubmission,
     loadSubmissionRecords,

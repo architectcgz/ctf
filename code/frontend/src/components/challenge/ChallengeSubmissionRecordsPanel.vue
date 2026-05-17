@@ -20,8 +20,10 @@
         </div>
       </div>
 
+      <div v-if="submissionRecordsLoading" class="inline-note">正在加载提交记录...</div>
+
       <div
-        v-if="submissionRecords.length === 0"
+        v-else-if="submissionRecords.length === 0"
         class="inline-note"
       >
         还没有提交记录。你在右侧提交 Flag 后，新的提交结果会出现在这里。
@@ -79,6 +81,7 @@ interface SubmissionRecordItem {
 }
 
 interface Props {
+  submissionRecordsLoading: boolean
   submissionRecords: SubmissionRecordItem[]
   paginatedSubmissionRecords: SubmissionRecordItem[]
   submissionRecordPage: number

@@ -5,6 +5,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import DashboardView from '../DashboardView.vue'
 import dashboardViewSource from '../DashboardView.vue?raw'
 import studentCategoryProgressPageSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import studentDifficultyPageSource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
+import studentOverviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import studentRecommendationPageSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentTimelinePageSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -347,7 +351,9 @@ describe('DashboardView', () => {
     await flushPromises()
 
     const categoryPanel = wrapper.get('#dashboard-panel-category')
+    const webAction = categoryPanel.get('[data-test="category-action-web"]')
     const cryptoAction = categoryPanel.get('[data-test="category-action-crypto"]')
+    const webActionStyle = webAction.attributes('style') ?? ''
 
     expect(categoryPanel.classes()).toContain('active')
     expect(categoryPanel.attributes('aria-hidden')).toBe('false')
@@ -355,6 +361,8 @@ describe('DashboardView', () => {
     expect(categoryPanel.text()).toContain('优先补这个分类')
     expect(categoryPanel.text()).toContain('crypto')
     expect(categoryPanel.findAll('.category-action-item')).toHaveLength(2)
+    expect(webActionStyle).toContain('--journal-soft-panel-item-border:')
+    expect(webActionStyle).toContain('color-mix')
 
     await cryptoAction.get('button').trigger('click')
 
@@ -408,8 +416,31 @@ describe('DashboardView', () => {
   })
 
   it('分类补强卡片应统一使用明确的外边框 token', () => {
+    expect(studentCategoryProgressPageSource).toContain('categoryActionItemStyle(')
+    expect(studentCategoryProgressPageSource).toContain('getChallengeCategoryColor')
     expect(studentCategoryProgressPageSource).toContain(
-      '--journal-soft-panel-item-border: var(--journal-shell-border);'
+      'primaryCategory?.category === item.category'
+    )
+  })
+
+  it('学生仪表盘的各个 tab 面板应补齐统一的 eyebrow', () => {
+    expect(studentOverviewPageSource).toContain('<div class="workspace-overline">')
+    expect(studentOverviewPageSource).toContain('Overview')
+    expect(studentRecommendationPageSource).toContain('<div class="workspace-overline">')
+    expect(studentRecommendationPageSource).toContain('Recommendations')
+    expect(studentCategoryProgressPageSource).toContain('<div class="workspace-overline">')
+    expect(studentCategoryProgressPageSource).toContain('Category')
+    expect(studentTimelinePageSource).toContain('<div class="workspace-overline">')
+    expect(studentTimelinePageSource).toContain('Timeline')
+    expect(studentDifficultyPageSource).toContain('<div class="workspace-overline">')
+    expect(studentDifficultyPageSource).toContain('Difficulty')
+  })
+
+  it('difficulty 补强卡片应统一使用可见外边框 token', () => {
+    expect(studentDifficultyPageSource).toContain('difficultyActionItemStyle(')
+    expect(studentDifficultyPageSource).toContain('getChallengeDifficultyColor')
+    expect(studentDifficultyPageSource).toContain(
+      'primaryDifficulty?.difficulty === item.difficulty'
     )
   })
 
@@ -429,7 +460,10 @@ describe('DashboardView', () => {
     await flushPromises()
 
     const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const easyAction = difficultyPanel.get('[data-test="difficulty-action-easy"]')
     const mediumAction = difficultyPanel.get('[data-test="difficulty-action-medium"]')
+    const easyActionStyle = easyAction.attributes('style') ?? ''
+    const mediumActionStyle = mediumAction.attributes('style') ?? ''
 
     expect(difficultyPanel.classes()).toContain('active')
     expect(difficultyPanel.attributes('aria-hidden')).toBe('false')
@@ -438,6 +472,10 @@ describe('DashboardView', () => {
     expect(difficultyPanel.text()).toContain('中等')
     expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(2)
     expect(mediumAction.classes()).toContain('difficulty-action-item--primary')
+    expect(easyActionStyle).toContain('--journal-soft-panel-item-border:')
+    expect(easyActionStyle).toContain('color-mix')
+    expect(mediumActionStyle).toContain('--journal-soft-panel-item-border:')
+    expect(mediumActionStyle).toContain('color-mix')
 
     await mediumAction.get('button').trigger('click')
 

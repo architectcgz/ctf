@@ -38,24 +38,26 @@ export function useChallengeWriteupSubmissionFlow(options: UseChallengeWriteupSu
     writeupContent.value = ''
   }
 
-  async function loadMyWriteupSubmission(): Promise<void> {
+  async function loadMyWriteupSubmission(): Promise<boolean> {
     const currentChallengeId = challengeId.value
-    if (!currentChallengeId) return
+    if (!currentChallengeId) return false
 
     const requestId = ++latestWriteupRequestId
     submissionLoading.value = true
     try {
       const nextWriteup = await getMyChallengeWriteupSubmission(currentChallengeId)
       if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
-        return
+        return false
       }
       myWriteup.value = nextWriteup
       hydrateSubmissionForm(myWriteup.value)
+      return true
     } catch {
       if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
-        return
+        return false
       }
       toast.error('加载个人题解失败')
+      return false
     } finally {
       if (requestId === latestWriteupRequestId && currentChallengeId === challengeId.value) {
         submissionLoading.value = false

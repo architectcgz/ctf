@@ -4,7 +4,7 @@
 
 - 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前按 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`teaching_query` 等模块组织，其中 `teaching_query` 负责教师侧查询聚合
 - 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Tailwind CSS 4 + 仓库内通用前端原语
-- 开发依赖：本项目自带的 Compose 与 infra 入口位于 `docker/ctf/` 和 `docker/ctf/infra/`，可直接启动 `ctf-api`、`ctf-postgres`、`ctf-redis`、`ctf-registry`
+- 开发依赖：本项目自带的 Compose 与 infra 入口位于 `docker/ctf/` 和 `docker/ctf/infra/`，可直接启动 `ctf-frontend`、`ctf-api`、`ctf-postgres`、`ctf-redis`、`ctf-registry`
 - 文档入口：架构和页面设计主要看 `docs/architecture/`，接口与题包契约主要看 `docs/contracts/`
 
 ## 启动方式
@@ -61,6 +61,21 @@ cd code/backend && \
 cd code/frontend && npm run dev
 ```
 
+前端容器化运行：
+
+```bash
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
+```
+
+启动后访问 `http://127.0.0.1:5173`。容器内会由 `nginx` 直接把 `/api` 和 `/ws` 转发到 `ctf-api:8080`。
+如果本地已经跑着 `npm run dev` 占用 `5173`，可以改成：
+
+```bash
+CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
+```
+
+此时访问 `http://127.0.0.1:15173`。
+
 开发容器栈（仅在需要整套容器联调时使用）：
 
 ```bash
@@ -81,6 +96,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 
 `docker/ctf/docker-compose.dev.yml` 默认端口如下，并且仅绑定到 `127.0.0.1`，避免开发态暴露到局域网：
 
+- `ctf-frontend`: `5173`
 - `ctf-api`: `8080`
 - `ctf-api` AWD 防守 SSH 网关: `2222`
 - `ctf-postgres`: `15432`

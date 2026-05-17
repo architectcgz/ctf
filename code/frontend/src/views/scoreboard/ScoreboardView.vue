@@ -108,6 +108,9 @@ function onContestModeFilterChange(event: Event): void {
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
         >
+          <div class="workspace-overline scoreboard-panel-overline">
+            Contest Scoreboard
+          </div>
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
               <BarChart2 class="h-4 w-4" />
@@ -336,6 +339,9 @@ function onContestModeFilterChange(event: Event): void {
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
         >
+          <div class="workspace-overline scoreboard-panel-overline">
+            Points Scoreboard
+          </div>
           <section
             class="student-directory-section workspace-directory-section"
             aria-label="积分排行榜"
@@ -433,7 +439,7 @@ function onContestModeFilterChange(event: Event): void {
 }
 
 .scoreboard-panel-overline {
-  margin-bottom: 18px;
+  margin-bottom: var(--space-3);
 }
 
 .scoreboard-inline-note {

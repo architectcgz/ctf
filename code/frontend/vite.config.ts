@@ -8,7 +8,7 @@ import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'http://127.0.0.1:8080'
+  const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'http://0.0.0.0:8080'
   const wsProxyTarget = proxyTarget.replace(/^http/i, 'ws')
 
   return {

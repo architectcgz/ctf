@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
+import { ApiError } from '@/api/request'
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
@@ -49,9 +50,17 @@ describe('ChallengeDetail', () => {
   let router: ReturnType<typeof createRouter>
 
   beforeEach(() => {
+    window.history.replaceState({}, '', '/challenges/1')
     router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/challenges/:id', component: { template: '<div />' } }],
+    })
+
+    Object.values(challengeApiMocks).forEach((mock) => {
+      mock.mockReset()
+    })
+    Object.values(instanceApiMocks).forEach((mock) => {
+      mock.mockReset()
     })
 
     challengeApiMocks.getChallengeDetail.mockResolvedValue({
@@ -214,6 +223,19 @@ describe('ChallengeDetail', () => {
     expect(challengeQuestionPanelSource).not.toContain('<div class="overline">Question</div>')
   })
 
+  it('题目详情应把 tab 下方面板间距收口到共享 workspace token', () => {
+    expect(challengeDetailSource).toContain('--workspace-tabs-panel-gap: var(--space-2);')
+    expect(challengeDetailSource).toContain(
+      '--workspace-panel-padding-top: var(--workspace-tabs-panel-gap);'
+    )
+    expect(challengeDetailSource).toMatch(
+      /\.detail-main,\s*\.content-pane\s*\{[\s\S]*padding:\s*0\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\);/s
+    )
+    expect(challengeDetailSource).toMatch(
+      /\.tool-pane\s*\{[\s\S]*padding:\s*var\(--workspace-tabs-panel-gap,\s*var\(--space-2\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\);/s
+    )
+  })
+
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
       challengeDetailSource,
@@ -264,6 +286,50 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('精选官方题解')
     expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
     expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
+  })
+
+  it('草稿题目不可访问时应停留在当前页显示状态提示，并停止额外预取', async () => {
+    challengeApiMocks.getChallengeDetail.mockRejectedValueOnce(
+      new ApiError('题目为草稿，无法访问', { code: 13005, status: 403 })
+    )
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
+    expect(wrapper.text()).toContain('草稿题目暂不可访问')
+    expect(wrapper.text()).toContain('当前题目还处于草稿状态，尚未开放访问。')
+    expect(challengeApiMocks.getMyChallengeWriteupSubmission).not.toHaveBeenCalled()
+    expect(challengeApiMocks.getMyChallengeSubmissionRecords).not.toHaveBeenCalled()
+  })
+
+  it('已归档题目不可访问时应停留在当前页显示状态提示', async () => {
+    challengeApiMocks.getChallengeDetail.mockRejectedValueOnce(
+      new ApiError('题目已归档，无法访问', { code: 13005, status: 403 })
+    )
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
+    expect(wrapper.text()).toContain('已归档题目不可访问')
+    expect(wrapper.text()).toContain('当前题目已归档，不再提供访问入口。')
   })
 
   it('快速切换题目时不应被旧详情和旧提交记录回写', async () => {
@@ -385,14 +451,16 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    expect(challengeApiMocks.getRecommendedChallengeSolutions).toHaveBeenCalledWith('1')
-    expect(challengeApiMocks.getCommunityChallengeSolutions).toHaveBeenCalledWith('1')
+    expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
+    expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
     const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
     expect(solutionTab).toBeTruthy()
 
     await solutionTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
+    expect(challengeApiMocks.getRecommendedChallengeSolutions).toHaveBeenCalledWith('1')
+    expect(challengeApiMocks.getCommunityChallengeSolutions).toHaveBeenCalledWith('1')
     expect(wrapper.text()).toContain('推荐题解')
     expect(wrapper.text()).toContain('社区题解')
     expect(wrapper.text()).toContain('精选官方题解')
@@ -586,13 +654,15 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).not.toContain('解题过程复盘')
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(false)
+    expect(challengeApiMocks.getMyChallengeWriteupSubmission).not.toHaveBeenCalled()
 
     const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
     expect(writeupTab).toBeTruthy()
 
     await writeupTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
+    expect(challengeApiMocks.getMyChallengeWriteupSubmission).toHaveBeenCalledWith('1')
     expect(wrapper.text()).toContain('解题过程复盘')
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(true)
   })
@@ -824,11 +894,12 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
+    expect(challengeApiMocks.getMyChallengeSubmissionRecords).not.toHaveBeenCalled()
     const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
     expect(recordsTab).toBeTruthy()
 
     await recordsTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(challengeApiMocks.getMyChallengeSubmissionRecords).toHaveBeenCalledWith('1')
     expect(wrapper.text()).toContain('恭喜你，Flag 正确！')
