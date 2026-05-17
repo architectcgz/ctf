@@ -22,8 +22,8 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 )
@@ -56,7 +56,7 @@ func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var preview importEnvelope[dto.ChallengeImportPreviewResp]
+	var preview importEnvelope[challengecontracts.ChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &preview); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 		t.Fatalf("commit status = %d, body = %s", commitRecorder.Code, commitRecorder.Body.String())
 	}
 
-	var commit importEnvelope[dto.ChallengeImportCommitResp]
+	var commit importEnvelope[challengecontracts.ChallengeImportCommitResp]
 	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &commit); err != nil {
 		t.Fatalf("decode commit response: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestBuildWiresAWDImportImageBuildService(t *testing.T) {
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var preview importEnvelope[dto.AWDChallengeImportPreviewResp]
+	var preview importEnvelope[challengecontracts.AWDChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &preview); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestBuildWiresAWDImportImageBuildService(t *testing.T) {
 		t.Fatalf("commit status = %d, body = %s", commitRecorder.Code, commitRecorder.Body.String())
 	}
 
-	var commit importEnvelope[dto.AWDChallengeImportCommitResp]
+	var commit importEnvelope[challengecontracts.AWDChallengeImportCommitResp]
 	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &commit); err != nil {
 		t.Fatalf("decode commit response: %v", err)
 	}
