@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authports "ctf-platform/internal/module/auth/ports"
@@ -26,7 +25,7 @@ const (
 )
 
 type CASService interface {
-	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error)
+	Authenticate(ctx context.Context, ticket string) (*LoginResp, *authcontracts.Session, error)
 }
 
 type casService struct {
@@ -57,7 +56,7 @@ func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService a
 	}
 }
 
-func (s *casService) Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *casService) Authenticate(ctx context.Context, ticket string) (*LoginResp, *authcontracts.Session, error) {
 	if !s.config.Enabled {
 		return nil, nil, errcode.ErrCASDisabled
 	}
@@ -176,7 +175,7 @@ func (s *casService) mergePrincipal(user *model.User, principal *authports.CASPr
 	return changed
 }
 
-func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*LoginResp, *authcontracts.Session, error) {
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_cas_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))

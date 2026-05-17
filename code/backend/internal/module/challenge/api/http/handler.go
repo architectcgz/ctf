@@ -50,7 +50,7 @@ func NewHandler(commands challengeCommandService, queries challengeQueryService)
 }
 
 func (h *Handler) CreateChallenge(c *gin.Context) {
-	var req dto.CreateChallengeReq
+	var req CreateChallengeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -72,7 +72,7 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateChallengeReq
+	var req UpdateChallengeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -118,13 +118,14 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 }
 
 func (h *Handler) ListChallenges(c *gin.Context) {
-	var query dto.ChallengeQuery
+	var query ChallengeQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	result, err := h.queries.ListChallenges(c.Request.Context(), &query)
+	mappedQuery := challengeRequestMapper.ToChallengeQuery(query)
+	result, err := h.queries.ListChallenges(c.Request.Context(), &mappedQuery)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -280,13 +281,14 @@ func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
 
 // ListPublishedChallenges 靶场列表（学员视图）
 func (h *Handler) ListPublishedChallenges(c *gin.Context) {
-	var query dto.ChallengeQuery
+	var query ChallengeQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	result, err := h.queries.ListPublishedChallenges(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
+	mappedQuery := challengeRequestMapper.ToChallengeQuery(query)
+	result, err := h.queries.ListPublishedChallenges(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &mappedQuery)
 	if err != nil {
 		response.FromError(c, err)
 		return

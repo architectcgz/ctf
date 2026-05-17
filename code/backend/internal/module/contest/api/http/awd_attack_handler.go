@@ -4,14 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
 func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	roundID := c.GetInt64("rid")
-	var req dto.CreateAWDAttackLogReq
+	var req CreateAWDAttackLogReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -30,7 +29,7 @@ func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	serviceID := c.GetInt64("sid")
 
-	var req dto.SubmitAWDAttackReq
+	var req SubmitAWDAttackReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

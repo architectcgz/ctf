@@ -13,7 +13,22 @@ import (
 
 type ChallengeRequestMapperImpl struct{}
 
-func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source dto.CreateAWDChallengeReq) commands.CreateAWDChallengeInput {
+func (c *ChallengeRequestMapperImpl) ToChallengeQuery(source ChallengeQuery) dto.ChallengeQuery {
+	var dtoChallengeQuery dto.ChallengeQuery
+	dtoChallengeQuery.Category = source.Category
+	dtoChallengeQuery.Difficulty = source.Difficulty
+	dtoChallengeQuery.Status = source.Status
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		dtoChallengeQuery.CreatedBy = &xint64
+	}
+	dtoChallengeQuery.Keyword = source.Keyword
+	dtoChallengeQuery.SortBy = source.SortBy
+	dtoChallengeQuery.Page = source.Page
+	dtoChallengeQuery.Size = source.Size
+	return dtoChallengeQuery
+}
+func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source CreateAWDChallengeReq) commands.CreateAWDChallengeInput {
 	var commandsCreateAWDChallengeInput commands.CreateAWDChallengeInput
 	commandsCreateAWDChallengeInput.Name = source.Name
 	commandsCreateAWDChallengeInput.Slug = source.Slug
@@ -24,7 +39,7 @@ func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source dto.Create
 	commandsCreateAWDChallengeInput.DeploymentMode = source.DeploymentMode
 	return commandsCreateAWDChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source dto.CreateChallengeReq) commands.CreateChallengeInput {
+func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallengeReq) commands.CreateChallengeInput {
 	var commandsCreateChallengeInput commands.CreateChallengeInput
 	commandsCreateChallengeInput.Title = source.Title
 	commandsCreateChallengeInput.Description = source.Description
@@ -37,26 +52,26 @@ func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source dto.CreateCha
 	if source.Hints != nil {
 		commandsCreateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
-			commandsCreateChallengeInput.Hints[i] = c.dtoChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
+			commandsCreateChallengeInput.Hints[i] = c.httpChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
 		}
 	}
 	return commandsCreateChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToCreateImageInput(source dto.CreateImageReq) commands.CreateImageInput {
+func (c *ChallengeRequestMapperImpl) ToCreateImageInput(source CreateImageReq) commands.CreateImageInput {
 	var commandsCreateImageInput commands.CreateImageInput
 	commandsCreateImageInput.Name = source.Name
 	commandsCreateImageInput.Tag = source.Tag
 	commandsCreateImageInput.Description = source.Description
 	return commandsCreateImageInput
 }
-func (c *ChallengeRequestMapperImpl) ToCreateTagInput(source dto.CreateTagReq) commands.CreateTagInput {
+func (c *ChallengeRequestMapperImpl) ToCreateTagInput(source CreateTagReq) commands.CreateTagInput {
 	var commandsCreateTagInput commands.CreateTagInput
 	commandsCreateTagInput.Name = source.Name
 	commandsCreateTagInput.Type = source.Type
 	commandsCreateTagInput.Description = source.Description
 	return commandsCreateTagInput
 }
-func (c *ChallengeRequestMapperImpl) ToListAWDChallengesInput(source dto.AWDChallengeQuery) queries.ListAWDChallengesInput {
+func (c *ChallengeRequestMapperImpl) ToListAWDChallengesInput(source AWDChallengeQuery) queries.ListAWDChallengesInput {
 	var queriesListAWDChallengesInput queries.ListAWDChallengesInput
 	queriesListAWDChallengesInput.Keyword = source.Keyword
 	queriesListAWDChallengesInput.ServiceType = source.ServiceType
@@ -65,7 +80,7 @@ func (c *ChallengeRequestMapperImpl) ToListAWDChallengesInput(source dto.AWDChal
 	queriesListAWDChallengesInput.Size = source.Size
 	return queriesListAWDChallengesInput
 }
-func (c *ChallengeRequestMapperImpl) ToListImagesInput(source dto.ImageQuery) queries.ListImagesInput {
+func (c *ChallengeRequestMapperImpl) ToListImagesInput(source ImageQuery) queries.ListImagesInput {
 	var queriesListImagesInput queries.ListImagesInput
 	queriesListImagesInput.Name = source.Name
 	queriesListImagesInput.Status = source.Status
@@ -73,7 +88,7 @@ func (c *ChallengeRequestMapperImpl) ToListImagesInput(source dto.ImageQuery) qu
 	queriesListImagesInput.Size = source.Size
 	return queriesListImagesInput
 }
-func (c *ChallengeRequestMapperImpl) ToSaveChallengeTopologyInput(source dto.SaveChallengeTopologyReq) commands.SaveChallengeTopologyInput {
+func (c *ChallengeRequestMapperImpl) ToSaveChallengeTopologyInput(source SaveChallengeTopologyReq) commands.SaveChallengeTopologyInput {
 	var commandsSaveChallengeTopologyInput commands.SaveChallengeTopologyInput
 	if source.TemplateID != nil {
 		xint64 := *source.TemplateID
@@ -83,30 +98,30 @@ func (c *ChallengeRequestMapperImpl) ToSaveChallengeTopologyInput(source dto.Sav
 	if source.Networks != nil {
 		commandsSaveChallengeTopologyInput.Networks = make([]dto.TopologyNetworkReq, len(source.Networks))
 		for i := 0; i < len(source.Networks); i++ {
-			commandsSaveChallengeTopologyInput.Networks[i] = c.dtoTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
+			commandsSaveChallengeTopologyInput.Networks[i] = c.httpTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
 		}
 	}
 	if source.Nodes != nil {
 		commandsSaveChallengeTopologyInput.Nodes = make([]dto.TopologyNodeReq, len(source.Nodes))
 		for j := 0; j < len(source.Nodes); j++ {
-			commandsSaveChallengeTopologyInput.Nodes[j] = c.dtoTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
+			commandsSaveChallengeTopologyInput.Nodes[j] = c.httpTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
 		}
 	}
 	if source.Links != nil {
 		commandsSaveChallengeTopologyInput.Links = make([]dto.TopologyLinkReq, len(source.Links))
 		for k := 0; k < len(source.Links); k++ {
-			commandsSaveChallengeTopologyInput.Links[k] = c.dtoTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
+			commandsSaveChallengeTopologyInput.Links[k] = c.httpTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
 		}
 	}
 	if source.Policies != nil {
 		commandsSaveChallengeTopologyInput.Policies = make([]dto.TopologyTrafficPolicyReq, len(source.Policies))
 		for l := 0; l < len(source.Policies); l++ {
-			commandsSaveChallengeTopologyInput.Policies[l] = c.dtoTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
+			commandsSaveChallengeTopologyInput.Policies[l] = c.httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
 		}
 	}
 	return commandsSaveChallengeTopologyInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source dto.UpdateAWDChallengeReq) commands.UpdateAWDChallengeInput {
+func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source UpdateAWDChallengeReq) commands.UpdateAWDChallengeInput {
 	var commandsUpdateAWDChallengeInput commands.UpdateAWDChallengeInput
 	commandsUpdateAWDChallengeInput.Name = source.Name
 	commandsUpdateAWDChallengeInput.Slug = source.Slug
@@ -118,7 +133,7 @@ func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source dto.Update
 	commandsUpdateAWDChallengeInput.Status = source.Status
 	return commandsUpdateAWDChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source dto.UpdateChallengeReq) commands.UpdateChallengeInput {
+func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallengeReq) commands.UpdateChallengeInput {
 	var commandsUpdateChallengeInput commands.UpdateChallengeInput
 	commandsUpdateChallengeInput.Title = source.Title
 	commandsUpdateChallengeInput.Description = source.Description
@@ -137,12 +152,12 @@ func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source dto.UpdateCha
 	if source.Hints != nil {
 		commandsUpdateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
-			commandsUpdateChallengeInput.Hints[i] = c.dtoChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
+			commandsUpdateChallengeInput.Hints[i] = c.httpChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
 		}
 	}
 	return commandsUpdateChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpdateImageInput(source dto.UpdateImageReq) commands.UpdateImageInput {
+func (c *ChallengeRequestMapperImpl) ToUpdateImageInput(source UpdateImageReq) commands.UpdateImageInput {
 	var commandsUpdateImageInput commands.UpdateImageInput
 	if source.Description != nil {
 		xstring := *source.Description
@@ -151,7 +166,7 @@ func (c *ChallengeRequestMapperImpl) ToUpdateImageInput(source dto.UpdateImageRe
 	commandsUpdateImageInput.Status = source.Status
 	return commandsUpdateImageInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpsertEnvironmentTemplateInput(source dto.UpsertEnvironmentTemplateReq) commands.UpsertEnvironmentTemplateInput {
+func (c *ChallengeRequestMapperImpl) ToUpsertEnvironmentTemplateInput(source UpsertEnvironmentTemplateReq) commands.UpsertEnvironmentTemplateInput {
 	var commandsUpsertEnvironmentTemplateInput commands.UpsertEnvironmentTemplateInput
 	commandsUpsertEnvironmentTemplateInput.Name = source.Name
 	commandsUpsertEnvironmentTemplateInput.Description = source.Description
@@ -159,25 +174,25 @@ func (c *ChallengeRequestMapperImpl) ToUpsertEnvironmentTemplateInput(source dto
 	if source.Networks != nil {
 		commandsUpsertEnvironmentTemplateInput.Networks = make([]dto.TopologyNetworkReq, len(source.Networks))
 		for i := 0; i < len(source.Networks); i++ {
-			commandsUpsertEnvironmentTemplateInput.Networks[i] = c.dtoTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
+			commandsUpsertEnvironmentTemplateInput.Networks[i] = c.httpTopologyNetworkReqToDtoTopologyNetworkReq(source.Networks[i])
 		}
 	}
 	if source.Nodes != nil {
 		commandsUpsertEnvironmentTemplateInput.Nodes = make([]dto.TopologyNodeReq, len(source.Nodes))
 		for j := 0; j < len(source.Nodes); j++ {
-			commandsUpsertEnvironmentTemplateInput.Nodes[j] = c.dtoTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
+			commandsUpsertEnvironmentTemplateInput.Nodes[j] = c.httpTopologyNodeReqToDtoTopologyNodeReq(source.Nodes[j])
 		}
 	}
 	if source.Links != nil {
 		commandsUpsertEnvironmentTemplateInput.Links = make([]dto.TopologyLinkReq, len(source.Links))
 		for k := 0; k < len(source.Links); k++ {
-			commandsUpsertEnvironmentTemplateInput.Links[k] = c.dtoTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
+			commandsUpsertEnvironmentTemplateInput.Links[k] = c.httpTopologyLinkReqToDtoTopologyLinkReq(source.Links[k])
 		}
 	}
 	if source.Policies != nil {
 		commandsUpsertEnvironmentTemplateInput.Policies = make([]dto.TopologyTrafficPolicyReq, len(source.Policies))
 		for l := 0; l < len(source.Policies); l++ {
-			commandsUpsertEnvironmentTemplateInput.Policies[l] = c.dtoTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
+			commandsUpsertEnvironmentTemplateInput.Policies[l] = c.httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source.Policies[l])
 		}
 	}
 	return commandsUpsertEnvironmentTemplateInput
@@ -196,20 +211,20 @@ func (c *ChallengeRequestMapperImpl) ToUpsertSubmissionWriteupInput(source contr
 	commandsUpsertSubmissionWriteupInput.SubmissionStatus = source.SubmissionStatus
 	return commandsUpsertSubmissionWriteupInput
 }
-func (c *ChallengeRequestMapperImpl) dtoChallengeHintReqToCommandsChallengeHintInput(source dto.ChallengeHintReq) commands.ChallengeHintInput {
+func (c *ChallengeRequestMapperImpl) httpChallengeHintReqToCommandsChallengeHintInput(source ChallengeHintReq) commands.ChallengeHintInput {
 	var commandsChallengeHintInput commands.ChallengeHintInput
 	commandsChallengeHintInput.Level = source.Level
 	commandsChallengeHintInput.Title = source.Title
 	commandsChallengeHintInput.Content = source.Content
 	return commandsChallengeHintInput
 }
-func (c *ChallengeRequestMapperImpl) dtoTopologyLinkReqToDtoTopologyLinkReq(source dto.TopologyLinkReq) dto.TopologyLinkReq {
+func (c *ChallengeRequestMapperImpl) httpTopologyLinkReqToDtoTopologyLinkReq(source TopologyLinkReq) dto.TopologyLinkReq {
 	var dtoTopologyLinkReq dto.TopologyLinkReq
 	dtoTopologyLinkReq.FromNodeKey = source.FromNodeKey
 	dtoTopologyLinkReq.ToNodeKey = source.ToNodeKey
 	return dtoTopologyLinkReq
 }
-func (c *ChallengeRequestMapperImpl) dtoTopologyNetworkReqToDtoTopologyNetworkReq(source dto.TopologyNetworkReq) dto.TopologyNetworkReq {
+func (c *ChallengeRequestMapperImpl) httpTopologyNetworkReqToDtoTopologyNetworkReq(source TopologyNetworkReq) dto.TopologyNetworkReq {
 	var dtoTopologyNetworkReq dto.TopologyNetworkReq
 	dtoTopologyNetworkReq.Key = source.Key
 	dtoTopologyNetworkReq.Name = source.Name
@@ -217,7 +232,7 @@ func (c *ChallengeRequestMapperImpl) dtoTopologyNetworkReqToDtoTopologyNetworkRe
 	dtoTopologyNetworkReq.Internal = source.Internal
 	return dtoTopologyNetworkReq
 }
-func (c *ChallengeRequestMapperImpl) dtoTopologyNodeReqToDtoTopologyNodeReq(source dto.TopologyNodeReq) dto.TopologyNodeReq {
+func (c *ChallengeRequestMapperImpl) httpTopologyNodeReqToDtoTopologyNodeReq(source TopologyNodeReq) dto.TopologyNodeReq {
 	var dtoTopologyNodeReq dto.TopologyNodeReq
 	dtoTopologyNodeReq.Key = source.Key
 	dtoTopologyNodeReq.Name = source.Name
@@ -238,10 +253,10 @@ func (c *ChallengeRequestMapperImpl) dtoTopologyNodeReqToDtoTopologyNodeReq(sour
 			dtoTopologyNodeReq.Env[key] = value
 		}
 	}
-	dtoTopologyNodeReq.Resources = c.pDtoTopologyResourcesReqToPDtoTopologyResourcesReq(source.Resources)
+	dtoTopologyNodeReq.Resources = c.pHttpTopologyResourcesReqToPDtoTopologyResourcesReq(source.Resources)
 	return dtoTopologyNodeReq
 }
-func (c *ChallengeRequestMapperImpl) dtoTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source dto.TopologyTrafficPolicyReq) dto.TopologyTrafficPolicyReq {
+func (c *ChallengeRequestMapperImpl) httpTopologyTrafficPolicyReqToDtoTopologyTrafficPolicyReq(source TopologyTrafficPolicyReq) dto.TopologyTrafficPolicyReq {
 	var dtoTopologyTrafficPolicyReq dto.TopologyTrafficPolicyReq
 	dtoTopologyTrafficPolicyReq.SourceNodeKey = source.SourceNodeKey
 	dtoTopologyTrafficPolicyReq.TargetNodeKey = source.TargetNodeKey
@@ -271,7 +286,7 @@ func (c *ChallengeRequestMapperImpl) modelInstanceSharingToModelInstanceSharing(
 	}
 	return modelInstanceSharing
 }
-func (c *ChallengeRequestMapperImpl) pDtoTopologyResourcesReqToPDtoTopologyResourcesReq(source *dto.TopologyResourcesReq) *dto.TopologyResourcesReq {
+func (c *ChallengeRequestMapperImpl) pHttpTopologyResourcesReqToPDtoTopologyResourcesReq(source *TopologyResourcesReq) *dto.TopologyResourcesReq {
 	var pDtoTopologyResourcesReq *dto.TopologyResourcesReq
 	if source != nil {
 		var dtoTopologyResourcesReq dto.TopologyResourcesReq

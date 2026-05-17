@@ -40,7 +40,7 @@ func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	var req dto.SaveChallengeTopologyReq
+	var req SaveChallengeTopologyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -81,7 +81,7 @@ func (h *TopologyHandler) DeleteChallengeTopology(c *gin.Context) {
 }
 
 func (h *TopologyHandler) CreateTemplate(c *gin.Context) {
-	var req dto.UpsertEnvironmentTemplateReq
+	var req UpsertEnvironmentTemplateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -100,7 +100,7 @@ func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	var req dto.UpsertEnvironmentTemplateReq
+	var req UpsertEnvironmentTemplateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

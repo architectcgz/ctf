@@ -20,22 +20,22 @@ import (
 // goverter:output:package :http
 type ContestRequestMapper interface {
 	ToStringAnyMap(source map[string]any) map[string]any
-	ToCreateContestInput(source dto.CreateContestReq) contestcmd.CreateContestInput
-	ToUpdateContestInput(source dto.UpdateContestReq) contestcmd.UpdateContestInput
-	ToCreateAnnouncementInput(source dto.CreateContestAnnouncementReq) contestcmd.CreateAnnouncementInput
-	ToReviewRegistrationInput(source dto.ReviewContestRegistrationReq) contestcmd.ReviewRegistrationInput
-	ToCreateTeamInput(source dto.CreateTeamReq) contestcmd.CreateTeamInput
-	ToAddContestChallengeInput(source dto.AddContestChallengeReq) contestcmd.AddContestChallengeInput
-	ToUpdateContestChallengeInput(source dto.UpdateContestChallengeReq) contestcmd.UpdateContestChallengeInput
-	ToCreateAWDRoundInput(source dto.CreateAWDRoundReq) contestcmd.CreateAWDRoundInput
-	ToUpsertServiceCheckInput(source dto.UpsertAWDServiceCheckReq) contestcmd.UpsertServiceCheckInput
-	ToRunCurrentRoundChecksInput(source dto.RunCurrentAWDCheckerReq) contestcmd.RunCurrentRoundChecksInput
-	ToCreateAttackLogInput(source dto.CreateAWDAttackLogReq) contestcmd.CreateAttackLogInput
-	ToSubmitAttackInput(source dto.SubmitAWDAttackReq) contestcmd.SubmitAttackInput
-	ToPreviewCheckerInput(source dto.PreviewAWDCheckerReq) contestcmd.PreviewCheckerInput
-	ToCreateContestAWDServiceInput(source dto.CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput
-	ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput
-	ToListAWDTrafficEventsInput(source dto.ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput
+	ToCreateContestInput(source CreateContestReq) contestcmd.CreateContestInput
+	ToUpdateContestInput(source UpdateContestReq) contestcmd.UpdateContestInput
+	ToCreateAnnouncementInput(source CreateContestAnnouncementReq) contestcmd.CreateAnnouncementInput
+	ToReviewRegistrationInput(source ReviewContestRegistrationReq) contestcmd.ReviewRegistrationInput
+	ToCreateTeamInput(source CreateTeamReq) contestcmd.CreateTeamInput
+	ToAddContestChallengeInput(source AddContestChallengeReq) contestcmd.AddContestChallengeInput
+	ToUpdateContestChallengeInput(source UpdateContestChallengeReq) contestcmd.UpdateContestChallengeInput
+	ToCreateAWDRoundInput(source CreateAWDRoundReq) contestcmd.CreateAWDRoundInput
+	ToUpsertServiceCheckInput(source UpsertAWDServiceCheckReq) contestcmd.UpsertServiceCheckInput
+	ToRunCurrentRoundChecksInput(source RunCurrentAWDCheckerReq) contestcmd.RunCurrentRoundChecksInput
+	ToCreateAttackLogInput(source CreateAWDAttackLogReq) contestcmd.CreateAttackLogInput
+	ToSubmitAttackInput(source SubmitAWDAttackReq) contestcmd.SubmitAttackInput
+	ToPreviewCheckerInput(source PreviewAWDCheckerReq) contestcmd.PreviewCheckerInput
+	ToCreateContestAWDServiceInput(source CreateContestAWDServiceReq) contestcmd.CreateContestAWDServiceInput
+	ToUpdateContestAWDServiceInput(source UpdateContestAWDServiceReq) contestcmd.UpdateContestAWDServiceInput
+	ToListAWDTrafficEventsInput(source ListAWDTrafficEventsReq) contestqry.ListAWDTrafficEventsInput
 	ToAWDCheckerPreviewResp(source contestdomain.AWDCheckerPreviewResult) dto.AWDCheckerPreviewResp
 	ToAWDCheckerPreviewRespPtr(source *contestdomain.AWDCheckerPreviewResult) *dto.AWDCheckerPreviewResp
 	// goverter:ignore LastPreviewResult

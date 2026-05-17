@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsports "ctf-platform/internal/module/ops/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
@@ -30,7 +29,7 @@ func NewNotificationService(repo opsports.NotificationQueryRepository, paginatio
 	}
 }
 
-func (s *NotificationService) GetNotifications(ctx context.Context, userID int64, query *dto.NotificationQuery) ([]dto.NotificationInfo, int64, int, int, error) {
+func (s *NotificationService) GetNotifications(ctx context.Context, userID int64, query *NotificationQuery) ([]NotificationInfo, int64, int, int, error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -53,7 +52,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	result := make([]dto.NotificationInfo, 0, len(items))
+	result := make([]NotificationInfo, 0, len(items))
 	for _, item := range items {
 		result = append(result, toNotificationInfo(&item))
 	}
@@ -61,7 +60,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 	return result, total, page, pageSize, nil
 }
 
-func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
+func toNotificationInfo(notification *model.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
 	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead

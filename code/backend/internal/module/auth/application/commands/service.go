@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -17,8 +16,8 @@ import (
 )
 
 type Service interface {
-	Register(ctx context.Context, req RegisterInput) (*dto.LoginResp, *authcontracts.Session, error)
-	Login(ctx context.Context, req LoginInput) (*dto.LoginResp, *authcontracts.Session, error)
+	Register(ctx context.Context, req RegisterInput) (*LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req LoginInput) (*LoginResp, *authcontracts.Session, error)
 	ValidatePassword(user *model.User, password string) bool
 }
 
@@ -48,7 +47,7 @@ func NewService(users authUserRepository, tokenService authcontracts.TokenServic
 	}
 }
 
-func (s *service) Register(ctx context.Context, req RegisterInput) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *service) Register(ctx context.Context, req RegisterInput) (*LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_register_attempt", zap.String("username", req.Username))
 
 	user := &model.User{
@@ -84,7 +83,7 @@ func (s *service) Register(ctx context.Context, req RegisterInput) (*dto.LoginRe
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) Login(ctx context.Context, req LoginInput) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_login_attempt", zap.String("username", req.Username))
 
 	user, err := s.users.FindByUsername(ctx, req.Username)
@@ -144,7 +143,7 @@ func (s *service) ValidatePassword(user *model.User, password string) bool {
 	return user.CheckPassword(password)
 }
 
-func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.Session, error) {
+func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*LoginResp, *authcontracts.Session, error) {
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))

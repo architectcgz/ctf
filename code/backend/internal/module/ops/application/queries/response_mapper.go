@@ -3,7 +3,6 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -17,8 +16,8 @@ import (
 type notificationResponseMapper interface {
 	// goverter:ignore Content
 	// goverter:ignore Unread
-	ToNotificationInfo(source model.Notification) dto.NotificationInfo
-	ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo
+	ToNotificationInfo(source model.Notification) NotificationInfo
+	ToNotificationInfoPtr(source *model.Notification) *NotificationInfo
 }
 
 var notificationMapper notificationResponseMapper

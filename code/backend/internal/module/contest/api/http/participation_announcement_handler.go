@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
@@ -16,7 +15,7 @@ func (h *ParticipationHandler) CreateAnnouncement(c *gin.Context) {
 		response.InvalidParams(c, "无效的竞赛ID")
 		return
 	}
-	var req dto.CreateContestAnnouncementReq
+	var req CreateContestAnnouncementReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

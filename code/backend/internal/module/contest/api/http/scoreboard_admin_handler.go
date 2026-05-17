@@ -3,7 +3,6 @@ package http
 import (
 	"strconv"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,7 @@ func (h *Handler) FreezeScoreboard(c *gin.Context) {
 		return
 	}
 
-	var req dto.FreezeReq
+	var req FreezeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

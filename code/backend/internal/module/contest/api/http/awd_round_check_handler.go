@@ -2,7 +2,6 @@ package http
 
 import (
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
@@ -12,7 +11,7 @@ import (
 
 func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	req := dto.RunCurrentAWDCheckerReq{}
+	req := RunCurrentAWDCheckerReq{}
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.ValidationError(c, err)
@@ -50,7 +49,7 @@ func (h *AWDHandler) RunRoundChecks(c *gin.Context) {
 
 func (h *AWDHandler) PreviewChecker(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	var req dto.PreviewAWDCheckerReq
+	var req PreviewAWDCheckerReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

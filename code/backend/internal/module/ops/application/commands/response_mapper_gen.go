@@ -3,41 +3,38 @@
 
 package commands
 
-import (
-	dto "ctf-platform/internal/dto"
-	model "ctf-platform/internal/model"
-)
+import model "ctf-platform/internal/model"
 
 type notificationResponseMapperImpl struct{}
 
-func (c *notificationResponseMapperImpl) ToAdminNotificationPublishResp(source adminNotificationPublishRespSource) dto.AdminNotificationPublishResp {
-	var dtoAdminNotificationPublishResp dto.AdminNotificationPublishResp
-	dtoAdminNotificationPublishResp.BatchID = source.BatchID
-	dtoAdminNotificationPublishResp.RecipientCount = source.RecipientCount
-	return dtoAdminNotificationPublishResp
+func (c *notificationResponseMapperImpl) ToAdminNotificationPublishResp(source adminNotificationPublishRespSource) AdminNotificationPublishResp {
+	var commandsAdminNotificationPublishResp AdminNotificationPublishResp
+	commandsAdminNotificationPublishResp.BatchID = source.BatchID
+	commandsAdminNotificationPublishResp.RecipientCount = source.RecipientCount
+	return commandsAdminNotificationPublishResp
 }
-func (c *notificationResponseMapperImpl) ToAdminNotificationPublishRespPtr(source adminNotificationPublishRespSource) *dto.AdminNotificationPublishResp {
-	dtoAdminNotificationPublishResp := c.ToAdminNotificationPublishResp(source)
-	return &dtoAdminNotificationPublishResp
+func (c *notificationResponseMapperImpl) ToAdminNotificationPublishRespPtr(source adminNotificationPublishRespSource) *AdminNotificationPublishResp {
+	commandsAdminNotificationPublishResp := c.ToAdminNotificationPublishResp(source)
+	return &commandsAdminNotificationPublishResp
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) dto.NotificationInfo {
-	var dtoNotificationInfo dto.NotificationInfo
-	dtoNotificationInfo.ID = source.ID
-	dtoNotificationInfo.Type = source.Type
-	dtoNotificationInfo.Title = source.Title
+func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) NotificationInfo {
+	var commandsNotificationInfo NotificationInfo
+	commandsNotificationInfo.ID = source.ID
+	commandsNotificationInfo.Type = source.Type
+	commandsNotificationInfo.Title = source.Title
 	if source.Link != nil {
 		xstring := *source.Link
-		dtoNotificationInfo.Link = &xstring
+		commandsNotificationInfo.Link = &xstring
 	}
-	dtoNotificationInfo.CreatedAt = CopyTime(source.CreatedAt)
-	dtoNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
-	return dtoNotificationInfo
+	commandsNotificationInfo.CreatedAt = CopyTime(source.CreatedAt)
+	commandsNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
+	return commandsNotificationInfo
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo {
-	var pDtoNotificationInfo *dto.NotificationInfo
+func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *NotificationInfo {
+	var pCommandsNotificationInfo *NotificationInfo
 	if source != nil {
-		dtoNotificationInfo := c.ToNotificationInfo((*source))
-		pDtoNotificationInfo = &dtoNotificationInfo
+		commandsNotificationInfo := c.ToNotificationInfo((*source))
+		pCommandsNotificationInfo = &commandsNotificationInfo
 	}
-	return pDtoNotificationInfo
+	return pCommandsNotificationInfo
 }

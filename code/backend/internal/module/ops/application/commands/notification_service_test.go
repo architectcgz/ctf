@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -329,10 +328,10 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
 			Rules: []NotificationAudienceRuleInput{
-				{Type: dto.NotificationAudienceTypeAll},
-				{Type: dto.NotificationAudienceTypeRole, Values: []string{model.RoleTeacher}},
-				{Type: dto.NotificationAudienceTypeClass, Values: []string{"ClassA"}},
-				{Type: dto.NotificationAudienceTypeUser, Values: []string{"4", "5", "999"}},
+				{Type: NotificationAudienceTypeAll},
+				{Type: NotificationAudienceTypeRole, Values: []string{model.RoleTeacher}},
+				{Type: NotificationAudienceTypeClass, Values: []string{"ClassA"}},
+				{Type: NotificationAudienceTypeUser, Values: []string{"4", "5", "999"}},
 			},
 		},
 	})
@@ -397,7 +396,7 @@ func TestNotificationServicePublishAdminNotificationRejectsInvalidAudienceRule(t
 		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
 			Rules: []NotificationAudienceRuleInput{
-				{Type: dto.NotificationAudienceTypeRole},
+				{Type: NotificationAudienceTypeRole},
 			},
 		},
 	})
@@ -419,7 +418,7 @@ func TestNotificationServicePublishAdminNotificationRejectsUnknownRoleValue(t *t
 		AudienceRules: NotificationAudienceRulesInput{
 			Mode: "union",
 			Rules: []NotificationAudienceRuleInput{
-				{Type: dto.NotificationAudienceTypeRole, Values: []string{"superadmin"}},
+				{Type: NotificationAudienceTypeRole, Values: []string{"superadmin"}},
 			},
 		},
 	})

@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
@@ -56,7 +55,7 @@ func TestNotificationServiceGetNotificationsNormalizesPagination(t *testing.T) {
 		MaxPageSize:     100,
 	}, zap.NewNop())
 
-	items, total, page, pageSize, err := service.GetNotifications(context.Background(), 7, &dto.NotificationQuery{
+	items, total, page, pageSize, err := service.GetNotifications(context.Background(), 7, &NotificationQuery{
 		Page:     0,
 		PageSize: 999,
 	})

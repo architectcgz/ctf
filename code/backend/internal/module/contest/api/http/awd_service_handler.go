@@ -3,14 +3,13 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
 func (h *AWDHandler) UpsertServiceCheck(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	roundID := c.GetInt64("rid")
-	var req dto.UpsertAWDServiceCheckReq
+	var req UpsertAWDServiceCheckReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

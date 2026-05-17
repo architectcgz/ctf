@@ -5,14 +5,14 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
+	contestcommands "ctf-platform/internal/module/contest/application/commands"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
 
 type submissionService interface {
-	SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error)
+	SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*contestcommands.SubmissionResp, error)
 }
 
 type SubmissionHandler struct {
@@ -39,7 +39,7 @@ func (h *SubmissionHandler) SubmitFlag(c *gin.Context) {
 
 	userID := authctx.MustCurrentUser(c).UserID
 
-	var req dto.SubmitFlagReq
+	var req SubmitFlagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

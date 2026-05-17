@@ -3,7 +3,6 @@ package http
 import (
 	"strconv"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -43,7 +42,7 @@ func (h *ChallengeHandler) UpdatePoints(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateContestChallengeReq
+	var req UpdateContestChallengeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

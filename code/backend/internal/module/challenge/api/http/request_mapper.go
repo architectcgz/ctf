@@ -14,19 +14,20 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type ChallengeRequestMapper interface {
-	ToCreateChallengeInput(source dto.CreateChallengeReq) challengecmd.CreateChallengeInput
-	ToUpdateChallengeInput(source dto.UpdateChallengeReq) challengecmd.UpdateChallengeInput
-	ToCreateAWDChallengeInput(source dto.CreateAWDChallengeReq) challengecmd.CreateAWDChallengeInput
-	ToUpdateAWDChallengeInput(source dto.UpdateAWDChallengeReq) challengecmd.UpdateAWDChallengeInput
-	ToCreateTagInput(source dto.CreateTagReq) challengecmd.CreateTagInput
-	ToSaveChallengeTopologyInput(source dto.SaveChallengeTopologyReq) challengecmd.SaveChallengeTopologyInput
-	ToUpsertEnvironmentTemplateInput(source dto.UpsertEnvironmentTemplateReq) challengecmd.UpsertEnvironmentTemplateInput
+	ToCreateChallengeInput(source CreateChallengeReq) challengecmd.CreateChallengeInput
+	ToUpdateChallengeInput(source UpdateChallengeReq) challengecmd.UpdateChallengeInput
+	ToCreateAWDChallengeInput(source CreateAWDChallengeReq) challengecmd.CreateAWDChallengeInput
+	ToUpdateAWDChallengeInput(source UpdateAWDChallengeReq) challengecmd.UpdateAWDChallengeInput
+	ToCreateTagInput(source CreateTagReq) challengecmd.CreateTagInput
+	ToSaveChallengeTopologyInput(source SaveChallengeTopologyReq) challengecmd.SaveChallengeTopologyInput
+	ToUpsertEnvironmentTemplateInput(source UpsertEnvironmentTemplateReq) challengecmd.UpsertEnvironmentTemplateInput
 	ToUpsertOfficialWriteupInput(source challengecontracts.UpsertChallengeWriteupReq) challengecmd.UpsertOfficialWriteupInput
 	ToUpsertSubmissionWriteupInput(source challengecontracts.UpsertSubmissionWriteupReq) challengecmd.UpsertSubmissionWriteupInput
-	ToListAWDChallengesInput(source dto.AWDChallengeQuery) challengeqry.ListAWDChallengesInput
-	ToCreateImageInput(source dto.CreateImageReq) challengecmd.CreateImageInput
-	ToUpdateImageInput(source dto.UpdateImageReq) challengecmd.UpdateImageInput
-	ToListImagesInput(source dto.ImageQuery) challengeqry.ListImagesInput
+	ToChallengeQuery(source ChallengeQuery) dto.ChallengeQuery
+	ToListAWDChallengesInput(source AWDChallengeQuery) challengeqry.ListAWDChallengesInput
+	ToCreateImageInput(source CreateImageReq) challengecmd.CreateImageInput
+	ToUpdateImageInput(source UpdateImageReq) challengecmd.UpdateImageInput
+	ToListImagesInput(source ImageQuery) challengeqry.ListImagesInput
 }
 
 var challengeRequestMapper ChallengeRequestMapper

@@ -3,31 +3,28 @@
 
 package queries
 
-import (
-	dto "ctf-platform/internal/dto"
-	model "ctf-platform/internal/model"
-)
+import model "ctf-platform/internal/model"
 
 type notificationResponseMapperImpl struct{}
 
-func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) dto.NotificationInfo {
-	var dtoNotificationInfo dto.NotificationInfo
-	dtoNotificationInfo.ID = source.ID
-	dtoNotificationInfo.Type = source.Type
-	dtoNotificationInfo.Title = source.Title
+func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) NotificationInfo {
+	var queriesNotificationInfo NotificationInfo
+	queriesNotificationInfo.ID = source.ID
+	queriesNotificationInfo.Type = source.Type
+	queriesNotificationInfo.Title = source.Title
 	if source.Link != nil {
 		xstring := *source.Link
-		dtoNotificationInfo.Link = &xstring
+		queriesNotificationInfo.Link = &xstring
 	}
-	dtoNotificationInfo.CreatedAt = CopyTime(source.CreatedAt)
-	dtoNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
-	return dtoNotificationInfo
+	queriesNotificationInfo.CreatedAt = CopyTime(source.CreatedAt)
+	queriesNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
+	return queriesNotificationInfo
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *dto.NotificationInfo {
-	var pDtoNotificationInfo *dto.NotificationInfo
+func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *NotificationInfo {
+	var pQueriesNotificationInfo *NotificationInfo
 	if source != nil {
-		dtoNotificationInfo := c.ToNotificationInfo((*source))
-		pDtoNotificationInfo = &dtoNotificationInfo
+		queriesNotificationInfo := c.ToNotificationInfo((*source))
+		pQueriesNotificationInfo = &queriesNotificationInfo
 	}
-	return pDtoNotificationInfo
+	return pQueriesNotificationInfo
 }

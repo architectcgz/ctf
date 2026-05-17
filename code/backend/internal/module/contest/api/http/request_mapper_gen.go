@@ -413,7 +413,7 @@ func (c *ContestRequestMapperImpl) ToAWDWorkspaceTeamResp(source queries.AWDWork
 	dtoContestAWDWorkspaceTeamResp.TeamName = source.TeamName
 	return dtoContestAWDWorkspaceTeamResp
 }
-func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source dto.AddContestChallengeReq) commands.AddContestChallengeInput {
+func (c *ContestRequestMapperImpl) ToAddContestChallengeInput(source AddContestChallengeReq) commands.AddContestChallengeInput {
 	var commandsAddContestChallengeInput commands.AddContestChallengeInput
 	commandsAddContestChallengeInput.ChallengeID = source.ChallengeID
 	commandsAddContestChallengeInput.Points = source.Points
@@ -616,7 +616,7 @@ func (c *ContestRequestMapperImpl) ToContestSolvedProgressItem(source queries.Co
 	dtoContestSolvedProgressItem.PointsEarned = source.PointsEarned
 	return dtoContestSolvedProgressItem
 }
-func (c *ContestRequestMapperImpl) ToCreateAWDRoundInput(source dto.CreateAWDRoundReq) commands.CreateAWDRoundInput {
+func (c *ContestRequestMapperImpl) ToCreateAWDRoundInput(source CreateAWDRoundReq) commands.CreateAWDRoundInput {
 	var commandsCreateAWDRoundInput commands.CreateAWDRoundInput
 	commandsCreateAWDRoundInput.RoundNumber = source.RoundNumber
 	if source.Status != nil {
@@ -641,13 +641,13 @@ func (c *ContestRequestMapperImpl) ToCreateAWDRoundInput(source dto.CreateAWDRou
 	}
 	return commandsCreateAWDRoundInput
 }
-func (c *ContestRequestMapperImpl) ToCreateAnnouncementInput(source dto.CreateContestAnnouncementReq) commands.CreateAnnouncementInput {
+func (c *ContestRequestMapperImpl) ToCreateAnnouncementInput(source CreateContestAnnouncementReq) commands.CreateAnnouncementInput {
 	var commandsCreateAnnouncementInput commands.CreateAnnouncementInput
 	commandsCreateAnnouncementInput.Title = source.Title
 	commandsCreateAnnouncementInput.Content = source.Content
 	return commandsCreateAnnouncementInput
 }
-func (c *ContestRequestMapperImpl) ToCreateAttackLogInput(source dto.CreateAWDAttackLogReq) commands.CreateAttackLogInput {
+func (c *ContestRequestMapperImpl) ToCreateAttackLogInput(source CreateAWDAttackLogReq) commands.CreateAttackLogInput {
 	var commandsCreateAttackLogInput commands.CreateAttackLogInput
 	commandsCreateAttackLogInput.AttackerTeamID = source.AttackerTeamID
 	commandsCreateAttackLogInput.VictimTeamID = source.VictimTeamID
@@ -657,7 +657,7 @@ func (c *ContestRequestMapperImpl) ToCreateAttackLogInput(source dto.CreateAWDAt
 	commandsCreateAttackLogInput.IsSuccess = source.IsSuccess
 	return commandsCreateAttackLogInput
 }
-func (c *ContestRequestMapperImpl) ToCreateContestAWDServiceInput(source dto.CreateContestAWDServiceReq) commands.CreateContestAWDServiceInput {
+func (c *ContestRequestMapperImpl) ToCreateContestAWDServiceInput(source CreateContestAWDServiceReq) commands.CreateContestAWDServiceInput {
 	var commandsCreateContestAWDServiceInput commands.CreateContestAWDServiceInput
 	commandsCreateContestAWDServiceInput.AWDChallengeID = source.AWDChallengeID
 	commandsCreateContestAWDServiceInput.Points = source.Points
@@ -686,7 +686,7 @@ func (c *ContestRequestMapperImpl) ToCreateContestAWDServiceInput(source dto.Cre
 	}
 	return commandsCreateContestAWDServiceInput
 }
-func (c *ContestRequestMapperImpl) ToCreateContestInput(source dto.CreateContestReq) commands.CreateContestInput {
+func (c *ContestRequestMapperImpl) ToCreateContestInput(source CreateContestReq) commands.CreateContestInput {
 	var commandsCreateContestInput commands.CreateContestInput
 	commandsCreateContestInput.Title = source.Title
 	commandsCreateContestInput.Description = source.Description
@@ -695,13 +695,13 @@ func (c *ContestRequestMapperImpl) ToCreateContestInput(source dto.CreateContest
 	commandsCreateContestInput.EndTime = CopyTime(source.EndTime)
 	return commandsCreateContestInput
 }
-func (c *ContestRequestMapperImpl) ToCreateTeamInput(source dto.CreateTeamReq) commands.CreateTeamInput {
+func (c *ContestRequestMapperImpl) ToCreateTeamInput(source CreateTeamReq) commands.CreateTeamInput {
 	var commandsCreateTeamInput commands.CreateTeamInput
 	commandsCreateTeamInput.Name = source.Name
 	commandsCreateTeamInput.MaxMembers = source.MaxMembers
 	return commandsCreateTeamInput
 }
-func (c *ContestRequestMapperImpl) ToListAWDTrafficEventsInput(source dto.ListAWDTrafficEventsReq) queries.ListAWDTrafficEventsInput {
+func (c *ContestRequestMapperImpl) ToListAWDTrafficEventsInput(source ListAWDTrafficEventsReq) queries.ListAWDTrafficEventsInput {
 	var queriesListAWDTrafficEventsInput queries.ListAWDTrafficEventsInput
 	queriesListAWDTrafficEventsInput.AttackerTeamID = source.AttackerTeamID
 	queriesListAWDTrafficEventsInput.VictimTeamID = source.VictimTeamID
@@ -730,7 +730,7 @@ func (c *ContestRequestMapperImpl) ToMyTeamRespPtr(source *queries.MyTeamResult)
 	}
 	return pDtoMyTeamResp
 }
-func (c *ContestRequestMapperImpl) ToPreviewCheckerInput(source dto.PreviewAWDCheckerReq) commands.PreviewCheckerInput {
+func (c *ContestRequestMapperImpl) ToPreviewCheckerInput(source PreviewAWDCheckerReq) commands.PreviewCheckerInput {
 	var commandsPreviewCheckerInput commands.PreviewCheckerInput
 	commandsPreviewCheckerInput.AWDChallengeID = source.AWDChallengeID
 	commandsPreviewCheckerInput.ServiceID = source.ServiceID
@@ -757,12 +757,12 @@ func (c *ContestRequestMapperImpl) ToRegistrationPageRespPtr(source *queries.Reg
 	}
 	return pDtoPageResult
 }
-func (c *ContestRequestMapperImpl) ToReviewRegistrationInput(source dto.ReviewContestRegistrationReq) commands.ReviewRegistrationInput {
+func (c *ContestRequestMapperImpl) ToReviewRegistrationInput(source ReviewContestRegistrationReq) commands.ReviewRegistrationInput {
 	var commandsReviewRegistrationInput commands.ReviewRegistrationInput
 	commandsReviewRegistrationInput.Status = source.Status
 	return commandsReviewRegistrationInput
 }
-func (c *ContestRequestMapperImpl) ToRunCurrentRoundChecksInput(source dto.RunCurrentAWDCheckerReq) commands.RunCurrentRoundChecksInput {
+func (c *ContestRequestMapperImpl) ToRunCurrentRoundChecksInput(source RunCurrentAWDCheckerReq) commands.RunCurrentRoundChecksInput {
 	var commandsRunCurrentRoundChecksInput commands.RunCurrentRoundChecksInput
 	if source.ForceOverride != nil {
 		xbool := *source.ForceOverride
@@ -818,7 +818,7 @@ func (c *ContestRequestMapperImpl) ToStringAnyMap(source map[string]interface{})
 	}
 	return mapStringUnknown
 }
-func (c *ContestRequestMapperImpl) ToSubmitAttackInput(source dto.SubmitAWDAttackReq) commands.SubmitAttackInput {
+func (c *ContestRequestMapperImpl) ToSubmitAttackInput(source SubmitAWDAttackReq) commands.SubmitAttackInput {
 	var commandsSubmitAttackInput commands.SubmitAttackInput
 	commandsSubmitAttackInput.VictimTeamID = source.VictimTeamID
 	commandsSubmitAttackInput.Flag = source.Flag
@@ -871,7 +871,7 @@ func (c *ContestRequestMapperImpl) ToTeamResps(source []*queries.TeamResult) []*
 	}
 	return pDtoTeamRespList
 }
-func (c *ContestRequestMapperImpl) ToUpdateContestAWDServiceInput(source dto.UpdateContestAWDServiceReq) commands.UpdateContestAWDServiceInput {
+func (c *ContestRequestMapperImpl) ToUpdateContestAWDServiceInput(source UpdateContestAWDServiceReq) commands.UpdateContestAWDServiceInput {
 	var commandsUpdateContestAWDServiceInput commands.UpdateContestAWDServiceInput
 	if source.AWDChallengeID != nil {
 		xint64 := *source.AWDChallengeID
@@ -912,7 +912,7 @@ func (c *ContestRequestMapperImpl) ToUpdateContestAWDServiceInput(source dto.Upd
 	}
 	return commandsUpdateContestAWDServiceInput
 }
-func (c *ContestRequestMapperImpl) ToUpdateContestChallengeInput(source dto.UpdateContestChallengeReq) commands.UpdateContestChallengeInput {
+func (c *ContestRequestMapperImpl) ToUpdateContestChallengeInput(source UpdateContestChallengeReq) commands.UpdateContestChallengeInput {
 	var commandsUpdateContestChallengeInput commands.UpdateContestChallengeInput
 	if source.Points != nil {
 		xint := *source.Points
@@ -928,7 +928,7 @@ func (c *ContestRequestMapperImpl) ToUpdateContestChallengeInput(source dto.Upda
 	}
 	return commandsUpdateContestChallengeInput
 }
-func (c *ContestRequestMapperImpl) ToUpdateContestInput(source dto.UpdateContestReq) commands.UpdateContestInput {
+func (c *ContestRequestMapperImpl) ToUpdateContestInput(source UpdateContestReq) commands.UpdateContestInput {
 	var commandsUpdateContestInput commands.UpdateContestInput
 	if source.Title != nil {
 		xstring := *source.Title
@@ -958,7 +958,7 @@ func (c *ContestRequestMapperImpl) ToUpdateContestInput(source dto.UpdateContest
 	}
 	return commandsUpdateContestInput
 }
-func (c *ContestRequestMapperImpl) ToUpsertServiceCheckInput(source dto.UpsertAWDServiceCheckReq) commands.UpsertServiceCheckInput {
+func (c *ContestRequestMapperImpl) ToUpsertServiceCheckInput(source UpsertAWDServiceCheckReq) commands.UpsertServiceCheckInput {
 	var commandsUpsertServiceCheckInput commands.UpsertServiceCheckInput
 	commandsUpsertServiceCheckInput.TeamID = source.TeamID
 	commandsUpsertServiceCheckInput.ServiceID = source.ServiceID

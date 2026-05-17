@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
@@ -12,9 +11,9 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type AuthRequestMapper interface {
-	ToRegisterInput(source dto.RegisterReq) authcmd.RegisterInput
-	ToLoginInput(source dto.LoginReq) authcmd.LoginInput
-	ToChangePasswordInput(source dto.ChangePasswordReq) identitycontracts.ChangePasswordInput
+	ToRegisterInput(source RegisterReq) authcmd.RegisterInput
+	ToLoginInput(source LoginReq) authcmd.LoginInput
+	ToChangePasswordInput(source ChangePasswordReq) identitycontracts.ChangePasswordInput
 }
 
 var authRequestMapper AuthRequestMapper

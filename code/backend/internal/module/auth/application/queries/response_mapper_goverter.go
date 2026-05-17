@@ -1,7 +1,5 @@
 package queries
 
-import "ctf-platform/internal/dto"
-
 type casStatusSource struct {
 	Provider      string
 	Enabled       bool
@@ -23,11 +21,11 @@ type casLoginSource struct {
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :queries
 type authQueryResponseMapper interface {
-	ToCASStatusResp(source casStatusSource) dto.CASStatusResp
-	ToCASStatusRespPtr(source casStatusSource) *dto.CASStatusResp
+	ToCASStatusResp(source casStatusSource) CASStatusResp
+	ToCASStatusRespPtr(source casStatusSource) *CASStatusResp
 
-	ToCASLoginResp(source casLoginSource) dto.CASLoginResp
-	ToCASLoginRespPtr(source casLoginSource) *dto.CASLoginResp
+	ToCASLoginResp(source casLoginSource) CASLoginResp
+	ToCASLoginRespPtr(source casLoginSource) *CASLoginResp
 }
 
 var authQueryResponseMapperInst authQueryResponseMapper

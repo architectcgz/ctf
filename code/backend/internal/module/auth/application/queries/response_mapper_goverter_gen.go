@@ -3,32 +3,30 @@
 
 package queries
 
-import dto "ctf-platform/internal/dto"
-
 type authQueryResponseMapperImpl struct{}
 
-func (c *authQueryResponseMapperImpl) ToCASLoginResp(source casLoginSource) dto.CASLoginResp {
-	var dtoCASLoginResp dto.CASLoginResp
-	dtoCASLoginResp.Provider = source.Provider
-	dtoCASLoginResp.RedirectURL = source.RedirectURL
-	dtoCASLoginResp.CallbackURL = source.CallbackURL
-	return dtoCASLoginResp
+func (c *authQueryResponseMapperImpl) ToCASLoginResp(source casLoginSource) CASLoginResp {
+	var queriesCASLoginResp CASLoginResp
+	queriesCASLoginResp.Provider = source.Provider
+	queriesCASLoginResp.RedirectURL = source.RedirectURL
+	queriesCASLoginResp.CallbackURL = source.CallbackURL
+	return queriesCASLoginResp
 }
-func (c *authQueryResponseMapperImpl) ToCASLoginRespPtr(source casLoginSource) *dto.CASLoginResp {
-	dtoCASLoginResp := c.ToCASLoginResp(source)
-	return &dtoCASLoginResp
+func (c *authQueryResponseMapperImpl) ToCASLoginRespPtr(source casLoginSource) *CASLoginResp {
+	queriesCASLoginResp := c.ToCASLoginResp(source)
+	return &queriesCASLoginResp
 }
-func (c *authQueryResponseMapperImpl) ToCASStatusResp(source casStatusSource) dto.CASStatusResp {
-	var dtoCASStatusResp dto.CASStatusResp
-	dtoCASStatusResp.Provider = source.Provider
-	dtoCASStatusResp.Enabled = source.Enabled
-	dtoCASStatusResp.Configured = source.Configured
-	dtoCASStatusResp.AutoProvision = source.AutoProvision
-	dtoCASStatusResp.LoginPath = source.LoginPath
-	dtoCASStatusResp.CallbackPath = source.CallbackPath
-	return dtoCASStatusResp
+func (c *authQueryResponseMapperImpl) ToCASStatusResp(source casStatusSource) CASStatusResp {
+	var queriesCASStatusResp CASStatusResp
+	queriesCASStatusResp.Provider = source.Provider
+	queriesCASStatusResp.Enabled = source.Enabled
+	queriesCASStatusResp.Configured = source.Configured
+	queriesCASStatusResp.AutoProvision = source.AutoProvision
+	queriesCASStatusResp.LoginPath = source.LoginPath
+	queriesCASStatusResp.CallbackPath = source.CallbackPath
+	return queriesCASStatusResp
 }
-func (c *authQueryResponseMapperImpl) ToCASStatusRespPtr(source casStatusSource) *dto.CASStatusResp {
-	dtoCASStatusResp := c.ToCASStatusResp(source)
-	return &dtoCASStatusResp
+func (c *authQueryResponseMapperImpl) ToCASStatusRespPtr(source casStatusSource) *CASStatusResp {
+	queriesCASStatusResp := c.ToCASStatusResp(source)
+	return &queriesCASStatusResp
 }

@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
@@ -21,7 +20,7 @@ func (h *AWDHandler) GetTrafficSummary(c *gin.Context) {
 func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	roundID := c.GetInt64("rid")
-	var req dto.ListAWDTrafficEventsReq
+	var req ListAWDTrafficEventsReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return

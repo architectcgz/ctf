@@ -32,7 +32,7 @@ func contestAWDServiceResultsToDTO(results []contestqry.ContestAWDServiceResult)
 
 func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	var req dto.CreateContestAWDServiceReq
+	var req CreateContestAWDServiceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -50,7 +50,7 @@ func (h *AWDHandler) CreateContestAWDService(c *gin.Context) {
 func (h *AWDHandler) UpdateContestAWDService(c *gin.Context) {
 	contestID := c.GetInt64("id")
 	serviceID := c.GetInt64("sid")
-	var req dto.UpdateContestAWDServiceReq
+	var req UpdateContestAWDServiceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

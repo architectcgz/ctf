@@ -31,7 +31,7 @@ func NewTagHandler(commands tagCommandService, queries tagQueryService) *TagHand
 }
 
 func (h *TagHandler) CreateTag(c *gin.Context) {
-	var req dto.CreateTagReq
+	var req CreateTagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -47,7 +47,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 }
 
 func (h *TagHandler) ListTags(c *gin.Context) {
-	var query dto.TagQuery
+	var query TagQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -69,7 +69,7 @@ func (h *TagHandler) AttachTags(c *gin.Context) {
 		return
 	}
 
-	var req dto.AttachTagsReq
+	var req AttachTagsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -90,7 +90,7 @@ func (h *TagHandler) DetachTags(c *gin.Context) {
 		return
 	}
 
-	var req dto.AttachTagsReq
+	var req AttachTagsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

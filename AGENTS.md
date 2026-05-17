@@ -40,6 +40,15 @@
 - 若当前仓库实际不在 `main`，先说明当前所在分支，再按用户意图继续执行。
 - 若本地已启动前端开发服务，默认复用当前服务以便用户立即看到页面变化，不主动中断。
 
+### Completion Validation Gate
+
+- “完成”是强约束，不是描述性用语：未执行完约定验证并通过前，不得宣称完成、已修复或可提交。
+- 涉及 mapper / DTO / contract 边界迁移的任务，完成前至少执行以下三类验证：
+  - `go generate`：受影响包（至少覆盖本次改动触达的 mapper 包）
+  - `go test`：受影响模块（最小充分范围）
+  - 全局 mapper 委托约束：`go test ./internal/module -run TestMapperWrappersFollowGlobalDelegationPolicy -count=1`
+- 回复中必须给出本次实际执行的验证命令与结果；不能用“理论上通过”“应当通过”替代执行证据。
+
 ## File Placement Rules
 
 - 文档写作、目录归属、命名和验证细则以 `docs/文档规范.md` 为准；新增、移动、删除或修改文档前，必须先按其中“文档修改前置读取协议”和“新增路径登记协议”执行。

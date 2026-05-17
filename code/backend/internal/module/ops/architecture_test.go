@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -168,6 +169,81 @@ func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
 			t.Fatalf("ops runtime should delegate through %s", marker)
 		}
 	}
+}
+
+func TestNotificationHTTPResponseMapperUsesGoverterDelegationOnly(t *testing.T) {
+	t.Parallel()
+
+	mapperFile := filepath.Join("api", "http", "notification_response_mapper.go")
+	assertFileContains(t, mapperFile, "type notificationHTTPResponseMapper interface")
+	assertFileContains(t, mapperFile, "var notificationResponseMapper notificationHTTPResponseMapper")
+
+	assertMapperDelegatesOnly(t, mapperFile, "toNotificationInfo", "notificationResponseMapper", "ToNotificationInfo")
+	assertMapperDelegatesOnly(t, mapperFile, "toNotificationInfos", "notificationResponseMapper", "ToNotificationInfos")
+	assertMapperDelegatesOnly(t, mapperFile, "toAdminNotificationPublishResp", "notificationResponseMapper", "ToAdminNotificationPublishRespPtr")
+}
+
+func assertFileContains(t *testing.T, filePath string, marker string) {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	if !strings.Contains(string(content), marker) {
+		t.Fatalf("%s must contain marker %q", filePath, marker)
+	}
+}
+
+func assertMapperDelegatesOnly(t *testing.T, filePath string, funcName string, mapperVar string, mapperMethod string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.AllErrors)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, decl := range fileNode.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name == nil || fn.Name.Name != funcName {
+			continue
+		}
+
+		if fn.Body == nil || len(fn.Body.List) != 1 {
+			t.Fatalf("%s in %s must contain exactly one statement", funcName, filePath)
+		}
+		ret, ok := fn.Body.List[0].(*ast.ReturnStmt)
+		if !ok || len(ret.Results) != 1 {
+			t.Fatalf("%s in %s must contain exactly one return value", funcName, filePath)
+		}
+
+		call, ok := ret.Results[0].(*ast.CallExpr)
+		if !ok {
+			t.Fatalf("%s in %s must return a mapper call", funcName, filePath)
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			t.Fatalf("%s in %s must call mapper selector", funcName, filePath)
+		}
+		mapperIdent, ok := sel.X.(*ast.Ident)
+		if !ok || mapperIdent.Name != mapperVar {
+			t.Fatalf("%s in %s must call %s", funcName, filePath, mapperVar)
+		}
+		if sel.Sel == nil || sel.Sel.Name != mapperMethod {
+			t.Fatalf("%s in %s must call mapper method %s", funcName, filePath, mapperMethod)
+		}
+		if len(call.Args) != 1 {
+			t.Fatalf("%s in %s must pass exactly one argument", funcName, filePath)
+		}
+		arg, ok := call.Args[0].(*ast.Ident)
+		if !ok || arg.Name != "source" {
+			t.Fatalf("%s in %s must pass source directly", funcName, filePath)
+		}
+		return
+	}
+
+	t.Fatalf("function %s not found in %s", funcName, filePath)
 }
 
 func assertFileImports(t *testing.T, filePath string, expectedImport string) {

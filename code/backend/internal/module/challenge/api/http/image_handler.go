@@ -35,7 +35,7 @@ func NewImageHandler(commands imageCommandService, queries imageQueryService) *I
 }
 
 func (h *ImageHandler) CreateImage(c *gin.Context) {
-	var req dto.CreateImageReq
+	var req CreateImageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -67,7 +67,7 @@ func (h *ImageHandler) GetImage(c *gin.Context) {
 }
 
 func (h *ImageHandler) ListImages(c *gin.Context) {
-	var query dto.ImageQuery
+	var query ImageQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -89,7 +89,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateImageReq
+	var req UpdateImageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

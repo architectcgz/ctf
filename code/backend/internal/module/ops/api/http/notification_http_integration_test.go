@@ -21,7 +21,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
@@ -58,10 +57,10 @@ type notificationTestWSTicketResponse struct {
 }
 
 type notificationTestPage struct {
-	List     []dto.NotificationInfo `json:"list"`
-	Total    int64                  `json:"total"`
-	Page     int                    `json:"page"`
-	PageSize int                    `json:"page_size"`
+	List     []NotificationInfo `json:"list"`
+	Total    int64              `json:"total"`
+	Page     int                `json:"page"`
+	PageSize int                `json:"page_size"`
 }
 
 type notificationTestWSEnvelope struct {
@@ -132,7 +131,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	}
 
 	pushMsg := receiveWSMessageByType(t, conn, "notification.created")
-	pushData := decodeNotificationJSON[dto.NotificationInfo](t, pushMsg.Payload)
+	pushData := decodeNotificationJSON[NotificationInfo](t, pushMsg.Payload)
 	if pushData.Title != "比赛开始提醒" {
 		t.Fatalf("unexpected push title: %s", pushData.Title)
 	}
@@ -175,7 +174,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	}
 
 	readMsg := receiveWSMessageByType(t, conn, "notification.read")
-	readData := decodeNotificationJSON[dto.NotificationInfo](t, readMsg.Payload)
+	readData := decodeNotificationJSON[NotificationInfo](t, readMsg.Payload)
 	if readData.Unread {
 		t.Fatal("expected read push to mark notification as read")
 	}
@@ -235,7 +234,7 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 		t.Fatalf("unexpected publish status: %d body=%s", adminResp.Code, adminResp.Body.String())
 	}
 	adminBody := decodeNotificationEnvelope(t, adminResp)
-	result := decodeNotificationJSON[dto.AdminNotificationPublishResp](t, adminBody.Data)
+	result := decodeNotificationJSON[AdminNotificationPublishResp](t, adminBody.Data)
 	if result.BatchID <= 0 || result.RecipientCount < 2 {
 		t.Fatalf("unexpected publish result: %+v", result)
 	}

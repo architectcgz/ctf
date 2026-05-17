@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 		return
 	}
 
-	var req dto.CreateTeamReq
+	var req CreateTeamReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -118,7 +117,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 	return nil
 }
 
-func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req PublishAdminNotificationInput) (*dto.AdminNotificationPublishResp, error) {
+func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req PublishAdminNotificationInput) (*AdminNotificationPublishResp, error) {
 	if req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
 		return nil, errcode.ErrInvalidParams
 	}
@@ -214,7 +213,7 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 	return nil
 }
 
-func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
+func toNotificationInfo(notification *model.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
 	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead
@@ -223,13 +222,13 @@ func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
 
 func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule NotificationAudienceRuleInput) ([]int64, error) {
 	switch rule.Type {
-	case dto.NotificationAudienceTypeAll:
+	case NotificationAudienceTypeAll:
 		userIDs, err := s.repo.ListAllUserIDs(ctx)
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
-	case dto.NotificationAudienceTypeRole:
+	case NotificationAudienceTypeRole:
 		roles, err := normalizeRoleSlice(rule.Values)
 		if err != nil {
 			return nil, errcode.ErrInvalidParams
@@ -242,7 +241,7 @@ func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule Noti
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
-	case dto.NotificationAudienceTypeClass:
+	case NotificationAudienceTypeClass:
 		classNames := normalizeStringSlice(rule.Values)
 		if len(classNames) == 0 {
 			return nil, errcode.ErrInvalidParams
@@ -252,7 +251,7 @@ func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule Noti
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
-	case dto.NotificationAudienceTypeUser:
+	case NotificationAudienceTypeUser:
 		userIDs, err := normalizeUserIDSlice(rule.Values)
 		if err != nil {
 			return nil, errcode.ErrInvalidParams

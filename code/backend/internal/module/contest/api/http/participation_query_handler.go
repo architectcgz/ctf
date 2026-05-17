@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	"ctf-platform/pkg/response"
 
@@ -17,7 +16,7 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.InvalidParams(c, "无效的竞赛ID")
 		return
 	}
-	var query dto.ContestRegistrationQuery
+	var query ContestRegistrationQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return

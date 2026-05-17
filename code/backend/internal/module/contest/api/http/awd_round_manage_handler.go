@@ -3,14 +3,13 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 )
 
 func (h *AWDHandler) CreateRound(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	var req dto.CreateAWDRoundReq
+	var req CreateAWDRoundReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

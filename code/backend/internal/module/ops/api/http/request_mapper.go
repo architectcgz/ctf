@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 )
 
@@ -11,7 +10,7 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type OpsRequestMapper interface {
-	ToPublishAdminNotificationInput(source dto.AdminNotificationPublishReq) opscmd.PublishAdminNotificationInput
+	ToPublishAdminNotificationInput(source AdminNotificationPublishReq) opscmd.PublishAdminNotificationInput
 }
 
 var opsRequestMapper OpsRequestMapper

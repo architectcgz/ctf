@@ -10,9 +10,9 @@ import (
 	xws "golang.org/x/net/websocket"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	"ctf-platform/pkg/response"
 	ctfws "ctf-platform/pkg/websocket"
 )
@@ -21,11 +21,11 @@ type notificationAuthContextKey struct{}
 
 type notificationCommandService interface {
 	MarkAsRead(ctx context.Context, userID, notificationID int64) error
-	PublishAdminNotification(ctx context.Context, actorUserID int64, req opscmd.PublishAdminNotificationInput) (*dto.AdminNotificationPublishResp, error)
+	PublishAdminNotification(ctx context.Context, actorUserID int64, req opscmd.PublishAdminNotificationInput) (*opscmd.AdminNotificationPublishResp, error)
 }
 
 type notificationQueryService interface {
-	GetNotifications(ctx context.Context, userID int64, query *dto.NotificationQuery) ([]dto.NotificationInfo, int64, int, int, error)
+	GetNotifications(ctx context.Context, userID int64, query *opsqry.NotificationQuery) ([]opsqry.NotificationInfo, int64, int, int, error)
 }
 
 type NotificationHandler struct {
@@ -52,7 +52,7 @@ func NewNotificationHandler(commands notificationCommandService, queries notific
 
 func (h *NotificationHandler) ListNotifications(c *gin.Context) {
 	authUser := authctx.MustCurrentUser(c)
-	var query dto.NotificationQuery
+	var query opsqry.NotificationQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -63,7 +63,7 @@ func (h *NotificationHandler) ListNotifications(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Page(c, items, total, page, pageSize)
+	response.Page(c, toNotificationInfos(items), total, page, pageSize)
 }
 
 func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
@@ -78,7 +78,7 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 
 func (h *NotificationHandler) PublishAdminNotification(c *gin.Context) {
 	authUser := authctx.MustCurrentUser(c)
-	var req dto.AdminNotificationPublishReq
+	var req AdminNotificationPublishReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -89,7 +89,7 @@ func (h *NotificationHandler) PublishAdminNotification(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, result)
+	response.Success(c, toAdminNotificationPublishResp(result))
 }
 
 func (h *NotificationHandler) ServeWS(c *gin.Context) {

@@ -22,7 +22,7 @@ func (h *Handler) GetContest(c *gin.Context) {
 }
 
 func (h *Handler) ListContests(c *gin.Context) {
-	var req dto.ListContestsReq
+	var req ListContestsReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return

@@ -41,7 +41,7 @@ func NewAWDChallengeHandler(commands awdChallengeCommandService, queries awdChal
 }
 
 func (h *AWDChallengeHandler) CreateChallenge(c *gin.Context) {
-	var req dto.CreateAWDChallengeReq
+	var req CreateAWDChallengeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -69,7 +69,7 @@ func (h *AWDChallengeHandler) GetChallenge(c *gin.Context) {
 }
 
 func (h *AWDChallengeHandler) ListChallenges(c *gin.Context) {
-	var req dto.AWDChallengeQuery
+	var req AWDChallengeQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -88,7 +88,7 @@ func (h *AWDChallengeHandler) UpdateChallenge(c *gin.Context) {
 		response.InvalidParams(c, "无效的 AWD Challenge ID")
 		return
 	}
-	var req dto.UpdateAWDChallengeReq
+	var req UpdateAWDChallengeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

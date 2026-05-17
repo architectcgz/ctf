@@ -3,14 +3,11 @@
 
 package http
 
-import (
-	dto "ctf-platform/internal/dto"
-	commands "ctf-platform/internal/module/ops/application/commands"
-)
+import commands "ctf-platform/internal/module/ops/application/commands"
 
 type OpsRequestMapperImpl struct{}
 
-func (c *OpsRequestMapperImpl) ToPublishAdminNotificationInput(source dto.AdminNotificationPublishReq) commands.PublishAdminNotificationInput {
+func (c *OpsRequestMapperImpl) ToPublishAdminNotificationInput(source AdminNotificationPublishReq) commands.PublishAdminNotificationInput {
 	var commandsPublishAdminNotificationInput commands.PublishAdminNotificationInput
 	commandsPublishAdminNotificationInput.Type = source.Type
 	commandsPublishAdminNotificationInput.Title = source.Title
@@ -19,10 +16,10 @@ func (c *OpsRequestMapperImpl) ToPublishAdminNotificationInput(source dto.AdminN
 		xstring := *source.Link
 		commandsPublishAdminNotificationInput.Link = &xstring
 	}
-	commandsPublishAdminNotificationInput.AudienceRules = c.dtoNotificationAudienceRulesReqToCommandsNotificationAudienceRulesInput(source.AudienceRules)
+	commandsPublishAdminNotificationInput.AudienceRules = c.httpNotificationAudienceRulesReqToCommandsNotificationAudienceRulesInput(source.AudienceRules)
 	return commandsPublishAdminNotificationInput
 }
-func (c *OpsRequestMapperImpl) dtoNotificationAudienceRuleReqToCommandsNotificationAudienceRuleInput(source dto.NotificationAudienceRuleReq) commands.NotificationAudienceRuleInput {
+func (c *OpsRequestMapperImpl) httpNotificationAudienceRuleReqToCommandsNotificationAudienceRuleInput(source NotificationAudienceRuleReq) commands.NotificationAudienceRuleInput {
 	var commandsNotificationAudienceRuleInput commands.NotificationAudienceRuleInput
 	commandsNotificationAudienceRuleInput.Type = source.Type
 	if source.Values != nil {
@@ -33,13 +30,13 @@ func (c *OpsRequestMapperImpl) dtoNotificationAudienceRuleReqToCommandsNotificat
 	}
 	return commandsNotificationAudienceRuleInput
 }
-func (c *OpsRequestMapperImpl) dtoNotificationAudienceRulesReqToCommandsNotificationAudienceRulesInput(source dto.NotificationAudienceRulesReq) commands.NotificationAudienceRulesInput {
+func (c *OpsRequestMapperImpl) httpNotificationAudienceRulesReqToCommandsNotificationAudienceRulesInput(source NotificationAudienceRulesReq) commands.NotificationAudienceRulesInput {
 	var commandsNotificationAudienceRulesInput commands.NotificationAudienceRulesInput
 	commandsNotificationAudienceRulesInput.Mode = source.Mode
 	if source.Rules != nil {
 		commandsNotificationAudienceRulesInput.Rules = make([]commands.NotificationAudienceRuleInput, len(source.Rules))
 		for i := 0; i < len(source.Rules); i++ {
-			commandsNotificationAudienceRulesInput.Rules[i] = c.dtoNotificationAudienceRuleReqToCommandsNotificationAudienceRuleInput(source.Rules[i])
+			commandsNotificationAudienceRulesInput.Rules[i] = c.httpNotificationAudienceRuleReqToCommandsNotificationAudienceRuleInput(source.Rules[i])
 		}
 	}
 	return commandsNotificationAudienceRulesInput

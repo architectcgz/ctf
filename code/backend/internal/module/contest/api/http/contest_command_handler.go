@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/dto"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
@@ -10,7 +9,7 @@ import (
 )
 
 func (h *Handler) CreateContest(c *gin.Context) {
-	var req dto.CreateContestReq
+	var req CreateContestReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -27,7 +26,7 @@ func (h *Handler) CreateContest(c *gin.Context) {
 
 func (h *Handler) UpdateContest(c *gin.Context) {
 	id := c.GetInt64("id")
-	var req dto.UpdateContestReq
+	var req UpdateContestReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return

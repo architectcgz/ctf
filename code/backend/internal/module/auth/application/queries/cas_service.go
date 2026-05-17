@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -18,8 +17,8 @@ const (
 )
 
 type CASService interface {
-	Status() *dto.CASStatusResp
-	BuildLogin(ctx context.Context) (*dto.CASLoginResp, error)
+	Status() *CASStatusResp
+	BuildLogin(ctx context.Context) (*CASLoginResp, error)
 }
 
 type casService struct {
@@ -30,7 +29,7 @@ func NewCASService(cfg config.CASConfig) CASService {
 	return &casService{config: cfg}
 }
 
-func (s *casService) Status() *dto.CASStatusResp {
+func (s *casService) Status() *CASStatusResp {
 	return authQueryResponseMapperInst.ToCASStatusRespPtr(casStatusSource{
 		Provider:      casProviderName,
 		Enabled:       s.config.Enabled,
@@ -41,7 +40,7 @@ func (s *casService) Status() *dto.CASStatusResp {
 	})
 }
 
-func (s *casService) BuildLogin(context.Context) (*dto.CASLoginResp, error) {
+func (s *casService) BuildLogin(context.Context) (*CASLoginResp, error) {
 	if !s.config.Enabled {
 		return nil, errcode.ErrCASDisabled
 	}

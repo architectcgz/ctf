@@ -21,12 +21,14 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
+	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
+	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -261,7 +263,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var personalReport dto.ReportExportData
+	var personalReport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &personalReport)
 	if personalReport.Status != model.ReportStatusReady || personalReport.DownloadURL == nil {
 		t.Fatalf("expected ready personal report with download url, got %+v", personalReport)
@@ -270,7 +272,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", personalReport.ReportID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var personalStatus dto.ReportExportData
+	var personalStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &personalStatus)
 	if personalStatus.Status != model.ReportStatusReady || personalStatus.DownloadURL == nil {
 		t.Fatalf("expected ready personal report status, got %+v", personalStatus)
@@ -292,7 +294,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", processingReport.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var processingStatus dto.ReportExportData
+	var processingStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &processingStatus)
 	if processingStatus.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected processing status, got %+v", processingStatus)
@@ -313,7 +315,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", failedReport.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var failedStatus dto.ReportExportData
+	var failedStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &failedStatus)
 	if failedStatus.Status != model.ReportStatusFailed || failedStatus.ErrorMessage == nil || *failedStatus.ErrorMessage != failedMessage {
 		t.Fatalf("expected failed status with message, got %+v", failedStatus)
@@ -334,7 +336,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var classReport dto.ReportExportData
+	var classReport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &classReport)
 	if classReport.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected class report to start in processing state, got %+v", classReport)
@@ -362,7 +364,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var contestExport dto.ReportExportData
+	var contestExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &contestExport)
 	if contestExport.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected contest export processing status, got %+v", contestExport)
@@ -392,7 +394,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewArchive dto.ReportExportData
+	var reviewArchive assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reviewArchive)
 	if reviewArchive.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected review archive processing status, got %+v", reviewArchive)
@@ -458,7 +460,7 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, missingContestResp, http.StatusNotFound)
 
-	var contestExport dto.ReportExportData
+	var contestExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &contestExport)
 	if contestExport.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected contest export to start in processing state, got %+v", contestExport)
@@ -495,7 +497,7 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reviewArchive dto.ReportExportData
+	var reviewArchive assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reviewArchive)
 	if reviewArchive.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected review archive export to start in processing state, got %+v", reviewArchive)
@@ -711,7 +713,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var archiveExport dto.ReportExportData
+	var archiveExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &archiveExport)
 	if archiveExport.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected archive export processing status, got %+v", archiveExport)
@@ -783,7 +785,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var reportExport dto.ReportExportData
+	var reportExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reportExport)
 	if reportExport.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected report export processing status, got %+v", reportExport)
@@ -827,10 +829,10 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var teacherClasses struct {
-		List     []dto.TeacherClassItem `json:"list"`
-		Total    int64                  `json:"total"`
-		Page     int                    `json:"page"`
-		PageSize int                    `json:"page_size"`
+		List     []teachingqueryqueries.TeacherClassItem `json:"list"`
+		Total    int64                                   `json:"total"`
+		Page     int                                     `json:"page"`
+		PageSize int                                     `json:"page_size"`
 	}
 	decodeFullRouterData(t, resp, &teacherClasses)
 	if teacherClasses.Total != 1 || len(teacherClasses.List) != 1 || teacherClasses.List[0].Name != env.className {
@@ -841,10 +843,10 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var adminClasses struct {
-		List     []dto.TeacherClassItem `json:"list"`
-		Total    int64                  `json:"total"`
-		Page     int                    `json:"page"`
-		PageSize int                    `json:"page_size"`
+		List     []teachingqueryqueries.TeacherClassItem `json:"list"`
+		Total    int64                                   `json:"total"`
+		Page     int                                     `json:"page"`
+		PageSize int                                     `json:"page_size"`
 	}
 	decodeFullRouterData(t, resp, &adminClasses)
 	if adminClasses.Page != 1 || adminClasses.PageSize != 1 || len(adminClasses.List) != 1 || adminClasses.Total < 2 {
@@ -888,7 +890,7 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/progress", env.student.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var progress dto.TeacherProgressResp
+	var progress teachingqueryqueries.TeacherProgressResp
 	decodeFullRouterData(t, resp, &progress)
 	if progress.SolvedChallenges == 0 {
 		t.Fatalf("expected solved challenges in teacher progress, got %+v", progress)
@@ -910,7 +912,7 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/recommendations", env.student.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherRecommendations dto.TeacherRecommendationResp
+	var teacherRecommendations teachingqueryqueries.TeacherRecommendationResp
 	decodeFullRouterData(t, resp, &teacherRecommendations)
 	if len(teacherRecommendations.Challenges) == 0 {
 		t.Fatalf("expected teacher recommendations, got %+v", teacherRecommendations)
@@ -1252,9 +1254,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var pendingManualSubmission dto.SubmissionResp
+	var pendingManualSubmission practicecmd.SubmissionResp
 	decodeFullRouterData(t, resp, &pendingManualSubmission)
-	if pendingManualSubmission.Status != dto.SubmissionStatusPendingReview || pendingManualSubmission.IsCorrect {
+	if pendingManualSubmission.Status != practicecmd.SubmissionStatusPendingReview || pendingManualSubmission.IsCorrect {
 		t.Fatalf("unexpected pending manual review response: %+v", pendingManualSubmission)
 	}
 
@@ -2438,7 +2440,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var publishResult dto.AdminNotificationPublishResp
+	var publishResult opshttp.AdminNotificationPublishResp
 	decodeFullRouterData(t, resp, &publishResult)
 	if publishResult.BatchID <= 0 || publishResult.RecipientCount < 4 {
 		t.Fatalf("unexpected publish result: %+v", publishResult)
@@ -2657,7 +2659,7 @@ func receiveFullRouterWSMessageByType(t *testing.T, conn *xws.Conn, expectedType
 	}
 }
 
-func waitForReportStatus(t *testing.T, env *fullRouterTestEnv, reportID int64, headers map[string]string, wantStatus string, timeout time.Duration) *dto.ReportExportData {
+func waitForReportStatus(t *testing.T, env *fullRouterTestEnv, reportID int64, headers map[string]string, wantStatus string, timeout time.Duration) *assessmentcmd.ReportExportData {
 	t.Helper()
 
 	deadline := time.Now().Add(timeout)
@@ -2667,7 +2669,7 @@ func waitForReportStatus(t *testing.T, env *fullRouterTestEnv, reportID int64, h
 			t.Fatalf("unexpected report status response: %d body=%s", resp.Code, resp.Body.String())
 		}
 
-		var report dto.ReportExportData
+		var report assessmentcmd.ReportExportData
 		decodeFullRouterData(t, resp, &report)
 		if report.Status == wantStatus {
 			return &report

@@ -3,53 +3,50 @@
 
 package commands
 
-import (
-	dto "ctf-platform/internal/dto"
-	model "ctf-platform/internal/model"
-)
+import model "ctf-platform/internal/model"
 
 type authCommandResponseMapperImpl struct{}
 
-func (c *authCommandResponseMapperImpl) ToAuthUserBase(source model.User) dto.AuthUser {
-	var dtoAuthUser dto.AuthUser
-	dtoAuthUser.ID = source.ID
-	dtoAuthUser.Username = source.Username
-	dtoAuthUser.Role = source.Role
-	return dtoAuthUser
+func (c *authCommandResponseMapperImpl) ToAuthUserBase(source model.User) AuthUser {
+	var commandsAuthUser AuthUser
+	commandsAuthUser.ID = source.ID
+	commandsAuthUser.Username = source.Username
+	commandsAuthUser.Role = source.Role
+	return commandsAuthUser
 }
-func (c *authCommandResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *dto.AuthUser {
-	var pDtoAuthUser *dto.AuthUser
+func (c *authCommandResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *AuthUser {
+	var pCommandsAuthUser *AuthUser
 	if source != nil {
-		dtoAuthUser := c.ToAuthUserBase((*source))
-		pDtoAuthUser = &dtoAuthUser
+		commandsAuthUser := c.ToAuthUserBase((*source))
+		pCommandsAuthUser = &commandsAuthUser
 	}
-	return pDtoAuthUser
+	return pCommandsAuthUser
 }
-func (c *authCommandResponseMapperImpl) ToLoginResp(source loginRespSource) dto.LoginResp {
-	var dtoLoginResp dto.LoginResp
-	dtoLoginResp.User = c.dtoAuthUserToDtoAuthUser(source.User)
-	return dtoLoginResp
+func (c *authCommandResponseMapperImpl) ToLoginResp(source loginRespSource) LoginResp {
+	var commandsLoginResp LoginResp
+	commandsLoginResp.User = c.commandsAuthUserToCommandsAuthUser(source.User)
+	return commandsLoginResp
 }
-func (c *authCommandResponseMapperImpl) ToLoginRespPtr(source loginRespSource) *dto.LoginResp {
-	dtoLoginResp := c.ToLoginResp(source)
-	return &dtoLoginResp
+func (c *authCommandResponseMapperImpl) ToLoginRespPtr(source loginRespSource) *LoginResp {
+	commandsLoginResp := c.ToLoginResp(source)
+	return &commandsLoginResp
 }
-func (c *authCommandResponseMapperImpl) dtoAuthUserToDtoAuthUser(source dto.AuthUser) dto.AuthUser {
-	var dtoAuthUser dto.AuthUser
-	dtoAuthUser.ID = source.ID
-	dtoAuthUser.Username = source.Username
-	dtoAuthUser.Role = source.Role
+func (c *authCommandResponseMapperImpl) commandsAuthUserToCommandsAuthUser(source AuthUser) AuthUser {
+	var commandsAuthUser AuthUser
+	commandsAuthUser.ID = source.ID
+	commandsAuthUser.Username = source.Username
+	commandsAuthUser.Role = source.Role
 	if source.Avatar != nil {
 		xstring := *source.Avatar
-		dtoAuthUser.Avatar = &xstring
+		commandsAuthUser.Avatar = &xstring
 	}
 	if source.Name != nil {
 		xstring2 := *source.Name
-		dtoAuthUser.Name = &xstring2
+		commandsAuthUser.Name = &xstring2
 	}
 	if source.ClassName != nil {
 		xstring3 := *source.ClassName
-		dtoAuthUser.ClassName = &xstring3
+		commandsAuthUser.ClassName = &xstring3
 	}
-	return dtoAuthUser
+	return commandsAuthUser
 }

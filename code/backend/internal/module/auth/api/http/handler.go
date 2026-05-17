@@ -11,7 +11,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -23,8 +22,8 @@ import (
 )
 
 type authCommandService interface {
-	Register(ctx context.Context, req authcmd.RegisterInput) (*dto.LoginResp, *authcontracts.Session, error)
-	Login(ctx context.Context, req authcmd.LoginInput) (*dto.LoginResp, *authcontracts.Session, error)
+	Register(ctx context.Context, req authcmd.RegisterInput) (*authcmd.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req authcmd.LoginInput) (*authcmd.LoginResp, *authcontracts.Session, error)
 }
 
 type profileCommandService interface {
@@ -36,12 +35,12 @@ type profileQueryService interface {
 }
 
 type casCommandService interface {
-	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error)
+	Authenticate(ctx context.Context, ticket string) (*authcmd.LoginResp, *authcontracts.Session, error)
 }
 
 type casQueryService interface {
-	Status() *dto.CASStatusResp
-	BuildLogin(ctx context.Context) (*dto.CASLoginResp, error)
+	Status() *authqry.CASStatusResp
+	BuildLogin(ctx context.Context) (*authqry.CASLoginResp, error)
 }
 
 type Handler struct {
@@ -92,7 +91,7 @@ func NewHandler(commands authCommandService, profileCmd profileCommandService, p
 }
 
 func (h *Handler) Register(c *gin.Context) {
-	req := &dto.RegisterReq{}
+	req := &RegisterReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -105,11 +104,11 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	h.writeSessionCookie(c, session.ID)
-	response.Success(c, resp)
+	response.Success(c, toLoginResp(resp))
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	req := &dto.LoginReq{}
+	req := &LoginReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -147,7 +146,7 @@ func (h *Handler) Login(c *gin.Context) {
 		IPAddress: c.ClientIP(),
 		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
-	response.Success(c, resp)
+	response.Success(c, toLoginResp(resp))
 }
 
 func (h *Handler) Logout(c *gin.Context) {
@@ -197,7 +196,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	}
 
 	authUser := authctx.MustCurrentUser(c)
-	req := &dto.ChangePasswordReq{}
+	req := &ChangePasswordReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -244,14 +243,14 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, &dto.WSTicketResp{
+	response.Success(c, &WSTicketResp{
 		Ticket:    ticket.Ticket,
 		ExpiresAt: ticket.ExpiresAt.Format(time.RFC3339),
 	})
 }
 
 func (h *Handler) CASStatus(c *gin.Context) {
-	response.Success(c, h.casQueries.Status())
+	response.Success(c, toCASStatusResp(h.casQueries.Status()))
 }
 
 func (h *Handler) CASLogin(c *gin.Context) {
@@ -260,7 +259,7 @@ func (h *Handler) CASLogin(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, resp)
+	response.Success(c, toCASLoginResp(resp))
 }
 
 func (h *Handler) CASCallback(c *gin.Context) {
@@ -303,7 +302,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 		IPAddress: c.ClientIP(),
 		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
 	})
-	response.Success(c, resp)
+	response.Success(c, toLoginResp(resp))
 }
 
 func (h *Handler) writeSessionCookie(c *gin.Context, value string) {

@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
@@ -34,7 +33,7 @@ func (h *ParticipationHandler) ReviewRegistration(c *gin.Context) {
 		response.InvalidParams(c, "无效的报名ID")
 		return
 	}
-	var req dto.ReviewContestRegistrationReq
+	var req ReviewContestRegistrationReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
