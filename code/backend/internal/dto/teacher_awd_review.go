@@ -2,18 +2,6 @@ package dto
 
 import "time"
 
-type GetTeacherAWDReviewArchiveReq struct {
-	RoundNumber *int   `form:"round" binding:"omitempty,min=1"`
-	TeamID      *int64 `form:"team_id"`
-}
-
-type TeacherAWDReviewContestQuery struct {
-	Status  string `form:"status" binding:"omitempty,max=32"`
-	Keyword string `form:"keyword" binding:"omitempty,max=128"`
-	Page    int    `form:"page" binding:"omitempty,min=1"`
-	Size    int    `form:"page_size" binding:"omitempty,min=1,max=100"`
-}
-
 type TeacherAWDReviewContestListSummaryResp struct {
 	RunningCount     int64 `json:"running_count"`
 	ExportReadyCount int64 `json:"export_ready_count"`

@@ -42,7 +42,7 @@ func (c *AssessmentRequestMapperImpl) ToCreateTeacherAWDReviewExportInput(source
 	}
 	return commandsCreateTeacherAWDReviewExportInput
 }
-func (c *AssessmentRequestMapperImpl) ToGetTeacherAWDReviewArchiveInput(source dto.GetTeacherAWDReviewArchiveReq) queries.GetTeacherAWDReviewArchiveInput {
+func (c *AssessmentRequestMapperImpl) ToGetTeacherAWDReviewArchiveInput(source GetTeacherAWDReviewArchiveReq) queries.GetTeacherAWDReviewArchiveInput {
 	var queriesGetTeacherAWDReviewArchiveInput queries.GetTeacherAWDReviewArchiveInput
 	if source.RoundNumber != nil {
 		xint := *source.RoundNumber

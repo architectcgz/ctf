@@ -30,7 +30,7 @@ func NewTeacherAWDReviewHandler(service teacherAWDReviewService) *TeacherAWDRevi
 func (h *TeacherAWDReviewHandler) ListReviews(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 
-	var req dto.TeacherAWDReviewContestQuery
+	var req TeacherAWDReviewContestQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -53,7 +53,7 @@ func (h *TeacherAWDReviewHandler) GetReview(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 	contestID := c.GetInt64("id")
 
-	var req dto.GetTeacherAWDReviewArchiveReq
+	var req GetTeacherAWDReviewArchiveReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return

@@ -23,7 +23,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
@@ -226,7 +225,7 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 func TestTeacherAWDReviewArchiveReqUsesPlannedQueryParams(t *testing.T) {
 	t.Parallel()
 
-	reqType := reflect.TypeOf(dto.GetTeacherAWDReviewArchiveReq{})
+	reqType := reflect.TypeOf(assessmenthttp.GetTeacherAWDReviewArchiveReq{})
 
 	roundField, ok := reqType.FieldByName("RoundNumber")
 	if !ok {
@@ -235,6 +234,9 @@ func TestTeacherAWDReviewArchiveReqUsesPlannedQueryParams(t *testing.T) {
 	if tag := roundField.Tag.Get("form"); tag != "round" {
 		t.Fatalf("RoundNumber form tag = %q, want %q", tag, "round")
 	}
+	if tag := roundField.Tag.Get("binding"); tag != "omitempty,min=1" {
+		t.Fatalf("RoundNumber binding tag = %q, want %q", tag, "omitempty,min=1")
+	}
 
 	teamField, ok := reqType.FieldByName("TeamID")
 	if !ok {
@@ -242,6 +244,44 @@ func TestTeacherAWDReviewArchiveReqUsesPlannedQueryParams(t *testing.T) {
 	}
 	if tag := teamField.Tag.Get("form"); tag != "team_id" {
 		t.Fatalf("TeamID form tag = %q, want %q", tag, "team_id")
+	}
+}
+
+func TestTeacherAWDReviewContestQueryUsesPlannedQueryParams(t *testing.T) {
+	t.Parallel()
+
+	reqType := reflect.TypeOf(assessmenthttp.TeacherAWDReviewContestQuery{})
+
+	statusField, ok := reqType.FieldByName("Status")
+	if !ok || statusField.Tag.Get("form") != "status" {
+		t.Fatalf("Status form tag = %q, want %q", statusField.Tag.Get("form"), "status")
+	}
+	if tag := statusField.Tag.Get("binding"); tag != "omitempty,max=32" {
+		t.Fatalf("Status binding tag = %q, want %q", tag, "omitempty,max=32")
+	}
+
+	keywordField, ok := reqType.FieldByName("Keyword")
+	if !ok || keywordField.Tag.Get("form") != "keyword" {
+		t.Fatalf("Keyword form tag = %q, want %q", keywordField.Tag.Get("form"), "keyword")
+	}
+	if tag := keywordField.Tag.Get("binding"); tag != "omitempty,max=128" {
+		t.Fatalf("Keyword binding tag = %q, want %q", tag, "omitempty,max=128")
+	}
+
+	pageField, ok := reqType.FieldByName("Page")
+	if !ok || pageField.Tag.Get("form") != "page" {
+		t.Fatalf("Page form tag = %q, want %q", pageField.Tag.Get("form"), "page")
+	}
+	if tag := pageField.Tag.Get("binding"); tag != "omitempty,min=1" {
+		t.Fatalf("Page binding tag = %q, want %q", tag, "omitempty,min=1")
+	}
+
+	sizeField, ok := reqType.FieldByName("Size")
+	if !ok || sizeField.Tag.Get("form") != "page_size" {
+		t.Fatalf("Size form tag = %q, want %q", sizeField.Tag.Get("form"), "page_size")
+	}
+	if tag := sizeField.Tag.Get("binding"); tag != "omitempty,min=1,max=100" {
+		t.Fatalf("Size binding tag = %q, want %q", tag, "omitempty,min=1,max=100")
 	}
 }
 
