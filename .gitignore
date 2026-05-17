@@ -62,6 +62,7 @@ code/frontend/docs/
 
 # Local development artifacts
 /.playwright-cli/
+/.tmp/
 /backups/
 /TODO/
 /code/backend/data/challenge-import-previews/
