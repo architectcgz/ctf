@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
@@ -100,7 +99,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(item), nil
 }
 
-func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*challengecontracts.RecommendedChallengeSolutionResp], error) {
+func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*challengecontracts.PageResult[*challengecontracts.RecommendedChallengeSolutionResp], error) {
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -113,7 +112,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 	for _, item := range items {
 		respItems = append(respItems, domain.RecommendedSolutionRespFromRecord(item))
 	}
-	return &dto.PageResult[*challengecontracts.RecommendedChallengeSolutionResp]{
+	return &challengecontracts.PageResult[*challengecontracts.RecommendedChallengeSolutionResp]{
 		List:  respItems,
 		Total: int64(len(respItems)),
 		Page:  1,
@@ -121,7 +120,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 	}, nil
 }
 
-func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) (*dto.PageResult[*challengecontracts.CommunityChallengeSolutionResp], error) {
+func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) (*challengecontracts.PageResult[*challengecontracts.CommunityChallengeSolutionResp], error) {
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -150,7 +149,7 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 	for _, item := range items {
 		respItems = append(respItems, domain.CommunitySolutionRespFromRecord(item))
 	}
-	return &dto.PageResult[*challengecontracts.CommunityChallengeSolutionResp]{
+	return &challengecontracts.PageResult[*challengecontracts.CommunityChallengeSolutionResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
@@ -158,7 +157,7 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 	}, nil
 }
 
-func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *challengecontracts.TeacherSubmissionWriteupQuery) (*dto.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp], error) {
+func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *challengecontracts.TeacherSubmissionWriteupQuery) (*challengecontracts.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp], error) {
 	if query == nil {
 		query = &challengecontracts.TeacherSubmissionWriteupQuery{}
 	}
@@ -177,7 +176,7 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 		respItems = append(respItems, domain.TeacherSubmissionWriteupItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp]{
+	return &challengecontracts.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,

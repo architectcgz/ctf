@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/response"
@@ -34,9 +33,9 @@ type writeupQueryService interface {
 	GetAdmin(ctx context.Context, challengeID int64) (*challengecontracts.AdminChallengeWriteupResp, error)
 	GetPublished(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeWriteupResp, error)
 	GetMySubmission(ctx context.Context, userID, challengeID int64) (*challengecontracts.SubmissionWriteupResp, error)
-	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*challengecontracts.RecommendedChallengeSolutionResp], error)
-	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) (*dto.PageResult[*challengecontracts.CommunityChallengeSolutionResp], error)
-	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *challengecontracts.TeacherSubmissionWriteupQuery) (*dto.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp], error)
+	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*challengecontracts.PageResult[*challengecontracts.RecommendedChallengeSolutionResp], error)
+	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) (*challengecontracts.PageResult[*challengecontracts.CommunityChallengeSolutionResp], error)
+	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *challengecontracts.TeacherSubmissionWriteupQuery) (*challengecontracts.PageResult[*challengecontracts.TeacherSubmissionWriteupItemResp], error)
 	GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengecontracts.TeacherSubmissionWriteupDetailResp, error)
 }
 
