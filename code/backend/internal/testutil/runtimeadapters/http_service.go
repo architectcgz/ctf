@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -19,7 +20,7 @@ type httpInstanceCommandService interface {
 type httpInstanceQueryService interface {
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
 }
 
 type httpProxyTicketService interface {
@@ -65,7 +66,7 @@ func (a *HTTPService) GetUserInstances(ctx context.Context, userID int64) ([]*dt
 	return a.queryService.GetUserInstances(ctx, userID)
 }
 
-func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
 	return a.queryService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 

@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -34,7 +35,7 @@ func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*dto.Insta
 	return nil, nil
 }
 
-func (stubRuntimeService) ListTeacherInstances(context.Context, int64, string, *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+func (stubRuntimeService) ListTeacherInstances(context.Context, int64, string, instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
 	return nil, nil
 }
 
@@ -101,6 +102,17 @@ type stubAWDDefenseSSHRuntimeService struct {
 	resp *dto.AWDDefenseSSHAccessResp
 }
 
+type captureTeacherInstanceRuntimeService struct {
+	stubRuntimeService
+	lastQuery instancecontracts.TeacherInstanceListQuery
+	resp      []instancecontracts.TeacherInstanceItem
+}
+
+func (s *captureTeacherInstanceRuntimeService) ListTeacherInstances(_ context.Context, _ int64, _ string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+	s.lastQuery = query
+	return s.resp, nil
+}
+
 func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
 	return s.resp, nil
 }
@@ -153,6 +165,49 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 	if strings.Contains(resp.Body.String(), `"ssh_profile":`) {
 		t.Fatalf("expected response to omit ssh profile, got %s", resp.Body.String())
+	}
+}
+
+func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	service := &captureTeacherInstanceRuntimeService{
+		resp: []instancecontracts.TeacherInstanceItem{{
+			ID:              42,
+			StudentID:       11,
+			StudentName:     "Alice",
+			StudentUsername: "alice",
+			ClassName:       "Class A",
+			ChallengeID:     9,
+			ChallengeTitle:  "web-101",
+			Status:          model.InstanceStatusRunning,
+			AccessURL:       "https://runtime.example/instances/42",
+			RemainingTime:   1800,
+		}},
+	}
+	handler := NewHandler(service, "", "", nil, CookieConfig{}, nil)
+
+	router := gin.New()
+	router.GET("/api/v1/teacher/instances", func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		handler.ListTeacherInstances(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/teacher/instances?class_name=Class%20A&keyword=alice&student_no=S-1001", nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if service.lastQuery.ClassName != "Class A" || service.lastQuery.Keyword != "alice" || service.lastQuery.StudentNo != "S-1001" {
+		t.Fatalf("unexpected bound query: %+v", service.lastQuery)
+	}
+	if !strings.Contains(resp.Body.String(), `"student_username":"alice"`) {
+		t.Fatalf("expected response to preserve student_username field, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"remaining_time":1800`) {
+		t.Fatalf("expected response to preserve remaining_time field, got %s", resp.Body.String())
 	}
 }
 

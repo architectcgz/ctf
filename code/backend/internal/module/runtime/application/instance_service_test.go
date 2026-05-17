@@ -12,10 +12,10 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -701,7 +701,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -712,7 +712,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 		t.Fatalf("unexpected item: %+v", items[0])
 	}
 
-	filtered, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{
+	filtered, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword:   "ali",
 		StudentNo: "S-1001",
 	})
@@ -723,7 +723,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
 
-	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{
+	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword: "1001",
 	})
 	if err != nil {
@@ -789,7 +789,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -838,7 +838,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}

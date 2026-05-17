@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -1777,7 +1778,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	seedInstance(t, repo.db, &model.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &model.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -1788,7 +1789,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 		t.Fatalf("unexpected item: %+v", items[0])
 	}
 
-	filtered, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{
+	filtered, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword:   "ali",
 		StudentNo: "S-1001",
 	})
@@ -1799,7 +1800,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
 
-	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{
+	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword: "1001",
 	})
 	if err != nil {
@@ -1819,7 +1820,7 @@ func TestServiceListTeacherInstancesRejectsTeacherCrossClassFilter(t *testing.T)
 
 	seedUser(t, repo.db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 
-	_, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{ClassName: "Class B"})
+	_, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{ClassName: "Class B"})
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden, got %v", err)
 	}
@@ -1913,7 +1914,7 @@ func (s *testRuntimeService) GetAccessURL(ctx context.Context, instanceID, userI
 	return s.queries.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
 	return s.queries.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 

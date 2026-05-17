@@ -18,6 +18,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -41,7 +42,7 @@ type runtimeService interface {
 	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
@@ -321,19 +322,19 @@ func (h *Handler) ListInstances(c *gin.Context) {
 
 func (h *Handler) ListTeacherInstances(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
-	var query dto.TeacherInstanceQuery
+	var query TeacherInstanceQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	items, err := h.service.ListTeacherInstances(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	items, err := h.service.ListTeacherInstances(c.Request.Context(), currentUser.UserID, currentUser.Role, toTeacherInstanceListQuery(query))
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.Success(c, items)
+	response.Success(c, toTeacherInstanceItems(items))
 }
 
 func (h *Handler) DestroyTeacherInstance(c *gin.Context) {

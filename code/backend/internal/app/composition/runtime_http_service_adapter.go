@@ -73,7 +73,7 @@ func (a *runtimeHTTPServiceAdapter) GetUserInstances(ctx context.Context, userID
 	return a.queryService.GetUserInstances(ctx, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+func (a *runtimeHTTPServiceAdapter) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
 	if a == nil || a.queryService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}

@@ -26,6 +26,7 @@ import (
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
+	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -1488,10 +1489,16 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/instances", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherInstances []dto.TeacherInstanceItem
+	var teacherInstances []runtimehttp.TeacherInstanceItem
 	decodeFullRouterData(t, resp, &teacherInstances)
 	if len(teacherInstances) == 0 {
 		t.Fatalf("expected teacher instances for own class")
+	}
+	if !strings.Contains(resp.Body.String(), `"student_username"`) || !strings.Contains(resp.Body.String(), `"access_url"`) || !strings.Contains(resp.Body.String(), `"remaining_time"`) {
+		t.Fatalf("expected teacher instance response to preserve key json fields, got %s", resp.Body.String())
+	}
+	if teacherInstances[0].StudentUsername == "" || teacherInstances[0].RemainingTime <= 0 {
+		t.Fatalf("expected decoded teacher instance fields, got %+v", teacherInstances[0])
 	}
 
 	proxyTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

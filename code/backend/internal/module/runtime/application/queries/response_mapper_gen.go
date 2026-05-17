@@ -6,7 +6,7 @@ package queries
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
-	ports "ctf-platform/internal/module/runtime/ports"
+	ports "ctf-platform/internal/module/instance/ports"
 )
 
 type instanceResponseMapperImpl struct{}
@@ -20,7 +20,7 @@ func (c *instanceResponseMapperImpl) ToInstanceInfo(source ports.UserVisibleInst
 	dtoInstanceInfo.Category = source.Category
 	dtoInstanceInfo.Difficulty = source.Difficulty
 	dtoInstanceInfo.FlagType = source.FlagType
-	dtoInstanceInfo.ShareScope = c.modelInstanceSharingToModelInstanceSharing(source.ShareScope)
+	dtoInstanceInfo.ShareScope = model.InstanceSharing(source.ShareScope)
 	dtoInstanceInfo.ExpiresAt = CopyTime(source.ExpiresAt)
 	dtoInstanceInfo.ExtendCount = source.ExtendCount
 	dtoInstanceInfo.MaxExtends = source.MaxExtends
@@ -34,48 +34,4 @@ func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *ports.UserVisible
 		pDtoInstanceInfo = &dtoInstanceInfo
 	}
 	return pDtoInstanceInfo
-}
-func (c *instanceResponseMapperImpl) ToTeacherInstanceItem(source ports.TeacherInstanceRow) dto.TeacherInstanceItem {
-	var dtoTeacherInstanceItem dto.TeacherInstanceItem
-	dtoTeacherInstanceItem.ID = source.ID
-	dtoTeacherInstanceItem.StudentID = source.StudentID
-	dtoTeacherInstanceItem.StudentName = source.StudentName
-	dtoTeacherInstanceItem.StudentUsername = source.StudentUsername
-	if source.StudentNo != nil {
-		xstring := *source.StudentNo
-		dtoTeacherInstanceItem.StudentNo = &xstring
-	}
-	dtoTeacherInstanceItem.ClassName = source.ClassName
-	dtoTeacherInstanceItem.ChallengeID = source.ChallengeID
-	dtoTeacherInstanceItem.ChallengeTitle = source.ChallengeTitle
-	dtoTeacherInstanceItem.AccessURL = source.AccessURL
-	dtoTeacherInstanceItem.ExpiresAt = CopyTime(source.ExpiresAt)
-	dtoTeacherInstanceItem.ExtendCount = source.ExtendCount
-	dtoTeacherInstanceItem.MaxExtends = source.MaxExtends
-	dtoTeacherInstanceItem.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoTeacherInstanceItem
-}
-func (c *instanceResponseMapperImpl) ToTeacherInstanceItemPtr(source *ports.TeacherInstanceRow) *dto.TeacherInstanceItem {
-	var pDtoTeacherInstanceItem *dto.TeacherInstanceItem
-	if source != nil {
-		dtoTeacherInstanceItem := c.ToTeacherInstanceItem((*source))
-		pDtoTeacherInstanceItem = &dtoTeacherInstanceItem
-	}
-	return pDtoTeacherInstanceItem
-}
-func (c *instanceResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
-	var modelInstanceSharing model.InstanceSharing
-	switch source {
-	case model.InstanceSharingPerTeam:
-		modelInstanceSharing = model.InstanceSharingPerTeam
-	case model.InstanceSharingPerUser:
-		modelInstanceSharing = model.InstanceSharingPerUser
-	case model.InstanceSharingShared:
-		modelInstanceSharing = model.InstanceSharingShared
-	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
-	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
-	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
-	default: // ignored
-	}
-	return modelInstanceSharing
 }

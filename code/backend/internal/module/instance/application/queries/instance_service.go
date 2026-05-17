@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
@@ -65,15 +66,13 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 	return result, nil
 }
 
-func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
 	ctx = normalizeContext(ctx)
 
 	filter := instanceports.TeacherInstanceFilter{}
-	if query != nil {
-		filter.ClassName = strings.TrimSpace(query.ClassName)
-		filter.Keyword = strings.TrimSpace(query.Keyword)
-		filter.StudentNo = strings.TrimSpace(query.StudentNo)
-	}
+	filter.ClassName = strings.TrimSpace(query.ClassName)
+	filter.Keyword = strings.TrimSpace(query.Keyword)
+	filter.StudentNo = strings.TrimSpace(query.StudentNo)
 
 	if requesterRole != model.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
@@ -86,7 +85,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 
 		className := strings.TrimSpace(requester.ClassName)
 		if className == "" {
-			return []dto.TeacherInstanceItem{}, nil
+			return []instancecontracts.TeacherInstanceItem{}, nil
 		}
 		if filter.ClassName != "" && filter.ClassName != className {
 			return nil, errcode.ErrForbidden
@@ -100,7 +99,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	}
 
 	now := time.Now()
-	result := make([]dto.TeacherInstanceItem, len(items))
+	result := make([]instancecontracts.TeacherInstanceItem, len(items))
 	for idx, item := range items {
 		result[idx] = toTeacherInstanceItem(item, now, s.cfg.PublicHost, s.cfg.AccessHost)
 	}
@@ -134,9 +133,9 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 	}
 }
 
-func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time, publicHost, accessHost string) dto.TeacherInstanceItem {
+func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time, publicHost, accessHost string) instancecontracts.TeacherInstanceItem {
 	accessURL := model.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
-	return dto.TeacherInstanceItem{
+	return instancecontracts.TeacherInstanceItem{
 		ID:              item.ID,
 		StudentID:       item.StudentID,
 		StudentName:     item.StudentName,
