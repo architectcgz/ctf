@@ -47,7 +47,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, challengeResponseMapper.ToImageResp(resp))
 }
 
 func (h *ImageHandler) GetImage(c *gin.Context) {
@@ -63,7 +63,7 @@ func (h *ImageHandler) GetImage(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, challengeResponseMapper.ToImageResp(resp))
 }
 
 func (h *ImageHandler) ListImages(c *gin.Context) {
@@ -79,7 +79,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, mapImagePageResult(result))
 }
 
 func (h *ImageHandler) UpdateImage(c *gin.Context) {

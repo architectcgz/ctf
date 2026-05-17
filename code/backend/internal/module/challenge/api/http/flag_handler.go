@@ -80,5 +80,5 @@ func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, flagResp)
+	response.Success(c, challengeResponseMapper.ToFlagResp(flagResp))
 }

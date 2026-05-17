@@ -43,7 +43,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, challengeResponseMapper.ToTagResp(resp))
 }
 
 func (h *TagHandler) ListTags(c *gin.Context) {
@@ -59,7 +59,7 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, challengeResponseMapper.ToTagRespList(result))
 }
 
 func (h *TagHandler) AttachTags(c *gin.Context) {
