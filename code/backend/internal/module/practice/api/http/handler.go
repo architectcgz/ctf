@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -44,8 +45,8 @@ type practiceRankingService interface {
 }
 
 type practiceProgressTimelineQueryService interface {
-	GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error)
-	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error)
+	GetProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error)
+	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error)
 }
 
 func NewHandler(service practiceService, rankingService practiceRankingService, progressQuery practiceProgressTimelineQueryService) *Handler {
@@ -412,13 +413,13 @@ func (h *Handler) GetRanking(c *gin.Context) {
 func (h *Handler) GetProgress(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	resp, err := h.progressQuery.GetProgress(c.Request.Context(), userID)
+	snapshot, err := h.progressQuery.GetProgress(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, practiceResponseMapper.ToProgressRespPtr(snapshot))
 }
 
 // GetTimeline 获取解题时间线
@@ -439,13 +440,13 @@ func (h *Handler) GetTimeline(c *gin.Context) {
 		req.Limit = 100
 	}
 
-	resp, err := h.progressQuery.GetTimeline(c.Request.Context(), userID, req.Limit, req.Offset)
+	timeline, err := h.progressQuery.GetTimeline(c.Request.Context(), userID, req.Limit, req.Offset)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.Success(c, resp)
+	response.Success(c, practiceResponseMapper.ToTimelineRespPtr(timeline))
 }
 
 func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {

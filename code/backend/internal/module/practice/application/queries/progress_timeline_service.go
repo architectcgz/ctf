@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -19,8 +18,8 @@ type progressTimelineQueryRepository interface {
 }
 
 type ProgressTimelineQueryService interface {
-	GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error)
-	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error)
+	GetProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error)
+	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error)
 }
 
 type ProgressTimelineService struct {

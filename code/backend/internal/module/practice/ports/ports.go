@@ -275,6 +275,26 @@ type DifficultyProgressStat struct {
 	Total      int    `gorm:"column:total"`
 }
 
+type UserProgressCategorySnapshot struct {
+	Category string
+	Solved   int
+	Total    int
+}
+
+type UserProgressDifficultySnapshot struct {
+	Difficulty string
+	Solved     int
+	Total      int
+}
+
+type UserProgressSnapshot struct {
+	TotalScore      int
+	TotalSolved     int
+	Rank            int
+	CategoryStats   []UserProgressCategorySnapshot
+	DifficultyStats []UserProgressDifficultySnapshot
+}
+
 type TimelineEventRecord struct {
 	Type        string
 	ChallengeID int64
@@ -283,6 +303,20 @@ type TimelineEventRecord struct {
 	IsCorrect   *bool
 	Points      *int
 	Detail      string
+}
+
+type TimelineEventSnapshot struct {
+	Type        string
+	ChallengeID int64
+	Title       string
+	Timestamp   time.Time
+	IsCorrect   *bool
+	Points      *int
+	Detail      string
+}
+
+type TimelineSnapshot struct {
+	Events []TimelineEventSnapshot
 }
 
 type PracticeProgressQueryRepository interface {
@@ -297,8 +331,8 @@ type PracticeTimelineQueryRepository interface {
 }
 
 type PracticeUserProgressCache interface {
-	GetUserProgress(ctx context.Context, userID int64) (*dto.ProgressResp, bool, error)
-	StoreUserProgress(ctx context.Context, userID int64, resp *dto.ProgressResp, ttl time.Duration) error
+	GetUserProgress(ctx context.Context, userID int64) (*UserProgressSnapshot, bool, error)
+	StoreUserProgress(ctx context.Context, userID int64, resp *UserProgressSnapshot, ttl time.Duration) error
 	DeleteUserProgress(ctx context.Context, userID int64) error
 }
 

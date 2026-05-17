@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -110,11 +109,11 @@ type stubPracticeProgressCache struct {
 	deleteUserProgressFn func(ctx context.Context, userID int64) error
 }
 
-func (s *stubPracticeProgressCache) GetUserProgress(context.Context, int64) (*dto.ProgressResp, bool, error) {
+func (s *stubPracticeProgressCache) GetUserProgress(context.Context, int64) (*practiceports.UserProgressSnapshot, bool, error) {
 	return nil, false, nil
 }
 
-func (s *stubPracticeProgressCache) StoreUserProgress(context.Context, int64, *dto.ProgressResp, time.Duration) error {
+func (s *stubPracticeProgressCache) StoreUserProgress(context.Context, int64, *practiceports.UserProgressSnapshot, time.Duration) error {
 	return nil
 }
 

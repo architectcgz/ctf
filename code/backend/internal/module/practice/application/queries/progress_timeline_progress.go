@@ -5,11 +5,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
+func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error) {
 	if s.cache != nil {
 		cached, hit, err := s.cache.GetUserProgress(ctx, userID)
 		if err != nil {
@@ -39,22 +39,22 @@ func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64)
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := &dto.ProgressResp{
+	resp := &practiceports.UserProgressSnapshot{
 		TotalScore:      totalScore,
 		TotalSolved:     totalSolved,
 		Rank:            rank,
-		CategoryStats:   make([]dto.CategoryStat, len(categoryStats)),
-		DifficultyStats: make([]dto.DifficultyStat, len(difficultyStats)),
+		CategoryStats:   make([]practiceports.UserProgressCategorySnapshot, len(categoryStats)),
+		DifficultyStats: make([]practiceports.UserProgressDifficultySnapshot, len(difficultyStats)),
 	}
 	for i, stat := range categoryStats {
-		resp.CategoryStats[i] = dto.CategoryStat{
+		resp.CategoryStats[i] = practiceports.UserProgressCategorySnapshot{
 			Category: stat.Category,
 			Solved:   stat.Solved,
 			Total:    stat.Total,
 		}
 	}
 	for i, stat := range difficultyStats {
-		resp.DifficultyStats[i] = dto.DifficultyStat{
+		resp.DifficultyStats[i] = practiceports.UserProgressDifficultySnapshot{
 			Difficulty: stat.Difficulty,
 			Solved:     stat.Solved,
 			Total:      stat.Total,

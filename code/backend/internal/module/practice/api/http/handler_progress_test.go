@@ -11,19 +11,19 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
+	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type stubPracticeProgressQuery struct {
-	getProgressFn func(ctx context.Context, userID int64) (*dto.ProgressResp, error)
-	getTimelineFn func(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error)
+	getProgressFn func(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error)
+	getTimelineFn func(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error)
 }
 
-func (s *stubPracticeProgressQuery) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
+func (s *stubPracticeProgressQuery) GetProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error) {
 	return s.getProgressFn(ctx, userID)
 }
 
-func (s *stubPracticeProgressQuery) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
+func (s *stubPracticeProgressQuery) GetTimeline(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error) {
 	return s.getTimelineFn(ctx, userID, limit, offset)
 }
 
@@ -31,11 +31,11 @@ func TestHandlerUsesPracticeQueryForProgress(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
-		getProgressFn: func(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
+		getProgressFn: func(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error) {
 			if userID != 42 {
 				t.Fatalf("unexpected user id: %d", userID)
 			}
-			return &dto.ProgressResp{TotalScore: 120}, nil
+			return &practiceports.UserProgressSnapshot{TotalScore: 120}, nil
 		},
 	})
 
@@ -54,8 +54,8 @@ func TestHandlerUsesPracticeQueryForProgress(t *testing.T) {
 	}
 
 	var envelope struct {
-		Code int              `json:"code"`
-		Data dto.ProgressResp `json:"data"`
+		Code int          `json:"code"`
+		Data ProgressResp `json:"data"`
 	}
 	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
 		t.Fatalf("decode response: %v", err)
@@ -70,15 +70,15 @@ func TestHandlerUsesPracticeQueryForTimeline(t *testing.T) {
 
 	now := time.Now().UTC()
 	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
-		getTimelineFn: func(ctx context.Context, userID int64, limit, offset int) (*dto.TimelineResp, error) {
+		getTimelineFn: func(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error) {
 			if userID != 7 {
 				t.Fatalf("unexpected user id: %d", userID)
 			}
 			if limit != 5 || offset != 2 {
 				t.Fatalf("unexpected pagination: limit=%d offset=%d", limit, offset)
 			}
-			return &dto.TimelineResp{
-				Events: []dto.TimelineEvent{{
+			return &practiceports.TimelineSnapshot{
+				Events: []practiceports.TimelineEventSnapshot{{
 					Type:      "flag_submit",
 					Timestamp: now,
 					Detail:    "ok",
@@ -99,5 +99,16 @@ func TestHandlerUsesPracticeQueryForTimeline(t *testing.T) {
 
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var envelope struct {
+		Code int          `json:"code"`
+		Data TimelineResp `json:"data"`
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if got := len(envelope.Data.Events); got != 1 {
+		t.Fatalf("expected 1 event, got %d", got)
 	}
 }

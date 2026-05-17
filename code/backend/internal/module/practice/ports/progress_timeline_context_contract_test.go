@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -35,11 +34,11 @@ var _ practiceports.PracticeTimelineQueryRepository = (*ctxOnlyPracticeProgressQ
 
 type ctxOnlyPracticeProgressCache struct{}
 
-func (ctxOnlyPracticeProgressCache) GetUserProgress(context.Context, int64) (*dto.ProgressResp, bool, error) {
+func (ctxOnlyPracticeProgressCache) GetUserProgress(context.Context, int64) (*practiceports.UserProgressSnapshot, bool, error) {
 	return nil, false, nil
 }
 
-func (ctxOnlyPracticeProgressCache) StoreUserProgress(context.Context, int64, *dto.ProgressResp, time.Duration) error {
+func (ctxOnlyPracticeProgressCache) StoreUserProgress(context.Context, int64, *practiceports.UserProgressSnapshot, time.Duration) error {
 	return nil
 }
 

@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/constants"
-	"ctf-platform/internal/dto"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -26,7 +25,7 @@ func NewProgressCache(client *redis.Client) *ProgressCache {
 	return &ProgressCache{client: client}
 }
 
-func (c *ProgressCache) GetUserProgress(ctx context.Context, userID int64) (*dto.ProgressResp, bool, error) {
+func (c *ProgressCache) GetUserProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, bool, error) {
 	if c == nil || c.client == nil {
 		return nil, false, nil
 	}
@@ -39,14 +38,14 @@ func (c *ProgressCache) GetUserProgress(ctx context.Context, userID int64) (*dto
 		return nil, false, fmt.Errorf("get user progress cache: %w", err)
 	}
 
-	var resp dto.ProgressResp
+	var resp practiceports.UserProgressSnapshot
 	if err := json.Unmarshal([]byte(cached), &resp); err != nil {
 		return nil, false, fmt.Errorf("decode user progress cache: %w", err)
 	}
 	return &resp, true, nil
 }
 
-func (c *ProgressCache) StoreUserProgress(ctx context.Context, userID int64, resp *dto.ProgressResp, ttl time.Duration) error {
+func (c *ProgressCache) StoreUserProgress(ctx context.Context, userID int64, resp *practiceports.UserProgressSnapshot, ttl time.Duration) error {
 	if c == nil || c.client == nil || resp == nil {
 		return nil
 	}
