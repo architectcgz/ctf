@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 )
@@ -15,33 +14,8 @@ type DimensionScore struct {
 	UserScore  int
 }
 
-func BuildEmptyProfile(userID int64) *dto.SkillProfileResp {
-	return BuildSkillProfile(userID, nil)
-}
-
 func BuildEmptyProfileContract(userID int64) *assessmentcontracts.SkillProfile {
 	return BuildSkillProfileContract(userID, nil)
-}
-
-func BuildSkillProfile(userID int64, profiles []*model.SkillProfile) *dto.SkillProfileResp {
-	dimensionMap, latestUpdate := buildProfileSnapshot(profiles)
-	dimensions := make([]*dto.SkillDimension, 0, len(model.AllDimensions))
-	for _, dim := range model.AllDimensions {
-		dimensions = append(dimensions, &dto.SkillDimension{
-			Dimension: dim,
-			Score:     dimensionMap[dim],
-		})
-	}
-
-	resp := &dto.SkillProfileResp{
-		UserID:     userID,
-		Dimensions: dimensions,
-		UpdatedAt:  "",
-	}
-	if !latestUpdate.IsZero() {
-		resp.UpdatedAt = latestUpdate.Format(time.RFC3339)
-	}
-	return resp
 }
 
 func BuildSkillProfileContract(userID int64, profiles []*model.SkillProfile) *assessmentcontracts.SkillProfile {

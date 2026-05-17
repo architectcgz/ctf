@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
@@ -139,7 +138,7 @@ type AssessmentReviewArchiveRepository interface {
 }
 
 type AssessmentProfileReader interface {
-	GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+	GetSkillProfile(ctx context.Context, userID int64) (*assessmentcontracts.SkillProfile, error)
 }
 
 type ReportRepository interface {

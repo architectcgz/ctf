@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -52,23 +53,23 @@ type ReportService struct {
 
 type personalReportData struct {
 	User           *assessmentdomain.ReportUser
-	SkillProfile   []*dto.SkillDimension
+	SkillProfile   []*assessmentcontracts.SkillDimension
 	Stats          *assessmentdomain.PersonalReportStats
 	DimensionStats []assessmentdomain.ReportDimensionStat
 }
 
 type classReportData struct {
-	ClassName              string                                    `json:"class_name"`
-	Window                 classReportWindow                         `json:"window"`
-	TotalStudents          int                                       `json:"total_students"`
-	AverageScore           float64                                   `json:"average_score"`
-	DimensionAverages      []assessmentdomain.ClassDimensionAverage   `json:"dimension_averages"`
-	TopStudents            []assessmentdomain.ClassTopStudent        `json:"top_students"`
-	Summary                *dto.TeacherClassSummaryResp              `json:"summary,omitempty"`
-	Trend                  *dto.TeacherClassTrendResp                `json:"trend,omitempty"`
-	Review                 *dto.TeacherClassReviewResp               `json:"review,omitempty"`
-	CategoryDistribution   []assessmentdomain.ClassDistributionStat  `json:"category_distribution"`
-	DifficultyDistribution []assessmentdomain.ClassDistributionStat  `json:"difficulty_distribution"`
+	ClassName              string                                        `json:"class_name"`
+	Window                 classReportWindow                             `json:"window"`
+	TotalStudents          int                                           `json:"total_students"`
+	AverageScore           float64                                       `json:"average_score"`
+	DimensionAverages      []assessmentdomain.ClassDimensionAverage      `json:"dimension_averages"`
+	TopStudents            []assessmentdomain.ClassTopStudent            `json:"top_students"`
+	Summary                *dto.TeacherClassSummaryResp                  `json:"summary,omitempty"`
+	Trend                  *dto.TeacherClassTrendResp                    `json:"trend,omitempty"`
+	Review                 *dto.TeacherClassReviewResp                   `json:"review,omitempty"`
+	CategoryDistribution   []assessmentdomain.ClassDistributionStat      `json:"category_distribution"`
+	DifficultyDistribution []assessmentdomain.ClassDistributionStat      `json:"difficulty_distribution"`
 	ContestMigration       assessmentdomain.ClassContestMigrationSummary `json:"contest_migration"`
 }
 
@@ -101,7 +102,7 @@ type ReviewArchiveData struct {
 	GeneratedAt         time.Time                                         `json:"generated_at"`
 	Student             ReviewArchiveStudent                              `json:"student"`
 	Summary             assessmentdomain.ReviewArchiveSummary             `json:"summary"`
-	SkillProfile        []*dto.SkillDimension                             `json:"skill_profile,omitempty"`
+	SkillProfile        []*assessmentcontracts.SkillDimension             `json:"skill_profile,omitempty"`
 	Timeline            []assessmentdomain.ReviewArchiveTimelineEvent     `json:"timeline"`
 	Evidence            []assessmentdomain.ReviewArchiveEvidenceEvent     `json:"evidence"`
 	Writeups            []assessmentdomain.ReviewArchiveWriteupItem       `json:"writeups"`
@@ -861,7 +862,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	var skillProfile []*dto.SkillDimension
+	var skillProfile []*assessmentcontracts.SkillDimension
 	if s.assessmentService != nil {
 		skillProfileResp, skillErr := s.assessmentService.GetSkillProfile(ctx, studentID)
 		if skillErr != nil {
@@ -974,7 +975,7 @@ func latestReviewArchiveActivity(
 
 func buildReviewArchiveObservations(
 	summary assessmentdomain.ReviewArchiveSummary,
-	skillProfile []*dto.SkillDimension,
+	skillProfile []*assessmentcontracts.SkillDimension,
 	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 	writeups []assessmentdomain.ReviewArchiveWriteupItem,
@@ -1001,7 +1002,7 @@ func buildReviewArchiveObservations(
 
 func buildReviewArchiveTeachingFactSnapshot(
 	summary assessmentdomain.ReviewArchiveSummary,
-	skillProfile []*dto.SkillDimension,
+	skillProfile []*assessmentcontracts.SkillDimension,
 	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
 	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
 	writeups []assessmentdomain.ReviewArchiveWriteupItem,
@@ -1958,7 +1959,7 @@ type chartRow struct {
 	Value float64
 }
 
-func skillProfileChartRows(dimensions []*dto.SkillDimension) []chartRow {
+func skillProfileChartRows(dimensions []*assessmentcontracts.SkillDimension) []chartRow {
 	rows := make([]chartRow, 0, len(dimensions))
 	for _, dimension := range dimensions {
 		rows = append(rows, chartRow{

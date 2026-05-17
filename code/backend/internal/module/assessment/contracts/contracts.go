@@ -9,14 +9,14 @@ type ProfileService interface {
 }
 
 type SkillDimension struct {
-	Dimension string
-	Score     float64
+	Dimension string  `json:"dimension"`
+	Score     float64 `json:"score"`
 }
 
 type SkillProfile struct {
-	UserID     int64
-	Dimensions []*SkillDimension
-	UpdatedAt  string
+	UserID     int64             `json:"user_id"`
+	Dimensions []*SkillDimension `json:"dimensions"`
+	UpdatedAt  string            `json:"updated_at"`
 }
 
 type RecommendationWeakDimension struct {

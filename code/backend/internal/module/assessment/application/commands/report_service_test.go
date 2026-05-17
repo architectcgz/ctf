@@ -18,6 +18,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -28,25 +29,25 @@ import (
 )
 
 type testReportRepository struct {
-	db              *gorm.DB
-	users           map[int64]*assessmentdomain.ReportUser
-	contests        map[int64]*model.Contest
-	personalStats   *assessmentdomain.PersonalReportStats
-	totalChallenges int64
-	classSummary    *queryports.ClassSummary
-	classTrend      *queryports.ClassTrend
-	classSnapshots  []teachingadvice.StudentFactSnapshot
-	categoryStats   []assessmentdomain.ClassDistributionStat
-	difficultyStats []assessmentdomain.ClassDistributionStat
-	contestSummary  *assessmentdomain.ClassContestMigrationSummary
-	lastSummarySince time.Time
-	lastTrendSince   time.Time
-	lastTrendDays    int
+	db                *gorm.DB
+	users             map[int64]*assessmentdomain.ReportUser
+	contests          map[int64]*model.Contest
+	personalStats     *assessmentdomain.PersonalReportStats
+	totalChallenges   int64
+	classSummary      *queryports.ClassSummary
+	classTrend        *queryports.ClassTrend
+	classSnapshots    []teachingadvice.StudentFactSnapshot
+	categoryStats     []assessmentdomain.ClassDistributionStat
+	difficultyStats   []assessmentdomain.ClassDistributionStat
+	contestSummary    *assessmentdomain.ClassContestMigrationSummary
+	lastSummarySince  time.Time
+	lastTrendSince    time.Time
+	lastTrendDays     int
 	lastSnapshotSince time.Time
-	timeline        []assessmentdomain.ReviewArchiveTimelineEvent
-	evidence        []assessmentdomain.ReviewArchiveEvidenceEvent
-	writeups        []assessmentdomain.ReviewArchiveWriteupItem
-	manualReviews   []assessmentdomain.ReviewArchiveManualReviewItem
+	timeline          []assessmentdomain.ReviewArchiveTimelineEvent
+	evidence          []assessmentdomain.ReviewArchiveEvidenceEvent
+	writeups          []assessmentdomain.ReviewArchiveWriteupItem
+	manualReviews     []assessmentdomain.ReviewArchiveManualReviewItem
 }
 
 func (r *testReportRepository) Create(ctx context.Context, report *model.Report) error {
@@ -232,12 +233,12 @@ func (r *testReportRepository) ListStudentManualReviews(context.Context, int64) 
 }
 
 type testAssessmentProfileReader struct {
-	resp *dto.SkillProfileResp
+	resp *assessmentcontracts.SkillProfile
 }
 
-func (r *testAssessmentProfileReader) GetSkillProfile(context.Context, int64) (*dto.SkillProfileResp, error) {
+func (r *testAssessmentProfileReader) GetSkillProfile(context.Context, int64) (*assessmentcontracts.SkillProfile, error) {
 	if r == nil || r.resp == nil {
-		return &dto.SkillProfileResp{}, nil
+		return &assessmentcontracts.SkillProfile{}, nil
 	}
 	return r.resp, nil
 }
@@ -392,7 +393,7 @@ func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
 			Username:  "alice",
 			ClassName: "class-a",
 		},
-		SkillProfile: []*dto.SkillDimension{
+		SkillProfile: []*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.8},
 			{Dimension: "crypto", Score: 0.5},
 		},
@@ -432,7 +433,7 @@ func TestWritePersonalExcelCreatesWorkbook(t *testing.T) {
 			Username:  "alice",
 			ClassName: "class-a",
 		},
-		SkillProfile: []*dto.SkillDimension{
+		SkillProfile: []*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.8},
 			{Dimension: "crypto", Score: 0.5},
 		},
@@ -527,6 +528,54 @@ func TestWriteJSONReportCreatesJSONFile(t *testing.T) {
 	}
 	if len(content) == 0 || content[0] != '{' {
 		t.Fatalf("expected json object content, got %q", string(content))
+	}
+}
+
+func TestWriteJSONReportPreservesSkillProfileFieldNames(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "archive.json")
+	payload := ReviewArchiveData{
+		GeneratedAt: time.Date(2026, 5, 17, 12, 0, 0, 0, time.UTC),
+		Student: ReviewArchiveStudent{
+			ID:       7,
+			Username: "alice",
+		},
+		SkillProfile: []*assessmentcontracts.SkillDimension{
+			{Dimension: "web", Score: 0.8},
+		},
+	}
+
+	if err := writeJSONReport(path, payload); err != nil {
+		t.Fatalf("writeJSONReport() error = %v", err)
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if !bytes.Contains(content, []byte(`"skill_profile"`)) {
+		t.Fatalf("expected skill_profile key, got %s", string(content))
+	}
+
+	var decoded map[string]any
+	if err := json.Unmarshal(content, &decoded); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	profiles, ok := decoded["skill_profile"].([]any)
+	if !ok || len(profiles) != 1 {
+		t.Fatalf("expected one skill_profile item, got %#v", decoded["skill_profile"])
+	}
+	first, ok := profiles[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected skill_profile item object, got %#v", profiles[0])
+	}
+	if first["dimension"] != "web" {
+		t.Fatalf("expected dimension key to stay dimension=web, got %#v", first)
+	}
+	if score, ok := first["score"].(float64); !ok || score != 0.8 {
+		t.Fatalf("expected score key to stay score=0.8, got %#v", first)
 	}
 }
 
@@ -683,9 +732,9 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 		repo,
 		repo,
 		&testAssessmentProfileReader{
-			resp: &dto.SkillProfileResp{
+			resp: &assessmentcontracts.SkillProfile{
 				UserID: 7,
-				Dimensions: []*dto.SkillDimension{
+				Dimensions: []*assessmentcontracts.SkillDimension{
 					{Dimension: "web", Score: 0.8},
 				},
 				UpdatedAt: submittedAt.Format(time.RFC3339),
@@ -844,7 +893,7 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 			TotalAttempts:          2,
 			CorrectSubmissionCount: 0,
 		},
-		[]*dto.SkillDimension{
+		[]*assessmentcontracts.SkillDimension{
 			{Dimension: "pwn", Score: 0.3},
 		},
 		nil,
@@ -869,7 +918,7 @@ func TestBuildReviewArchiveTeachingFactSnapshotOnlyMarksDimensionWithRealEvidenc
 			TotalAttempts:          2,
 			CorrectSubmissionCount: 0,
 		},
-		[]*dto.SkillDimension{
+		[]*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.28},
 			{Dimension: "pwn", Score: 0.24},
 		},
@@ -922,7 +971,7 @@ func TestBuildReviewArchiveTeachingFactSnapshotUsesExplicitTrackedSubmissionCoun
 			CorrectSubmissionCount: 2,
 			LastActivityAt:         &now,
 		},
-		[]*dto.SkillDimension{
+		[]*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.42},
 		},
 		nil,
@@ -1027,7 +1076,7 @@ func TestBuildReviewArchiveTeachingFactSnapshotCountsRecentManualReviewsAsActivi
 		assessmentdomain.ReviewArchiveSummary{
 			LastActivityAt: &now,
 		},
-		[]*dto.SkillDimension{
+		[]*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.42},
 		},
 		nil,
@@ -1047,7 +1096,7 @@ func TestBuildReviewArchiveTeachingFactSnapshotCountsRecentManualReviewsAsActivi
 		assessmentdomain.ReviewArchiveSummary{
 			LastActivityAt: &now,
 		},
-		[]*dto.SkillDimension{
+		[]*assessmentcontracts.SkillDimension{
 			{Dimension: "web", Score: 0.42},
 		},
 		nil,

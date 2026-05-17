@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
@@ -148,7 +147,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 }
 
 // CalculateSkillProfile 带超时控制的画像计算
-func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
+func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*assessmentcontracts.SkillDimension, error) {
 	start := time.Now()
 	defer func() {
 		s.logger.Info("画像计算完成", zap.Int64("userID", userID), zap.Duration("duration", time.Since(start)))
@@ -176,7 +175,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*d
 		return nil, err
 	}
 
-	dimensions := make([]*dto.SkillDimension, 0, len(scores))
+	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(scores))
 	profiles := make([]*model.SkillProfile, 0, len(scores))
 	now := time.Now()
 
@@ -192,7 +191,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*d
 			rate = float64(score.UserScore) / float64(score.TotalScore)
 		}
 
-		dimensions = append(dimensions, &dto.SkillDimension{
+		dimensions = append(dimensions, &assessmentcontracts.SkillDimension{
 			Dimension: score.Dimension,
 			Score:     rate,
 		})
@@ -233,15 +232,15 @@ func (s *Service) RebuildAllSkillProfiles(ctx context.Context) error {
 }
 
 // getExistingProfile 获取已有画像
-func (s *Service) getExistingProfile(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
+func (s *Service) getExistingProfile(ctx context.Context, userID int64) ([]*assessmentcontracts.SkillDimension, error) {
 	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	dimensions := make([]*dto.SkillDimension, 0, len(profiles))
+	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(profiles))
 	for _, p := range profiles {
-		dimensions = append(dimensions, &dto.SkillDimension{
+		dimensions = append(dimensions, &assessmentcontracts.SkillDimension{
 			Dimension: p.Dimension,
 			Score:     p.Score,
 		})
@@ -250,19 +249,19 @@ func (s *Service) getExistingProfile(ctx context.Context, userID int64) ([]*dto.
 }
 
 // GetSkillProfile 获取用户能力画像
-func (s *Service) GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+func (s *Service) GetSkillProfile(ctx context.Context, userID int64) (*assessmentcontracts.SkillProfile, error) {
 	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if len(profiles) == 0 {
-		return assessmentdomain.BuildEmptyProfile(userID), nil
+		return assessmentdomain.BuildEmptyProfileContract(userID), nil
 	}
 
-	return assessmentdomain.BuildSkillProfile(userID, profiles), nil
+	return assessmentdomain.BuildSkillProfileContract(userID, profiles), nil
 }
 
-func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {
+func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*assessmentcontracts.SkillProfile, error) {
 	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
