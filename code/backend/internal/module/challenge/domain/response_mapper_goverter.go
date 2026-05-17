@@ -29,15 +29,15 @@ type ChallengeResponseMapper interface {
 	// goverter:ignore PackageBaseline
 	// goverter:ignore PackageFiles
 	// goverter:ignore PackageRevisions
-	ToChallengeTopologyRespBase(source model.ChallengeTopology) dto.ChallengeTopologyResp
-	ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *dto.ChallengeTopologyResp
+	ToChallengeTopologyRespBase(source model.ChallengeTopology) challengecontracts.ChallengeTopologyResp
+	ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *challengecontracts.ChallengeTopologyResp
 
 	// goverter:ignore Networks
 	// goverter:ignore Nodes
 	// goverter:ignore Links
 	// goverter:ignore Policies
-	ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) dto.EnvironmentTemplateResp
-	ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *dto.EnvironmentTemplateResp
+	ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) challengecontracts.EnvironmentTemplateResp
+	ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *challengecontracts.EnvironmentTemplateResp
 
 	// goverter:ignore CheckerConfig FlagConfig AccessConfig RuntimeConfig
 	ToAWDChallengeRespBase(source model.AWDChallenge) dto.AWDChallengeResp
@@ -78,8 +78,8 @@ type ChallengeResponseMapper interface {
 	ToRecommendedChallengeSolutionRespBase(source challengeports.RecommendedSolutionRecord) challengecontracts.RecommendedChallengeSolutionResp
 	ToRecommendedChallengeSolutionRespBasePtr(source *challengeports.RecommendedSolutionRecord) *challengecontracts.RecommendedChallengeSolutionResp
 
-	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) dto.ChallengePackageRevisionResp
-	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *dto.ChallengePackageRevisionResp
+	ToChallengePackageRevisionResp(source model.ChallengePackageRevision) challengecontracts.ChallengePackageRevisionResp
+	ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *challengecontracts.ChallengePackageRevisionResp
 
 	ToChallengePackageFileResp(source ParsedChallengePackageFile) dto.ChallengePackageFileResp
 	ToChallengePackageFileResps(source []ParsedChallengePackageFile) []dto.ChallengePackageFileResp

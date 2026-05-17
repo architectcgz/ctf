@@ -349,7 +349,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeSelfCheckResp(source *dto.Chall
 	}
 	return pHttpChallengeSelfCheckResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *contracts.ChallengeTopologyResp) *ChallengeTopologyResp {
 	var pHttpChallengeTopologyResp *ChallengeTopologyResp
 	if source != nil {
 		var httpChallengeTopologyResp ChallengeTopologyResp
@@ -363,25 +363,25 @@ func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *dto.Challe
 		if (*source).Networks != nil {
 			httpChallengeTopologyResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
 			for i := 0; i < len((*source).Networks); i++ {
-				httpChallengeTopologyResp.Networks[i] = c.dtoTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
+				httpChallengeTopologyResp.Networks[i] = c.contractsTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
 			}
 		}
 		if (*source).Nodes != nil {
 			httpChallengeTopologyResp.Nodes = make([]TopologyNodeResp, len((*source).Nodes))
 			for j := 0; j < len((*source).Nodes); j++ {
-				httpChallengeTopologyResp.Nodes[j] = c.dtoTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
+				httpChallengeTopologyResp.Nodes[j] = c.contractsTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
 			}
 		}
 		if (*source).Links != nil {
 			httpChallengeTopologyResp.Links = make([]TopologyLinkResp, len((*source).Links))
 			for k := 0; k < len((*source).Links); k++ {
-				httpChallengeTopologyResp.Links[k] = c.dtoTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
+				httpChallengeTopologyResp.Links[k] = c.contractsTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
 			}
 		}
 		if (*source).Policies != nil {
 			httpChallengeTopologyResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
 			for l := 0; l < len((*source).Policies); l++ {
-				httpChallengeTopologyResp.Policies[l] = c.dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
+				httpChallengeTopologyResp.Policies[l] = c.contractsTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
 			}
 		}
 		httpChallengeTopologyResp.SourceType = (*source).SourceType
@@ -395,17 +395,17 @@ func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *dto.Challe
 			xint643 := *(*source).LastExportRevisionID
 			httpChallengeTopologyResp.LastExportRevisionID = &xint643
 		}
-		httpChallengeTopologyResp.PackageBaseline = c.pDtoTopologySpecRespToPHttpTopologySpecResp((*source).PackageBaseline)
+		httpChallengeTopologyResp.PackageBaseline = c.pContractsTopologySpecRespToPHttpTopologySpecResp((*source).PackageBaseline)
 		if (*source).PackageFiles != nil {
 			httpChallengeTopologyResp.PackageFiles = make([]ChallengePackageFileResp, len((*source).PackageFiles))
 			for m := 0; m < len((*source).PackageFiles); m++ {
-				httpChallengeTopologyResp.PackageFiles[m] = c.dtoChallengePackageFileRespToHttpChallengePackageFileResp((*source).PackageFiles[m])
+				httpChallengeTopologyResp.PackageFiles[m] = c.contractsChallengePackageFileRespToHttpChallengePackageFileResp((*source).PackageFiles[m])
 			}
 		}
 		if (*source).PackageRevisions != nil {
 			httpChallengeTopologyResp.PackageRevisions = make([]ChallengePackageRevisionResp, len((*source).PackageRevisions))
 			for n := 0; n < len((*source).PackageRevisions); n++ {
-				httpChallengeTopologyResp.PackageRevisions[n] = c.dtoChallengePackageRevisionRespToHttpChallengePackageRevisionResp((*source).PackageRevisions[n])
+				httpChallengeTopologyResp.PackageRevisions[n] = c.contractsChallengePackageRevisionRespToHttpChallengePackageRevisionResp((*source).PackageRevisions[n])
 			}
 		}
 		httpChallengeTopologyResp.CreatedAt = CopyTime((*source).CreatedAt)
@@ -414,7 +414,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeTopologyResp(source *dto.Challe
 	}
 	return pHttpChallengeTopologyResp
 }
-func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp {
+func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateResp(source *contracts.EnvironmentTemplateResp) *EnvironmentTemplateResp {
 	var pHttpEnvironmentTemplateResp *EnvironmentTemplateResp
 	if source != nil {
 		var httpEnvironmentTemplateResp EnvironmentTemplateResp
@@ -425,25 +425,25 @@ func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateResp(source *dto.Envi
 		if (*source).Networks != nil {
 			httpEnvironmentTemplateResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
 			for i := 0; i < len((*source).Networks); i++ {
-				httpEnvironmentTemplateResp.Networks[i] = c.dtoTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
+				httpEnvironmentTemplateResp.Networks[i] = c.contractsTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
 			}
 		}
 		if (*source).Nodes != nil {
 			httpEnvironmentTemplateResp.Nodes = make([]TopologyNodeResp, len((*source).Nodes))
 			for j := 0; j < len((*source).Nodes); j++ {
-				httpEnvironmentTemplateResp.Nodes[j] = c.dtoTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
+				httpEnvironmentTemplateResp.Nodes[j] = c.contractsTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
 			}
 		}
 		if (*source).Links != nil {
 			httpEnvironmentTemplateResp.Links = make([]TopologyLinkResp, len((*source).Links))
 			for k := 0; k < len((*source).Links); k++ {
-				httpEnvironmentTemplateResp.Links[k] = c.dtoTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
+				httpEnvironmentTemplateResp.Links[k] = c.contractsTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
 			}
 		}
 		if (*source).Policies != nil {
 			httpEnvironmentTemplateResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
 			for l := 0; l < len((*source).Policies); l++ {
-				httpEnvironmentTemplateResp.Policies[l] = c.dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
+				httpEnvironmentTemplateResp.Policies[l] = c.contractsTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
 			}
 		}
 		httpEnvironmentTemplateResp.UsageCount = (*source).UsageCount
@@ -453,7 +453,7 @@ func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateResp(source *dto.Envi
 	}
 	return pHttpEnvironmentTemplateResp
 }
-func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp {
+func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespList(source []*contracts.EnvironmentTemplateResp) []*EnvironmentTemplateResp {
 	var pHttpEnvironmentTemplateRespList []*EnvironmentTemplateResp
 	if source != nil {
 		pHttpEnvironmentTemplateRespList = make([]*EnvironmentTemplateResp, len(source))
@@ -544,6 +544,85 @@ func (c *ChallengeResponseMapperImpl) ToTagRespList(source []*contracts.TagResp)
 		}
 	}
 	return pHttpTagRespList
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengePackageFileRespToHttpChallengePackageFileResp(source contracts.ChallengePackageFileResp) ChallengePackageFileResp {
+	var httpChallengePackageFileResp ChallengePackageFileResp
+	httpChallengePackageFileResp.Path = source.Path
+	httpChallengePackageFileResp.Size = source.Size
+	return httpChallengePackageFileResp
+}
+func (c *ChallengeResponseMapperImpl) contractsChallengePackageRevisionRespToHttpChallengePackageRevisionResp(source contracts.ChallengePackageRevisionResp) ChallengePackageRevisionResp {
+	var httpChallengePackageRevisionResp ChallengePackageRevisionResp
+	httpChallengePackageRevisionResp.ID = source.ID
+	httpChallengePackageRevisionResp.RevisionNo = source.RevisionNo
+	httpChallengePackageRevisionResp.SourceType = source.SourceType
+	if source.ParentRevisionID != nil {
+		xint64 := *source.ParentRevisionID
+		httpChallengePackageRevisionResp.ParentRevisionID = &xint64
+	}
+	httpChallengePackageRevisionResp.PackageSlug = source.PackageSlug
+	httpChallengePackageRevisionResp.ArchivePath = source.ArchivePath
+	httpChallengePackageRevisionResp.SourceDir = source.SourceDir
+	httpChallengePackageRevisionResp.TopologySourcePath = source.TopologySourcePath
+	if source.CreatedBy != nil {
+		xint642 := *source.CreatedBy
+		httpChallengePackageRevisionResp.CreatedBy = &xint642
+	}
+	httpChallengePackageRevisionResp.CreatedAt = CopyTime(source.CreatedAt)
+	httpChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return httpChallengePackageRevisionResp
+}
+func (c *ChallengeResponseMapperImpl) contractsTopologyLinkRespToHttpTopologyLinkResp(source contracts.TopologyLinkResp) TopologyLinkResp {
+	var httpTopologyLinkResp TopologyLinkResp
+	httpTopologyLinkResp.FromNodeKey = source.FromNodeKey
+	httpTopologyLinkResp.ToNodeKey = source.ToNodeKey
+	return httpTopologyLinkResp
+}
+func (c *ChallengeResponseMapperImpl) contractsTopologyNetworkRespToHttpTopologyNetworkResp(source contracts.TopologyNetworkResp) TopologyNetworkResp {
+	var httpTopologyNetworkResp TopologyNetworkResp
+	httpTopologyNetworkResp.Key = source.Key
+	httpTopologyNetworkResp.Name = source.Name
+	httpTopologyNetworkResp.CIDR = source.CIDR
+	httpTopologyNetworkResp.Internal = source.Internal
+	return httpTopologyNetworkResp
+}
+func (c *ChallengeResponseMapperImpl) contractsTopologyNodeRespToHttpTopologyNodeResp(source contracts.TopologyNodeResp) TopologyNodeResp {
+	var httpTopologyNodeResp TopologyNodeResp
+	httpTopologyNodeResp.Key = source.Key
+	httpTopologyNodeResp.Name = source.Name
+	httpTopologyNodeResp.ImageID = source.ImageID
+	httpTopologyNodeResp.ServicePort = source.ServicePort
+	httpTopologyNodeResp.ServiceProtocol = source.ServiceProtocol
+	httpTopologyNodeResp.InjectFlag = source.InjectFlag
+	httpTopologyNodeResp.Tier = source.Tier
+	if source.NetworkKeys != nil {
+		httpTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
+		for i := 0; i < len(source.NetworkKeys); i++ {
+			httpTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
+		}
+	}
+	if source.Env != nil {
+		httpTopologyNodeResp.Env = make(map[string]string, len(source.Env))
+		for key, value := range source.Env {
+			httpTopologyNodeResp.Env[key] = value
+		}
+	}
+	httpTopologyNodeResp.Resources = c.pContractsTopologyResourcesRespToPHttpTopologyResourcesResp(source.Resources)
+	return httpTopologyNodeResp
+}
+func (c *ChallengeResponseMapperImpl) contractsTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp(source contracts.TopologyTrafficPolicyResp) TopologyTrafficPolicyResp {
+	var httpTopologyTrafficPolicyResp TopologyTrafficPolicyResp
+	httpTopologyTrafficPolicyResp.SourceNodeKey = source.SourceNodeKey
+	httpTopologyTrafficPolicyResp.TargetNodeKey = source.TargetNodeKey
+	httpTopologyTrafficPolicyResp.Action = source.Action
+	httpTopologyTrafficPolicyResp.Protocol = source.Protocol
+	if source.Ports != nil {
+		httpTopologyTrafficPolicyResp.Ports = make([]int, len(source.Ports))
+		for i := 0; i < len(source.Ports); i++ {
+			httpTopologyTrafficPolicyResp.Ports[i] = source.Ports[i]
+		}
+	}
+	return httpTopologyTrafficPolicyResp
 }
 func (c *ChallengeResponseMapperImpl) dtoAWDChallengeImportPreviewRespToHttpAWDChallengeImportPreviewResp(source dto.AWDChallengeImportPreviewResp) AWDChallengeImportPreviewResp {
 	var httpAWDChallengeImportPreviewResp AWDChallengeImportPreviewResp
@@ -720,27 +799,6 @@ func (c *ChallengeResponseMapperImpl) dtoChallengePackageFileRespToHttpChallenge
 	httpChallengePackageFileResp.Size = source.Size
 	return httpChallengePackageFileResp
 }
-func (c *ChallengeResponseMapperImpl) dtoChallengePackageRevisionRespToHttpChallengePackageRevisionResp(source dto.ChallengePackageRevisionResp) ChallengePackageRevisionResp {
-	var httpChallengePackageRevisionResp ChallengePackageRevisionResp
-	httpChallengePackageRevisionResp.ID = source.ID
-	httpChallengePackageRevisionResp.RevisionNo = source.RevisionNo
-	httpChallengePackageRevisionResp.SourceType = source.SourceType
-	if source.ParentRevisionID != nil {
-		xint64 := *source.ParentRevisionID
-		httpChallengePackageRevisionResp.ParentRevisionID = &xint64
-	}
-	httpChallengePackageRevisionResp.PackageSlug = source.PackageSlug
-	httpChallengePackageRevisionResp.ArchivePath = source.ArchivePath
-	httpChallengePackageRevisionResp.SourceDir = source.SourceDir
-	httpChallengePackageRevisionResp.TopologySourcePath = source.TopologySourcePath
-	if source.CreatedBy != nil {
-		xint642 := *source.CreatedBy
-		httpChallengePackageRevisionResp.CreatedBy = &xint642
-	}
-	httpChallengePackageRevisionResp.CreatedAt = CopyTime(source.CreatedAt)
-	httpChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
-	return httpChallengePackageRevisionResp
-}
 func (c *ChallengeResponseMapperImpl) dtoChallengeRespToPHttpChallengeResp(source dto.ChallengeResp) *ChallengeResp {
 	var httpChallengeResp ChallengeResp
 	httpChallengeResp.ID = source.ID
@@ -817,30 +875,6 @@ func (c *ChallengeResponseMapperImpl) dtoTopologyNetworkRespToHttpTopologyNetwor
 	httpTopologyNetworkResp.Internal = source.Internal
 	return httpTopologyNetworkResp
 }
-func (c *ChallengeResponseMapperImpl) dtoTopologyNodeRespToHttpTopologyNodeResp(source dto.TopologyNodeResp) TopologyNodeResp {
-	var httpTopologyNodeResp TopologyNodeResp
-	httpTopologyNodeResp.Key = source.Key
-	httpTopologyNodeResp.Name = source.Name
-	httpTopologyNodeResp.ImageID = source.ImageID
-	httpTopologyNodeResp.ServicePort = source.ServicePort
-	httpTopologyNodeResp.ServiceProtocol = source.ServiceProtocol
-	httpTopologyNodeResp.InjectFlag = source.InjectFlag
-	httpTopologyNodeResp.Tier = source.Tier
-	if source.NetworkKeys != nil {
-		httpTopologyNodeResp.NetworkKeys = make([]string, len(source.NetworkKeys))
-		for i := 0; i < len(source.NetworkKeys); i++ {
-			httpTopologyNodeResp.NetworkKeys[i] = source.NetworkKeys[i]
-		}
-	}
-	if source.Env != nil {
-		httpTopologyNodeResp.Env = make(map[string]string, len(source.Env))
-		for key, value := range source.Env {
-			httpTopologyNodeResp.Env[key] = value
-		}
-	}
-	httpTopologyNodeResp.Resources = c.pDtoTopologyResourcesRespToPHttpTopologyResourcesResp(source.Resources)
-	return httpTopologyNodeResp
-}
 func (c *ChallengeResponseMapperImpl) dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp(source dto.TopologyTrafficPolicyResp) TopologyTrafficPolicyResp {
 	var httpTopologyTrafficPolicyResp TopologyTrafficPolicyResp
 	httpTopologyTrafficPolicyResp.SourceNodeKey = source.SourceNodeKey
@@ -870,6 +904,50 @@ func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing
 	default: // ignored
 	}
 	return modelInstanceSharing
+}
+func (c *ChallengeResponseMapperImpl) pContractsTopologyResourcesRespToPHttpTopologyResourcesResp(source *contracts.TopologyResourcesResp) *TopologyResourcesResp {
+	var pHttpTopologyResourcesResp *TopologyResourcesResp
+	if source != nil {
+		var httpTopologyResourcesResp TopologyResourcesResp
+		httpTopologyResourcesResp.CPUQuota = (*source).CPUQuota
+		httpTopologyResourcesResp.MemoryMB = (*source).MemoryMB
+		httpTopologyResourcesResp.PidsLimit = (*source).PidsLimit
+		pHttpTopologyResourcesResp = &httpTopologyResourcesResp
+	}
+	return pHttpTopologyResourcesResp
+}
+func (c *ChallengeResponseMapperImpl) pContractsTopologySpecRespToPHttpTopologySpecResp(source *contracts.TopologySpecResp) *TopologySpecResp {
+	var pHttpTopologySpecResp *TopologySpecResp
+	if source != nil {
+		var httpTopologySpecResp TopologySpecResp
+		httpTopologySpecResp.EntryNodeKey = (*source).EntryNodeKey
+		if (*source).Networks != nil {
+			httpTopologySpecResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
+			for i := 0; i < len((*source).Networks); i++ {
+				httpTopologySpecResp.Networks[i] = c.contractsTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
+			}
+		}
+		if (*source).Nodes != nil {
+			httpTopologySpecResp.Nodes = make([]TopologyNodeResp, len((*source).Nodes))
+			for j := 0; j < len((*source).Nodes); j++ {
+				httpTopologySpecResp.Nodes[j] = c.contractsTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
+			}
+		}
+		if (*source).Links != nil {
+			httpTopologySpecResp.Links = make([]TopologyLinkResp, len((*source).Links))
+			for k := 0; k < len((*source).Links); k++ {
+				httpTopologySpecResp.Links[k] = c.contractsTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
+			}
+		}
+		if (*source).Policies != nil {
+			httpTopologySpecResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
+			for l := 0; l < len((*source).Policies); l++ {
+				httpTopologySpecResp.Policies[l] = c.contractsTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
+			}
+		}
+		pHttpTopologySpecResp = &httpTopologySpecResp
+	}
+	return pHttpTopologySpecResp
 }
 func (c *ChallengeResponseMapperImpl) pDtoChallengeHintAdminRespToPHttpChallengeHintAdminResp(source *dto.ChallengeHintAdminResp) *ChallengeHintAdminResp {
 	var pHttpChallengeHintAdminResp *ChallengeHintAdminResp
@@ -928,48 +1006,4 @@ func (c *ChallengeResponseMapperImpl) pDtoChallengeImportTopologyRespToPHttpChal
 		pHttpChallengeImportTopologyResp = &httpChallengeImportTopologyResp
 	}
 	return pHttpChallengeImportTopologyResp
-}
-func (c *ChallengeResponseMapperImpl) pDtoTopologyResourcesRespToPHttpTopologyResourcesResp(source *dto.TopologyResourcesResp) *TopologyResourcesResp {
-	var pHttpTopologyResourcesResp *TopologyResourcesResp
-	if source != nil {
-		var httpTopologyResourcesResp TopologyResourcesResp
-		httpTopologyResourcesResp.CPUQuota = (*source).CPUQuota
-		httpTopologyResourcesResp.MemoryMB = (*source).MemoryMB
-		httpTopologyResourcesResp.PidsLimit = (*source).PidsLimit
-		pHttpTopologyResourcesResp = &httpTopologyResourcesResp
-	}
-	return pHttpTopologyResourcesResp
-}
-func (c *ChallengeResponseMapperImpl) pDtoTopologySpecRespToPHttpTopologySpecResp(source *dto.TopologySpecResp) *TopologySpecResp {
-	var pHttpTopologySpecResp *TopologySpecResp
-	if source != nil {
-		var httpTopologySpecResp TopologySpecResp
-		httpTopologySpecResp.EntryNodeKey = (*source).EntryNodeKey
-		if (*source).Networks != nil {
-			httpTopologySpecResp.Networks = make([]TopologyNetworkResp, len((*source).Networks))
-			for i := 0; i < len((*source).Networks); i++ {
-				httpTopologySpecResp.Networks[i] = c.dtoTopologyNetworkRespToHttpTopologyNetworkResp((*source).Networks[i])
-			}
-		}
-		if (*source).Nodes != nil {
-			httpTopologySpecResp.Nodes = make([]TopologyNodeResp, len((*source).Nodes))
-			for j := 0; j < len((*source).Nodes); j++ {
-				httpTopologySpecResp.Nodes[j] = c.dtoTopologyNodeRespToHttpTopologyNodeResp((*source).Nodes[j])
-			}
-		}
-		if (*source).Links != nil {
-			httpTopologySpecResp.Links = make([]TopologyLinkResp, len((*source).Links))
-			for k := 0; k < len((*source).Links); k++ {
-				httpTopologySpecResp.Links[k] = c.dtoTopologyLinkRespToHttpTopologyLinkResp((*source).Links[k])
-			}
-		}
-		if (*source).Policies != nil {
-			httpTopologySpecResp.Policies = make([]TopologyTrafficPolicyResp, len((*source).Policies))
-			for l := 0; l < len((*source).Policies); l++ {
-				httpTopologySpecResp.Policies[l] = c.dtoTopologyTrafficPolicyRespToHttpTopologyTrafficPolicyResp((*source).Policies[l])
-			}
-		}
-		pHttpTopologySpecResp = &httpTopologySpecResp
-	}
-	return pHttpTopologySpecResp
 }

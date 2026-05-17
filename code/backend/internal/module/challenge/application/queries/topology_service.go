@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/dto"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -40,7 +40,7 @@ func NewTopologyService(
 	return service
 }
 
-func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
+func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*challengecontracts.ChallengeTopologyResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -64,7 +64,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 			return nil, err
 		}
 		if len(revisions) > 0 {
-			resp.PackageRevisions = make([]dto.ChallengePackageRevisionResp, 0, len(revisions))
+			resp.PackageRevisions = make([]challengecontracts.ChallengePackageRevisionResp, 0, len(revisions))
 			for _, revision := range revisions {
 				if revision == nil {
 					continue
@@ -88,7 +88,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 	return resp, nil
 }
 
-func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*challengecontracts.EnvironmentTemplateResp, error) {
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
@@ -99,12 +99,12 @@ func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.Envir
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*challengecontracts.EnvironmentTemplateResp, error) {
 	items, err := s.templateRepo.List(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err
 	}
-	resp := make([]*dto.EnvironmentTemplateResp, 0, len(items))
+	resp := make([]*challengecontracts.EnvironmentTemplateResp, 0, len(items))
 	for _, item := range items {
 		mapped, mapErr := domain.TemplateRespFromModel(item)
 		if mapErr != nil {
@@ -115,12 +115,12 @@ func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]
 	return resp, nil
 }
 
-func listChallengePackageFilesFromSourceDir(sourceDir string) ([]dto.ChallengePackageFileResp, error) {
+func listChallengePackageFilesFromSourceDir(sourceDir string) ([]challengecontracts.ChallengePackageFileResp, error) {
 	sourceDir = strings.TrimSpace(sourceDir)
 	if sourceDir == "" {
 		return nil, nil
 	}
-	files := make([]dto.ChallengePackageFileResp, 0, 16)
+	files := make([]challengecontracts.ChallengePackageFileResp, 0, 16)
 	err := filepath.Walk(sourceDir, func(current string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -132,7 +132,7 @@ func listChallengePackageFilesFromSourceDir(sourceDir string) ([]dto.ChallengePa
 		if err != nil {
 			return err
 		}
-		files = append(files, dto.ChallengePackageFileResp{
+		files = append(files, challengecontracts.ChallengePackageFileResp{
 			Path: filepath.ToSlash(relativePath),
 			Size: info.Size(),
 		})

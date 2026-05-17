@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/response"
 )
 
@@ -17,17 +17,17 @@ type TopologyHandler struct {
 }
 
 type topologyCommandService interface {
-	SaveChallengeTopology(ctx context.Context, challengeID int64, req challengecmd.SaveChallengeTopologyInput) (*dto.ChallengeTopologyResp, error)
+	SaveChallengeTopology(ctx context.Context, challengeID int64, req challengecmd.SaveChallengeTopologyInput) (*challengecontracts.ChallengeTopologyResp, error)
 	DeleteChallengeTopology(ctx context.Context, challengeID int64) error
-	CreateTemplate(ctx context.Context, req challengecmd.UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error)
-	UpdateTemplate(ctx context.Context, id int64, req challengecmd.UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error)
+	CreateTemplate(ctx context.Context, req challengecmd.UpsertEnvironmentTemplateInput) (*challengecontracts.EnvironmentTemplateResp, error)
+	UpdateTemplate(ctx context.Context, id int64, req challengecmd.UpsertEnvironmentTemplateInput) (*challengecontracts.EnvironmentTemplateResp, error)
 	DeleteTemplate(ctx context.Context, id int64) error
 }
 
 type topologyQueryService interface {
-	GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
-	GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
-	ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error)
+	GetChallengeTopology(ctx context.Context, challengeID int64) (*challengecontracts.ChallengeTopologyResp, error)
+	GetTemplate(ctx context.Context, id int64) (*challengecontracts.EnvironmentTemplateResp, error)
+	ListTemplates(ctx context.Context, keyword string) ([]*challengecontracts.EnvironmentTemplateResp, error)
 }
 
 func NewTopologyHandler(commands topologyCommandService, queries topologyQueryService) *TopologyHandler {

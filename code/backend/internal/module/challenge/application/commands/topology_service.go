@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -39,7 +39,7 @@ func NewTopologyService(repo topologyCommandRepository, templateRepo topologyTem
 	}
 }
 
-func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req SaveChallengeTopologyInput) (*dto.ChallengeTopologyResp, error) {
+func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req SaveChallengeTopologyInput) (*challengecontracts.ChallengeTopologyResp, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
@@ -138,7 +138,7 @@ func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challenge
 	return s.repo.DeleteChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
-func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironmentTemplateInput) (*challengecontracts.EnvironmentTemplateResp, error) {
 	rawSpec, entryNodeKey, err := domain.BuildTopologySpec(req.EntryNodeKey, req.Networks, req.Nodes, req.Links, req.Policies)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironm
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req UpsertEnvironmentTemplateInput) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req UpsertEnvironmentTemplateInput) (*challengecontracts.EnvironmentTemplateResp, error) {
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {

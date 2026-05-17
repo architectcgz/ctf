@@ -36,9 +36,9 @@ type ChallengeResponseMapper interface {
 	ToImageRespList(source []*challengecontracts.ImageResp) []*ImageResp
 	ToImagePageResult(source *challengecontracts.PageResult[*challengecontracts.ImageResp]) *PageResult[*ImageResp]
 	ToFlagResp(source *challengecontracts.FlagResp) *FlagResp
-	ToChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp
-	ToEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp
-	ToEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp
+	ToChallengeTopologyResp(source *challengecontracts.ChallengeTopologyResp) *ChallengeTopologyResp
+	ToEnvironmentTemplateResp(source *challengecontracts.EnvironmentTemplateResp) *EnvironmentTemplateResp
+	ToEnvironmentTemplateRespList(source []*challengecontracts.EnvironmentTemplateResp) []*EnvironmentTemplateResp
 	ToAWDChallengeResp(source *dto.AWDChallengeResp) *AWDChallengeResp
 	ToAWDChallengeRespList(source []*dto.AWDChallengeResp) []*AWDChallengeResp
 	ToAWDChallengePageResult(source *dto.AWDChallengePageResp) *AWDChallengePageResp
@@ -117,15 +117,15 @@ func toFlagResp(source *challengecontracts.FlagResp) *FlagResp {
 	return challengeResponseMapper.ToFlagResp(source)
 }
 
-func toChallengeTopologyResp(source *dto.ChallengeTopologyResp) *ChallengeTopologyResp {
+func toChallengeTopologyResp(source *challengecontracts.ChallengeTopologyResp) *ChallengeTopologyResp {
 	return challengeResponseMapper.ToChallengeTopologyResp(source)
 }
 
-func toEnvironmentTemplateResp(source *dto.EnvironmentTemplateResp) *EnvironmentTemplateResp {
+func toEnvironmentTemplateResp(source *challengecontracts.EnvironmentTemplateResp) *EnvironmentTemplateResp {
 	return challengeResponseMapper.ToEnvironmentTemplateResp(source)
 }
 
-func toEnvironmentTemplateRespList(source []*dto.EnvironmentTemplateResp) []*EnvironmentTemplateResp {
+func toEnvironmentTemplateRespList(source []*challengecontracts.EnvironmentTemplateResp) []*EnvironmentTemplateResp {
 	return challengeResponseMapper.ToEnvironmentTemplateRespList(source)
 }
 
