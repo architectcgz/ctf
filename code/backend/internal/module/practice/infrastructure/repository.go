@@ -93,6 +93,14 @@ func (r *Repository) FindContestAWDService(ctx context.Context, contestID, servi
 	return &service, nil
 }
 
+func (r *Repository) FindContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+	service, err := r.FindContestAWDService(ctx, contestID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	return buildContestAWDServiceRuntimeSubject(service)
+}
+
 func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
 	var services []*model.ContestAWDService
 	if err := r.dbWithContext(ctx).

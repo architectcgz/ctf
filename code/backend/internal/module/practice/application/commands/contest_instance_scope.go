@@ -44,19 +44,22 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	if err != nil {
 		return 0, practiceports.InstanceScope{}, err
 	}
-	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
+	subject, err := s.contestScope.FindContestAWDServiceRuntimeSubject(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
 		return 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
-	if !service.IsVisible {
+	if subject == nil {
+		return 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest awd runtime subject is nil"))
+	}
+	if !subject.Visible {
 		return 0, practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
 	}
-	serviceIDCopy := service.ID
+	serviceIDCopy := subject.ServiceID
 	scope.ServiceID = &serviceIDCopy
-	return service.AWDChallengeID, scope, nil
+	return subject.ChallengeID, scope, nil
 }
 
 func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
@@ -104,20 +107,23 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx cont
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(errors.New("队伍缺少队长用户"))
 	}
 
-	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
+	subject, err := s.contestScope.FindContestAWDServiceRuntimeSubject(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
-	if !service.IsVisible {
+	if subject == nil {
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest awd runtime subject is nil"))
+	}
+	if !subject.Visible {
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
 	}
 
 	contestIDCopy := contestID
 	teamIDCopy := teamID
-	serviceIDCopy := service.ID
+	serviceIDCopy := subject.ServiceID
 	scope := practiceports.InstanceScope{
 		ContestID:     &contestIDCopy,
 		ContestMode:   contest.Mode,
@@ -126,7 +132,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx cont
 		FlagSubjectID: teamID,
 		ShareScope:    model.InstanceSharingPerTeam,
 	}
-	return service.AWDChallengeID, team.CaptainID, scope, nil
+	return subject.ChallengeID, team.CaptainID, scope, nil
 }
 
 func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*model.Challenge, *model.ChallengeTopology, error) {
@@ -162,22 +168,18 @@ func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, conte
 	if s.contestScope == nil {
 		return nil, nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
-	service, err := s.contestScope.FindContestAWDService(ctx, contestID, serviceID)
+	subject, err := s.contestScope.FindContestAWDServiceRuntimeSubject(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
 			return nil, nil, errcode.ErrChallengeNotInContest
 		}
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
-	snapshot, err := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
-	if err != nil {
-		return nil, nil, errcode.ErrInternal.WithCause(err)
+	if subject == nil {
+		return nil, nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest awd runtime subject is nil"))
 	}
-	chal := buildContestAWDServiceVirtualChallenge(service, snapshot)
-	topology, err := buildContestAWDServiceVirtualTopology(service, snapshot)
-	if err != nil {
-		return nil, nil, errcode.ErrInternal.WithCause(err)
-	}
+	chal := buildContestAWDServiceVirtualChallenge(subject)
+	topology := buildContestAWDServiceVirtualTopology(subject)
 	return chal, topology, nil
 }
 

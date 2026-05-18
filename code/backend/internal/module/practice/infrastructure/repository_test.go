@@ -301,6 +301,53 @@ func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHo
 	}
 }
 
+func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T) {
+	db := newRepositoryTestDB(t, &model.ContestAWDService{})
+
+	service := &model.ContestAWDService{
+		ID:              41,
+		ContestID:       7,
+		AWDChallengeID:  19,
+		DisplayName:     "Display Name",
+		IsVisible:       true,
+		ScoreConfig:     `{"points":320}`,
+		ServiceSnapshot: `{"name":"Snapshot Name","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team","topology":{"entry_node_key":"web","spec":{"nodes":[{"key":"web"}]}}},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
+	}
+	if err := db.Create(service).Error; err != nil {
+		t.Fatalf("seed awd service: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	subject, err := repo.FindContestAWDServiceRuntimeSubject(context.Background(), service.ContestID, service.ID)
+	if err != nil {
+		t.Fatalf("FindContestAWDServiceRuntimeSubject() error = %v", err)
+	}
+	if subject == nil {
+		t.Fatal("expected runtime subject")
+	}
+	if subject.ServiceID != service.ID || subject.ChallengeID != service.AWDChallengeID || !subject.Visible {
+		t.Fatalf("unexpected runtime subject identity: %+v", subject)
+	}
+	if subject.RuntimeChallenge == nil {
+		t.Fatal("expected runtime challenge")
+	}
+	if subject.RuntimeChallenge.Title != "Display Name" {
+		t.Fatalf("expected display name to win title fallback, got %+v", subject.RuntimeChallenge)
+	}
+	if subject.RuntimeChallenge.Points != 320 || subject.RuntimeChallenge.ImageID != 105 {
+		t.Fatalf("unexpected runtime challenge payload: %+v", subject.RuntimeChallenge)
+	}
+	if subject.RuntimeChallenge.InstanceSharing != model.InstanceSharingPerTeam {
+		t.Fatalf("unexpected instance sharing: %+v", subject.RuntimeChallenge)
+	}
+	if subject.RuntimeTopology == nil || subject.RuntimeTopology.EntryNodeKey != "web" {
+		t.Fatalf("unexpected runtime topology: %+v", subject.RuntimeTopology)
+	}
+	if subject.RuntimeTopology.Spec == "" {
+		t.Fatalf("expected topology spec, got %+v", subject.RuntimeTopology)
+	}
+}
+
 func TestRepositoryIsHostPortReusableForRestart(t *testing.T) {
 	db := newRepositoryTestDB(t, &model.PortAllocation{})
 

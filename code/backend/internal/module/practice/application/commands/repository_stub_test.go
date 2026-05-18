@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -19,6 +20,7 @@ type stubPracticeRepository struct {
 	listDesiredRuntimeAWDContestsFn        func(ctx context.Context) ([]*model.Contest, error)
 	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
+	findContestAWDServiceRuntimeSubjectFn  func(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error)
 	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
 	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*model.Instance, error)
 	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*model.Team, error)
@@ -101,6 +103,17 @@ func (s *stubPracticeRepository) FindContestAWDService(ctx context.Context, cont
 		return s.findContestAWDServiceFn(ctx, contestID, serviceID)
 	}
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) FindContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+	if s.findContestAWDServiceRuntimeSubjectFn != nil {
+		return s.findContestAWDServiceRuntimeSubjectFn(ctx, contestID, serviceID)
+	}
+	service, err := s.FindContestAWDService(ctx, contestID, serviceID)
+	if err != nil || service == nil {
+		return nil, err
+	}
+	return stubContestAWDServiceRuntimeSubject(service)
 }
 
 func (s *stubPracticeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
@@ -220,6 +233,153 @@ func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *m
 		return s.createInstanceFn(ctx, instance)
 	}
 	return nil
+}
+
+func stubContestAWDServiceRuntimeSubject(service *model.ContestAWDService) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+	if service == nil {
+		return nil, nil
+	}
+
+	subject := &practiceports.ContestAWDServiceRuntimeSubject{
+		ServiceID:   service.ID,
+		ChallengeID: service.AWDChallengeID,
+		Visible:     service.IsVisible,
+		RuntimeChallenge: &model.Challenge{
+			ID:     service.AWDChallengeID,
+			Status: model.ChallengeStatusPublished,
+		},
+	}
+
+	snapshot, err := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
+	if err != nil {
+		return nil, err
+	}
+	subject.RuntimeChallenge.Title = firstNonEmptyStubRuntimeValue(service.DisplayName, snapshot.Name)
+	subject.RuntimeChallenge.Category = snapshot.Category
+	subject.RuntimeChallenge.Difficulty = snapshot.Difficulty
+	subject.RuntimeChallenge.Points = stubContestAWDServiceSnapshotPoints(service.ScoreConfig)
+	subject.RuntimeChallenge.ImageID = stubContestAWDServiceSnapshotImageID(snapshot.RuntimeConfig)
+	subject.RuntimeChallenge.FlagType = stubContestAWDServiceSnapshotFlagType(snapshot.FlagConfig)
+	subject.RuntimeChallenge.FlagPrefix = stubContestAWDServiceSnapshotFlagPrefix(snapshot.FlagConfig)
+	subject.RuntimeChallenge.InstanceSharing = stubContestAWDServiceSnapshotInstanceSharing(snapshot.RuntimeConfig)
+	if subject.RuntimeChallenge.FlagPrefix == "" {
+		subject.RuntimeChallenge.FlagPrefix = "flag"
+	}
+
+	topologyPayload, ok := snapshot.RuntimeConfig["topology"]
+	if !ok {
+		return subject, nil
+	}
+	topologyMap, ok := topologyPayload.(map[string]any)
+	if !ok {
+		return subject, nil
+	}
+	specPayload, ok := topologyMap["spec"]
+	if !ok {
+		return subject, nil
+	}
+	specRaw, err := json.Marshal(specPayload)
+	if err != nil {
+		return nil, err
+	}
+	entryNodeKey, _ := topologyMap["entry_node_key"].(string)
+	subject.RuntimeTopology = &model.ChallengeTopology{
+		ChallengeID:  service.AWDChallengeID,
+		EntryNodeKey: entryNodeKey,
+		Spec:         string(specRaw),
+	}
+	return subject, nil
+}
+
+func firstNonEmptyStubRuntimeValue(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func stubContestAWDServiceSnapshotPoints(scoreConfig string) int {
+	if scoreConfig == "" {
+		return 0
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(scoreConfig), &payload); err != nil {
+		return 0
+	}
+	return stubContestAWDServiceSnapshotInt(payload["points"])
+}
+
+func stubContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
+	if runtimeConfig == nil {
+		return 0
+	}
+	value := stubContestAWDServiceSnapshotInt(runtimeConfig["image_id"])
+	if value <= 0 {
+		return 0
+	}
+	return int64(value)
+}
+
+func stubContestAWDServiceSnapshotFlagType(flagConfig map[string]any) string {
+	if flagConfig == nil {
+		return model.FlagTypeDynamic
+	}
+	value, _ := flagConfig["flag_type"].(string)
+	if value == "" {
+		return model.FlagTypeDynamic
+	}
+	return value
+}
+
+func stubContestAWDServiceSnapshotFlagPrefix(flagConfig map[string]any) string {
+	if flagConfig == nil {
+		return "flag"
+	}
+	value, _ := flagConfig["flag_prefix"].(string)
+	if value == "" {
+		return "flag"
+	}
+	return value
+}
+
+func stubContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) model.InstanceSharing {
+	if runtimeConfig == nil {
+		return model.InstanceSharingPerTeam
+	}
+	value, _ := runtimeConfig["instance_sharing"].(string)
+	switch model.InstanceSharing(value) {
+	case model.InstanceSharingShared:
+		return model.InstanceSharingShared
+	case model.InstanceSharingPerUser:
+		return model.InstanceSharingPerUser
+	case model.InstanceSharingPerTeam:
+		return model.InstanceSharingPerTeam
+	default:
+		return model.InstanceSharingPerTeam
+	}
+}
+
+func stubContestAWDServiceSnapshotInt(value any) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int32:
+		return int(typed)
+	case int64:
+		return int(typed)
+	case float64:
+		return int(typed)
+	case json.Number:
+		next, err := typed.Int64()
+		if err != nil {
+			return 0
+		}
+		return int(next)
+	default:
+		return 0
+	}
 }
 
 func (s *stubPracticeRepository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {

@@ -14,6 +14,7 @@ type contestScopeLookupSource interface {
 	practiceports.PracticeContestLookupRepository
 	practiceports.PracticeContestChallengeLookupRepository
 	practiceports.PracticeContestAWDServiceRepository
+	practiceports.PracticeContestAWDServiceRuntimeSubjectRepository
 	practiceports.PracticeContestTeamRepository
 	practiceports.PracticeContestRegistrationRepository
 }
@@ -55,6 +56,14 @@ func (r *ContestScopeRepository) FindContestAWDService(ctx context.Context, cont
 
 func (r *ContestScopeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
 	return r.source.ListContestAWDServices(ctx, contestID)
+}
+
+func (r *ContestScopeRepository) FindContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+	subject, err := r.source.FindContestAWDServiceRuntimeSubject(ctx, contestID, serviceID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, practiceports.ErrPracticeContestAWDServiceNotFound
+	}
+	return subject, err
 }
 
 func (r *ContestScopeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {

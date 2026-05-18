@@ -172,6 +172,18 @@ type PracticeContestAWDServiceRepository interface {
 	ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
 }
 
+type ContestAWDServiceRuntimeSubject struct {
+	ServiceID        int64
+	ChallengeID      int64
+	Visible          bool
+	RuntimeChallenge *model.Challenge
+	RuntimeTopology  *model.ChallengeTopology
+}
+
+type PracticeContestAWDServiceRuntimeSubjectRepository interface {
+	FindContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*ContestAWDServiceRuntimeSubject, error)
+}
+
 type PracticeContestAWDInstanceRepository interface {
 	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error)
 }
@@ -210,6 +222,7 @@ type PracticeContestScopeRepository interface {
 	PracticeContestLookupRepository
 	PracticeContestChallengeLookupRepository
 	PracticeContestAWDServiceRepository
+	PracticeContestAWDServiceRuntimeSubjectRepository
 	PracticeContestTeamRepository
 	PracticeContestRegistrationRepository
 }
