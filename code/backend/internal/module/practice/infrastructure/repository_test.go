@@ -311,7 +311,7 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 		DisplayName:     "Display Name",
 		IsVisible:       true,
 		ScoreConfig:     `{"points":320}`,
-		ServiceSnapshot: `{"name":"Snapshot Name","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team","topology":{"entry_node_key":"web","spec":{"nodes":[{"key":"web"}]}}},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
+		ServiceSnapshot: `{"name":"Snapshot Name","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team","topology":{"entry_node_key":"web","spec":{"nodes":[{"key":"web"}]}},"defense_workspace":{"seed_root":"docker/workspace","workspace_roots":["docker/workspace/src"],"writable_roots":["docker/workspace/src"],"runtime_mounts":[{"source":"docker/workspace/src","target":"/workspace/src","mode":"rw"}]}},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
 	}
 	if err := db.Create(service).Error; err != nil {
 		t.Fatalf("seed awd service: %v", err)
@@ -340,11 +340,23 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 	if subject.RuntimeChallenge.InstanceSharing != model.InstanceSharingPerTeam {
 		t.Fatalf("unexpected instance sharing: %+v", subject.RuntimeChallenge)
 	}
+	if subject.SeedSignature == "" {
+		t.Fatalf("expected seed signature, got %+v", subject)
+	}
 	if subject.RuntimeTopology == nil || subject.RuntimeTopology.EntryNodeKey != "web" {
 		t.Fatalf("unexpected runtime topology: %+v", subject.RuntimeTopology)
 	}
 	if subject.RuntimeTopology.Spec == "" {
 		t.Fatalf("expected topology spec, got %+v", subject.RuntimeTopology)
+	}
+	if subject.WorkspaceConfig == nil {
+		t.Fatalf("expected workspace config, got %+v", subject)
+	}
+	if subject.WorkspaceConfig.SeedRoot != "docker/workspace" {
+		t.Fatalf("unexpected workspace config: %+v", subject.WorkspaceConfig)
+	}
+	if subject.WorkspaceConfig.CheckerTokenEnv != "" {
+		t.Fatalf("expected empty checker token env by default, got %+v", subject.WorkspaceConfig)
 	}
 }
 

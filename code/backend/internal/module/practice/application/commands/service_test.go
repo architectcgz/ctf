@@ -198,39 +198,39 @@ func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(
 	}
 }
 
-func TestParseAWDDefenseWorkspaceConfigTreatsRootsOutsideWritableSetAsReadonly(t *testing.T) {
-	config, err := parseAWDDefenseWorkspaceConfig(map[string]any{
-		"defense_workspace": map[string]any{
-			"seed_root":       "docker/workspace",
-			"workspace_roots": []string{"docker/workspace/src", "docker/workspace/templates", "docker/workspace/data"},
-			"writable_roots":  []string{"docker/workspace/src"},
-			"readonly_roots":  []string{"docker/workspace/data"},
-			"runtime_mounts": []any{
-				map[string]any{"source": "docker/workspace/src", "target": "/workspace/src", "mode": "rw"},
-				map[string]any{"source": "docker/workspace/templates", "target": "/workspace/templates", "mode": "ro"},
-				map[string]any{"source": "docker/workspace/data", "target": "/workspace/data", "mode": "ro"},
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("parseAWDDefenseWorkspaceConfig() error = %v", err)
-	}
-	if len(config.workspaceRoots) != 3 {
-		t.Fatalf("expected three workspace roots, got %+v", config.workspaceRoots)
+func TestContestAWDServiceRuntimeSubjectMapsWorkspaceRootsOutsideWritableSetAsReadonly(t *testing.T) {
+	service := &model.ContestAWDService{
+		ID:              21,
+		ContestID:       8,
+		AWDChallengeID:  13,
+		ServiceSnapshot: `{"name":"Workspace Service","runtime_config":{"defense_workspace":{"seed_root":"docker/workspace","workspace_roots":["docker/workspace/src","docker/workspace/templates","docker/workspace/data"],"writable_roots":["docker/workspace/src"],"readonly_roots":["docker/workspace/data"],"runtime_mounts":[{"source":"docker/workspace/src","target":"/workspace/src","mode":"rw"},{"source":"docker/workspace/templates","target":"/workspace/templates","mode":"ro"},{"source":"docker/workspace/data","target":"/workspace/data","mode":"ro"}]}}}`,
 	}
 
-	readonlyBySource := make(map[string]bool, len(config.workspaceRoots))
-	for _, root := range config.workspaceRoots {
-		readonlyBySource[root.source] = root.readOnly
+	subject, err := stubContestAWDServiceRuntimeSubject(service)
+	if err != nil {
+		t.Fatalf("stubContestAWDServiceRuntimeSubject() error = %v", err)
+	}
+	if subject == nil || subject.WorkspaceConfig == nil {
+		t.Fatalf("expected workspace config, got %+v", subject)
+	}
+
+	config := subject.WorkspaceConfig
+	if len(config.WorkspaceRoots) != 3 {
+		t.Fatalf("expected three workspace roots, got %+v", config.WorkspaceRoots)
+	}
+
+	readonlyBySource := make(map[string]bool, len(config.WorkspaceRoots))
+	for _, root := range config.WorkspaceRoots {
+		readonlyBySource[root.Source] = root.ReadOnly
 	}
 	if readonlyBySource["docker/workspace/src"] {
-		t.Fatalf("expected src root to stay writable, got %+v", config.workspaceRoots)
+		t.Fatalf("expected src root to stay writable, got %+v", config.WorkspaceRoots)
 	}
 	if !readonlyBySource["docker/workspace/templates"] {
-		t.Fatalf("expected template root outside writable_roots to default readonly, got %+v", config.workspaceRoots)
+		t.Fatalf("expected template root outside writable_roots to default readonly, got %+v", config.WorkspaceRoots)
 	}
 	if !readonlyBySource["docker/workspace/data"] {
-		t.Fatalf("expected readonly root to stay readonly, got %+v", config.workspaceRoots)
+		t.Fatalf("expected readonly root to stay readonly, got %+v", config.WorkspaceRoots)
 	}
 }
 

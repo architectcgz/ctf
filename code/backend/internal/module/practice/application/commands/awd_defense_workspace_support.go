@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"path"
 	"strings"
@@ -62,23 +60,6 @@ type awdDefenseWorkspacePlan struct {
 	checkerTokenEnv           string
 	checkerToken              string
 	createWorkspace           bool
-}
-
-type awdDefenseWorkspaceConfig struct {
-	seedRoot       string
-	workspaceRoots []awdDefenseWorkspaceRoot
-	runtimeMounts  []awdDefenseRuntimeMount
-}
-
-type awdDefenseWorkspaceRoot struct {
-	source   string
-	readOnly bool
-}
-
-type awdDefenseRuntimeMount struct {
-	source   string
-	target   string
-	readOnly bool
 }
 
 func resolveAWDDefenseWorkspaceRepository(repo any) awdDefenseWorkspaceRepository {
@@ -171,15 +152,15 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	teamID := *instance.TeamID
 	serviceID := *instance.ServiceID
 
-	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
+	subject, err := s.repo.FindContestAWDServiceRuntimeSubject(ctx, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
-	snapshot, err := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
-	if err != nil {
-		return nil, err
+	if subject == nil {
+		return nil, fmt.Errorf("awd service runtime subject is not configured")
 	}
-	config, err := parseAWDDefenseWorkspaceConfig(snapshot.RuntimeConfig)
+	config := subject.WorkspaceConfig
+	err = validateAWDDefenseWorkspaceConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -193,34 +174,34 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	if current != nil && current.WorkspaceRevision > 0 {
 		workspaceRevision = current.WorkspaceRevision
 	}
-	seedSignature := buildAWDDefenseWorkspaceSeedSignature(service.ServiceSnapshot)
+	seedSignature := subject.SeedSignature
 	if current != nil && strings.TrimSpace(current.SeedSignature) != "" {
 		seedSignature = current.SeedSignature
 	}
 
-	volumeBySource := make(map[string]string, len(config.workspaceRoots))
-	workspaceMounts := make([]model.ContainerMount, 0, len(config.workspaceRoots))
-	for _, root := range config.workspaceRoots {
-		relative := relativeAWDDefenseWorkspaceRoot(config.seedRoot, root.source)
+	volumeBySource := make(map[string]string, len(config.WorkspaceRoots))
+	workspaceMounts := make([]model.ContainerMount, 0, len(config.WorkspaceRoots))
+	for _, root := range config.WorkspaceRoots {
+		relative := relativeAWDDefenseWorkspaceRoot(config.SeedRoot, root.Source)
 		volumeName := buildAWDDefenseWorkspaceVolumeName(instance, workspaceRevision, relative)
-		volumeBySource[root.source] = volumeName
+		volumeBySource[root.Source] = volumeName
 		workspaceMounts = append(workspaceMounts, model.ContainerMount{
 			Source:   volumeName,
 			Target:   buildAWDDefenseWorkspaceTarget(relative),
-			ReadOnly: root.readOnly,
+			ReadOnly: root.ReadOnly,
 		})
 	}
 
-	runtimeMounts := make([]model.ContainerMount, 0, len(config.runtimeMounts))
-	for _, item := range config.runtimeMounts {
-		volumeName := volumeBySource[item.source]
+	runtimeMounts := make([]model.ContainerMount, 0, len(config.RuntimeMounts))
+	for _, item := range config.RuntimeMounts {
+		volumeName := volumeBySource[item.Source]
 		if volumeName == "" {
-			return nil, fmt.Errorf("workspace root volume is missing for %s", item.source)
+			return nil, fmt.Errorf("workspace root volume is missing for %s", item.Source)
 		}
 		runtimeMounts = append(runtimeMounts, model.ContainerMount{
 			Source:   volumeName,
-			Target:   item.target,
-			ReadOnly: item.readOnly,
+			Target:   item.Target,
+			ReadOnly: item.ReadOnly,
 		})
 	}
 
@@ -234,9 +215,9 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 		workspaceMounts:        workspaceMounts,
 		workspaceContainerName: buildAWDDefenseWorkspaceContainerName(chal, instance, workspaceRevision),
 	}
-	checkerTokenEnv := strings.TrimSpace(readStringFromAny(snapshot.RuntimeConfig["checker_token_env"]))
+	checkerTokenEnv := strings.TrimSpace(config.CheckerTokenEnv)
 	if checkerTokenEnv != "" {
-		challengeID := service.AWDChallengeID
+		challengeID := subject.ChallengeID
 		if challengeID <= 0 {
 			challengeID = instance.ChallengeID
 		}
@@ -276,119 +257,25 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	return plan, nil
 }
 
-func parseAWDDefenseWorkspaceConfig(runtimeConfig map[string]any) (*awdDefenseWorkspaceConfig, error) {
-	if runtimeConfig == nil {
-		return nil, fmt.Errorf("awd runtime config is empty")
+func validateAWDDefenseWorkspaceConfig(config *practiceports.ContestAWDDefenseWorkspaceConfig) error {
+	if config == nil {
+		return fmt.Errorf("awd runtime config defense_workspace is empty")
 	}
-	raw, ok := runtimeConfig["defense_workspace"]
-	if !ok {
-		return nil, fmt.Errorf("awd runtime config defense_workspace is empty")
+	if strings.TrimSpace(config.SeedRoot) == "" {
+		return fmt.Errorf("awd defense workspace seed_root is empty")
 	}
-	payload, ok := raw.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("awd runtime config defense_workspace must be an object")
+	if len(config.WorkspaceRoots) == 0 {
+		return fmt.Errorf("awd defense workspace roots are empty")
 	}
-
-	seedRoot := strings.TrimSpace(readStringFromAny(payload["seed_root"]))
-	if seedRoot == "" {
-		return nil, fmt.Errorf("awd defense workspace seed_root is empty")
+	if len(config.RuntimeMounts) == 0 {
+		return fmt.Errorf("awd defense runtime mounts are empty")
 	}
-
-	workspaceRoots := readStringListFromAny(payload["workspace_roots"])
-	if len(workspaceRoots) == 0 {
-		return nil, fmt.Errorf("awd defense workspace roots are empty")
-	}
-	writableRootSet := make(map[string]struct{})
-	for _, root := range readStringListFromAny(payload["writable_roots"]) {
-		writableRootSet[root] = struct{}{}
-	}
-
-	roots := make([]awdDefenseWorkspaceRoot, 0, len(workspaceRoots))
-	for _, root := range workspaceRoots {
-		_, writable := writableRootSet[root]
-		roots = append(roots, awdDefenseWorkspaceRoot{
-			source:   root,
-			readOnly: !writable,
-		})
-	}
-
-	runtimeMounts, err := parseAWDDefenseRuntimeMounts(payload["runtime_mounts"])
-	if err != nil {
-		return nil, err
-	}
-	return &awdDefenseWorkspaceConfig{
-		seedRoot:       seedRoot,
-		workspaceRoots: roots,
-		runtimeMounts:  runtimeMounts,
-	}, nil
-}
-
-func parseAWDDefenseRuntimeMounts(raw any) ([]awdDefenseRuntimeMount, error) {
-	items, ok := raw.([]any)
-	if !ok || len(items) == 0 {
-		return nil, fmt.Errorf("awd defense runtime mounts are empty")
-	}
-
-	result := make([]awdDefenseRuntimeMount, 0, len(items))
-	for _, item := range items {
-		payload, ok := item.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("awd defense runtime mount must be an object")
+	for _, mount := range config.RuntimeMounts {
+		if strings.TrimSpace(mount.Source) == "" || strings.TrimSpace(mount.Target) == "" {
+			return fmt.Errorf("awd defense runtime mount is incomplete")
 		}
-		source := strings.TrimSpace(readStringFromAny(payload["source"]))
-		target := strings.TrimSpace(readStringFromAny(payload["target"]))
-		mode := strings.ToLower(strings.TrimSpace(readStringFromAny(payload["mode"])))
-		if source == "" || target == "" || mode == "" {
-			return nil, fmt.Errorf("awd defense runtime mount is incomplete")
-		}
-		result = append(result, awdDefenseRuntimeMount{
-			source:   source,
-			target:   target,
-			readOnly: mode == "ro",
-		})
 	}
-	return result, nil
-}
-
-func readStringFromAny(raw any) string {
-	switch typed := raw.(type) {
-	case string:
-		return typed
-	default:
-		return ""
-	}
-}
-
-func readStringListFromAny(raw any) []string {
-	switch typed := raw.(type) {
-	case []string:
-		items := make([]string, 0, len(typed))
-		for _, item := range typed {
-			value := strings.TrimSpace(item)
-			if value == "" {
-				continue
-			}
-			items = append(items, value)
-		}
-		return items
-	case []any:
-		items := make([]string, 0, len(typed))
-		for _, item := range typed {
-			value := strings.TrimSpace(readStringFromAny(item))
-			if value == "" {
-				continue
-			}
-			items = append(items, value)
-		}
-		return items
-	default:
-		return nil
-	}
-}
-
-func buildAWDDefenseWorkspaceSeedSignature(raw string) string {
-	hash := sha256.Sum256([]byte(raw))
-	return hex.EncodeToString(hash[:])
+	return nil
 }
 
 func relativeAWDDefenseWorkspaceRoot(seedRoot, root string) string {

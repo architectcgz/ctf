@@ -176,8 +176,28 @@ type ContestAWDServiceRuntimeSubject struct {
 	ServiceID        int64
 	ChallengeID      int64
 	Visible          bool
+	SeedSignature    string
 	RuntimeChallenge *model.Challenge
 	RuntimeTopology  *model.ChallengeTopology
+	WorkspaceConfig  *ContestAWDDefenseWorkspaceConfig
+}
+
+type ContestAWDDefenseWorkspaceConfig struct {
+	SeedRoot        string
+	WorkspaceRoots  []ContestAWDDefenseWorkspaceRoot
+	RuntimeMounts   []ContestAWDDefenseRuntimeMount
+	CheckerTokenEnv string
+}
+
+type ContestAWDDefenseWorkspaceRoot struct {
+	Source   string
+	ReadOnly bool
+}
+
+type ContestAWDDefenseRuntimeMount struct {
+	Source   string
+	Target   string
+	ReadOnly bool
 }
 
 type PracticeContestAWDServiceRuntimeSubjectRepository interface {

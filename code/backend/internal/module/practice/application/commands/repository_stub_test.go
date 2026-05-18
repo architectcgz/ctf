@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"time"
 
@@ -241,9 +243,10 @@ func stubContestAWDServiceRuntimeSubject(service *model.ContestAWDService) (*pra
 	}
 
 	subject := &practiceports.ContestAWDServiceRuntimeSubject{
-		ServiceID:   service.ID,
-		ChallengeID: service.AWDChallengeID,
-		Visible:     service.IsVisible,
+		ServiceID:     service.ID,
+		ChallengeID:   service.AWDChallengeID,
+		Visible:       service.IsVisible,
+		SeedSignature: buildStubContestAWDServiceSeedSignature(service.ServiceSnapshot),
 		RuntimeChallenge: &model.Challenge{
 			ID:     service.AWDChallengeID,
 			Status: model.ChallengeStatusPublished,
@@ -265,6 +268,7 @@ func stubContestAWDServiceRuntimeSubject(service *model.ContestAWDService) (*pra
 	if subject.RuntimeChallenge.FlagPrefix == "" {
 		subject.RuntimeChallenge.FlagPrefix = "flag"
 	}
+	subject.WorkspaceConfig = stubContestAWDDefenseWorkspaceConfig(snapshot.RuntimeConfig)
 
 	topologyPayload, ok := snapshot.RuntimeConfig["topology"]
 	if !ok {
@@ -380,6 +384,101 @@ func stubContestAWDServiceSnapshotInt(value any) int {
 	default:
 		return 0
 	}
+}
+
+func stubContestAWDDefenseWorkspaceConfig(runtimeConfig map[string]any) *practiceports.ContestAWDDefenseWorkspaceConfig {
+	if runtimeConfig == nil {
+		return nil
+	}
+	raw, ok := runtimeConfig["defense_workspace"]
+	if !ok {
+		return nil
+	}
+	payload, ok := raw.(map[string]any)
+	if !ok {
+		return nil
+	}
+	seedRoot := stubReadRuntimeString(payload["seed_root"])
+	workspaceRoots := stubReadRuntimeStringList(payload["workspace_roots"])
+	if seedRoot == "" || len(workspaceRoots) == 0 {
+		return nil
+	}
+	writableRoots := make(map[string]struct{}, len(workspaceRoots))
+	for _, root := range stubReadRuntimeStringList(payload["writable_roots"]) {
+		writableRoots[root] = struct{}{}
+	}
+	roots := make([]practiceports.ContestAWDDefenseWorkspaceRoot, 0, len(workspaceRoots))
+	for _, root := range workspaceRoots {
+		_, writable := writableRoots[root]
+		roots = append(roots, practiceports.ContestAWDDefenseWorkspaceRoot{
+			Source:   root,
+			ReadOnly: !writable,
+		})
+	}
+	runtimeMounts := stubContestAWDDefenseRuntimeMounts(payload["runtime_mounts"])
+	if len(runtimeMounts) == 0 {
+		return nil
+	}
+	return &practiceports.ContestAWDDefenseWorkspaceConfig{
+		SeedRoot:        seedRoot,
+		WorkspaceRoots:  roots,
+		RuntimeMounts:   runtimeMounts,
+		CheckerTokenEnv: stubReadRuntimeString(runtimeConfig["checker_token_env"]),
+	}
+}
+
+func stubContestAWDDefenseRuntimeMounts(raw any) []practiceports.ContestAWDDefenseRuntimeMount {
+	items, ok := raw.([]any)
+	if !ok || len(items) == 0 {
+		return nil
+	}
+	result := make([]practiceports.ContestAWDDefenseRuntimeMount, 0, len(items))
+	for _, item := range items {
+		payload, ok := item.(map[string]any)
+		if !ok {
+			return nil
+		}
+		source := stubReadRuntimeString(payload["source"])
+		target := stubReadRuntimeString(payload["target"])
+		mode := stubReadRuntimeString(payload["mode"])
+		if source == "" || target == "" || mode == "" {
+			return nil
+		}
+		result = append(result, practiceports.ContestAWDDefenseRuntimeMount{
+			Source:   source,
+			Target:   target,
+			ReadOnly: mode == "ro",
+		})
+	}
+	return result
+}
+
+func stubReadRuntimeString(raw any) string {
+	value, _ := raw.(string)
+	return value
+}
+
+func stubReadRuntimeStringList(raw any) []string {
+	switch typed := raw.(type) {
+	case []string:
+		return append([]string(nil), typed...)
+	case []any:
+		items := make([]string, 0, len(typed))
+		for _, item := range typed {
+			value := stubReadRuntimeString(item)
+			if value != "" {
+				items = append(items, value)
+			}
+		}
+		return items
+	default:
+		return nil
+	}
+}
+
+func buildStubContestAWDServiceSeedSignature(raw string) string {
+	hash := sha256.Sum256([]byte(raw))
+	return hex.EncodeToString(hash[:])
 }
 
 func (s *stubPracticeRepository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
