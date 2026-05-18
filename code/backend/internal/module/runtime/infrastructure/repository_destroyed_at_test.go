@@ -15,6 +15,59 @@ import (
 
 type runtimeRepositoryCountRunningContextKey string
 
+func TestReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 30000)
+	if err != nil {
+		t.Fatalf("ReserveAvailablePortExcluding() error = %v", err)
+	}
+	if port != 30001 {
+		t.Fatalf("expected excluded port 30000 to be skipped, got %d", port)
+	}
+}
+
+func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	instanceID := int64(6001)
+	if err := db.Create(&model.Instance{
+		ID:          instanceID,
+		UserID:      7,
+		ChallengeID: 11,
+		HostPort:    32021,
+		Status:      model.InstanceStatusFailed,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+	if err := db.Create(&model.PortAllocation{Port: 32021}).Error; err != nil {
+		t.Fatalf("seed unbound port allocation: %v", err)
+	}
+
+	hostPort, err := repo.SyncInstanceHostPortForRestart(context.Background(), instanceID, 32021, true)
+	if err != nil {
+		t.Fatalf("SyncInstanceHostPortForRestart() error = %v", err)
+	}
+	if hostPort != 32021 {
+		t.Fatalf("expected preserved host port 32021, got %d", hostPort)
+	}
+
+	var allocation model.PortAllocation
+	if err := db.Where("port = ?", 32021).First(&allocation).Error; err != nil {
+		t.Fatalf("load port allocation: %v", err)
+	}
+	if allocation.InstanceID == nil || *allocation.InstanceID != instanceID {
+		t.Fatalf("expected port allocation to bind to instance %d, got %+v", instanceID, allocation.InstanceID)
+	}
+}
+
 func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.T) {
 	t.Parallel()
 

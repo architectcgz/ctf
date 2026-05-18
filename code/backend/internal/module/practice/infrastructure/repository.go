@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -14,18 +13,27 @@ import (
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type Repository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	runtimePorts runtimeports.PortReservationOwner
 }
 
 func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+	return &Repository{
+		db:           db,
+		runtimePorts: runtimecontracts.NewPortReservationOwner(db),
+	}
 }
 
 func (r *Repository) WithDB(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+	return &Repository{
+		db:           db,
+		runtimePorts: runtimecontracts.NewPortReservationOwner(db),
+	}
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
@@ -379,47 +387,12 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 			return err
 		}
 
-		if preserveHostPort {
-			var allocation model.PortAllocation
-			err := tx.Where("instance_id = ?", instance.ID).
-				Order("updated_at DESC, port DESC").
-				First(&allocation).Error
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				return err
-			}
-			if err == nil && allocation.Port > 0 {
-				instance.HostPort = allocation.Port
-			}
-
-			if instance.HostPort > 0 {
-				allocation := &model.PortAllocation{
-					Port:       instance.HostPort,
-					InstanceID: &instance.ID,
-				}
-				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(allocation).Error; err != nil {
-					return err
-				}
-				var stored model.PortAllocation
-				if err := tx.Where("port = ?", instance.HostPort).First(&stored).Error; err != nil {
-					return err
-				}
-				if stored.InstanceID != nil && *stored.InstanceID != instance.ID {
-					return fmt.Errorf("host port %d is allocated to instance %d", instance.HostPort, *stored.InstanceID)
-				}
-				if stored.InstanceID == nil {
-					if err := tx.Model(&model.PortAllocation{}).
-						Where("port = ?", instance.HostPort).
-						Updates(map[string]any{"instance_id": instance.ID, "updated_at": time.Now().UTC()}).Error; err != nil {
-						return err
-					}
-				}
-			}
+		repoWithTx := r.WithDB(tx)
+		hostPort, err := repoWithTx.runtimePorts.SyncInstanceHostPortForRestart(ctx, instance.ID, instance.HostPort, preserveHostPort)
+		if err != nil {
+			return err
 		}
-		if !preserveHostPort {
-			if err := tx.Where("instance_id = ?", instance.ID).Delete(&model.PortAllocation{}).Error; err != nil {
-				return err
-			}
-		}
+		instance.HostPort = hostPort
 
 		updates := map[string]any{
 			"container_id":    "",
@@ -444,24 +417,7 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 }
 
 func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
-	if instanceID <= 0 || hostPort <= 0 {
-		return false, nil
-	}
-
-	var allocation model.PortAllocation
-	if err := r.dbWithContext(ctx).
-		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("port = ?", hostPort).
-		First(&allocation).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
-		}
-		return false, err
-	}
-	if allocation.InstanceID == nil {
-		return false, nil
-	}
-	return *allocation.InstanceID == instanceID, nil
+	return r.runtimePorts.IsHostPortReusableForRestart(ctx, instanceID, hostPort)
 }
 
 func (r *Repository) CreateInstance(ctx context.Context, instance *model.Instance) error {
@@ -508,56 +464,23 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 }
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
-	return r.ReserveAvailablePortExcluding(ctx, start, end, 0)
+	return r.runtimePorts.ReserveAvailablePort(ctx, start, end)
 }
 
 func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error) {
-	for port := start; port < end; port++ {
-		if excludedPort > 0 && port == excludedPort {
-			continue
-		}
-		result := r.dbWithContext(ctx).
-			Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "port"}},
-				DoNothing: true,
-			}).
-			Create(&model.PortAllocation{Port: port})
-		if result.Error != nil {
-			return 0, result.Error
-		}
-		if result.RowsAffected == 0 {
-			continue
-		}
-		return port, nil
-	}
-	return 0, fmt.Errorf("no available port in range %d-%d", start, end)
+	return r.runtimePorts.ReserveAvailablePortExcluding(ctx, start, end, excludedPort)
 }
 
 func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
-	return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
-		Where("port = ?", port).
-		Updates(map[string]any{
-			"instance_id": instanceID,
-			"updated_at":  time.Now().UTC(),
-		}).Error
+	return r.runtimePorts.BindReservedPort(ctx, port, instanceID)
 }
 
 func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {
-	if port <= 0 {
-		return nil
-	}
-	return r.dbWithContext(ctx).
-		Where("port = ? AND instance_id IS NULL", port).
-		Delete(&model.PortAllocation{}).Error
+	return r.runtimePorts.ReleaseReservedPort(ctx, port)
 }
 
 func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
-	if port <= 0 || instanceID <= 0 {
-		return nil
-	}
-	return r.dbWithContext(ctx).
-		Where("port = ? AND instance_id = ?", port, instanceID).
-		Delete(&model.PortAllocation{}).Error
+	return r.runtimePorts.ReleasePortForInstance(ctx, port, instanceID)
 }
 
 // CreateSubmission 创建提交记录
@@ -776,16 +699,4 @@ func (r *Repository) IsUniqueViolation(err error) bool {
 		return pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, "idx_submissions_user_challenge_correct")
 	}
 	return false
-}
-
-func isPracticePortAllocationConflict(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
-	}
-
-	lowered := strings.ToLower(err.Error())
-	return strings.Contains(lowered, "unique constraint failed") ||
-		strings.Contains(lowered, "duplicate key value") ||
-		strings.Contains(lowered, "duplicate entry")
 }

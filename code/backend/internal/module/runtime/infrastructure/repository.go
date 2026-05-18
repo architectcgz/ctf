@@ -798,7 +798,14 @@ func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []stri
 }
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
+	return r.ReserveAvailablePortExcluding(ctx, start, end, 0)
+}
+
+func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error) {
 	for port := start; port < end; port++ {
+		if excludedPort > 0 && port == excludedPort {
+			continue
+		}
 		if err := r.dbWithContext(ctx).Create(&model.PortAllocation{Port: port}).Error; err != nil {
 			if isPortAllocationConflict(err) {
 				continue
@@ -834,6 +841,114 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 	}
 	return r.dbWithContext(ctx).
 		Where("port = ? AND instance_id = ?", port, instanceID).
+		Delete(&model.PortAllocation{}).Error
+}
+
+func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
+	if instanceID <= 0 || hostPort <= 0 {
+		return false, nil
+	}
+
+	var allocation model.PortAllocation
+	if err := r.dbWithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("port = ?", hostPort).
+		First(&allocation).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	if allocation.InstanceID == nil {
+		return false, nil
+	}
+	return *allocation.InstanceID == instanceID, nil
+}
+
+func (r *Repository) SyncInstanceHostPortForRestart(ctx context.Context, instanceID int64, hostPort int, preserveHostPort bool) (int, error) {
+	if instanceID <= 0 {
+		return 0, nil
+	}
+	if !preserveHostPort {
+		return 0, r.releaseAllPortsForInstance(ctx, instanceID)
+	}
+
+	boundPort, err := r.findLatestBoundPortForInstance(ctx, instanceID)
+	if err != nil {
+		return 0, err
+	}
+	if boundPort > 0 {
+		hostPort = boundPort
+	}
+	if hostPort <= 0 {
+		return 0, nil
+	}
+	if err := r.ensurePortBoundToInstance(ctx, hostPort, instanceID); err != nil {
+		return 0, err
+	}
+	return hostPort, nil
+}
+
+func (r *Repository) findLatestBoundPortForInstance(ctx context.Context, instanceID int64) (int, error) {
+	if instanceID <= 0 {
+		return 0, nil
+	}
+
+	var allocation model.PortAllocation
+	err := r.dbWithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("instance_id = ?", instanceID).
+		Order("updated_at DESC, port DESC").
+		First(&allocation).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	return allocation.Port, nil
+}
+
+func (r *Repository) ensurePortBoundToInstance(ctx context.Context, port int, instanceID int64) error {
+	if port <= 0 || instanceID <= 0 {
+		return nil
+	}
+
+	allocation := &model.PortAllocation{
+		Port:       port,
+		InstanceID: &instanceID,
+	}
+	if err := r.dbWithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(allocation).Error; err != nil {
+		return err
+	}
+
+	var stored model.PortAllocation
+	if err := r.dbWithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("port = ?", port).
+		First(&stored).Error; err != nil {
+		return err
+	}
+	if stored.InstanceID != nil && *stored.InstanceID != instanceID {
+		return fmt.Errorf("host port %d is allocated to instance %d", port, *stored.InstanceID)
+	}
+	if stored.InstanceID == nil {
+		return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
+			Where("port = ?", port).
+			Updates(map[string]any{
+				"instance_id": instanceID,
+				"updated_at":  time.Now().UTC(),
+			}).Error
+	}
+	return nil
+}
+
+func (r *Repository) releaseAllPortsForInstance(ctx context.Context, instanceID int64) error {
+	if instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("instance_id = ?", instanceID).
 		Delete(&model.PortAllocation{}).Error
 }
 
