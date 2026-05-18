@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type submissionRespSource struct {
@@ -24,8 +25,8 @@ type submissionRespSource struct {
 type contestResponseMapper interface {
 	ToContestRespBase(source model.Contest) ContestResp
 	ToContestRespBasePtr(source *model.Contest) *ContestResp
-	ToContestAnnouncementRespBase(source model.ContestAnnouncement) ContestAnnouncementResp
-	ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *ContestAnnouncementResp
+	ToContestAnnouncementRespBase(source contestentity.ContestAnnouncement) ContestAnnouncementResp
+	ToContestAnnouncementRespBasePtr(source *contestentity.ContestAnnouncement) *ContestAnnouncementResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category

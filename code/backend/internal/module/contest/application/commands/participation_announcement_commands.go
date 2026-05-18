@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
@@ -21,7 +21,7 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 	}
 
 	now := time.Now().UTC()
-	item := &model.ContestAnnouncement{
+	item := &contestentity.ContestAnnouncement{
 		ContestID: contestID,
 		Title:     req.Title,
 		Content:   req.Content,

@@ -3,11 +3,11 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *ParticipationRepository) ListAnnouncements(ctx context.Context, contestID int64) ([]*model.ContestAnnouncement, error) {
-	var announcements []*model.ContestAnnouncement
+func (r *ParticipationRepository) ListAnnouncements(ctx context.Context, contestID int64) ([]*contestentity.ContestAnnouncement, error) {
+	var announcements []*contestentity.ContestAnnouncement
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("created_at DESC, id DESC").
@@ -17,14 +17,14 @@ func (r *ParticipationRepository) ListAnnouncements(ctx context.Context, contest
 	return announcements, nil
 }
 
-func (r *ParticipationRepository) CreateAnnouncement(ctx context.Context, announcement *model.ContestAnnouncement) error {
+func (r *ParticipationRepository) CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error {
 	return r.dbWithContext(ctx).Create(announcement).Error
 }
 
 func (r *ParticipationRepository) DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) (bool, error) {
 	result := r.dbWithContext(ctx).
 		Where("id = ? AND contest_id = ?", announcementID, contestID).
-		Delete(&model.ContestAnnouncement{})
+		Delete(&contestentity.ContestAnnouncement{})
 	if result.Error != nil {
 		return false, result.Error
 	}

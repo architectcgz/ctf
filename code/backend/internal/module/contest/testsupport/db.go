@@ -8,6 +8,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func SetupContestTestDB(t *testing.T) *gorm.DB {
@@ -30,7 +31,7 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 		&model.Team{},
 		&model.TeamMember{},
 		&model.ContestRegistration{},
-		&model.ContestAnnouncement{},
+		&contestentity.ContestAnnouncement{},
 		&model.ContestChallenge{},
 		&model.Submission{},
 	); err != nil {

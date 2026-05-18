@@ -3,7 +3,10 @@
 
 package commands
 
-import model "ctf-platform/internal/model"
+import (
+	model "ctf-platform/internal/model"
+	entity "ctf-platform/internal/module/contest/entity"
+)
 
 type contestResponseMapperImpl struct{}
 
@@ -97,7 +100,7 @@ func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *model
 	}
 	return pCommandsContestAWDServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.ContestAnnouncement) ContestAnnouncementResp {
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source entity.ContestAnnouncement) ContestAnnouncementResp {
 	var commandsContestAnnouncementResp ContestAnnouncementResp
 	commandsContestAnnouncementResp.ID = source.ID
 	commandsContestAnnouncementResp.Title = source.Title
@@ -105,7 +108,7 @@ func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source model.C
 	commandsContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
 	return commandsContestAnnouncementResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *model.ContestAnnouncement) *ContestAnnouncementResp {
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *entity.ContestAnnouncement) *ContestAnnouncementResp {
 	var pCommandsContestAnnouncementResp *ContestAnnouncementResp
 	if source != nil {
 		commandsContestAnnouncementResp := c.ToContestAnnouncementRespBase((*source))

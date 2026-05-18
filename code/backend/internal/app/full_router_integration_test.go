@@ -33,6 +33,7 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
@@ -61,7 +62,7 @@ type fullRouterTestEnv struct {
 	contest      *model.Contest
 	awdContest   *model.Contest
 	registration *model.ContestRegistration
-	announcement *model.ContestAnnouncement
+	announcement *contestentity.ContestAnnouncement
 	team         *model.Team
 	awdRound     *model.AWDRound
 	instance     *model.Instance
@@ -104,7 +105,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.ContestChallenge{},
 	&model.ContestAWDService{},
 	&model.ContestRegistration{},
-	&model.ContestAnnouncement{},
+	&contestentity.ContestAnnouncement{},
 	&model.Team{},
 	&model.TeamMember{},
 	&model.AWDRound{},
@@ -1352,7 +1353,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create awd registration: %v", err)
 	}
 
-	env.announcement = &model.ContestAnnouncement{
+	env.announcement = &contestentity.ContestAnnouncement{
 		ContestID: env.contest.ID,
 		Title:     "公告",
 		Content:   "contest starts",

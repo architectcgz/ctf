@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -27,7 +28,7 @@ func (s participationQueryRepoStub) ListRegistrations(context.Context, int64, *s
 	return nil, 0, nil
 }
 
-func (s participationQueryRepoStub) ListAnnouncements(context.Context, int64) ([]*model.ContestAnnouncement, error) {
+func (s participationQueryRepoStub) ListAnnouncements(context.Context, int64) ([]*contestentity.ContestAnnouncement, error) {
 	return nil, nil
 }
 

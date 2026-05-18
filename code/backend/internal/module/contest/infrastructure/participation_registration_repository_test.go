@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -46,11 +47,11 @@ func (s participationRegistrationSourceStub) FindUserByID(context.Context, int64
 	return &model.User{}, nil
 }
 
-func (s participationRegistrationSourceStub) ListAnnouncements(context.Context, int64) ([]*model.ContestAnnouncement, error) {
+func (s participationRegistrationSourceStub) ListAnnouncements(context.Context, int64) ([]*contestentity.ContestAnnouncement, error) {
 	return nil, nil
 }
 
-func (s participationRegistrationSourceStub) CreateAnnouncement(context.Context, *model.ContestAnnouncement) error {
+func (s participationRegistrationSourceStub) CreateAnnouncement(context.Context, *contestentity.ContestAnnouncement) error {
 	return nil
 }
 

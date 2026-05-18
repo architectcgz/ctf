@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 var ErrContestParticipationRegistrationNotFound = errors.New("contest participation registration not found")
@@ -29,11 +30,11 @@ type ContestParticipationUserLookupRepository interface {
 }
 
 type ContestParticipationAnnouncementReadRepository interface {
-	ListAnnouncements(ctx context.Context, contestID int64) ([]*model.ContestAnnouncement, error)
+	ListAnnouncements(ctx context.Context, contestID int64) ([]*contestentity.ContestAnnouncement, error)
 }
 
 type ContestParticipationAnnouncementWriteRepository interface {
-	CreateAnnouncement(ctx context.Context, announcement *model.ContestAnnouncement) error
+	CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error
 	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) (bool, error)
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -33,7 +34,7 @@ type participationCommandRepoStub struct {
 	createRegistrationFn   func(context.Context, *model.ContestRegistration) error
 	saveRegistrationFn     func(context.Context, *model.ContestRegistration) error
 	findUserByIDFn         func(context.Context, int64) (*model.User, error)
-	createAnnouncementFn   func(context.Context, *model.ContestAnnouncement) error
+	createAnnouncementFn   func(context.Context, *contestentity.ContestAnnouncement) error
 	deleteAnnouncementFn   func(context.Context, int64, int64) (bool, error)
 }
 
@@ -72,7 +73,7 @@ func (s participationCommandRepoStub) FindUserByID(ctx context.Context, userID i
 	return &model.User{ID: userID, Username: "reviewer-target"}, nil
 }
 
-func (s participationCommandRepoStub) CreateAnnouncement(ctx context.Context, announcement *model.ContestAnnouncement) error {
+func (s participationCommandRepoStub) CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error {
 	if s.createAnnouncementFn != nil {
 		return s.createAnnouncementFn(ctx, announcement)
 	}
