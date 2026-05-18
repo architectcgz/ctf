@@ -9,7 +9,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
@@ -36,7 +35,21 @@ type AWDReadinessAuditPayload struct {
 	ExecutionError        string
 }
 
-func BuildAWDReadinessAuditPayload(gateAction string, overrideReason *string, snapshot *dto.AWDReadinessResp, executionErr error) *AWDReadinessAuditPayload {
+type AWDReadinessAuditSnapshotItem struct {
+	AWDChallengeID  int64
+	Title           string
+	CheckerType     model.AWDCheckerType
+	ValidationState string
+	BlockingReason  string
+}
+
+type AWDReadinessAuditSnapshot struct {
+	BlockingCount         int
+	GlobalBlockingReasons []string
+	Items                 []*AWDReadinessAuditSnapshotItem
+}
+
+func BuildAWDReadinessAuditPayload(gateAction string, overrideReason *string, snapshot *AWDReadinessAuditSnapshot, executionErr error) *AWDReadinessAuditPayload {
 	if snapshot == nil {
 		return nil
 	}

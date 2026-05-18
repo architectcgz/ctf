@@ -15,5 +15,5 @@ func (h *AWDHandler) GetUserWorkspace(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDWorkspaceRespPtr(resp))
+	response.Success(c, contestResponseMapper.ToAWDWorkspaceRespPtr(resp))
 }

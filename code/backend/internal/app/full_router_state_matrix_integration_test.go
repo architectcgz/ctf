@@ -24,6 +24,7 @@ import (
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	opshttp "ctf-platform/internal/module/ops/api/http"
@@ -179,7 +180,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var createdTeam dto.TeamResp
+	var createdTeam contesthttp.TeamResp
 	decodeFullRouterData(t, resp, &createdTeam)
 	if createdTeam.CaptainID != env.student.ID {
 		t.Fatalf("expected student captain id %d, got %d", env.student.ID, createdTeam.CaptainID)
@@ -211,7 +212,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/my-progress", env.contest.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var progress dto.ContestMyProgressResp
+	var progress contesthttp.ContestMyProgressResp
 	decodeFullRouterData(t, resp, &progress)
 	if progress.ContestID != env.contest.ID || len(progress.Solved) == 0 {
 		t.Fatalf("expected existing contest progress, got %+v", progress)
@@ -220,7 +221,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/my-progress", env.contest.ID), nil, otherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var emptyProgress dto.ContestMyProgressResp
+	var emptyProgress contesthttp.ContestMyProgressResp
 	decodeFullRouterData(t, resp, &emptyProgress)
 	if emptyProgress.TeamID != nil || len(emptyProgress.Solved) != 0 {
 		t.Fatalf("expected empty progress for unregistered student, got %+v", emptyProgress)
@@ -229,7 +230,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/announcements", env.contest.ID), nil, nil)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var announcements []dto.ContestAnnouncementResp
+	var announcements []contesthttp.ContestAnnouncementResp
 	decodeFullRouterData(t, resp, &announcements)
 	if len(announcements) == 0 {
 		t.Fatalf("expected seeded announcement")
@@ -241,7 +242,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var createdAnnouncement dto.ContestAnnouncementResp
+	var createdAnnouncement contesthttp.ContestAnnouncementResp
 	decodeFullRouterData(t, resp, &createdAnnouncement)
 	if createdAnnouncement.Title != "新的公告" {
 		t.Fatalf("unexpected announcement title: %+v", createdAnnouncement)
@@ -1639,7 +1640,7 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/rounds/%d/traffic/summary", env.awdContest.ID, env.awdRound.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var summary dto.AWDTrafficSummaryResp
+	var summary contesthttp.AWDTrafficSummaryResp
 	decodeFullRouterData(t, resp, &summary)
 	if summary.TotalRequests < 1 {
 		t.Fatalf("expected traffic requests in summary, got %+v", summary)
@@ -1651,7 +1652,7 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/rounds/%d/traffic/events?page=1&page_size=20", env.awdContest.ID, env.awdRound.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var page dto.AWDTrafficEventPageResp
+	var page contesthttp.AWDTrafficEventPageResp
 	decodeFullRouterData(t, resp, &page)
 	if page.Total < 1 || len(page.List) == 0 {
 		t.Fatalf("expected traffic events page data, got %+v", page)
@@ -1852,7 +1853,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var contestChallenge dto.ContestChallengeResp
+	var contestChallenge contesthttp.ContestChallengeResp
 	decodeFullRouterData(t, resp, &contestChallenge)
 	if contestChallenge.Points != 220 || contestChallenge.IsVisible {
 		t.Fatalf("unexpected contest challenge: %+v", contestChallenge)
@@ -1875,7 +1876,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/challenges", editableContest.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var adminChallenges []dto.ContestChallengeResp
+	var adminChallenges []contesthttp.ContestChallengeResp
 	decodeFullRouterData(t, resp, &adminChallenges)
 	if len(adminChallenges) != 1 || adminChallenges[0].Points != updatedPoints || adminChallenges[0].Order != 2 || !adminChallenges[0].IsVisible {
 		t.Fatalf("unexpected admin contest challenges: %+v", adminChallenges)
@@ -1889,7 +1890,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", editableContest.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var visibleChallenges []dto.ContestChallengeInfo
+	var visibleChallenges []contesthttp.ContestChallengeInfo
 	decodeFullRouterData(t, resp, &visibleChallenges)
 	if len(visibleChallenges) != 1 || visibleChallenges[0].ChallengeID != challengeA.ID || visibleChallenges[0].Points != updatedPoints {
 		t.Fatalf("unexpected visible contest challenges: %+v", visibleChallenges)
@@ -1945,7 +1946,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/scoreboard", scoreboardContest.ID), nil, nil)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var publicScoreboard dto.ScoreboardResp
+	var publicScoreboard contesthttp.ScoreboardResp
 	decodeFullRouterData(t, resp, &publicScoreboard)
 	if publicScoreboard.Frozen || len(publicScoreboard.Scoreboard.List) != 2 || publicScoreboard.Scoreboard.List[0].TeamID != teamAlpha.ID {
 		t.Fatalf("unexpected public scoreboard: %+v", publicScoreboard)
@@ -1961,7 +1962,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/scoreboard", scoreboardContest.ID), nil, nil)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var frozenScoreboard dto.ScoreboardResp
+	var frozenScoreboard contesthttp.ScoreboardResp
 	decodeFullRouterData(t, resp, &frozenScoreboard)
 	if !frozenScoreboard.Frozen || frozenScoreboard.Scoreboard.List[0].TeamID != teamAlpha.ID || frozenScoreboard.Scoreboard.List[0].Score != 100 {
 		t.Fatalf("unexpected frozen scoreboard: %+v", frozenScoreboard)
@@ -1970,7 +1971,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/scoreboard/live", scoreboardContest.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var liveScoreboard dto.ScoreboardResp
+	var liveScoreboard contesthttp.ScoreboardResp
 	decodeFullRouterData(t, resp, &liveScoreboard)
 	if liveScoreboard.Scoreboard.List[0].TeamID != teamBeta.ID || liveScoreboard.Scoreboard.List[0].Score != 200 {
 		t.Fatalf("unexpected live scoreboard: %+v", liveScoreboard)
@@ -1982,7 +1983,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/scoreboard", scoreboardContest.ID), nil, nil)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var unfrozenScoreboard dto.ScoreboardResp
+	var unfrozenScoreboard contesthttp.ScoreboardResp
 	decodeFullRouterData(t, resp, &unfrozenScoreboard)
 	if unfrozenScoreboard.Frozen || unfrozenScoreboard.Scoreboard.List[0].TeamID != teamBeta.ID || unfrozenScoreboard.Scoreboard.List[0].Score != 200 {
 		t.Fatalf("unexpected unfrozen scoreboard: %+v", unfrozenScoreboard)
@@ -2042,7 +2043,7 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var visibleChallenges []dto.ContestChallengeInfo
+	var visibleChallenges []contesthttp.ContestChallengeInfo
 	decodeFullRouterData(t, resp, &visibleChallenges)
 	if len(visibleChallenges) != 1 || visibleChallenges[0].AWDServiceID == nil || *visibleChallenges[0].AWDServiceID != awdService.ID {
 		t.Fatalf("unexpected visible awd service metadata: %+v", visibleChallenges)
@@ -2224,7 +2225,7 @@ func TestFullRouter_AdminContestListSupportsModeStatusesSortAndSummary(t *testin
 		t.Fatalf("expected raw payload registering_count=1, got %#v", rawSummary["registering_count"])
 	}
 
-	var page dto.ContestPageResp
+	var page contesthttp.ContestPageResp
 	decodeFullRouterData(t, resp, &page)
 
 	if page.Total != 4 {

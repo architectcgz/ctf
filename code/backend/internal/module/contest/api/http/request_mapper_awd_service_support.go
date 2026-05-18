@@ -10,12 +10,12 @@ func contestAWDServiceResultsToResp(results []contestqry.ContestAWDServiceResult
 	resp := make([]*contestcmd.ContestAWDServiceResp, 0, len(results))
 	for i := range results {
 		item := results[i]
-		respItem := contestRequestMapper.ToContestAWDServiceCommandRespPtr(&item)
+		respItem := contestResponseMapper.ToContestAWDServiceCommandRespPtr(&item)
 		if respItem == nil {
 			resp = append(resp, nil)
 			continue
 		}
-		respItem.LastPreviewResult = contestRequestMapper.ToAWDCheckerPreviewCommandRespPtr(
+		respItem.LastPreviewResult = contestResponseMapper.ToAWDCheckerPreviewCommandRespPtr(
 			contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResultRaw),
 		)
 		resp = append(resp, respItem)

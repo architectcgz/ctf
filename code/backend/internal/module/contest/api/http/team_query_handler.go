@@ -23,8 +23,8 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"team":    contestRequestMapper.ToTeamRespPtr(teamResp),
-		"members": contestRequestMapper.ToTeamMemberResps(members),
+		"team":    contestResponseMapper.ToTeamRespPtr(teamResp),
+		"members": contestResponseMapper.ToTeamMemberResps(members),
 	})
 }
 
@@ -41,7 +41,7 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, contestRequestMapper.ToTeamResps(teams))
+	response.Success(c, contestResponseMapper.ToTeamResps(teams))
 }
 
 func (h *TeamHandler) GetMyTeam(c *gin.Context) {
@@ -57,5 +57,5 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToMyTeamRespPtr(team))
+	response.Success(c, contestResponseMapper.ToMyTeamRespPtr(team))
 }

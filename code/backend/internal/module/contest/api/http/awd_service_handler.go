@@ -31,5 +31,5 @@ func (h *AWDHandler) ListServices(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDTeamServiceResps(resp))
+	response.Success(c, contestResponseMapper.ToAWDTeamServiceResps(resp))
 }

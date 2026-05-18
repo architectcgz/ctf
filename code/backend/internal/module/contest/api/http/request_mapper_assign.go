@@ -4,4 +4,5 @@ package http
 
 func init() {
 	contestRequestMapper = &ContestRequestMapperImpl{}
+	contestResponseMapper = &ContestResponseMapperImpl{}
 }

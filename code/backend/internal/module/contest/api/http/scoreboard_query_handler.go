@@ -48,5 +48,5 @@ func (h *Handler) getScoreboard(c *gin.Context, live bool) {
 		return
 	}
 
-	response.Success(c, contestRequestMapper.ToScoreboardRespPtr(scoreboard))
+	response.Success(c, contestResponseMapper.ToScoreboardRespPtr(scoreboard))
 }

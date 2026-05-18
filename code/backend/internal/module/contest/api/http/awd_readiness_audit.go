@@ -36,7 +36,7 @@ func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideRe
 	if c == nil || snapshot == nil || trace == nil || !trace.Allowed() || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
 		return
 	}
-	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, contestRequestMapper.ToAWDReadinessRespPtr(snapshot), err))
+	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, toAWDReadinessAuditSnapshot(contestResponseMapper.ToAWDReadinessRespPtr(snapshot)), err))
 }
 
 func shouldPrepareUpdateContestReadinessAudit(contest *contestqry.ContestResult, req contestcmd.UpdateContestInput) bool {
@@ -56,4 +56,30 @@ func isAWDReadinessBlocked(err error) bool {
 
 func hasNonBlankOverrideReason(reason *string) bool {
 	return reason != nil && strings.TrimSpace(*reason) != ""
+}
+
+func toAWDReadinessAuditSnapshot(source *AWDReadinessResp) *middleware.AWDReadinessAuditSnapshot {
+	if source == nil {
+		return nil
+	}
+
+	items := make([]*middleware.AWDReadinessAuditSnapshotItem, 0, len(source.Items))
+	for _, item := range source.Items {
+		if item == nil {
+			continue
+		}
+		items = append(items, &middleware.AWDReadinessAuditSnapshotItem{
+			AWDChallengeID:  item.AWDChallengeID,
+			Title:           item.Title,
+			CheckerType:     item.CheckerType,
+			ValidationState: item.ValidationState,
+			BlockingReason:  item.BlockingReason,
+		})
+	}
+
+	return &middleware.AWDReadinessAuditSnapshot{
+		BlockingCount:         source.BlockingCount,
+		GlobalBlockingReasons: append([]string(nil), source.GlobalBlockingReasons...),
+		Items:                 items,
+	}
 }

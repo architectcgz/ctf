@@ -14,5 +14,5 @@ func (h *AWDHandler) GetRoundSummary(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDRoundSummaryRespPtr(resp))
+	response.Success(c, contestResponseMapper.ToAWDRoundSummaryRespPtr(resp))
 }

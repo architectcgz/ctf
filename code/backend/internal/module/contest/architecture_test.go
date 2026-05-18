@@ -46,6 +46,18 @@ func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 	}
 }
 
+func TestAPIHTTPDoesNotDependOnGlobalDTO(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 

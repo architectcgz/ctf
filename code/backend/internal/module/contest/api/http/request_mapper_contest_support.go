@@ -5,22 +5,6 @@ import (
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 )
 
-type ContestListSummaryResp struct {
-	DraftCount       int64 `json:"draft_count"`
-	RegisteringCount int64 `json:"registering_count"`
-	RunningCount     int64 `json:"running_count"`
-	FrozenCount      int64 `json:"frozen_count"`
-	EndedCount       int64 `json:"ended_count"`
-}
-
-type ContestPageResp struct {
-	List     []*contestcmd.ContestResp `json:"list"`
-	Total    int64                     `json:"total"`
-	Page     int                       `json:"page"`
-	PageSize int                       `json:"page_size"`
-	Summary  ContestListSummaryResp    `json:"summary"`
-}
-
 func buildContestPageResp(
 	req ListContestsReq,
 	contests []*contestqry.ContestResult,
@@ -37,7 +21,7 @@ func buildContestPageResp(
 	}
 
 	resp := ContestPageResp{
-		List:     contestRequestMapper.ToContestCommandResps(contests),
+		List:     contestResponseMapper.ToContestCommandResps(contests),
 		Total:    total,
 		Page:     page,
 		PageSize: size,
@@ -55,5 +39,5 @@ func buildContestPageResp(
 }
 
 func contestResultToResp(result *contestqry.ContestResult) *contestcmd.ContestResp {
-	return contestRequestMapper.ToContestCommandRespPtr(result)
+	return contestResponseMapper.ToContestCommandRespPtr(result)
 }

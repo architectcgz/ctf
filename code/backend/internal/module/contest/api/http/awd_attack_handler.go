@@ -51,5 +51,5 @@ func (h *AWDHandler) ListAttackLogs(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDAttackLogResps(resp))
+	response.Success(c, contestResponseMapper.ToAWDAttackLogResps(resp))
 }

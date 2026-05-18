@@ -13,5 +13,5 @@ func (h *AWDHandler) GetReadiness(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDReadinessRespPtr(resp))
+	response.Success(c, contestResponseMapper.ToAWDReadinessRespPtr(resp))
 }

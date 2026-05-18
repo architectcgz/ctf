@@ -18,10 +18,10 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
@@ -30,19 +30,19 @@ import (
 
 type challengeImportQueryStub struct{}
 
-func (challengeImportQueryStub) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+func (challengeImportQueryStub) GetChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeResp, error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
+func (challengeImportQueryStub) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
+func (challengeImportQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeListItem], error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+func (challengeImportQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error) {
 	panic("unexpected call")
 }
 
@@ -127,7 +127,7 @@ func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var previewEnvelope envelope[dto.ChallengeImportPreviewResp]
+	var previewEnvelope envelope[challengehttp.ChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &previewEnvelope); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -154,7 +154,7 @@ func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 		t.Fatalf("commit status = %d, body = %s", commitRecorder.Code, commitRecorder.Body.String())
 	}
 
-	var commitEnvelope envelope[dto.ChallengeImportCommitResp]
+	var commitEnvelope envelope[challengehttp.ChallengeImportCommitResp]
 	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &commitEnvelope); err != nil {
 		t.Fatalf("decode commit response: %v", err)
 	}
@@ -225,7 +225,7 @@ func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var previewEnvelope envelope[dto.ChallengeImportPreviewResp]
+	var previewEnvelope envelope[challengehttp.ChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &previewEnvelope); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -281,7 +281,7 @@ func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var previewEnvelope envelope[dto.ChallengeImportPreviewResp]
+	var previewEnvelope envelope[challengehttp.ChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &previewEnvelope); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -497,7 +497,7 @@ func previewAndCommitChallengeImport(
 	t *testing.T,
 	router *gin.Engine,
 	archiveBytes []byte,
-) dto.ChallengeImportCommitResp {
+) challengehttp.ChallengeImportCommitResp {
 	t.Helper()
 
 	body, contentType := buildChallengeImportMultipartFromArchive(t, archiveBytes)
@@ -510,7 +510,7 @@ func previewAndCommitChallengeImport(
 		t.Fatalf("preview status = %d, body = %s", previewRecorder.Code, previewRecorder.Body.String())
 	}
 
-	var previewEnvelope envelope[dto.ChallengeImportPreviewResp]
+	var previewEnvelope envelope[challengehttp.ChallengeImportPreviewResp]
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &previewEnvelope); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
@@ -523,7 +523,7 @@ func previewAndCommitChallengeImport(
 		t.Fatalf("commit status = %d, body = %s", commitRecorder.Code, commitRecorder.Body.String())
 	}
 
-	var commitEnvelope envelope[dto.ChallengeImportCommitResp]
+	var commitEnvelope envelope[challengehttp.ChallengeImportCommitResp]
 	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &commitEnvelope); err != nil {
 		t.Fatalf("decode commit response: %v", err)
 	}

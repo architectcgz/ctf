@@ -39,5 +39,5 @@ func (h *AWDHandler) ListRounds(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDRoundResps(resp))
+	response.Success(c, contestResponseMapper.ToAWDRoundResps(resp))
 }

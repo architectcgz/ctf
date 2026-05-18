@@ -14,7 +14,7 @@ func (h *AWDHandler) GetTrafficSummary(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDTrafficSummaryRespPtr(resp))
+	response.Success(c, contestResponseMapper.ToAWDTrafficSummaryRespPtr(resp))
 }
 
 func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
@@ -31,5 +31,5 @@ func (h *AWDHandler) ListTrafficEvents(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToAWDTrafficEventPageRespPtr(resp))
+	response.Success(c, contestResponseMapper.ToAWDTrafficEventPageRespPtr(resp))
 }

@@ -30,7 +30,7 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToRegistrationPageRespPtr(items))
+	response.Success(c, contestResponseMapper.ToRegistrationPageRespPtr(items))
 }
 
 func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
@@ -44,7 +44,7 @@ func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToContestAnnouncementResps(items))
+	response.Success(c, contestResponseMapper.ToContestAnnouncementResps(items))
 }
 
 func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
@@ -58,5 +58,5 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, contestRequestMapper.ToContestMyProgressRespPtr(item))
+	response.Success(c, contestResponseMapper.ToContestMyProgressRespPtr(item))
 }
