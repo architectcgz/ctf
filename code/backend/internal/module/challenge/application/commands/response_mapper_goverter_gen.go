@@ -7,6 +7,7 @@ import (
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	domain "ctf-platform/internal/module/challenge/domain"
+	entity "ctf-platform/internal/module/challenge/entity"
 )
 
 type challengeCommandResponseMapperImpl struct{}
@@ -95,7 +96,7 @@ func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr
 	}
 	return pContractsChallengePackageExportResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) contracts.ChallengePublishCheckJobResp {
+func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(source entity.ChallengePublishCheckJob) contracts.ChallengePublishCheckJobResp {
 	var contractsChallengePublishCheckJobResp contracts.ChallengePublishCheckJobResp
 	contractsChallengePublishCheckJobResp.ID = source.ID
 	contractsChallengePublishCheckJobResp.ChallengeID = source.ChallengeID
@@ -109,7 +110,7 @@ func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBase(
 	contractsChallengePublishCheckJobResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsChallengePublishCheckJobResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *contracts.ChallengePublishCheckJobResp {
+func (c *challengeCommandResponseMapperImpl) ToChallengePublishCheckJobRespBasePtr(source *entity.ChallengePublishCheckJob) *contracts.ChallengePublishCheckJobResp {
 	var pContractsChallengePublishCheckJobResp *contracts.ChallengePublishCheckJobResp
 	if source != nil {
 		contractsChallengePublishCheckJobResp := c.ToChallengePublishCheckJobRespBase((*source))

@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
@@ -248,10 +249,10 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 		return nil, err
 	}
 
-	job := &model.ChallengePublishCheckJob{
+	job := &challengeentity.ChallengePublishCheckJob{
 		ChallengeID:   challenge.ID,
 		RequestedBy:   actorUserID,
-		Status:        model.ChallengePublishCheckStatusPending,
+		Status:        challengeentity.ChallengePublishCheckStatusPending,
 		RequestSource: "admin_publish",
 	}
 	if err := s.repo.CreatePublishCheckJob(ctx, job); err != nil {
@@ -366,11 +367,11 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 	}
 }
 
-func (s *ChallengeService) loadPublishCheckJob(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+func (s *ChallengeService) loadPublishCheckJob(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	return s.repo.FindPublishCheckJobByID(ctx, id)
 }
 
-func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
+func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
 	if job == nil {
 		return
 	}
@@ -379,10 +380,10 @@ func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model
 	job.UpdatedAt = now
 	job.FailureSummary = strings.TrimSpace(failureSummary)
 	if passed {
-		job.Status = model.ChallengePublishCheckStatusPassed
+		job.Status = challengeentity.ChallengePublishCheckStatusPassed
 		job.PublishedAt = &now
 	} else {
-		job.Status = model.ChallengePublishCheckStatusFailed
+		job.Status = challengeentity.ChallengePublishCheckStatusFailed
 	}
 	if result != nil {
 		if content, err := json.Marshal(result); err == nil {
@@ -429,7 +430,7 @@ func buildPublishCheckFailureSummary(resp *challengecontracts.ChallengeSelfCheck
 	return ""
 }
 
-func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp {
+func (s *ChallengeService) buildPublishCheckJobResp(job *challengeentity.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp {
 	resp := challengeCommandResponseMapperInst.ToChallengePublishCheckJobRespBasePtr(job)
 	if resp == nil {
 		return nil
@@ -447,9 +448,9 @@ func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishC
 
 func mapPublishCheckStatus(status string) string {
 	switch status {
-	case model.ChallengePublishCheckStatusPending:
+	case challengeentity.ChallengePublishCheckStatusPending:
 		return "queued"
-	case model.ChallengePublishCheckStatusPassed:
+	case challengeentity.ChallengePublishCheckStatusPassed:
 		return "succeeded"
 	default:
 		return status
@@ -457,7 +458,7 @@ func mapPublishCheckStatus(status string) string {
 }
 
 func isActivePublishCheckStatus(status string) bool {
-	return status == model.ChallengePublishCheckStatusPending || status == model.ChallengePublishCheckStatusRunning
+	return status == challengeentity.ChallengePublishCheckStatusPending || status == challengeentity.ChallengePublishCheckStatusRunning
 }
 
 type challengeSelfCheckRuntimeInput struct {

@@ -32,6 +32,7 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
@@ -837,7 +838,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.TeamMember{},
 		&model.Image{},
 		&model.Challenge{},
-		&model.ChallengePublishCheckJob{},
+		&challengeentity.ChallengePublishCheckJob{},
 		&model.ChallengeHint{},
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},

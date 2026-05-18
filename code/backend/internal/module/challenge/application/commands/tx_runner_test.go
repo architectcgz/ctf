@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -145,7 +146,7 @@ func (s *testChallengeImportTxStore) UpdateImportedChallenge(ctx context.Context
 }
 
 func (s *testChallengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {
-	return s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengePublishCheckJob{}).Error
+	return s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengePublishCheckJob{}).Error
 }
 
 func (s *testChallengeImportTxStore) ReplaceImportedHints(ctx context.Context, challengeID int64, hints []model.ChallengeHint) error {

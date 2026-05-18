@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
@@ -19,11 +20,11 @@ type challengeCommandContextRepoStub struct {
 	updateWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	deleteFn                        func(ctx context.Context, id int64) error
 	hasRunningInstancesFn           func(ctx context.Context, challengeID int64) (bool, error)
-	createPublishCheckJobFn         func(ctx context.Context, job *model.ChallengePublishCheckJob) error
-	findActivePublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
-	findLatestPublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
-	findPublishCheckJobByIDFn       func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
-	updatePublishCheckJobFn         func(ctx context.Context, job *model.ChallengePublishCheckJob) error
+	createPublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
+	findActivePublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error)
+	findLatestPublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error)
+	findPublishCheckJobByIDFn       func(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error)
+	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
 func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
@@ -68,35 +69,35 @@ func (s *challengeCommandContextRepoStub) HasRunningInstances(ctx context.Contex
 	return false, nil
 }
 
-func (s *challengeCommandContextRepoStub) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (s *challengeCommandContextRepoStub) CreatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	if s.createPublishCheckJobFn != nil {
 		return s.createPublishCheckJobFn(ctx, job)
 	}
 	return nil
 }
 
-func (s *challengeCommandContextRepoStub) FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+func (s *challengeCommandContextRepoStub) FindPublishCheckJobByID(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	if s.findPublishCheckJobByIDFn != nil {
 		return s.findPublishCheckJobByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *challengeCommandContextRepoStub) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+func (s *challengeCommandContextRepoStub) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	if s.findActivePublishCheckJobByIDFn != nil {
 		return s.findActivePublishCheckJobByIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *challengeCommandContextRepoStub) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+func (s *challengeCommandContextRepoStub) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	if s.findLatestPublishCheckJobByIDFn != nil {
 		return s.findLatestPublishCheckJobByIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *challengeCommandContextRepoStub) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error) {
+func (s *challengeCommandContextRepoStub) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*challengeentity.ChallengePublishCheckJob, error) {
 	return nil, nil
 }
 
@@ -104,7 +105,7 @@ func (s *challengeCommandContextRepoStub) TryStartPublishCheckJob(ctx context.Co
 	return false, nil
 }
 
-func (s *challengeCommandContextRepoStub) UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (s *challengeCommandContextRepoStub) UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	if s.updatePublishCheckJobFn != nil {
 		return s.updatePublishCheckJobFn(ctx, job)
 	}
@@ -377,14 +378,14 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 			}
 			return &model.Challenge{ID: id, Title: "Publish Me", Status: model.ChallengeStatusDraft}, nil
 		},
-		findActivePublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+		findActivePublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 			activeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find active job ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return nil, challengeports.ErrChallengePublishCheckJobNotFound
 		},
-		createPublishCheckJobFn: func(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+		createPublishCheckJobFn: func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create job ctx value %v, got %v", expectedCtxValue, got)
@@ -425,12 +426,12 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 			}
 			return &model.Challenge{ID: id, Title: "Publish Me", UpdatedAt: now}, nil
 		},
-		findLatestPublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+		findLatestPublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 			latestCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find latest job ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: model.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
+			return &challengeentity.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: challengeentity.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
 		},
 	}
 	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
@@ -566,12 +567,12 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 	updateJobCalled := 0
 
 	repo := &challengeCommandContextRepoStub{
-		findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+		findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error) {
 			loadJobCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected load job ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengePublishCheckJob{ID: id, ChallengeID: 21, RequestedBy: 1001, Status: model.ChallengePublishCheckStatusRunning}, nil
+			return &challengeentity.ChallengePublishCheckJob{ID: id, ChallengeID: 21, RequestedBy: 1001, Status: challengeentity.ChallengePublishCheckStatusRunning}, nil
 		},
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			findChallengeCalled = true
@@ -590,7 +591,7 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 			}
 			return nil
 		},
-		updatePublishCheckJobFn: func(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+		updatePublishCheckJobFn: func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 			updateJobCalled++
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update job ctx value %v, got %v", expectedCtxValue, got)

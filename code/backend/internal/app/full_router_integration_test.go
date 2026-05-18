@@ -32,6 +32,7 @@ import (
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -80,7 +81,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.Image{},
 	&model.Challenge{},
 	&model.AWDChallenge{},
-	&model.ChallengePublishCheckJob{},
+	&challengeentity.ChallengePublishCheckJob{},
 	&model.Tag{},
 	&model.ChallengeTag{},
 	&model.ChallengeHint{},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"errors"
 	"fmt"
 	"strings"
@@ -211,30 +212,30 @@ func (r *Repository) HasRunningInstances(ctx context.Context, challengeID int64)
 	return count > 0, err
 }
 
-func (r *Repository) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (r *Repository) CreatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	return r.dbWithContext(ctx).Create(job).Error
 }
 
-func (r *Repository) FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
-	var job model.ChallengePublishCheckJob
+func (r *Repository) FindPublishCheckJobByID(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error) {
+	var job challengeentity.ChallengePublishCheckJob
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&job).Error
 	return &job, err
 }
 
-func (r *Repository) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
-	var job model.ChallengePublishCheckJob
+func (r *Repository) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
+	var job challengeentity.ChallengePublishCheckJob
 	err := r.dbWithContext(ctx).
 		Where("challenge_id = ? AND status IN ?", challengeID, []string{
-			model.ChallengePublishCheckStatusPending,
-			model.ChallengePublishCheckStatusRunning,
+			challengeentity.ChallengePublishCheckStatusPending,
+			challengeentity.ChallengePublishCheckStatusRunning,
 		}).
 		Order("created_at DESC, id DESC").
 		First(&job).Error
 	return &job, err
 }
 
-func (r *Repository) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
-	var job model.ChallengePublishCheckJob
+func (r *Repository) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
+	var job challengeentity.ChallengePublishCheckJob
 	err := r.dbWithContext(ctx).
 		Where("challenge_id = ?", challengeID).
 		Order("created_at DESC, id DESC").
@@ -242,13 +243,13 @@ func (r *Repository) FindLatestPublishCheckJobByChallengeID(ctx context.Context,
 	return &job, err
 }
 
-func (r *Repository) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error) {
+func (r *Repository) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*challengeentity.ChallengePublishCheckJob, error) {
 	if limit <= 0 {
 		limit = 1
 	}
-	var jobs []*model.ChallengePublishCheckJob
+	var jobs []*challengeentity.ChallengePublishCheckJob
 	err := r.dbWithContext(ctx).
-		Where("status = ?", model.ChallengePublishCheckStatusPending).
+		Where("status = ?", challengeentity.ChallengePublishCheckStatusPending).
 		Order("created_at ASC, id ASC").
 		Limit(limit).
 		Find(&jobs).Error
@@ -257,10 +258,10 @@ func (r *Repository) ListPendingPublishCheckJobs(ctx context.Context, limit int)
 
 func (r *Repository) TryStartPublishCheckJob(ctx context.Context, id int64, startedAt time.Time) (bool, error) {
 	result := r.dbWithContext(ctx).
-		Model(&model.ChallengePublishCheckJob{}).
-		Where("id = ? AND status = ?", id, model.ChallengePublishCheckStatusPending).
+		Model(&challengeentity.ChallengePublishCheckJob{}).
+		Where("id = ? AND status = ?", id, challengeentity.ChallengePublishCheckStatusPending).
 		Updates(map[string]any{
-			"status":     model.ChallengePublishCheckStatusRunning,
+			"status":     challengeentity.ChallengePublishCheckStatusRunning,
 			"started_at": startedAt,
 			"updated_at": startedAt,
 		})
@@ -270,7 +271,7 @@ func (r *Repository) TryStartPublishCheckJob(ctx context.Context, id int64, star
 	return result.RowsAffected > 0, nil
 }
 
-func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	if job == nil {
 		return errors.New("publish check job is nil")
 	}

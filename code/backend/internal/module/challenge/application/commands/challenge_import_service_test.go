@@ -15,6 +15,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -601,10 +602,10 @@ flag:
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	legacyJob := model.ChallengePublishCheckJob{
+	legacyJob := challengeentity.ChallengePublishCheckJob{
 		ChallengeID:    challenge.ID,
 		RequestedBy:    4,
-		Status:         model.ChallengePublishCheckStatusFailed,
+		Status:         challengeentity.ChallengePublishCheckStatusFailed,
 		RequestSource:  "manual",
 		FailureSummary: "单容器拉起失败: Error response from daemon: No such image: registry.example.edu/ctf/web-source-audit-double-wrap-01:20260404",
 		CreatedAt:      time.Now().Add(-time.Hour),
@@ -644,7 +645,7 @@ flag:
 	}
 
 	var count int64
-	if err := db.Model(&model.ChallengePublishCheckJob{}).Where("challenge_id = ?", challenge.ID).Count(&count).Error; err != nil {
+	if err := db.Model(&challengeentity.ChallengePublishCheckJob{}).Where("challenge_id = ?", challenge.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count publish check jobs: %v", err)
 	}
 	if count != 1 {

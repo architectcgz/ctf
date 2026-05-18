@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -409,7 +410,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	if err != nil {
 		t.Fatalf("GetLatestPublishCheck() error = %v", err)
 	}
-	if latest.Status != model.ChallengePublishCheckStatusFailed || latest.Active {
+	if latest.Status != challengeentity.ChallengePublishCheckStatusFailed || latest.Active {
 		t.Fatalf("expected failed publish check job, got %+v", latest)
 	}
 	if latest.FailureSummary == "" {
@@ -531,10 +532,10 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 		t.Fatalf("update challenge updated_at: %v", err)
 	}
 
-	job := &model.ChallengePublishCheckJob{
+	job := &challengeentity.ChallengePublishCheckJob{
 		ChallengeID:    challenge.ID,
 		RequestedBy:    teacher.ID,
-		Status:         model.ChallengePublishCheckStatusFailed,
+		Status:         challengeentity.ChallengePublishCheckStatusFailed,
 		RequestSource:  "admin_publish",
 		FailureSummary: "单容器拉起失败: Error response from daemon: No such image: registry.example.edu/ctf/web-source-audit-double-wrap-01:20260404",
 		CreatedAt:      createdAt,

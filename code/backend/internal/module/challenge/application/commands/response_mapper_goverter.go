@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -19,8 +20,8 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore Status
 	// goverter:ignore Active
 	// goverter:ignore Result
-	ToChallengePublishCheckJobRespBase(source model.ChallengePublishCheckJob) challengecontracts.ChallengePublishCheckJobResp
-	ToChallengePublishCheckJobRespBasePtr(source *model.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp
+	ToChallengePublishCheckJobRespBase(source challengeentity.ChallengePublishCheckJob) challengecontracts.ChallengePublishCheckJobResp
+	ToChallengePublishCheckJobRespBasePtr(source *challengeentity.ChallengePublishCheckJob) *challengecontracts.ChallengePublishCheckJobResp
 
 	ToChallengeImportAttachmentResps(source []challengedomain.ParsedChallengePackageAttachment) []challengecontracts.ChallengeImportAttachmentResp
 

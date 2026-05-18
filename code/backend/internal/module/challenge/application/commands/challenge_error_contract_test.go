@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -106,10 +107,10 @@ func TestChallengeServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoAc
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: 9, Status: model.ChallengeStatusDraft}, nil
 			},
-			findActivePublishCheckJobByIDFn: func(context.Context, int64) (*model.ChallengePublishCheckJob, error) {
+			findActivePublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 				return nil, challengeports.ErrChallengePublishCheckJobNotFound
 			},
-			createPublishCheckJobFn: func(_ context.Context, job *model.ChallengePublishCheckJob) error {
+			createPublishCheckJobFn: func(_ context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 				job.ID = 101
 				job.CreatedAt = time.Now()
 				job.UpdatedAt = job.CreatedAt
@@ -141,7 +142,7 @@ func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFo
 			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
 			},
-			findLatestPublishCheckJobByIDFn: func(context.Context, int64) (*model.ChallengePublishCheckJob, error) {
+			findLatestPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 				return nil, challengeports.ErrChallengePublishCheckJobNotFound
 			},
 		},

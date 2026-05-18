@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 var (
@@ -43,13 +44,13 @@ type ChallengeInstanceUsageRepository interface {
 }
 
 type ChallengePublishCheckRepository interface {
-	CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
-	FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
-	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
-	FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
-	ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error)
+	CreatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
+	FindPublishCheckJobByID(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error)
+	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error)
+	FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error)
+	ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*challengeentity.ChallengePublishCheckJob, error)
 	TryStartPublishCheckJob(ctx context.Context, id int64, startedAt time.Time) (bool, error)
-	UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
+	UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
 type ChallengeFlagRepository interface {

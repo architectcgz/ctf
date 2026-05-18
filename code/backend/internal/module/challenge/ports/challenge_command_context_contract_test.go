@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -34,23 +35,23 @@ func (ctxOnlyChallengeCommandRepository) HasRunningInstances(context.Context, in
 	return false, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) CreatePublishCheckJob(context.Context, *model.ChallengePublishCheckJob) error {
+func (ctxOnlyChallengeCommandRepository) CreatePublishCheckJob(context.Context, *challengeentity.ChallengePublishCheckJob) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) FindPublishCheckJobByID(context.Context, int64) (*model.ChallengePublishCheckJob, error) {
+func (ctxOnlyChallengeCommandRepository) FindPublishCheckJobByID(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) FindActivePublishCheckJobByChallengeID(context.Context, int64) (*model.ChallengePublishCheckJob, error) {
+func (ctxOnlyChallengeCommandRepository) FindActivePublishCheckJobByChallengeID(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) FindLatestPublishCheckJobByChallengeID(context.Context, int64) (*model.ChallengePublishCheckJob, error) {
+func (ctxOnlyChallengeCommandRepository) FindLatestPublishCheckJobByChallengeID(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) ListPendingPublishCheckJobs(context.Context, int) ([]*model.ChallengePublishCheckJob, error) {
+func (ctxOnlyChallengeCommandRepository) ListPendingPublishCheckJobs(context.Context, int) ([]*challengeentity.ChallengePublishCheckJob, error) {
 	return nil, nil
 }
 
@@ -58,7 +59,7 @@ func (ctxOnlyChallengeCommandRepository) TryStartPublishCheckJob(context.Context
 	return false, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) UpdatePublishCheckJob(context.Context, *model.ChallengePublishCheckJob) error {
+func (ctxOnlyChallengeCommandRepository) UpdatePublishCheckJob(context.Context, *challengeentity.ChallengePublishCheckJob) error {
 	return nil
 }
 

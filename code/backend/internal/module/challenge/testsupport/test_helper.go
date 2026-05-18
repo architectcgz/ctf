@@ -1,9 +1,10 @@
 package testsupport
 
 import (
-	"ctf-platform/internal/model"
 	"testing"
 
+	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -20,7 +21,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.Challenge{},
 		&model.ChallengePackageRevision{},
 		&model.AWDChallenge{},
-		&model.ChallengePublishCheckJob{},
+		&challengeentity.ChallengePublishCheckJob{},
 		&model.Image{},
 		&model.ImageBuildJob{},
 		&model.Instance{},

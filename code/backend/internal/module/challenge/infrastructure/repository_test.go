@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"reflect"
 	"testing"
@@ -272,10 +273,10 @@ func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	job := &model.ChallengePublishCheckJob{
+	job := &challengeentity.ChallengePublishCheckJob{
 		ChallengeID:   challenge.ID,
 		RequestedBy:   user.ID,
-		Status:        model.ChallengePublishCheckStatusPending,
+		Status:        challengeentity.ChallengePublishCheckStatusPending,
 		RequestSource: "admin_publish",
 	}
 	if err := repo.CreatePublishCheckJob(ctx, job); err != nil {
@@ -319,11 +320,11 @@ func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindLatestPublishCheckJobByChallengeID() error = %v", err)
 	}
-	if latest.Status != model.ChallengePublishCheckStatusRunning {
+	if latest.Status != challengeentity.ChallengePublishCheckStatusRunning {
 		t.Fatalf("unexpected latest status: %s", latest.Status)
 	}
 
-	latest.Status = model.ChallengePublishCheckStatusFailed
+	latest.Status = challengeentity.ChallengePublishCheckStatusFailed
 	latest.FailureSummary = "runtime failed"
 	if err := repo.UpdatePublishCheckJob(ctx, latest); err != nil {
 		t.Fatalf("UpdatePublishCheckJob() error = %v", err)

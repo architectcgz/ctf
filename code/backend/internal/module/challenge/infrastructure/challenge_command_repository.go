@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -56,11 +57,11 @@ func (r *ChallengeCommandRepository) HasRunningInstances(ctx context.Context, ch
 	return r.source.HasRunningInstances(ctx, challengeID)
 }
 
-func (r *ChallengeCommandRepository) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (r *ChallengeCommandRepository) CreatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	return r.source.CreatePublishCheckJob(ctx, job)
 }
 
-func (r *ChallengeCommandRepository) FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+func (r *ChallengeCommandRepository) FindPublishCheckJobByID(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	item, err := r.source.FindPublishCheckJobByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengePublishCheckJobNotFound
@@ -68,7 +69,7 @@ func (r *ChallengeCommandRepository) FindPublishCheckJobByID(ctx context.Context
 	return item, err
 }
 
-func (r *ChallengeCommandRepository) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+func (r *ChallengeCommandRepository) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	item, err := r.source.FindActivePublishCheckJobByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengePublishCheckJobNotFound
@@ -76,7 +77,7 @@ func (r *ChallengeCommandRepository) FindActivePublishCheckJobByChallengeID(ctx 
 	return item, err
 }
 
-func (r *ChallengeCommandRepository) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+func (r *ChallengeCommandRepository) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 	item, err := r.source.FindLatestPublishCheckJobByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengePublishCheckJobNotFound
@@ -84,7 +85,7 @@ func (r *ChallengeCommandRepository) FindLatestPublishCheckJobByChallengeID(ctx 
 	return item, err
 }
 
-func (r *ChallengeCommandRepository) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error) {
+func (r *ChallengeCommandRepository) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*challengeentity.ChallengePublishCheckJob, error) {
 	return r.source.ListPendingPublishCheckJobs(ctx, limit)
 }
 
@@ -92,7 +93,7 @@ func (r *ChallengeCommandRepository) TryStartPublishCheckJob(ctx context.Context
 	return r.source.TryStartPublishCheckJob(ctx, id, startedAt)
 }
 
-func (r *ChallengeCommandRepository) UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+func (r *ChallengeCommandRepository) UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	return r.source.UpdatePublishCheckJob(ctx, job)
 }
 
