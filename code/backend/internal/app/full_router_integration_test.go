@@ -35,6 +35,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
@@ -49,12 +50,12 @@ type fullRouterTestEnv struct {
 	db     *gorm.DB
 	cache  *redislib.Client
 
-	admin        *model.User
-	teacher      *model.User
-	student      *model.User
-	peerStudent  *model.User
-	otherTeacher *model.User
-	otherStudent *model.User
+	admin        *identitycontracts.User
+	teacher      *identitycontracts.User
+	student      *identitycontracts.User
+	peerStudent  *identitycontracts.User
+	otherTeacher *identitycontracts.User
+	otherStudent *identitycontracts.User
 	studentPwd   string
 	teacherPwd   string
 	adminPwd     string
@@ -81,9 +82,9 @@ var (
 )
 
 var fullRouterTestSchemaModels = []any{
-	&model.Role{},
-	&model.User{},
-	&model.UserRole{},
+	&identitycontracts.Role{},
+	&identitycontracts.User{},
+	&identitycontracts.UserRole{},
 	&model.Image{},
 	&model.Challenge{},
 	&challengecontracts.AWDChallenge{},
@@ -1215,12 +1216,12 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 
 	seedRoles(t, env.db)
 
-	env.admin = createFullRouterUser(t, env.db, "admin_matrix", env.adminPwd, model.RoleAdmin, "")
-	env.teacher = createFullRouterUser(t, env.db, "teacher_matrix", env.teacherPwd, model.RoleTeacher, env.className)
-	env.student = createFullRouterUser(t, env.db, "student_matrix", env.studentPwd, model.RoleStudent, env.className)
-	env.peerStudent = createFullRouterUser(t, env.db, "student_peer", "Password123", model.RoleStudent, env.className)
-	env.otherTeacher = createFullRouterUser(t, env.db, "teacher_other", "Password123", model.RoleTeacher, "ClassB")
-	env.otherStudent = createFullRouterUser(t, env.db, "student_other", "Password123", model.RoleStudent, "ClassB")
+	env.admin = createFullRouterUser(t, env.db, "admin_matrix", env.adminPwd, identitycontracts.RoleAdmin, "")
+	env.teacher = createFullRouterUser(t, env.db, "teacher_matrix", env.teacherPwd, identitycontracts.RoleTeacher, env.className)
+	env.student = createFullRouterUser(t, env.db, "student_matrix", env.studentPwd, identitycontracts.RoleStudent, env.className)
+	env.peerStudent = createFullRouterUser(t, env.db, "student_peer", "Password123", identitycontracts.RoleStudent, env.className)
+	env.otherTeacher = createFullRouterUser(t, env.db, "teacher_other", "Password123", identitycontracts.RoleTeacher, "ClassB")
+	env.otherStudent = createFullRouterUser(t, env.db, "student_other", "Password123", identitycontracts.RoleStudent, "ClassB")
 
 	env.image = createFlowImage(t, env.db)
 
@@ -1511,10 +1512,10 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 func seedRoles(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
-	roles := []*model.Role{
-		{Code: model.RoleAdmin, Name: "管理员"},
-		{Code: model.RoleTeacher, Name: "教师"},
-		{Code: model.RoleStudent, Name: "学生"},
+	roles := []*identitycontracts.Role{
+		{Code: identitycontracts.RoleAdmin, Name: "管理员"},
+		{Code: identitycontracts.RoleTeacher, Name: "教师"},
+		{Code: identitycontracts.RoleStudent, Name: "学生"},
 	}
 	for _, role := range roles {
 		if err := db.Create(role).Error; err != nil {
@@ -1523,14 +1524,14 @@ func seedRoles(t *testing.T, db *gorm.DB) {
 	}
 }
 
-func createFullRouterUser(t *testing.T, db *gorm.DB, username, password, role, className string) *model.User {
+func createFullRouterUser(t *testing.T, db *gorm.DB, username, password, role, className string) *identitycontracts.User {
 	t.Helper()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username:  username,
 		Email:     fmt.Sprintf("%s@example.com", username),
 		Role:      role,
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		ClassName: className,
 		Name:      username,
 	}

@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 )
@@ -16,15 +15,15 @@ import (
 func TestAdminServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 	db := setupIdentityTestDB(t)
 	now := time.Now()
-	users := []model.User{
+	users := []identitycontracts.User{
 		{
 			ID:           1,
 			Username:     "student-1",
 			Name:         "Alice",
 			PasswordHash: "hash",
 			StudentNo:    "20240001",
-			Role:         model.RoleStudent,
-			Status:       model.UserStatusActive,
+			Role:         identitycontracts.RoleStudent,
+			Status:       identitycontracts.UserStatusActive,
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		},
@@ -34,8 +33,8 @@ func TestAdminServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 			Name:         "Bob",
 			PasswordHash: "hash",
 			TeacherNo:    "T-1001",
-			Role:         model.RoleTeacher,
-			Status:       model.UserStatusActive,
+			Role:         identitycontracts.RoleTeacher,
+			Status:       identitycontracts.UserStatusActive,
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		},

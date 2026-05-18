@@ -9,7 +9,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	"ctf-platform/pkg/errcode"
@@ -22,14 +21,14 @@ func setupIdentityTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
-	roles := []model.Role{
-		{ID: 1, Code: model.RoleStudent, Name: "Student"},
-		{ID: 2, Code: model.RoleTeacher, Name: "Teacher"},
-		{ID: 3, Code: model.RoleAdmin, Name: "Admin"},
+	roles := []identitycontracts.Role{
+		{ID: 1, Code: identitycontracts.RoleStudent, Name: "Student"},
+		{ID: 2, Code: identitycontracts.RoleTeacher, Name: "Teacher"},
+		{ID: 3, Code: identitycontracts.RoleAdmin, Name: "Admin"},
 	}
 	for _, role := range roles {
 		if err := db.Create(&role).Error; err != nil {
@@ -52,10 +51,10 @@ func TestAdminServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 		Username:  "student-1",
 		Name:      "Alice",
 		Password:  "Password123",
-		Role:      model.RoleStudent,
+		Role:      identitycontracts.RoleStudent,
 		StudentNo: "20240001",
 		TeacherNo: "T-ignored",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 	})
 	if err != nil {
 		t.Fatalf("CreateUser() error = %v", err)
@@ -70,7 +69,7 @@ func TestAdminServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 		t.Fatalf("expected teacher no to be cleared for student, got %+v", resp)
 	}
 
-	var user model.User
+	var user identitycontracts.User
 	if err := db.First(&user, resp.ID).Error; err != nil {
 		t.Fatalf("load created user: %v", err)
 	}
@@ -86,8 +85,8 @@ func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 	if _, err := service.CreateUser(context.Background(), identitycontracts.CreateUserInput{
 		Username: "duplicate-user",
 		Password: "Password123",
-		Role:     model.RoleStudent,
-		Status:   model.UserStatusActive,
+		Role:     identitycontracts.RoleStudent,
+		Status:   identitycontracts.UserStatusActive,
 	}); err != nil {
 		t.Fatalf("seed CreateUser() error = %v", err)
 	}
@@ -95,8 +94,8 @@ func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 	_, err := service.CreateUser(context.Background(), identitycontracts.CreateUserInput{
 		Username: "duplicate-user",
 		Password: "Password123",
-		Role:     model.RoleStudent,
-		Status:   model.UserStatusActive,
+		Role:     identitycontracts.RoleStudent,
+		Status:   identitycontracts.UserStatusActive,
 	})
 	if !errors.Is(err, errcode.ErrUsernameExists) {
 		t.Fatalf("expected ErrUsernameExists, got %v", err)

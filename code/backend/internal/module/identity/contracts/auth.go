@@ -4,7 +4,22 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	identityentity "ctf-platform/internal/module/identity/entity"
+)
+
+type User = identityentity.User
+type UserRole = identityentity.UserRole
+type Role = identityentity.Role
+
+const (
+	UserStatusActive   = identityentity.UserStatusActive
+	UserStatusInactive = identityentity.UserStatusInactive
+	UserStatusLocked   = identityentity.UserStatusLocked
+	UserStatusBanned   = identityentity.UserStatusBanned
+
+	RoleStudent = identityentity.RoleStudent
+	RoleTeacher = identityentity.RoleTeacher
+	RoleAdmin   = identityentity.RoleAdmin
 )
 
 type UserListFilter struct {
@@ -19,17 +34,17 @@ type UserListFilter struct {
 }
 
 type UserListRepository interface {
-	List(ctx context.Context, filter UserListFilter) ([]*model.User, int64, error)
+	List(ctx context.Context, filter UserListFilter) ([]*User, int64, error)
 }
 
 type UserLookupRepository interface {
-	FindByID(ctx context.Context, userID int64) (*model.User, error)
-	FindByUsername(ctx context.Context, username string) (*model.User, error)
+	FindByID(ctx context.Context, userID int64) (*User, error)
+	FindByUsername(ctx context.Context, username string) (*User, error)
 }
 
 type UserWriteRepository interface {
-	Create(ctx context.Context, user *model.User) error
-	Update(ctx context.Context, user *model.User) error
+	Create(ctx context.Context, user *User) error
+	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, userID int64) error
 }
 
@@ -42,7 +57,7 @@ type UserLoginStateRepository interface {
 }
 
 type UserProfileRepository interface {
-	UpdateProfile(ctx context.Context, user *model.User) error
+	UpdateProfile(ctx context.Context, user *User) error
 }
 
 type UserRepository interface {

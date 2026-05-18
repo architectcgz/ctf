@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -59,7 +60,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.User{ID: 43, Username: "student-43", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&identitycontracts.User{ID: 43, Username: "student-43", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 
@@ -748,7 +749,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		}
 	}
 	for _, userID := range []int64{51, 52} {
-		if err := db.Create(&model.User{ID: userID, Username: fmt.Sprintf("student-%d", userID), Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		if err := db.Create(&identitycontracts.User{ID: userID, Username: fmt.Sprintf("student-%d", userID), Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 			t.Fatalf("create user %d: %v", userID, err)
 		}
 	}

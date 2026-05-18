@@ -8,6 +8,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type ctxOnlyChallengeWriteupRepository struct{}
@@ -16,7 +17,7 @@ func (ctxOnlyChallengeWriteupRepository) FindByID(context.Context, int64) (*mode
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindUserByID(context.Context, int64) (*model.User, error) {
+func (ctxOnlyChallengeWriteupRepository) FindUserByID(context.Context, int64) (*identitycontracts.User, error) {
 	return nil, nil
 }
 

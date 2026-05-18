@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -670,7 +671,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&contestentity.Contest{},
 		&contestentity.ContestAWDService{},
 		&contestentity.ContestRegistration{},
-		&model.User{},
+		&identitycontracts.User{},
 		&contestentity.Team{},
 		&instanceentity.Instance{},
 		&runtimeentity.AWDServiceOperation{},

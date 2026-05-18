@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 var ErrContestUserTeamNotFound = errors.New("contest user team not found")
@@ -42,5 +42,5 @@ type ContestTeamListRepository interface {
 }
 
 type ContestTeamUserLookupRepository interface {
-	FindUsersByIDs(ctx context.Context, ids []int64) ([]*model.User, error)
+	FindUsersByIDs(ctx context.Context, ids []int64) ([]*identitycontracts.User, error)
 }

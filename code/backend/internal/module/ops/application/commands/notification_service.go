@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -322,9 +322,9 @@ func normalizeUserIDSlice(values []string) ([]int64, error) {
 func normalizeRoleSlice(values []string) ([]string, error) {
 	roles := normalizeStringSlice(values)
 	allowed := map[string]struct{}{
-		model.RoleStudent: {},
-		model.RoleTeacher: {},
-		model.RoleAdmin:   {},
+		identitycontracts.RoleStudent: {},
+		identitycontracts.RoleTeacher: {},
+		identitycontracts.RoleAdmin:   {},
 	}
 	for _, role := range roles {
 		if _, ok := allowed[role]; !ok {

@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -73,7 +74,7 @@ func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {
 			claims: &runtimeports.ProxyTicketClaims{
 				UserID:               1001,
 				Username:             "student",
-				Role:                 model.RoleStudent,
+				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9001,
 				ContestID:            &contestID,
 				ShareScope:           model.InstanceSharingPerTeam,
@@ -128,7 +129,7 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 			claims: &runtimeports.ProxyTicketClaims{
 				UserID:               1002,
 				Username:             "student",
-				Role:                 model.RoleStudent,
+				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9002,
 				ContestID:            &contestID,
 				ShareScope:           model.InstanceSharingPerTeam,

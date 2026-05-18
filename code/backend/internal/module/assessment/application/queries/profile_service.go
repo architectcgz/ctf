@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -40,11 +40,11 @@ func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if student == nil || student.Role != model.RoleStudent {
+	if student == nil || student.Role != identitycontracts.RoleStudent {
 		return nil, errcode.ErrNotFound
 	}
 
-	if requesterRole != model.RoleAdmin {
+	if requesterRole != identitycontracts.RoleAdmin {
 		requester, findErr := s.repo.FindUserByID(ctx, requesterID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)

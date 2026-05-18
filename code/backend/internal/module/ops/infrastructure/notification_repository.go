@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
@@ -108,7 +108,7 @@ func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID,
 }
 
 func (r *NotificationRepository) listUserIDs(ctx context.Context, apply func(query *gorm.DB) *gorm.DB) ([]int64, error) {
-	query := r.db.WithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&identitycontracts.User{}).Where("deleted_at IS NULL")
 	if apply != nil {
 		query = apply(query)
 	}

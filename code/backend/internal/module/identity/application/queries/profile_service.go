@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -33,7 +32,7 @@ func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*identit
 	return &profile, nil
 }
 
-func buildProfileUser(user *model.User) identitycontracts.ProfileUser {
+func buildProfileUser(user *identitycontracts.User) identitycontracts.ProfileUser {
 	resp := adminUserMapper.ToProfileUserBasePtr(user)
 	resp.Name = commonmapper.NormalizeOptionalTrimmedString(user.Name)
 	resp.ClassName = commonmapper.NormalizeOptionalTrimmedString(user.ClassName)

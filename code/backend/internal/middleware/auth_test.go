@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
@@ -41,26 +40,26 @@ func (s *stubTokenService) ConsumeWSTicket(context.Context, string) (*authctx.Cu
 }
 
 type stubUserRepository struct {
-	user *model.User
+	user *identitycontracts.User
 }
 
-func (s *stubUserRepository) List(context.Context, identitycontracts.UserListFilter) ([]*model.User, int64, error) {
+func (s *stubUserRepository) List(context.Context, identitycontracts.UserListFilter) ([]*identitycontracts.User, int64, error) {
 	panic("unexpected call to List")
 }
 
-func (s *stubUserRepository) FindByID(context.Context, int64) (*model.User, error) {
+func (s *stubUserRepository) FindByID(context.Context, int64) (*identitycontracts.User, error) {
 	return s.user, nil
 }
 
-func (s *stubUserRepository) FindByUsername(context.Context, string) (*model.User, error) {
+func (s *stubUserRepository) FindByUsername(context.Context, string) (*identitycontracts.User, error) {
 	panic("unexpected call to FindByUsername")
 }
 
-func (s *stubUserRepository) Create(context.Context, *model.User) error {
+func (s *stubUserRepository) Create(context.Context, *identitycontracts.User) error {
 	panic("unexpected call to Create")
 }
 
-func (s *stubUserRepository) Update(context.Context, *model.User) error {
+func (s *stubUserRepository) Update(context.Context, *identitycontracts.User) error {
 	panic("unexpected call to Update")
 }
 
@@ -76,7 +75,7 @@ func (s *stubUserRepository) UpdateLoginState(context.Context, int64, int, *time
 	panic("unexpected call to UpdateLoginState")
 }
 
-func (s *stubUserRepository) UpdateProfile(context.Context, *model.User) error {
+func (s *stubUserRepository) UpdateProfile(context.Context, *identitycontracts.User) error {
 	panic("unexpected call to UpdateProfile")
 }
 
@@ -88,22 +87,22 @@ func TestAuthUsesCurrentPersistedRoleForRBAC(t *testing.T) {
 			ID:        "sess-1",
 			UserID:    42,
 			Username:  "teacher-token",
-			Role:      model.RoleTeacher,
+			Role:      identitycontracts.RoleTeacher,
 			ExpiresAt: time.Now().Add(time.Hour),
 		},
 	}
 	users := &stubUserRepository{
-		user: &model.User{
+		user: &identitycontracts.User{
 			ID:       42,
 			Username: "admin-db",
-			Role:     model.RoleAdmin,
+			Role:     identitycontracts.RoleAdmin,
 		},
 	}
 
 	router := gin.New()
 	router.Use(Auth(tokenService, "ctf_session", users))
 	adminOnly := router.Group("/admin")
-	adminOnly.Use(RequireRole(model.RoleAdmin))
+	adminOnly.Use(RequireRole(identitycontracts.RoleAdmin))
 	adminOnly.PUT("/contests/1", func(c *gin.Context) {
 		currentUser := MustCurrentUser(c)
 		c.JSON(http.StatusOK, gin.H{
@@ -126,8 +125,8 @@ func TestAuthUsesCurrentPersistedRoleForRBAC(t *testing.T) {
 	if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
-	if payload["role"] != model.RoleAdmin {
-		t.Fatalf("expected current role %q, got %q", model.RoleAdmin, payload["role"])
+	if payload["role"] != identitycontracts.RoleAdmin {
+		t.Fatalf("expected current role %q, got %q", identitycontracts.RoleAdmin, payload["role"])
 	}
 	if payload["username"] != "admin-db" {
 		t.Fatalf("expected current username %q, got %q", "admin-db", payload["username"])
@@ -142,22 +141,22 @@ func TestAuthRejectsPrivilegesRemovedAfterTokenIssued(t *testing.T) {
 			ID:        "sess-2",
 			UserID:    99,
 			Username:  "admin-token",
-			Role:      model.RoleAdmin,
+			Role:      identitycontracts.RoleAdmin,
 			ExpiresAt: time.Now().Add(time.Hour),
 		},
 	}
 	users := &stubUserRepository{
-		user: &model.User{
+		user: &identitycontracts.User{
 			ID:       99,
 			Username: "teacher-db",
-			Role:     model.RoleTeacher,
+			Role:     identitycontracts.RoleTeacher,
 		},
 	}
 
 	router := gin.New()
 	router.Use(Auth(tokenService, "ctf_session", users))
 	adminOnly := router.Group("/admin")
-	adminOnly.Use(RequireRole(model.RoleAdmin))
+	adminOnly.Use(RequireRole(identitycontracts.RoleAdmin))
 	adminOnly.PUT("/contests/1", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -56,7 +57,7 @@ type stubPracticeRepository struct {
 	findCorrectSubmissionFn                func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error)
 	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error)
 	updateSubmissionFn                     func(ctx context.Context, submission *practiceports.SubmissionRecord) error
-	findUserByIDFn                         func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn                         func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
 	getTeacherManualReviewSubmissionByIDFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
 	isUniqueViolationFn                    func(err error) bool
@@ -692,7 +693,7 @@ func (s *stubPracticeRepository) UpdateSubmission(ctx context.Context, submissio
 	return nil
 }
 
-func (s *stubPracticeRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *stubPracticeRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDFn != nil {
 		return s.findUserByIDFn(ctx, userID)
 	}

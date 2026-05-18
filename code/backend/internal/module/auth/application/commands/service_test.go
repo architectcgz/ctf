@@ -8,7 +8,6 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
@@ -16,46 +15,46 @@ import (
 )
 
 type mockRepository struct {
-	createFn           func(ctx context.Context, user *model.User) error
-	findByIDFn         func(ctx context.Context, userID int64) (*model.User, error)
-	findByUsernameFn   func(ctx context.Context, username string) (*model.User, error)
-	listFn             func(ctx context.Context, filter identitycontracts.UserListFilter) ([]*model.User, int64, error)
-	updateFn           func(ctx context.Context, user *model.User) error
+	createFn           func(ctx context.Context, user *identitycontracts.User) error
+	findByIDFn         func(ctx context.Context, userID int64) (*identitycontracts.User, error)
+	findByUsernameFn   func(ctx context.Context, username string) (*identitycontracts.User, error)
+	listFn             func(ctx context.Context, filter identitycontracts.UserListFilter) ([]*identitycontracts.User, int64, error)
+	updateFn           func(ctx context.Context, user *identitycontracts.User) error
 	deleteFn           func(ctx context.Context, userID int64) error
 	updatePasswordFn   func(ctx context.Context, userID int64, newHash string) error
 	updateLoginStateFn func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error
-	updateProfileFn    func(ctx context.Context, user *model.User) error
+	updateProfileFn    func(ctx context.Context, user *identitycontracts.User) error
 }
 
-func (m *mockRepository) Create(ctx context.Context, user *model.User) error {
+func (m *mockRepository) Create(ctx context.Context, user *identitycontracts.User) error {
 	if m.createFn == nil {
 		return nil
 	}
 	return m.createFn(ctx, user)
 }
 
-func (m *mockRepository) FindByUsername(ctx context.Context, username string) (*model.User, error) {
+func (m *mockRepository) FindByUsername(ctx context.Context, username string) (*identitycontracts.User, error) {
 	if m.findByUsernameFn == nil {
 		return nil, identitycontracts.ErrUserNotFound
 	}
 	return m.findByUsernameFn(ctx, username)
 }
 
-func (m *mockRepository) FindByID(ctx context.Context, userID int64) (*model.User, error) {
+func (m *mockRepository) FindByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if m.findByIDFn == nil {
 		return nil, identitycontracts.ErrUserNotFound
 	}
 	return m.findByIDFn(ctx, userID)
 }
 
-func (m *mockRepository) List(ctx context.Context, filter identitycontracts.UserListFilter) ([]*model.User, int64, error) {
+func (m *mockRepository) List(ctx context.Context, filter identitycontracts.UserListFilter) ([]*identitycontracts.User, int64, error) {
 	if m.listFn == nil {
 		return nil, 0, nil
 	}
 	return m.listFn(ctx, filter)
 }
 
-func (m *mockRepository) Update(ctx context.Context, user *model.User) error {
+func (m *mockRepository) Update(ctx context.Context, user *identitycontracts.User) error {
 	if m.updateFn == nil {
 		return nil
 	}
@@ -83,7 +82,7 @@ func (m *mockRepository) UpdateLoginState(ctx context.Context, userID int64, fai
 	return m.updateLoginStateFn(ctx, userID, failedAttempts, lastFailedAt, lockedUntil, status)
 }
 
-func (m *mockRepository) UpdateProfile(ctx context.Context, user *model.User) error {
+func (m *mockRepository) UpdateProfile(ctx context.Context, user *identitycontracts.User) error {
 	if m.updateProfileFn == nil {
 		return nil
 	}
@@ -121,7 +120,7 @@ func TestServiceRegisterSuccess(t *testing.T) {
 	t.Parallel()
 
 	repo := &mockRepository{
-		createFn: func(ctx context.Context, user *model.User) error {
+		createFn: func(ctx context.Context, user *identitycontracts.User) error {
 			if user.Username != "alice_1" {
 				t.Fatalf("unexpected username: %s", user.Username)
 			}
@@ -169,7 +168,7 @@ func TestServiceRegisterTrimsEmail(t *testing.T) {
 	t.Parallel()
 
 	repo := &mockRepository{
-		createFn: func(ctx context.Context, user *model.User) error {
+		createFn: func(ctx context.Context, user *identitycontracts.User) error {
 			if user.Email != "alice@example.com" {
 				t.Fatalf("expected trimmed email, got %q", user.Email)
 			}
@@ -205,7 +204,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 	t.Parallel()
 
 	service := NewService(&mockRepository{
-		createFn: func(context.Context, *model.User) error {
+		createFn: func(context.Context, *identitycontracts.User) error {
 			return identitycontracts.ErrRoleNotFound
 		},
 	}, &mockTokenService{
@@ -227,18 +226,18 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 func TestServiceLoginInvalidPassword(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:       1,
 		Username: "alice_1",
-		Role:     model.RoleStudent,
-		Status:   model.UserStatusActive,
+		Role:     identitycontracts.RoleStudent,
+		Status:   identitycontracts.UserStatusActive,
 	}
 	if err := user.SetPassword("Password123"); err != nil {
 		t.Fatalf("SetPassword() error = %v", err)
 	}
 
 	service := NewService(&mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return user, nil
 		},
 		updateLoginStateFn: func(context.Context, int64, int, *time.Time, *time.Time, string) error {
@@ -262,11 +261,11 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:                  2,
 		Username:            "alice_2",
-		Role:                model.RoleStudent,
-		Status:              model.UserStatusActive,
+		Role:                identitycontracts.RoleStudent,
+		Status:              identitycontracts.UserStatusActive,
 		FailedLoginAttempts: 2,
 	}
 	if err := user.SetPassword("Password123"); err != nil {
@@ -276,7 +275,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 	user.LastFailedLoginAt = &lastFailedAt
 
 	service := NewService(&mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return user, nil
 		},
 		updateLoginStateFn: func(_ context.Context, _ int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
@@ -300,7 +299,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 	if !errors.Is(err, errcode.ErrLoginTooFrequent) {
 		t.Fatalf("expected ErrLoginTooFrequent, got %v", err)
 	}
-	if user.Status != model.UserStatusLocked || user.LockedUntil == nil {
+	if user.Status != identitycontracts.UserStatusLocked || user.LockedUntil == nil {
 		t.Fatalf("expected locked user state, got %+v", user)
 	}
 }
@@ -308,11 +307,11 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:                  3,
 		Username:            "alice_3",
-		Role:                model.RoleStudent,
-		Status:              model.UserStatusLocked,
+		Role:                identitycontracts.RoleStudent,
+		Status:              identitycontracts.UserStatusLocked,
 		FailedLoginAttempts: 3,
 	}
 	if err := user.SetPassword("Password123"); err != nil {
@@ -322,7 +321,7 @@ func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 	user.LockedUntil = &lockedUntil
 
 	service := NewService(&mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return user, nil
 		},
 		updateLoginStateFn: func(_ context.Context, _ int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
@@ -351,7 +350,7 @@ func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Login() error = %v", err)
 	}
-	if user.Status != model.UserStatusActive || user.FailedLoginAttempts != 0 || user.LockedUntil != nil {
+	if user.Status != identitycontracts.UserStatusActive || user.FailedLoginAttempts != 0 || user.LockedUntil != nil {
 		t.Fatalf("expected login tracking to be reset, got %+v", user)
 	}
 }

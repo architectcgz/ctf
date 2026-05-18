@@ -6,9 +6,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 func (r *ParticipationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
@@ -65,8 +65,8 @@ func (r *ParticipationRepository) ListRegistrations(ctx context.Context, contest
 	return rows, total, nil
 }
 
-func (r *ParticipationRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
+func (r *ParticipationRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+	var user identitycontracts.User
 	if err := r.dbWithContext(ctx).Select("id, username").First(&user, userID).Error; err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (r *ParticipationRegistrationRepository) ListRegistrations(ctx context.Cont
 	return r.source.ListRegistrations(ctx, contestID, status, offset, limit)
 }
 
-func (r *ParticipationRegistrationRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (r *ParticipationRegistrationRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	return r.source.FindUserByID(ctx, userID)
 }
 

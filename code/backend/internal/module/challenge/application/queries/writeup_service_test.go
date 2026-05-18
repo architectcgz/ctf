@@ -9,14 +9,15 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeWriteupRepository struct {
 	findByIDFn                                         func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
-	findUserByIDFn                                     func(userID int64) (*model.User, error)
-	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn                                     func(userID int64) (*identitycontracts.User, error)
+	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
 	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
@@ -50,7 +51,7 @@ func (s *stubChallengeWriteupRepository) FindByID(ctx context.Context, id int64)
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *stubChallengeWriteupRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}
@@ -275,11 +276,11 @@ func TestWriteupServiceListTeacherSubmissionsPropagatesContextToRepository(t *te
 	expectedCtxValue := "ctx-writeup-list-teacher-submissions"
 	listCalled := false
 	repo := &stubChallengeWriteupRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		listTeacherSubmissionWriteupsWithContextFn: func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 			listCalled = true
@@ -295,7 +296,7 @@ func TestWriteupServiceListTeacherSubmissionsPropagatesContextToRepository(t *te
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherSubmissions(ctx, 1001, model.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{}); err != nil {
+	if _, err := service.ListTeacherSubmissions(ctx, 1001, identitycontracts.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{}); err != nil {
 		t.Fatalf("ListTeacherSubmissions() error = %v", err)
 	}
 	if !listCalled {
@@ -325,18 +326,18 @@ func TestWriteupServiceGetTeacherSubmissionPropagatesContextToRepository(t *test
 				ChallengeTitle:  "writeup challenge",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 	}
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.GetTeacherSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
+	if _, err := service.GetTeacherSubmission(ctx, 91, 1001, identitycontracts.RoleTeacher); err != nil {
 		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}
 	if !getCalled {
@@ -490,7 +491,7 @@ func TestWriteupServiceGetTeacherSubmissionTreatsTeacherSubmissionNotFoundSentin
 		},
 	})
 
-	_, err := service.GetTeacherSubmission(context.Background(), 91, 1001, model.RoleTeacher)
+	_, err := service.GetTeacherSubmission(context.Background(), 91, 1001, identitycontracts.RoleTeacher)
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
 		t.Fatalf("expected not found, got %v", err)
 	}
@@ -500,12 +501,12 @@ func TestWriteupServiceListTeacherSubmissionsTreatsRequesterNotFoundSentinelAsUn
 	t.Parallel()
 
 	service := NewWriteupService(&stubChallengeWriteupRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			return nil, challengeports.ErrChallengeWriteupRequesterNotFound
 		},
 	})
 
-	_, err := service.ListTeacherSubmissions(context.Background(), 1001, model.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{})
+	_, err := service.ListTeacherSubmissions(context.Background(), 1001, identitycontracts.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{})
 	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
 		t.Fatalf("expected unauthorized, got %v", err)
 	}

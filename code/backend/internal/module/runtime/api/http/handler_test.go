@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -140,7 +140,7 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 
 	router := gin.New()
 	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/ssh", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: identitycontracts.RoleStudent})
 		c.Set("id", int64(5))
 		c.Set("sid", int64(12))
 		handler.AccessAWDDefenseSSH(c)
@@ -189,7 +189,7 @@ func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/instances", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.ListTeacherInstances(c)
 	})
 
@@ -297,7 +297,7 @@ func TestAccessAWDTargetReturnsTargetProxyURL(t *testing.T) {
 
 	router := gin.New()
 	router.POST("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "alice", Role: model.RoleStudent})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "alice", Role: identitycontracts.RoleStudent})
 		c.Set("id", int64(7))
 		c.Set("sid", int64(7009))
 		c.Set("team_id", int64(14))
@@ -341,7 +341,7 @@ func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
 			claims: &runtimeports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
-				Role:              model.RoleStudent,
+				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
 				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
@@ -407,7 +407,7 @@ func TestProxyAWDTargetRewritesRootRelativeHTMLLinks(t *testing.T) {
 			claims: &runtimeports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
-				Role:              model.RoleStudent,
+				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
 				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
@@ -475,7 +475,7 @@ func TestProxyAWDTargetRewritesRootRelativeRedirectLocation(t *testing.T) {
 			claims: &runtimeports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
-				Role:              model.RoleStudent,
+				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
 				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,

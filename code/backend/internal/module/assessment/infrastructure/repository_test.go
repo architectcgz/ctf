@@ -12,6 +12,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -23,7 +24,7 @@ func setupAssessmentRepoTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&challengecontracts.AWDChallenge{},
@@ -54,12 +55,12 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	repo := NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        7,
 		Username:  "alice",
-		Role:      model.RoleStudent,
+		Role:      identitycontracts.RoleStudent,
 		ClassName: "Class A",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {

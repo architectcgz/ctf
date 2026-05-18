@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -329,7 +330,7 @@ func ensureTeacherCanModerateCommunityWriteup(
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,
 ) error {
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return nil
 	}
 	requester, err := repo.FindUserByID(ctx, requesterID)

@@ -73,8 +73,8 @@ type flowTestEnv struct {
 	router  *gin.Engine
 	db      *gorm.DB
 	cache   *redislib.Client
-	admin   *model.User
-	student *model.User
+	admin   *identitycontracts.User
+	student *identitycontracts.User
 	image   *model.Image
 }
 
@@ -96,7 +96,7 @@ type teachingQueryIdentityLookupAdapter struct {
 	users identitycontracts.UserLookupRepository
 }
 
-func (a teachingQueryIdentityLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (a teachingQueryIdentityLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	user, err := a.users.FindByID(ctx, userID)
 	if errors.Is(err, identitycontracts.ErrUserNotFound) {
 		return nil, nil
@@ -836,9 +836,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.Role{},
-		&model.User{},
-		&model.UserRole{},
+		&identitycontracts.Role{},
+		&identitycontracts.User{},
+		&identitycontracts.UserRole{},
 		&opsentity.AuditLog{},
 		&contestcontracts.Contest{},
 		&contestcontracts.ContestRegistration{},
@@ -977,8 +977,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, runtimehttp.CookieConfig{}, nil)
 
-	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
-	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)
+	admin := createFlowUser(t, db, "admin_user", "Password123", identitycontracts.RoleAdmin)
+	student := createFlowUser(t, db, "student_user", "Password123", identitycontracts.RoleStudent)
 	image := createFlowImage(t, db)
 
 	router := gin.New()
@@ -992,12 +992,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName))
 
 	authoringOnly := protected.Group("/authoring")
-	authoringOnly.Use(middleware.RequireRole(model.RoleTeacher))
+	authoringOnly.Use(middleware.RequireRole(identitycontracts.RoleTeacher))
 	authoringOnly.POST("/challenges", challengeHandler.CreateChallenge)
 	authoringOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
 
 	adminOnly := protected.Group("/admin")
-	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
+	adminOnly.Use(middleware.RequireRole(identitycontracts.RoleAdmin))
 	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
@@ -1026,7 +1026,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
 	teacherGroup := protected.Group("/teacher")
-	teacherGroup.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
+	teacherGroup.Use(middleware.RequireRole(identitycontracts.RoleTeacher, identitycontracts.RoleAdmin))
 	teacherGroup.GET("/students/:id/evidence", teachingQueryHandler.GetStudentEvidence)
 	teacherGroup.GET("/students/:id/attack-sessions", teachingQueryHandler.GetStudentAttackSessions)
 
@@ -1111,14 +1111,14 @@ func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 	}
 }
 
-func createFlowUser(t *testing.T, db *gorm.DB, username, password, role string) *model.User {
+func createFlowUser(t *testing.T, db *gorm.DB, username, password, role string) *identitycontracts.User {
 	t.Helper()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username: username,
 		Email:    fmt.Sprintf("%s@example.com", username),
 		Role:     role,
-		Status:   model.UserStatusActive,
+		Status:   identitycontracts.UserStatusActive,
 	}
 	setTestPassword(t, user, password)
 	if err := db.Create(user).Error; err != nil {

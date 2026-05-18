@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -43,7 +43,7 @@ func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*TeamResul
 	return teamResultFromModel(team, len(members)), memberResps, nil
 }
 
-func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*contestentity.TeamMember) (map[int64]*model.User, error) {
+func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*contestentity.TeamMember) (map[int64]*identitycontracts.User, error) {
 	userIDs := make([]int64, len(members))
 	for i, member := range members {
 		userIDs[i] = member.UserID
@@ -54,7 +54,7 @@ func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*con
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	userMap := make(map[int64]*model.User, len(users))
+	userMap := make(map[int64]*identitycontracts.User, len(users))
 	for _, user := range users {
 		userMap[user.ID] = user
 	}

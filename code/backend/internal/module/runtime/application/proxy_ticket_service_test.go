@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -135,7 +135,7 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 	ticket, expiresAt, err := service.IssueAWDTargetTicket(context.Background(), authctx.CurrentUser{
 		UserID:   1001,
 		Username: "alice",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}, 3001, 4001, 5002)
 	if err != nil {
 		t.Fatalf("IssueAWDTargetTicket() error = %v", err)
@@ -185,7 +185,7 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 	ticket, expiresAt, err := service.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
 		UserID:   1001,
 		Username: "alice",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}, 3001, 4001)
 	if err != nil {
 		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
@@ -223,7 +223,7 @@ func TestProxyTicketServiceResolveTicketAllowsClaimsWithoutChallengeID(t *testin
 		findClaims: &runtimeports.ProxyTicketClaims{
 			UserID:     1001,
 			Username:   "alice",
-			Role:       model.RoleStudent,
+			Role:       identitycontracts.RoleStudent,
 			InstanceID: 2001,
 			ShareScope: instanceentity.ShareScopePerTeam,
 		},
@@ -267,7 +267,7 @@ func TestProxyTicketServiceResolveTicketRejectsDefenseClaimsWithoutWorkspaceRevi
 		findClaims: &runtimeports.ProxyTicketClaims{
 			UserID:            1001,
 			Username:          "alice",
-			Role:              model.RoleStudent,
+			Role:              identitycontracts.RoleStudent,
 			InstanceID:        2001,
 			ContestID:         &contestID,
 			ShareScope:        instanceentity.ShareScopePerTeam,
@@ -305,7 +305,7 @@ func TestProxyTicketServiceIssueTicketPropagatesContextToInstanceReader(t *testi
 	}, 15*time.Minute)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, _, err := service.IssueTicket(ctx, authctx.CurrentUser{UserID: 1001, Username: "alice", Role: model.RoleStudent}, 2001); err != nil {
+	if _, _, err := service.IssueTicket(ctx, authctx.CurrentUser{UserID: 1001, Username: "alice", Role: identitycontracts.RoleStudent}, 2001); err != nil {
 		t.Fatalf("IssueTicket() error = %v", err)
 	}
 	if !readerCalled {

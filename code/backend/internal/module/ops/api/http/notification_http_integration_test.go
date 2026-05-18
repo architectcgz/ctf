@@ -22,7 +22,6 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -30,6 +29,7 @@ import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -75,7 +75,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	server := httptest.NewServer(env.router)
 	defer server.Close()
 
-	user := createNotificationUser(t, env.db, "notify_user", model.RoleStudent)
+	user := createNotificationUser(t, env.db, "notify_user", identitycontracts.RoleStudent)
 	sessionCookie, err := issueNotificationSessionCookie(env.tokenService, user)
 	if err != nil {
 		t.Fatalf("issue session: %v", err)
@@ -199,8 +199,8 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T) {
 	env := newNotificationIntegrationEnv(t)
 
-	admin := createNotificationUser(t, env.db, "admin_notify", model.RoleAdmin)
-	student := createNotificationUser(t, env.db, "student_notify", model.RoleStudent)
+	admin := createNotificationUser(t, env.db, "admin_notify", identitycontracts.RoleAdmin)
+	student := createNotificationUser(t, env.db, "student_notify", identitycontracts.RoleStudent)
 	adminSessionCookie, err := issueNotificationSessionCookie(env.tokenService, admin)
 	if err != nil {
 		t.Fatalf("issue admin session: %v", err)
@@ -317,7 +317,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &opsentity.NotificationBatch{}, &opsentity.Notification{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}, &opsentity.NotificationBatch{}, &opsentity.Notification{}); err != nil {
 		t.Fatalf("auto migrate schema: %v", err)
 	}
 	seedNotificationRoles(t, db)
@@ -364,7 +364,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	protected.GET("/notifications", notificationHandler.ListNotifications)
 	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), notificationHandler.MarkAsRead)
 	adminOnly := protected.Group("/admin")
-	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
+	adminOnly.Use(middleware.RequireRole(identitycontracts.RoleAdmin))
 	adminOnly.POST("/notifications", notificationHandler.PublishAdminNotification)
 	router.GET("/ws/notifications", notificationHandler.ServeWS)
 
@@ -399,10 +399,10 @@ func newNotificationTestConfigs(t *testing.T) (config.AuthConfig, config.WebSock
 
 func seedNotificationRoles(t *testing.T, db *gorm.DB) {
 	t.Helper()
-	roles := []model.Role{
-		{ID: 1, Code: model.RoleStudent, Name: "Student"},
-		{ID: 2, Code: model.RoleTeacher, Name: "Teacher"},
-		{ID: 3, Code: model.RoleAdmin, Name: "Admin"},
+	roles := []identitycontracts.Role{
+		{ID: 1, Code: identitycontracts.RoleStudent, Name: "Student"},
+		{ID: 2, Code: identitycontracts.RoleTeacher, Name: "Teacher"},
+		{ID: 3, Code: identitycontracts.RoleAdmin, Name: "Admin"},
 	}
 	for _, role := range roles {
 		if err := db.Create(&role).Error; err != nil {
@@ -411,13 +411,13 @@ func seedNotificationRoles(t *testing.T, db *gorm.DB) {
 	}
 }
 
-func createNotificationUser(t *testing.T, db *gorm.DB, username, role string) *model.User {
+func createNotificationUser(t *testing.T, db *gorm.DB, username, role string) *identitycontracts.User {
 	t.Helper()
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username: username,
 		Email:    fmt.Sprintf("%s@example.com", username),
 		Role:     role,
-		Status:   model.UserStatusActive,
+		Status:   identitycontracts.UserStatusActive,
 	}
 	if err := user.SetPassword("Password123"); err != nil {
 		t.Fatalf("set password: %v", err)
@@ -462,7 +462,7 @@ func performNotificationJSONRequest(
 	return recorder
 }
 
-func issueNotificationSessionCookie(tokenService authcontracts.TokenService, user *model.User) (*http.Cookie, error) {
+func issueNotificationSessionCookie(tokenService authcontracts.TokenService, user *identitycontracts.User) (*http.Cookie, error) {
 	session, err := tokenService.CreateSession(context.Background(), user.ID, user.Username, user.Role)
 	if err != nil {
 		return nil, err

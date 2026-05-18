@@ -14,6 +14,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	"ctf-platform/internal/teaching/evidence"
@@ -30,7 +31,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 	}
 
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&model.Challenge{},
 		&challengecontracts.AWDChallenge{},
 		&contestcontracts.Submission{},
@@ -74,9 +75,9 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 	ctx := context.Background()
 	now := time.Date(2026, 4, 13, 10, 0, 0, 0, time.UTC)
 
-	users := []model.User{
-		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+	users := []identitycontracts.User{
+		{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 2, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
 	}
 	if err := db.Create(&users).Error; err != nil {
 		t.Fatalf("seed users: %v", err)
@@ -183,7 +184,7 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 	ctx := context.Background()
 	now := time.Date(2026, 4, 13, 11, 0, 0, 0, time.UTC)
 
-	user := model.User{ID: 7, Username: "neo", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
+	user := identitycontracts.User{ID: 7, Username: "neo", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive}
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -277,10 +278,10 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, 4, 13, 12, 0, 0, 0, time.UTC)
 
-	users := []model.User{
-		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 3, Username: "charlie", Role: model.RoleStudent, ClassName: "class-b", Status: model.UserStatusActive},
+	users := []identitycontracts.User{
+		{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 2, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 3, Username: "charlie", Role: identitycontracts.RoleStudent, ClassName: "class-b", Status: identitycontracts.UserStatusActive},
 	}
 	if err := db.Create(&users).Error; err != nil {
 		t.Fatalf("seed users: %v", err)
@@ -357,7 +358,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	ctx := context.Background()
 	now := time.Date(2026, 4, 13, 13, 0, 0, 0, time.UTC)
 
-	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
+	user := identitycontracts.User{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive}
 	challenge := challengecontracts.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := contestcontracts.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []contestcontracts.Team{
@@ -445,7 +446,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, 4, 13, 14, 0, 0, 0, time.UTC)
 
-	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
+	user := identitycontracts.User{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive}
 	challenge := challengecontracts.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := contestcontracts.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []contestcontracts.Team{
@@ -543,9 +544,9 @@ func TestReportRepositoryListClassDistributions(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, 5, 14, 10, 0, 0, 0, time.UTC)
 
-	users := []model.User{
-		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
+	users := []identitycontracts.User{
+		{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 2, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
 	}
 	if err := db.Create(&users).Error; err != nil {
 		t.Fatalf("seed users: %v", err)
@@ -596,10 +597,10 @@ func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, 5, 14, 11, 0, 0, 0, time.UTC)
 
-	users := []model.User{
-		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive},
-		{ID: 3, Username: "carol", Role: model.RoleStudent, ClassName: "class-b", Status: model.UserStatusActive},
+	users := []identitycontracts.User{
+		{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 2, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive},
+		{ID: 3, Username: "carol", Role: identitycontracts.RoleStudent, ClassName: "class-b", Status: identitycontracts.UserStatusActive},
 	}
 	if err := db.Create(&users).Error; err != nil {
 		t.Fatalf("seed users: %v", err)

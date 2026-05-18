@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -74,7 +75,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	filter.Keyword = strings.TrimSpace(query.Keyword)
 	filter.StudentNo = strings.TrimSpace(query.StudentNo)
 
-	if requesterRole != model.RoleAdmin {
+	if requesterRole != identitycontracts.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)

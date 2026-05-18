@@ -9,8 +9,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	identityentity "ctf-platform/internal/module/identity/entity"
 )
 
 const (
@@ -37,8 +37,8 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) List(ctx context.Context, filter identitycontracts.UserListFilter) ([]*model.User, int64, error) {
-	query := r.dbWithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
+func (r *Repository) List(ctx context.Context, filter identitycontracts.UserListFilter) ([]*identitycontracts.User, int64, error) {
+	query := r.dbWithContext(ctx).Model(&identityentity.User{}).Where("deleted_at IS NULL")
 	if filter.Keyword != "" {
 		keyword := "%" + strings.TrimSpace(filter.Keyword) + "%"
 		query = query.Where(
@@ -72,15 +72,15 @@ func (r *Repository) List(ctx context.Context, filter identitycontracts.UserList
 		return nil, 0, err
 	}
 
-	users := make([]*model.User, 0)
+	users := make([]*identitycontracts.User, 0)
 	if err := query.Order("created_at DESC").Offset(filter.Offset).Limit(filter.Limit).Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 	return users, total, nil
 }
 
-func (r *Repository) FindByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
+func (r *Repository) FindByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+	var user identityentity.User
 	if err := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, identitycontracts.ErrUserNotFound
@@ -90,8 +90,8 @@ func (r *Repository) FindByID(ctx context.Context, userID int64) (*model.User, e
 	return &user, nil
 }
 
-func (r *Repository) FindByUsername(ctx context.Context, username string) (*model.User, error) {
-	var user model.User
+func (r *Repository) FindByUsername(ctx context.Context, username string) (*identitycontracts.User, error) {
+	var user identityentity.User
 	if err := r.dbWithContext(ctx).Where("username = ? AND deleted_at IS NULL", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, identitycontracts.ErrUserNotFound
@@ -101,7 +101,7 @@ func (r *Repository) FindByUsername(ctx context.Context, username string) (*mode
 	return &user, nil
 }
 
-func (r *Repository) Create(ctx context.Context, user *model.User) error {
+func (r *Repository) Create(ctx context.Context, user *identitycontracts.User) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(user).Error; err != nil {
 			return mapUserWriteError(err)
@@ -113,9 +113,9 @@ func (r *Repository) Create(ctx context.Context, user *model.User) error {
 	})
 }
 
-func (r *Repository) Update(ctx context.Context, user *model.User) error {
+func (r *Repository) Update(ctx context.Context, user *identitycontracts.User) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&model.User{}).
+		result := tx.Model(&identityentity.User{}).
 			Where("id = ? AND deleted_at IS NULL", user.ID).
 			Updates(map[string]any{
 				"password_hash": user.PasswordHash,
@@ -142,7 +142,7 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 }
 
 func (r *Repository) Delete(ctx context.Context, userID int64) error {
-	result := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).Delete(&model.User{})
+	result := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).Delete(&identityentity.User{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -153,7 +153,7 @@ func (r *Repository) Delete(ctx context.Context, userID int64) error {
 }
 
 func (r *Repository) UpdatePassword(ctx context.Context, userID int64, newHash string) error {
-	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", userID).Update("password_hash", newHash)
+	result := r.dbWithContext(ctx).Model(&identityentity.User{}).Where("id = ? AND deleted_at IS NULL", userID).Update("password_hash", newHash)
 	if result.Error != nil {
 		return fmt.Errorf("update password: %w", result.Error)
 	}
@@ -170,7 +170,7 @@ func (r *Repository) UpdateLoginState(ctx context.Context, userID int64, failedA
 		"locked_until":          lockedUntil,
 		"status":                status,
 	}
-	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", userID).Updates(updates)
+	result := r.dbWithContext(ctx).Model(&identityentity.User{}).Where("id = ? AND deleted_at IS NULL", userID).Updates(updates)
 	if result.Error != nil {
 		return fmt.Errorf("update login state: %w", result.Error)
 	}
@@ -180,7 +180,7 @@ func (r *Repository) UpdateLoginState(ctx context.Context, userID int64, failedA
 	return nil
 }
 
-func (r *Repository) UpdateProfile(ctx context.Context, user *model.User) error {
+func (r *Repository) UpdateProfile(ctx context.Context, user *identitycontracts.User) error {
 	updates := map[string]any{
 		"name":                  user.Name,
 		"email":                 user.Email,
@@ -193,7 +193,7 @@ func (r *Repository) UpdateProfile(ctx context.Context, user *model.User) error 
 		"locked_until":          user.LockedUntil,
 		"updated_at":            time.Now(),
 	}
-	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", user.ID).Updates(updates)
+	result := r.dbWithContext(ctx).Model(&identityentity.User{}).Where("id = ? AND deleted_at IS NULL", user.ID).Updates(updates)
 	if result.Error != nil {
 		return mapUserWriteError(fmt.Errorf("update profile: %w", result.Error))
 	}
@@ -208,17 +208,17 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 }
 
 func syncUserRole(tx *gorm.DB, userID int64, roleCode string) error {
-	var role model.Role
+	var role identityentity.Role
 	if err := tx.Where("code = ?", roleCode).First(&role).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return identitycontracts.ErrRoleNotFound
 		}
 		return fmt.Errorf("find role: %w", err)
 	}
-	if err := tx.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error; err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&identityentity.UserRole{}).Error; err != nil {
 		return fmt.Errorf("delete user roles: %w", err)
 	}
-	if err := tx.Create(&model.UserRole{
+	if err := tx.Create(&identityentity.UserRole{
 		UserID: userID,
 		RoleID: role.ID,
 	}).Error; err != nil {

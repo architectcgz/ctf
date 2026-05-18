@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -92,7 +92,7 @@ type OverviewTrend struct {
 }
 
 type TeachingUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type TeachingClassQueryRepository interface {

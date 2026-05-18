@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 var (
@@ -106,7 +107,7 @@ type ChallengeWriteupChallengeLookupRepository interface {
 }
 
 type ChallengeWriteupUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type ChallengeAdminWriteupRepository interface {

@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authports "ctf-platform/internal/module/auth/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -19,14 +18,14 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 	t.Parallel()
 
 	repo := &mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return nil, identitycontracts.ErrUserNotFound
 		},
-		createFn: func(_ context.Context, user *model.User) error {
+		createFn: func(_ context.Context, user *identitycontracts.User) error {
 			if user.Username != "cas_user_1" {
 				t.Fatalf("unexpected username: %s", user.Username)
 			}
-			if user.Role != model.RoleStudent {
+			if user.Role != identitycontracts.RoleStudent {
 				t.Fatalf("unexpected role: %s", user.Role)
 			}
 			if user.Name != "CAS User" || user.Email != "cas_user_1@example.edu" || user.ClassName != "CTF-1" {
@@ -44,7 +43,7 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 	}
 	tokenService := &mockTokenService{
 		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
-			if userID != 101 || username != "cas_user_1" || role != model.RoleStudent {
+			if userID != 101 || username != "cas_user_1" || role != identitycontracts.RoleStudent {
 				t.Fatalf("unexpected session issue params: %d %s %s", userID, username, role)
 			}
 			return &authcontracts.Session{
@@ -84,7 +83,7 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Authenticate() error = %v", err)
 	}
-	if resp.User.Username != "cas_user_1" || resp.User.Role != model.RoleStudent {
+	if resp.User.Username != "cas_user_1" || resp.User.Role != identitycontracts.RoleStudent {
 		t.Fatalf("unexpected login response user: %+v", resp.User)
 	}
 	if tokens.ID != "cas-session-1" {
@@ -96,12 +95,12 @@ func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *test
 	t.Parallel()
 
 	expired := time.Now().Add(-time.Minute)
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:                  202,
 		Username:            "cas_user_2",
 		Name:                "Old Name",
-		Role:                model.RoleStudent,
-		Status:              model.UserStatusLocked,
+		Role:                identitycontracts.RoleStudent,
+		Status:              identitycontracts.UserStatusLocked,
 		ClassName:           "Old Class",
 		FailedLoginAttempts: 3,
 		LastFailedLoginAt:   &expired,
@@ -109,17 +108,17 @@ func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *test
 	}
 
 	repo := &mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return user, nil
 		},
-		updateProfileFn: func(_ context.Context, updated *model.User) error {
+		updateProfileFn: func(_ context.Context, updated *identitycontracts.User) error {
 			if updated.Name != "Updated Name" || updated.Email != "cas_user_2@example.edu" {
 				t.Fatalf("unexpected updated profile: %+v", updated)
 			}
 			if updated.ClassName != "CTF-2" || updated.StudentNo != "20260002" {
 				t.Fatalf("unexpected updated attributes: %+v", updated)
 			}
-			if updated.Status != model.UserStatusActive || updated.FailedLoginAttempts != 0 {
+			if updated.Status != identitycontracts.UserStatusActive || updated.FailedLoginAttempts != 0 {
 				t.Fatalf("expected login tracking reset, got %+v", updated)
 			}
 			if updated.LastFailedLoginAt != nil || updated.LockedUntil != nil {
@@ -176,7 +175,7 @@ func TestCASServiceAuthenticateRejectsUserWhenAutoProvisionDisabled(t *testing.T
 		ServiceURL:    "https://ctf.example.edu/api/v1/auth/cas/callback",
 		AutoProvision: false,
 	}, &mockRepository{
-		findByUsernameFn: func(context.Context, string) (*model.User, error) {
+		findByUsernameFn: func(context.Context, string) (*identitycontracts.User, error) {
 			return nil, identitycontracts.ErrUserNotFound
 		},
 	}, &mockTokenService{}, zap.NewNop(), &mockCASTicketValidator{

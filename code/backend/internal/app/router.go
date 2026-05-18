@@ -10,9 +10,9 @@ import (
 	"ctf-platform/internal/config"
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	ratelimitpkg "ctf-platform/pkg/ratelimit"
@@ -135,14 +135,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/ws/notifications", opsModule.NotificationHandler.ServeWS)
 
 	teacherOrAbove := protected.Group("/teacher")
-	teacherOrAbove.Use(middleware.RequireRole(model.RoleTeacher))
+	teacherOrAbove.Use(middleware.RequireRole(identitycontracts.RoleTeacher))
 	teacherOrAbove.GET("/ping", middleware.RoleGuardPing("teacher"))
 
 	authoring := protected.Group("/authoring")
-	authoring.Use(middleware.RequireRole(model.RoleTeacher))
+	authoring.Use(middleware.RequireRole(identitycontracts.RoleTeacher))
 
 	adminOnly := protected.Group("/admin")
-	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
+	adminOnly.Use(middleware.RequireRole(identitycontracts.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
 	challengeModule, err := buildChallengeModule(root, containerRuntimeModule)
 	if err != nil {

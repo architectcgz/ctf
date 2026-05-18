@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -174,7 +175,7 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return err
 	}
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return nil
 	}
 	requester, err := repo.FindUserByID(ctx, requesterID)
@@ -210,7 +211,7 @@ func normalizeTeacherManualReviewQuery(
 	if normalized.Size <= 0 {
 		normalized.Size = 20
 	}
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return &normalized, nil
 	}
 
@@ -232,7 +233,7 @@ func normalizeTeacherManualReviewQuery(
 }
 
 func ensureManualReviewRequesterRole(role string) error {
-	if role == model.RoleAdmin || role == model.RoleTeacher {
+	if role == identitycontracts.RoleAdmin || role == identitycontracts.RoleTeacher {
 		return nil
 	}
 	return errcode.ErrForbidden

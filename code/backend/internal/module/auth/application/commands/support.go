@@ -1,12 +1,16 @@
 package commands
 
 import (
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
-func buildAuthUser(user *model.User) AuthUser {
-	resp := authCommandResponseMapperInst.ToAuthUserBasePtr(user)
+func buildAuthUser(user *identitycontracts.User) AuthUser {
+	resp := authCommandResponseMapperInst.ToAuthUserBasePtr(&authUserSource{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role,
+	})
 	resp.Name = commonmapper.NormalizeOptionalString(user.Name)
 	resp.ClassName = commonmapper.NormalizeOptionalString(user.ClassName)
 	return *resp

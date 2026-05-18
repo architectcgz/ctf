@@ -25,6 +25,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/mapperutil"
@@ -414,7 +415,7 @@ func validateClassReportAccess(requester *assessmentdomain.ReportUser, className
 	if requester == nil || requester.ID <= 0 {
 		return errcode.ErrUnauthorized
 	}
-	if requester.Role == model.RoleAdmin {
+	if requester.Role == identitycontracts.RoleAdmin {
 		return nil
 	}
 	if strings.TrimSpace(requester.ClassName) == "" || strings.TrimSpace(requester.ClassName) != className {
@@ -430,10 +431,10 @@ func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.Rep
 	if student == nil || student.ID <= 0 {
 		return errcode.ErrNotFound
 	}
-	if student.Role != model.RoleStudent {
+	if student.Role != identitycontracts.RoleStudent {
 		return errcode.New(errcode.ErrInvalidParams.Code, "目标用户不是学生", errcode.ErrInvalidParams.HTTPStatus)
 	}
-	if requester.Role == model.RoleAdmin {
+	if requester.Role == identitycontracts.RoleAdmin {
 		return nil
 	}
 	if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != student.ClassName {

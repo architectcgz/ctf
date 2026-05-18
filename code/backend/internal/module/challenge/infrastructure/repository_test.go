@@ -7,6 +7,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"reflect"
 	"testing"
@@ -265,7 +266,7 @@ func TestRepositoryFindPublishedForRecommendationPrefersClosestDifficultyMatch(t
 func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
-	user := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher}
+	user := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher}
 	if err := db.Create(user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}

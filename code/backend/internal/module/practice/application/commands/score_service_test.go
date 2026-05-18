@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -101,7 +102,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	now := time.Now()
-	if err := db.Create([]*model.User{
+	if err := db.Create([]*identitycontracts.User{
 		{ID: 9, Username: "student09", CreatedAt: now, UpdatedAt: now},
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)

@@ -26,6 +26,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classwindow"
@@ -88,7 +89,7 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 
 	var user assessmentdomain.ReportUser
 	if err := r.db.WithContext(ctx).
-		Model(&model.User{}).
+		Model(&identitycontracts.User{}).
 		Select("id, username, class_name, role").
 		Where("id = ? AND deleted_at IS NULL", userID).
 		Scan(&user).Error; err != nil {
@@ -646,10 +647,10 @@ func TestWriteJSONReportPreservesSkillProfileFieldNames(t *testing.T) {
 func TestValidateStudentReviewArchiveAccess(t *testing.T) {
 	t.Parallel()
 
-	teacher := &assessmentdomain.ReportUser{ID: 1, Role: model.RoleTeacher, ClassName: "class-a"}
-	admin := &assessmentdomain.ReportUser{ID: 2, Role: model.RoleAdmin}
-	student := &assessmentdomain.ReportUser{ID: 3, Role: model.RoleStudent, ClassName: "class-a"}
-	otherStudent := &assessmentdomain.ReportUser{ID: 4, Role: model.RoleStudent, ClassName: "class-b"}
+	teacher := &assessmentdomain.ReportUser{ID: 1, Role: identitycontracts.RoleTeacher, ClassName: "class-a"}
+	admin := &assessmentdomain.ReportUser{ID: 2, Role: identitycontracts.RoleAdmin}
+	student := &assessmentdomain.ReportUser{ID: 3, Role: identitycontracts.RoleStudent, ClassName: "class-a"}
+	otherStudent := &assessmentdomain.ReportUser{ID: 4, Role: identitycontracts.RoleStudent, ClassName: "class-b"}
 
 	if err := validateStudentReviewArchiveAccess(teacher, student); err != nil {
 		t.Fatalf("expected same-class teacher access, got %v", err)
@@ -681,7 +682,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 				Username:  "alice",
 				Name:      "Alice",
 				ClassName: "class-a",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 			},
 		},
 		personalStats: &assessmentdomain.PersonalReportStats{
@@ -1191,16 +1192,16 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
-	teacher := &model.User{
+	teacher := &identitycontracts.User{
 		ID:        11,
 		Username:  "teacher-awd",
-		Role:      model.RoleTeacher,
+		Role:      identitycontracts.RoleTeacher,
 		ClassName: "class-a",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 	}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)
@@ -1362,16 +1363,16 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
-	teacher := &model.User{
+	teacher := &identitycontracts.User{
 		ID:        12,
 		Username:  "teacher-running",
-		Role:      model.RoleTeacher,
+		Role:      identitycontracts.RoleTeacher,
 		ClassName: "class-a",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 	}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)
@@ -1455,8 +1456,8 @@ func TestReportDownloadFileNameUsesPDFForAWDReviewReport(t *testing.T) {
 func TestValidateClassReportAccess(t *testing.T) {
 	t.Parallel()
 
-	teacher := &assessmentdomain.ReportUser{ID: 1, Role: model.RoleTeacher, ClassName: "class-a"}
-	admin := &assessmentdomain.ReportUser{ID: 2, Role: model.RoleAdmin, ClassName: ""}
+	teacher := &assessmentdomain.ReportUser{ID: 1, Role: identitycontracts.RoleTeacher, ClassName: "class-a"}
+	admin := &assessmentdomain.ReportUser{ID: 2, Role: identitycontracts.RoleAdmin, ClassName: ""}
 
 	if err := validateClassReportAccess(teacher, "class-a"); err != nil {
 		t.Fatalf("expected same-class teacher access, got %v", err)
@@ -1476,16 +1477,16 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
-	teacher := &model.User{
+	teacher := &identitycontracts.User{
 		ID:        1,
 		Username:  "teacher-a",
-		Role:      model.RoleTeacher,
+		Role:      identitycontracts.RoleTeacher,
 		ClassName: "class-a",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 	}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)

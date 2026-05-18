@@ -11,7 +11,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
@@ -25,7 +25,7 @@ func setupAuditQueryTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &opsentity.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("migrate audit tables: %v", err)
 	}
 	return db
@@ -43,9 +43,9 @@ func TestAuditServiceListAuditLogsNormalizesPaginationAndDetails(t *testing.T) {
 	service := newAuditQueryService(db)
 
 	now := time.Now().UTC().Truncate(time.Second)
-	users := []model.User{
-		{ID: 1, Username: "admin", Role: model.RoleAdmin, Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
-		{ID: 2, Username: "alice", Role: model.RoleStudent, Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+	users := []identitycontracts.User{
+		{ID: 1, Username: "admin", Role: identitycontracts.RoleAdmin, Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 2, Username: "alice", Role: identitycontracts.RoleStudent, Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, user := range users {
 		if err := db.Create(&user).Error; err != nil {

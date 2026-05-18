@@ -3,18 +3,16 @@
 
 package commands
 
-import model "ctf-platform/internal/model"
-
 type authCommandResponseMapperImpl struct{}
 
-func (c *authCommandResponseMapperImpl) ToAuthUserBase(source model.User) AuthUser {
+func (c *authCommandResponseMapperImpl) ToAuthUserBase(source authUserSource) AuthUser {
 	var commandsAuthUser AuthUser
 	commandsAuthUser.ID = source.ID
 	commandsAuthUser.Username = source.Username
 	commandsAuthUser.Role = source.Role
 	return commandsAuthUser
 }
-func (c *authCommandResponseMapperImpl) ToAuthUserBasePtr(source *model.User) *AuthUser {
+func (c *authCommandResponseMapperImpl) ToAuthUserBasePtr(source *authUserSource) *AuthUser {
 	var pCommandsAuthUser *AuthUser
 	if source != nil {
 		commandsAuthUser := c.ToAuthUserBase((*source))

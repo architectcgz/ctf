@@ -31,6 +31,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -130,9 +131,9 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	otherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherStudent.Username, "Password123"))
 
 	registrationContest := createFullRouterContest(t, env, "Registration Matrix", contestcontracts.ContestStatusRegistration)
-	retryStudent := createFullRouterUser(t, env.db, "student_retry", "Password123", model.RoleStudent, env.className)
+	retryStudent := createFullRouterUser(t, env.db, "student_retry", "Password123", identitycontracts.RoleStudent, env.className)
 	retryHeaders := bearerHeaders(loginForToken(t, env.router, retryStudent.Username, "Password123"))
-	fillerStudent := createFullRouterUser(t, env.db, "student_filler", "Password123", model.RoleStudent, env.className)
+	fillerStudent := createFullRouterUser(t, env.db, "student_filler", "Password123", identitycontracts.RoleStudent, env.className)
 
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/contests/%d/register", registrationContest.ID), nil, peerHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1173,7 +1174,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
 	}
 	peerStudentNo := "20240001"
-	if err := env.db.Model(&model.User{}).Where("id = ?", env.peerStudent.ID).Update("student_no", peerStudentNo).Error; err != nil {
+	if err := env.db.Model(&identitycontracts.User{}).Where("id = ?", env.peerStudent.ID).Update("student_no", peerStudentNo).Error; err != nil {
 		t.Fatalf("set peer student number: %v", err)
 	}
 	env.peerStudent.StudentNo = peerStudentNo
@@ -2323,8 +2324,8 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 		"email":      "created_student@example.com",
 		"student_no": "20260001",
 		"class_name": "ClassA",
-		"role":       model.RoleStudent,
-		"status":     model.UserStatusActive,
+		"role":       identitycontracts.RoleStudent,
+		"status":     identitycontracts.UserStatusActive,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -2338,12 +2339,12 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/users", map[string]any{
 		"username": "admin_created_student",
 		"password": "Password123",
-		"role":     model.RoleStudent,
+		"role":     identitycontracts.RoleStudent,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
 	updatedTeacherNo := "T-9001"
-	updatedRole := model.RoleTeacher
+	updatedRole := identitycontracts.RoleTeacher
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/users/%d", createdUser.ID), map[string]any{
 		"role":       updatedRole,
 		"teacher_no": updatedTeacherNo,
@@ -2401,7 +2402,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 			t.Fatalf("seed submit audit log: %v", err)
 		}
 	}
-	for _, user := range []*model.User{env.student, env.peerStudent} {
+	for _, user := range []*identitycontracts.User{env.student, env.peerStudent} {
 		if err := env.db.Create(&opsentity.AuditLog{
 			UserID:       &user.ID,
 			Action:       auditlog.ActionLogin,

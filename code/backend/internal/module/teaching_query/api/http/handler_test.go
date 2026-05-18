@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 )
 
@@ -144,7 +144,7 @@ func TestGetStudentEvidenceBindsQueryIntoTeachingInput(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/students/:id/evidence", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.GetStudentEvidence(c)
 	})
 
@@ -179,7 +179,7 @@ func TestGetClassReviewBindsWindowIntoTeachingInput(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/classes/:name/review", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.GetClassReview(c)
 	})
 
@@ -206,7 +206,7 @@ func TestGetClassSummaryKeepsTeacherHTTPContract(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/classes/:name/summary", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.GetClassSummary(c)
 	})
 
@@ -237,7 +237,7 @@ func TestGetClassReviewKeepsTeacherHTTPContract(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/classes/:name/review", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.GetClassReview(c)
 	})
 
@@ -272,7 +272,7 @@ func TestGetStudentAttackSessionsBindsQueryIntoTeachingInput(t *testing.T) {
 
 	router := gin.New()
 	router.GET("/api/v1/teacher/students/:id/attack-sessions", func(c *gin.Context) {
-		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: model.RoleTeacher})
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "teacher", Role: identitycontracts.RoleTeacher})
 		handler.GetStudentAttackSessions(c)
 	})
 

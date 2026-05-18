@@ -11,6 +11,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
@@ -19,11 +20,11 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	teacher := &model.User{
+	teacher := &identitycontracts.User{
 		Username:  "teacher_a",
-		Role:      model.RoleTeacher,
+		Role:      identitycontracts.RoleTeacher,
 		ClassName: "ClassA",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -33,11 +34,11 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
-	student := &model.User{
+	student := &identitycontracts.User{
 		Username:  "student_a",
-		Role:      model.RoleStudent,
+		Role:      identitycontracts.RoleStudent,
 		ClassName: "ClassA",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -134,7 +135,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected my published submission payload: %+v", mine)
 	}
 
-	detail, err := queryService.GetTeacherSubmission(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
+	detail, err := queryService.GetTeacherSubmission(context.Background(), published.ID, teacher.ID, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}
@@ -153,7 +154,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create image: %v", err)
 	}
 
-	admin := &model.User{Username: "admin_a", Role: model.RoleAdmin, Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	admin := &identitycontracts.User{Username: "admin_a", Role: identitycontracts.RoleAdmin, Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now}
 	if err := admin.SetPassword("Password123"); err != nil {
 		t.Fatalf("set admin password: %v", err)
 	}
@@ -161,7 +162,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create admin: %v", err)
 	}
 
-	teacher := &model.User{Username: "teacher_a", Role: model.RoleTeacher, ClassName: "ClassA", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	teacher := &identitycontracts.User{Username: "teacher_a", Role: identitycontracts.RoleTeacher, ClassName: "ClassA", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now}
 	if err := teacher.SetPassword("Password123"); err != nil {
 		t.Fatalf("set teacher password: %v", err)
 	}
@@ -169,7 +170,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create teacher: %v", err)
 	}
 
-	otherTeacher := &model.User{Username: "teacher_b", Role: model.RoleTeacher, ClassName: "ClassB", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	otherTeacher := &identitycontracts.User{Username: "teacher_b", Role: identitycontracts.RoleTeacher, ClassName: "ClassB", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now}
 	if err := otherTeacher.SetPassword("Password123"); err != nil {
 		t.Fatalf("set other teacher password: %v", err)
 	}
@@ -177,7 +178,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create other teacher: %v", err)
 	}
 
-	student := &model.User{Username: "student_a", Role: model.RoleStudent, ClassName: "ClassA", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	student := &identitycontracts.User{Username: "student_a", Role: identitycontracts.RoleStudent, ClassName: "ClassA", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now}
 	if err := student.SetPassword("Password123"); err != nil {
 		t.Fatalf("set student password: %v", err)
 	}
@@ -241,7 +242,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected official writeup to be recommended, got %+v", official)
 	}
 
-	community, err := service.RecommendCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
+	community, err := service.RecommendCommunity(context.Background(), published.ID, teacher.ID, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RecommendCommunity() error = %v", err)
 	}
@@ -249,11 +250,11 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected community writeup to be recommended, got %+v", community)
 	}
 
-	if _, err := service.HideCommunity(context.Background(), published.ID, otherTeacher.ID, model.RoleTeacher); err == nil {
+	if _, err := service.HideCommunity(context.Background(), published.ID, otherTeacher.ID, identitycontracts.RoleTeacher); err == nil {
 		t.Fatalf("expected teacher from another class to be forbidden")
 	}
 
-	hidden, err := service.HideCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
+	hidden, err := service.HideCommunity(context.Background(), published.ID, teacher.ID, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("HideCommunity() error = %v", err)
 	}
@@ -261,7 +262,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected hidden community writeup, got %+v", hidden)
 	}
 
-	restored, err := service.RestoreCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
+	restored, err := service.RestoreCommunity(context.Background(), published.ID, teacher.ID, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RestoreCommunity() error = %v", err)
 	}
@@ -269,7 +270,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected restored community writeup, got %+v", restored)
 	}
 
-	unrecommendedCommunity, err := service.UnrecommendCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
+	unrecommendedCommunity, err := service.UnrecommendCommunity(context.Background(), published.ID, teacher.ID, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("UnrecommendCommunity() error = %v", err)
 	}

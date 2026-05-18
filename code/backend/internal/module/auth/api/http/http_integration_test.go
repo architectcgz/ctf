@@ -24,7 +24,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -32,6 +31,7 @@ import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
@@ -137,7 +137,7 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 		t.Fatalf("unexpected register code: %d body=%s", registerBody.Code, registerResp.Body.String())
 	}
 	registerData := decodeJSON[testLoginResponse](t, registerBody.Data)
-	if registerData.User.Role != model.RoleStudent {
+	if registerData.User.Role != identitycontracts.RoleStudent {
 		t.Fatalf("expected student role, got %q", registerData.User.Role)
 	}
 	if cookieValue(registerResp.Result().Cookies(), "ctf_session") == "" {
@@ -185,7 +185,7 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 	if profileData.Username != "student_one" {
 		t.Fatalf("expected profile username student_one, got %q", profileData.Username)
 	}
-	if profileData.Role != model.RoleStudent {
+	if profileData.Role != identitycontracts.RoleStudent {
 		t.Fatalf("expected profile role student, got %q", profileData.Role)
 	}
 }
@@ -193,7 +193,7 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 func TestHTTP_LoginResponseDoesNotExposeAccessToken(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
-	createUser(t, env.db, "session_login_user", "Password123", model.RoleStudent, "")
+	createUser(t, env.db, "session_login_user", "Password123", identitycontracts.RoleStudent, "")
 
 	loginResp := performJSONRequest(
 		t,
@@ -307,7 +307,7 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
-	createUser(t, env.db, "audit_admin", "Password123", model.RoleAdmin, "")
+	createUser(t, env.db, "audit_admin", "Password123", identitycontracts.RoleAdmin, "")
 
 	registerResp := performJSONRequest(
 		t,
@@ -409,7 +409,7 @@ func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
-	createUser(t, env.db, "audit_admin", "Password123", model.RoleAdmin, "")
+	createUser(t, env.db, "audit_admin", "Password123", identitycontracts.RoleAdmin, "")
 
 	failedResp := performJSONRequest(
 		t,
@@ -479,7 +479,7 @@ func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
-	createUser(t, env.db, "locked_user", "Password123", model.RoleStudent, "CTF-1")
+	createUser(t, env.db, "locked_user", "Password123", identitycontracts.RoleStudent, "CTF-1")
 
 	for attempt := 1; attempt <= 3; attempt++ {
 		failedResp := performJSONRequest(
@@ -604,14 +604,14 @@ func TestHTTP_CASCallbackAutoProvisionsUserAndIssuesCookie(t *testing.T) {
 		t.Fatalf("unexpected cas callback code %d body=%s", body.Code, resp.Body.String())
 	}
 	data := decodeJSON[testLoginResponse](t, body.Data)
-	if data.User.Username != "cas_http_user" || data.User.Role != model.RoleStudent {
+	if data.User.Username != "cas_http_user" || data.User.Role != identitycontracts.RoleStudent {
 		t.Fatalf("unexpected cas callback user: %+v", data.User)
 	}
 	if cookieValue(resp.Result().Cookies(), "ctf_session") == "" {
 		t.Fatalf("expected session cookie to be set")
 	}
 
-	var user model.User
+	var user identitycontracts.User
 	if err := env.db.Where("username = ?", "cas_http_user").First(&user).Error; err != nil {
 		t.Fatalf("query cas user: %v", err)
 	}
@@ -667,7 +667,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &opsentity.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)
 	}
 	seedRoles(t, db)
@@ -725,7 +725,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	protected.PUT("/auth/password", authHandler.ChangePassword)
 
 	adminOnly := protected.Group("/admin")
-	adminOnly.Use(testRequireRole(model.RoleAdmin))
+	adminOnly.Use(testRequireRole(identitycontracts.RoleAdmin))
 	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
 	t.Cleanup(func() {
@@ -836,10 +836,10 @@ func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string)
 func seedRoles(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
-	roles := []model.Role{
-		{ID: 1, Code: model.RoleStudent, Name: "Student"},
-		{ID: 2, Code: model.RoleTeacher, Name: "Teacher"},
-		{ID: 3, Code: model.RoleAdmin, Name: "Admin"},
+	roles := []identitycontracts.Role{
+		{ID: 1, Code: identitycontracts.RoleStudent, Name: "Student"},
+		{ID: 2, Code: identitycontracts.RoleTeacher, Name: "Teacher"},
+		{ID: 3, Code: identitycontracts.RoleAdmin, Name: "Admin"},
 	}
 	for _, role := range roles {
 		if err := db.Create(&role).Error; err != nil {
@@ -848,15 +848,15 @@ func seedRoles(t *testing.T, db *gorm.DB) {
 	}
 }
 
-func createUser(t *testing.T, db *gorm.DB, username, password, role, className string) *model.User {
+func createUser(t *testing.T, db *gorm.DB, username, password, role, className string) *identitycontracts.User {
 	t.Helper()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username:  username,
 		Email:     fmt.Sprintf("%s@example.com", username),
 		Role:      role,
 		ClassName: className,
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 	}
 	if err := user.SetPassword(password); err != nil {
 		t.Fatalf("hash password: %v", err)
@@ -991,9 +991,9 @@ func testAuthMiddleware(tokenService authcontracts.TokenService, cookieName stri
 
 func testRequireRole(minRole string) gin.HandlerFunc {
 	roleLevels := map[string]int{
-		model.RoleStudent: 1,
-		model.RoleTeacher: 2,
-		model.RoleAdmin:   3,
+		identitycontracts.RoleStudent: 1,
+		identitycontracts.RoleTeacher: 2,
+		identitycontracts.RoleAdmin:   3,
 	}
 
 	return func(c *gin.Context) {

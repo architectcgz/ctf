@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -99,7 +99,7 @@ func emptyOverviewResponse() *TeacherOverviewResp {
 }
 
 func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, requesterID int64, requesterRole string) ([]queryports.ClassItem, error) {
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		items, err := s.repo.ListClasses(ctx, 0, 0)
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)

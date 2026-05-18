@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -33,7 +34,7 @@ func (noopRuntimeCleaner) CleanupRuntime(context.Context, *instanceentity.Instan
 
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
-	findUserByIDFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
@@ -45,7 +46,7 @@ func (r *runtimeInstanceContextRepo) FindByID(ctx context.Context, id int64) (*i
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if r.findUserByIDFn != nil {
 		return r.findUserByIDFn(ctx, userID)
 	}
@@ -695,9 +696,9 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	db := newInstanceServiceTestDB(t)
 	now := time.Now()
 
-	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
@@ -705,7 +706,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -716,7 +717,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 		t.Fatalf("unexpected item: %+v", items[0])
 	}
 
-	filtered, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
+	filtered, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword:   "ali",
 		StudentNo: "S-1001",
 	})
@@ -727,7 +728,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
 
-	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
+	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
 		Keyword: "1001",
 	})
 	if err != nil {
@@ -746,8 +747,8 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 	contestID := int64(702)
 	serviceID := int64(9702)
 
-	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 211, Title: "Legacy Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, FlagType: model.FlagTypeStatic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
@@ -793,7 +794,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -812,8 +813,8 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 	now := time.Now()
 	contestID := int64(704)
 
-	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 222, Title: "Legacy AWD Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, FlagType: model.FlagTypeDynamic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
@@ -842,7 +843,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
@@ -857,9 +858,9 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	db := newInstanceServiceTestDB(t)
 	now := time.Now()
 
-	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceUser(t, db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 3, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
@@ -871,11 +872,11 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		nil,
 	)
 
-	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, identitycontracts.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
 	}
 
-	if err := service.DestroyTeacherInstance(context.Background(), 201, 1, model.RoleTeacher); err != nil {
+	if err := service.DestroyTeacherInstance(context.Background(), 201, 1, identitycontracts.RoleTeacher); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 
@@ -898,7 +899,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &model.Challenge{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
@@ -916,7 +917,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func seedInstanceServiceUser(t *testing.T, db *gorm.DB, user *model.User) {
+func seedInstanceServiceUser(t *testing.T, db *gorm.DB, user *identitycontracts.User) {
 	t.Helper()
 	if err := db.Create(user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
@@ -970,16 +971,16 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			}
 			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if userID == 1001 {
 				findRequesterCalled = true
-				return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			}
 			findOwnerCalled = true
-			return &model.User{ID: userID, Role: model.RoleStudent, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 		},
 		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
 			updateCalled = true
@@ -995,7 +996,7 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DestroyTeacherInstance(ctx, 201, 1001, model.RoleTeacher); err != nil {
+	if err := service.DestroyTeacherInstance(ctx, 201, 1001, identitycontracts.RoleTeacher); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 	if !findByIDCalled || !findRequesterCalled || !findOwnerCalled || !updateCalled {
@@ -1022,7 +1023,7 @@ func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *
 	}
 	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
 
-	if err := service.DestroyTeacherInstance(nil, 201, 1001, model.RoleAdmin); err != nil {
+	if err := service.DestroyTeacherInstance(nil, 201, 1001, identitycontracts.RoleAdmin); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 }

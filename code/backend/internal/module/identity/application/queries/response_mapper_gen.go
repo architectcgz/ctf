@@ -4,13 +4,13 @@
 package queries
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/identity/contracts"
+	entity "ctf-platform/internal/module/identity/entity"
 )
 
 type adminUserResponseMapperImpl struct{}
 
-func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) contracts.AdminUser {
+func (c *adminUserResponseMapperImpl) ToAdminUserResp(source entity.User) contracts.AdminUser {
 	var contractsAdminUser contracts.AdminUser
 	contractsAdminUser.ID = source.ID
 	contractsAdminUser.Username = source.Username
@@ -18,7 +18,7 @@ func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) contrac
 	contractsAdminUser.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsAdminUser
 }
-func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *contracts.AdminUser {
+func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *entity.User) *contracts.AdminUser {
 	var pContractsAdminUser *contracts.AdminUser
 	if source != nil {
 		contractsAdminUser := c.ToAdminUserResp((*source))
@@ -26,14 +26,14 @@ func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *co
 	}
 	return pContractsAdminUser
 }
-func (c *adminUserResponseMapperImpl) ToProfileUserBase(source model.User) contracts.ProfileUser {
+func (c *adminUserResponseMapperImpl) ToProfileUserBase(source entity.User) contracts.ProfileUser {
 	var contractsProfileUser contracts.ProfileUser
 	contractsProfileUser.ID = source.ID
 	contractsProfileUser.Username = source.Username
 	contractsProfileUser.Role = source.Role
 	return contractsProfileUser
 }
-func (c *adminUserResponseMapperImpl) ToProfileUserBasePtr(source *model.User) *contracts.ProfileUser {
+func (c *adminUserResponseMapperImpl) ToProfileUserBasePtr(source *entity.User) *contracts.ProfileUser {
 	var pContractsProfileUser *contracts.ProfileUser
 	if source != nil {
 		contractsProfileUser := c.ToProfileUserBase((*source))

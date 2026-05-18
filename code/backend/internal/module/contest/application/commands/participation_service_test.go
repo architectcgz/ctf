@@ -7,12 +7,12 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -257,10 +257,10 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        3001,
 		Username:  "alice",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {

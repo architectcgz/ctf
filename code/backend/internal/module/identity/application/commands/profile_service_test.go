@@ -8,36 +8,35 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 type mockProfileRepository struct {
-	findByIDFn       func(ctx context.Context, userID int64) (*model.User, error)
+	findByIDFn       func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	updatePasswordFn func(ctx context.Context, userID int64, newHash string) error
 }
 
-func (m *mockProfileRepository) List(context.Context, identitycontracts.UserListFilter) ([]*model.User, int64, error) {
+func (m *mockProfileRepository) List(context.Context, identitycontracts.UserListFilter) ([]*identitycontracts.User, int64, error) {
 	return nil, 0, nil
 }
 
-func (m *mockProfileRepository) FindByID(ctx context.Context, userID int64) (*model.User, error) {
+func (m *mockProfileRepository) FindByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if m.findByIDFn == nil {
 		return nil, identitycontracts.ErrUserNotFound
 	}
 	return m.findByIDFn(ctx, userID)
 }
 
-func (m *mockProfileRepository) FindByUsername(context.Context, string) (*model.User, error) {
+func (m *mockProfileRepository) FindByUsername(context.Context, string) (*identitycontracts.User, error) {
 	return nil, identitycontracts.ErrUserNotFound
 }
 
-func (m *mockProfileRepository) Create(context.Context, *model.User) error {
+func (m *mockProfileRepository) Create(context.Context, *identitycontracts.User) error {
 	return nil
 }
 
-func (m *mockProfileRepository) Update(context.Context, *model.User) error {
+func (m *mockProfileRepository) Update(context.Context, *identitycontracts.User) error {
 	return nil
 }
 
@@ -56,18 +55,18 @@ func (m *mockProfileRepository) UpdateLoginState(context.Context, int64, int, *t
 	return nil
 }
 
-func (m *mockProfileRepository) UpdateProfile(context.Context, *model.User) error {
+func (m *mockProfileRepository) UpdateProfile(context.Context, *identitycontracts.User) error {
 	return nil
 }
 
 func TestProfileServiceChangePasswordSuccess(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:       1,
 		Username: "alice_1",
-		Role:     model.RoleStudent,
-		Status:   model.UserStatusActive,
+		Role:     identitycontracts.RoleStudent,
+		Status:   identitycontracts.UserStatusActive,
 	}
 	if err := user.SetPassword("Password123"); err != nil {
 		t.Fatalf("SetPassword() error = %v", err)
@@ -76,7 +75,7 @@ func TestProfileServiceChangePasswordSuccess(t *testing.T) {
 
 	var updatedHash string
 	service := NewProfileService(&mockProfileRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			if userID != user.ID {
 				t.Fatalf("unexpected user id: %d", userID)
 			}
@@ -109,13 +108,13 @@ func TestProfileServiceChangePasswordSuccess(t *testing.T) {
 func TestProfileServiceChangePasswordOldPasswordInvalid(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{ID: 1, Username: "alice_1"}
+	user := &identitycontracts.User{ID: 1, Username: "alice_1"}
 	if err := user.SetPassword("Password123"); err != nil {
 		t.Fatalf("SetPassword() error = %v", err)
 	}
 
 	service := NewProfileService(&mockProfileRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			return user, nil
 		},
 		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
@@ -136,13 +135,13 @@ func TestProfileServiceChangePasswordOldPasswordInvalid(t *testing.T) {
 func TestProfileServiceChangePasswordRejectsSamePassword(t *testing.T) {
 	t.Parallel()
 
-	user := &model.User{ID: 1, Username: "alice_1"}
+	user := &identitycontracts.User{ID: 1, Username: "alice_1"}
 	if err := user.SetPassword("Password123"); err != nil {
 		t.Fatalf("SetPassword() error = %v", err)
 	}
 
 	service := NewProfileService(&mockProfileRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			return user, nil
 		},
 		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {

@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 func (r *TeamRepository) FindByID(ctx context.Context, id int64) (*contestentity.Team, error) {
@@ -64,12 +64,12 @@ func (r *TeamRepository) GetMemberCountBatch(ctx context.Context, teamIDs []int6
 	return countMap, err
 }
 
-func (r *TeamRepository) FindUsersByIDs(ctx context.Context, ids []int64) ([]*model.User, error) {
+func (r *TeamRepository) FindUsersByIDs(ctx context.Context, ids []int64) ([]*identitycontracts.User, error) {
 	if len(ids) == 0 {
-		return []*model.User{}, nil
+		return []*identitycontracts.User{}, nil
 	}
 
-	var users []*model.User
+	var users []*identitycontracts.User
 	err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&users).Error
 	return users, err
 }

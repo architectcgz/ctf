@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -187,7 +188,7 @@ type ReviewArchiveManualReviewItem struct {
 }
 
 func ValidateReportAccess(report *assessmententity.Report, requesterID int64, role string) error {
-	if role == model.RoleAdmin {
+	if role == identitycontracts.RoleAdmin {
 		return nil
 	}
 	if report.UserID == nil || *report.UserID != requesterID {

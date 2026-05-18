@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
 
 type overviewRepoStub struct {
-	findUserByIDFn          func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	countStudentsByClassFn  func(ctx context.Context, className string) (int64, error)
 	listClassesFn           func(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error)
 	listStudentsByClassFn   func(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]queryports.StudentItem, error)
@@ -21,7 +21,7 @@ type overviewRepoStub struct {
 	getOverviewTrendFn      func(ctx context.Context, classNames []string, since time.Time, days int) (*queryports.OverviewTrend, error)
 }
 
-func (s *overviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *overviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDFn != nil {
 		return s.findUserByIDFn(ctx, userID)
 	}
@@ -146,8 +146,8 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 	t.Parallel()
 
 	repo := &overviewRepoStub{
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		countStudentsByClassFn: func(context.Context, string) (int64, error) {
 			return 2, nil
@@ -212,7 +212,7 @@ func TestOverviewQueryServiceGetOverviewBuildsScopeSummary(t *testing.T) {
 
 	service := NewOverviewService(repo, repo)
 
-	overview, err := service.GetOverview(context.Background(), 11, model.RoleTeacher)
+	overview, err := service.GetOverview(context.Background(), 11, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetOverview() error = %v", err)
 	}
@@ -250,14 +250,14 @@ func TestOverviewQueryServiceGetOverviewWithoutAccessibleClassReturnsEmptyScope(
 	t.Parallel()
 
 	repo := &overviewRepoStub{
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 22, Role: model.RoleTeacher, ClassName: ""}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 22, Role: identitycontracts.RoleTeacher, ClassName: ""}, nil
 		},
 	}
 
 	service := NewOverviewService(repo, repo)
 
-	overview, err := service.GetOverview(context.Background(), 22, model.RoleTeacher)
+	overview, err := service.GetOverview(context.Background(), 22, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetOverview() error = %v", err)
 	}

@@ -4,13 +4,13 @@
 package commands
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/identity/contracts"
+	entity "ctf-platform/internal/module/identity/entity"
 )
 
 type adminUserResponseMapperImpl struct{}
 
-func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) contracts.AdminUser {
+func (c *adminUserResponseMapperImpl) ToAdminUserResp(source entity.User) contracts.AdminUser {
 	var contractsAdminUser contracts.AdminUser
 	contractsAdminUser.ID = source.ID
 	contractsAdminUser.Username = source.Username
@@ -18,7 +18,7 @@ func (c *adminUserResponseMapperImpl) ToAdminUserResp(source model.User) contrac
 	contractsAdminUser.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsAdminUser
 }
-func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *model.User) *contracts.AdminUser {
+func (c *adminUserResponseMapperImpl) ToAdminUserRespPtr(source *entity.User) *contracts.AdminUser {
 	var pContractsAdminUser *contracts.AdminUser
 	if source != nil {
 		contractsAdminUser := c.ToAdminUserResp((*source))

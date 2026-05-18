@@ -10,6 +10,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -19,7 +20,7 @@ var ErrAssessmentReportNotFound = errors.New("assessment report not found")
 var ErrAssessmentContestNotFound = errors.New("assessment contest not found")
 
 type AssessmentProfileLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type AssessmentProfileReadRepository interface {

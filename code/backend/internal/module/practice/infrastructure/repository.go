@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -273,7 +274,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 	}
 	return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", userID).
-		First(&model.User{}).Error
+		First(&identitycontracts.User{}).Error
 }
 
 func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instancecontracts.Instance, error) {
@@ -551,8 +552,8 @@ func (r *Repository) UpdateSubmission(ctx context.Context, submission *practicep
 	return r.dbWithContext(ctx).Save(row).Error
 }
 
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+	var user identitycontracts.User
 	if err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
 	}

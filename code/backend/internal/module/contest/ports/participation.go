@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 var ErrContestParticipationRegistrationNotFound = errors.New("contest participation registration not found")
@@ -26,7 +26,7 @@ type ContestParticipationRegistrationListRepository interface {
 }
 
 type ContestParticipationUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type ContestParticipationAnnouncementReadRepository interface {

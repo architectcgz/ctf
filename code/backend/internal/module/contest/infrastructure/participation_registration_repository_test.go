@@ -7,9 +7,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type participationRegistrationSourceStub struct {
@@ -43,8 +43,8 @@ func (s participationRegistrationSourceStub) ListRegistrations(context.Context, 
 	return nil, 0, nil
 }
 
-func (s participationRegistrationSourceStub) FindUserByID(context.Context, int64) (*model.User, error) {
-	return &model.User{}, nil
+func (s participationRegistrationSourceStub) FindUserByID(context.Context, int64) (*identitycontracts.User, error) {
+	return &identitycontracts.User{}, nil
 }
 
 func (s participationRegistrationSourceStub) ListAnnouncements(context.Context, int64) ([]*contestentity.ContestAnnouncement, error) {

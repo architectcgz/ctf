@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
@@ -22,7 +22,7 @@ func setupAuditCommandTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &opsentity.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("migrate audit tables: %v", err)
 	}
 	return db

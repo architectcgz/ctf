@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
@@ -13,7 +13,7 @@ type InstanceLookupRepository interface {
 }
 
 type InstanceUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type InstanceAccessRepository interface {

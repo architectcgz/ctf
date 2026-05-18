@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingqueryruntime "ctf-platform/internal/module/teaching_query/runtime"
 )
@@ -15,7 +14,7 @@ type teachingQueryUserLookupAdapter struct {
 	users identitycontracts.UserLookupRepository
 }
 
-func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if a.users == nil {
 		return nil, nil
 	}

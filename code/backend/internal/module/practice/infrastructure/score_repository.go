@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
@@ -69,12 +70,12 @@ func (r *Repository) ListTopUserScores(ctx context.Context, limit int) ([]practi
 	return scores, err
 }
 
-func (r *Repository) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error) {
+func (r *Repository) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]identitycontracts.User, error) {
 	if len(userIDs) == 0 {
-		return []model.User{}, nil
+		return []identitycontracts.User{}, nil
 	}
 
-	var users []model.User
+	var users []identitycontracts.User
 	err := r.dbWithContext(ctx).
 		Select("id, username, class_name").
 		Where("id IN ?", userIDs).

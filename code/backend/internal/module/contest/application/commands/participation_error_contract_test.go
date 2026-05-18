@@ -10,6 +10,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -33,7 +34,7 @@ type participationCommandRepoStub struct {
 	findRegistrationByIDFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 	createRegistrationFn   func(context.Context, *contestentity.ContestRegistration) error
 	saveRegistrationFn     func(context.Context, *contestentity.ContestRegistration) error
-	findUserByIDFn         func(context.Context, int64) (*model.User, error)
+	findUserByIDFn         func(context.Context, int64) (*identitycontracts.User, error)
 	createAnnouncementFn   func(context.Context, *contestentity.ContestAnnouncement) error
 	deleteAnnouncementFn   func(context.Context, int64, int64) (bool, error)
 }
@@ -66,11 +67,11 @@ func (s participationCommandRepoStub) SaveRegistration(ctx context.Context, regi
 	return nil
 }
 
-func (s participationCommandRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s participationCommandRepoStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDFn != nil {
 		return s.findUserByIDFn(ctx, userID)
 	}
-	return &model.User{ID: userID, Username: "reviewer-target"}, nil
+	return &identitycontracts.User{ID: userID, Username: "reviewer-target"}, nil
 }
 
 func (s participationCommandRepoStub) CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error {

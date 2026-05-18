@@ -12,6 +12,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -23,7 +24,7 @@ func setupTeachingQueryRepoTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&challengecontracts.AWDChallenge{},
@@ -51,9 +52,9 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 	repo := NewRepository(db)
 	now := time.Now().UTC()
 
-	students := []model.User{
-		{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
-		{ID: 2, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+	students := []identitycontracts.User{
+		{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 2, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, user := range students {
 		if err := db.Create(&user).Error; err != nil {

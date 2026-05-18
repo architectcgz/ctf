@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -521,7 +522,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeTopology{},
@@ -679,12 +680,12 @@ func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeI
 
 func seedContestInstanceUser(t *testing.T, db *gorm.DB, userID int64, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:           userID,
 		Username:     fmt.Sprintf("user-%d", userID),
 		PasswordHash: "hash",
-		Role:         model.RoleStudent,
-		Status:       model.UserStatusActive,
+		Role:         identitycontracts.RoleStudent,
+		Status:       identitycontracts.UserStatusActive,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}).Error; err != nil {

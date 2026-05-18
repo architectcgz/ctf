@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -28,8 +29,8 @@ func NewRepository(db *gorm.DB) *Repository {
 
 func (r *Repository) CountStudentsByClass(ctx context.Context, className string) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&model.User{}).
-		Where("class_name = ? AND role = ? AND deleted_at IS NULL", className, model.RoleStudent).
+	if err := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
+		Where("class_name = ? AND role = ? AND deleted_at IS NULL", className, identitycontracts.RoleStudent).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("count students by class: %w", err)
 	}
@@ -38,9 +39,9 @@ func (r *Repository) CountStudentsByClass(ctx context.Context, className string)
 
 func (r *Repository) CountClasses(ctx context.Context) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&model.User{}).
+	if err := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
 		Distinct("class_name").
-		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
+		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", identitycontracts.RoleStudent).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("count classes: %w", err)
 	}
@@ -49,9 +50,9 @@ func (r *Repository) CountClasses(ctx context.Context) (int64, error) {
 
 func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error) {
 	items := make([]queryports.ClassItem, 0)
-	query := r.db.WithContext(ctx).Model(&model.User{}).
+	query := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
 		Select("class_name AS name, COUNT(*) AS student_count").
-		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
+		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", identitycontracts.RoleStudent).
 		Group("class_name").
 		Order("class_name ASC")
 	if offset > 0 {
@@ -110,7 +111,7 @@ func (r *Repository) listStudentsBaseQuery(ctx context.Context, since time.Time)
 				LIMIT 1
 			) AS weak_dimension
 		`, model.ChallengeStatusPublished, model.ChallengeStatusPublished, since, since, since).
-		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
+		Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent)
 }
 
 func applyStudentFilters(query *gorm.DB, className, keyword, studentNo string) *gorm.DB {
@@ -182,7 +183,7 @@ func (r *Repository) ListStudents(
 	items := make([]queryports.StudentItem, 0)
 	var total int64
 	countQuery := applyStudentFilters(
-		r.db.WithContext(ctx).Table("users AS u").Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent),
+		r.db.WithContext(ctx).Table("users AS u").Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent),
 		className,
 		keyword,
 		studentNo,
@@ -252,7 +253,7 @@ func (r *Repository) ListClassTeachingFactSnapshots(
 	}, 0)
 	if err := r.db.WithContext(ctx).Table("users AS u").
 		Select("u.id, u.username, NULLIF(u.name, '') AS name").
-		Where("u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL", className, model.RoleStudent).
+		Where("u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL", className, identitycontracts.RoleStudent).
 		Order("u.username ASC").
 		Scan(&studentRows).Error; err != nil {
 		return nil, fmt.Errorf("list class teaching fact students: %w", err)
@@ -1455,7 +1456,7 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		JOIN users u ON u.id = i.user_id
 		WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 			AND i.status IN ('stopped', 'expired') AND i.updated_at >= ?
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&rows).Error; err != nil {
+	`, identitycontracts.RoleStudent, className, since, identitycontracts.RoleStudent, className, since, identitycontracts.RoleStudent, className, since).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get class trend: %w", err)
 	}
 
@@ -1533,7 +1534,7 @@ func (r *Repository) GetOverviewTrend(
 		JOIN users u ON u.id = i.user_id
 		WHERE u.role = ? AND u.class_name IN ? AND u.deleted_at IS NULL
 			AND i.status IN ('stopped', 'expired') AND i.updated_at >= ?
-	`, model.RoleStudent, normalized, since, model.RoleStudent, normalized, since, model.RoleStudent, normalized, since).Scan(&rows).Error; err != nil {
+	`, identitycontracts.RoleStudent, normalized, since, identitycontracts.RoleStudent, normalized, since, identitycontracts.RoleStudent, normalized, since).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get overview trend: %w", err)
 	}
 
@@ -1597,7 +1598,7 @@ func (r *Repository) getAverageSolvedByClass(ctx context.Context, className stri
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 			GROUP BY u.id
 		) student_solved
-	`, model.ChallengeStatusPublished, model.RoleStudent, className).Scan(&result).Error; err != nil {
+	`, model.ChallengeStatusPublished, identitycontracts.RoleStudent, className).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get average solved by class: %w", err)
 	}
 	return result.AverageSolved, nil
@@ -1621,7 +1622,7 @@ func (r *Repository) getActiveStudentCountByClass(ctx context.Context, className
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 				AND (i.created_at >= ? OR i.updated_at >= ?)
 		) active
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, since).Scan(&result).Error; err != nil {
+	`, identitycontracts.RoleStudent, className, since, identitycontracts.RoleStudent, className, since, since).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get active student count by class: %w", err)
 	}
 	return result.Count, nil
@@ -1650,7 +1651,7 @@ func (r *Repository) getRecentEventCountByClass(ctx context.Context, className s
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 				AND i.status IN ('stopped', 'expired') AND i.updated_at >= ?
 		) recent_events
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&result).Error; err != nil {
+	`, identitycontracts.RoleStudent, className, since, identitycontracts.RoleStudent, className, since, identitycontracts.RoleStudent, className, since).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get recent event count by class: %w", err)
 	}
 	return result.Count, nil

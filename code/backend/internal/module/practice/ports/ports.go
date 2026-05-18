@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
@@ -341,7 +342,7 @@ type PracticeSubmissionConstraintRepository interface {
 }
 
 type PracticeUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
 }
 
 type PracticeManualReviewListRepository interface {
@@ -464,7 +465,7 @@ type PracticeRankingListRepository interface {
 }
 
 type PracticeUserDirectoryRepository interface {
-	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error)
+	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]identitycontracts.User, error)
 }
 
 type PracticeScoreLockLease interface {

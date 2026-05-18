@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -15,7 +15,7 @@ func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*instanceenti
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) FindUserByID(context.Context, int64) (*model.User, error) {
+func (ctxOnlyInstanceRepository) FindUserByID(context.Context, int64) (*identitycontracts.User, error) {
 	return nil, nil
 }
 

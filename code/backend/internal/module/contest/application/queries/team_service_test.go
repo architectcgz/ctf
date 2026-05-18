@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -21,7 +21,7 @@ type teamRepoStub struct {
 	findByIDFn              func(context.Context, int64) (*contestentity.Team, error)
 	findUserTeamInContestFn func(context.Context, int64, int64) (*contestentity.Team, error)
 	getMembersFn            func(context.Context, int64) ([]*contestentity.TeamMember, error)
-	findUsersByIDsFn        func(context.Context, []int64) ([]*model.User, error)
+	findUsersByIDsFn        func(context.Context, []int64) ([]*identitycontracts.User, error)
 }
 
 func (s *teamRepoStub) CreateWithMember(context.Context, *contestentity.Team, int64) error {
@@ -54,11 +54,11 @@ func (s *teamRepoStub) ListByContest(context.Context, int64) ([]*contestentity.T
 func (s *teamRepoStub) GetMemberCountBatch(context.Context, []int64) (map[int64]int, error) {
 	return map[int64]int{}, nil
 }
-func (s *teamRepoStub) FindUsersByIDs(ctx context.Context, ids []int64) ([]*model.User, error) {
+func (s *teamRepoStub) FindUsersByIDs(ctx context.Context, ids []int64) ([]*identitycontracts.User, error) {
 	if s.findUsersByIDsFn != nil {
 		return s.findUsersByIDsFn(ctx, ids)
 	}
-	return []*model.User{}, nil
+	return []*identitycontracts.User{}, nil
 }
 func (s *teamRepoStub) IsUniqueViolation(error, string) bool { return false }
 func (s *teamRepoStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {

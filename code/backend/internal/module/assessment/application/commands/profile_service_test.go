@@ -19,6 +19,7 @@ import (
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
@@ -31,7 +32,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&model.Challenge{},
 		&contestcontracts.Submission{},
 		&contestcontracts.AWDAttackLog{},
@@ -66,12 +67,12 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 	service := newAssessmentTestService(db, nil)
 	now := time.Now()
 
-	student := model.User{
+	student := identitycontracts.User{
 		ID:        1,
 		Username:  "alice",
-		Role:      model.RoleStudent,
+		Role:      identitycontracts.RoleStudent,
 		ClassName: "Class A",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -135,12 +136,12 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 	service := newAssessmentTestService(db, nil)
 	now := time.Now()
 
-	student := model.User{
+	student := identitycontracts.User{
 		ID:        3,
 		Username:  "awd-student",
-		Role:      model.RoleStudent,
+		Role:      identitycontracts.RoleStudent,
 		ClassName: "Class A",
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -286,9 +287,9 @@ func TestGetStudentSkillProfileRejectsTeacherFromOtherClass(t *testing.T) {
 	service := newAssessmentTestService(db, nil)
 	now := time.Now()
 
-	users := []model.User{
-		{ID: 10, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
-		{ID: 20, Username: "student-b", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+	users := []identitycontracts.User{
+		{ID: 10, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 20, Username: "student-b", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, user := range users {
 		if err := db.Create(&user).Error; err != nil {
@@ -296,7 +297,7 @@ func TestGetStudentSkillProfileRejectsTeacherFromOtherClass(t *testing.T) {
 		}
 	}
 
-	_, err := service.GetStudentSkillProfile(context.Background(), 10, model.RoleTeacher, 20)
+	_, err := service.GetStudentSkillProfile(context.Background(), 10, identitycontracts.RoleTeacher, 20)
 	if err == nil {
 		t.Fatal("expected forbidden error for cross-class teacher access")
 	}

@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
@@ -18,7 +17,7 @@ import (
 type Service interface {
 	Register(ctx context.Context, req RegisterInput) (*LoginResp, *authcontracts.Session, error)
 	Login(ctx context.Context, req LoginInput) (*LoginResp, *authcontracts.Session, error)
-	ValidatePassword(user *model.User, password string) bool
+	ValidatePassword(user *identitycontracts.User, password string) bool
 }
 
 type service struct {
@@ -50,12 +49,12 @@ func NewService(users authUserRepository, tokenService authcontracts.TokenServic
 func (s *service) Register(ctx context.Context, req RegisterInput) (*LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_register_attempt", zap.String("username", req.Username))
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username:  req.Username,
 		Email:     strings.TrimSpace(req.Email),
 		ClassName: req.ClassName,
-		Role:      model.RoleStudent,
-		Status:    model.UserStatusActive,
+		Role:      identitycontracts.RoleStudent,
+		Status:    identitycontracts.UserStatusActive,
 	}
 	if err := user.SetPassword(req.Password); err != nil {
 		s.log.Error("auth_register_password_hash_failed", zap.String("username", req.Username), zap.Error(err))
@@ -96,16 +95,16 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	if user.Status == model.UserStatusBanned {
+	if user.Status == identitycontracts.UserStatusBanned {
 		s.log.Warn("auth_login_failed_account_disabled", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
 		return nil, nil, errcode.ErrAccountDisabled
 	}
-	if user.Status == model.UserStatusLocked {
+	if user.Status == identitycontracts.UserStatusLocked {
 		if user.LockedUntil == nil || time.Now().Before(*user.LockedUntil) {
 			s.log.Warn("auth_login_failed_account_locked", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
 			return nil, nil, errcode.ErrAccountLocked
 		}
-		if err := s.resetLoginTracking(ctx, user, model.UserStatusActive); err != nil {
+		if err := s.resetLoginTracking(ctx, user, identitycontracts.UserStatusActive); err != nil {
 			s.log.Error("auth_login_failed_unlock_expired_lock", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 			return nil, nil, errcode.ErrInternal.WithCause(err)
 		}
@@ -124,10 +123,10 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		return nil, nil, errcode.ErrInvalidCredentials
 	}
 
-	if user.FailedLoginAttempts > 0 || user.LockedUntil != nil || user.Status == model.UserStatusLocked {
+	if user.FailedLoginAttempts > 0 || user.LockedUntil != nil || user.Status == identitycontracts.UserStatusLocked {
 		nextStatus := user.Status
-		if nextStatus == model.UserStatusLocked {
-			nextStatus = model.UserStatusActive
+		if nextStatus == identitycontracts.UserStatusLocked {
+			nextStatus = identitycontracts.UserStatusActive
 		}
 		if err := s.resetLoginTracking(ctx, user, nextStatus); err != nil {
 			s.log.Error("auth_login_failed_reset_attempts", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(err))
@@ -139,11 +138,11 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) ValidatePassword(user *model.User, password string) bool {
+func (s *service) ValidatePassword(user *identitycontracts.User, password string) bool {
 	return user.CheckPassword(password)
 }
 
-func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*LoginResp, *authcontracts.Session, error) {
+func (s *service) issueLoginResp(ctx context.Context, user *identitycontracts.User) (*LoginResp, *authcontracts.Session, error) {
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
@@ -153,7 +152,7 @@ func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*LoginR
 	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil
 }
 
-func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now time.Time) (bool, error) {
+func (s *service) recordFailedLogin(ctx context.Context, user *identitycontracts.User, now time.Time) (bool, error) {
 	failedAttempts := user.FailedLoginAttempts
 	if user.LastFailedLoginAt == nil || s.loginPolicy.Window <= 0 || now.Sub(*user.LastFailedLoginAt) > s.loginPolicy.Window {
 		failedAttempts = 0
@@ -166,7 +165,7 @@ func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now t
 	if s.loginPolicy.Limit > 0 && failedAttempts >= s.loginPolicy.Limit {
 		until := now.Add(s.loginPolicy.LockDuration)
 		lockedUntil = &until
-		status = model.UserStatusLocked
+		status = identitycontracts.UserStatusLocked
 		locked = true
 	}
 
@@ -182,7 +181,7 @@ func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now t
 	return locked, nil
 }
 
-func (s *service) resetLoginTracking(ctx context.Context, user *model.User, status string) error {
+func (s *service) resetLoginTracking(ctx context.Context, user *identitycontracts.User, status string) error {
 	if err := s.users.UpdateLoginState(ctx, user.ID, 0, nil, nil, status); err != nil {
 		return err
 	}

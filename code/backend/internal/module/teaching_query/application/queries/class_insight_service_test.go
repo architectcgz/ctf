@@ -5,20 +5,20 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
 type classInsightRepoStub struct {
-	findUserByIDFn                 func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn                 func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	getClassSummaryFn              func(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
 	getClassTrendFn                func(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
 	listClassTeachingFactSnapshots func(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 
-func (s *classInsightRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *classInsightRepoStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDFn != nil {
 		return s.findUserByIDFn(ctx, userID)
 	}
@@ -61,8 +61,8 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 	t.Parallel()
 
 	repo := &classInsightRepoStub{
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		getClassSummaryFn: func(context.Context, string, time.Time) (*queryports.ClassSummary, error) {
 			return &queryports.ClassSummary{
@@ -78,7 +78,7 @@ func TestClassInsightQueryServiceGetClassSummaryUsesAccessibleClass(t *testing.T
 
 	service := NewClassInsightService(repo, repo, nil, nil)
 
-	summary, err := service.GetClassSummary(context.Background(), 11, model.RoleTeacher, "Class A", nil)
+	summary, err := service.GetClassSummary(context.Background(), 11, identitycontracts.RoleTeacher, "Class A", nil)
 	if err != nil {
 		t.Fatalf("GetClassSummary() error = %v", err)
 	}
@@ -98,8 +98,8 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 	nameCarol := "Carol"
 
 	repo := &classInsightRepoStub{
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		getClassSummaryFn: func(context.Context, string, time.Time) (*queryports.ClassSummary, error) {
 			return &queryports.ClassSummary{
@@ -192,7 +192,7 @@ func TestClassInsightQueryServiceGetClassReviewOnlyAttachesDimensionMatchedRecom
 
 	service := NewClassInsightService(repo, repo, recommendations, nil)
 
-	review, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", nil)
+	review, err := service.GetClassReview(context.Background(), 11, identitycontracts.RoleTeacher, "Class A", nil)
 	if err != nil {
 		t.Fatalf("GetClassReview() error = %v", err)
 	}
@@ -243,8 +243,8 @@ func TestClassInsightQueryServiceUsesSharedCustomWindow(t *testing.T) {
 	var snapshotSince time.Time
 
 	repo := &classInsightRepoStub{
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		getClassSummaryFn: func(_ context.Context, _ string, since time.Time) (*queryports.ClassSummary, error) {
 			summarySince = since
@@ -275,7 +275,7 @@ func TestClassInsightQueryServiceUsesSharedCustomWindow(t *testing.T) {
 	}
 
 	service := NewClassInsightService(repo, repo, nil, nil)
-	_, err := service.GetClassReview(context.Background(), 11, model.RoleTeacher, "Class A", &TeacherClassInsightInput{
+	_, err := service.GetClassReview(context.Background(), 11, identitycontracts.RoleTeacher, "Class A", &TeacherClassInsightInput{
 		FromDate: "2026-05-01",
 		ToDate:   "2026-05-03",
 	})

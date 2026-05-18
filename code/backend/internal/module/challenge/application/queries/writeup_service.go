@@ -9,6 +9,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -212,7 +213,7 @@ func normalizeTeacherSubmissionQuery(
 	if normalized.Size <= 0 {
 		normalized.Size = 20
 	}
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return &normalized, nil
 	}
 
@@ -240,7 +241,7 @@ func ensureTeacherCanAccessQueryRecord(
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,
 ) error {
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return nil
 	}
 	requester, err := repo.FindUserByID(ctx, requesterID)

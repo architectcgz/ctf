@@ -15,6 +15,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -86,7 +87,7 @@ func (r *ReportRepository) MarkFailed(ctx context.Context, reportID int64, messa
 
 func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error) {
 	var user assessmentdomain.ReportUser
-	err := r.db.WithContext(ctx).Model(&model.User{}).
+	err := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
 		Select("id, username, COALESCE(name, '') AS name, class_name, role").
 		Where("id = ? AND deleted_at IS NULL", userID).
 		Scan(&user).Error
@@ -188,8 +189,8 @@ func (r *ReportRepository) ListPersonalDimensionStats(ctx context.Context, userI
 
 func (r *ReportRepository) CountClassStudents(ctx context.Context, className string) (int, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.User{}).
-		Where("class_name = ? AND role = ? AND deleted_at IS NULL", className, model.RoleStudent).
+	err := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
+		Where("class_name = ? AND role = ? AND deleted_at IS NULL", className, identitycontracts.RoleStudent).
 		Count(&count).Error
 	return int(count), err
 }
@@ -211,7 +212,7 @@ func (r *ReportRepository) GetClassAverageScore(ctx context.Context, className s
 		SELECT COALESCE(AVG(total_score), 0) AS avg_score
 		FROM user_scores
 	`, reportSolvedChallengesCTE())
-	err := r.db.WithContext(ctx).Raw(query, className, model.RoleStudent).Scan(&avgScore).Error
+	err := r.db.WithContext(ctx).Raw(query, className, identitycontracts.RoleStudent).Scan(&avgScore).Error
 	return avgScore, err
 }
 
@@ -224,7 +225,7 @@ func (r *ReportRepository) ListClassDimensionAverages(ctx context.Context, class
 		WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
 		GROUP BY sp.dimension
 		ORDER BY sp.dimension
-	`, className, model.RoleStudent).Scan(&rows).Error
+	`, className, identitycontracts.RoleStudent).Scan(&rows).Error
 	return rows, err
 }
 
@@ -252,7 +253,7 @@ func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className s
 		ORDER BY total_score DESC, user_id ASC
 		LIMIT ?
 	`, reportSolvedChallengesCTE())
-	err := r.db.WithContext(ctx).Raw(query, className, model.RoleStudent, limit).Scan(&rows).Error
+	err := r.db.WithContext(ctx).Raw(query, className, identitycontracts.RoleStudent, limit).Scan(&rows).Error
 	return rows, err
 }
 
@@ -299,7 +300,7 @@ func (r *ReportRepository) listClassDistribution(
 	err := r.db.WithContext(ctx).Raw(
 		query,
 		className,
-		model.RoleStudent,
+		identitycontracts.RoleStudent,
 		model.ChallengeStatusPublished,
 		model.ChallengeStatusPublished,
 	).Scan(&rows).Error
@@ -331,7 +332,7 @@ func (r *ReportRepository) GetClassContestMigrationSummary(ctx context.Context, 
 		WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
 			AND aal.submitted_by_user_id IS NOT NULL
 			AND aal.source = ?
-	`, className, model.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&row).Error; err != nil {
+	`, className, identitycontracts.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&row).Error; err != nil {
 		return nil, err
 	}
 
@@ -355,7 +356,7 @@ func (r *ReportRepository) GetClassContestMigrationSummary(ctx context.Context, 
 			AND aal.score_gained > 0
 			AND ac.deleted_at IS NULL
 		ORDER BY ac.category
-	`, className, model.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&dimensionRows).Error; err != nil {
+	`, className, identitycontracts.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&dimensionRows).Error; err != nil {
 		return nil, err
 	}
 

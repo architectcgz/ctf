@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -296,7 +296,7 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 			return []int64{1, 2}, nil
 		},
 		listUserIDsByRolesFn: func(_ context.Context, roles []string) ([]int64, error) {
-			if len(roles) != 1 || roles[0] != model.RoleTeacher {
+			if len(roles) != 1 || roles[0] != identitycontracts.RoleTeacher {
 				t.Fatalf("unexpected roles filter: %+v", roles)
 			}
 			return []int64{2, 3}, nil
@@ -330,7 +330,7 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 			Mode: "union",
 			Rules: []NotificationAudienceRuleInput{
 				{Type: NotificationAudienceTypeAll},
-				{Type: NotificationAudienceTypeRole, Values: []string{model.RoleTeacher}},
+				{Type: NotificationAudienceTypeRole, Values: []string{identitycontracts.RoleTeacher}},
 				{Type: NotificationAudienceTypeClass, Values: []string{"ClassA"}},
 				{Type: NotificationAudienceTypeUser, Values: []string{"4", "5", "999"}},
 			},

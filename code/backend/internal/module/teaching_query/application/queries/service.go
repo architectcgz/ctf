@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -53,7 +53,7 @@ func (s *QueryService) ListClasses(
 		return nil, 0, 0, 0, errcode.ErrUnauthorized
 	}
 
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		total, err := s.repo.CountClasses(ctx)
 		if err != nil {
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
@@ -120,8 +120,8 @@ func (s *QueryService) ListStudents(
 ) ([]TeacherStudentItem, int64, int, int, error) {
 	page, size := s.normalizeStudentPagination(query)
 
-	var requester *model.User
-	if requesterRole != model.RoleAdmin {
+	var requester *identitycontracts.User
+	if requesterRole != identitycontracts.RoleAdmin {
 		var err error
 		requester, err = s.users.FindUserByID(ctx, requesterID)
 		if err != nil {
@@ -149,7 +149,7 @@ func (s *QueryService) ListStudents(
 		}
 	}
 
-	if requesterRole != model.RoleAdmin {
+	if requesterRole != identitycontracts.RoleAdmin {
 		requesterClassName := strings.TrimSpace(requester.ClassName)
 		if requesterClassName == "" {
 			return []TeacherStudentItem{}, 0, page, size, nil
@@ -224,7 +224,7 @@ type classAccessRepository interface {
 }
 
 func ensureClassAccess(ctx context.Context, repo classAccessRepository, requesterID int64, requesterRole, className string) error {
-	if requesterRole == model.RoleAdmin {
+	if requesterRole == identitycontracts.RoleAdmin {
 		return nil
 	}
 

@@ -24,6 +24,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 )
@@ -54,7 +55,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.User{},
+		&identitycontracts.User{},
 		&model.Challenge{},
 		&challengecontracts.AWDChallenge{},
 		&assessmententity.SkillProfile{},
@@ -123,10 +124,10 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       7,
 		Username: "student-7",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -206,10 +207,10 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       8,
 		Username: "student-8",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -278,10 +279,10 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       18,
 		Username: "student-18",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -386,10 +387,10 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       10,
 		Username: "student-10",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -441,10 +442,10 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       30,
 		Username: "student-30",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
@@ -504,10 +505,10 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	db := setupRecommendationTestDB(t)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:       31,
 		Username: "student-31",
-		Role:     model.RoleStudent,
+		Role:     identitycontracts.RoleStudent,
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}

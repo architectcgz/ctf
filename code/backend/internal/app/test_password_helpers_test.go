@@ -6,12 +6,12 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 var testPasswordHashCache sync.Map
 
-func setTestPassword(t *testing.T, user *model.User, password string) {
+func setTestPassword(t *testing.T, user *identitycontracts.User, password string) {
 	t.Helper()
 
 	if user == nil {

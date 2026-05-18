@@ -26,6 +26,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type importEnvelope[T any] struct {
@@ -263,7 +264,7 @@ func importTestAuthMiddleware() gin.HandlerFunc {
 		authctx.SetCurrentUser(c, authctx.CurrentUser{
 			UserID:   userID,
 			Username: "tester",
-			Role:     model.RoleAdmin,
+			Role:     identitycontracts.RoleAdmin,
 		})
 		c.Next()
 	}

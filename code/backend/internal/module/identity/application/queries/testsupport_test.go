@@ -6,7 +6,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 func setupIdentityTestDB(t *testing.T) *gorm.DB {
@@ -16,14 +16,14 @@ func setupIdentityTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
-	roles := []model.Role{
-		{ID: 1, Code: model.RoleStudent, Name: "Student"},
-		{ID: 2, Code: model.RoleTeacher, Name: "Teacher"},
-		{ID: 3, Code: model.RoleAdmin, Name: "Admin"},
+	roles := []identitycontracts.Role{
+		{ID: 1, Code: identitycontracts.RoleStudent, Name: "Student"},
+		{ID: 2, Code: identitycontracts.RoleTeacher, Name: "Teacher"},
+		{ID: 3, Code: identitycontracts.RoleAdmin, Name: "Admin"},
 	}
 	for _, role := range roles {
 		if err := db.Create(&role).Error; err != nil {

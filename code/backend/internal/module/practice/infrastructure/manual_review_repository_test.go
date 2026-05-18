@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -17,7 +17,7 @@ type manualReviewSourceStub struct {
 	listTeacherManualReviewSubmissionsFn   func(context.Context, *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
 	findCorrectSubmissionFn                func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error)
 	updateSubmissionFn                     func(context.Context, *practiceports.SubmissionRecord) error
-	findUserByIDFn                         func(context.Context, int64) (*model.User, error)
+	findUserByIDFn                         func(context.Context, int64) (*identitycontracts.User, error)
 }
 
 func (s manualReviewSourceStub) GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
@@ -42,7 +42,7 @@ func (s manualReviewSourceStub) UpdateSubmission(ctx context.Context, submission
 	return s.updateSubmissionFn(ctx, submission)
 }
 
-func (s manualReviewSourceStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s manualReviewSourceStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	return s.findUserByIDFn(ctx, userID)
 }
 
@@ -56,7 +56,7 @@ func TestManualReviewRepositoryMapsNotFoundErrors(t *testing.T) {
 		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -83,8 +83,8 @@ func TestManualReviewRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return &practiceports.SubmissionRecord{ID: 1}, nil
 		},
-		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
-			return &model.User{ID: 2}, nil
+		findUserByIDFn: func(context.Context, int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: 2}, nil
 		},
 	})
 

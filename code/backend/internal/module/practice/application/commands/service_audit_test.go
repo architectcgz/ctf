@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -24,11 +25,11 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	now := time.Now()
 	flagSalt := "repeat-audit-salt"
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        71,
 		Username:  "student71",
-		Role:      model.RoleStudent,
-		Status:    model.UserStatusActive,
+		Role:      identitycontracts.RoleStudent,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -101,11 +102,11 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	now := time.Now()
 	flagSalt := "rate-limit-salt"
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        81,
 		Username:  "student81",
-		Role:      model.RoleStudent,
-		Status:    model.UserStatusActive,
+		Role:      identitycontracts.RoleStudent,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -184,8 +185,8 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 			updatedSubmission = submission
 			return nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
-			return &model.User{ID: userID, Username: "teacher", Role: model.RoleTeacher, ClassName: "Class 1"}, nil
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: userID, Username: "teacher", Role: identitycontracts.RoleTeacher, ClassName: "Class 1"}, nil
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
@@ -239,7 +240,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		context.Background(),
 		submissionID,
 		reviewerID,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{
 			ReviewStatus:  contestentity.SubmissionReviewStatusApproved,
 			ReviewComment: "答案链路完整",
@@ -427,11 +428,11 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	now := time.Now()
 	flagSalt := "repeat-submit-salt"
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        71,
 		Username:  "student-repeat",
-		Role:      model.RoleStudent,
-		Status:    model.UserStatusActive,
+		Role:      identitycontracts.RoleStudent,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -516,11 +517,11 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	now := time.Now()
 	flagSalt := "solve-grace-salt"
 
-	if err := db.Create(&model.User{
+	if err := db.Create(&identitycontracts.User{
 		ID:        7,
 		Username:  "student7",
-		Role:      model.RoleStudent,
-		Status:    model.UserStatusActive,
+		Role:      identitycontracts.RoleStudent,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -964,12 +965,12 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			updatedCalled = true
@@ -1014,7 +1015,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		ctx,
 		91,
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	); err != nil {
 		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
@@ -1040,11 +1041,11 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 	expectedCtxValue := "ctx-list-review"
 	listCalled := false
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			listCalled = true
@@ -1064,7 +1065,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &practicecontracts.TeacherManualReviewSubmissionQuery{}); err != nil {
+	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, identitycontracts.RoleTeacher, &practicecontracts.TeacherManualReviewSubmissionQuery{}); err != nil {
 		t.Fatalf("ListTeacherManualReviewSubmissions() error = %v", err)
 	}
 	if !listCalled {
@@ -1076,7 +1077,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
@@ -1091,7 +1092,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &practicecontracts.TeacherManualReviewSubmissionQuery{})
+	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, identitycontracts.RoleStudent, &practicecontracts.TeacherManualReviewSubmissionQuery{})
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
@@ -1105,7 +1106,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
@@ -1123,7 +1124,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.TeacherManualReviewSubmissionQuery{ReviewStatus: "archived"},
 	)
 	if err == nil {
@@ -1139,7 +1140,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for oversized page size")
 			return nil, nil
 		},
@@ -1157,7 +1158,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.TeacherManualReviewSubmissionQuery{Size: 101},
 	)
 	if err == nil {
@@ -1173,7 +1174,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for non-positive student id")
 			return nil, nil
 		},
@@ -1192,7 +1193,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.TeacherManualReviewSubmissionQuery{StudentID: &studentID},
 	)
 	if err == nil {
@@ -1208,7 +1209,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for non-positive challenge id")
 			return nil, nil
 		},
@@ -1223,7 +1224,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.TeacherManualReviewSubmissionQuery{ChallengeID: &challengeID},
 	)
 	if err == nil {
@@ -1239,7 +1240,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for oversized class name")
 			return nil, nil
 		},
@@ -1253,7 +1254,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
-		model.RoleAdmin,
+		identitycontracts.RoleAdmin,
 		&practicecontracts.TeacherManualReviewSubmissionQuery{ClassName: strings.Repeat("A", 129)},
 	)
 	if err == nil {
@@ -1287,12 +1288,12 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
@@ -1302,7 +1303,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
+	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, identitycontracts.RoleTeacher); err != nil {
 		t.Fatalf("GetTeacherManualReviewSubmission() error = %v", err)
 	}
 	if !getCalled {
@@ -1321,14 +1322,14 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect get repository call for student role")
 			return nil, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleStudent)
+	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, identitycontracts.RoleStudent)
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
@@ -1346,7 +1347,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect review record lookup for student role")
 			return nil, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
@@ -1361,7 +1362,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 		context.Background(),
 		91,
 		1001,
-		model.RoleStudent,
+		identitycontracts.RoleStudent,
 		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
@@ -1381,7 +1382,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			t.Fatal("did not expect review record lookup for invalid review status")
 			return nil, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
@@ -1396,7 +1397,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 		context.Background(),
 		91,
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusPending},
 	)
 	if err == nil {
@@ -1416,7 +1417,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			t.Fatal("did not expect review record lookup for oversized review comment")
 			return nil, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			t.Fatal("did not expect requester lookup for oversized review comment")
 			return nil, nil
 		},
@@ -1431,7 +1432,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 		context.Background(),
 		91,
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{
 			ReviewStatus:  contestentity.SubmissionReviewStatusApproved,
 			ReviewComment: strings.Repeat("a", 4001),
@@ -1468,8 +1469,8 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 			return &practiceports.SubmissionRecord{
@@ -1517,7 +1518,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		context.Background(),
 		91,
 		1001,
-		model.RoleTeacher,
+		identitycontracts.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
@@ -1543,7 +1544,7 @@ func TestGetTeacherManualReviewSubmissionTreatsPracticeManualReviewSubmissionNot
 		nil,
 	)
 
-	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleTeacher)
+	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, identitycontracts.RoleTeacher)
 	if err == nil {
 		t.Fatal("expected manual review detail lookup to fail")
 	}

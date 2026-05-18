@@ -9,6 +9,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -259,7 +260,7 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
@@ -357,7 +358,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
@@ -436,7 +437,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
@@ -509,7 +510,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}

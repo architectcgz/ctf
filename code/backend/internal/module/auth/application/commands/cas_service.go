@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authports "ctf-platform/internal/module/auth/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -96,7 +95,7 @@ func (s *casService) validateTicket(ctx context.Context, ticket string) (*authpo
 	return principal, nil
 }
 
-func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrincipal) (*model.User, error) {
+func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrincipal) (*identitycontracts.User, error) {
 	user, err := s.users.FindByUsername(ctx, principal.Username)
 	if err != nil {
 		if !errors.Is(err, identitycontracts.ErrUserNotFound) {
@@ -107,15 +106,15 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 			return nil, errcode.ErrCASUserNotProvisioned
 		}
 
-		user = &model.User{
+		user = &identitycontracts.User{
 			Username:  principal.Username,
 			Name:      principal.Name,
 			Email:     principal.Email,
 			StudentNo: principal.StudentNo,
 			TeacherNo: principal.TeacherNo,
-			Role:      model.RoleStudent,
+			Role:      identitycontracts.RoleStudent,
 			ClassName: principal.ClassName,
-			Status:    model.UserStatusActive,
+			Status:    identitycontracts.UserStatusActive,
 		}
 		if err := user.SetPassword(randomPassword()); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
@@ -126,16 +125,16 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 		return user, nil
 	}
 
-	if user.Status == model.UserStatusBanned {
+	if user.Status == identitycontracts.UserStatusBanned {
 		return nil, errcode.ErrAccountDisabled
 	}
-	if user.Status == model.UserStatusLocked && (user.LockedUntil == nil || time.Now().Before(*user.LockedUntil)) {
+	if user.Status == identitycontracts.UserStatusLocked && (user.LockedUntil == nil || time.Now().Before(*user.LockedUntil)) {
 		return nil, errcode.ErrAccountLocked
 	}
 
 	changed := s.mergePrincipal(user, principal)
-	if user.Status == model.UserStatusLocked || user.FailedLoginAttempts > 0 || user.LastFailedLoginAt != nil || user.LockedUntil != nil {
-		user.Status = model.UserStatusActive
+	if user.Status == identitycontracts.UserStatusLocked || user.FailedLoginAttempts > 0 || user.LastFailedLoginAt != nil || user.LockedUntil != nil {
+		user.Status = identitycontracts.UserStatusActive
 		user.FailedLoginAttempts = 0
 		user.LastFailedLoginAt = nil
 		user.LockedUntil = nil
@@ -150,7 +149,7 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 	return user, nil
 }
 
-func (s *casService) mergePrincipal(user *model.User, principal *authports.CASPrincipal) bool {
+func (s *casService) mergePrincipal(user *identitycontracts.User, principal *authports.CASPrincipal) bool {
 	changed := false
 	if principal.Name != "" && user.Name != principal.Name {
 		user.Name = principal.Name
@@ -175,7 +174,7 @@ func (s *casService) mergePrincipal(user *model.User, principal *authports.CASPr
 	return changed
 }
 
-func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*LoginResp, *authcontracts.Session, error) {
+func (s *casService) issueLoginResp(ctx context.Context, user *identitycontracts.User) (*LoginResp, *authcontracts.Session, error) {
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_cas_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))

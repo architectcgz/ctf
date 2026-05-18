@@ -10,7 +10,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
@@ -46,7 +45,7 @@ func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.Cre
 	}
 
 	identity := normalizeIdentityNumbers(req.Role, req.StudentNo, req.TeacherNo)
-	user := &model.User{
+	user := &identitycontracts.User{
 		Username:  username,
 		Name:      strings.TrimSpace(req.Name),
 		Email:     strings.TrimSpace(req.Email),
@@ -180,10 +179,10 @@ func (s *AdminService) importRow(ctx context.Context, record []string) (bool, er
 		return false, fmt.Errorf("username 不能为空")
 	}
 	if role == "" {
-		role = model.RoleStudent
+		role = identitycontracts.RoleStudent
 	}
 	if status == "" {
-		status = model.UserStatusActive
+		status = identitycontracts.UserStatusActive
 	}
 
 	existing, err := s.repo.FindByUsername(ctx, username)

@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -52,7 +53,7 @@ func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middlewa
 func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUser := authctx.MustCurrentUser(c)
-		if currentUser.Role == model.RoleAdmin {
+		if currentUser.Role == identitycontracts.RoleAdmin {
 			c.Next()
 			return
 		}
@@ -881,7 +882,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	usersGroup.GET("/me/timeline", deps.practice.Handler.GetTimeline)
 	usersGroup.GET("/me/skill-profile", deps.assessment.Handler.GetMySkillProfile)
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
-	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
+	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(identitycontracts.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
 
 	teacherOrAbove.GET("/overview", deps.teachingQuery.Handler.GetOverview)
 	teacherOrAbove.GET("/classes", deps.teachingQuery.Handler.ListClasses)
@@ -976,6 +977,6 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.POST("/reports/personal", deps.assessment.ReportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", deps.assessment.ReportHandler.GetReportStatus)
 	protected.GET("/reports/:id/download", deps.assessment.ReportHandler.DownloadReport)
-	protected.POST("/reports/class", middleware.RequireRole(model.RoleTeacher), deps.assessment.ReportHandler.CreateClassReport)
+	protected.POST("/reports/class", middleware.RequireRole(identitycontracts.RoleTeacher), deps.assessment.ReportHandler.CreateClassReport)
 	teacherOrAbove.POST("/reports/class", deps.assessment.ReportHandler.CreateClassReport)
 }

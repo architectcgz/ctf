@@ -6,9 +6,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type TeamQueryAdapter struct {
@@ -74,7 +74,7 @@ func (r *TeamQueryAdapter) ListByContest(ctx context.Context, contestID int64) (
 	return r.source.ListByContest(ctx, contestID)
 }
 
-func (r *TeamQueryAdapter) FindUsersByIDs(ctx context.Context, ids []int64) ([]*model.User, error) {
+func (r *TeamQueryAdapter) FindUsersByIDs(ctx context.Context, ids []int64) ([]*identitycontracts.User, error) {
 	return r.source.FindUsersByIDs(ctx, ids)
 }
 

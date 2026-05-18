@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -40,7 +40,7 @@ func (r *ScoreQueryRepository) ListTopUserScores(ctx context.Context, limit int)
 	return r.source.ListTopUserScores(ctx, limit)
 }
 
-func (r *ScoreQueryRepository) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error) {
+func (r *ScoreQueryRepository) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]identitycontracts.User, error) {
 	return r.source.FindUsersByIDs(ctx, userIDs)
 }
 

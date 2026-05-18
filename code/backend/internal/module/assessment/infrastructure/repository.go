@@ -12,6 +12,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -29,8 +30,8 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+	var user identitycontracts.User
 	if err := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -117,8 +118,8 @@ func (r *Repository) BatchUpsert(ctx context.Context, profiles []*assessmententi
 
 func (r *Repository) ListStudentIDs(ctx context.Context) ([]int64, error) {
 	var ids []int64
-	err := r.dbWithContext(ctx).Model(&model.User{}).
-		Where("role = ? AND deleted_at IS NULL", model.RoleStudent).
+	err := r.dbWithContext(ctx).Model(&identitycontracts.User{}).
+		Where("role = ? AND deleted_at IS NULL", identitycontracts.RoleStudent).
 		Pluck("id", &ids).Error
 	return ids, err
 }

@@ -16,6 +16,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
@@ -267,11 +268,11 @@ func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64,
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if student == nil || student.Role != model.RoleStudent {
+	if student == nil || student.Role != identitycontracts.RoleStudent {
 		return nil, errcode.ErrNotFound
 	}
 
-	if requesterRole != model.RoleAdmin {
+	if requesterRole != identitycontracts.RoleAdmin {
 		requester, findErr := s.repo.FindUserByID(ctx, requesterID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)

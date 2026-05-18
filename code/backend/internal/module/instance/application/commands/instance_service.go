@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -115,7 +116,7 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 		return errcode.ErrInstanceNotFound
 	}
 
-	if requesterRole != model.RoleAdmin {
+	if requesterRole != identitycontracts.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
 		if err != nil {
 			return errcode.ErrInternal.WithCause(err)

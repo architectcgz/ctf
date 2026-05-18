@@ -4,13 +4,12 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
 )
 
-func toAdminUserResp(user *model.User) identitycontracts.AdminUser {
+func toAdminUserResp(user *identitycontracts.User) identitycontracts.AdminUser {
 	resp := adminUserMapper.ToAdminUserRespPtr(user)
 	resp.Name = commonmapper.NormalizeOptionalTrimmedString(user.Name)
 	resp.Email = commonmapper.NormalizeOptionalTrimmedString(user.Email)
@@ -24,7 +23,7 @@ func toAdminUserResp(user *model.User) identitycontracts.AdminUser {
 
 func defaultUserStatus(status string) string {
 	if strings.TrimSpace(status) == "" {
-		return model.UserStatusActive
+		return identitycontracts.UserStatusActive
 	}
 	return strings.TrimSpace(status)
 }
@@ -80,9 +79,9 @@ func normalizeIdentityNumbers(role, studentNo, teacherNo string) identityNumbers
 	}
 
 	switch strings.TrimSpace(role) {
-	case model.RoleStudent:
+	case identitycontracts.RoleStudent:
 		normalized.TeacherNo = ""
-	case model.RoleTeacher:
+	case identitycontracts.RoleTeacher:
 		normalized.StudentNo = ""
 	default:
 		normalized.StudentNo = ""

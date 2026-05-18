@@ -10,6 +10,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -47,8 +48,8 @@ func (r *Repository) FindReleasedWriteupByChallengeID(ctx context.Context, chall
 	return &writeup, nil
 }
 
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
-	var user model.User
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+	var user identitycontracts.User
 	err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err

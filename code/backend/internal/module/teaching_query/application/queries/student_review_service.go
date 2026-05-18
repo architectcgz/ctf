@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	teachingevidence "ctf-platform/internal/teaching/evidence"
@@ -544,12 +544,12 @@ func getAccessibleStudent(
 	requesterID int64,
 	requesterRole string,
 	studentID int64,
-) (*model.User, error) {
+) (*identitycontracts.User, error) {
 	student, err := repo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if student == nil || student.Role != model.RoleStudent {
+	if student == nil || student.Role != identitycontracts.RoleStudent {
 		return nil, errcode.ErrNotFound
 	}
 

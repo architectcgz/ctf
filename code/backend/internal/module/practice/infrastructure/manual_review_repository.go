@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -54,7 +54,7 @@ func (r *ManualReviewRepository) UpdateSubmission(ctx context.Context, submissio
 	return r.source.UpdateSubmission(ctx, submission)
 }
 
-func (r *ManualReviewRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (r *ManualReviewRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	user, err := r.source.FindUserByID(ctx, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeUserNotFound

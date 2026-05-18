@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
@@ -30,7 +31,7 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 		&model.Image{},
 		&challengecontracts.AWDChallenge{},
 		&contestentity.ContestAWDService{},
-		&model.User{},
+		&identitycontracts.User{},
 		&contestentity.Team{},
 		&contestentity.TeamMember{},
 		&contestentity.ContestRegistration{},

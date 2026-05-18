@@ -9,14 +9,15 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 type writeupCommandContextStub struct {
 	findByIDFn                                         func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
-	findUserByIDFn                                     func(userID int64) (*model.User, error)
-	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn                                     func(userID int64) (*identitycontracts.User, error)
+	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
 	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
@@ -50,7 +51,7 @@ func (s *writeupCommandContextStub) FindByID(ctx context.Context, id int64) (*mo
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *writeupCommandContextStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}
@@ -412,12 +413,12 @@ func TestWriteupServiceRecommendCommunityTreatsRequesterNotFoundSentinelAsUnauth
 				ChallengeTitle:  "challenge",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			return nil, challengeports.ErrChallengeWriteupRequesterNotFound
 		},
 	})
 
-	_, err := service.RecommendCommunity(context.Background(), 91, 1001, model.RoleTeacher)
+	_, err := service.RecommendCommunity(context.Background(), 91, 1001, identitycontracts.RoleTeacher)
 	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
 		t.Fatalf("expected unauthorized, got %v", err)
 	}
@@ -496,12 +497,12 @@ func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testin
 				ClassName:       "Class A",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -525,7 +526,7 @@ func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testin
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RecommendCommunity(ctx, 31, 1001, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RecommendCommunity() error = %v", err)
 	}
@@ -559,12 +560,12 @@ func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *test
 				ClassName:       "Class A",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -588,7 +589,7 @@ func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *test
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UnrecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.UnrecommendCommunity(ctx, 31, 1001, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("UnrecommendCommunity() error = %v", err)
 	}
@@ -622,12 +623,12 @@ func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) 
 				ClassName:       "Class A",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -651,7 +652,7 @@ func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) 
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.HideCommunity(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.HideCommunity(ctx, 31, 1001, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("HideCommunity() error = %v", err)
 	}
@@ -685,12 +686,12 @@ func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.
 				ClassName:       "Class A",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -714,7 +715,7 @@ func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RestoreCommunity(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RestoreCommunity(ctx, 31, 1001, identitycontracts.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RestoreCommunity() error = %v", err)
 	}

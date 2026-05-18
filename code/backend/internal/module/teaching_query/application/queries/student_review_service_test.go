@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
 
 type studentReviewRepoStub struct {
-	findUserByIDFn             func(ctx context.Context, userID int64) (*model.User, error)
+	findUserByIDFn             func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	countPublishedChallengesFn func(ctx context.Context) (int64, error)
 	countSolvedChallengesFn    func(ctx context.Context, userID int64) (int64, error)
 	getCategoryProgressFn      func(ctx context.Context, userID int64) ([]queryports.ProgressRow, error)
@@ -21,7 +21,7 @@ type studentReviewRepoStub struct {
 	getStudentEvidenceFn       func(ctx context.Context, userID int64, query evidence.Query) ([]queryports.EvidenceEventRecord, error)
 }
 
-func (s *studentReviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (s *studentReviewRepoStub) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	if s.findUserByIDFn != nil {
 		return s.findUserByIDFn(ctx, userID)
 	}
@@ -85,12 +85,12 @@ func TestStudentReviewQueryServiceGetStudentProgressUsesAccessibleStudent(t *tes
 	t.Parallel()
 
 	repo := &studentReviewRepoStub{
-		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(_ context.Context, userID int64) (*identitycontracts.User, error) {
 			switch userID {
 			case 11:
-				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			case 101:
-				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 101, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 			default:
 				return nil, nil
 			}
@@ -111,7 +111,7 @@ func TestStudentReviewQueryServiceGetStudentProgressUsesAccessibleStudent(t *tes
 
 	service := NewStudentReviewService(repo, repo, nil)
 
-	progress, err := service.GetStudentProgress(context.Background(), 11, model.RoleTeacher, 101)
+	progress, err := service.GetStudentProgress(context.Background(), 11, identitycontracts.RoleTeacher, 101)
 	if err != nil {
 		t.Fatalf("GetStudentProgress() error = %v", err)
 	}
@@ -130,12 +130,12 @@ func TestStudentReviewQueryServiceGetStudentRecommendationsMapsResult(t *testing
 	t.Parallel()
 
 	repo := &studentReviewRepoStub{
-		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(_ context.Context, userID int64) (*identitycontracts.User, error) {
 			switch userID {
 			case 11:
-				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			case 101:
-				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 101, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 			default:
 				return nil, nil
 			}
@@ -159,7 +159,7 @@ func TestStudentReviewQueryServiceGetStudentRecommendationsMapsResult(t *testing
 
 	service := NewStudentReviewService(repo, repo, recommendations)
 
-	resp, err := service.GetStudentRecommendations(context.Background(), 11, model.RoleTeacher, 101, 3)
+	resp, err := service.GetStudentRecommendations(context.Background(), 11, identitycontracts.RoleTeacher, 101, 3)
 	if err != nil {
 		t.Fatalf("GetStudentRecommendations() error = %v", err)
 	}
@@ -178,12 +178,12 @@ func TestStudentReviewQueryServiceGetStudentTimelineMapsFields(t *testing.T) {
 	points := 120
 	timestamp := time.Date(2026, 5, 12, 9, 30, 0, 0, time.UTC)
 	repo := &studentReviewRepoStub{
-		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(_ context.Context, userID int64) (*identitycontracts.User, error) {
 			switch userID {
 			case 11:
-				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			case 101:
-				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 101, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 			default:
 				return nil, nil
 			}
@@ -206,7 +206,7 @@ func TestStudentReviewQueryServiceGetStudentTimelineMapsFields(t *testing.T) {
 
 	service := NewStudentReviewService(repo, repo, nil)
 
-	resp, err := service.GetStudentTimeline(context.Background(), 11, model.RoleTeacher, 101, 50, 5)
+	resp, err := service.GetStudentTimeline(context.Background(), 11, identitycontracts.RoleTeacher, 101, 50, 5)
 	if err != nil {
 		t.Fatalf("GetStudentTimeline() error = %v", err)
 	}
@@ -229,12 +229,12 @@ func TestStudentReviewQueryServiceGetStudentTimelineNormalizesNilEventsToEmptySl
 	t.Parallel()
 
 	repo := &studentReviewRepoStub{
-		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(_ context.Context, userID int64) (*identitycontracts.User, error) {
 			switch userID {
 			case 11:
-				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			case 101:
-				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 101, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 			default:
 				return nil, nil
 			}
@@ -246,7 +246,7 @@ func TestStudentReviewQueryServiceGetStudentTimelineNormalizesNilEventsToEmptySl
 
 	service := NewStudentReviewService(repo, repo, nil)
 
-	resp, err := service.GetStudentTimeline(context.Background(), 11, model.RoleTeacher, 101, 20, 0)
+	resp, err := service.GetStudentTimeline(context.Background(), 11, identitycontracts.RoleTeacher, 101, 20, 0)
 	if err != nil {
 		t.Fatalf("GetStudentTimeline() error = %v", err)
 	}
@@ -264,12 +264,12 @@ func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testi
 	withEvents := false
 	start := time.Date(2026, 5, 12, 10, 0, 0, 0, time.UTC)
 	repo := &studentReviewRepoStub{
-		findUserByIDFn: func(_ context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(_ context.Context, userID int64) (*identitycontracts.User, error) {
 			switch userID {
 			case 11:
-				return &model.User{ID: 11, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 11, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			case 101:
-				return &model.User{ID: 101, Role: model.RoleStudent, ClassName: "Class A"}, nil
+				return &identitycontracts.User{ID: 101, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 			default:
 				return nil, nil
 			}
@@ -287,7 +287,7 @@ func TestStudentReviewQueryServiceGetStudentAttackSessionsBuildsSummary(t *testi
 
 	service := NewStudentReviewService(repo, repo, nil)
 
-	resp, err := service.GetStudentAttackSessions(context.Background(), 11, model.RoleTeacher, 101, &TeacherAttackSessionInput{
+	resp, err := service.GetStudentAttackSessions(context.Background(), 11, identitycontracts.RoleTeacher, 101, &TeacherAttackSessionInput{
 		WithEvents: &withEvents,
 	})
 	if err != nil {

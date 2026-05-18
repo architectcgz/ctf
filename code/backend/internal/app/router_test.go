@@ -160,7 +160,7 @@ func TestChallengeOwnerGuardPropagatesRequestContextToLookup(t *testing.T) {
 	router := gin.New()
 	router.GET("/authoring/challenges/:id",
 		func(c *gin.Context) {
-			authctx.SetCurrentUser(c, authctx.CurrentUser{UserID: 42, Role: model.RoleTeacher})
+			authctx.SetCurrentUser(c, authctx.CurrentUser{UserID: 42, Role: identitycontracts.RoleTeacher})
 			c.Next()
 		},
 		challengeOwnerGuard(&routerChallengeLookupContextStub{

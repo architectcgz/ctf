@@ -2,9 +2,13 @@ package commands
 
 import (
 	"time"
-
-	"ctf-platform/internal/model"
 )
+
+type authUserSource struct {
+	ID       int64
+	Username string
+	Role     string
+}
 
 type loginRespSource struct {
 	User AuthUser
@@ -20,8 +24,8 @@ type authCommandResponseMapper interface {
 	// goverter:ignore Avatar
 	// goverter:ignore Name
 	// goverter:ignore ClassName
-	ToAuthUserBase(source model.User) AuthUser
-	ToAuthUserBasePtr(source *model.User) *AuthUser
+	ToAuthUserBase(source authUserSource) AuthUser
+	ToAuthUserBasePtr(source *authUserSource) *AuthUser
 
 	ToLoginResp(source loginRespSource) LoginResp
 	ToLoginRespPtr(source loginRespSource) *LoginResp

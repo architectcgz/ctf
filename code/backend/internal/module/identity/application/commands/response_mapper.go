@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
@@ -21,8 +20,8 @@ type adminUserResponseMapper interface {
 	// goverter:ignore ClassName
 	// goverter:ignore Roles
 	// goverter:ignore UpdatedAt
-	ToAdminUserResp(source model.User) identitycontracts.AdminUser
-	ToAdminUserRespPtr(source *model.User) *identitycontracts.AdminUser
+	ToAdminUserResp(source identitycontracts.User) identitycontracts.AdminUser
+	ToAdminUserRespPtr(source *identitycontracts.User) *identitycontracts.AdminUser
 }
 
 var adminUserMapper adminUserResponseMapper

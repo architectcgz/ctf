@@ -11,6 +11,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 type writeupServiceRawRepository interface {
@@ -37,7 +38,7 @@ func (r *WriteupServiceRepository) FindByID(ctx context.Context, id int64) (*mod
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeWriteupChallengeNotFound)
 }
 
-func (r *WriteupServiceRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (r *WriteupServiceRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	item, err := r.raw.FindUserByID(ctx, userID)
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeWriteupRequesterNotFound)
 }

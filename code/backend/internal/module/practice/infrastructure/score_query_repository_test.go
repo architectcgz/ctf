@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -15,7 +15,7 @@ import (
 type scoreQuerySourceStub struct {
 	findUserScoreFn     func(context.Context, int64) (*practiceentity.UserScore, error)
 	listTopUserScoresFn func(context.Context, int) ([]practiceentity.UserScore, error)
-	findUsersByIDsFn    func(context.Context, []int64) ([]model.User, error)
+	findUsersByIDsFn    func(context.Context, []int64) ([]identitycontracts.User, error)
 }
 
 func (s scoreQuerySourceStub) FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error) {
@@ -29,9 +29,9 @@ func (s scoreQuerySourceStub) ListTopUserScores(ctx context.Context, limit int) 
 	return s.listTopUserScoresFn(ctx, limit)
 }
 
-func (s scoreQuerySourceStub) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error) {
+func (s scoreQuerySourceStub) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]identitycontracts.User, error) {
 	if s.findUsersByIDsFn == nil {
-		return []model.User{}, nil
+		return []identitycontracts.User{}, nil
 	}
 	return s.findUsersByIDsFn(ctx, userIDs)
 }

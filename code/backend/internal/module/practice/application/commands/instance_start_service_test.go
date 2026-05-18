@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -46,7 +47,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.User{ID: 42, Username: "student-42", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&identitycontracts.User{ID: 42, Username: "student-42", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 
@@ -1025,7 +1026,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.User{ID: userID, Username: "restart-student", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&identitycontracts.User{ID: userID, Username: "restart-student", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	if err := db.Create(&contestentity.ContestRegistration{
@@ -1228,7 +1229,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.User{ID: userID, Username: "restart-student-missing", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&identitycontracts.User{ID: userID, Username: "restart-student-missing", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	if err := db.Create(&contestentity.ContestRegistration{
@@ -1444,7 +1445,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.User{ID: 46, Username: "student-46", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&identitycontracts.User{ID: 46, Username: "student-46", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	if err := db.Create(&instanceentity.Instance{
