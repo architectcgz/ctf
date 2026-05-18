@@ -430,7 +430,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl").
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
-		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
@@ -618,7 +618,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = i.service_id AND cas.deleted_at IS NULL").
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("i.status <> ?", model.InstanceStatusStopped).
-		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
 
 	if filter.ClassName != "" {
@@ -677,11 +677,11 @@ func buildRuntimeInstanceMetadata(contestMode, serviceSnapshot, serviceName, cha
 		Difficulty: difficulty,
 		FlagType:   flagType,
 	}
-	if contestMode != model.ContestModeAWD {
+	if contestMode != contestcontracts.ContestModeAWD {
 		return metadata
 	}
 
-	snapshot, err := model.DecodeContestAWDServiceSnapshot(serviceSnapshot)
+	snapshot, err := contestcontracts.DecodeContestAWDServiceSnapshot(serviceSnapshot)
 	if err != nil {
 		return metadata
 	}

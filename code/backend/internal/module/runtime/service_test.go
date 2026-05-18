@@ -602,10 +602,10 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	contestID := int64(301)
 	teamID := int64(401)
 
-	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Alpha", CaptainID: 1, InviteCode: "alpha", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Alpha", CaptainID: 1, InviteCode: "alpha", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
 	seedInstance(t, repo.db, &model.Instance{
@@ -640,10 +640,10 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	contestID := int64(302)
 	teamID := int64(402)
 
-	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Beta", CaptainID: 1, InviteCode: "beta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Beta", CaptainID: 1, InviteCode: "beta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
 	initialExpiry := now.Add(time.Hour)
@@ -691,10 +691,10 @@ func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	teamID := int64(403)
 	serviceID := int64(503)
 
-	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Gamma", CaptainID: 1, InviteCode: "gamma", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Gamma", CaptainID: 1, InviteCode: "gamma", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
 	seedInstance(t, repo.db, &model.Instance{
@@ -724,10 +724,10 @@ func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	teamID := int64(404)
 	serviceID := int64(504)
 
-	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Delta", CaptainID: 1, InviteCode: "delta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Delta", CaptainID: 1, InviteCode: "delta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
 	seedInstance(t, repo.db, &model.Instance{
@@ -902,7 +902,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := repo.db.Create(&model.Team{
+	if err := repo.db.Create(&contestcontracts.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Runtime Team",
@@ -914,7 +914,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := repo.db.Create(&model.TeamMember{
+	if err := repo.db.Create(&contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    2,
@@ -1876,10 +1876,10 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
+	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Contest{}, &model.ContestAWDService{}); err != nil {
+	if err := db.AutoMigrate(&contestcontracts.Contest{}, &contestcontracts.ContestAWDService{}); err != nil {
 		t.Fatalf("migrate awd tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.AWDScopeControl{}); err != nil {

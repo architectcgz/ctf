@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -182,7 +182,7 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 }
 
 func snapshotTypeForContest(status string) string {
-	if status == model.ContestStatusEnded {
+	if status == contestcontracts.ContestStatusEnded {
 		return "final"
 	}
 	return "live"

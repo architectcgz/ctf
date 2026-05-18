@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
@@ -68,5 +69,5 @@ type ProxyTicketInstanceReader = instanceports.ProxyTicketInstanceReader
 
 type ProxyTrafficEventRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
-	RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error
 }

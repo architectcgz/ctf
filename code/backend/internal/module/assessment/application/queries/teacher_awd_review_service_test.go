@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -32,11 +31,11 @@ func TestTeacherAWDReviewServiceListContestsReturnsOnlyAWDContests(t *testing.T)
 	service := newTeacherAWDReviewService(db)
 
 	contesttestsupport.CreateAWDContestFixture(t, db, 101, now)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        102,
 		Title:     "jeopardy-contest",
-		Mode:      model.ContestModeJeopardy,
-		Status:    model.ContestStatusEnded,
+		Mode:      contestcontracts.ContestModeJeopardy,
+		Status:    contestcontracts.ContestStatusEnded,
 		StartTime: now.Add(-4 * time.Hour),
 		EndTime:   now.Add(-2 * time.Hour),
 		CreatedAt: now,
@@ -49,7 +48,7 @@ func TestTeacherAWDReviewServiceListContestsReturnsOnlyAWDContests(t *testing.T)
 	if err != nil {
 		t.Fatalf("ListContests() error = %v", err)
 	}
-	if len(resp.List) != 1 || resp.List[0].Mode != model.ContestModeAWD {
+	if len(resp.List) != 1 || resp.List[0].Mode != contestcontracts.ContestModeAWD {
 		t.Fatalf("expected awd-only contest list, got %+v", resp.List)
 	}
 }
@@ -67,16 +66,16 @@ func TestTeacherAWDReviewServiceListContestsSupportsFiltersAndPagination(t *test
 
 	mustUpdateContest := func(contestID int64, title string, status string) {
 		t.Helper()
-		if err := db.Model(&model.Contest{}).
+		if err := db.Model(&contestcontracts.Contest{}).
 			Where("id = ?", contestID).
 			Updates(map[string]any{"title": title, "status": status}).Error; err != nil {
 			t.Fatalf("update contest %d: %v", contestID, err)
 		}
 	}
 
-	mustUpdateContest(401, "春季 AWD 联训", model.ContestStatusRunning)
-	mustUpdateContest(402, "秋季 AWD 复盘", model.ContestStatusEnded)
-	mustUpdateContest(403, "春季 期中 AWD", model.ContestStatusFrozen)
+	mustUpdateContest(401, "春季 AWD 联训", contestcontracts.ContestStatusRunning)
+	mustUpdateContest(402, "秋季 AWD 复盘", contestcontracts.ContestStatusEnded)
+	mustUpdateContest(403, "春季 期中 AWD", contestcontracts.ContestStatusFrozen)
 
 	pageResp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{
 		Keyword: "春季",
@@ -97,7 +96,7 @@ func TestTeacherAWDReviewServiceListContestsSupportsFiltersAndPagination(t *test
 	}
 
 	statusResp, err := service.ListContests(context.Background(), 1, assessmentqry.ListTeacherAWDReviewContestsInput{
-		Status: model.ContestStatusEnded,
+		Status: contestcontracts.ContestStatusEnded,
 	})
 	if err != nil {
 		t.Fatalf("ListContests() with status filter error = %v", err)
@@ -318,11 +317,11 @@ func TestTeacherAWDReviewServiceMarksEndedContestAsFinalSnapshot(t *testing.T) {
 	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
 	service := newTeacherAWDReviewService(db)
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        401,
 		Title:     "awd-ended",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusEnded,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusEnded,
 		StartTime: now.Add(-2 * time.Hour),
 		EndTime:   now.Add(-time.Hour),
 		CreatedAt: now,
@@ -405,34 +404,34 @@ func seedTeacherAWDReviewSignals(t *testing.T, db *gorm.DB, contestID, roundID i
 	challengeID := contestID*10 + 1
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
 
-	if err := db.Create(&model.AWDTeamService{
+	if err := db.Create(&contestcontracts.AWDTeamService{
 		ID:             roundID*10 + 1,
 		RoundID:        roundID,
 		TeamID:         contestID*10 + 1,
 		ServiceID:      serviceID,
 		AWDChallengeID: challengeID,
-		ServiceStatus:  model.AWDServiceStatusUp,
+		ServiceStatus:  contestcontracts.AWDServiceStatusUp,
 		UpdatedAt:      attackAt.Add(-time.Minute),
 		CreatedAt:      attackAt.Add(-2 * time.Minute),
 	}).Error; err != nil {
 		t.Fatalf("create team service: %v", err)
 	}
-	if err := db.Create(&model.AWDAttackLog{
+	if err := db.Create(&contestcontracts.AWDAttackLog{
 		ID:             roundID*10 + 2,
 		RoundID:        roundID,
 		AttackerTeamID: contestID*10 + 1,
 		VictimTeamID:   contestID*10 + 2,
 		ServiceID:      serviceID,
 		AWDChallengeID: challengeID,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceManual,
+		AttackType:     contestcontracts.AWDAttackTypeFlagCapture,
+		Source:         contestcontracts.AWDAttackSourceManual,
 		IsSuccess:      true,
 		ScoreGained:    10,
 		CreatedAt:      attackAt,
 	}).Error; err != nil {
 		t.Fatalf("create attack log: %v", err)
 	}
-	if err := db.Create(&model.AWDTrafficEvent{
+	if err := db.Create(&contestcontracts.AWDTrafficEvent{
 		ID:             roundID*10 + 3,
 		ContestID:      contestID,
 		RoundID:        roundID,
@@ -443,7 +442,7 @@ func seedTeacherAWDReviewSignals(t *testing.T, db *gorm.DB, contestID, roundID i
 		Method:         "POST",
 		Path:           "/flag",
 		StatusCode:     200,
-		Source:         model.AWDTrafficSourceRuntimeProxy,
+		Source:         contestcontracts.AWDTrafficSourceRuntimeProxy,
 		CreatedAt:      trafficAt,
 	}).Error; err != nil {
 		t.Fatalf("create traffic event: %v", err)
@@ -456,63 +455,63 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 	challengeID := contestID*10 + 1
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
 	rows := []any{
-		&model.AWDTeamService{
+		&contestcontracts.AWDTeamService{
 			ID:             roundID*10 + 1,
 			RoundID:        roundID,
 			TeamID:         contestID*10 + 1,
 			ServiceID:      serviceID,
 			AWDChallengeID: challengeID,
-			ServiceStatus:  model.AWDServiceStatusUp,
+			ServiceStatus:  contestcontracts.AWDServiceStatusUp,
 			UpdatedAt:      now.Add(-10 * time.Minute),
 			CreatedAt:      now.Add(-11 * time.Minute),
 		},
-		&model.AWDTeamService{
+		&contestcontracts.AWDTeamService{
 			ID:             roundID*10 + 2,
 			RoundID:        roundID,
 			TeamID:         contestID*10 + 2,
 			ServiceID:      serviceID,
 			AWDChallengeID: challengeID,
-			ServiceStatus:  model.AWDServiceStatusDown,
+			ServiceStatus:  contestcontracts.AWDServiceStatusDown,
 			UpdatedAt:      now.Add(-9 * time.Minute),
 			CreatedAt:      now.Add(-10 * time.Minute),
 		},
-		&model.AWDTeamService{
+		&contestcontracts.AWDTeamService{
 			ID:             roundID*10 + 3,
 			RoundID:        roundID,
 			TeamID:         contestID*10 + 3,
 			ServiceID:      serviceID,
 			AWDChallengeID: challengeID,
-			ServiceStatus:  model.AWDServiceStatusCompromised,
+			ServiceStatus:  contestcontracts.AWDServiceStatusCompromised,
 			UpdatedAt:      now.Add(-8 * time.Minute),
 			CreatedAt:      now.Add(-9 * time.Minute),
 		},
-		&model.AWDAttackLog{
+		&contestcontracts.AWDAttackLog{
 			ID:             roundID*10 + 4,
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 1,
 			VictimTeamID:   contestID*10 + 2,
 			ServiceID:      serviceID,
 			AWDChallengeID: challengeID,
-			AttackType:     model.AWDAttackTypeFlagCapture,
-			Source:         model.AWDAttackSourceManual,
+			AttackType:     contestcontracts.AWDAttackTypeFlagCapture,
+			Source:         contestcontracts.AWDAttackSourceManual,
 			IsSuccess:      true,
 			ScoreGained:    10,
 			CreatedAt:      now.Add(-7 * time.Minute),
 		},
-		&model.AWDAttackLog{
+		&contestcontracts.AWDAttackLog{
 			ID:             roundID*10 + 5,
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 2,
 			VictimTeamID:   contestID*10 + 3,
 			ServiceID:      serviceID,
 			AWDChallengeID: challengeID,
-			AttackType:     model.AWDAttackTypeFlagCapture,
-			Source:         model.AWDAttackSourceManual,
+			AttackType:     contestcontracts.AWDAttackTypeFlagCapture,
+			Source:         contestcontracts.AWDAttackSourceManual,
 			IsSuccess:      true,
 			ScoreGained:    8,
 			CreatedAt:      now.Add(-6 * time.Minute),
 		},
-		&model.AWDTrafficEvent{
+		&contestcontracts.AWDTrafficEvent{
 			ID:             roundID*10 + 6,
 			ContestID:      contestID,
 			RoundID:        roundID,
@@ -523,10 +522,10 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			Method:         "GET",
 			Path:           "/health",
 			StatusCode:     200,
-			Source:         model.AWDTrafficSourceRuntimeProxy,
+			Source:         contestcontracts.AWDTrafficSourceRuntimeProxy,
 			CreatedAt:      now.Add(-5 * time.Minute),
 		},
-		&model.AWDTrafficEvent{
+		&contestcontracts.AWDTrafficEvent{
 			ID:             roundID*10 + 7,
 			ContestID:      contestID,
 			RoundID:        roundID,
@@ -537,7 +536,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			Method:         "POST",
 			Path:           "/exploit",
 			StatusCode:     500,
-			Source:         model.AWDTrafficSourceRuntimeProxy,
+			Source:         contestcontracts.AWDTrafficSourceRuntimeProxy,
 			CreatedAt:      now.Add(-4 * time.Minute),
 		},
 	}

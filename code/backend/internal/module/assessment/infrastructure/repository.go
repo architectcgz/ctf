@@ -345,7 +345,7 @@ func (r *Repository) fillStudentHandsOnStats(
 				"submitted_by_user_id = ? AND is_success = ? AND source = ? AND score_gained > 0",
 				userID,
 				true,
-				model.AWDAttackSourceSubmission,
+				contestcontracts.AWDAttackSourceSubmission,
 			).
 			Count(&awdSuccessCount).Error; err != nil {
 			return fmt.Errorf("count awd success events: %w", err)
@@ -549,7 +549,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND al.score_gained > 0
 				AND ac.status = ?
 			GROUP BY ac.category
-		`, userID, model.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
+		`, userID, contestcontracts.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
 			return fmt.Errorf("get awd success dimension facts: %w", err)
 		}
 		for _, row := range successRows {
@@ -583,7 +583,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND al.score_gained > 0
 				AND ac.status = ?
 			GROUP BY ac.category, ac.difficulty
-		`, userID, model.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
+		`, userID, contestcontracts.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
 			return fmt.Errorf("get awd solved difficulty facts: %w", err)
 		}
 		for _, row := range difficultyRows {

@@ -27,7 +27,7 @@ func setupAssessmentRepoTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&challengecontracts.AWDChallenge{},
-		&model.AWDAttackLog{},
+		&contestcontracts.AWDAttackLog{},
 	); err != nil {
 		t.Fatalf("migrate assessment repo tables: %v", err)
 	}
@@ -86,13 +86,13 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 		}
 	}
 
-	logs := []model.AWDAttackLog{
-		{ID: 1, RoundID: 81, AttackerTeamID: 91, VictimTeamID: 101, ServiceID: 111, AWDChallengeID: 701, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now},
-		{ID: 2, RoundID: 81, AttackerTeamID: 91, VictimTeamID: 102, ServiceID: 112, AWDChallengeID: 702, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(1 * time.Minute)},
-		{ID: 3, RoundID: 82, AttackerTeamID: 91, VictimTeamID: 103, ServiceID: 113, AWDChallengeID: 703, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(2 * time.Minute)},
-		{ID: 4, RoundID: 82, AttackerTeamID: 91, VictimTeamID: 104, ServiceID: 114, AWDChallengeID: 704, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(3 * time.Minute)},
-		{ID: 5, RoundID: 83, AttackerTeamID: 91, VictimTeamID: 105, ServiceID: 115, AWDChallengeID: 704, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 0, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(4 * time.Minute)},
-		{ID: 6, RoundID: 83, AttackerTeamID: 91, VictimTeamID: 106, ServiceID: 116, AWDChallengeID: 704, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 100, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(5 * time.Minute)},
+	logs := []contestcontracts.AWDAttackLog{
+		{ID: 1, RoundID: 81, AttackerTeamID: 91, VictimTeamID: 101, ServiceID: 111, AWDChallengeID: 701, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now},
+		{ID: 2, RoundID: 81, AttackerTeamID: 91, VictimTeamID: 102, ServiceID: 112, AWDChallengeID: 702, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(1 * time.Minute)},
+		{ID: 3, RoundID: 82, AttackerTeamID: 91, VictimTeamID: 103, ServiceID: 113, AWDChallengeID: 703, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(2 * time.Minute)},
+		{ID: 4, RoundID: 82, AttackerTeamID: 91, VictimTeamID: 104, ServiceID: 114, AWDChallengeID: 704, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(3 * time.Minute)},
+		{ID: 5, RoundID: 83, AttackerTeamID: 91, VictimTeamID: 105, ServiceID: 115, AWDChallengeID: 704, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 0, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(4 * time.Minute)},
+		{ID: 6, RoundID: 83, AttackerTeamID: 91, VictimTeamID: 106, ServiceID: 116, AWDChallengeID: 704, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 100, SubmittedByUserID: ptrAssessmentRepoInt64(7), CreatedAt: now.Add(5 * time.Minute)},
 	}
 	for _, log := range logs {
 		if err := db.Create(&log).Error; err != nil {

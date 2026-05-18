@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
@@ -54,7 +55,7 @@ type runtimeService interface {
 
 type runtimeProxyTrafficRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
-	RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error
 }
 
 type Handler struct {
@@ -631,7 +632,7 @@ func (h *Handler) recordProxyAudit(
 			claims.AWDVictimTeamID != nil &&
 			claims.AWDServiceID != nil &&
 			claims.AWDChallengeID != nil {
-			_ = h.proxyTrafficRecorder.RecordAWDProxyTrafficEvent(c.Request.Context(), model.AWDProxyTrafficEventInput{
+			_ = h.proxyTrafficRecorder.RecordAWDProxyTrafficEvent(c.Request.Context(), contestcontracts.AWDProxyTrafficEventInput{
 				ContestID:      *claims.ContestID,
 				AttackerTeamID: *claims.AWDAttackerTeamID,
 				VictimTeamID:   *claims.AWDVictimTeamID,

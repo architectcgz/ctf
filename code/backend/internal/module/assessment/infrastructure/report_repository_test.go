@@ -33,11 +33,11 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 		&model.Challenge{},
 		&challengecontracts.AWDChallenge{},
 		&contestcontracts.Submission{},
-		&model.AWDRound{},
-		&model.AWDAttackLog{},
-		&model.AWDTrafficEvent{},
-		&model.Team{},
-		&model.TeamMember{},
+		&contestcontracts.AWDRound{},
+		&contestcontracts.AWDAttackLog{},
+		&contestcontracts.AWDTrafficEvent{},
+		&contestcontracts.Team{},
+		&contestcontracts.TeamMember{},
 		&model.Instance{},
 		&opsentity.AuditLog{},
 	); err != nil {
@@ -97,11 +97,11 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 		t.Fatalf("seed submissions: %v", err)
 	}
 
-	round := model.AWDRound{
+	round := contestcontracts.AWDRound{
 		ID:          11,
 		ContestID:   88,
 		RoundNumber: 1,
-		Status:      model.AWDRoundStatusFinished,
+		Status:      contestcontracts.AWDRoundStatusFinished,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -110,15 +110,15 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 	}
 
 	aliceID := int64(1)
-	logs := []model.AWDAttackLog{
+	logs := []contestcontracts.AWDAttackLog{
 		{
 			ID:                1,
 			RoundID:           round.ID,
 			AttackerTeamID:    301,
 			VictimTeamID:      401,
 			AWDChallengeID:    102,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
 			IsSuccess:         true,
 			ScoreGained:       200,
@@ -130,8 +130,8 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 			AttackerTeamID:    301,
 			VictimTeamID:      402,
 			AWDChallengeID:    101,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
 			IsSuccess:         true,
 			ScoreGained:       0,
@@ -143,8 +143,8 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 			AttackerTeamID:    301,
 			VictimTeamID:      403,
 			AWDChallengeID:    102,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
 			IsSuccess:         false,
 			ScoreGained:       0,
@@ -208,21 +208,21 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 		t.Fatalf("seed submission: %v", err)
 	}
 
-	round := model.AWDRound{ID: 21, ContestID: 99, RoundNumber: 1, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	round := contestcontracts.AWDRound{ID: 21, ContestID: 99, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	if err := db.Create(&round).Error; err != nil {
 		t.Fatalf("seed round: %v", err)
 	}
 
 	userID := user.ID
-	logs := []model.AWDAttackLog{
+	logs := []contestcontracts.AWDAttackLog{
 		{
 			ID:                21,
 			RoundID:           round.ID,
 			AttackerTeamID:    1,
 			VictimTeamID:      2,
 			AWDChallengeID:    201,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         true,
 			ScoreGained:       100,
@@ -234,8 +234,8 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 			AttackerTeamID:    1,
 			VictimTeamID:      3,
 			AWDChallengeID:    202,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         true,
 			ScoreGained:       150,
@@ -302,20 +302,20 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 		t.Fatalf("seed submissions: %v", err)
 	}
 
-	round := model.AWDRound{ID: 41, ContestID: 100, RoundNumber: 1, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	round := contestcontracts.AWDRound{ID: 41, ContestID: 100, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	if err := db.Create(&round).Error; err != nil {
 		t.Fatalf("seed round: %v", err)
 	}
 
 	aliceID := int64(1)
-	log := model.AWDAttackLog{
+	log := contestcontracts.AWDAttackLog{
 		ID:                41,
 		RoundID:           round.ID,
 		AttackerTeamID:    11,
 		VictimTeamID:      22,
 		AWDChallengeID:    302,
-		AttackType:        model.AWDAttackTypeFlagCapture,
-		Source:            model.AWDAttackSourceSubmission,
+		AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+		Source:            contestcontracts.AWDAttackSourceSubmission,
 		SubmittedByUserID: &aliceID,
 		IsSuccess:         true,
 		ScoreGained:       200,
@@ -358,8 +358,8 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
 	challenge := challengecontracts.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
-	round := model.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
-	teams := []model.Team{
+	round := contestcontracts.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	teams := []contestcontracts.Team{
 		{ID: 501, ContestID: 200, Name: "red-team", CaptainID: user.ID, InviteCode: "invite-red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
 		{ID: 502, ContestID: 200, Name: "blue-team", CaptainID: user.ID, InviteCode: "invite-blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
 	}
@@ -377,15 +377,15 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	}
 
 	userID := user.ID
-	logs := []model.AWDAttackLog{
+	logs := []contestcontracts.AWDAttackLog{
 		{
 			ID:                51,
 			RoundID:           round.ID,
 			AttackerTeamID:    900,
 			VictimTeamID:      501,
 			AWDChallengeID:    challenge.ID,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         false,
 			ScoreGained:       0,
@@ -397,8 +397,8 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 			AttackerTeamID:    900,
 			VictimTeamID:      502,
 			AWDChallengeID:    challenge.ID,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         true,
 			ScoreGained:       120,
@@ -446,8 +446,8 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
 	challenge := challengecontracts.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
-	round := model.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
-	teams := []model.Team{
+	round := contestcontracts.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	teams := []contestcontracts.Team{
 		{ID: 601, ContestID: 300, Name: "green-team", CaptainID: user.ID, InviteCode: "invite-green", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
 		{ID: 602, ContestID: 300, Name: "gold-team", CaptainID: user.ID, InviteCode: "invite-gold", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
 	}
@@ -465,15 +465,15 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	}
 
 	userID := user.ID
-	logs := []model.AWDAttackLog{
+	logs := []contestcontracts.AWDAttackLog{
 		{
 			ID:                61,
 			RoundID:           round.ID,
 			AttackerTeamID:    910,
 			VictimTeamID:      601,
 			AWDChallengeID:    challenge.ID,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         false,
 			ScoreGained:       0,
@@ -485,8 +485,8 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 			AttackerTeamID:    910,
 			VictimTeamID:      602,
 			AWDChallengeID:    challenge.ID,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
 			IsSuccess:         true,
 			ScoreGained:       150,
@@ -604,7 +604,7 @@ func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
 		t.Fatalf("seed users: %v", err)
 	}
 
-	round := model.AWDRound{ID: 81, ContestID: 300, RoundNumber: 1, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
+	round := contestcontracts.AWDRound{ID: 81, ContestID: 300, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	if err := db.Create(&round).Error; err != nil {
 		t.Fatalf("seed round: %v", err)
 	}
@@ -620,11 +620,11 @@ func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
 	aliceID := int64(1)
 	bobID := int64(2)
 	carolID := int64(3)
-	logs := []model.AWDAttackLog{
-		{ID: 811, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 2, AWDChallengeID: 801, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: true, ScoreGained: 100, CreatedAt: now},
-		{ID: 812, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 3, AWDChallengeID: 801, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: false, ScoreGained: 0, CreatedAt: now},
-		{ID: 813, RoundID: round.ID, AttackerTeamID: 2, VictimTeamID: 3, AWDChallengeID: 802, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &bobID, IsSuccess: true, ScoreGained: 200, CreatedAt: now},
-		{ID: 814, RoundID: round.ID, AttackerTeamID: 3, VictimTeamID: 1, AWDChallengeID: 802, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, SubmittedByUserID: &carolID, IsSuccess: true, ScoreGained: 300, CreatedAt: now},
+	logs := []contestcontracts.AWDAttackLog{
+		{ID: 811, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 2, AWDChallengeID: 801, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: true, ScoreGained: 100, CreatedAt: now},
+		{ID: 812, RoundID: round.ID, AttackerTeamID: 1, VictimTeamID: 3, AWDChallengeID: 801, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByUserID: &aliceID, IsSuccess: false, ScoreGained: 0, CreatedAt: now},
+		{ID: 813, RoundID: round.ID, AttackerTeamID: 2, VictimTeamID: 3, AWDChallengeID: 802, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByUserID: &bobID, IsSuccess: true, ScoreGained: 200, CreatedAt: now},
+		{ID: 814, RoundID: round.ID, AttackerTeamID: 3, VictimTeamID: 1, AWDChallengeID: 802, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByUserID: &carolID, IsSuccess: true, ScoreGained: 300, CreatedAt: now},
 	}
 	if err := db.Create(&logs).Error; err != nil {
 		t.Fatalf("seed awd logs: %v", err)

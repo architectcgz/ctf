@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -108,7 +109,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 
 func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *instancecontracts.InstanceInfo {
 	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
-	if inst.ContestMode == model.ContestModeAWD {
+	if inst.ContestMode == contestcontracts.ContestModeAWD {
 		accessURL = ""
 	}
 	return &instancecontracts.InstanceInfo{

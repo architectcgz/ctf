@@ -25,6 +25,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classwindow"
@@ -35,7 +36,7 @@ import (
 type testReportRepository struct {
 	db                *gorm.DB
 	users             map[int64]*assessmentdomain.ReportUser
-	contests          map[int64]*model.Contest
+	contests          map[int64]*contestcontracts.Contest
 	personalStats     *assessmentdomain.PersonalReportStats
 	totalChallenges   int64
 	classSummary      *queryports.ClassSummary
@@ -99,7 +100,7 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 	return &user, nil
 }
 
-func (r *testReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (r *testReportRepository) FindContestByID(ctx context.Context, contestID int64) (*contestcontracts.Contest, error) {
 	if r != nil && r.contests != nil {
 		contest, ok := r.contests[contestID]
 		if !ok {
@@ -283,8 +284,8 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 		Contest: assessmentqry.TeacherAWDReviewContestMetaResp{
 			ID:         contestID,
 			Title:      "awd-review",
-			Mode:       model.ContestModeAWD,
-			Status:     model.ContestStatusEnded,
+			Mode:       contestcontracts.ContestModeAWD,
+			Status:     contestcontracts.ContestStatusEnded,
 			RoundCount: 1,
 			TeamCount:  1,
 		},
@@ -299,7 +300,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 			ID:           1,
 			ContestID:    contestID,
 			RoundNumber:  selectedRoundNumber,
-			Status:       model.AWDRoundStatusFinished,
+			Status:       contestcontracts.AWDRoundStatusFinished,
 			ServiceCount: 1,
 			AttackCount:  1,
 			TrafficCount: 1,
@@ -309,7 +310,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				ID:           1,
 				ContestID:    contestID,
 				RoundNumber:  selectedRoundNumber,
-				Status:       model.AWDRoundStatusFinished,
+				Status:       contestcontracts.AWDRoundStatusFinished,
 				ServiceCount: 1,
 				AttackCount:  1,
 				TrafficCount: 1,
@@ -328,7 +329,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				TeamName:          "blue",
 				AWDChallengeID:    1,
 				AWDChallengeTitle: "web",
-				ServiceStatus:     model.AWDServiceStatusUp,
+				ServiceStatus:     contestcontracts.AWDServiceStatusUp,
 			}},
 			Attacks: []assessmentqry.TeacherAWDReviewAttackResp{{
 				ID:                1,
@@ -339,8 +340,8 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				VictimTeamName:    "red",
 				AWDChallengeID:    1,
 				AWDChallengeTitle: "web",
-				AttackType:        model.AWDAttackTypeFlagCapture,
-				Source:            model.AWDAttackSourceManual,
+				AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+				Source:            contestcontracts.AWDAttackSourceManual,
 			}},
 			Traffic: []assessmentqry.TeacherAWDReviewTrafficResp{{
 				ID:                1,
@@ -355,7 +356,7 @@ func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requester
 				Method:            "GET",
 				Path:              "/health",
 				StatusCode:        200,
-				Source:            model.AWDAttackSourceSubmission,
+				Source:            contestcontracts.AWDAttackSourceSubmission,
 			}},
 		},
 	}, nil
@@ -1204,17 +1205,17 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)
 	}
-	contest := &model.Contest{
+	contest := &contestcontracts.Contest{
 		ID:        21,
 		Title:     "awd-ended",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusEnded,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusEnded,
 		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
 		EndTime:   time.Date(2026, 4, 12, 11, 0, 0, 0, time.UTC),
 	}
 	repo := &testReportRepository{
 		db: db,
-		contests: map[int64]*model.Contest{
+		contests: map[int64]*contestcontracts.Contest{
 			contest.ID: contest,
 		},
 	}
@@ -1375,17 +1376,17 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)
 	}
-	contest := &model.Contest{
+	contest := &contestcontracts.Contest{
 		ID:        22,
 		Title:     "awd-running",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
 		EndTime:   time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC),
 	}
 	repo := &testReportRepository{
 		db: db,
-		contests: map[int64]*model.Contest{
+		contests: map[int64]*contestcontracts.Contest{
 			contest.ID: contest,
 		},
 	}

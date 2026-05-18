@@ -61,12 +61,12 @@ type fullRouterTestEnv struct {
 	image        *model.Image
 	challenge    *model.Challenge
 	template     *model.EnvironmentTemplate
-	contest      *model.Contest
-	awdContest   *model.Contest
+	contest      *contestcontracts.Contest
+	awdContest   *contestcontracts.Contest
 	registration *contestcontracts.ContestRegistration
 	announcement *contestentity.ContestAnnouncement
-	team         *model.Team
-	awdRound     *model.AWDRound
+	team         *contestcontracts.Team
+	awdRound     *contestcontracts.AWDRound
 	instance     *model.Instance
 	notification *opsentity.Notification
 	report       *assessmententity.Report
@@ -102,18 +102,18 @@ var fullRouterTestSchemaModels = []any{
 	&opsentity.NotificationBatch{},
 	&opsentity.Notification{},
 	&assessmententity.SkillProfile{},
-	&model.Contest{},
+	&contestcontracts.Contest{},
 	&contestentity.ContestStatusTransition{},
 	&contestcontracts.ContestChallenge{},
-	&model.ContestAWDService{},
+	&contestcontracts.ContestAWDService{},
 	&contestcontracts.ContestRegistration{},
 	&contestentity.ContestAnnouncement{},
-	&model.Team{},
-	&model.TeamMember{},
-	&model.AWDRound{},
-	&model.AWDTeamService{},
-	&model.AWDAttackLog{},
-	&model.AWDTrafficEvent{},
+	&contestcontracts.Team{},
+	&contestcontracts.TeamMember{},
+	&contestcontracts.AWDRound{},
+	&contestcontracts.AWDTeamService{},
+	&contestcontracts.AWDAttackLog{},
+	&contestcontracts.AWDTrafficEvent{},
 	&model.AWDServiceOperation{},
 	&model.AWDScopeControl{},
 	&assessmententity.Report{},
@@ -237,7 +237,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 	env := newFullRouterTestEnv(t)
 	now := time.Now().UTC()
 
-	awdTeam := &model.Team{
+	awdTeam := &contestcontracts.Team{
 		ContestID:  env.awdContest.ID,
 		Name:       "AWD Control Team",
 		CaptainID:  env.student.ID,
@@ -249,7 +249,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 	if err := env.db.Create(awdTeam).Error; err != nil {
 		t.Fatalf("create awd team: %v", err)
 	}
-	if err := env.db.Create(&model.TeamMember{
+	if err := env.db.Create(&contestcontracts.TeamMember{
 		ContestID: env.awdContest.ID,
 		TeamID:    awdTeam.ID,
 		UserID:    env.student.ID,
@@ -259,7 +259,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 		t.Fatalf("create awd team member: %v", err)
 	}
 
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestcontracts.EncodeContestAWDServiceSnapshot(contestcontracts.ContestAWDServiceSnapshot{
 		Name:       "AWD Web",
 		Category:   model.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
@@ -275,7 +275,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 	if err != nil {
 		t.Fatalf("encode awd service snapshot: %v", err)
 	}
-	awdService := &model.ContestAWDService{
+	awdService := &contestcontracts.ContestAWDService{
 		ContestID:       env.awdContest.ID,
 		AWDChallengeID:  env.challenge.ID,
 		DisplayName:     "AWD Web",
@@ -1293,25 +1293,25 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}
 
 	now := time.Now()
-	env.contest = &model.Contest{
+	env.contest = &contestcontracts.Contest{
 		Title:       "Matrix Jeopardy",
 		Description: "contest",
-		Mode:        model.ContestModeJeopardy,
+		Mode:        contestcontracts.ContestModeJeopardy,
 		StartTime:   now.Add(-time.Hour),
 		EndTime:     now.Add(time.Hour),
-		Status:      model.ContestStatusRunning,
+		Status:      contestcontracts.ContestStatusRunning,
 	}
 	if err := env.db.Create(env.contest).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
 
-	env.awdContest = &model.Contest{
+	env.awdContest = &contestcontracts.Contest{
 		Title:       "Matrix AWD",
 		Description: "awd contest",
-		Mode:        model.ContestModeAWD,
+		Mode:        contestcontracts.ContestModeAWD,
 		StartTime:   now.Add(-time.Hour),
 		EndTime:     now.Add(time.Hour),
-		Status:      model.ContestStatusRunning,
+		Status:      contestcontracts.ContestStatusRunning,
 	}
 	if err := env.db.Create(env.awdContest).Error; err != nil {
 		t.Fatalf("create awd contest: %v", err)
@@ -1365,7 +1365,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create announcement: %v", err)
 	}
 
-	env.team = &model.Team{
+	env.team = &contestcontracts.Team{
 		ContestID:  env.contest.ID,
 		Name:       "Matrix Team",
 		CaptainID:  env.student.ID,
@@ -1375,7 +1375,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err := env.db.Create(env.team).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := env.db.Create(&model.TeamMember{
+	if err := env.db.Create(&contestcontracts.TeamMember{
 		ContestID: env.contest.ID,
 		TeamID:    env.team.ID,
 		UserID:    env.student.ID,
@@ -1388,10 +1388,10 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("update registration team: %v", err)
 	}
 
-	env.awdRound = &model.AWDRound{
+	env.awdRound = &contestcontracts.AWDRound{
 		ContestID:    env.awdContest.ID,
 		RoundNumber:  1,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestcontracts.AWDRoundStatusRunning,
 		StartedAt:    &now,
 		AttackScore:  50,
 		DefenseScore: 50,
@@ -1399,22 +1399,22 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err := env.db.Create(env.awdRound).Error; err != nil {
 		t.Fatalf("create awd round: %v", err)
 	}
-	if err := env.db.Create(&model.AWDTeamService{
+	if err := env.db.Create(&contestcontracts.AWDTeamService{
 		RoundID:        env.awdRound.ID,
 		TeamID:         env.team.ID,
 		AWDChallengeID: env.challenge.ID,
-		ServiceStatus:  model.AWDServiceStatusUp,
+		ServiceStatus:  contestcontracts.AWDServiceStatusUp,
 		CheckResult:    `{"status":"ok"}`,
 	}).Error; err != nil {
 		t.Fatalf("create awd team service: %v", err)
 	}
-	if err := env.db.Create(&model.AWDAttackLog{
+	if err := env.db.Create(&contestcontracts.AWDAttackLog{
 		RoundID:        env.awdRound.ID,
 		AttackerTeamID: env.team.ID,
 		VictimTeamID:   env.team.ID,
 		AWDChallengeID: env.challenge.ID,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceManual,
+		AttackType:     contestcontracts.AWDAttackTypeFlagCapture,
+		Source:         contestcontracts.AWDAttackSourceManual,
 		IsSuccess:      false,
 	}).Error; err != nil {
 		t.Fatalf("create awd attack log: %v", err)

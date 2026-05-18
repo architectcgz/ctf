@@ -95,7 +95,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceTeam(t, db, &model.Team{
+	seedInstanceServiceTeam(t, db, &contestcontracts.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Runtime Team",
@@ -105,7 +105,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+	seedInstanceServiceTeamMember(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    2,
@@ -157,11 +157,11 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -169,7 +169,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestcontracts.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  202,
@@ -185,7 +185,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	}).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
-	seedInstanceServiceTeam(t, db, &model.Team{
+	seedInstanceServiceTeam(t, db, &contestcontracts.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Runtime AWD Team",
@@ -195,7 +195,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+	seedInstanceServiceTeamMember(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    2,
@@ -238,7 +238,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	if items[0].AccessURL != "" {
 		t.Fatalf("expected awd user instance list to hide raw access url, got %q", items[0].AccessURL)
 	}
-	if items[0].ContestMode != model.ContestModeAWD {
+	if items[0].ContestMode != contestcontracts.ContestModeAWD {
 		t.Fatalf("expected awd contest mode in user instance list, got %+v", items[0])
 	}
 }
@@ -261,11 +261,11 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -273,7 +273,7 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	seedInstanceServiceTeam(t, db, &model.Team{
+	seedInstanceServiceTeam(t, db, &contestcontracts.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Runtime AWD Team",
@@ -283,7 +283,7 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+	seedInstanceServiceTeamMember(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    2,
@@ -355,11 +355,11 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 				CreatedAt:  now,
 				UpdatedAt:  now,
 			})
-			if err := db.Create(&model.Contest{
+			if err := db.Create(&contestcontracts.Contest{
 				ID:        contestID,
 				Title:     "AWD Contest",
-				Mode:      model.ContestModeAWD,
-				Status:    model.ContestStatusRunning,
+				Mode:      contestcontracts.ContestModeAWD,
+				Status:    contestcontracts.ContestStatusRunning,
 				StartTime: now.Add(-time.Minute),
 				EndTime:   now.Add(time.Hour),
 				CreatedAt: now,
@@ -367,7 +367,7 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 			}).Error; err != nil {
 				t.Fatalf("create contest: %v", err)
 			}
-			if err := db.Create(&model.ContestAWDService{
+			if err := db.Create(&contestcontracts.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  223,
@@ -379,7 +379,7 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 			}).Error; err != nil {
 				t.Fatalf("create contest awd service: %v", err)
 			}
-			seedInstanceServiceTeam(t, db, &model.Team{
+			seedInstanceServiceTeam(t, db, &contestcontracts.Team{
 				ID:         teamID,
 				ContestID:  contestID,
 				Name:       "Runtime AWD Team",
@@ -389,7 +389,7 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 				CreatedAt:  now,
 				UpdatedAt:  now,
 			})
-			seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+			seedInstanceServiceTeamMember(t, db, &contestcontracts.TeamMember{
 				ContestID: contestID,
 				TeamID:    teamID,
 				UserID:    2,
@@ -612,11 +612,11 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -624,7 +624,7 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestcontracts.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  225,
@@ -636,7 +636,7 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
-	seedInstanceServiceTeam(t, db, &model.Team{
+	seedInstanceServiceTeam(t, db, &contestcontracts.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Runtime AWD Team",
@@ -646,7 +646,7 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+	seedInstanceServiceTeamMember(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    2,
@@ -747,11 +747,11 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 211, Title: "Legacy Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, FlagType: model.FlagTypeStatic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -759,7 +759,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestcontracts.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  212,
@@ -813,11 +813,11 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 222, Title: "Legacy AWD Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, FlagType: model.FlagTypeDynamic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -899,10 +899,10 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
+	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Contest{}, &model.ContestAWDService{}); err != nil {
+	if err := db.AutoMigrate(&contestcontracts.Contest{}, &contestcontracts.ContestAWDService{}); err != nil {
 		t.Fatalf("migrate awd tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.AWDScopeControl{}); err != nil {
@@ -928,14 +928,14 @@ func seedInstanceServiceChallenge(t *testing.T, db *gorm.DB, challenge *model.Ch
 	}
 }
 
-func seedInstanceServiceTeam(t *testing.T, db *gorm.DB, team *model.Team) {
+func seedInstanceServiceTeam(t *testing.T, db *gorm.DB, team *contestcontracts.Team) {
 	t.Helper()
 	if err := db.Create(team).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
 }
 
-func seedInstanceServiceTeamMember(t *testing.T, db *gorm.DB, member *model.TeamMember) {
+func seedInstanceServiceTeamMember(t *testing.T, db *gorm.DB, member *contestcontracts.TeamMember) {
 	t.Helper()
 	if err := db.Create(member).Error; err != nil {
 		t.Fatalf("create team member: %v", err)

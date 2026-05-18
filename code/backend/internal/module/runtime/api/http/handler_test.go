@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -231,7 +232,7 @@ func (r *failingTrafficRecorder) RecordRuntimeProxyTrafficEvent(context.Context,
 	return errors.New("persist failed")
 }
 
-func (r *failingTrafficRecorder) RecordAWDProxyTrafficEvent(context.Context, model.AWDProxyTrafficEventInput) error {
+func (r *failingTrafficRecorder) RecordAWDProxyTrafficEvent(context.Context, contestcontracts.AWDProxyTrafficEventInput) error {
 	r.calls++
 	return errors.New("persist failed")
 }

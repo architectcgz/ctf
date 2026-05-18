@@ -14,6 +14,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -98,8 +99,8 @@ func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*ass
 	return &user, nil
 }
 
-func (r *ReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
-	var contest model.Contest
+func (r *ReportRepository) FindContestByID(ctx context.Context, contestID int64) (*contestcontracts.Contest, error) {
+	var contest contestcontracts.Contest
 	if err := r.db.WithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, assessmentports.ErrAssessmentContestNotFound
@@ -154,7 +155,7 @@ func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (
 					AND aal.source = '%s'
 			), 0) AS total_attempts,
 			COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 1) AS rank
-	`, reportSolvedChallengesCTE(), model.AWDAttackSourceSubmission)
+	`, reportSolvedChallengesCTE(), contestcontracts.AWDAttackSourceSubmission)
 	err := r.db.WithContext(ctx).Raw(query, userID, userID, userID, userID).Scan(&stats).Error
 	if err != nil {
 		return nil, err
@@ -330,7 +331,7 @@ func (r *ReportRepository) GetClassContestMigrationSummary(ctx context.Context, 
 		WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
 			AND aal.submitted_by_user_id IS NOT NULL
 			AND aal.source = ?
-	`, className, model.RoleStudent, model.AWDAttackSourceSubmission).Scan(&row).Error; err != nil {
+	`, className, model.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&row).Error; err != nil {
 		return nil, err
 	}
 
@@ -354,7 +355,7 @@ func (r *ReportRepository) GetClassContestMigrationSummary(ctx context.Context, 
 			AND aal.score_gained > 0
 			AND ac.deleted_at IS NULL
 		ORDER BY ac.category
-	`, className, model.RoleStudent, model.AWDAttackSourceSubmission).Scan(&dimensionRows).Error; err != nil {
+	`, className, model.RoleStudent, contestcontracts.AWDAttackSourceSubmission).Scan(&dimensionRows).Error; err != nil {
 		return nil, err
 	}
 
@@ -609,7 +610,7 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 		LEFT JOIN challenges c ON c.id = events.challenge_id
 		ORDER BY events.timestamp DESC
 		LIMIT ? OFFSET ?
-	`, reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained"), model.AWDAttackSourceSubmission), userID, userID, userID, userID, limit, offset).Scan(&rows).Error
+	`, reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained"), contestcontracts.AWDAttackSourceSubmission), userID, userID, userID, userID, limit, offset).Scan(&rows).Error
 	return rows, err
 }
 

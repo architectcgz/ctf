@@ -9,9 +9,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 type teacherAWDReviewContestCardRow struct {
@@ -104,8 +104,8 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Co
 
 func (r *TeacherAWDReviewRepository) teacherAWDReviewContestBaseQuery(ctx context.Context, filter assessmentports.TeacherAWDReviewContestFilter) *gorm.DB {
 	query := r.dbWithContext(ctx).
-		Model(&model.Contest{}).
-		Where("mode = ? AND deleted_at IS NULL", model.ContestModeAWD)
+		Model(&contestcontracts.Contest{}).
+		Where("mode = ? AND deleted_at IS NULL", contestcontracts.ContestModeAWD)
 
 	status := strings.TrimSpace(filter.Status)
 	if status != "" {
@@ -136,10 +136,10 @@ func (r *TeacherAWDReviewRepository) summarizeTeacherAWDReviewContests(ctx conte
 
 	summary := assessmentports.TeacherAWDReviewContestSummary{}
 	for _, row := range rows {
-		if row.Status == model.ContestStatusRunning {
+		if row.Status == contestcontracts.ContestStatusRunning {
 			summary.RunningCount = row.Count
 		}
-		if row.Status == model.ContestStatusEnded {
+		if row.Status == contestcontracts.ContestStatusEnded {
 			summary.ExportReadyCount = row.Count
 		}
 	}
@@ -188,7 +188,7 @@ func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Con
 			CASE WHEN c.status = ? THEN 1 ELSE 0 END AS export_ready
 		FROM contests c
 		WHERE c.id = ? AND c.mode = ? AND c.deleted_at IS NULL
-	`, model.AWDRoundStatusRunning, model.ContestStatusEnded, contestID, model.ContestModeAWD).Scan(&row).Error
+	`, contestcontracts.AWDRoundStatusRunning, contestcontracts.ContestStatusEnded, contestID, contestcontracts.ContestModeAWD).Scan(&row).Error
 	if err != nil {
 		return nil, fmt.Errorf("find teacher awd review contest %d: %w", contestID, err)
 	}
@@ -214,7 +214,7 @@ func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Con
 
 func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRounds(ctx context.Context, contestID int64) ([]assessmentdomain.TeacherAWDReviewRoundSummary, error) {
 	rows := make([]assessmentdomain.TeacherAWDReviewRoundSummary, 0)
-	err := r.dbWithContext(ctx).Model(&model.AWDRound{}).
+	err := r.dbWithContext(ctx).Model(&contestcontracts.AWDRound{}).
 		Select("id, contest_id, round_number, status, started_at, ended_at, attack_score, defense_score").
 		Where("contest_id = ?", contestID).
 		Order("round_number ASC").
@@ -367,7 +367,7 @@ func (r *TeacherAWDReviewRepository) findLatestTrafficAt(ctx context.Context, co
 	var row struct {
 		CreatedAt time.Time
 	}
-	err := r.dbWithContext(ctx).Model(&model.AWDTrafficEvent{}).
+	err := r.dbWithContext(ctx).Model(&contestcontracts.AWDTrafficEvent{}).
 		Select("created_at").
 		Where("contest_id = ?", contestID).
 		Order("created_at DESC").
@@ -386,7 +386,7 @@ func (r *TeacherAWDReviewRepository) findLatestAttackAt(ctx context.Context, con
 	var row struct {
 		CreatedAt time.Time
 	}
-	err := r.dbWithContext(ctx).Model(&model.AWDAttackLog{}).
+	err := r.dbWithContext(ctx).Model(&contestcontracts.AWDAttackLog{}).
 		Select("awd_attack_logs.created_at").
 		Joins("JOIN awd_rounds ON awd_rounds.id = awd_attack_logs.round_id").
 		Where("awd_rounds.contest_id = ?", contestID).

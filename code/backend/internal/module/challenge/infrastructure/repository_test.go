@@ -6,6 +6,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"reflect"
 	"testing"
 	"time"
@@ -79,17 +80,17 @@ func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 		t.Fatalf("create awd challenge: %v", err)
 	}
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestcontracts.Contest{
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
 	}
 	if err := db.Create(contest).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestcontracts.ContestAWDService{
 		ContestID:      contest.ID,
 		AWDChallengeID: awdChallenge.ID,
 		DisplayName:    "AWD Web",

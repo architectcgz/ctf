@@ -21,8 +21,8 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
@@ -59,7 +59,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 		&challengecontracts.AWDChallenge{},
 		&assessmententity.SkillProfile{},
 		&contestcontracts.Submission{},
-		&model.AWDAttackLog{},
+		&contestcontracts.AWDAttackLog{},
 		&model.Tag{},
 		&model.ChallengeTag{},
 	); err != nil {
@@ -532,11 +532,11 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 		}
 	}
 
-	attackLogs := []model.AWDAttackLog{
-		{ID: 1, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6101, ServiceID: 7101, AWDChallengeID: 3101, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now},
-		{ID: 2, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6102, ServiceID: 7102, AWDChallengeID: 3102, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(1 * time.Minute)},
-		{ID: 3, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6103, ServiceID: 7103, AWDChallengeID: 3103, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(2 * time.Minute)},
-		{ID: 4, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6104, ServiceID: 7104, AWDChallengeID: 3104, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(3 * time.Minute)},
+	attackLogs := []contestcontracts.AWDAttackLog{
+		{ID: 1, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6101, ServiceID: 7101, AWDChallengeID: 3101, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now},
+		{ID: 2, RoundID: 4101, AttackerTeamID: 5101, VictimTeamID: 6102, ServiceID: 7102, AWDChallengeID: 3102, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(1 * time.Minute)},
+		{ID: 3, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6103, ServiceID: 7103, AWDChallengeID: 3103, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(2 * time.Minute)},
+		{ID: 4, RoundID: 4102, AttackerTeamID: 5101, VictimTeamID: 6104, ServiceID: 7104, AWDChallengeID: 3104, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrRecommendationInt64(31), CreatedAt: now.Add(3 * time.Minute)},
 	}
 	for _, log := range attackLogs {
 		if err := db.Create(&log).Error; err != nil {

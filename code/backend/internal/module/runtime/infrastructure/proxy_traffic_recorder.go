@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 func NewProxyTrafficEventRecorder(db *gorm.DB) *Repository {
@@ -45,7 +45,7 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 		return nil
 	}
 
-	return r.dbWithContext(ctx).Create(&model.AWDTrafficEvent{
+	return r.dbWithContext(ctx).Create(&contestcontracts.AWDTrafficEvent{
 		ContestID:      *instanceScope.ContestID,
 		RoundID:        round.ID,
 		AttackerTeamID: attackerTeam.ID,
@@ -55,11 +55,11 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 		Method:         trimProxyTrafficField(method, 16),
 		Path:           trimProxyTrafficField(requestPath, 1024),
 		StatusCode:     statusCode,
-		Source:         model.AWDTrafficSourceRuntimeProxy,
+		Source:         contestcontracts.AWDTrafficSourceRuntimeProxy,
 	}).Error
 }
 
-func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error {
+func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error {
 	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.AWDChallengeID <= 0 {
 		return nil
 	}
@@ -72,7 +72,7 @@ func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model
 		return err
 	}
 
-	return r.dbWithContext(ctx).Create(&model.AWDTrafficEvent{
+	return r.dbWithContext(ctx).Create(&contestcontracts.AWDTrafficEvent{
 		ContestID:      event.ContestID,
 		RoundID:        round.ID,
 		AttackerTeamID: event.AttackerTeamID,
@@ -82,7 +82,7 @@ func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model
 		Method:         trimProxyTrafficField(event.Method, 16),
 		Path:           trimProxyTrafficField(event.Path, 1024),
 		StatusCode:     event.StatusCode,
-		Source:         model.AWDTrafficSourceRuntimeProxy,
+		Source:         contestcontracts.AWDTrafficSourceRuntimeProxy,
 	}).Error
 }
 
@@ -103,10 +103,10 @@ func (r *Repository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, i
 	return &row, nil
 }
 
-func (r *Repository) findRunningAWDRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
-	var round model.AWDRound
+func (r *Repository) findRunningAWDRound(ctx context.Context, contestID int64) (*contestcontracts.AWDRound, error) {
+	var round contestcontracts.AWDRound
 	if err := r.dbWithContext(ctx).
-		Where("contest_id = ? AND status = ?", contestID, model.AWDRoundStatusRunning).
+		Where("contest_id = ? AND status = ?", contestID, contestcontracts.AWDRoundStatusRunning).
 		Order("round_number DESC, id DESC").
 		First(&round).Error; err != nil {
 		return nil, err
@@ -114,8 +114,8 @@ func (r *Repository) findRunningAWDRound(ctx context.Context, contestID int64) (
 	return &round, nil
 }
 
-func (r *Repository) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*model.Team, error) {
-	var team model.Team
+func (r *Repository) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*contestcontracts.Team, error) {
+	var team contestcontracts.Team
 	if err := r.dbWithContext(ctx).
 		Table("teams AS t").
 		Select("t.*").

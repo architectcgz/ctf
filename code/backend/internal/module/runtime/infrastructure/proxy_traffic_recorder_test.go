@@ -24,28 +24,28 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 	attackerTeamID := int64(90112)
 	serviceID := int64(90121)
 
-	seedProxyTrafficRecorderRow(t, db, &model.Contest{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "Runtime AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.AWDRound{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.AWDRound{
 		ID:           90101,
 		ContestID:    contestID,
 		RoundNumber:  1,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestcontracts.AWDRoundStatusRunning,
 		StartedAt:    &now,
 		AttackScore:  50,
 		DefenseScore: 50,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.Team{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Team{
 		ID:         victimTeamID,
 		ContestID:  contestID,
 		Name:       "Victim",
@@ -55,7 +55,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.Team{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Team{
 		ID:         attackerTeamID,
 		ContestID:  contestID,
 		Name:       "Attacker",
@@ -65,21 +65,21 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.TeamMember{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    victimTeamID,
 		UserID:    5001,
 		JoinedAt:  now,
 		CreatedAt: now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.TeamMember{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.TeamMember{
 		ContestID: contestID,
 		TeamID:    attackerTeamID,
 		UserID:    5002,
 		JoinedAt:  now,
 		CreatedAt: now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.ContestAWDService{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  9012,
@@ -110,7 +110,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		t.Fatalf("RecordRuntimeProxyTrafficEvent() error = %v", err)
 	}
 
-	var event model.AWDTrafficEvent
+	var event contestcontracts.AWDTrafficEvent
 	if err := db.First(&event).Error; err != nil {
 		t.Fatalf("load awd traffic event: %v", err)
 	}
@@ -135,28 +135,28 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 	attackerTeamID := int64(90212)
 	serviceID := int64(90221)
 
-	seedProxyTrafficRecorderRow(t, db, &model.Contest{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "Runtime AWD Contest",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.AWDRound{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.AWDRound{
 		ID:           90201,
 		ContestID:    contestID,
 		RoundNumber:  1,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestcontracts.AWDRoundStatusRunning,
 		StartedAt:    &now,
 		AttackScore:  50,
 		DefenseScore: 50,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.Team{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Team{
 		ID:         victimTeamID,
 		ContestID:  contestID,
 		Name:       "Victim",
@@ -166,7 +166,7 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.Team{
+	seedProxyTrafficRecorderRow(t, db, &contestcontracts.Team{
 		ID:         attackerTeamID,
 		ContestID:  contestID,
 		Name:       "Attacker",
@@ -178,7 +178,7 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 	})
 
 	recorder := NewProxyTrafficEventRecorder(db)
-	err := recorder.RecordAWDProxyTrafficEvent(context.Background(), model.AWDProxyTrafficEventInput{
+	err := recorder.RecordAWDProxyTrafficEvent(context.Background(), contestcontracts.AWDProxyTrafficEventInput{
 		ContestID:      contestID,
 		AttackerTeamID: attackerTeamID,
 		VictimTeamID:   victimTeamID,
@@ -192,7 +192,7 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 		t.Fatalf("RecordAWDProxyTrafficEvent() error = %v", err)
 	}
 
-	var event model.AWDTrafficEvent
+	var event contestcontracts.AWDTrafficEvent
 	if err := db.First(&event).Error; err != nil {
 		t.Fatalf("load awd traffic event: %v", err)
 	}
@@ -221,13 +221,13 @@ func newProxyTrafficRecorderTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.Contest{},
-		&model.AWDRound{},
-		&model.Team{},
-		&model.TeamMember{},
-		&model.ContestAWDService{},
+		&contestcontracts.Contest{},
+		&contestcontracts.AWDRound{},
+		&contestcontracts.Team{},
+		&contestcontracts.TeamMember{},
+		&contestcontracts.ContestAWDService{},
 		&model.Instance{},
-		&model.AWDTrafficEvent{},
+		&contestcontracts.AWDTrafficEvent{},
 	); err != nil {
 		t.Fatalf("migrate proxy traffic recorder tables: %v", err)
 	}

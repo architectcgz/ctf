@@ -32,8 +32,8 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&challengeentity.SubmissionWriteup{},
 		&model.ChallengeTopology{},
 		&model.EnvironmentTemplate{},
-		&model.Contest{},
-		&model.ContestAWDService{},
+		&contestcontracts.Contest{},
+		&contestcontracts.ContestAWDService{},
 	); err != nil {
 		t.Fatalf("failed to migrate tables: %v", err)
 	}

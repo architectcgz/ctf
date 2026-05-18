@@ -24,6 +24,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/mapperutil"
@@ -361,7 +362,7 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 	if err != nil {
 		return nil, err
 	}
-	if contest.Status != model.ContestStatusEnded {
+	if contest.Status != contestcontracts.ContestStatusEnded {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "教师复盘报告仅支持赛后导出", errcode.ErrInvalidParams.HTTPStatus)
 	}
 	if s.awdReviewBuilder == nil {
@@ -441,7 +442,7 @@ func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.Rep
 	return nil
 }
 
-func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID int64) (*contestcontracts.Contest, error) {
 	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
@@ -449,7 +450,7 @@ func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID i
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != contestcontracts.ContestModeAWD {
 		return nil, errcode.ErrContestNotFound
 	}
 	return contest, nil

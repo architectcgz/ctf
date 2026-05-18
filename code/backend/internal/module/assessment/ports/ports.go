@@ -9,6 +9,7 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -100,7 +101,7 @@ type AssessmentReportUserLookupRepository interface {
 }
 
 type AssessmentReportContestLookupRepository interface {
-	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+	FindContestByID(ctx context.Context, contestID int64) (*contestcontracts.Contest, error)
 }
 
 type AssessmentPersonalReportRepository interface {

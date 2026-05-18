@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
@@ -25,21 +26,21 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 	challengeID := int64(9401)
 	instanceID := int64(9501)
 
-	seedAWDTargetProxyRow(t, db, &model.Contest{
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1001, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1002, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1001, JoinedAt: now, CreatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9601, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1001, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1002, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1001, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9601, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{
 		ID:             serviceID,
 		ContestID:      contestID,
 		AWDChallengeID: challengeID,
@@ -95,11 +96,11 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 	teamID := int64(9203)
 	serviceID := int64(9302)
 
-	seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1003, InviteCode: "red-own", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1003, JoinedAt: now, CreatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9602, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1003, InviteCode: "red-own", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1003, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9602, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          9502,
 		UserID:      1003,
@@ -135,11 +136,11 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 	challengeID := int64(9403)
 	instanceID := int64(9503)
 
-	seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{
 		ID:             serviceID,
 		ContestID:      contestID,
 		AWDChallengeID: challengeID,
@@ -203,12 +204,12 @@ func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
 	serviceID := int64(9304)
 	challengeID := int64(9404)
 
-	seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: ownTeamID, ContestID: contestID, Name: "Red", CaptainID: 1005, InviteCode: "ownssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Team{ID: otherTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1006, InviteCode: "othssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: ownTeamID, ContestID: contestID, Name: "Red", CaptainID: 1005, InviteCode: "ownssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: otherTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1006, InviteCode: "othssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          9504,
 		UserID:      1006,
@@ -282,12 +283,12 @@ func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
 			victimTeamID := int64(9211)
 			serviceID := int64(9310)
 
-			seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1010, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1011, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1010, JoinedAt: now, CreatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9610, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9410, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1010, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1011, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1010, JoinedAt: now, CreatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9610, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9410, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 			seedAWDTargetProxyRow(t, db, &model.Instance{
 				ID:          9510,
 				UserID:      1011,
@@ -357,11 +358,11 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 			challengeID := int64(9411)
 			instanceID := int64(9511)
 
-			seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1012, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1012, JoinedAt: now, CreatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9611, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1012, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1012, JoinedAt: now, CreatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9611, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 			seedAWDTargetProxyRow(t, db, &model.Instance{
 				ID:          instanceID,
 				UserID:      1012,
@@ -421,11 +422,11 @@ func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.Contest{},
-		&model.Team{},
-		&model.TeamMember{},
-		&model.AWDRound{},
-		&model.ContestAWDService{},
+		&contestcontracts.Contest{},
+		&contestcontracts.Team{},
+		&contestcontracts.TeamMember{},
+		&contestcontracts.AWDRound{},
+		&contestcontracts.ContestAWDService{},
 		&model.Instance{},
 		&model.AWDDefenseWorkspace{},
 		&model.AWDScopeControl{},

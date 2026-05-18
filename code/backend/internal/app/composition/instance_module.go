@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
@@ -41,7 +42,7 @@ type InstanceModule struct {
 
 type runtimeProxyTrafficRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
-	RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error
 }
 
 func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceModule {

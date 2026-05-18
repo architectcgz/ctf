@@ -27,7 +27,7 @@ func setupTeachingQueryRepoTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&challengecontracts.AWDChallenge{},
-		&model.AWDAttackLog{},
+		&contestcontracts.AWDAttackLog{},
 	); err != nil {
 		t.Fatalf("migrate teaching query repo tables: %v", err)
 	}
@@ -81,13 +81,13 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 		}
 	}
 
-	logs := []model.AWDAttackLog{
-		{ID: 1, RoundID: 11, AttackerTeamID: 21, VictimTeamID: 31, ServiceID: 41, AWDChallengeID: 1001, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now},
-		{ID: 2, RoundID: 11, AttackerTeamID: 21, VictimTeamID: 32, ServiceID: 42, AWDChallengeID: 1002, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(1 * time.Minute)},
-		{ID: 3, RoundID: 12, AttackerTeamID: 21, VictimTeamID: 33, ServiceID: 43, AWDChallengeID: 1003, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(2 * time.Minute)},
-		{ID: 4, RoundID: 12, AttackerTeamID: 21, VictimTeamID: 34, ServiceID: 44, AWDChallengeID: 1004, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(3 * time.Minute)},
-		{ID: 5, RoundID: 13, AttackerTeamID: 21, VictimTeamID: 35, ServiceID: 45, AWDChallengeID: 1004, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 0, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(4 * time.Minute)},
-		{ID: 6, RoundID: 13, AttackerTeamID: 21, VictimTeamID: 36, ServiceID: 46, AWDChallengeID: 1004, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 100, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(5 * time.Minute)},
+	logs := []contestcontracts.AWDAttackLog{
+		{ID: 1, RoundID: 11, AttackerTeamID: 21, VictimTeamID: 31, ServiceID: 41, AWDChallengeID: 1001, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now},
+		{ID: 2, RoundID: 11, AttackerTeamID: 21, VictimTeamID: 32, ServiceID: 42, AWDChallengeID: 1002, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 80, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(1 * time.Minute)},
+		{ID: 3, RoundID: 12, AttackerTeamID: 21, VictimTeamID: 33, ServiceID: 43, AWDChallengeID: 1003, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(2 * time.Minute)},
+		{ID: 4, RoundID: 12, AttackerTeamID: 21, VictimTeamID: 34, ServiceID: 44, AWDChallengeID: 1004, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 90, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(3 * time.Minute)},
+		{ID: 5, RoundID: 13, AttackerTeamID: 21, VictimTeamID: 35, ServiceID: 45, AWDChallengeID: 1004, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceSubmission, IsSuccess: true, ScoreGained: 0, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(4 * time.Minute)},
+		{ID: 6, RoundID: 13, AttackerTeamID: 21, VictimTeamID: 36, ServiceID: 46, AWDChallengeID: 1004, AttackType: contestcontracts.AWDAttackTypeFlagCapture, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 100, SubmittedByUserID: ptrTeachingQueryInt64(1), CreatedAt: now.Add(5 * time.Minute)},
 	}
 	for _, log := range logs {
 		if err := db.Create(&log).Error; err != nil {

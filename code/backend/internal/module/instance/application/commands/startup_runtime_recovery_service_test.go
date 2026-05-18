@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 type startupRuntimeReconcilerStub struct {
@@ -60,18 +60,18 @@ type startupRuntimeContestCall struct {
 }
 
 type startupRuntimeContestRepoStub struct {
-	contests []*model.Contest
+	contests []*contestcontracts.Contest
 	calls    []startupRuntimeContestCall
 }
 
-func (s *startupRuntimeContestRepoStub) AddPausedDurationToActiveAWDContests(_ context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*model.Contest, error) {
+func (s *startupRuntimeContestRepoStub) AddPausedDurationToActiveAWDContests(_ context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*contestcontracts.Contest, error) {
 	s.calls = append(s.calls, startupRuntimeContestCall{
 		activeAt:            activeAt,
 		recoveryKey:         recoveryKey,
 		targetPausedSeconds: targetPausedSeconds,
 		updatedAt:           updatedAt,
 	})
-	result := make([]*model.Contest, 0, len(s.contests))
+	result := make([]*contestcontracts.Contest, 0, len(s.contests))
 	for _, contest := range s.contests {
 		if contest == nil {
 			continue
@@ -147,11 +147,11 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 	recoveredAt := startedAt.Add(30 * time.Second)
 
 	contestRepo := &startupRuntimeContestRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestcontracts.Contest{
 			{
 				ID:            41,
-				Mode:          model.ContestModeAWD,
-				Status:        model.ContestStatusRunning,
+				Mode:          contestcontracts.ContestModeAWD,
+				Status:        contestcontracts.ContestStatusRunning,
 				StartTime:     time.Date(2026, 5, 16, 9, 0, 0, 0, time.UTC),
 				EndTime:       time.Date(2026, 5, 16, 11, 0, 0, 0, time.UTC),
 				UpdatedAt:     lastHeartbeat,
@@ -301,11 +301,11 @@ func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatTriggersRecovery
 	recoveredAt := startedAt.Add(20 * time.Second)
 
 	contestRepo := &startupRuntimeContestRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestcontracts.Contest{
 			{
 				ID:            61,
-				Mode:          model.ContestModeAWD,
-				Status:        model.ContestStatusRunning,
+				Mode:          contestcontracts.ContestModeAWD,
+				Status:        contestcontracts.ContestStatusRunning,
 				StartTime:     time.Date(2026, 5, 16, 9, 0, 0, 0, time.UTC),
 				EndTime:       time.Date(2026, 5, 16, 11, 0, 0, 0, time.UTC),
 				UpdatedAt:     lastHeartbeat,
@@ -369,11 +369,11 @@ func TestStartupRuntimeRecoveryServiceRetryDoesNotDoubleCountPreviouslyAppliedPa
 	secondRecoveredAt := secondStartedAt.Add(30 * time.Second)
 
 	contestRepo := &startupRuntimeContestRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestcontracts.Contest{
 			{
 				ID:        52,
-				Mode:      model.ContestModeAWD,
-				Status:    model.ContestStatusRunning,
+				Mode:      contestcontracts.ContestModeAWD,
+				Status:    contestcontracts.ContestStatusRunning,
 				StartTime: time.Date(2026, 5, 16, 9, 0, 0, 0, time.UTC),
 				EndTime:   time.Date(2026, 5, 16, 11, 0, 0, 0, time.UTC),
 				UpdatedAt: lastHeartbeat,

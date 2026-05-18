@@ -10,7 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 const (
@@ -29,7 +29,7 @@ type startupRuntimeDesiredReconciler interface {
 }
 
 type startupRuntimeContestRepository interface {
-	AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*model.Contest, error)
+	AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*contestcontracts.Contest, error)
 }
 
 type startupRuntimeInstanceRepository interface {
@@ -251,7 +251,7 @@ func (s *StartupRuntimeRecoveryService) extendActiveAWDContests(ctx context.Cont
 	return nil
 }
 
-func startupRuntimeContestEffectiveEndTime(contest *model.Contest) time.Time {
+func startupRuntimeContestEffectiveEndTime(contest *contestcontracts.Contest) time.Time {
 	if contest == nil {
 		return time.Time{}
 	}

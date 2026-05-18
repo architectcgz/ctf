@@ -34,7 +34,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Challenge{},
 		&contestcontracts.Submission{},
-		&model.AWDAttackLog{},
+		&contestcontracts.AWDAttackLog{},
 		&assessmententity.SkillProfile{},
 	); err != nil {
 		t.Fatalf("migrate tables: %v", err)
@@ -168,15 +168,15 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 		t.Fatalf("seed practice submission: %v", err)
 	}
 
-	awdLogs := []model.AWDAttackLog{
+	awdLogs := []contestcontracts.AWDAttackLog{
 		{
 			ID:                1,
 			RoundID:           301,
 			AttackerTeamID:    401,
 			VictimTeamID:      402,
 			AWDChallengeID:    31,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			IsSuccess:         true,
 			ScoreGained:       80,
 			SubmittedByUserID: ptrInt64(student.ID),
@@ -188,8 +188,8 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 			AttackerTeamID:    401,
 			VictimTeamID:      403,
 			AWDChallengeID:    32,
-			AttackType:        model.AWDAttackTypeFlagCapture,
-			Source:            model.AWDAttackSourceSubmission,
+			AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+			Source:            contestcontracts.AWDAttackSourceSubmission,
 			IsSuccess:         true,
 			ScoreGained:       80,
 			SubmittedByUserID: ptrInt64(student.ID),
@@ -354,14 +354,14 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed challenge: %v", err)
 	}
-	if err := db.Create(&model.AWDAttackLog{
+	if err := db.Create(&contestcontracts.AWDAttackLog{
 		ID:                51,
 		RoundID:           501,
 		AttackerTeamID:    601,
 		VictimTeamID:      602,
 		AWDChallengeID:    51,
-		AttackType:        model.AWDAttackTypeFlagCapture,
-		Source:            model.AWDAttackSourceSubmission,
+		AttackType:        contestcontracts.AWDAttackTypeFlagCapture,
+		Source:            contestcontracts.AWDAttackSourceSubmission,
 		IsSuccess:         true,
 		ScoreGained:       80,
 		SubmittedByUserID: ptrInt64(77),
