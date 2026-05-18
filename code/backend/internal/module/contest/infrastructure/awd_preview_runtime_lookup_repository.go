@@ -23,7 +23,7 @@ func NewAWDPreviewRuntimeChallengeRepository(source challengeports.AWDChallengeQ
 	return &AWDPreviewRuntimeChallengeRepository{source: source}
 }
 
-func (r *AWDPreviewRuntimeChallengeRepository) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (r *AWDPreviewRuntimeChallengeRepository) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	challenge, err := r.source.FindAWDChallengeByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDPreviewChallengeNotFound
@@ -31,7 +31,7 @@ func (r *AWDPreviewRuntimeChallengeRepository) FindAWDChallengeByID(ctx context.
 	return challenge, err
 }
 
-func (r *AWDPreviewRuntimeChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *AWDPreviewRuntimeChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return r.source.ListAWDChallenges(ctx, query)
 }
 

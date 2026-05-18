@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
@@ -88,14 +88,14 @@ func buildParsedAWDChallengePackage(
 	awd := manifest.Extensions.AWD
 	serviceType := strings.TrimSpace(awd.ServiceType)
 	switch serviceType {
-	case string(model.AWDServiceTypeWebHTTP), string(model.AWDServiceTypeBinaryTCP), string(model.AWDServiceTypeMultiContainer):
+	case string(challengeentity.AWDServiceTypeWebHTTP), string(challengeentity.AWDServiceTypeBinaryTCP), string(challengeentity.AWDServiceTypeMultiContainer):
 	default:
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.service_type 仅支持 web_http、binary_tcp、multi_container"))
 	}
 
 	deploymentMode := strings.TrimSpace(awd.DeploymentMode)
 	switch deploymentMode {
-	case string(model.AWDDeploymentModeSingleContainer), string(model.AWDDeploymentModeTopology):
+	case string(challengeentity.AWDDeploymentModeSingleContainer), string(challengeentity.AWDDeploymentModeTopology):
 	default:
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.deployment_mode 仅支持 single_container、topology"))
 	}

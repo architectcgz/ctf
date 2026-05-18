@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -62,7 +63,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 	if err != nil {
 		return "", "", "", nil, err
 	}
-	if deploymentMode != "" && deploymentMode != model.AWDDeploymentModeSingleContainer {
+	if deploymentMode != "" && deploymentMode != challengecontracts.AWDDeploymentModeSingleContainer {
 		return "", "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
 	}
 
@@ -112,14 +113,14 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 	ctx context.Context,
 	previewService *contestentity.ContestAWDService,
 	previewChallengeID int64,
-) (model.AWDDeploymentMode, map[string]any, error) {
+) (challengecontracts.AWDDeploymentMode, map[string]any, error) {
 	if previewService != nil {
 		snapshot, err := contestentity.DecodeContestAWDServiceSnapshot(previewService.ServiceSnapshot)
 		if err != nil {
 			return "", nil, errcode.ErrInternal.WithCause(err)
 		}
 		if len(snapshot.RuntimeConfig) > 0 {
-			return model.AWDDeploymentMode(snapshot.DeploymentMode), snapshot.RuntimeConfig, nil
+			return challengecontracts.AWDDeploymentMode(snapshot.DeploymentMode), snapshot.RuntimeConfig, nil
 		}
 	}
 	if previewChallengeID <= 0 || s.awdChallengeRepo == nil {

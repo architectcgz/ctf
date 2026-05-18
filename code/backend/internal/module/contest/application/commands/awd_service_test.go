@@ -855,15 +855,15 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 		t.Fatalf("set contest status registration: %v", err)
 	}
 	createAWDChallengeFixture(t, db, awdChallengeID, now)
-	if err := db.Create(&model.AWDChallenge{
+	if err := db.Create(&challengecontracts.AWDChallenge{
 		ID:             awdChallengeID,
 		Name:           "TCP Length Gate",
 		Slug:           "awd-tcp-length-gate",
 		Category:       "pwn",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeBinaryTCP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeBinaryTCP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeTCPStandard,
 		CheckerConfig:  `{"timeout_ms":3000,"steps":[{"send":"PING\n","expect_contains":"PONG"},{"send_template":"SET_FLAG {{FLAG}}\n","expect_contains":"OK"},{"send":"GET_FLAG\n","expect_contains":"{{FLAG}}"}]}`,
 		AccessConfig:   `{"public_base_url":"tcp://preview.internal:8080","service_port":8080}`,
@@ -1486,7 +1486,7 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 
 func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *testing.T) {
 	db := newAWDTestDB(t)
-	if err := db.AutoMigrate(&model.Image{}, &model.AWDChallenge{}); err != nil {
+	if err := db.AutoMigrate(&model.Image{}, &challengecontracts.AWDChallenge{}); err != nil {
 		t.Fatalf("auto migrate preview dependencies: %v", err)
 	}
 	mini, err := miniredis.Run()
@@ -1514,15 +1514,15 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.AWDChallenge{
+	if err := db.Create(&challengecontracts.AWDChallenge{
 		ID:             2601,
 		Name:           "Preview Target",
 		Slug:           "preview-target",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyEasy,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
 		RuntimeConfig:  `{"image_id":26001,"image_ref":"registry.example.edu/ctf/awd-preview:v1","checker_token_env":"CHECKER_TOKEN"}`,
@@ -1613,7 +1613,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 
 func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavailable(t *testing.T) {
 	db := newAWDTestDB(t)
-	if err := db.AutoMigrate(&model.AWDChallenge{}); err != nil {
+	if err := db.AutoMigrate(&challengecontracts.AWDChallenge{}); err != nil {
 		t.Fatalf("auto migrate awd challenge: %v", err)
 	}
 	now := time.Now()
@@ -1628,15 +1628,15 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.AWDChallenge{
+	if err := db.Create(&challengecontracts.AWDChallenge{
 		ID:             2602,
 		Name:           "Preview Pending Image",
 		Slug:           "preview-pending-image",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyEasy,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
 		RuntimeConfig:  `{"image_id":26002,"image_ref":"registry.example.edu/ctf/awd-preview:pending"}`,

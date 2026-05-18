@@ -14,6 +14,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -79,15 +80,15 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1001,
 		Name:           "Bank Portal",
 		Slug:           "bank-portal",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/internal/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://bank.internal"}`,
@@ -144,15 +145,15 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             180801,
 		Name:           "Default Score Service",
 		Slug:           "default-score-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://default.internal"}`,
@@ -199,15 +200,15 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             180901,
 		Name:           "Oversized Score Service",
 		Slug:           "oversized-score-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://oversized.internal"}`,
@@ -244,15 +245,15 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             181001,
 		Name:           "Oversized Points Service",
 		Slug:           "oversized-points-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://points.internal"}`,
@@ -287,15 +288,15 @@ func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             181101,
 		Name:           "Immutable Create Service",
 		Slug:           "immutable-create-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-create.internal"}`,
@@ -345,15 +346,15 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1002,
 		Name:           "Billing API",
 		Slug:           "billing-api",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/healthz"}}`,
 		AccessConfig:   `{"primary_url":"http://billing.internal"}`,
@@ -427,15 +428,15 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1004,
 		Name:           "Orders API",
 		Slug:           "orders-api",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://orders.internal"}`,
@@ -523,15 +524,15 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1005,
 		Name:           "Inventory API",
 		Slug:           "inventory-api",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://inventory.internal"}`,
@@ -625,15 +626,15 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1006,
 		Name:           "Preview Service",
 		Slug:           "preview-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview.internal"}`,
@@ -746,15 +747,15 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1106,
 		Name:           "Preview Service Missing Token",
 		Slug:           "preview-service-missing-token",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-missing.internal"}`,
@@ -821,15 +822,15 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1007,
 		Name:           "Preview Update Service",
 		Slug:           "preview-update-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update.internal"}`,
@@ -946,15 +947,15 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1107,
 		Name:           "Preview Update Missing Token",
 		Slug:           "preview-update-missing-token",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update-missing.internal"}`,
@@ -1001,15 +1002,15 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             181201,
 		Name:           "Immutable Update Service",
 		Slug:           "immutable-update-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-update.internal"}`,
@@ -1083,15 +1084,15 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             2106,
 		Name:           "Preview Service Token Env",
 		Slug:           "preview-service-token-env",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-token-env.internal"}`,
@@ -1226,15 +1227,15 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             1003,
 		Name:           "User Center",
 		Slug:           "user-center",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://user.internal"}`,
@@ -1285,15 +1286,15 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:             181301,
 		Name:           "Immutable Delete Service",
 		Slug:           "immutable-delete-service",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-delete.internal"}`,

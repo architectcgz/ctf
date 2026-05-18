@@ -7,24 +7,23 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type contestAWDChallengeLookupSourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
+	findByIDFn func(context.Context, int64) (*challengecontracts.AWDChallenge, error)
 }
 
-func (s contestAWDChallengeLookupSourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s contestAWDChallengeLookupSourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.AWDChallenge{ID: id}, nil
+	return &challengecontracts.AWDChallenge{ID: id}, nil
 }
 
-func (s contestAWDChallengeLookupSourceStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s contestAWDChallengeLookupSourceStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 
@@ -45,7 +44,7 @@ func TestContestAWDChallengeLookupAdapterMapsNotFoundErrors(t *testing.T) {
 			t.Parallel()
 
 			repo := NewContestAWDChallengeLookupAdapter(contestAWDChallengeLookupSourceStub{
-				findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+				findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 					return nil, tc.err
 				},
 			})
@@ -62,7 +61,7 @@ func TestContestAWDChallengeLookupAdapterPassesThroughNonNotFoundErrors(t *testi
 
 	expectedErr := errors.New("awd challenge lookup exploded")
 	repo := NewContestAWDChallengeLookupAdapter(contestAWDChallengeLookupSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 			return nil, expectedErr
 		},
 	})

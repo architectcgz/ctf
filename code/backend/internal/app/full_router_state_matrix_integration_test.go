@@ -2006,13 +2006,13 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 
-	awdChallenge := &model.AWDChallenge{
+	awdChallenge := &challengecontracts.AWDChallenge{
 		Name:           "Visible AWD Challenge",
 		Category:       model.DimensionWeb,
 		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 	}
 	if err := env.db.Create(awdChallenge).Error; err != nil {
 		t.Fatalf("create awd challenge: %v", err)

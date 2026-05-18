@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -29,16 +30,16 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
 		ID:               2801,
 		Name:             "Bank Portal",
 		Slug:             "bank-portal",
 		Category:         "web",
 		Difficulty:       model.ChallengeDifficultyMedium,
 		Description:      "Bank Portal runtime",
-		ServiceType:      model.AWDServiceTypeWebHTTP,
-		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
-		Status:           model.AWDChallengeStatusPublished,
+		ServiceType:      challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode:   challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:           challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:      contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"get_flag":{"path":"/internal/flag"}}`,
 		FlagMode:         "dynamic",
@@ -108,16 +109,16 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	awdChallenge := &model.AWDChallenge{
+	awdChallenge := &challengecontracts.AWDChallenge{
 		ID:             2802,
 		Name:           "Billing API",
 		Slug:           "billing-api",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyMedium,
 		Description:    "Billing runtime",
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
+		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
+		Status:         challengecontracts.AWDChallengeStatusPublished,
 		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/health"}}`,
 		RuntimeConfig:  `{"image_id":9902}`,

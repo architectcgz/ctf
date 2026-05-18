@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -21,17 +21,17 @@ func NewAWDChallengeService(repo challengeports.AWDChallengeCommandRepository) *
 }
 
 func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
-	challenge := &model.AWDChallenge{
+	challenge := &challengeentity.AWDChallenge{
 		Name:            strings.TrimSpace(req.Name),
 		Slug:            strings.TrimSpace(req.Slug),
 		Category:        strings.TrimSpace(req.Category),
 		Difficulty:      strings.TrimSpace(req.Difficulty),
 		Description:     strings.TrimSpace(req.Description),
-		ServiceType:     model.AWDServiceType(strings.TrimSpace(req.ServiceType)),
-		DeploymentMode:  model.AWDDeploymentMode(strings.TrimSpace(req.DeploymentMode)),
+		ServiceType:     challengeentity.AWDServiceType(strings.TrimSpace(req.ServiceType)),
+		DeploymentMode:  challengeentity.AWDDeploymentMode(strings.TrimSpace(req.DeploymentMode)),
 		Version:         "v1",
-		Status:          model.AWDChallengeStatusDraft,
-		ReadinessStatus: model.AWDReadinessStatusPending,
+		Status:          challengeentity.AWDChallengeStatusDraft,
+		ReadinessStatus: challengeentity.AWDReadinessStatusPending,
 		CreatedBy:       &actorUserID,
 	}
 	if err := s.repo.CreateAWDChallenge(ctx, challenge); err != nil {
@@ -65,13 +65,13 @@ func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req
 		challenge.Description = strings.TrimSpace(req.Description)
 	}
 	if req.ServiceType != "" {
-		challenge.ServiceType = model.AWDServiceType(strings.TrimSpace(req.ServiceType))
+		challenge.ServiceType = challengeentity.AWDServiceType(strings.TrimSpace(req.ServiceType))
 	}
 	if req.DeploymentMode != "" {
-		challenge.DeploymentMode = model.AWDDeploymentMode(strings.TrimSpace(req.DeploymentMode))
+		challenge.DeploymentMode = challengeentity.AWDDeploymentMode(strings.TrimSpace(req.DeploymentMode))
 	}
 	if req.Status != "" {
-		challenge.Status = model.AWDChallengeStatus(strings.TrimSpace(req.Status))
+		challenge.Status = challengeentity.AWDChallengeStatus(strings.TrimSpace(req.Status))
 	}
 
 	if err := s.repo.UpdateAWDChallenge(ctx, challenge); err != nil {

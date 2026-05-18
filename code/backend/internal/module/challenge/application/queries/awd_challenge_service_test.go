@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -18,14 +19,14 @@ func TestAWDChallengeQueryServiceListChallenges(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDChallengeQueryService(repo)
 
-	if err := repo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := repo.CreateAWDChallenge(context.Background(), &challengeentity.AWDChallenge{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyHard,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusDraft,
+		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
+		Status:         challengeentity.AWDChallengeStatusDraft,
 	}); err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
@@ -47,16 +48,16 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDChallengeQueryService(repo)
 
-	if err := repo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
+	if err := repo.CreateAWDChallenge(context.Background(), &challengeentity.AWDChallenge{
 		ID:               2401,
 		Name:             "Bank Portal AWD",
 		Slug:             "bank-portal-awd",
 		Category:         "web",
 		Difficulty:       model.ChallengeDifficultyHard,
 		Description:      "multi-step banking target",
-		ServiceType:      model.AWDServiceTypeWebHTTP,
-		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
-		Status:           model.AWDChallengeStatusPublished,
+		ServiceType:      challengeentity.AWDServiceTypeWebHTTP,
+		DeploymentMode:   challengeentity.AWDDeploymentModeSingleContainer,
+		Status:           challengeentity.AWDChallengeStatusPublished,
 		CheckerType:      contestcontracts.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"put_flag":{"path":"/api/flag"},"get_flag":{"path":"/api/flag"}}`,
 		FlagMode:         "dynamic_team",
@@ -64,7 +65,7 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 		DefenseEntryMode: "http",
 		AccessConfig:     `{"public_base_url":"http://bank.internal","service_port":8080}`,
 		RuntimeConfig:    `{"image_id":9901,"service_port":8080}`,
-		ReadinessStatus:  model.AWDReadinessStatusPassed,
+		ReadinessStatus:  challengeentity.AWDReadinessStatusPassed,
 	}); err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
@@ -98,7 +99,7 @@ func TestAWDChallengeQueryServiceTreatsAWDChallengeNotFoundAsNotFound(t *testing
 	t.Parallel()
 
 	service := NewAWDChallengeQueryService(&awdChallengeQueryContextRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.AWDChallenge, error) {
 			return nil, challengeports.ErrAWDChallengeNotFound
 		},
 	})

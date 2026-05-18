@@ -1,12 +1,15 @@
 # Reuse Decision
 
 ## Change type
-cleanup / compatibility shim removal / cross-module entity owner convergence
+cleanup / compatibility shim removal / cross-module entity owner convergence / owner persistence entity relocation
 
 ## Existing code searched
 - `code/backend/internal/model/submission.go`
 - `code/backend/internal/model/contest_registration.go`
 - `code/backend/internal/model/contest_challenge.go`
+- `code/backend/internal/model/awd_challenge.go`
+- `code/backend/internal/module/challenge/entity`
+- `code/backend/internal/module/challenge/contracts`
 - `code/backend/internal/module/contest/entity`
 - `code/backend/internal/module/assessment`
 - `code/backend/internal/module/teaching_query`
@@ -25,6 +28,11 @@ cleanup / compatibility shim removal / cross-module entity owner convergence
 ## Decision
 refactor_existing
 
+## Execution notes
+- 第 1 刀已提交 `d6ddf3cf`：先暴露 `contest/contracts` 稳定入口并替换外部调用面。
+- 第 2 刀继续删除 `internal/model` 中剩余的三份兼容 shim，不再保留过渡别名。
+- 同步把 `AWDChallenge` 从共享层移入 `challenge` owner，由 `challenge/contracts` 暴露跨模块读取入口。
+
 ## Reason
 `Submission`、`ContestRegistration`、`ContestChallenge` 的真实 owner 已经明确在
 `internal/module/contest/entity`。当前 `internal/model` 中这三个文件只剩兼容 alias / 常量转发，
@@ -39,6 +47,9 @@ refactor_existing
 - `code/backend/internal/model/submission.go`
 - `code/backend/internal/model/contest_registration.go`
 - `code/backend/internal/model/contest_challenge.go`
+- `code/backend/internal/model/awd_challenge.go`
+- `code/backend/internal/module/challenge/entity/awd_challenge.go`
+- `code/backend/internal/module/challenge/contracts/persistence.go`
 - `code/backend/internal/module/contest/contracts/persistence.go`
 - `code/backend/internal/module/assessment/infrastructure/repository.go`
 - `code/backend/internal/module/assessment/infrastructure/repository_test.go`
@@ -47,11 +58,41 @@ refactor_existing
 - `code/backend/internal/module/assessment/application/queries/recommendation_service_test.go`
 - `code/backend/internal/module/assessment/application/queries/teacher_awd_review_service_test.go`
 - `code/backend/internal/module/challenge/domain/awd_package_parser.go`
+- `code/backend/internal/module/challenge/domain/mappers.go`
+- `code/backend/internal/module/challenge/domain/response_mapper_goverter.go`
+- `code/backend/internal/module/challenge/domain/response_mapper_goverter_gen.go`
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service_test.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_command_facade_test.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_service.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_service_context_test.go`
+- `code/backend/internal/module/challenge/application/commands/awd_challenge_service_test.go`
+- `code/backend/internal/module/challenge/application/commands/tx_runner_test.go`
 - `code/backend/internal/module/challenge/application/commands/writeup_submission_service_test.go`
+- `code/backend/internal/module/challenge/application/queries/awd_challenge_service_context_test.go`
 - `code/backend/internal/module/challenge/application/queries/awd_challenge_service_test.go`
 - `code/backend/internal/module/challenge/application/queries/challenge_service_test.go`
+- `code/backend/internal/module/challenge/infrastructure/awd_challenge_repository.go`
+- `code/backend/internal/module/challenge/infrastructure/awd_challenge_repository_test.go`
+- `code/backend/internal/module/challenge/infrastructure/repository.go`
+- `code/backend/internal/module/challenge/infrastructure/repository_test.go`
+- `code/backend/internal/module/challenge/ports/ports.go`
+- `code/backend/internal/module/challenge/ports/awd_challenge_command_context_contract_test.go`
+- `code/backend/internal/module/challenge/ports/awd_challenge_query_context_contract_test.go`
+- `code/backend/internal/module/challenge/runtime/awd_import_tx_bridge.go`
 - `code/backend/internal/module/challenge/testsupport/test_helper.go`
+- `code/backend/internal/module/contest/application/commands/awd_preview_runtime_support.go`
+- `code/backend/internal/module/contest/application/commands/awd_preview_runtime_support_contract_test.go`
+- `code/backend/internal/module/contest/application/commands/awd_service_test.go`
+- `code/backend/internal/module/contest/application/commands/contest_awd_service_native_test.go`
+- `code/backend/internal/module/contest/application/commands/contest_awd_service_service_test.go`
+- `code/backend/internal/module/contest/application/commands/contest_awd_service_support.go`
+- `code/backend/internal/module/contest/application/commands/contest_challenge_error_contract_test.go`
+- `code/backend/internal/module/contest/infrastructure/awd_preview_runtime_lookup_repository.go`
+- `code/backend/internal/module/contest/infrastructure/awd_preview_runtime_lookup_repository_test.go`
+- `code/backend/internal/module/contest/infrastructure/contest_awd_challenge_lookup_adapter.go`
+- `code/backend/internal/module/contest/infrastructure/contest_awd_challenge_lookup_adapter_test.go`
+- `code/backend/internal/module/contest/testsupport/db.go`
 - `code/backend/internal/module/teaching_query/infrastructure/repository.go`
 - `code/backend/internal/module/teaching_query/infrastructure/repository_test.go`
 - `code/backend/internal/module/runtime/infrastructure/repository.go`

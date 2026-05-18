@@ -7,31 +7,31 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type awdChallengeRepositorySourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
-	listFn     func(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
-	createFn   func(context.Context, *model.AWDChallenge) error
-	updateFn   func(context.Context, *model.AWDChallenge) error
+	findByIDFn func(context.Context, int64) (*challengeentity.AWDChallenge, error)
+	listFn     func(context.Context, *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error)
+	createFn   func(context.Context, *challengeentity.AWDChallenge) error
+	updateFn   func(context.Context, *challengeentity.AWDChallenge) error
 	deleteFn   func(context.Context, int64) error
 }
 
-func (s awdChallengeRepositorySourceStub) CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (s awdChallengeRepositorySourceStub) CreateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, challenge)
 	}
 	return nil
 }
 
-func (s awdChallengeRepositorySourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s awdChallengeRepositorySourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s awdChallengeRepositorySourceStub) UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (s awdChallengeRepositorySourceStub) UpdateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, challenge)
 	}
@@ -45,18 +45,18 @@ func (s awdChallengeRepositorySourceStub) DeleteAWDChallenge(ctx context.Context
 	return nil
 }
 
-func (s awdChallengeRepositorySourceStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s awdChallengeRepositorySourceStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
-	return []*model.AWDChallenge{}, 0, nil
+	return []*challengeentity.AWDChallenge{}, 0, nil
 }
 
 func TestAWDChallengeRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewAWDChallengeRepository(awdChallengeRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.AWDChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -71,7 +71,7 @@ func TestAWDChallengeRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewAWDChallengeRepository(awdChallengeRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.AWDChallenge, error) {
 			return nil, expectedErr
 		},
 	})

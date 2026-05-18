@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
@@ -25,7 +26,7 @@ func setupTeachingQueryRepoTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
-		&model.AWDChallenge{},
+		&challengecontracts.AWDChallenge{},
 		&model.AWDAttackLog{},
 	); err != nil {
 		t.Fatalf("migrate teaching query repo tables: %v", err)
@@ -68,11 +69,11 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 		t.Fatalf("seed pwn profile: %v", err)
 	}
 
-	awdChallenges := []model.AWDChallenge{
-		{ID: 1001, Name: "pwn-awd-easy-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1002, Name: "pwn-awd-easy-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1003, Name: "pwn-awd-medium-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1004, Name: "pwn-awd-medium-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	awdChallenges := []challengecontracts.AWDChallenge{
+		{ID: 1001, Name: "pwn-awd-easy-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1002, Name: "pwn-awd-easy-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1003, Name: "pwn-awd-medium-a", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1004, Name: "pwn-awd-medium-b", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range awdChallenges {
 		if err := db.Create(&challenge).Error; err != nil {

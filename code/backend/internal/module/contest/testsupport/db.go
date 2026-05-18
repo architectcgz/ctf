@@ -8,6 +8,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -25,7 +26,7 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 		&contestentity.ContestStatusTransition{},
 		&model.Challenge{},
 		&model.Image{},
-		&model.AWDChallenge{},
+		&challengecontracts.AWDChallenge{},
 		&contestentity.ContestAWDService{},
 		&model.User{},
 		&contestentity.Team{},

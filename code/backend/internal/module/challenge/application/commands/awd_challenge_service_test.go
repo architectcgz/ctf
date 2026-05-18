@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -23,8 +24,8 @@ func TestAWDChallengeServiceCreateChallenge(t *testing.T) {
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyHard,
 		Description:    "desc",
-		ServiceType:    string(model.AWDServiceTypeWebHTTP),
-		DeploymentMode: string(model.AWDDeploymentModeSingleContainer),
+		ServiceType:    string(challengeentity.AWDServiceTypeWebHTTP),
+		DeploymentMode: string(challengeentity.AWDDeploymentModeSingleContainer),
 	})
 	if err != nil {
 		t.Fatalf("CreateChallenge() error = %v", err)
@@ -35,7 +36,7 @@ func TestAWDChallengeServiceCreateChallenge(t *testing.T) {
 	if resp.CreatedBy == nil || *resp.CreatedBy != 2001 {
 		t.Fatalf("unexpected created_by: %+v", resp.CreatedBy)
 	}
-	if resp.Status != string(model.AWDChallengeStatusDraft) {
+	if resp.Status != string(challengeentity.AWDChallengeStatusDraft) {
 		t.Fatalf("unexpected status: %s", resp.Status)
 	}
 }
@@ -45,14 +46,14 @@ func TestAWDChallengeServiceUpdateChallenge(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDChallengeService(repo)
 
-	template := &model.AWDChallenge{
+	template := &challengeentity.AWDChallenge{
 		Name:           "Legacy",
 		Slug:           "legacy",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyEasy,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusDraft,
+		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
+		Status:         challengeentity.AWDChallengeStatusDraft,
 	}
 	if err := repo.CreateAWDChallenge(context.Background(), template); err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -60,7 +61,7 @@ func TestAWDChallengeServiceUpdateChallenge(t *testing.T) {
 
 	resp, err := service.UpdateChallenge(context.Background(), template.ID, UpdateAWDChallengeInput{
 		Name:   "Bank Portal AWD",
-		Status: string(model.AWDChallengeStatusPublished),
+		Status: string(challengeentity.AWDChallengeStatusPublished),
 	})
 	if err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
@@ -68,7 +69,7 @@ func TestAWDChallengeServiceUpdateChallenge(t *testing.T) {
 	if resp.Name != "Bank Portal AWD" {
 		t.Fatalf("unexpected name: %s", resp.Name)
 	}
-	if resp.Status != string(model.AWDChallengeStatusPublished) {
+	if resp.Status != string(challengeentity.AWDChallengeStatusPublished) {
 		t.Fatalf("unexpected status: %s", resp.Status)
 	}
 }
@@ -77,7 +78,7 @@ func TestAWDChallengeServiceTreatsAWDChallengeNotFoundAsNotFound(t *testing.T) {
 	t.Parallel()
 
 	service := NewAWDChallengeService(&awdChallengeCommandContextRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.AWDChallenge, error) {
 			return nil, challengeports.ErrAWDChallengeNotFound
 		},
 	})

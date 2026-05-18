@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -23,7 +22,7 @@ func NewContestAWDChallengeLookupAdapter(source challengeports.AWDChallengeQuery
 	return &ContestAWDChallengeLookupAdapter{source: source}
 }
 
-func (r *ContestAWDChallengeLookupAdapter) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (r *ContestAWDChallengeLookupAdapter) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	challenge, err := r.source.FindAWDChallengeByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
 		return nil, contestports.ErrContestAWDChallengeNotFound
@@ -31,7 +30,7 @@ func (r *ContestAWDChallengeLookupAdapter) FindAWDChallengeByID(ctx context.Cont
 	return challenge, err
 }
 
-func (r *ContestAWDChallengeLookupAdapter) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *ContestAWDChallengeLookupAdapter) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return r.source.ListAWDChallenges(ctx, query)
 }
 

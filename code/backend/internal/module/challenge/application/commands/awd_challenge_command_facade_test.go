@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 func TestNewAWDChallengeCommandFacadeUsesProvidedImportService(t *testing.T) {
@@ -25,15 +25,15 @@ func TestNewAWDChallengeCommandFacadeUsesProvidedImportService(t *testing.T) {
 
 type awdChallengeCommandFacadeRepoStub struct{}
 
-func (awdChallengeCommandFacadeRepoStub) CreateAWDChallenge(context.Context, *model.AWDChallenge) error {
+func (awdChallengeCommandFacadeRepoStub) CreateAWDChallenge(context.Context, *challengeentity.AWDChallenge) error {
 	return nil
 }
 
-func (awdChallengeCommandFacadeRepoStub) FindAWDChallengeByID(context.Context, int64) (*model.AWDChallenge, error) {
+func (awdChallengeCommandFacadeRepoStub) FindAWDChallengeByID(context.Context, int64) (*challengeentity.AWDChallenge, error) {
 	return nil, nil
 }
 
-func (awdChallengeCommandFacadeRepoStub) UpdateAWDChallenge(context.Context, *model.AWDChallenge) error {
+func (awdChallengeCommandFacadeRepoStub) UpdateAWDChallenge(context.Context, *challengeentity.AWDChallenge) error {
 	return nil
 }
 

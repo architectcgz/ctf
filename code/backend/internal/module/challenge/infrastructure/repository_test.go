@@ -68,9 +68,9 @@ func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 		Title:  "Normal Web",
 		Status: model.ChallengeStatusPublished,
 	}
-	awdChallenge := &model.AWDChallenge{
+	awdChallenge := &challengeentity.AWDChallenge{
 		Name:   "AWD Web",
-		Status: model.AWDChallengeStatusPublished,
+		Status: challengeentity.AWDChallengeStatusPublished,
 	}
 	if err := db.Create(normalChallenge).Error; err != nil {
 		t.Fatalf("create normal challenge: %v", err)
@@ -354,14 +354,14 @@ func TestRepositoryCreateAndListAWDChallenges(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	template := &model.AWDChallenge{
+	template := &challengeentity.AWDChallenge{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
 		Difficulty:     "hard",
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusDraft,
+		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
+		Status:         challengeentity.AWDChallengeStatusDraft,
 	}
 
 	if err := repo.CreateAWDChallenge(context.Background(), template); err != nil {

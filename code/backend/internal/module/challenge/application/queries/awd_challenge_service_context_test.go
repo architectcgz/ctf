@@ -4,23 +4,23 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type awdChallengeQueryContextRepoStub struct {
-	findByIDFn func(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	listFn     func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
+	findByIDFn func(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error)
+	listFn     func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error)
 }
 
-func (s *awdChallengeQueryContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s *awdChallengeQueryContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *awdChallengeQueryContextRepoStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s *awdChallengeQueryContextRepoStub) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
@@ -36,12 +36,12 @@ func TestAWDChallengeQueryServiceGetChallengePropagatesContextToRepository(t *te
 	expectedCtxValue := "ctx-get"
 	findCalled := false
 	repo := &awdChallengeQueryContextRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.AWDChallenge{ID: id, Name: "Bank Portal AWD", Slug: "bank-portal-awd"}, nil
+			return &challengeentity.AWDChallenge{ID: id, Name: "Bank Portal AWD", Slug: "bank-portal-awd"}, nil
 		},
 	}
 	service := NewAWDChallengeQueryService(repo)
@@ -66,7 +66,7 @@ func TestAWDChallengeQueryServiceListChallengesPropagatesContextToRepository(t *
 	expectedCtxValue := "ctx-list"
 	listCalled := false
 	repo := &awdChallengeQueryContextRepoStub{
-		listFn: func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+		listFn: func(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list ctx value %v, got %v", expectedCtxValue, got)
@@ -74,7 +74,7 @@ func TestAWDChallengeQueryServiceListChallengesPropagatesContextToRepository(t *
 			if query == nil || query.Page != 1 || query.Size != 10 {
 				t.Fatalf("unexpected query: %+v", query)
 			}
-			return []*model.AWDChallenge{
+			return []*challengeentity.AWDChallenge{
 				{ID: 1, Name: "Bank Portal AWD", Slug: "bank-portal-awd"},
 			}, 1, nil
 		},

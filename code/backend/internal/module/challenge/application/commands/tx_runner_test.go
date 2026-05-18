@@ -310,7 +310,7 @@ func (s *testAWDChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(c
 	if normalizedSlug == "" {
 		return nil
 	}
-	var existing model.AWDChallenge
+	var existing challengeentity.AWDChallenge
 	err := s.tx(ctx).Unscoped().
 		Select("id", "slug", "name").
 		Where("slug = ?", normalizedSlug).
@@ -326,7 +326,7 @@ func (s *testAWDChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(c
 	}
 }
 
-func (s *testAWDChallengeImportTxStore) CreateImportedAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (s *testAWDChallengeImportTxStore) CreateImportedAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	return s.rawRepo.CreateAWDChallenge(ctx, challenge)
 }
 

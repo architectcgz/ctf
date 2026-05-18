@@ -8,8 +8,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -67,7 +67,7 @@ func (s *awdChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(ctx c
 		return nil
 	}
 
-	var existing model.AWDChallenge
+	var existing challengeentity.AWDChallenge
 	err := s.tx(ctx).Unscoped().
 		Select("id", "slug", "name").
 		Where("slug = ?", normalizedSlug).
@@ -85,7 +85,7 @@ func (s *awdChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(ctx c
 
 func (s *awdChallengeImportTxStore) CreateImportedAWDChallenge(
 	ctx context.Context,
-	challenge *model.AWDChallenge,
+	challenge *challengeentity.AWDChallenge,
 ) error {
 	return s.rawRepo.CreateAWDChallenge(ctx, challenge)
 }

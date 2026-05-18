@@ -86,15 +86,15 @@ type ChallengeSolvedCountCache interface {
 }
 
 type AWDChallengeCommandRepository interface {
-	CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
-	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
+	CreateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error
+	FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error)
+	UpdateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error
 	DeleteAWDChallenge(ctx context.Context, id int64) error
 }
 
 type AWDChallengeQueryRepository interface {
-	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
+	FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error)
+	ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error)
 }
 
 type ChallengeImageUsageRepository interface {
@@ -229,7 +229,7 @@ type ChallengeImportTxRunner interface {
 type AWDChallengeImportTxStore interface {
 	ChallengeImportedImageTxStore
 	RejectImportedAWDChallengeSlugConflict(ctx context.Context, slug string) error
-	CreateImportedAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
+	CreateImportedAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error
 }
 
 type AWDChallengeImportTxRunner interface {

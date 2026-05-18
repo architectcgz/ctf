@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"gorm.io/gorm"
@@ -523,7 +524,7 @@ func (r *Repository) fillStudentDimensionFacts(
 			FROM awd_challenges ac
 			WHERE ac.status = ?
 			GROUP BY ac.category
-		`, model.AWDChallengeStatusPublished).Scan(&publishedRows).Error; err != nil {
+		`, challengecontracts.AWDChallengeStatusPublished).Scan(&publishedRows).Error; err != nil {
 			return fmt.Errorf("get awd published dimension totals: %w", err)
 		}
 		awdTotals := make(map[string]int, len(publishedRows))
@@ -548,7 +549,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND al.score_gained > 0
 				AND ac.status = ?
 			GROUP BY ac.category
-		`, userID, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
+		`, userID, model.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&successRows).Error; err != nil {
 			return fmt.Errorf("get awd success dimension facts: %w", err)
 		}
 		for _, row := range successRows {
@@ -582,7 +583,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND al.score_gained > 0
 				AND ac.status = ?
 			GROUP BY ac.category, ac.difficulty
-		`, userID, model.AWDAttackSourceSubmission, model.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
+		`, userID, model.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&difficultyRows).Error; err != nil {
 			return fmt.Errorf("get awd solved difficulty facts: %w", err)
 		}
 		for _, row := range difficultyRows {

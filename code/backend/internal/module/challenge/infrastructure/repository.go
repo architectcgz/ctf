@@ -109,29 +109,29 @@ func (r *Repository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
-func (r *Repository) CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (r *Repository) CreateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
-func (r *Repository) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
-	var challenge model.AWDChallenge
+func (r *Repository) FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
+	var challenge challengeentity.AWDChallenge
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err
 }
 
-func (r *Repository) UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (r *Repository) UpdateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
 func (r *Repository) DeleteAWDChallenge(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Delete(&model.AWDChallenge{}, id).Error
+	return r.dbWithContext(ctx).Delete(&challengeentity.AWDChallenge{}, id).Error
 }
 
-func (r *Repository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
-	var challenges []*model.AWDChallenge
+func (r *Repository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error) {
+	var challenges []*challengeentity.AWDChallenge
 	var total int64
 
-	db := r.dbWithContext(ctx).Model(&model.AWDChallenge{})
+	db := r.dbWithContext(ctx).Model(&challengeentity.AWDChallenge{})
 	if query != nil {
 		if keyword := strings.TrimSpace(query.Keyword); keyword != "" {
 			pattern := "%" + keyword + "%"

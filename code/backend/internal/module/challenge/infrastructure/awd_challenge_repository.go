@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -28,11 +28,11 @@ func NewAWDChallengeRepository(source interface {
 	return &AWDChallengeRepository{source: source}
 }
 
-func (r *AWDChallengeRepository) CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (r *AWDChallengeRepository) CreateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	return r.source.CreateAWDChallenge(ctx, challenge)
 }
 
-func (r *AWDChallengeRepository) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (r *AWDChallengeRepository) FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 	challenge, err := r.source.FindAWDChallengeByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrAWDChallengeNotFound
@@ -40,7 +40,7 @@ func (r *AWDChallengeRepository) FindAWDChallengeByID(ctx context.Context, id in
 	return challenge, err
 }
 
-func (r *AWDChallengeRepository) UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+func (r *AWDChallengeRepository) UpdateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
 	return r.source.UpdateAWDChallenge(ctx, challenge)
 }
 
@@ -48,7 +48,7 @@ func (r *AWDChallengeRepository) DeleteAWDChallenge(ctx context.Context, id int6
 	return r.source.DeleteAWDChallenge(ctx, id)
 }
 
-func (r *AWDChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (r *AWDChallengeRepository) ListAWDChallenges(ctx context.Context, query *challengecontracts.AWDChallengeQuery) ([]*challengeentity.AWDChallenge, int64, error) {
 	return r.source.ListAWDChallenges(ctx, query)
 }
 

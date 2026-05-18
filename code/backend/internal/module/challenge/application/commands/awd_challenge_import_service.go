@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
@@ -186,7 +187,7 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil, err
 	}
 
-	var challenge *model.AWDChallenge
+	var challenge *challengeentity.AWDChallenge
 	if s.txRunner == nil {
 		return nil, fmt.Errorf("awd challenge import tx runner is not configured")
 	}
@@ -209,7 +210,7 @@ func (s *AWDChallengeImportService) CommitImport(
 		}
 
 		now := time.Now().UTC()
-		var current model.AWDChallenge
+		var current challengeentity.AWDChallenge
 		checkerConfigWithArtifact, err := persistAWDCheckerArtifact(parsed)
 		if err != nil {
 			return err
@@ -227,16 +228,16 @@ func (s *AWDChallengeImportService) CommitImport(
 			return err
 		}
 
-		current = model.AWDChallenge{
+		current = challengeentity.AWDChallenge{
 			Name:             parsed.Title,
 			Slug:             parsed.Slug,
 			Category:         parsed.Category,
 			Difficulty:       parsed.Difficulty,
 			Description:      parsed.Description,
-			ServiceType:      model.AWDServiceType(parsed.ServiceType),
-			DeploymentMode:   model.AWDDeploymentMode(parsed.DeploymentMode),
+			ServiceType:      challengeentity.AWDServiceType(parsed.ServiceType),
+			DeploymentMode:   challengeentity.AWDDeploymentMode(parsed.DeploymentMode),
 			Version:          parsed.Version,
-			Status:           model.AWDChallengeStatusPublished,
+			Status:           challengeentity.AWDChallengeStatusPublished,
 			CheckerType:      contestcontracts.AWDCheckerType(parsed.CheckerType),
 			CheckerConfig:    checkerConfigWithArtifact,
 			FlagMode:         parsed.FlagMode,
@@ -244,7 +245,7 @@ func (s *AWDChallengeImportService) CommitImport(
 			DefenseEntryMode: parsed.DefenseEntryMode,
 			AccessConfig:     accessConfigRaw,
 			RuntimeConfig:    runtimeConfigRaw,
-			ReadinessStatus:  model.AWDReadinessStatusPending,
+			ReadinessStatus:  challengeentity.AWDReadinessStatusPending,
 			ReadinessReport:  "",
 			LastVerifiedAt:   nil,
 			LastVerifiedBy:   nil,

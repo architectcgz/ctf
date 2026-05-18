@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	"ctf-platform/internal/teaching/evidence"
@@ -30,7 +31,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Challenge{},
-		&model.AWDChallenge{},
+		&challengecontracts.AWDChallenge{},
 		&contestcontracts.Submission{},
 		&model.AWDRound{},
 		&model.AWDAttackLog{},
@@ -356,7 +357,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	now := time.Date(2026, 4, 13, 13, 0, 0, 0, time.UTC)
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
-	challenge := model.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := challengecontracts.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := model.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []model.Team{
 		{ID: 501, ContestID: 200, Name: "red-team", CaptainID: user.ID, InviteCode: "invite-red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -444,7 +445,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	now := time.Date(2026, 4, 13, 14, 0, 0, 0, time.UTC)
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
-	challenge := model.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := challengecontracts.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := model.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []model.Team{
 		{ID: 601, ContestID: 300, Name: "green-team", CaptainID: user.ID, InviteCode: "invite-green", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -608,9 +609,9 @@ func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
 		t.Fatalf("seed round: %v", err)
 	}
 
-	challenges := []model.AWDChallenge{
-		{ID: 801, Name: "awd-web", Slug: "awd-web", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 802, Name: "awd-pwn", Slug: "awd-pwn", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	challenges := []challengecontracts.AWDChallenge{
+		{ID: 801, Name: "awd-web", Slug: "awd-web", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 802, Name: "awd-pwn", Slug: "awd-pwn", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed awd challenges: %v", err)

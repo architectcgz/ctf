@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -200,7 +201,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CommitImport() error = %v", err)
 	}
-	if committed.ReadinessStatus != string(model.AWDReadinessStatusPending) {
+	if committed.ReadinessStatus != string(challengecontracts.AWDReadinessStatusPending) {
 		t.Fatalf("ReadinessStatus = %q, want pending", committed.ReadinessStatus)
 	}
 	if committed.RuntimeConfig["image_ref"] != "127.0.0.1:5000/awd/awd-platform-build:c1" {

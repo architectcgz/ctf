@@ -5,30 +5,31 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type awdChallengeCommandContextRepoStub struct {
-	createFn   func(ctx context.Context, template *model.AWDChallenge) error
-	findByIDFn func(ctx context.Context, id int64) (*model.AWDChallenge, error)
-	updateFn   func(ctx context.Context, template *model.AWDChallenge) error
+	createFn   func(ctx context.Context, template *challengeentity.AWDChallenge) error
+	findByIDFn func(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error)
+	updateFn   func(ctx context.Context, template *challengeentity.AWDChallenge) error
 	deleteFn   func(ctx context.Context, id int64) error
 }
 
-func (s *awdChallengeCommandContextRepoStub) CreateAWDChallenge(ctx context.Context, template *model.AWDChallenge) error {
+func (s *awdChallengeCommandContextRepoStub) CreateAWDChallenge(ctx context.Context, template *challengeentity.AWDChallenge) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *awdChallengeCommandContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s *awdChallengeCommandContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *awdChallengeCommandContextRepoStub) UpdateAWDChallenge(ctx context.Context, template *model.AWDChallenge) error {
+func (s *awdChallengeCommandContextRepoStub) UpdateAWDChallenge(ctx context.Context, template *challengeentity.AWDChallenge) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, template)
 	}
@@ -51,7 +52,7 @@ func TestAWDChallengeServiceCreateChallengePropagatesContextToRepository(t *test
 	expectedCtxValue := "ctx-create"
 	createCalled := false
 	repo := &awdChallengeCommandContextRepoStub{
-		createFn: func(ctx context.Context, template *model.AWDChallenge) error {
+		createFn: func(ctx context.Context, template *challengeentity.AWDChallenge) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create ctx value %v, got %v", expectedCtxValue, got)
@@ -71,8 +72,8 @@ func TestAWDChallengeServiceCreateChallengePropagatesContextToRepository(t *test
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyHard,
 		Description:    "desc",
-		ServiceType:    string(model.AWDServiceTypeWebHTTP),
-		DeploymentMode: string(model.AWDDeploymentModeSingleContainer),
+		ServiceType:    string(challengeentity.AWDServiceTypeWebHTTP),
+		DeploymentMode: string(challengeentity.AWDDeploymentModeSingleContainer),
 	})
 	if err != nil {
 		t.Fatalf("CreateChallenge() error = %v", err)
@@ -93,28 +94,28 @@ func TestAWDChallengeServiceUpdateChallengePropagatesContextToRepository(t *test
 	findCalled := false
 	updateCalled := false
 	repo := &awdChallengeCommandContextRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.AWDChallenge{
+			return &challengeentity.AWDChallenge{
 				ID:             id,
 				Name:           "Legacy",
 				Slug:           "legacy",
 				Category:       "web",
 				Difficulty:     model.ChallengeDifficultyEasy,
-				ServiceType:    model.AWDServiceTypeWebHTTP,
-				DeploymentMode: model.AWDDeploymentModeSingleContainer,
-				Status:         model.AWDChallengeStatusDraft,
+				ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
+				DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
+				Status:         challengeentity.AWDChallengeStatusDraft,
 			}, nil
 		},
-		updateFn: func(ctx context.Context, template *model.AWDChallenge) error {
+		updateFn: func(ctx context.Context, template *challengeentity.AWDChallenge) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if template.Name != "Bank Portal AWD" || template.Status != model.AWDChallengeStatusPublished {
+			if template.Name != "Bank Portal AWD" || template.Status != challengeentity.AWDChallengeStatusPublished {
 				t.Fatalf("unexpected updated template payload: %+v", template)
 			}
 			return nil
@@ -125,7 +126,7 @@ func TestAWDChallengeServiceUpdateChallengePropagatesContextToRepository(t *test
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.UpdateChallenge(ctx, 99, UpdateAWDChallengeInput{
 		Name:   "Bank Portal AWD",
-		Status: string(model.AWDChallengeStatusPublished),
+		Status: string(challengeentity.AWDChallengeStatusPublished),
 	})
 	if err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
@@ -146,12 +147,12 @@ func TestAWDChallengeServiceDeleteChallengePropagatesContextToRepository(t *test
 	findCalled := false
 	deleteCalled := false
 	repo := &awdChallengeCommandContextRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.AWDChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.AWDChallenge{ID: id, Name: "Legacy"}, nil
+			return &challengeentity.AWDChallenge{ID: id, Name: "Legacy"}, nil
 		},
 		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true

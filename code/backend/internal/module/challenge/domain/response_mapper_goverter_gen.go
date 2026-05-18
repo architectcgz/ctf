@@ -12,7 +12,7 @@ import (
 
 type ChallengeResponseMapperImpl struct{}
 
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDChallenge) contracts.AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source entity.AWDChallenge) contracts.AWDChallengeResp {
 	var contractsAWDChallengeResp contracts.AWDChallengeResp
 	contractsAWDChallengeResp.ID = source.ID
 	contractsAWDChallengeResp.Name = source.Name
@@ -37,7 +37,7 @@ func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBase(source model.AWDCha
 	contractsAWDChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsAWDChallengeResp
 }
-func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *contracts.AWDChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToAWDChallengeRespBasePtr(source *entity.AWDChallenge) *contracts.AWDChallengeResp {
 	var pContractsAWDChallengeResp *contracts.AWDChallengeResp
 	if source != nil {
 		contractsAWDChallengeResp := c.ToAWDChallengeRespBase((*source))

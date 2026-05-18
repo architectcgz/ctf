@@ -13,17 +13,17 @@ import (
 )
 
 type awdPreviewRuntimeChallengeLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
+	findByIDFn func(context.Context, int64) (*challengecontracts.AWDChallenge, error)
 }
 
-func (s awdPreviewRuntimeChallengeLookupStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s awdPreviewRuntimeChallengeLookupStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.AWDChallenge{ID: id}, nil
+	return &challengecontracts.AWDChallenge{ID: id}, nil
 }
 
-func (s awdPreviewRuntimeChallengeLookupStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s awdPreviewRuntimeChallengeLookupStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return nil, 0, errors.New("unexpected ListAWDChallenges call")
 }
 
@@ -46,7 +46,7 @@ func TestAWDServiceLoadPreviewRuntimeDefinitionTreatsPreviewChallengeSentinelAsN
 
 	service := &AWDService{
 		awdChallengeRepo: awdPreviewRuntimeChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+			findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 				return nil, contestports.ErrContestAWDPreviewChallengeNotFound
 			},
 		},
@@ -64,7 +64,7 @@ func TestAWDServicePrepareCheckerPreviewAccessURLAllowsExplicitURLWhenPreviewCha
 
 	service := &AWDService{
 		awdChallengeRepo: awdPreviewRuntimeChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+			findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 				return nil, contestports.ErrContestAWDPreviewChallengeNotFound
 			},
 		},
@@ -103,10 +103,10 @@ func TestAWDServicePrepareCheckerPreviewAccessURLRejectsExplicitURLWhenPreviewIm
 			},
 		},
 		awdChallengeRepo: awdPreviewRuntimeChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
-				return &model.AWDChallenge{
+			findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
+				return &challengecontracts.AWDChallenge{
 					ID:             3202,
-					DeploymentMode: model.AWDDeploymentModeSingleContainer,
+					DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 					RuntimeConfig:  `{"image_id":9901}`,
 				}, nil
 			},

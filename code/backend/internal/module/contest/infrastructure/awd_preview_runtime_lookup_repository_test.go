@@ -13,17 +13,17 @@ import (
 )
 
 type awdPreviewRuntimeChallengeSourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
+	findByIDFn func(context.Context, int64) (*challengecontracts.AWDChallenge, error)
 }
 
-func (s awdPreviewRuntimeChallengeSourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s awdPreviewRuntimeChallengeSourceStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.AWDChallenge{ID: id}, nil
+	return &challengecontracts.AWDChallenge{ID: id}, nil
 }
 
-func (s awdPreviewRuntimeChallengeSourceStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s awdPreviewRuntimeChallengeSourceStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 
@@ -42,7 +42,7 @@ func TestAWDPreviewRuntimeChallengeRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewAWDPreviewRuntimeChallengeRepository(awdPreviewRuntimeChallengeSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -71,7 +71,7 @@ func TestAWDPreviewRuntimeLookupRepositoriesPassThroughNonNotFoundErrors(t *test
 
 	expectedErr := errors.New("boom")
 	challengeRepo := NewAWDPreviewRuntimeChallengeRepository(awdPreviewRuntimeChallengeSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 			return nil, expectedErr
 		},
 	})

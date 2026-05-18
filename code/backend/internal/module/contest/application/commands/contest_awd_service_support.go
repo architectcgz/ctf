@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func buildContestAWDServiceSnapshot(awdChallenge *model.AWDChallenge) string {
+func buildContestAWDServiceSnapshot(awdChallenge *challengecontracts.AWDChallenge) string {
 	if awdChallenge == nil {
 		return "{}"
 	}

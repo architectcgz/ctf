@@ -112,21 +112,21 @@ func (s contestAWDServiceStoreStub) DeleteContestAWDServiceByContestAndID(ctx co
 }
 
 type contestAWDChallengeLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.AWDChallenge, error)
+	findByIDFn func(context.Context, int64) (*challengecontracts.AWDChallenge, error)
 }
 
-func (s contestAWDChallengeLookupStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+func (s contestAWDChallengeLookupStub) FindAWDChallengeByID(ctx context.Context, id int64) (*challengecontracts.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.AWDChallenge{
+	return &challengecontracts.AWDChallenge{
 		ID:          id,
 		Name:        "awd challenge",
 		CheckerType: contestentity.AWDCheckerTypeHTTPStandard,
 	}, nil
 }
 
-func (s contestAWDChallengeLookupStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+func (s contestAWDChallengeLookupStub) ListAWDChallenges(context.Context, *challengecontracts.AWDChallengeQuery) ([]*challengecontracts.AWDChallenge, int64, error) {
 	return nil, 0, nil
 }
 
@@ -200,7 +200,7 @@ func TestContestAWDServiceServiceCreateTreatsAWDChallengeSentinelAsErrNotFound(t
 		nil,
 		contestChallengeLookupStub{},
 		contestAWDChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+			findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 				return nil, contestports.ErrContestAWDChallengeNotFound
 			},
 		},
@@ -259,7 +259,7 @@ func TestContestAWDServiceServiceUpdateTreatsNewAWDChallengeSentinelAsErrNotFoun
 		nil,
 		contestChallengeLookupStub{},
 		contestAWDChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.AWDChallenge, error) {
+			findByIDFn: func(context.Context, int64) (*challengecontracts.AWDChallenge, error) {
 				return nil, contestports.ErrContestAWDChallengeNotFound
 			},
 		},

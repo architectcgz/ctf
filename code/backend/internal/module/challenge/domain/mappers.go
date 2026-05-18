@@ -58,7 +58,7 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*challengeentity
 	return resp
 }
 
-func AWDChallengeRespFromModel(challenge *model.AWDChallenge) *challengecontracts.AWDChallengeResp {
+func AWDChallengeRespFromModel(challenge *challengeentity.AWDChallenge) *challengecontracts.AWDChallengeResp {
 	resp := challengeResponseMapperInst.ToAWDChallengeRespBasePtr(challenge)
 	if resp == nil {
 		return nil
