@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
@@ -19,7 +18,7 @@ type awdScopeControlSpec struct {
 	ControlType string
 }
 
-func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*dto.AdminAWDScopeControlResp, error) {
+func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -49,7 +48,7 @@ func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, 
 	return resp, nil
 }
 
-func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*dto.AdminAWDScopeControlResp, error) {
+func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.validateAdminContestAWDServiceControlScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -79,7 +78,7 @@ func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, con
 	return resp, nil
 }
 
-func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*dto.AdminAWDScopeControlResp, error) {
+func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.validateAdminContestAWDServiceControlScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -102,7 +101,7 @@ func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Conte
 	return resp, nil
 }
 
-func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSpec, actorUserID int64, enabled bool, reason string) (*dto.AdminAWDScopeControlResp, error) {
+func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSpec, actorUserID int64, enabled bool, reason string) (*AdminAWDScopeControlResp, error) {
 	if s == nil || s.repo == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice awd scope control repository is nil"))
 	}
@@ -137,8 +136,8 @@ func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSp
 	return adminAWDScopeControlRespFromModel(spec, row), nil
 }
 
-func adminAWDScopeControlRespFromModel(spec awdScopeControlSpec, row *model.AWDScopeControl) *dto.AdminAWDScopeControlResp {
-	resp := &dto.AdminAWDScopeControlResp{
+func adminAWDScopeControlRespFromModel(spec awdScopeControlSpec, row *model.AWDScopeControl) *AdminAWDScopeControlResp {
+	resp := &AdminAWDScopeControlResp{
 		ScopeType:   spec.ScopeType,
 		ControlType: spec.ControlType,
 		TeamID:      spec.TeamID,

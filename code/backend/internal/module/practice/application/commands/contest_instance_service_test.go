@@ -16,7 +16,6 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
@@ -229,9 +228,7 @@ func TestServicePrewarmAdminContestAWDInstancesStartsVisibleServicesForSelectedT
 
 	service := newContestInstanceTestService(t, db)
 	teamID := int64(40100)
-	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30100, &dto.PrewarmAdminContestAWDInstancesReq{
-		TeamID: &teamID,
-	})
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30100, &teamID)
 	if err != nil {
 		t.Fatalf("PrewarmAdminContestAWDInstances() error = %v", err)
 	}
@@ -303,7 +300,7 @@ func TestServicePrewarmAdminContestAWDInstancesReturnsReusedAndFailedResults(t *
 	}
 
 	service := newContestInstanceTestService(t, db)
-	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30110, &dto.PrewarmAdminContestAWDInstancesReq{})
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30110, nil)
 	if err != nil {
 		t.Fatalf("PrewarmAdminContestAWDInstances() error = %v", err)
 	}
@@ -337,7 +334,7 @@ func TestServicePrewarmAdminContestAWDInstancesRejectsNonRegistrationContest(t *
 	seedContestInstanceTeamMember(t, db, 30120, 40120, 50120, now)
 
 	service := newContestInstanceTestService(t, db)
-	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30120, &dto.PrewarmAdminContestAWDInstancesReq{})
+	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30120, nil)
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected non-registration contest prewarm rejected, resp=%+v err=%v", resp, err)
 	}

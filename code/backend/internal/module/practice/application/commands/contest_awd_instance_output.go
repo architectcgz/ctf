@@ -1,4 +1,4 @@
-package dto
+package commands
 
 import (
 	"time"
@@ -25,23 +25,6 @@ type AdminAWDInstanceItemResp struct {
 	Instance  *instancecontracts.InstanceResp `json:"instance,omitempty"`
 }
 
-type AdminAWDInstanceOrchestrationResp struct {
-	ContestID int64                          `json:"contest_id"`
-	Teams     []*AdminAWDInstanceTeamResp    `json:"teams"`
-	Services  []*AdminAWDInstanceServiceResp `json:"services"`
-	Instances []*AdminAWDInstanceItemResp    `json:"instances"`
-	Controls  []*AdminAWDScopeControlResp    `json:"controls"`
-}
-
-type StartAdminContestAWDInstanceReq struct {
-	TeamID    int64 `json:"team_id" binding:"required"`
-	ServiceID int64 `json:"service_id" binding:"required"`
-}
-
-type PrewarmAdminContestAWDInstancesReq struct {
-	TeamID *int64 `json:"team_id,omitempty"`
-}
-
 type AdminAWDScopeControlResp struct {
 	ScopeType   string     `json:"scope_type"`
 	ControlType string     `json:"control_type"`
@@ -53,19 +36,12 @@ type AdminAWDScopeControlResp struct {
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
 }
 
-type SetAdminContestAWDTeamRetiredReq struct {
-	Retired *bool  `json:"retired" binding:"required"`
-	Reason  string `json:"reason" binding:"max=256"`
-}
-
-type SetAdminContestAWDServiceDisabledReq struct {
-	Disabled *bool  `json:"disabled" binding:"required"`
-	Reason   string `json:"reason" binding:"max=256"`
-}
-
-type SetAdminContestAWDDesiredReconcileSuppressedReq struct {
-	Suppressed *bool  `json:"suppressed" binding:"required"`
-	Reason     string `json:"reason" binding:"max=256"`
+type AdminAWDInstanceOrchestrationResp struct {
+	ContestID int64                          `json:"contest_id"`
+	Teams     []*AdminAWDInstanceTeamResp    `json:"teams"`
+	Services  []*AdminAWDInstanceServiceResp `json:"services"`
+	Instances []*AdminAWDInstanceItemResp    `json:"instances"`
+	Controls  []*AdminAWDScopeControlResp    `json:"controls"`
 }
 
 type AdminAWDInstancePrewarmItemResp struct {

@@ -4,54 +4,53 @@
 package commands
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/instance/contracts"
 )
 
 type practiceCommandResponseMapperImpl struct{}
 
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) dto.AdminAWDInstanceItemResp {
-	var dtoAdminAWDInstanceItemResp dto.AdminAWDInstanceItemResp
-	dtoAdminAWDInstanceItemResp.TeamID = source.TeamID
-	dtoAdminAWDInstanceItemResp.ServiceID = source.ServiceID
-	dtoAdminAWDInstanceItemResp.Instance = c.pContractsInstanceRespToPContractsInstanceResp(source.Instance)
-	return dtoAdminAWDInstanceItemResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) AdminAWDInstanceItemResp {
+	var commandsAdminAWDInstanceItemResp AdminAWDInstanceItemResp
+	commandsAdminAWDInstanceItemResp.TeamID = source.TeamID
+	commandsAdminAWDInstanceItemResp.ServiceID = source.ServiceID
+	commandsAdminAWDInstanceItemResp.Instance = c.pContractsInstanceRespToPContractsInstanceResp(source.Instance)
+	return commandsAdminAWDInstanceItemResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp {
-	dtoAdminAWDInstanceItemResp := c.ToAdminAWDInstanceItemResp(source)
-	return &dtoAdminAWDInstanceItemResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *AdminAWDInstanceItemResp {
+	commandsAdminAWDInstanceItemResp := c.ToAdminAWDInstanceItemResp(source)
+	return &commandsAdminAWDInstanceItemResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp {
-	var dtoAdminAWDInstanceServiceResp dto.AdminAWDInstanceServiceResp
-	dtoAdminAWDInstanceServiceResp.ServiceID = source.ID
-	dtoAdminAWDInstanceServiceResp.AWDChallengeID = source.AWDChallengeID
-	dtoAdminAWDInstanceServiceResp.DisplayName = source.DisplayName
-	dtoAdminAWDInstanceServiceResp.IsVisible = source.IsVisible
-	return dtoAdminAWDInstanceServiceResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceResp(source model.ContestAWDService) AdminAWDInstanceServiceResp {
+	var commandsAdminAWDInstanceServiceResp AdminAWDInstanceServiceResp
+	commandsAdminAWDInstanceServiceResp.ServiceID = source.ID
+	commandsAdminAWDInstanceServiceResp.AWDChallengeID = source.AWDChallengeID
+	commandsAdminAWDInstanceServiceResp.DisplayName = source.DisplayName
+	commandsAdminAWDInstanceServiceResp.IsVisible = source.IsVisible
+	return commandsAdminAWDInstanceServiceResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *dto.AdminAWDInstanceServiceResp {
-	var pDtoAdminAWDInstanceServiceResp *dto.AdminAWDInstanceServiceResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *AdminAWDInstanceServiceResp {
+	var pCommandsAdminAWDInstanceServiceResp *AdminAWDInstanceServiceResp
 	if source != nil {
-		dtoAdminAWDInstanceServiceResp := c.ToAdminAWDInstanceServiceResp((*source))
-		pDtoAdminAWDInstanceServiceResp = &dtoAdminAWDInstanceServiceResp
+		commandsAdminAWDInstanceServiceResp := c.ToAdminAWDInstanceServiceResp((*source))
+		pCommandsAdminAWDInstanceServiceResp = &commandsAdminAWDInstanceServiceResp
 	}
-	return pDtoAdminAWDInstanceServiceResp
+	return pCommandsAdminAWDInstanceServiceResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamResp(source model.Team) dto.AdminAWDInstanceTeamResp {
-	var dtoAdminAWDInstanceTeamResp dto.AdminAWDInstanceTeamResp
-	dtoAdminAWDInstanceTeamResp.TeamID = source.ID
-	dtoAdminAWDInstanceTeamResp.TeamName = source.Name
-	dtoAdminAWDInstanceTeamResp.CaptainID = source.CaptainID
-	return dtoAdminAWDInstanceTeamResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamResp(source model.Team) AdminAWDInstanceTeamResp {
+	var commandsAdminAWDInstanceTeamResp AdminAWDInstanceTeamResp
+	commandsAdminAWDInstanceTeamResp.TeamID = source.ID
+	commandsAdminAWDInstanceTeamResp.TeamName = source.Name
+	commandsAdminAWDInstanceTeamResp.CaptainID = source.CaptainID
+	return commandsAdminAWDInstanceTeamResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamRespPtr(source *model.Team) *dto.AdminAWDInstanceTeamResp {
-	var pDtoAdminAWDInstanceTeamResp *dto.AdminAWDInstanceTeamResp
+func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamRespPtr(source *model.Team) *AdminAWDInstanceTeamResp {
+	var pCommandsAdminAWDInstanceTeamResp *AdminAWDInstanceTeamResp
 	if source != nil {
-		dtoAdminAWDInstanceTeamResp := c.ToAdminAWDInstanceTeamResp((*source))
-		pDtoAdminAWDInstanceTeamResp = &dtoAdminAWDInstanceTeamResp
+		commandsAdminAWDInstanceTeamResp := c.ToAdminAWDInstanceTeamResp((*source))
+		pCommandsAdminAWDInstanceTeamResp = &commandsAdminAWDInstanceTeamResp
 	}
-	return pDtoAdminAWDInstanceTeamResp
+	return pCommandsAdminAWDInstanceTeamResp
 }
 func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source model.Submission) ChallengeSubmissionRecordResp {
 	var commandsChallengeSubmissionRecordResp ChallengeSubmissionRecordResp

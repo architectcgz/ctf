@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -86,7 +85,7 @@ func restartCleanupRuntimeView(instance *model.Instance) *model.Instance {
 	return &copied
 }
 
-func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error) {
+func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*AdminAWDInstanceOrchestrationResp, error) {
 	if s.contestScope == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -118,22 +117,22 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	resp := &dto.AdminAWDInstanceOrchestrationResp{
+	resp := &AdminAWDInstanceOrchestrationResp{
 		ContestID: contestID,
-		Teams:     make([]*dto.AdminAWDInstanceTeamResp, 0, len(teams)),
-		Services:  make([]*dto.AdminAWDInstanceServiceResp, 0, len(services)),
-		Instances: make([]*dto.AdminAWDInstanceItemResp, 0, len(instances)),
-		Controls:  make([]*dto.AdminAWDScopeControlResp, 0, len(controls)),
+		Teams:     make([]*AdminAWDInstanceTeamResp, 0, len(teams)),
+		Services:  make([]*AdminAWDInstanceServiceResp, 0, len(services)),
+		Instances: make([]*AdminAWDInstanceItemResp, 0, len(instances)),
+		Controls:  make([]*AdminAWDScopeControlResp, 0, len(controls)),
 	}
 	for _, team := range teams {
-		resp.Teams = append(resp.Teams, &dto.AdminAWDInstanceTeamResp{
+		resp.Teams = append(resp.Teams, &AdminAWDInstanceTeamResp{
 			TeamID:    team.ID,
 			TeamName:  team.Name,
 			CaptainID: team.CaptainID,
 		})
 	}
 	for _, service := range services {
-		resp.Services = append(resp.Services, &dto.AdminAWDInstanceServiceResp{
+		resp.Services = append(resp.Services, &AdminAWDInstanceServiceResp{
 			ServiceID:      service.ID,
 			AWDChallengeID: service.AWDChallengeID,
 			DisplayName:    service.DisplayName,
@@ -150,7 +149,7 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 			continue
 		}
 		seen[key] = struct{}{}
-		resp.Instances = append(resp.Instances, &dto.AdminAWDInstanceItemResp{
+		resp.Instances = append(resp.Instances, &AdminAWDInstanceItemResp{
 			TeamID:    *instance.TeamID,
 			ServiceID: *instance.ServiceID,
 			Instance:  domain.InstanceRespFromModel(instance, s.config.Container.PublicHost, s.config.Container.AccessHost),
@@ -165,11 +164,11 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	return resp, nil
 }
 
-func adminAWDScopeControlRecordResp(control *model.AWDScopeControl) *dto.AdminAWDScopeControlResp {
+func adminAWDScopeControlRecordResp(control *model.AWDScopeControl) *AdminAWDScopeControlResp {
 	if control == nil {
 		return nil
 	}
-	resp := &dto.AdminAWDScopeControlResp{
+	resp := &AdminAWDScopeControlResp{
 		ScopeType:   control.ScopeType,
 		ControlType: control.ControlType,
 		TeamID:      control.TeamID,

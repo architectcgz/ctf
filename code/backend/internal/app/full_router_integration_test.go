@@ -31,6 +31,7 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -286,7 +287,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 		name    string
 		path    string
 		payload map[string]any
-		assert  func(*testing.T, *dto.AdminAWDScopeControlResp)
+		assert  func(*testing.T, *practicecommands.AdminAWDScopeControlResp)
 	}{
 		{
 			name: "retire team",
@@ -295,7 +296,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 				"retired": true,
 				"reason":  "retired-by-admin",
 			},
-			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
 				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeRetired || resp.TeamID != awdTeam.ID {
 					t.Fatalf("unexpected retirement response: %+v", resp)
@@ -309,7 +310,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 				"disabled": true,
 				"reason":   "disabled-by-admin",
 			},
-			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
 				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
 					t.Fatalf("unexpected disable response: %+v", resp)
@@ -323,7 +324,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 				"suppressed": true,
 				"reason":     "manual-suppress",
 			},
-			assert: func(t *testing.T, resp *dto.AdminAWDScopeControlResp) {
+			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
 				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
 					t.Fatalf("unexpected suppress response: %+v", resp)
@@ -334,7 +335,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 		resp := performFullRouterRequest(t, env.router, http.MethodPut, tc.path, tc.payload, adminHeaders)
 		assertFullRouterStatus(t, resp, http.StatusOK)
 
-		var result dto.AdminAWDScopeControlResp
+		var result practicecommands.AdminAWDScopeControlResp
 		decodeFullRouterData(t, resp, &result)
 		tc.assert(t, &result)
 	}
@@ -342,7 +343,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/instances", env.awdContest.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var orchestration dto.AdminAWDInstanceOrchestrationResp
+	var orchestration practicecommands.AdminAWDInstanceOrchestrationResp
 	decodeFullRouterData(t, resp, &orchestration)
 	if len(orchestration.Controls) < 3 {
 		t.Fatalf("expected 3 awd controls in orchestration view, got %+v", orchestration.Controls)

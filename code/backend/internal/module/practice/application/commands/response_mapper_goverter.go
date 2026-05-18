@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
@@ -25,20 +24,20 @@ type adminAWDInstanceItemRespSource struct {
 type practiceCommandResponseMapper interface {
 	// goverter:map ID TeamID
 	// goverter:map Name TeamName
-	ToAdminAWDInstanceTeamResp(source model.Team) dto.AdminAWDInstanceTeamResp
-	ToAdminAWDInstanceTeamRespPtr(source *model.Team) *dto.AdminAWDInstanceTeamResp
+	ToAdminAWDInstanceTeamResp(source model.Team) AdminAWDInstanceTeamResp
+	ToAdminAWDInstanceTeamRespPtr(source *model.Team) *AdminAWDInstanceTeamResp
 
 	// goverter:map ID ServiceID
-	ToAdminAWDInstanceServiceResp(source model.ContestAWDService) dto.AdminAWDInstanceServiceResp
-	ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *dto.AdminAWDInstanceServiceResp
+	ToAdminAWDInstanceServiceResp(source model.ContestAWDService) AdminAWDInstanceServiceResp
+	ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *AdminAWDInstanceServiceResp
 
 	// goverter:ignore Status
 	// goverter:ignore Answer
 	ToChallengeSubmissionRecordRespBase(source model.Submission) ChallengeSubmissionRecordResp
 	ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *ChallengeSubmissionRecordResp
 
-	ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) dto.AdminAWDInstanceItemResp
-	ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp
+	ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) AdminAWDInstanceItemResp
+	ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *AdminAWDInstanceItemResp
 }
 
 var practiceCommandResponseMapperInst practiceCommandResponseMapper

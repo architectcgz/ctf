@@ -9,7 +9,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
@@ -213,7 +212,7 @@ func (s *Service) recordScopedAWDServiceOperation(ctx context.Context, instanceI
 	s.recordAWDServiceOperation(ctx, instanceID, contestID, scope, operationType, status, audit.RequestedBy, audit.RequestedByID, audit.Reason, audit.SLABillable)
 }
 
-func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error) {
+func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*AdminAWDInstanceItemResp, error) {
 	challengeID, ownerUserID, scope, err := s.resolveAdminContestAWDServiceInstanceScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -225,14 +224,14 @@ func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID
 	if err != nil {
 		return nil, err
 	}
-	return &dto.AdminAWDInstanceItemResp{
+	return &AdminAWDInstanceItemResp{
 		TeamID:    teamID,
 		ServiceID: serviceID,
 		Instance:  instance,
 	}, nil
 }
 
-func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error) {
+func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*AdminAWDInstancePrewarmResp, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -243,11 +242,8 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	if contest.Status != model.ContestStatusRegistration {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("awd 赛前预热仅支持报名阶段"))
 	}
-	if req == nil {
-		req = &dto.PrewarmAdminContestAWDInstancesReq{}
-	}
 
-	teams, err := s.resolveAdminContestAWDPrewarmTeams(ctx, contestID, req.TeamID)
+	teams, err := s.resolveAdminContestAWDPrewarmTeams(ctx, contestID, teamID)
 	if err != nil {
 		return nil, err
 	}
@@ -259,9 +255,9 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	resp := &dto.AdminAWDInstancePrewarmResp{
+	resp := &AdminAWDInstancePrewarmResp{
 		ContestID: contestID,
-		Results:   make([]*dto.AdminAWDInstancePrewarmItemResp, 0, len(teams)*len(services)),
+		Results:   make([]*AdminAWDInstancePrewarmItemResp, 0, len(teams)*len(services)),
 	}
 	for _, team := range teams {
 		for _, service := range services {
@@ -309,8 +305,8 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 	return teams, nil
 }
 
-func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *model.Team, service *model.ContestAWDService, existingInstances []*model.Instance) *dto.AdminAWDInstancePrewarmItemResp {
-	result := &dto.AdminAWDInstancePrewarmItemResp{
+func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *model.Team, service *model.ContestAWDService, existingInstances []*model.Instance) *AdminAWDInstancePrewarmItemResp {
+	result := &AdminAWDInstancePrewarmItemResp{
 		Outcome: adminAWDPrewarmOutcomeFailed,
 	}
 	if team != nil {

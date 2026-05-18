@@ -28,12 +28,12 @@ type practiceService interface {
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
 	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
-	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
-	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
-	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*dto.AdminAWDScopeControlResp, error)
-	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*dto.AdminAWDScopeControlResp, error)
-	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*dto.AdminAWDScopeControlResp, error)
-	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error)
+	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*practicecommands.AdminAWDInstanceOrchestrationResp, error)
+	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*practicecommands.AdminAWDInstanceItemResp, error)
+	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
+	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*practicecommands.AdminAWDInstancePrewarmResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*practicecommands.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*practicecommands.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
@@ -172,7 +172,7 @@ func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 		return
 	}
 
-	var req dto.StartAdminContestAWDInstanceReq
+	var req StartAdminContestAWDInstanceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -205,7 +205,7 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 		return
 	}
 
-	var req dto.PrewarmAdminContestAWDInstancesReq
+	var req PrewarmAdminContestAWDInstancesReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -215,7 +215,7 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.PrewarmAdminContestAWDInstances(c.Request.Context(), contestID, &req)
+	resp, err := h.service.PrewarmAdminContestAWDInstances(c.Request.Context(), contestID, req.TeamID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -238,7 +238,7 @@ func (h *Handler) SetAdminContestAWDTeamRetired(c *gin.Context) {
 		return
 	}
 
-	var req dto.SetAdminContestAWDTeamRetiredReq
+	var req SetAdminContestAWDTeamRetiredReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -278,7 +278,7 @@ func (h *Handler) SetAdminContestAWDTeamServiceDisabled(c *gin.Context) {
 		return
 	}
 
-	var req dto.SetAdminContestAWDServiceDisabledReq
+	var req SetAdminContestAWDServiceDisabledReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
@@ -319,7 +319,7 @@ func (h *Handler) SetAdminContestAWDDesiredReconcileSuppressed(c *gin.Context) {
 		return
 	}
 
-	var req dto.SetAdminContestAWDDesiredReconcileSuppressedReq
+	var req SetAdminContestAWDDesiredReconcileSuppressedReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(c, err)
 		return
