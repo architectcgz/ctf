@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 )
 
 func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(t *testing.T) {

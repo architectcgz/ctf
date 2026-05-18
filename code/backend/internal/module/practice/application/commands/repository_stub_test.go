@@ -10,9 +10,9 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 )
 
 type stubPracticeRepository struct {

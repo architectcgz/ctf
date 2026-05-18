@@ -13,11 +13,11 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	"ctf-platform/internal/module/practice/testsupport"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	"ctf-platform/internal/pkg/cache"
 )
 

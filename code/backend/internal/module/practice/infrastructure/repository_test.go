@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 

@@ -18,10 +18,10 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
@@ -764,7 +764,7 @@ func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serv
 				"flag_prefix": "flag",
 			},
 		}),
-		ValidationState: model.AWDCheckerValidationStatePending,
+		ValidationState: string(model.AWDCheckerValidationStatePending),
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {

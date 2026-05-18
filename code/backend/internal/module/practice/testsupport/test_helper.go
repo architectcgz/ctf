@@ -8,8 +8,8 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceentity "ctf-platform/internal/module/practice/entity"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 )
 
 func SetupPracticeTestDB(t *testing.T) *gorm.DB {

@@ -9,10 +9,10 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	"ctf-platform/pkg/errcode"
 )
 
