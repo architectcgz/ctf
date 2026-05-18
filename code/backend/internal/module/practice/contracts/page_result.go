@@ -1,4 +1,4 @@
-package dto
+package contracts
 
 type PageResult[T any] struct {
 	List  []T   `json:"list"`

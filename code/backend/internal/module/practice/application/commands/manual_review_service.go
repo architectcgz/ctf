@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -105,7 +104,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	requesterID int64,
 	requesterRole string,
 	query *practicecontracts.TeacherManualReviewSubmissionQuery,
-) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error) {
+) (*practicecontracts.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error) {
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
@@ -133,7 +132,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 		respItems = append(respItems, manualReviewListItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp]{
+	return &practicecontracts.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,

@@ -23,7 +23,6 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
@@ -48,6 +47,7 @@ import (
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
@@ -299,7 +299,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("unexpected list challenges status: %d body=%s", listBeforeResp.Code, listBeforeResp.Body.String())
 	}
 	listBeforeBody := decodeFlowEnvelope(t, listBeforeResp)
-	listBefore := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listBeforeBody.Data)
+	listBefore := decodeFlowJSON[practicecontracts.PageResult[json.RawMessage]](t, listBeforeBody.Data)
 	listBeforeItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listBefore.List))
 	if len(listBeforeItems) != 1 {
 		t.Fatalf("expected 1 published challenge, got %+v", listBeforeItems)
@@ -549,7 +549,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("unexpected post-submit list status: %d body=%s", listAfterResp.Code, listAfterResp.Body.String())
 	}
 	listAfterBody := decodeFlowEnvelope(t, listAfterResp)
-	listAfter := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listAfterBody.Data)
+	listAfter := decodeFlowJSON[practicecontracts.PageResult[json.RawMessage]](t, listAfterBody.Data)
 	listAfterItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listAfter.List))
 	if len(listAfterItems) != 1 {
 		t.Fatalf("expected 1 challenge after submit, got %+v", listAfterItems)
@@ -767,7 +767,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		t.Fatalf("unexpected list challenges status: %d body=%s", listResp.Code, listResp.Body.String())
 	}
 	listBody := decodeFlowEnvelope(t, listResp)
-	listPage := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listBody.Data)
+	listPage := decodeFlowJSON[practicecontracts.PageResult[json.RawMessage]](t, listBody.Data)
 	listItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listPage.List))
 	if len(listItems) != 0 {
 		t.Fatalf("expected unpublished challenge to stay hidden, got %+v", listItems)

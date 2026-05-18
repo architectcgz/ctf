@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -36,7 +35,7 @@ type practiceService interface {
 	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*practicecommands.AdminAWDInstancePrewarmResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*practicecommands.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*practicecommands.ChallengeSubmissionRecordResp, error)
-	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*practicecontracts.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
 	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *practicecontracts.ReviewManualReviewSubmissionReq) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
 }
