@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -59,192 +58,65 @@ func (r *Repository) WithinAWDServiceOperationTx(ctx context.Context, fn func(tx
 	})
 }
 
-func contestRecordFromEntity(contest *contestentity.Contest) *practiceports.ContestRecord {
-	if contest == nil {
-		return nil
-	}
-	return &practiceports.ContestRecord{
-		ID:            contest.ID,
-		Mode:          contest.Mode,
-		EndTime:       contest.EndTime,
-		PausedSeconds: contest.PausedSeconds,
-		Status:        contest.Status,
-	}
-}
-
-func contestRecordListFromEntities(items []*contestentity.Contest) []*practiceports.ContestRecord {
-	result := make([]*practiceports.ContestRecord, 0, len(items))
-	for _, item := range items {
-		result = append(result, contestRecordFromEntity(item))
-	}
-	return result
-}
-
-func contestChallengeRecordFromEntity(item *contestentity.ContestChallenge) *practiceports.ContestChallengeRecord {
-	if item == nil {
-		return nil
-	}
-	return &practiceports.ContestChallengeRecord{
-		ContestID:   item.ContestID,
-		ChallengeID: item.ChallengeID,
-		IsVisible:   item.IsVisible,
-	}
-}
-
-func contestAWDServiceRecordFromEntity(service *contestentity.ContestAWDService) *practiceports.ContestAWDServiceRecord {
-	if service == nil {
-		return nil
-	}
-	return &practiceports.ContestAWDServiceRecord{
-		ID:              service.ID,
-		ContestID:       service.ContestID,
-		AWDChallengeID:  service.AWDChallengeID,
-		DisplayName:     service.DisplayName,
-		ServiceSnapshot: service.ServiceSnapshot,
-		ScoreConfig:     service.ScoreConfig,
-		IsVisible:       service.IsVisible,
-	}
-}
-
-func contestAWDServiceRecordListFromEntities(items []*contestentity.ContestAWDService) []*practiceports.ContestAWDServiceRecord {
-	result := make([]*practiceports.ContestAWDServiceRecord, 0, len(items))
-	for _, item := range items {
-		result = append(result, contestAWDServiceRecordFromEntity(item))
-	}
-	return result
-}
-
-func contestTeamRecordFromEntity(team *contestentity.Team) *practiceports.ContestTeamRecord {
-	if team == nil {
-		return nil
-	}
-	return &practiceports.ContestTeamRecord{
-		ID:        team.ID,
-		ContestID: team.ContestID,
-		Name:      team.Name,
-		CaptainID: team.CaptainID,
-	}
-}
-
-func contestTeamRecordListFromEntities(items []*contestentity.Team) []*practiceports.ContestTeamRecord {
-	result := make([]*practiceports.ContestTeamRecord, 0, len(items))
-	for _, item := range items {
-		result = append(result, contestTeamRecordFromEntity(item))
-	}
-	return result
-}
-
-func submissionRecordFromEntity(submission *contestentity.Submission) *practiceports.SubmissionRecord {
-	if submission == nil {
-		return nil
-	}
-	return &practiceports.SubmissionRecord{
-		ID:            submission.ID,
-		UserID:        submission.UserID,
-		ChallengeID:   submission.ChallengeID,
-		ContestID:     submission.ContestID,
-		TeamID:        submission.TeamID,
-		Flag:          submission.Flag,
-		IsCorrect:     submission.IsCorrect,
-		ReviewStatus:  submission.ReviewStatus,
-		ReviewedBy:    submission.ReviewedBy,
-		ReviewedAt:    submission.ReviewedAt,
-		ReviewComment: submission.ReviewComment,
-		Score:         submission.Score,
-		SubmittedAt:   submission.SubmittedAt,
-		UpdatedAt:     submission.UpdatedAt,
-	}
-}
-
-func submissionRecordListFromEntities(items []contestentity.Submission) []practiceports.SubmissionRecord {
-	result := make([]practiceports.SubmissionRecord, 0, len(items))
-	for i := range items {
-		record := submissionRecordFromEntity(&items[i])
-		if record != nil {
-			result = append(result, *record)
-		}
-	}
-	return result
-}
-
-func submissionEntityFromRecord(submission *practiceports.SubmissionRecord) *contestentity.Submission {
-	if submission == nil {
-		return nil
-	}
-	return &contestentity.Submission{
-		ID:            submission.ID,
-		UserID:        submission.UserID,
-		ChallengeID:   submission.ChallengeID,
-		ContestID:     submission.ContestID,
-		TeamID:        submission.TeamID,
-		Flag:          submission.Flag,
-		IsCorrect:     submission.IsCorrect,
-		ReviewStatus:  submission.ReviewStatus,
-		ReviewedBy:    submission.ReviewedBy,
-		ReviewedAt:    submission.ReviewedAt,
-		ReviewComment: submission.ReviewComment,
-		Score:         submission.Score,
-		SubmittedAt:   submission.SubmittedAt,
-		UpdatedAt:     submission.UpdatedAt,
-	}
-}
-
 func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
-	var contest contestentity.Contest
+	var contest contestRow
 	if err := r.dbWithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
 		return nil, err
 	}
-	return contestRecordFromEntity(&contest), nil
+	return contest.toRecord(), nil
 }
 
 func (r *Repository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*practiceports.ContestRecord, error) {
-	var contests []*contestentity.Contest
+	var contests []*contestRow
 	if err := r.dbWithContext(ctx).
 		Where("mode = ? AND status IN ? AND deleted_at IS NULL",
-			contestentity.ContestModeAWD,
-			[]string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen},
+			practiceports.ContestModeAWD,
+			[]string{practiceports.ContestStatusRunning, practiceports.ContestStatusFrozen},
 		).
 		Order("id ASC").
 		Find(&contests).Error; err != nil {
 		return nil, err
 	}
-	return contestRecordListFromEntities(contests), nil
+	return contestRowsToRecords(contests), nil
 }
 
 func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*practiceports.ContestChallengeRecord, error) {
-	var contestChallenge contestentity.ContestChallenge
+	var contestChallenge contestChallengeProjection
 	if err := r.dbWithContext(ctx).
+		Table("contest_challenges").
+		Select("contest_id, challenge_id, is_visible").
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		First(&contestChallenge).Error; err != nil {
+		Where("deleted_at IS NULL").
+		Take(&contestChallenge).Error; err != nil {
 		return nil, err
 	}
-	return contestChallengeRecordFromEntity(&contestChallenge), nil
+	return contestChallenge.toRecord(), nil
 }
 
 func (r *Repository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRecord, error) {
-	var service contestentity.ContestAWDService
+	var service contestAWDServiceRow
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
 		Where("deleted_at IS NULL").
 		First(&service).Error; err != nil {
 		return nil, err
 	}
-	return contestAWDServiceRecordFromEntity(&service), nil
+	return service.toRecord(), nil
 }
 
 func (r *Repository) FindContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
-	var service contestentity.ContestAWDService
+	var service contestAWDServiceRow
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
 		Where("deleted_at IS NULL").
 		First(&service).Error; err != nil {
 		return nil, err
 	}
-	return buildContestAWDServiceRuntimeSubject(&service)
+	return buildContestAWDServiceRuntimeSubject(service.toRecord())
 }
 
 func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*practiceports.ContestAWDServiceRecord, error) {
-	var services []*contestentity.ContestAWDService
+	var services []*contestAWDServiceRow
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Where("deleted_at IS NULL").
@@ -252,7 +124,7 @@ func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64
 		Find(&services).Error; err != nil {
 		return nil, err
 	}
-	return contestAWDServiceRecordListFromEntities(services), nil
+	return contestAWDServiceRowsToRecords(services), nil
 }
 
 func (r *Repository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
@@ -272,31 +144,33 @@ func (r *Repository) ListContestAWDInstances(ctx context.Context, contestID int6
 }
 
 func (r *Repository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
-	var team contestentity.Team
+	var team contestTeamRow
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, teamID).
 		First(&team).Error; err != nil {
 		return nil, err
 	}
-	return contestTeamRecordFromEntity(&team), nil
+	return team.toRecord(), nil
 }
 
 func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*practiceports.ContestTeamRecord, error) {
-	var teams []*contestentity.Team
+	var teams []*contestTeamRow
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("created_at ASC, id ASC").
 		Find(&teams).Error; err != nil {
 		return nil, err
 	}
-	return contestTeamRecordListFromEntities(teams), nil
+	return contestTeamRowsToRecords(teams), nil
 }
 
 func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
-	var registration contestentity.ContestRegistration
+	var registration contestRegistrationProjection
 	if err := r.dbWithContext(ctx).
+		Table("contest_registrations").
+		Select("team_id, status").
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
-		First(&registration).Error; err != nil {
+		Take(&registration).Error; err != nil {
 		return nil, err
 	}
 	return &practiceports.ContestParticipation{
@@ -376,7 +250,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 	if scope.ServiceID != nil {
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.ServiceID).
-			First(&contestentity.ContestAWDService{}).Error
+			First(&contestAWDServiceRow{}).Error
 	}
 	switch scope.ShareScope {
 	case model.InstanceSharingShared:
@@ -387,13 +261,13 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 		if scope.TeamID != nil {
 			return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 				Where("id = ?", *scope.TeamID).
-				First(&contestentity.Team{}).Error
+				First(&contestTeamRow{}).Error
 		}
 	}
 	if scope.TeamID != nil && scope.ShareScope == model.InstanceSharingPerTeam {
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.TeamID).
-			First(&contestentity.Team{}).Error
+			First(&contestTeamRow{}).Error
 	}
 	return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", userID).
@@ -619,23 +493,23 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 
 // CreateSubmission 创建提交记录
 func (r *Repository) CreateSubmission(ctx context.Context, submission *practiceports.SubmissionRecord) error {
-	entity := submissionEntityFromRecord(submission)
-	if entity == nil {
+	row := submissionRowFromRecord(submission)
+	if row == nil {
 		return nil
 	}
-	if err := r.dbWithContext(ctx).Create(entity).Error; err != nil {
+	if err := r.dbWithContext(ctx).Create(row).Error; err != nil {
 		return err
 	}
-	submission.ID = entity.ID
+	submission.ID = row.ID
 	return nil
 }
 
 // FindCorrectSubmission 查找用户是否已正确提交过该题
 func (r *Repository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
-	var submission contestentity.Submission
+	var submission submissionRow
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
-	return submissionRecordFromEntity(&submission), err
+	return submission.toRecord(), err
 }
 
 func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
@@ -658,21 +532,21 @@ func (r *Repository) ListChallengeSubmissions(ctx context.Context, userID, chall
 		limit = 20
 	}
 
-	var submissions []contestentity.Submission
+	var submissions []submissionRow
 	err := r.dbWithContext(ctx).
 		Where("user_id = ? AND challenge_id = ? AND contest_id IS NULL", userID, challengeID).
 		Order("submitted_at DESC, id DESC").
 		Limit(limit).
 		Find(&submissions).Error
-	return submissionRecordListFromEntities(submissions), err
+	return submissionRowsToRecords(submissions), err
 }
 
 func (r *Repository) UpdateSubmission(ctx context.Context, submission *practiceports.SubmissionRecord) error {
-	entity := submissionEntityFromRecord(submission)
-	if entity == nil {
+	row := submissionRowFromRecord(submission)
+	if row == nil {
 		return nil
 	}
-	return r.dbWithContext(ctx).Save(entity).Error
+	return r.dbWithContext(ctx).Save(row).Error
 }
 
 func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
@@ -831,7 +705,7 @@ func (r *Repository) listTeacherManualReviewSubmissions(
 // CountRecentSubmissions 统计时间窗口内的提交次数
 func (r *Repository) CountRecentSubmissions(ctx context.Context, userID, challengeID int64, since time.Time) (int64, error) {
 	var count int64
-	err := r.dbWithContext(ctx).Model(&contestentity.Submission{}).
+	err := r.dbWithContext(ctx).Model(&submissionRow{}).
 		Where("user_id = ? AND challenge_id = ? AND submitted_at >= ?", userID, challengeID, since).
 		Count(&count).Error
 	return count, err
