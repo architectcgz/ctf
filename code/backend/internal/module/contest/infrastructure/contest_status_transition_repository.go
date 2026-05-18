@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (r *Repository) RecordAppliedTransition(ctx context.Context, transitionResult contestdomain.ContestStatusTransitionResult) (int64, error) {
@@ -24,7 +24,7 @@ func (r *Repository) RecordAppliedTransition(ctx context.Context, transitionResu
 
 func (r *Repository) ListTransitionsForSideEffectReplay(ctx context.Context, limit int) ([]contestdomain.ContestStatusTransitionResult, error) {
 	query := r.dbWithContext(ctx).
-		Model(&model.ContestStatusTransition{}).
+		Model(&contestentity.ContestStatusTransition{}).
 		Where("side_effect_status IN ?", []string{
 			contestdomain.ContestStatusTransitionSideEffectPending,
 			contestdomain.ContestStatusTransitionSideEffectFailed,
@@ -34,7 +34,7 @@ func (r *Repository) ListTransitionsForSideEffectReplay(ctx context.Context, lim
 		query = query.Limit(limit)
 	}
 
-	var records []model.ContestStatusTransition
+	var records []contestentity.ContestStatusTransition
 	if err := query.Find(&records).Error; err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func (r *Repository) ListTransitionsForSideEffectReplay(ctx context.Context, lim
 	return results, nil
 }
 
-func upsertContestStatusTransitionRecord(db *gorm.DB, transitionResult contestdomain.ContestStatusTransitionResult) (*model.ContestStatusTransition, error) {
-	record := model.ContestStatusTransition{
+func upsertContestStatusTransitionRecord(db *gorm.DB, transitionResult contestdomain.ContestStatusTransitionResult) (*contestentity.ContestStatusTransition, error) {
+	record := contestentity.ContestStatusTransition{
 		ContestID:        transitionResult.Transition.ContestID,
 		StatusVersion:    transitionResult.StatusVersion,
 		FromStatus:       transitionResult.Transition.FromStatus,
@@ -83,7 +83,7 @@ func upsertContestStatusTransitionRecord(db *gorm.DB, transitionResult contestdo
 	}
 	if dbResult.RowsAffected == 0 {
 		if err := db.
-			Model(&model.ContestStatusTransition{}).
+			Model(&contestentity.ContestStatusTransition{}).
 			Select("id").
 			Where("contest_id = ? AND status_version = ?", record.ContestID, record.StatusVersion).
 			First(&record).Error; err != nil {
@@ -97,7 +97,7 @@ func (r *Repository) MarkTransitionSideEffectsSucceeded(ctx context.Context, id 
 	if id <= 0 {
 		return nil
 	}
-	return r.dbWithContext(ctx).Model(&model.ContestStatusTransition{}).
+	return r.dbWithContext(ctx).Model(&contestentity.ContestStatusTransition{}).
 		Where("id = ?", id).
 		Updates(map[string]any{
 			"side_effect_status": contestdomain.ContestStatusTransitionSideEffectSucceeded,
@@ -113,7 +113,7 @@ func (r *Repository) MarkTransitionSideEffectsFailed(ctx context.Context, id int
 	if cause != nil {
 		message = cause.Error()
 	}
-	return r.dbWithContext(ctx).Model(&model.ContestStatusTransition{}).
+	return r.dbWithContext(ctx).Model(&contestentity.ContestStatusTransition{}).
 		Where("id = ?", id).
 		Updates(map[string]any{
 			"side_effect_status": contestdomain.ContestStatusTransitionSideEffectFailed,

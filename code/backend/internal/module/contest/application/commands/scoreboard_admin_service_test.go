@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -103,7 +104,7 @@ func TestScoreboardAdminServiceFreezeScoreboardCreatesTransitionAndSnapshot(t *t
 		t.Fatalf("unexpected frozen contest: %+v", contest)
 	}
 
-	var transition model.ContestStatusTransition
+	var transition contestentity.ContestStatusTransition
 	if err := db.Where("contest_id = ? AND status_version = ?", contestID, 3).First(&transition).Error; err != nil {
 		t.Fatalf("load transition: %v", err)
 	}

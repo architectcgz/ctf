@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -51,7 +52,7 @@ func TestRepositoryRecordAppliedTransition(t *testing.T) {
 		t.Fatalf("expected positive record id, got %d", recordID)
 	}
 
-	var record model.ContestStatusTransition
+	var record contestentity.ContestStatusTransition
 	if err := db.First(&record, recordID).Error; err != nil {
 		t.Fatalf("load transition record: %v", err)
 	}
@@ -77,7 +78,7 @@ func TestRepositoryMarkTransitionSideEffects(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	record := model.ContestStatusTransition{
+	record := contestentity.ContestStatusTransition{
 		ID:               301,
 		ContestID:        201,
 		StatusVersion:    1,
@@ -98,7 +99,7 @@ func TestRepositoryMarkTransitionSideEffects(t *testing.T) {
 		t.Fatalf("MarkTransitionSideEffectsSucceeded() error = %v", err)
 	}
 
-	var succeeded model.ContestStatusTransition
+	var succeeded contestentity.ContestStatusTransition
 	if err := db.First(&succeeded, 301).Error; err != nil {
 		t.Fatalf("load succeeded record: %v", err)
 	}
@@ -110,7 +111,7 @@ func TestRepositoryMarkTransitionSideEffects(t *testing.T) {
 		t.Fatalf("MarkTransitionSideEffectsFailed() error = %v", err)
 	}
 
-	var failed model.ContestStatusTransition
+	var failed contestentity.ContestStatusTransition
 	if err := db.First(&failed, 301).Error; err != nil {
 		t.Fatalf("load failed record: %v", err)
 	}
@@ -192,7 +193,7 @@ func TestRepositoryListTransitionsForSideEffectReplay(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	records := []model.ContestStatusTransition{
+	records := []contestentity.ContestStatusTransition{
 		{
 			ID:               401,
 			ContestID:        203,

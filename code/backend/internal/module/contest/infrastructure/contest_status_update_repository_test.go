@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -58,7 +59,7 @@ func TestRepositoryApplyStatusTransitionApplied(t *testing.T) {
 		t.Fatalf("expected persisted status version 1, got %d", contest.StatusVersion)
 	}
 
-	var transition model.ContestStatusTransition
+	var transition contestentity.ContestStatusTransition
 	if err := db.Where("contest_id = ? AND status_version = ?", 101, 1).First(&transition).Error; err != nil {
 		t.Fatalf("load transition record: %v", err)
 	}

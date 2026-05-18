@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -254,7 +255,7 @@ func TestContestServiceUpdateContestRecordsManualStatusTransition(t *testing.T) 
 		t.Fatalf("expected status_version 1, got %d", contest.StatusVersion)
 	}
 
-	var transition model.ContestStatusTransition
+	var transition contestentity.ContestStatusTransition
 	if err := db.Where("contest_id = ? AND status_version = ?", 806, 1).First(&transition).Error; err != nil {
 		t.Fatalf("load transition record: %v", err)
 	}
