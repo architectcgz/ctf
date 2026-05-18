@@ -67,12 +67,12 @@ func (s *challengePackageExportTxStore) FindTopology(ctx context.Context, challe
 func (s *challengePackageExportTxStore) FindPackageRevisionByID(
 	ctx context.Context,
 	revisionID int64,
-) (*model.ChallengePackageRevision, error) {
+) (*challengeentity.ChallengePackageRevision, error) {
 	return s.packageRepo.FindChallengePackageRevisionByID(ctx, revisionID)
 }
 
 func (s *challengePackageExportTxStore) NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
-	var latest model.ChallengePackageRevision
+	var latest challengeentity.ChallengePackageRevision
 	err := s.rawRepo.DB(ctx).
 		Where("challenge_id = ?", challengeID).
 		Order("revision_no DESC, id DESC").
@@ -124,7 +124,7 @@ func (s *challengePackageExportTxStore) FindImageRefByID(ctx context.Context, im
 
 func (s *challengePackageExportTxStore) CreateExportRevision(
 	ctx context.Context,
-	revision *model.ChallengePackageRevision,
+	revision *challengeentity.ChallengePackageRevision,
 ) error {
 	return s.rawRepo.CreateChallengePackageRevision(ctx, revision)
 }

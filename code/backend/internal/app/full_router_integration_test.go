@@ -91,7 +91,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.SubmissionWriteup{},
 	&model.EnvironmentTemplate{},
 	&model.ChallengeTopology{},
-	&model.ChallengePackageRevision{},
+	&challengeentity.ChallengePackageRevision{},
 	&model.Submission{},
 	&model.Instance{},
 	&model.PortAllocation{},
@@ -451,10 +451,10 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 		t.Fatalf("write package export: %v", err)
 	}
 	now := time.Now().UTC()
-	packageRevision := &model.ChallengePackageRevision{
+	packageRevision := &challengeentity.ChallengePackageRevision{
 		ChallengeID:      adminChallenge.ID,
 		RevisionNo:       1,
-		SourceType:       model.ChallengePackageRevisionSourceExported,
+		SourceType:       challengeentity.ChallengePackageRevisionSourceExported,
 		ArchivePath:      packageArchivePath,
 		SourceDir:        filepath.Join(packageArchiveDir, "source"),
 		ManifestSnapshot: "{}",

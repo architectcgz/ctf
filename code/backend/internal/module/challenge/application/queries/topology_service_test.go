@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -100,34 +101,34 @@ func (s *stubEnvironmentTemplateRepository) IncrementUsage(ctx context.Context, 
 type challengeTopologyContextKey string
 
 type stubChallengePackageRevisionRepository struct {
-	createFn     func(context.Context, *model.ChallengePackageRevision) error
-	findByIDFn   func(context.Context, int64) (*model.ChallengePackageRevision, error)
-	findLatestFn func(context.Context, int64) (*model.ChallengePackageRevision, error)
-	listFn       func(context.Context, int64) ([]*model.ChallengePackageRevision, error)
+	createFn     func(context.Context, *challengeentity.ChallengePackageRevision) error
+	findByIDFn   func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error)
+	findLatestFn func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error)
+	listFn       func(context.Context, int64) ([]*challengeentity.ChallengePackageRevision, error)
 }
 
-func (s *stubChallengePackageRevisionRepository) CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (s *stubChallengePackageRevisionRepository) CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, revision)
 	}
 	return nil
 }
 
-func (s *stubChallengePackageRevisionRepository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error) {
+func (s *stubChallengePackageRevisionRepository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*challengeentity.ChallengePackageRevision, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengePackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error) {
+func (s *stubChallengePackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePackageRevision, error) {
 	if s.findLatestFn != nil {
 		return s.findLatestFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengePackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error) {
+func (s *stubChallengePackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengePackageRevision, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, challengeID)
 	}
@@ -240,10 +241,10 @@ func TestTopologyServiceGetChallengeTopologyIgnoresMissingPackageRevision(t *tes
 			}, nil
 		},
 	}, nil, &stubChallengePackageRevisionRepository{
-		listFn: func(context.Context, int64) ([]*model.ChallengePackageRevision, error) {
-			return []*model.ChallengePackageRevision{{ID: revisionID, ChallengeID: 9, RevisionNo: 1}}, nil
+		listFn: func(context.Context, int64) ([]*challengeentity.ChallengePackageRevision, error) {
+			return []*challengeentity.ChallengePackageRevision{{ID: revisionID, ChallengeID: 9, RevisionNo: 1}}, nil
 		},
-		findByIDFn: func(context.Context, int64) (*model.ChallengePackageRevision, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error) {
 			return nil, challengeports.ErrChallengeTopologyPackageRevisionNotFound
 		},
 	})

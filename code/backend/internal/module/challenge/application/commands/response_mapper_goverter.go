@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -60,8 +59,8 @@ type challengeCommandResponseMapper interface {
 	// goverter:ignore ChallengeID
 	// goverter:ignore FileName
 	// goverter:ignore DownloadURL
-	ToChallengePackageExportRespBase(source model.ChallengePackageRevision) challengecontracts.ChallengePackageExportResp
-	ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *challengecontracts.ChallengePackageExportResp
+	ToChallengePackageExportRespBase(source challengeentity.ChallengePackageRevision) challengecontracts.ChallengePackageExportResp
+	ToChallengePackageExportRespBasePtr(source *challengeentity.ChallengePackageRevision) *challengecontracts.ChallengePackageExportResp
 }
 
 var challengeCommandResponseMapperInst challengeCommandResponseMapper

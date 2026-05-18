@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -31,19 +32,19 @@ var _ challengeports.ChallengeTopologyWriteRepository = (*ctxOnlyChallengeTopolo
 
 type ctxOnlyChallengePackageRevisionRepository struct{}
 
-func (ctxOnlyChallengePackageRevisionRepository) CreateChallengePackageRevision(context.Context, *model.ChallengePackageRevision) error {
+func (ctxOnlyChallengePackageRevisionRepository) CreateChallengePackageRevision(context.Context, *challengeentity.ChallengePackageRevision) error {
 	return nil
 }
 
-func (ctxOnlyChallengePackageRevisionRepository) FindChallengePackageRevisionByID(context.Context, int64) (*model.ChallengePackageRevision, error) {
+func (ctxOnlyChallengePackageRevisionRepository) FindChallengePackageRevisionByID(context.Context, int64) (*challengeentity.ChallengePackageRevision, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengePackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(context.Context, int64) (*model.ChallengePackageRevision, error) {
+func (ctxOnlyChallengePackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(context.Context, int64) (*challengeentity.ChallengePackageRevision, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengePackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(context.Context, int64) ([]*model.ChallengePackageRevision, error) {
+func (ctxOnlyChallengePackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(context.Context, int64) ([]*challengeentity.ChallengePackageRevision, error) {
 	return nil, nil
 }
 

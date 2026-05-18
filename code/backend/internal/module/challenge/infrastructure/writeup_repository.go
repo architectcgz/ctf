@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 
 	"gorm.io/gorm"
@@ -480,28 +481,28 @@ func (r *Repository) DeleteChallengeTopologyByChallengeID(ctx context.Context, c
 	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
 }
 
-func (r *Repository) CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (r *Repository) CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	return r.dbWithContext(ctx).Create(revision).Error
 }
 
-func (r *Repository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error) {
-	var revision model.ChallengePackageRevision
+func (r *Repository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*challengeentity.ChallengePackageRevision, error) {
+	var revision challengeentity.ChallengePackageRevision
 	if err := r.dbWithContext(ctx).Where("id = ?", id).First(&revision).Error; err != nil {
 		return nil, err
 	}
 	return &revision, nil
 }
 
-func (r *Repository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error) {
-	var revision model.ChallengePackageRevision
+func (r *Repository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePackageRevision, error) {
+	var revision challengeentity.ChallengePackageRevision
 	if err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&revision).Error; err != nil {
 		return nil, err
 	}
 	return &revision, nil
 }
 
-func (r *Repository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error) {
-	var revisions []*model.ChallengePackageRevision
+func (r *Repository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengePackageRevision, error) {
+	var revisions []*challengeentity.ChallengePackageRevision
 	if err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").Find(&revisions).Error; err != nil {
 		return nil, err
 	}

@@ -138,7 +138,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePackageFileResps(source []Parse
 	}
 	return contractsChallengePackageFileRespList
 }
-func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionResp(source model.ChallengePackageRevision) contracts.ChallengePackageRevisionResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionResp(source entity.ChallengePackageRevision) contracts.ChallengePackageRevisionResp {
 	var contractsChallengePackageRevisionResp contracts.ChallengePackageRevisionResp
 	contractsChallengePackageRevisionResp.ID = source.ID
 	contractsChallengePackageRevisionResp.RevisionNo = source.RevisionNo
@@ -159,7 +159,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionResp(source mode
 	contractsChallengePackageRevisionResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsChallengePackageRevisionResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *model.ChallengePackageRevision) *contracts.ChallengePackageRevisionResp {
+func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *entity.ChallengePackageRevision) *contracts.ChallengePackageRevisionResp {
 	var pContractsChallengePackageRevisionResp *contracts.ChallengePackageRevisionResp
 	if source != nil {
 		contractsChallengePackageRevisionResp := c.ToChallengePackageRevisionResp((*source))

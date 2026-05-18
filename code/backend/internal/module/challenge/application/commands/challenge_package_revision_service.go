@@ -29,7 +29,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 	challenge *model.Challenge,
 	record storedChallengeImportPreview,
 	parsed *domain.ParsedChallengePackage,
-) (*model.ChallengePackageRevision, error) {
+) (*challengeentity.ChallengePackageRevision, error) {
 	if challenge == nil || parsed == nil {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("缺少题目或题包信息"))
 	}
@@ -54,10 +54,10 @@ func (s *ChallengeService) createImportedPackageRevision(
 	}
 
 	now := time.Now().UTC()
-	revision := &model.ChallengePackageRevision{
+	revision := &challengeentity.ChallengePackageRevision{
 		ChallengeID:        challenge.ID,
 		RevisionNo:         revisionNo,
-		SourceType:         model.ChallengePackageRevisionSourceImported,
+		SourceType:         challengeentity.ChallengePackageRevisionSourceImported,
 		PackageSlug:        resolveChallengePackageSlug(challenge, parsed.Slug),
 		ArchivePath:        archivePath,
 		SourceDir:          sourceDir,
@@ -148,10 +148,10 @@ func (s *ChallengeService) ExportChallengePackage(
 
 		now := time.Now().UTC()
 		parentRevisionID := baseRevision.ID
-		revision := &model.ChallengePackageRevision{
+		revision := &challengeentity.ChallengePackageRevision{
 			ChallengeID:        challengeID,
 			RevisionNo:         revisionNo,
-			SourceType:         model.ChallengePackageRevisionSourceExported,
+			SourceType:         challengeentity.ChallengePackageRevisionSourceExported,
 			ParentRevisionID:   &parentRevisionID,
 			PackageSlug:        resolveChallengePackageSlug(challenge, baseRevision.PackageSlug),
 			ArchivePath:        archivePath,
@@ -205,7 +205,7 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		return nil, err
 	}
 
-	var revision *model.ChallengePackageRevision
+	var revision *challengeentity.ChallengePackageRevision
 	var err error
 	if revisionID != nil && *revisionID > 0 {
 		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *revisionID)
@@ -265,7 +265,7 @@ func rewriteChallengeManifestSnapshot(
 	challenge *model.Challenge,
 	topology *model.ChallengeTopology,
 	hints []challengeentity.ChallengeHint,
-	revision *model.ChallengePackageRevision,
+	revision *challengeentity.ChallengePackageRevision,
 ) (string, error) {
 	var manifest domain.ChallengePackageManifest
 	manifestRaw := strings.TrimSpace(revision.ManifestSnapshot)
@@ -351,7 +351,7 @@ func rewriteChallengeTopologySnapshot(
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	topology *model.ChallengeTopology,
-	revision *model.ChallengePackageRevision,
+	revision *challengeentity.ChallengePackageRevision,
 ) (string, error) {
 	if topology == nil {
 		return "", nil
@@ -479,7 +479,7 @@ func resolveTopologySnapshot(topology *domain.ParsedChallengePackageTopology) st
 	return topology.Raw
 }
 
-func resolveRevisionTopologySourcePath(topology *model.ChallengeTopology, revision *model.ChallengePackageRevision) string {
+func resolveRevisionTopologySourcePath(topology *model.ChallengeTopology, revision *challengeentity.ChallengePackageRevision) string {
 	if topology != nil && strings.TrimSpace(topology.SourcePath) != "" {
 		return strings.TrimSpace(topology.SourcePath)
 	}

@@ -164,7 +164,7 @@ func (s *testChallengeImportTxStore) ApplyImportedFlagUpdates(ctx context.Contex
 }
 
 func (s *testChallengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
-	var latest model.ChallengePackageRevision
+	var latest challengeentity.ChallengePackageRevision
 	err := s.tx(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -176,7 +176,7 @@ func (s *testChallengeImportTxStore) NextChallengePackageRevisionNo(ctx context.
 	}
 }
 
-func (s *testChallengeImportTxStore) CreateImportedPackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (s *testChallengeImportTxStore) CreateImportedPackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	return s.rawRepo.CreateChallengePackageRevision(ctx, revision)
 }
 
@@ -399,12 +399,12 @@ func (s *testChallengePackageExportTxStore) FindTopology(ctx context.Context, ch
 	return s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
-func (s *testChallengePackageExportTxStore) FindPackageRevisionByID(ctx context.Context, revisionID int64) (*model.ChallengePackageRevision, error) {
+func (s *testChallengePackageExportTxStore) FindPackageRevisionByID(ctx context.Context, revisionID int64) (*challengeentity.ChallengePackageRevision, error) {
 	return s.packageRepo.FindChallengePackageRevisionByID(ctx, revisionID)
 }
 
 func (s *testChallengePackageExportTxStore) NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
-	var latest model.ChallengePackageRevision
+	var latest challengeentity.ChallengePackageRevision
 	err := s.rawRepo.DB(ctx).Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&latest).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -448,7 +448,7 @@ func (s *testChallengePackageExportTxStore) FindImageRefByID(ctx context.Context
 	return fmt.Sprintf("%s:%s", strings.TrimSpace(image.Name), strings.TrimSpace(image.Tag)), nil
 }
 
-func (s *testChallengePackageExportTxStore) CreateExportRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (s *testChallengePackageExportTxStore) CreateExportRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	return s.rawRepo.CreateChallengePackageRevision(ctx, revision)
 }
 

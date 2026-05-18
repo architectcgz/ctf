@@ -199,7 +199,7 @@ func (s *challengeImportTxStore) ApplyImportedFlagUpdates(
 }
 
 func (s *challengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {
-	var latest model.ChallengePackageRevision
+	var latest challengeentity.ChallengePackageRevision
 	err := s.tx(ctx).
 		Where("challenge_id = ?", challengeID).
 		Order("revision_no DESC, id DESC").
@@ -216,7 +216,7 @@ func (s *challengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Cont
 
 func (s *challengeImportTxStore) CreateImportedPackageRevision(
 	ctx context.Context,
-	revision *model.ChallengePackageRevision,
+	revision *challengeentity.ChallengePackageRevision,
 ) error {
 	return s.rawRepo.CreateChallengePackageRevision(ctx, revision)
 }

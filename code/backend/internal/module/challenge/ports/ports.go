@@ -181,10 +181,10 @@ type ChallengeTopologyWriteRepository interface {
 }
 
 type ChallengePackageRevisionRepository interface {
-	CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
-	FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error)
-	FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error)
-	ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error)
+	CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error
+	FindChallengePackageRevisionByID(ctx context.Context, id int64) (*challengeentity.ChallengePackageRevision, error)
+	FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePackageRevision, error)
+	ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengePackageRevision, error)
 }
 
 type ImportedPlatformBuildImageRequest struct {
@@ -218,7 +218,7 @@ type ChallengeImportTxStore interface {
 	ReplaceImportedHints(ctx context.Context, challengeID int64, hints []challengeentity.ChallengeHint) error
 	ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error
 	NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
-	CreateImportedPackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
+	CreateImportedPackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error
 	UpsertImportedTopology(ctx context.Context, topology *model.ChallengeTopology) error
 }
 
@@ -239,11 +239,11 @@ type AWDChallengeImportTxRunner interface {
 type ChallengePackageExportTxStore interface {
 	FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error)
 	FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*model.ChallengePackageRevision, error)
+	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*challengeentity.ChallengePackageRevision, error)
 	NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
 	ListChallengeHints(ctx context.Context, challengeID int64) ([]challengeentity.ChallengeHint, error)
 	FindImageRefByID(ctx context.Context, imageID int64) (string, error)
-	CreateExportRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
+	CreateExportRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error
 	MarkTopologyExported(ctx context.Context, topologyID int64, revisionID int64, baselineSpec string, updatedAt time.Time) error
 }
 

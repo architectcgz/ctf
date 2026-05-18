@@ -845,7 +845,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&challengeentity.ChallengeHint{},
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},
-		&model.ChallengePackageRevision{},
+		&challengeentity.ChallengePackageRevision{},
 		&model.EnvironmentTemplate{},
 		&model.ContestAWDService{},
 		&model.Submission{},

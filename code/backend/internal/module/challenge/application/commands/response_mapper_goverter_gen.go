@@ -4,7 +4,6 @@
 package commands
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	domain "ctf-platform/internal/module/challenge/domain"
 	entity "ctf-platform/internal/module/challenge/entity"
@@ -80,7 +79,7 @@ func (c *challengeCommandResponseMapperImpl) ToChallengeImportPreviewRespBasePtr
 	}
 	return pContractsChallengeImportPreviewResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(source model.ChallengePackageRevision) contracts.ChallengePackageExportResp {
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(source entity.ChallengePackageRevision) contracts.ChallengePackageExportResp {
 	var contractsChallengePackageExportResp contracts.ChallengePackageExportResp
 	contractsChallengePackageExportResp.RevisionID = source.ID
 	contractsChallengePackageExportResp.ArchivePath = source.ArchivePath
@@ -88,7 +87,7 @@ func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBase(so
 	contractsChallengePackageExportResp.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsChallengePackageExportResp
 }
-func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr(source *model.ChallengePackageRevision) *contracts.ChallengePackageExportResp {
+func (c *challengeCommandResponseMapperImpl) ToChallengePackageExportRespBasePtr(source *entity.ChallengePackageRevision) *contracts.ChallengePackageExportResp {
 	var pContractsChallengePackageExportResp *contracts.ChallengePackageExportResp
 	if source != nil {
 		contractsChallengePackageExportResp := c.ToChallengePackageExportRespBase((*source))

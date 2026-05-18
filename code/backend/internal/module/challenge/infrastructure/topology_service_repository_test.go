@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -89,28 +90,28 @@ func (s topologyTemplateRepositoryStub) IncrementUsage(ctx context.Context, id i
 }
 
 type topologyPackageRevisionRepositoryStub struct {
-	createFn     func(context.Context, *model.ChallengePackageRevision) error
-	findByIDFn   func(context.Context, int64) (*model.ChallengePackageRevision, error)
-	findLatestFn func(context.Context, int64) (*model.ChallengePackageRevision, error)
-	listFn       func(context.Context, int64) ([]*model.ChallengePackageRevision, error)
+	createFn     func(context.Context, *challengeentity.ChallengePackageRevision) error
+	findByIDFn   func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error)
+	findLatestFn func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error)
+	listFn       func(context.Context, int64) ([]*challengeentity.ChallengePackageRevision, error)
 }
 
-func (s topologyPackageRevisionRepositoryStub) CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (s topologyPackageRevisionRepositoryStub) CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, revision)
 	}
 	return nil
 }
 
-func (s topologyPackageRevisionRepositoryStub) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error) {
+func (s topologyPackageRevisionRepositoryStub) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*challengeentity.ChallengePackageRevision, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s topologyPackageRevisionRepositoryStub) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error) {
+func (s topologyPackageRevisionRepositoryStub) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePackageRevision, error) {
 	return s.findLatestFn(ctx, challengeID)
 }
 
-func (s topologyPackageRevisionRepositoryStub) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error) {
+func (s topologyPackageRevisionRepositoryStub) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengePackageRevision, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, challengeID)
 	}
@@ -181,10 +182,10 @@ func TestTopologyPackageRevisionRepositoryMapsRawNotFoundToPortsSentinel(t *test
 	t.Parallel()
 
 	repo := NewTopologyPackageRevisionRepository(topologyPackageRevisionRepositoryStub{
-		findByIDFn: func(context.Context, int64) (*model.ChallengePackageRevision, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findLatestFn: func(context.Context, int64) (*model.ChallengePackageRevision, error) {
+		findLatestFn: func(context.Context, int64) (*challengeentity.ChallengePackageRevision, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

@@ -725,7 +725,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 		t.Fatal("expected imported topology node image to resolve to image id")
 	}
 
-	var revision model.ChallengePackageRevision
+	var revision challengeentity.ChallengePackageRevision
 	if err := db.First(&revision, *topology.PackageRevisionID).Error; err != nil {
 		t.Fatalf("load challenge package revision: %v", err)
 	}

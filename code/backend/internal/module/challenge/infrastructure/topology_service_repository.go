@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -115,11 +116,11 @@ func NewTopologyPackageRevisionRepository(source challengeports.ChallengePackage
 	return &TopologyPackageRevisionRepository{source: source}
 }
 
-func (r *TopologyPackageRevisionRepository) CreateChallengePackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error {
+func (r *TopologyPackageRevisionRepository) CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
 	return r.source.CreateChallengePackageRevision(ctx, revision)
 }
 
-func (r *TopologyPackageRevisionRepository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*model.ChallengePackageRevision, error) {
+func (r *TopologyPackageRevisionRepository) FindChallengePackageRevisionByID(ctx context.Context, id int64) (*challengeentity.ChallengePackageRevision, error) {
 	item, err := r.source.FindChallengePackageRevisionByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeTopologyPackageRevisionNotFound
@@ -127,7 +128,7 @@ func (r *TopologyPackageRevisionRepository) FindChallengePackageRevisionByID(ctx
 	return item, err
 }
 
-func (r *TopologyPackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePackageRevision, error) {
+func (r *TopologyPackageRevisionRepository) FindLatestChallengePackageRevisionByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengePackageRevision, error) {
 	item, err := r.source.FindLatestChallengePackageRevisionByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeTopologyPackageRevisionNotFound
@@ -135,7 +136,7 @@ func (r *TopologyPackageRevisionRepository) FindLatestChallengePackageRevisionBy
 	return item, err
 }
 
-func (r *TopologyPackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengePackageRevision, error) {
+func (r *TopologyPackageRevisionRepository) ListChallengePackageRevisionsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengePackageRevision, error) {
 	return r.source.ListChallengePackageRevisionsByChallengeID(ctx, challengeID)
 }
 
