@@ -407,11 +407,11 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	}
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				if gotContestID != contestID || gotServiceID != serviceID {
 					t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
 				}
-				return &contestentity.ContestAWDService{
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              serviceID,
 					ContestID:       contestID,
 					AWDChallengeID:  502,
@@ -551,8 +551,8 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 	}
 	service := NewService(
 		&stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  503,

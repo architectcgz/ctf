@@ -19,15 +19,15 @@ type stubPracticeRepository struct {
 	withinInstanceStartTxFn                func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error
 	withinInstanceRestartTxFn              func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceRestartTxRepository) error) error
 	withinAWDServiceOperationTxFn          func(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error
-	findContestByIDFn                      func(ctx context.Context, contestID int64) (*contestentity.Contest, error)
-	listDesiredRuntimeAWDContestsFn        func(ctx context.Context) ([]*contestentity.Contest, error)
-	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error)
-	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error)
+	findContestByIDFn                      func(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error)
+	listDesiredRuntimeAWDContestsFn        func(ctx context.Context) ([]*practiceports.ContestRecord, error)
+	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*practiceports.ContestChallengeRecord, error)
+	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRecord, error)
 	findContestAWDServiceRuntimeSubjectFn  func(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error)
-	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*contestentity.ContestAWDService, error)
+	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*practiceports.ContestAWDServiceRecord, error)
 	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*model.Instance, error)
-	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*contestentity.Team, error)
-	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*contestentity.Team, error)
+	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error)
+	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*practiceports.ContestTeamRecord, error)
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error)
 	listContestAWDScopeControlsFn          func(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error)
 	listScopeAWDScopeControlsFn            func(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error)
@@ -49,14 +49,144 @@ type stubPracticeRepository struct {
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
 	releaseReservedPortFn                  func(ctx context.Context, port int) error
 	releasePortForInstanceFn               func(ctx context.Context, port int, instanceID int64) error
-	createSubmissionFn                     func(ctx context.Context, submission *contestentity.Submission) error
-	findCorrectSubmissionFn                func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error)
-	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error)
-	updateSubmissionFn                     func(ctx context.Context, submission *contestentity.Submission) error
+	createSubmissionFn                     func(ctx context.Context, submission *practiceports.SubmissionRecord) error
+	findCorrectSubmissionFn                func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error)
+	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error)
+	updateSubmissionFn                     func(ctx context.Context, submission *practiceports.SubmissionRecord) error
 	findUserByIDFn                         func(ctx context.Context, userID int64) (*model.User, error)
 	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
 	getTeacherManualReviewSubmissionByIDFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
 	isUniqueViolationFn                    func(err error) bool
+}
+
+func practiceContestRecordFromEntity(contest *contestentity.Contest) *practiceports.ContestRecord {
+	if contest == nil {
+		return nil
+	}
+	return &practiceports.ContestRecord{
+		ID:            contest.ID,
+		Mode:          contest.Mode,
+		EndTime:       contest.EndTime,
+		PausedSeconds: contest.PausedSeconds,
+		Status:        contest.Status,
+	}
+}
+
+func practiceContestRecordsFromEntities(contests ...*contestentity.Contest) []*practiceports.ContestRecord {
+	items := make([]*practiceports.ContestRecord, 0, len(contests))
+	for _, contest := range contests {
+		items = append(items, practiceContestRecordFromEntity(contest))
+	}
+	return items
+}
+
+func practiceContestChallengeRecordFromEntity(item *contestentity.ContestChallenge) *practiceports.ContestChallengeRecord {
+	if item == nil {
+		return nil
+	}
+	return &practiceports.ContestChallengeRecord{
+		ContestID:   item.ContestID,
+		ChallengeID: item.ChallengeID,
+		IsVisible:   item.IsVisible,
+	}
+}
+
+func practiceContestAWDServiceRecordFromEntity(service *contestentity.ContestAWDService) *practiceports.ContestAWDServiceRecord {
+	if service == nil {
+		return nil
+	}
+	return &practiceports.ContestAWDServiceRecord{
+		ID:              service.ID,
+		ContestID:       service.ContestID,
+		AWDChallengeID:  service.AWDChallengeID,
+		DisplayName:     service.DisplayName,
+		ServiceSnapshot: service.ServiceSnapshot,
+		ScoreConfig:     service.ScoreConfig,
+		IsVisible:       service.IsVisible,
+	}
+}
+
+func practiceContestAWDServiceRecordsFromEntities(items ...*contestentity.ContestAWDService) []*practiceports.ContestAWDServiceRecord {
+	result := make([]*practiceports.ContestAWDServiceRecord, 0, len(items))
+	for _, item := range items {
+		result = append(result, practiceContestAWDServiceRecordFromEntity(item))
+	}
+	return result
+}
+
+func practiceContestTeamRecordFromEntity(team *contestentity.Team) *practiceports.ContestTeamRecord {
+	if team == nil {
+		return nil
+	}
+	return &practiceports.ContestTeamRecord{
+		ID:        team.ID,
+		ContestID: team.ContestID,
+		Name:      team.Name,
+		CaptainID: team.CaptainID,
+	}
+}
+
+func practiceContestTeamRecordsFromEntities(items ...*contestentity.Team) []*practiceports.ContestTeamRecord {
+	result := make([]*practiceports.ContestTeamRecord, 0, len(items))
+	for _, item := range items {
+		result = append(result, practiceContestTeamRecordFromEntity(item))
+	}
+	return result
+}
+
+func practiceSubmissionRecordFromEntity(submission *contestentity.Submission) *practiceports.SubmissionRecord {
+	if submission == nil {
+		return nil
+	}
+	return &practiceports.SubmissionRecord{
+		ID:            submission.ID,
+		UserID:        submission.UserID,
+		ChallengeID:   submission.ChallengeID,
+		ContestID:     submission.ContestID,
+		TeamID:        submission.TeamID,
+		Flag:          submission.Flag,
+		IsCorrect:     submission.IsCorrect,
+		ReviewStatus:  submission.ReviewStatus,
+		ReviewedBy:    submission.ReviewedBy,
+		ReviewedAt:    submission.ReviewedAt,
+		ReviewComment: submission.ReviewComment,
+		Score:         submission.Score,
+		SubmittedAt:   submission.SubmittedAt,
+		UpdatedAt:     submission.UpdatedAt,
+	}
+}
+
+func practiceSubmissionRecordsFromEntities(items ...contestentity.Submission) []practiceports.SubmissionRecord {
+	result := make([]practiceports.SubmissionRecord, 0, len(items))
+	for i := range items {
+		record := practiceSubmissionRecordFromEntity(&items[i])
+		if record != nil {
+			result = append(result, *record)
+		}
+	}
+	return result
+}
+
+func contestSubmissionEntityFromPracticeRecord(submission *practiceports.SubmissionRecord) *contestentity.Submission {
+	if submission == nil {
+		return nil
+	}
+	return &contestentity.Submission{
+		ID:            submission.ID,
+		UserID:        submission.UserID,
+		ChallengeID:   submission.ChallengeID,
+		ContestID:     submission.ContestID,
+		TeamID:        submission.TeamID,
+		Flag:          submission.Flag,
+		IsCorrect:     submission.IsCorrect,
+		ReviewStatus:  submission.ReviewStatus,
+		ReviewedBy:    submission.ReviewedBy,
+		ReviewedAt:    submission.ReviewedAt,
+		ReviewComment: submission.ReviewComment,
+		Score:         submission.Score,
+		SubmittedAt:   submission.SubmittedAt,
+		UpdatedAt:     submission.UpdatedAt,
+	}
 }
 
 func (s *stubPracticeRepository) WithinInstanceStartTx(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error {
@@ -80,28 +210,28 @@ func (s *stubPracticeRepository) WithinAWDServiceOperationTx(ctx context.Context
 	return fn(s)
 }
 
-func (s *stubPracticeRepository) FindContestByID(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
+func (s *stubPracticeRepository) FindContestByID(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
 	if s.findContestByIDFn != nil {
 		return s.findContestByIDFn(ctx, contestID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*contestentity.Contest, error) {
+func (s *stubPracticeRepository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*practiceports.ContestRecord, error) {
 	if s.listDesiredRuntimeAWDContestsFn != nil {
 		return s.listDesiredRuntimeAWDContestsFn(ctx)
 	}
-	return []*contestentity.Contest{}, nil
+	return []*practiceports.ContestRecord{}, nil
 }
 
-func (s *stubPracticeRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
+func (s *stubPracticeRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*practiceports.ContestChallengeRecord, error) {
 	if s.findContestChallengeFn != nil {
 		return s.findContestChallengeFn(ctx, contestID, challengeID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
+func (s *stubPracticeRepository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 	if s.findContestAWDServiceFn != nil {
 		return s.findContestAWDServiceFn(ctx, contestID, serviceID)
 	}
@@ -119,11 +249,11 @@ func (s *stubPracticeRepository) FindContestAWDServiceRuntimeSubject(ctx context
 	return stubContestAWDServiceRuntimeSubject(service)
 }
 
-func (s *stubPracticeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*contestentity.ContestAWDService, error) {
+func (s *stubPracticeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 	if s.listContestAWDServicesFn != nil {
 		return s.listContestAWDServicesFn(ctx, contestID)
 	}
-	return []*contestentity.ContestAWDService{}, nil
+	return []*practiceports.ContestAWDServiceRecord{}, nil
 }
 
 func (s *stubPracticeRepository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
@@ -133,18 +263,18 @@ func (s *stubPracticeRepository) ListContestAWDInstances(ctx context.Context, co
 	return []*model.Instance{}, nil
 }
 
-func (s *stubPracticeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*contestentity.Team, error) {
+func (s *stubPracticeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
 	if s.findContestTeamFn != nil {
 		return s.findContestTeamFn(ctx, contestID, teamID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) ListContestTeams(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
+func (s *stubPracticeRepository) ListContestTeams(ctx context.Context, contestID int64) ([]*practiceports.ContestTeamRecord, error) {
 	if s.listContestTeamsFn != nil {
 		return s.listContestTeamsFn(ctx, contestID)
 	}
-	return []*contestentity.Team{}, nil
+	return []*practiceports.ContestTeamRecord{}, nil
 }
 
 func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
@@ -238,7 +368,7 @@ func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *m
 	return nil
 }
 
-func stubContestAWDServiceRuntimeSubject(service *contestentity.ContestAWDService) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+func stubContestAWDServiceRuntimeSubject(service *practiceports.ContestAWDServiceRecord) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
 	if service == nil {
 		return nil, nil
 	}
@@ -531,28 +661,28 @@ func (s *stubPracticeRepository) ReleasePortForInstance(ctx context.Context, por
 	return nil
 }
 
-func (s *stubPracticeRepository) CreateSubmission(ctx context.Context, submission *contestentity.Submission) error {
+func (s *stubPracticeRepository) CreateSubmission(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 	if s.createSubmissionFn != nil {
 		return s.createSubmissionFn(ctx, submission)
 	}
 	return nil
 }
 
-func (s *stubPracticeRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+func (s *stubPracticeRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 	if s.findCorrectSubmissionFn != nil {
 		return s.findCorrectSubmissionFn(ctx, userID, challengeID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
+func (s *stubPracticeRepository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
 	if s.listChallengeSubmissionsFn != nil {
 		return s.listChallengeSubmissionsFn(ctx, userID, challengeID, limit)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) UpdateSubmission(ctx context.Context, submission *contestentity.Submission) error {
+func (s *stubPracticeRepository) UpdateSubmission(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 	if s.updateSubmissionFn != nil {
 		return s.updateSubmissionFn(ctx, submission)
 	}

@@ -208,7 +208,7 @@ func TestContestAWDServiceRuntimeSubjectMapsWorkspaceRootsOutsideWritableSetAsRe
 		ServiceSnapshot: `{"name":"Workspace Service","runtime_config":{"defense_workspace":{"seed_root":"docker/workspace","workspace_roots":["docker/workspace/src","docker/workspace/templates","docker/workspace/data"],"writable_roots":["docker/workspace/src"],"readonly_roots":["docker/workspace/data"],"runtime_mounts":[{"source":"docker/workspace/src","target":"/workspace/src","mode":"rw"},{"source":"docker/workspace/templates","target":"/workspace/templates","mode":"ro"},{"source":"docker/workspace/data","target":"/workspace/data","mode":"ro"}]}}}`,
 	}
 
-	subject, err := stubContestAWDServiceRuntimeSubject(service)
+	subject, err := stubContestAWDServiceRuntimeSubject(practiceContestAWDServiceRecordFromEntity(service))
 	if err != nil {
 		t.Fatalf("stubContestAWDServiceRuntimeSubject() error = %v", err)
 	}
@@ -316,8 +316,8 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,
@@ -476,8 +476,8 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,
@@ -608,8 +608,8 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,

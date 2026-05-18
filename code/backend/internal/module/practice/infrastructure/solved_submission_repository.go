@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -21,7 +20,7 @@ func NewSolvedSubmissionRepository(source practiceports.PracticeSolvedSubmission
 	return &SolvedSubmissionRepository{source: source}
 }
 
-func (r *SolvedSubmissionRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+func (r *SolvedSubmissionRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 	submission, err := r.source.FindCorrectSubmission(ctx, userID, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeSolvedSubmissionNotFound

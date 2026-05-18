@@ -7,15 +7,14 @@ import (
 
 	"gorm.io/gorm"
 
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type solvedSubmissionSourceStub struct {
-	findCorrectSubmissionFn func(context.Context, int64, int64) (*contestentity.Submission, error)
+	findCorrectSubmissionFn func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error)
 }
 
-func (s solvedSubmissionSourceStub) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+func (s solvedSubmissionSourceStub) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 	return s.findCorrectSubmissionFn(ctx, userID, challengeID)
 }
 
@@ -23,7 +22,7 @@ func TestSolvedSubmissionRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewSolvedSubmissionRepository(solvedSubmissionSourceStub{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -38,7 +37,7 @@ func TestSolvedSubmissionRepositoryPassesThroughNonNotFoundErrors(t *testing.T) 
 
 	expectedErr := errors.New("boom")
 	repo := NewSolvedSubmissionRepository(solvedSubmissionSourceStub{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return nil, expectedErr
 		},
 	})

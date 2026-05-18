@@ -49,26 +49,26 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 	findServiceCalled := false
 	findExistingCalled := false
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*practiceports.ContestRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest lookup id: %d", gotContestID)
 			}
-			return contest, nil
+			return practiceContestRecordFromEntity(contest), nil
 		},
-		listDesiredRuntimeAWDContestsFn: func(ctx context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		listDesiredRuntimeAWDContestsFn: func(ctx context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestTeamsFn: func(ctx context.Context, gotContestID int64) ([]*contestentity.Team, error) {
+		listContestTeamsFn: func(ctx context.Context, gotContestID int64) ([]*practiceports.ContestTeamRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for teams: %d", gotContestID)
 			}
-			return []*contestentity.Team{team}, nil
+			return practiceContestTeamRecordsFromEntities(team), nil
 		},
-		listContestAWDServicesFn: func(ctx context.Context, gotContestID int64) ([]*contestentity.ContestAWDService, error) {
+		listContestAWDServicesFn: func(ctx context.Context, gotContestID int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for services: %d", gotContestID)
 			}
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*model.Instance, error) {
 			if gotContestID != contestID {
@@ -76,19 +76,19 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 			}
 			return nil, nil
 		},
-		findContestTeamFn: func(ctx context.Context, gotContestID, gotTeamID int64) (*contestentity.Team, error) {
+		findContestTeamFn: func(ctx context.Context, gotContestID, gotTeamID int64) (*practiceports.ContestTeamRecord, error) {
 			findTeamCalled = true
 			if gotContestID != contestID || gotTeamID != teamID {
 				t.Fatalf("unexpected team lookup contest=%d team=%d", gotContestID, gotTeamID)
 			}
-			return team, nil
+			return practiceContestTeamRecordFromEntity(team), nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 			findServiceCalled = true
 			if gotContestID != contestID || gotServiceID != serviceID {
 				t.Fatalf("unexpected service lookup contest=%d service=%d", gotContestID, gotServiceID)
 			}
-			return serviceDef, nil
+			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
 		findScopedExistingInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			findExistingCalled = true
@@ -206,26 +206,26 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 	var operation *model.AWDServiceOperation
 	findRestartableCalled := false
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*practiceports.ContestRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest lookup id: %d", gotContestID)
 			}
-			return contest, nil
+			return practiceContestRecordFromEntity(contest), nil
 		},
-		listDesiredRuntimeAWDContestsFn: func(ctx context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		listDesiredRuntimeAWDContestsFn: func(ctx context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestTeamsFn: func(ctx context.Context, gotContestID int64) ([]*contestentity.Team, error) {
+		listContestTeamsFn: func(ctx context.Context, gotContestID int64) ([]*practiceports.ContestTeamRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for teams: %d", gotContestID)
 			}
-			return []*contestentity.Team{team}, nil
+			return practiceContestTeamRecordsFromEntities(team), nil
 		},
-		listContestAWDServicesFn: func(ctx context.Context, gotContestID int64) ([]*contestentity.ContestAWDService, error) {
+		listContestAWDServicesFn: func(ctx context.Context, gotContestID int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for services: %d", gotContestID)
 			}
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*model.Instance, error) {
 			if gotContestID != contestID {
@@ -233,17 +233,17 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 			}
 			return nil, nil
 		},
-		findContestTeamFn: func(ctx context.Context, gotContestID, gotTeamID int64) (*contestentity.Team, error) {
+		findContestTeamFn: func(ctx context.Context, gotContestID, gotTeamID int64) (*practiceports.ContestTeamRecord, error) {
 			if gotContestID != contestID || gotTeamID != teamID {
 				t.Fatalf("unexpected team lookup contest=%d team=%d", gotContestID, gotTeamID)
 			}
-			return team, nil
+			return practiceContestTeamRecordFromEntity(team), nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 			if gotContestID != contestID || gotServiceID != serviceID {
 				t.Fatalf("unexpected service lookup contest=%d service=%d", gotContestID, gotServiceID)
 			}
-			return serviceDef, nil
+			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
 		findScopedRestartableInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			findRestartableCalled = true
@@ -354,22 +354,22 @@ func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T)
 
 	var resolveCalls int32
 	repo := &stubPracticeRepository{
-		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestTeamsFn: func(context.Context, int64) ([]*contestentity.Team, error) {
-			return []*contestentity.Team{team}, nil
+		listContestTeamsFn: func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordsFromEntities(team), nil
 		},
-		listContestAWDServicesFn: func(context.Context, int64) ([]*contestentity.ContestAWDService, error) {
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
 			return nil, nil
 		},
-		findContestTeamFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
-			return team, nil
+		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordFromEntity(team), nil
 		},
-		findContestAWDServiceFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error) {
 			atomic.AddInt32(&resolveCalls, 1)
 			return nil, errors.New("bad runtime config")
 		},
@@ -452,21 +452,27 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 	var createdInstance *model.Instance
 	var operationCalls int32
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(context.Context, int64) (*contestentity.Contest, error) { return contest, nil },
-		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		findContestByIDFn: func(context.Context, int64) (*practiceports.ContestRecord, error) {
+			return practiceContestRecordFromEntity(contest), nil
 		},
-		listContestTeamsFn: func(context.Context, int64) ([]*contestentity.Team, error) {
-			return []*contestentity.Team{team}, nil
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestAWDServicesFn: func(context.Context, int64) ([]*contestentity.ContestAWDService, error) {
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+		listContestTeamsFn: func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordsFromEntities(team), nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
 			return nil, nil
 		},
-		findContestTeamFn:       func(context.Context, int64, int64) (*contestentity.Team, error) { return team, nil },
-		findContestAWDServiceFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) { return serviceDef, nil },
+		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordFromEntity(team), nil
+		},
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
+		},
 		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
 			return nil, nil
 		},
@@ -569,21 +575,27 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 
 	var createdInstance *model.Instance
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(context.Context, int64) (*contestentity.Contest, error) { return contest, nil },
-		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		findContestByIDFn: func(context.Context, int64) (*practiceports.ContestRecord, error) {
+			return practiceContestRecordFromEntity(contest), nil
 		},
-		listContestTeamsFn: func(context.Context, int64) ([]*contestentity.Team, error) {
-			return []*contestentity.Team{team}, nil
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestAWDServicesFn: func(context.Context, int64) ([]*contestentity.ContestAWDService, error) {
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+		listContestTeamsFn: func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordsFromEntities(team), nil
+		},
+		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
 			return nil, nil
 		},
-		findContestTeamFn:       func(context.Context, int64, int64) (*contestentity.Team, error) { return team, nil },
-		findContestAWDServiceFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) { return serviceDef, nil },
+		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordFromEntity(team), nil
+		},
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
+		},
 		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
 			return nil, nil
 		},
@@ -665,14 +677,14 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 	}
 
 	repo := &stubPracticeRepository{
-		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestTeamsFn: func(context.Context, int64) ([]*contestentity.Team, error) {
-			return []*contestentity.Team{team}, nil
+		listContestTeamsFn: func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordsFromEntities(team), nil
 		},
-		listContestAWDServicesFn: func(context.Context, int64) ([]*contestentity.ContestAWDService, error) {
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
 			return []*model.Instance{activeInstance}, nil
@@ -729,14 +741,14 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 
 	createCalled := false
 	repo := &stubPracticeRepository{
-		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*contestentity.Contest, error) {
-			return []*contestentity.Contest{contest}, nil
+		listDesiredRuntimeAWDContestsFn: func(context.Context) ([]*practiceports.ContestRecord, error) {
+			return practiceContestRecordsFromEntities(contest), nil
 		},
-		listContestTeamsFn: func(context.Context, int64) ([]*contestentity.Team, error) {
-			return []*contestentity.Team{team}, nil
+		listContestTeamsFn: func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error) {
+			return practiceContestTeamRecordsFromEntities(team), nil
 		},
-		listContestAWDServicesFn: func(context.Context, int64) ([]*contestentity.ContestAWDService, error) {
-			return []*contestentity.ContestAWDService{serviceDef}, nil
+		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
+			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
 			return nil, nil

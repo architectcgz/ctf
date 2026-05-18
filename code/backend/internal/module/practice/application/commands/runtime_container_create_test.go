@@ -320,8 +320,8 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  501,
@@ -482,8 +482,8 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  511,
@@ -653,8 +653,8 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	releasedOldPort := false
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  512,
@@ -819,8 +819,8 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  503,
@@ -971,8 +971,8 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
-				return &contestentity.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+				return &practiceports.ContestAWDServiceRecord{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  513,
@@ -1165,11 +1165,11 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	}
 
 	repo := &stubPracticeRepository{
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 			if gotContestID != contestID || gotServiceID != serviceID {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
 			}
-			return &contestentity.ContestAWDService{
+			return &practiceports.ContestAWDServiceRecord{
 				ID:              serviceID,
 				ContestID:       contestID,
 				DisplayName:     "Campus Drive",

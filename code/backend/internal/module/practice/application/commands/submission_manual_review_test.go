@@ -87,9 +87,9 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	var createdSubmission *contestentity.Submission
+	var createdSubmission *practiceports.SubmissionRecord
 	repo := &stubPracticeRepository{
-		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			createdSubmission = submission
 			return nil
 		},
@@ -157,7 +157,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	submissionID := int64(71)
 	reviewerID := int64(301)
 	studentID := int64(201)
-	var updatedSubmission *contestentity.Submission
+	var updatedSubmission *practiceports.SubmissionRecord
 	var scoreUpdateCalls atomic.Int32
 	repo := &stubPracticeRepository{
 		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
@@ -165,7 +165,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				t.Fatalf("unexpected submission id: %d", id)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: contestentity.Submission{
+				Submission: practiceports.SubmissionRecord{
 					ID:           submissionID,
 					UserID:       studentID,
 					ChallengeID:  19,
@@ -179,7 +179,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			updatedSubmission = submission
 			return nil
 		},
@@ -281,11 +281,16 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	bus := events.NewBus()
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
-			return db.Create(submission).Error
+		createSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
+			entity := contestSubmissionEntityFromPracticeRecord(submission)
+			if err := db.Create(entity).Error; err != nil {
+				return err
+			}
+			submission.ID = entity.ID
+			return nil
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
@@ -629,14 +634,14 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			&stubPracticeRepository{
-				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
 					if userID != 7 || challengeID != 11 {
 						t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
 					}
 					if limit <= 0 {
 						t.Fatalf("expected positive limit, got %d", limit)
 					}
-					return []contestentity.Submission{
+					return []practiceports.SubmissionRecord{
 						{
 							ID:           3,
 							UserID:       7,
@@ -762,14 +767,14 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	createSubmissionCalled := false
 	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
 			findCorrectCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-correct ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			createSubmissionCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -889,10 +894,10 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			&stubPracticeRepository{
-				findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+				findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 					return nil, errors.New("raw solved submission repo should not be called")
 				},
-				createSubmissionFn: func(context.Context, *contestentity.Submission) error {
+				createSubmissionFn: func(context.Context, *practiceports.SubmissionRecord) error {
 					createCalled = true
 					return nil
 				},
@@ -907,7 +912,7 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 			nil,
 		),
 		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
 		},
@@ -943,7 +948,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 				t.Fatalf("expected get-review-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: contestentity.Submission{
+				Submission: practiceports.SubmissionRecord{
 					ID:           id,
 					UserID:       88,
 					ChallengeID:  11,
@@ -965,7 +970,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			updatedCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -1274,7 +1279,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 				t.Fatalf("expected get-review ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission:      contestentity.Submission{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: contestentity.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
+				Submission:      practiceports.SubmissionRecord{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: contestentity.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
 				StudentUsername: "student88",
 				StudentName:     "Student 88",
 				ClassName:       "Class A",
@@ -1344,7 +1349,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			t.Fatal("did not expect submission update for student role")
 			return nil
 		},
@@ -1379,7 +1384,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			t.Fatal("did not expect submission update for invalid review status")
 			return nil
 		},
@@ -1414,7 +1419,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			t.Fatal("did not expect requester lookup for oversized review comment")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			t.Fatal("did not expect submission update for oversized review comment")
 			return nil
 		},
@@ -1447,7 +1452,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	repo := &stubPracticeRepository{
 		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: contestentity.Submission{
+				Submission: practiceports.SubmissionRecord{
 					ID:           id,
 					UserID:       88,
 					ChallengeID:  11,
@@ -1465,8 +1470,8 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
-			return &contestentity.Submission{
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
+			return &practiceports.SubmissionRecord{
 				ID:           99,
 				UserID:       userID,
 				ChallengeID:  challengeID,
@@ -1476,7 +1481,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 				UpdatedAt:    now.Add(-time.Minute),
 			}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
 			t.Fatal("did not expect submission update when challenge already solved")
 			return nil
 		},
@@ -1590,12 +1595,12 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			&stubPracticeRepository{
-				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
 					listCalled = true
 					if got := ctx.Value(ctxKey); got != expectedCtxValue {
 						t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
 					}
-					return []contestentity.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
+					return []practiceports.SubmissionRecord{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
 				},
 			},
 			challengeRepo,
@@ -1645,10 +1650,10 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		},
 	}
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(context.Context, *contestentity.Submission) error {
+		createSubmissionFn: func(context.Context, *practiceports.SubmissionRecord) error {
 			return nil
 		},
 	}
@@ -1726,10 +1731,10 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	}
 	flagSalt := "solve-grace-ctx"
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(context.Context, *contestentity.Submission) error {
+		createSubmissionFn: func(context.Context, *practiceports.SubmissionRecord) error {
 			return nil
 		},
 	}

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -25,27 +24,69 @@ var ErrPracticeSolvedSubmissionNotFound = errors.New("practice solved submission
 var ErrPracticeUserNotFound = errors.New("practice user not found")
 
 const (
-	ContestModeAWD = contestentity.ContestModeAWD
+	ContestModeAWD = "awd"
 
-	ContestStatusRegistration = contestentity.ContestStatusRegistration
-	ContestStatusRunning      = contestentity.ContestStatusRunning
-	ContestStatusFrozen       = contestentity.ContestStatusFrozen
-	ContestStatusEnded        = contestentity.ContestStatusEnded
+	ContestStatusRegistration = "registration"
+	ContestStatusRunning      = "running"
+	ContestStatusFrozen       = "frozen"
+	ContestStatusEnded        = "ended"
 
-	ContestRegistrationStatusPending  = contestentity.ContestRegistrationStatusPending
-	ContestRegistrationStatusApproved = contestentity.ContestRegistrationStatusApproved
+	ContestRegistrationStatusPending  = "pending"
+	ContestRegistrationStatusApproved = "approved"
 
-	SubmissionReviewStatusNotRequired = contestentity.SubmissionReviewStatusNotRequired
-	SubmissionReviewStatusPending     = contestentity.SubmissionReviewStatusPending
-	SubmissionReviewStatusApproved    = contestentity.SubmissionReviewStatusApproved
-	SubmissionReviewStatusRejected    = contestentity.SubmissionReviewStatusRejected
+	SubmissionReviewStatusNotRequired = "not_required"
+	SubmissionReviewStatusPending     = "pending"
+	SubmissionReviewStatusApproved    = "approved"
+	SubmissionReviewStatusRejected    = "rejected"
 )
 
-type ContestRecord = contestentity.Contest
-type ContestChallengeRecord = contestentity.ContestChallenge
-type ContestAWDServiceRecord = contestentity.ContestAWDService
-type ContestTeamRecord = contestentity.Team
-type SubmissionRecord = contestentity.Submission
+type ContestRecord struct {
+	ID            int64
+	Mode          string
+	EndTime       time.Time
+	PausedSeconds int64
+	Status        string
+}
+
+type ContestChallengeRecord struct {
+	ContestID   int64
+	ChallengeID int64
+	IsVisible   bool
+}
+
+type ContestAWDServiceRecord struct {
+	ID              int64
+	ContestID       int64
+	AWDChallengeID  int64
+	DisplayName     string
+	ServiceSnapshot string
+	ScoreConfig     string
+	IsVisible       bool
+}
+
+type ContestTeamRecord struct {
+	ID        int64
+	ContestID int64
+	Name      string
+	CaptainID int64
+}
+
+type SubmissionRecord struct {
+	ID            int64
+	UserID        int64
+	ChallengeID   int64
+	ContestID     *int64
+	TeamID        *int64
+	Flag          string
+	IsCorrect     bool
+	ReviewStatus  string
+	ReviewedBy    *int64
+	ReviewedAt    *time.Time
+	ReviewComment string
+	Score         int
+	SubmittedAt   time.Time
+	UpdatedAt     time.Time
+}
 
 type InstanceScope struct {
 	ContestID     *int64
