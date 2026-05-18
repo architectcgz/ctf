@@ -3,8 +3,8 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -15,14 +15,14 @@ import (
 // goverter:output:package :queries
 type practiceQueryResponseMapper interface {
 	// goverter:ignore Username
-	ToUserScoreInfoBase(source model.UserScore) dto.UserScoreInfo
-	ToUserScoreInfoBasePtr(source *model.UserScore) *dto.UserScoreInfo
+	ToUserScoreInfoBase(source model.UserScore) practicecontracts.UserScoreInfo
+	ToUserScoreInfoBasePtr(source *model.UserScore) *practicecontracts.UserScoreInfo
 
 	// goverter:ignore Rank
 	// goverter:ignore Username
 	// goverter:ignore ClassName
-	ToRankingItemBase(source model.UserScore) dto.RankingItem
-	ToRankingItemBasePtr(source *model.UserScore) *dto.RankingItem
+	ToRankingItemBase(source model.UserScore) practicecontracts.RankingItem
+	ToRankingItemBasePtr(source *model.UserScore) *practicecontracts.RankingItem
 }
 
 var practiceQueryResponseMapperInst practiceQueryResponseMapper

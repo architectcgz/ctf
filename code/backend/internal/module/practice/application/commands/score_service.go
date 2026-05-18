@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -110,7 +110,7 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 
 	s.logger.Info("更新用户得分", zap.Int64("userID", userID), zap.Int("totalScore", totalScore), zap.Int("solvedCount", len(challengeIDs)))
 
-	info := &dto.UserScoreInfo{
+	info := &practicecontracts.UserScoreInfo{
 		UserID:      userID,
 		TotalScore:  totalScore,
 		SolvedCount: len(challengeIDs),

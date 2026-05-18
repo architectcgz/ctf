@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	redislib "github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/dto"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/pkg/cache"
 )
@@ -64,7 +64,7 @@ func (s *ScoreStateStore) AcquireUserScoreUpdateLock(ctx context.Context, userID
 	return lock, true, nil
 }
 
-func (s *ScoreStateStore) LoadUserScoreCache(ctx context.Context, userID int64) (*dto.UserScoreInfo, bool, error) {
+func (s *ScoreStateStore) LoadUserScoreCache(ctx context.Context, userID int64) (*practicecontracts.UserScoreInfo, bool, error) {
 	if s == nil || s.client == nil {
 		return nil, false, nil
 	}
@@ -77,14 +77,14 @@ func (s *ScoreStateStore) LoadUserScoreCache(ctx context.Context, userID int64) 
 		return nil, false, fmt.Errorf("load user score cache: %w", err)
 	}
 
-	var info dto.UserScoreInfo
+	var info practicecontracts.UserScoreInfo
 	if err := json.Unmarshal([]byte(cached), &info); err != nil {
 		return nil, false, fmt.Errorf("decode user score cache: %w", err)
 	}
 	return &info, true, nil
 }
 
-func (s *ScoreStateStore) StoreUserScoreCache(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error {
+func (s *ScoreStateStore) StoreUserScoreCache(ctx context.Context, info *practicecontracts.UserScoreInfo, ttl time.Duration) error {
 	if s == nil || s.client == nil || info == nil {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (s *ScoreStateStore) StoreUserScoreCache(ctx context.Context, info *dto.Use
 	return nil
 }
 
-func (s *ScoreStateStore) SyncUserScoreState(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error {
+func (s *ScoreStateStore) SyncUserScoreState(ctx context.Context, info *practicecontracts.UserScoreInfo, ttl time.Duration) error {
 	if s == nil || s.client == nil || info == nil {
 		return nil
 	}

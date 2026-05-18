@@ -4,40 +4,40 @@
 package queries
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/practice/contracts"
 )
 
 type practiceQueryResponseMapperImpl struct{}
 
-func (c *practiceQueryResponseMapperImpl) ToRankingItemBase(source model.UserScore) dto.RankingItem {
-	var dtoRankingItem dto.RankingItem
-	dtoRankingItem.UserID = source.UserID
-	dtoRankingItem.TotalScore = source.TotalScore
-	dtoRankingItem.SolvedCount = source.SolvedCount
-	return dtoRankingItem
+func (c *practiceQueryResponseMapperImpl) ToRankingItemBase(source model.UserScore) contracts.RankingItem {
+	var contractsRankingItem contracts.RankingItem
+	contractsRankingItem.UserID = source.UserID
+	contractsRankingItem.TotalScore = source.TotalScore
+	contractsRankingItem.SolvedCount = source.SolvedCount
+	return contractsRankingItem
 }
-func (c *practiceQueryResponseMapperImpl) ToRankingItemBasePtr(source *model.UserScore) *dto.RankingItem {
-	var pDtoRankingItem *dto.RankingItem
+func (c *practiceQueryResponseMapperImpl) ToRankingItemBasePtr(source *model.UserScore) *contracts.RankingItem {
+	var pContractsRankingItem *contracts.RankingItem
 	if source != nil {
-		dtoRankingItem := c.ToRankingItemBase((*source))
-		pDtoRankingItem = &dtoRankingItem
+		contractsRankingItem := c.ToRankingItemBase((*source))
+		pContractsRankingItem = &contractsRankingItem
 	}
-	return pDtoRankingItem
+	return pContractsRankingItem
 }
-func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBase(source model.UserScore) dto.UserScoreInfo {
-	var dtoUserScoreInfo dto.UserScoreInfo
-	dtoUserScoreInfo.UserID = source.UserID
-	dtoUserScoreInfo.TotalScore = source.TotalScore
-	dtoUserScoreInfo.SolvedCount = source.SolvedCount
-	dtoUserScoreInfo.Rank = source.Rank
-	return dtoUserScoreInfo
+func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBase(source model.UserScore) contracts.UserScoreInfo {
+	var contractsUserScoreInfo contracts.UserScoreInfo
+	contractsUserScoreInfo.UserID = source.UserID
+	contractsUserScoreInfo.TotalScore = source.TotalScore
+	contractsUserScoreInfo.SolvedCount = source.SolvedCount
+	contractsUserScoreInfo.Rank = source.Rank
+	return contractsUserScoreInfo
 }
-func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBasePtr(source *model.UserScore) *dto.UserScoreInfo {
-	var pDtoUserScoreInfo *dto.UserScoreInfo
+func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBasePtr(source *model.UserScore) *contracts.UserScoreInfo {
+	var pContractsUserScoreInfo *contracts.UserScoreInfo
 	if source != nil {
-		dtoUserScoreInfo := c.ToUserScoreInfoBase((*source))
-		pDtoUserScoreInfo = &dtoUserScoreInfo
+		contractsUserScoreInfo := c.ToUserScoreInfoBase((*source))
+		pContractsUserScoreInfo = &contractsUserScoreInfo
 	}
-	return pDtoUserScoreInfo
+	return pContractsUserScoreInfo
 }

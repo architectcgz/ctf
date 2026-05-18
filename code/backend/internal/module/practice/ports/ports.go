@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -369,9 +368,9 @@ type PracticeScoreLockLease interface {
 
 type PracticeScoreStateStore interface {
 	AcquireUserScoreUpdateLock(ctx context.Context, userID int64, ttl time.Duration) (PracticeScoreLockLease, bool, error)
-	LoadUserScoreCache(ctx context.Context, userID int64) (*dto.UserScoreInfo, bool, error)
-	StoreUserScoreCache(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error
-	SyncUserScoreState(ctx context.Context, info *dto.UserScoreInfo, ttl time.Duration) error
+	LoadUserScoreCache(ctx context.Context, userID int64) (*practicecontracts.UserScoreInfo, bool, error)
+	StoreUserScoreCache(ctx context.Context, info *practicecontracts.UserScoreInfo, ttl time.Duration) error
+	SyncUserScoreState(ctx context.Context, info *practicecontracts.UserScoreInfo, ttl time.Duration) error
 }
 
 type PracticeFlagSubmitRateLimitStore interface {

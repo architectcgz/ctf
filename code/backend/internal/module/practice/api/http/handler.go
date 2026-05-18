@@ -42,7 +42,7 @@ type practiceService interface {
 }
 
 type practiceRankingService interface {
-	GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error)
+	GetRanking(ctx context.Context, limit int) ([]*practicecontracts.RankingItem, error)
 }
 
 type practiceProgressTimelineQueryService interface {

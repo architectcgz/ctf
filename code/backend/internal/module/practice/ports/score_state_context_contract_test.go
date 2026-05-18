@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/dto"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -22,15 +22,15 @@ func (ctxOnlyPracticeScoreStateStore) AcquireUserScoreUpdateLock(context.Context
 	return ctxOnlyPracticeScoreLockLease{}, true, nil
 }
 
-func (ctxOnlyPracticeScoreStateStore) LoadUserScoreCache(context.Context, int64) (*dto.UserScoreInfo, bool, error) {
+func (ctxOnlyPracticeScoreStateStore) LoadUserScoreCache(context.Context, int64) (*practicecontracts.UserScoreInfo, bool, error) {
 	return nil, false, nil
 }
 
-func (ctxOnlyPracticeScoreStateStore) StoreUserScoreCache(context.Context, *dto.UserScoreInfo, time.Duration) error {
+func (ctxOnlyPracticeScoreStateStore) StoreUserScoreCache(context.Context, *practicecontracts.UserScoreInfo, time.Duration) error {
 	return nil
 }
 
-func (ctxOnlyPracticeScoreStateStore) SyncUserScoreState(context.Context, *dto.UserScoreInfo, time.Duration) error {
+func (ctxOnlyPracticeScoreStateStore) SyncUserScoreState(context.Context, *practicecontracts.UserScoreInfo, time.Duration) error {
 	return nil
 }
 

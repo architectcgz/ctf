@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -44,7 +44,7 @@ func NewScoreService(repo practiceRankingRepository, stateStore practiceports.Pr
 	}
 }
 
-func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.UserScoreInfo, error) {
+func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*practicecontracts.UserScoreInfo, error) {
 	if s.stateStore != nil {
 		cached, hit, err := s.stateStore.LoadUserScoreCache(ctx, userID)
 		if err == nil && hit {
@@ -60,7 +60,7 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 
 	userScore, err := s.repo.FindUserScore(ctx, userID)
 	if errors.Is(err, practiceports.ErrPracticeUserScoreNotFound) {
-		return &dto.UserScoreInfo{
+		return &practicecontracts.UserScoreInfo{
 			UserID:      userID,
 			TotalScore:  0,
 			SolvedCount: 0,
@@ -88,7 +88,7 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 	return info, nil
 }
 
-func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error) {
+func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*practicecontracts.RankingItem, error) {
 	if limit <= 0 || limit > s.config.MaxRankingLimit {
 		limit = s.config.MaxRankingLimit
 	}
@@ -106,7 +106,7 @@ func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*dto.Rankin
 		s.logger.Error("批量查询用户名失败", zap.Error(err))
 	}
 
-	result := make([]*dto.RankingItem, 0, len(scores))
+	result := make([]*practicecontracts.RankingItem, 0, len(scores))
 	for idx, score := range scores {
 		scoreCopy := score
 		item := practiceQueryResponseMapperInst.ToRankingItemBasePtr(&scoreCopy)

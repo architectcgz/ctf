@@ -1,4 +1,4 @@
-package dto
+package contracts
 
 // UserScoreInfo 用户得分信息
 type UserScoreInfo struct {
