@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	opsports "ctf-platform/internal/module/ops/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -32,7 +31,7 @@ func NewAuditService(repo opsports.AuditQueryRepository, pagination config.Pagin
 	}
 }
 
-func (s *AuditService) ListAuditLogs(ctx context.Context, query *dto.AuditLogQuery) ([]dto.AuditLogItem, int64, int, int, error) {
+func (s *AuditService) ListAuditLogs(ctx context.Context, query *AuditLogQuery) ([]AuditLogItem, int64, int, int, error) {
 	userID := query.UserID
 	if userID == nil {
 		userID = query.ActorUserID
@@ -69,9 +68,9 @@ func (s *AuditService) ListAuditLogs(ctx context.Context, query *dto.AuditLogQue
 		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]dto.AuditLogItem, 0, len(records))
+	items := make([]AuditLogItem, 0, len(records))
 	for _, record := range records {
-		item := dto.AuditLogItem{
+		item := AuditLogItem{
 			ID:            record.ID,
 			Action:        record.Action,
 			ResourceType:  record.ResourceType,

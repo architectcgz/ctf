@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
@@ -80,7 +79,7 @@ func TestAuditServiceListAuditLogsNormalizesPaginationAndDetails(t *testing.T) {
 		}
 	}
 
-	items, total, page, pageSize, err := service.ListAuditLogs(context.Background(), &dto.AuditLogQuery{
+	items, total, page, pageSize, err := service.ListAuditLogs(context.Background(), &opsqry.AuditLogQuery{
 		StartTime: now.Add(-10 * time.Minute).Format(time.RFC3339),
 		EndTime:   now.Add(time.Minute).Format(time.RFC3339),
 		Page:      0,
@@ -112,7 +111,7 @@ func TestAuditServiceListAuditLogsNormalizesPaginationAndDetails(t *testing.T) {
 func TestAuditServiceListAuditLogsRejectsInvalidTimeRange(t *testing.T) {
 	service := newAuditQueryService(setupAuditQueryTestDB(t))
 
-	_, _, _, _, err := service.ListAuditLogs(context.Background(), &dto.AuditLogQuery{
+	_, _, _, _, err := service.ListAuditLogs(context.Background(), &opsqry.AuditLogQuery{
 		StartTime: "bad-time",
 	})
 	if err == nil {

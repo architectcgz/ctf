@@ -5,12 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type auditQueryService interface {
-	ListAuditLogs(ctx context.Context, query *dto.AuditLogQuery) ([]dto.AuditLogItem, int64, int, int, error)
+	ListAuditLogs(ctx context.Context, query *opsqry.AuditLogQuery) ([]opsqry.AuditLogItem, int64, int, int, error)
 }
 
 type AuditHandler struct {
@@ -22,7 +22,7 @@ func NewAuditHandler(service auditQueryService) *AuditHandler {
 }
 
 func (h *AuditHandler) ListAuditLogs(c *gin.Context) {
-	var query dto.AuditLogQuery
+	var query opsqry.AuditLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
