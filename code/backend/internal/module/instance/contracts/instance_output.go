@@ -1,4 +1,4 @@
-package dto
+package contracts
 
 import (
 	"fmt"
@@ -44,62 +44,11 @@ type InstanceInfo struct {
 	AccessURL        string              `json:"access_url"`
 	Access           *InstanceAccessInfo `json:"access,omitempty"`
 	ExpiresAt        time.Time           `json:"expires_at"`
-	RemainingTime    int64               `json:"remaining_time"` // 秒
+	RemainingTime    int64               `json:"remaining_time"`
 	ExtendCount      int                 `json:"extend_count"`
 	MaxExtends       int                 `json:"max_extends"`
 	RemainingExtends int                 `json:"remaining_extends"`
 	CreatedAt        time.Time           `json:"created_at"`
-}
-
-type InstanceAccessResp struct {
-	AccessURL string              `json:"access_url"`
-	Access    *InstanceAccessInfo `json:"access,omitempty"`
-}
-
-func BuildInstanceAccessInfo(accessURL string) *InstanceAccessInfo {
-	trimmed := strings.TrimSpace(accessURL)
-	if trimmed == "" {
-		return nil
-	}
-	parsed, err := url.Parse(trimmed)
-	if err != nil {
-		return nil
-	}
-	protocol := strings.ToLower(strings.TrimSpace(parsed.Scheme))
-	if protocol == "" {
-		return nil
-	}
-
-	info := &InstanceAccessInfo{Protocol: protocol}
-	host := parsed.Hostname()
-	if host != "" {
-		info.Host = host
-	}
-	if portValue := parsed.Port(); portValue != "" {
-		if port, parseErr := strconv.Atoi(portValue); parseErr == nil {
-			info.Port = port
-		}
-	}
-	if protocol == model.ChallengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
-		info.Command = fmt.Sprintf("nc %s %d", formatCommandHost(info.Host), info.Port)
-	}
-	return info
-}
-
-func formatCommandHost(host string) string {
-	if strings.Contains(host, ":") {
-		return "[" + host + "]"
-	}
-	return host
-}
-
-type AWDDefenseSSHAccessResp struct {
-	Host      string `json:"host"`
-	Port      int    `json:"port"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Command   string `json:"command"`
-	ExpiresAt string `json:"expires_at"`
 }
 
 type AWDDefenseFileResp struct {
@@ -139,4 +88,41 @@ type AWDDefenseCommandReq struct {
 type AWDDefenseCommandResp struct {
 	Command string `json:"command"`
 	Output  string `json:"output"`
+}
+
+func BuildInstanceAccessInfo(accessURL string) *InstanceAccessInfo {
+	trimmed := strings.TrimSpace(accessURL)
+	if trimmed == "" {
+		return nil
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return nil
+	}
+	protocol := strings.ToLower(strings.TrimSpace(parsed.Scheme))
+	if protocol == "" {
+		return nil
+	}
+
+	info := &InstanceAccessInfo{Protocol: protocol}
+	host := parsed.Hostname()
+	if host != "" {
+		info.Host = host
+	}
+	if portValue := parsed.Port(); portValue != "" {
+		if port, parseErr := strconv.Atoi(portValue); parseErr == nil {
+			info.Port = port
+		}
+	}
+	if protocol == model.ChallengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
+		info.Command = fmt.Sprintf("nc %s %d", formatCommandHost(info.Host), info.Port)
+	}
+	return info
+}
+
+func formatCommandHost(host string) string {
+	if strings.Contains(host, ":") {
+		return "[" + host + "]"
+	}
+	return host
 }

@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+)
 
 type AdminAWDInstanceTeamResp struct {
 	TeamID    int64  `json:"team_id"`
@@ -16,9 +20,9 @@ type AdminAWDInstanceServiceResp struct {
 }
 
 type AdminAWDInstanceItemResp struct {
-	TeamID    int64         `json:"team_id"`
-	ServiceID int64         `json:"service_id"`
-	Instance  *InstanceResp `json:"instance,omitempty"`
+	TeamID    int64                           `json:"team_id"`
+	ServiceID int64                           `json:"service_id"`
+	Instance  *instancecontracts.InstanceResp `json:"instance,omitempty"`
 }
 
 type AdminAWDInstanceOrchestrationResp struct {
@@ -65,11 +69,11 @@ type SetAdminContestAWDDesiredReconcileSuppressedReq struct {
 }
 
 type AdminAWDInstancePrewarmItemResp struct {
-	TeamID       int64         `json:"team_id"`
-	ServiceID    int64         `json:"service_id"`
-	Outcome      string        `json:"outcome"`
-	Instance     *InstanceResp `json:"instance,omitempty"`
-	ErrorMessage string        `json:"error_message,omitempty"`
+	TeamID       int64                           `json:"team_id"`
+	ServiceID    int64                           `json:"service_id"`
+	Outcome      string                          `json:"outcome"`
+	Instance     *instancecontracts.InstanceResp `json:"instance,omitempty"`
+	ErrorMessage string                          `json:"error_message,omitempty"`
 }
 
 type AdminAWDInstancePrewarmSummaryResp struct {

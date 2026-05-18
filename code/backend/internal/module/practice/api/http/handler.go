@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -23,10 +24,10 @@ type Handler struct {
 }
 
 type practiceService interface {
-	StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
-	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
-	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
-	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
+	StartChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error)
+	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error)
+	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
+	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
 	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
 	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
 	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*dto.AdminAWDScopeControlResp, error)

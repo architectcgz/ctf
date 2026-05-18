@@ -6,20 +6,20 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type httpInstanceCommandService interface {
 	DestroyInstance(ctx context.Context, instanceID, userID int64) error
-	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 type httpInstanceQueryService interface {
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
 }
 
@@ -54,7 +54,7 @@ func (a *HTTPService) DestroyInstance(ctx context.Context, instanceID, userID in
 	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (a *HTTPService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error) {
 	return a.commandService.ExtendInstance(ctx, instanceID, userID)
 }
 
@@ -62,7 +62,7 @@ func (a *HTTPService) GetAccessURL(ctx context.Context, instanceID, userID int64
 	return a.queryService.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (a *HTTPService) GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error) {
 	return a.queryService.GetUserInstances(ctx, userID)
 }
 
@@ -84,13 +84,13 @@ func (a *HTTPService) IssueAWDTargetProxyTicket(ctx context.Context, user authct
 	return ticket, err
 }
 
-func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error) {
+func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
 	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &dto.AWDDefenseSSHAccessResp{
+	return &runtimehttp.AWDDefenseSSHAccessResp{
 		Host:      "127.0.0.1",
 		Port:      2222,
 		Username:  username,
@@ -100,23 +100,23 @@ func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx
 	}, nil
 }
 
-func (a *HTTPService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error) {
-	return &dto.AWDDefenseFileResp{}, nil
+func (a *HTTPService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*instancecontracts.AWDDefenseFileResp, error) {
+	return &instancecontracts.AWDDefenseFileResp{}, nil
 }
 
-func (a *HTTPService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error) {
-	return &dto.AWDDefenseDirectoryResp{}, nil
+func (a *HTTPService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*instancecontracts.AWDDefenseDirectoryResp, error) {
+	return &instancecontracts.AWDDefenseDirectoryResp{}, nil
 }
 
-func (a *HTTPService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
-	return &dto.AWDDefenseFileSaveResp{
+func (a *HTTPService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req instancecontracts.AWDDefenseFileSaveReq) (*instancecontracts.AWDDefenseFileSaveResp, error) {
+	return &instancecontracts.AWDDefenseFileSaveResp{
 		Path: req.Path,
 		Size: len(req.Content),
 	}, nil
 }
 
-func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
-	return &dto.AWDDefenseCommandResp{
+func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req instancecontracts.AWDDefenseCommandReq) (*instancecontracts.AWDDefenseCommandResp, error) {
+	return &instancecontracts.AWDDefenseCommandResp{
 		Command: req.Command,
 	}, nil
 }

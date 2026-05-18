@@ -5,21 +5,20 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 // InstanceCommandService 定义实例 owner 对外暴露的命令能力。
 type InstanceCommandService interface {
 	DestroyInstance(ctx context.Context, instanceID, userID int64) error
-	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 // InstanceQueryService 定义实例 owner 对外暴露的查询能力。
 type InstanceQueryService interface {
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query TeacherInstanceListQuery) ([]TeacherInstanceItem, error)
 }
 
@@ -37,10 +36,10 @@ type ProxyTicketService interface {
 
 // AWDDefenseWorkbenchService 定义实例 owner 对外暴露的 AWD defense workbench 能力。
 type AWDDefenseWorkbenchService interface {
-	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
-	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error)
-	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
-	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
+	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*AWDDefenseFileResp, error)
+	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*AWDDefenseDirectoryResp, error)
+	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req AWDDefenseFileSaveReq) (*AWDDefenseFileSaveResp, error)
+	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req AWDDefenseCommandReq) (*AWDDefenseCommandResp, error)
 }
 
 // MaintenanceService 定义实例 owner 对外暴露的后台维护能力。

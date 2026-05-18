@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -23,7 +22,7 @@ func (stubRuntimeService) DestroyInstance(context.Context, int64, int64) error {
 	return nil
 }
 
-func (stubRuntimeService) ExtendInstance(context.Context, int64, int64) (*dto.InstanceResp, error) {
+func (stubRuntimeService) ExtendInstance(context.Context, int64, int64) (*instancecontracts.InstanceResp, error) {
 	return nil, nil
 }
 
@@ -31,7 +30,7 @@ func (stubRuntimeService) GetAccessURL(context.Context, int64, int64) (string, e
 	return "", nil
 }
 
-func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*dto.InstanceInfo, error) {
+func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*instancecontracts.InstanceInfo, error) {
 	return nil, nil
 }
 
@@ -51,7 +50,7 @@ func (stubRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.Cur
 	return "", nil
 }
 
-func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*AWDDefenseSSHAccessResp, error) {
 	return nil, nil
 }
 
@@ -99,7 +98,7 @@ type stubAWDProxyRuntimeService struct {
 
 type stubAWDDefenseSSHRuntimeService struct {
 	stubRuntimeService
-	resp *dto.AWDDefenseSSHAccessResp
+	resp *AWDDefenseSSHAccessResp
 }
 
 type captureTeacherInstanceRuntimeService struct {
@@ -113,7 +112,7 @@ func (s *captureTeacherInstanceRuntimeService) ListTeacherInstances(_ context.Co
 	return s.resp, nil
 }
 
-func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*AWDDefenseSSHAccessResp, error) {
 	return s.resp, nil
 }
 
@@ -122,7 +121,7 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 
 	handler := NewHandler(
 		stubAWDDefenseSSHRuntimeService{
-			resp: &dto.AWDDefenseSSHAccessResp{
+			resp: &AWDDefenseSSHAccessResp{
 				Host:      "127.0.0.1",
 				Port:      2222,
 				Username:  "student+5+12",

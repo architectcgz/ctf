@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
@@ -22,11 +23,11 @@ const (
 	adminAWDPrewarmOutcomeFailed  = "failed"
 )
 
-func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
+func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	return s.startPersonalChallenge(ctx, userID, challengeID)
 }
 
-func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error) {
+func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	scope, err := s.resolveContestChallengeInstanceScope(ctx, userID, contestID, challengeID)
 	if err != nil {
 		return nil, err
@@ -34,7 +35,7 @@ func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, 
 	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
 }
 
-func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
+func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
 	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -50,7 +51,7 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	return resp, nil
 }
 
-func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
+func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
 	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -92,7 +93,7 @@ type awdScopedRuntimeRequest struct {
 	NoopIfActive bool
 }
 
-func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*dto.InstanceResp, error) {
+func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*instancecontracts.InstanceResp, error) {
 	scope := resolveEffectiveInstanceScope(&model.Challenge{}, req.Scope)
 
 	var instance *model.Instance
@@ -373,14 +374,14 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 	return result
 }
 
-func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
+func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	return s.startChallengeWithScope(ctx, userID, challengeID, practiceports.InstanceScope{
 		FlagSubjectID: userID,
 		ShareScope:    model.InstanceSharingPerUser,
 	})
 }
 
-func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*dto.InstanceResp, error) {
+func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instancecontracts.InstanceResp, error) {
 	chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
 	if err != nil {
 		return nil, err
@@ -508,7 +509,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
-func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *dto.InstanceResp {
+func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *instancecontracts.InstanceResp {
 	resp := domain.InstanceRespFromModel(instance, publicHost, accessHost)
 	if scope.ContestMode == model.ContestModeAWD {
 		resp.AccessURL = ""

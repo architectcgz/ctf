@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -17,8 +17,8 @@ import (
 type practiceResponseMapper interface {
 	// goverter:ignore Access
 	// goverter:ignore RemainingExtends
-	ToInstanceRespBase(source model.Instance) dto.InstanceResp
-	ToInstanceRespBasePtr(source *model.Instance) *dto.InstanceResp
+	ToInstanceRespBase(source model.Instance) instancecontracts.InstanceResp
+	ToInstanceRespBasePtr(source *model.Instance) *instancecontracts.InstanceResp
 }
 
 var practiceResponseMapperInst practiceResponseMapper

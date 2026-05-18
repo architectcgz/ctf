@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
@@ -50,7 +49,7 @@ func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID i
 	return instance.AccessURL, nil
 }
 
-func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error) {
 	ctx = normalizeContext(ctx)
 
 	instances, err := s.repo.ListVisibleByUser(ctx, userID)
@@ -59,7 +58,7 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 	}
 
 	now := time.Now()
-	result := make([]*dto.InstanceInfo, len(instances))
+	result := make([]*instancecontracts.InstanceInfo, len(instances))
 	for idx, inst := range instances {
 		result[idx] = toInstanceInfo(inst, now, s.cfg.PublicHost, s.cfg.AccessHost)
 	}
@@ -107,12 +106,12 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	return result, nil
 }
 
-func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *dto.InstanceInfo {
+func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *instancecontracts.InstanceInfo {
 	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	if inst.ContestMode == model.ContestModeAWD {
 		accessURL = ""
 	}
-	return &dto.InstanceInfo{
+	return &instancecontracts.InstanceInfo{
 		ID:               inst.ID,
 		ContestMode:      inst.ContestMode,
 		ChallengeID:      inst.ChallengeID,
@@ -123,7 +122,7 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
 		ShareScope:       inst.ShareScope,
 		AccessURL:        accessURL,
-		Access:           dto.BuildInstanceAccessInfo(accessURL),
+		Access:           instancecontracts.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:        inst.ExpiresAt,
 		RemainingTime:    instancedomain.RemainingTime(inst.ExpiresAt, now),
 		ExtendCount:      inst.ExtendCount,
@@ -146,7 +145,7 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time,
 		ChallengeTitle:  item.ChallengeTitle,
 		Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
 		AccessURL:       accessURL,
-		Access:          dto.BuildInstanceAccessInfo(accessURL),
+		Access:          instancecontracts.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:       item.ExpiresAt,
 		RemainingTime:   instancedomain.RemainingTime(item.ExpiresAt, now),
 		ExtendCount:     item.ExtendCount,

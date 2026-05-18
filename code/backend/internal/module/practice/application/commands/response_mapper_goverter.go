@@ -5,12 +5,13 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 type adminAWDInstanceItemRespSource struct {
 	TeamID    int64
 	ServiceID int64
-	Instance  *dto.InstanceResp
+	Instance  *instancecontracts.InstanceResp
 }
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .

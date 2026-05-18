@@ -16,7 +16,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -39,14 +38,14 @@ type CookieConfig struct {
 
 type runtimeService interface {
 	DestroyInstance(ctx context.Context, instanceID, userID int64) error
-	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error)
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
-	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*AWDDefenseSSHAccessResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -133,9 +132,9 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 	}
 	if isTCPAccessURL(accessURL) {
 		publicAccessURL := model.ResolveRuntimePublicAccessURL(accessURL, h.publicHost, h.accessHost)
-		response.Success(c, &dto.InstanceAccessResp{
+		response.Success(c, &InstanceAccessResp{
 			AccessURL: publicAccessURL,
-			Access:    dto.BuildInstanceAccessInfo(publicAccessURL),
+			Access:    instancecontracts.BuildInstanceAccessInfo(publicAccessURL),
 		})
 		return
 	}
@@ -164,9 +163,9 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		})
 	}
 
-	response.Success(c, &dto.InstanceAccessResp{
+	response.Success(c, &InstanceAccessResp{
 		AccessURL: buildProxyAccessURL(instanceID, ticket),
-		Access:    dto.BuildInstanceAccessInfo(buildProxyAccessURL(instanceID, ticket)),
+		Access:    instancecontracts.BuildInstanceAccessInfo(buildProxyAccessURL(instanceID, ticket)),
 	})
 }
 
@@ -213,7 +212,7 @@ func (h *Handler) AccessAWDTarget(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, &dto.InstanceAccessResp{
+	response.Success(c, &InstanceAccessResp{
 		AccessURL: buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID, ticket),
 	})
 }

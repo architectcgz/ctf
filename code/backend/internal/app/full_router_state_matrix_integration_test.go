@@ -27,6 +27,7 @@ import (
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
@@ -1473,7 +1474,7 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/extend", env.instance.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
-	var extended dto.InstanceResp
+	var extended instancecontracts.InstanceResp
 	decodeFullRouterData(t, resp, &extended)
 	if extended.ID != env.instance.ID {
 		t.Fatalf("unexpected extended instance id: %+v", extended)
@@ -1527,7 +1528,7 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/access", env.instance.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var access dto.InstanceAccessResp
+	var access runtimehttp.InstanceAccessResp
 	decodeFullRouterData(t, resp, &access)
 	parsedAccessURL, err := url.Parse(access.AccessURL)
 	if err != nil {
@@ -1609,7 +1610,7 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/access", env.instance.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var access dto.InstanceAccessResp
+	var access runtimehttp.InstanceAccessResp
 	decodeFullRouterData(t, resp, &access)
 	parsedAccessURL, err := url.Parse(access.AccessURL)
 	if err != nil {
@@ -1905,7 +1906,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/contests/%d/challenges/%d/instances", editableContest.ID, challengeA.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var startedContestInstance dto.InstanceResp
+	var startedContestInstance instancecontracts.InstanceResp
 	decodeFullRouterData(t, resp, &startedContestInstance)
 	if startedContestInstance.ChallengeID != challengeA.ID {
 		t.Fatalf("unexpected started contest instance: %+v", startedContestInstance)

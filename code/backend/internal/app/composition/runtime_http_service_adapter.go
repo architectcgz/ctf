@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -52,7 +52,7 @@ func (a *runtimeHTTPServiceAdapter) DestroyInstance(ctx context.Context, instanc
 	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (a *runtimeHTTPServiceAdapter) ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error) {
 	if a == nil || a.commandService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
@@ -66,7 +66,7 @@ func (a *runtimeHTTPServiceAdapter) GetAccessURL(ctx context.Context, instanceID
 	return a.queryService.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (a *runtimeHTTPServiceAdapter) GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error) {
 	if a == nil || a.queryService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
@@ -105,7 +105,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Contex
 	return ticket, err
 }
 
-func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error) {
+func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
@@ -118,7 +118,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &dto.AWDDefenseSSHAccessResp{
+	return &runtimehttp.AWDDefenseSSHAccessResp{
 		Host:      a.defenseSSHHost,
 		Port:      a.defenseSSHPort,
 		Username:  username,

@@ -4,32 +4,32 @@
 package domain
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/instance/contracts"
 )
 
 type practiceResponseMapperImpl struct{}
 
-func (c *practiceResponseMapperImpl) ToInstanceRespBase(source model.Instance) dto.InstanceResp {
-	var dtoInstanceResp dto.InstanceResp
-	dtoInstanceResp.ID = source.ID
-	dtoInstanceResp.ChallengeID = source.ChallengeID
-	dtoInstanceResp.Status = source.Status
-	dtoInstanceResp.ShareScope = c.modelInstanceSharingToModelInstanceSharing(source.ShareScope)
-	dtoInstanceResp.AccessURL = source.AccessURL
-	dtoInstanceResp.ExpiresAt = CopyTime(source.ExpiresAt)
-	dtoInstanceResp.ExtendCount = source.ExtendCount
-	dtoInstanceResp.MaxExtends = source.MaxExtends
-	dtoInstanceResp.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoInstanceResp
+func (c *practiceResponseMapperImpl) ToInstanceRespBase(source model.Instance) contracts.InstanceResp {
+	var contractsInstanceResp contracts.InstanceResp
+	contractsInstanceResp.ID = source.ID
+	contractsInstanceResp.ChallengeID = source.ChallengeID
+	contractsInstanceResp.Status = source.Status
+	contractsInstanceResp.ShareScope = c.modelInstanceSharingToModelInstanceSharing(source.ShareScope)
+	contractsInstanceResp.AccessURL = source.AccessURL
+	contractsInstanceResp.ExpiresAt = CopyTime(source.ExpiresAt)
+	contractsInstanceResp.ExtendCount = source.ExtendCount
+	contractsInstanceResp.MaxExtends = source.MaxExtends
+	contractsInstanceResp.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsInstanceResp
 }
-func (c *practiceResponseMapperImpl) ToInstanceRespBasePtr(source *model.Instance) *dto.InstanceResp {
-	var pDtoInstanceResp *dto.InstanceResp
+func (c *practiceResponseMapperImpl) ToInstanceRespBasePtr(source *model.Instance) *contracts.InstanceResp {
+	var pContractsInstanceResp *contracts.InstanceResp
 	if source != nil {
-		dtoInstanceResp := c.ToInstanceRespBase((*source))
-		pDtoInstanceResp = &dtoInstanceResp
+		contractsInstanceResp := c.ToInstanceRespBase((*source))
+		pContractsInstanceResp = &contractsInstanceResp
 	}
-	return pDtoInstanceResp
+	return pContractsInstanceResp
 }
 func (c *practiceResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing

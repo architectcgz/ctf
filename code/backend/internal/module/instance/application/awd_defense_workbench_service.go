@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -50,7 +50,7 @@ func NewAWDDefenseWorkbenchService(
 	}
 }
 
-func (s *AWDDefenseWorkbenchService) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+func (s *AWDDefenseWorkbenchService) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*instancecontracts.AWDDefenseFileResp, error) {
 	scope, root, err := s.resolveReadOnlyScope(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -63,10 +63,10 @@ func (s *AWDDefenseWorkbenchService) ReadAWDDefenseFile(ctx context.Context, use
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.AWDDefenseFileResp{Path: cleanPath, Content: string(content), Size: len(content)}, nil
+	return &instancecontracts.AWDDefenseFileResp{Path: cleanPath, Content: string(content), Size: len(content)}, nil
 }
 
-func (s *AWDDefenseWorkbenchService) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+func (s *AWDDefenseWorkbenchService) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*instancecontracts.AWDDefenseDirectoryResp, error) {
 	scope, root, err := s.resolveReadOnlyScope(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -79,13 +79,13 @@ func (s *AWDDefenseWorkbenchService) ListAWDDefenseDirectory(ctx context.Context
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.AWDDefenseDirectoryResp{
+	return &instancecontracts.AWDDefenseDirectoryResp{
 		Path:    cleanPath,
 		Entries: buildEditableDefenseDirectoryEntries(scope.EditablePaths, cleanPath, entries, 300),
 	}, nil
 }
 
-func (s *AWDDefenseWorkbenchService) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+func (s *AWDDefenseWorkbenchService) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req instancecontracts.AWDDefenseFileSaveReq) (*instancecontracts.AWDDefenseFileSaveResp, error) {
 	scope, root, err := s.resolveReadOnlyScope(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -114,14 +114,14 @@ func (s *AWDDefenseWorkbenchService) SaveAWDDefenseFile(ctx context.Context, use
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.AWDDefenseFileSaveResp{
+	return &instancecontracts.AWDDefenseFileSaveResp{
 		Path:       cleanPath,
 		Size:       len(content),
 		BackupPath: backupPath,
 	}, nil
 }
 
-func (s *AWDDefenseWorkbenchService) RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+func (s *AWDDefenseWorkbenchService) RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req instancecontracts.AWDDefenseCommandReq) (*instancecontracts.AWDDefenseCommandResp, error) {
 	if s == nil || s.scopeReader == nil || s.runtime == nil {
 		return nil, errAWDDefenseWorkbenchUnavailable()
 	}
@@ -143,7 +143,7 @@ func (s *AWDDefenseWorkbenchService) RunAWDDefenseCommand(ctx context.Context, u
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.AWDDefenseCommandResp{
+	return &instancecontracts.AWDDefenseCommandResp{
 		Command: command,
 		Output:  string(output),
 	}, nil
@@ -297,10 +297,10 @@ func resolveEditableDefenseDirectoryPath(scope *instanceports.AWDDefenseSSHScope
 	return cleanPath, containerPath, nil
 }
 
-func buildEditableDefenseDirectoryEntries(editablePaths []string, dirPath string, actualEntries []instanceports.ContainerDirectoryEntry, limit int) []dto.AWDDefenseDirectoryEntryResp {
+func buildEditableDefenseDirectoryEntries(editablePaths []string, dirPath string, actualEntries []instanceports.ContainerDirectoryEntry, limit int) []instancecontracts.AWDDefenseDirectoryEntryResp {
 	normalized := normalizeDefenseEditablePaths(editablePaths)
 	if len(normalized) == 0 {
-		return []dto.AWDDefenseDirectoryEntryResp{}
+		return []instancecontracts.AWDDefenseDirectoryEntryResp{}
 	}
 
 	actualByName := make(map[string]instanceports.ContainerDirectoryEntry, len(actualEntries))
@@ -327,10 +327,10 @@ func buildEditableDefenseDirectoryEntries(editablePaths []string, dirPath string
 	}
 
 	if len(collected) == 0 {
-		return []dto.AWDDefenseDirectoryEntryResp{}
+		return []instancecontracts.AWDDefenseDirectoryEntryResp{}
 	}
 
-	result := make([]dto.AWDDefenseDirectoryEntryResp, 0, len(collected))
+	result := make([]instancecontracts.AWDDefenseDirectoryEntryResp, 0, len(collected))
 	for _, entry := range collected {
 		size := int64(0)
 		if entry.typ == "file" {
@@ -338,7 +338,7 @@ func buildEditableDefenseDirectoryEntries(editablePaths []string, dirPath string
 				size = actual.Size
 			}
 		}
-		result = append(result, dto.AWDDefenseDirectoryEntryResp{
+		result = append(result, instancecontracts.AWDDefenseDirectoryEntryResp{
 			Name: entry.name,
 			Path: entry.path,
 			Type: entry.typ,

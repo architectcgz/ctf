@@ -13,7 +13,6 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
@@ -1902,11 +1901,11 @@ func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, us
 	return s.commands.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (s *testRuntimeService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error) {
 	return s.commands.ExtendInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error) {
 	return s.queries.GetUserInstances(ctx, userID)
 }
 

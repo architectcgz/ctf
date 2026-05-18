@@ -4,34 +4,34 @@
 package queries
 
 import (
-	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/instance/contracts"
 	ports "ctf-platform/internal/module/instance/ports"
 )
 
 type instanceResponseMapperImpl struct{}
 
-func (c *instanceResponseMapperImpl) ToInstanceInfo(source ports.UserVisibleInstanceRow) dto.InstanceInfo {
-	var dtoInstanceInfo dto.InstanceInfo
-	dtoInstanceInfo.ID = source.ID
-	dtoInstanceInfo.ContestMode = source.ContestMode
-	dtoInstanceInfo.ChallengeID = source.ChallengeID
-	dtoInstanceInfo.ChallengeTitle = source.ChallengeTitle
-	dtoInstanceInfo.Category = source.Category
-	dtoInstanceInfo.Difficulty = source.Difficulty
-	dtoInstanceInfo.FlagType = source.FlagType
-	dtoInstanceInfo.ShareScope = model.InstanceSharing(source.ShareScope)
-	dtoInstanceInfo.ExpiresAt = CopyTime(source.ExpiresAt)
-	dtoInstanceInfo.ExtendCount = source.ExtendCount
-	dtoInstanceInfo.MaxExtends = source.MaxExtends
-	dtoInstanceInfo.CreatedAt = CopyTime(source.CreatedAt)
-	return dtoInstanceInfo
+func (c *instanceResponseMapperImpl) ToInstanceInfo(source ports.UserVisibleInstanceRow) contracts.InstanceInfo {
+	var contractsInstanceInfo contracts.InstanceInfo
+	contractsInstanceInfo.ID = source.ID
+	contractsInstanceInfo.ContestMode = source.ContestMode
+	contractsInstanceInfo.ChallengeID = source.ChallengeID
+	contractsInstanceInfo.ChallengeTitle = source.ChallengeTitle
+	contractsInstanceInfo.Category = source.Category
+	contractsInstanceInfo.Difficulty = source.Difficulty
+	contractsInstanceInfo.FlagType = source.FlagType
+	contractsInstanceInfo.ShareScope = model.InstanceSharing(source.ShareScope)
+	contractsInstanceInfo.ExpiresAt = CopyTime(source.ExpiresAt)
+	contractsInstanceInfo.ExtendCount = source.ExtendCount
+	contractsInstanceInfo.MaxExtends = source.MaxExtends
+	contractsInstanceInfo.CreatedAt = CopyTime(source.CreatedAt)
+	return contractsInstanceInfo
 }
-func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *ports.UserVisibleInstanceRow) *dto.InstanceInfo {
-	var pDtoInstanceInfo *dto.InstanceInfo
+func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *ports.UserVisibleInstanceRow) *contracts.InstanceInfo {
+	var pContractsInstanceInfo *contracts.InstanceInfo
 	if source != nil {
-		dtoInstanceInfo := c.ToInstanceInfo((*source))
-		pDtoInstanceInfo = &dtoInstanceInfo
+		contractsInstanceInfo := c.ToInstanceInfo((*source))
+		pContractsInstanceInfo = &contractsInstanceInfo
 	}
-	return pDtoInstanceInfo
+	return pContractsInstanceInfo
 }

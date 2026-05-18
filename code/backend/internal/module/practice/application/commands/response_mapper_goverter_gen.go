@@ -6,6 +6,7 @@ package commands
 import (
 	dto "ctf-platform/internal/dto"
 	model "ctf-platform/internal/model"
+	contracts "ctf-platform/internal/module/instance/contracts"
 )
 
 type practiceCommandResponseMapperImpl struct{}
@@ -14,7 +15,7 @@ func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemResp(source ad
 	var dtoAdminAWDInstanceItemResp dto.AdminAWDInstanceItemResp
 	dtoAdminAWDInstanceItemResp.TeamID = source.TeamID
 	dtoAdminAWDInstanceItemResp.ServiceID = source.ServiceID
-	dtoAdminAWDInstanceItemResp.Instance = c.pDtoInstanceRespToPDtoInstanceResp(source.Instance)
+	dtoAdminAWDInstanceItemResp.Instance = c.pContractsInstanceRespToPContractsInstanceResp(source.Instance)
 	return dtoAdminAWDInstanceItemResp
 }
 func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp {
@@ -82,34 +83,34 @@ func (c *practiceCommandResponseMapperImpl) modelInstanceSharingToModelInstanceS
 	}
 	return modelInstanceSharing
 }
-func (c *practiceCommandResponseMapperImpl) pDtoInstanceAccessInfoToPDtoInstanceAccessInfo(source *dto.InstanceAccessInfo) *dto.InstanceAccessInfo {
-	var pDtoInstanceAccessInfo *dto.InstanceAccessInfo
+func (c *practiceCommandResponseMapperImpl) pContractsInstanceAccessInfoToPContractsInstanceAccessInfo(source *contracts.InstanceAccessInfo) *contracts.InstanceAccessInfo {
+	var pContractsInstanceAccessInfo *contracts.InstanceAccessInfo
 	if source != nil {
-		var dtoInstanceAccessInfo dto.InstanceAccessInfo
-		dtoInstanceAccessInfo.Protocol = (*source).Protocol
-		dtoInstanceAccessInfo.Host = (*source).Host
-		dtoInstanceAccessInfo.Port = (*source).Port
-		dtoInstanceAccessInfo.Command = (*source).Command
-		pDtoInstanceAccessInfo = &dtoInstanceAccessInfo
+		var contractsInstanceAccessInfo contracts.InstanceAccessInfo
+		contractsInstanceAccessInfo.Protocol = (*source).Protocol
+		contractsInstanceAccessInfo.Host = (*source).Host
+		contractsInstanceAccessInfo.Port = (*source).Port
+		contractsInstanceAccessInfo.Command = (*source).Command
+		pContractsInstanceAccessInfo = &contractsInstanceAccessInfo
 	}
-	return pDtoInstanceAccessInfo
+	return pContractsInstanceAccessInfo
 }
-func (c *practiceCommandResponseMapperImpl) pDtoInstanceRespToPDtoInstanceResp(source *dto.InstanceResp) *dto.InstanceResp {
-	var pDtoInstanceResp *dto.InstanceResp
+func (c *practiceCommandResponseMapperImpl) pContractsInstanceRespToPContractsInstanceResp(source *contracts.InstanceResp) *contracts.InstanceResp {
+	var pContractsInstanceResp *contracts.InstanceResp
 	if source != nil {
-		var dtoInstanceResp dto.InstanceResp
-		dtoInstanceResp.ID = (*source).ID
-		dtoInstanceResp.ChallengeID = (*source).ChallengeID
-		dtoInstanceResp.Status = (*source).Status
-		dtoInstanceResp.ShareScope = c.modelInstanceSharingToModelInstanceSharing((*source).ShareScope)
-		dtoInstanceResp.AccessURL = (*source).AccessURL
-		dtoInstanceResp.Access = c.pDtoInstanceAccessInfoToPDtoInstanceAccessInfo((*source).Access)
-		dtoInstanceResp.ExpiresAt = CopyTime((*source).ExpiresAt)
-		dtoInstanceResp.ExtendCount = (*source).ExtendCount
-		dtoInstanceResp.MaxExtends = (*source).MaxExtends
-		dtoInstanceResp.RemainingExtends = (*source).RemainingExtends
-		dtoInstanceResp.CreatedAt = CopyTime((*source).CreatedAt)
-		pDtoInstanceResp = &dtoInstanceResp
+		var contractsInstanceResp contracts.InstanceResp
+		contractsInstanceResp.ID = (*source).ID
+		contractsInstanceResp.ChallengeID = (*source).ChallengeID
+		contractsInstanceResp.Status = (*source).Status
+		contractsInstanceResp.ShareScope = c.modelInstanceSharingToModelInstanceSharing((*source).ShareScope)
+		contractsInstanceResp.AccessURL = (*source).AccessURL
+		contractsInstanceResp.Access = c.pContractsInstanceAccessInfoToPContractsInstanceAccessInfo((*source).Access)
+		contractsInstanceResp.ExpiresAt = CopyTime((*source).ExpiresAt)
+		contractsInstanceResp.ExtendCount = (*source).ExtendCount
+		contractsInstanceResp.MaxExtends = (*source).MaxExtends
+		contractsInstanceResp.RemainingExtends = (*source).RemainingExtends
+		contractsInstanceResp.CreatedAt = CopyTime((*source).CreatedAt)
+		pContractsInstanceResp = &contractsInstanceResp
 	}
-	return pDtoInstanceResp
+	return pContractsInstanceResp
 }

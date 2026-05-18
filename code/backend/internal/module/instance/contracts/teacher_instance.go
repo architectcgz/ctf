@@ -2,8 +2,6 @@ package contracts
 
 import (
 	"time"
-
-	"ctf-platform/internal/dto"
 )
 
 type TeacherInstanceListQuery struct {
@@ -23,7 +21,7 @@ type TeacherInstanceItem struct {
 	ChallengeTitle  string
 	Status          string
 	AccessURL       string
-	Access          *dto.InstanceAccessInfo
+	Access          *InstanceAccessInfo
 	ExpiresAt       time.Time
 	RemainingTime   int64
 	ExtendCount     int

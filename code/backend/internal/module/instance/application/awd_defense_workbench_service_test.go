@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -136,7 +136,7 @@ func TestAWDDefenseWorkbenchServiceSavesOnlyEditableFiles(t *testing.T) {
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: true, Root: "/home/student"},
 	)
 
-	resp, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseFileSaveReq{
+	resp, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseFileSaveReq{
 		Path:    "docker/challenge_app.py",
 		Content: "print('fixed')",
 		Backup:  true,
@@ -160,7 +160,7 @@ func TestAWDDefenseWorkbenchServiceSavesOnlyEditableFiles(t *testing.T) {
 		t.Fatalf("unexpected save response: %+v", resp)
 	}
 
-	if _, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseFileSaveReq{
+	if _, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseFileSaveReq{
 		Path:    "docker/app.py",
 		Content: "print('nope')",
 	}); err == nil {
@@ -176,7 +176,7 @@ func TestAWDDefenseWorkbenchServiceRunsScopedContainerCommand(t *testing.T) {
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: false, Root: "/home/student"},
 	)
 
-	resp, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseCommandReq{
+	resp, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseCommandReq{
 		Command: "ls",
 	})
 	if err != nil {
@@ -202,7 +202,7 @@ func TestAWDDefenseWorkbenchServiceRejectsInvalidCommand(t *testing.T) {
 		stubAWDDefenseWorkbenchRuntime{},
 		AWDDefenseWorkbenchConfig{},
 	)
-	_, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseCommandReq{Command: "  "})
+	_, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseCommandReq{Command: "  "})
 	appErr, ok := err.(*errcode.AppError)
 	if err == nil || !ok || appErr.Code != errcode.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params, got %v", err)
@@ -318,7 +318,7 @@ func TestAWDDefenseWorkbenchServiceCommandDeadline(t *testing.T) {
 		AWDDefenseWorkbenchConfig{},
 	)
 
-	if _, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, dto.AWDDefenseCommandReq{
+	if _, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseCommandReq{
 		Command: "pwd",
 	}); err != nil {
 		t.Fatalf("RunAWDDefenseCommand() error = %v", err)

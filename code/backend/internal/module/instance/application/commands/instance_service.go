@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	"ctf-platform/pkg/errcode"
@@ -67,7 +67,7 @@ func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userI
 	return s.destroyManagedInstance(ctx, instance)
 }
 
-func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error) {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
@@ -157,18 +157,18 @@ func isAWDTeamServiceInstance(instance *model.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
 }
 
-func (s *InstanceService) toInstanceResp(inst *model.Instance) *dto.InstanceResp {
+func (s *InstanceService) toInstanceResp(inst *model.Instance) *instancecontracts.InstanceResp {
 	if inst == nil {
 		return nil
 	}
 	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
-	return &dto.InstanceResp{
+	return &instancecontracts.InstanceResp{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
 		Status:           inst.Status,
 		ShareScope:       inst.ShareScope,
 		AccessURL:        accessURL,
-		Access:           dto.BuildInstanceAccessInfo(accessURL),
+		Access:           instancecontracts.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,

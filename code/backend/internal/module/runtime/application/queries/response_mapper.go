@@ -3,7 +3,7 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -20,8 +20,8 @@ type instanceResponseMapper interface {
 	// goverter:ignore Access
 	// goverter:ignore RemainingTime
 	// goverter:ignore RemainingExtends
-	ToInstanceInfo(source runtimeports.UserVisibleInstanceRow) dto.InstanceInfo
-	ToInstanceInfoPtr(source *runtimeports.UserVisibleInstanceRow) *dto.InstanceInfo
+	ToInstanceInfo(source runtimeports.UserVisibleInstanceRow) instancecontracts.InstanceInfo
+	ToInstanceInfoPtr(source *runtimeports.UserVisibleInstanceRow) *instancecontracts.InstanceInfo
 }
 
 var runtimeResponseMapper instanceResponseMapper

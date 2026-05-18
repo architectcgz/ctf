@@ -2,8 +2,7 @@ package http
 
 import (
 	"time"
-
-	"ctf-platform/internal/dto"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 type TeacherInstanceQuery struct {
@@ -23,10 +22,10 @@ type TeacherInstanceItem struct {
 	ChallengeTitle  string                  `json:"challenge_title"`
 	Status          string                  `json:"status"`
 	AccessURL       string                  `json:"access_url"`
-	Access          *dto.InstanceAccessInfo `json:"access,omitempty"`
-	ExpiresAt       time.Time               `json:"expires_at"`
-	RemainingTime   int64                   `json:"remaining_time"`
-	ExtendCount     int                     `json:"extend_count"`
-	MaxExtends      int                     `json:"max_extends"`
-	CreatedAt       time.Time               `json:"created_at"`
+	Access          *instancecontracts.InstanceAccessInfo `json:"access,omitempty"`
+	ExpiresAt       time.Time                             `json:"expires_at"`
+	RemainingTime   int64                                 `json:"remaining_time"`
+	ExtendCount     int                                   `json:"extend_count"`
+	MaxExtends      int                                   `json:"max_extends"`
+	CreatedAt       time.Time                             `json:"created_at"`
 }
