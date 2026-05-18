@@ -10,6 +10,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
@@ -97,11 +98,11 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("expected publish before solve to be forbidden")
 	}
 
-	solvedSubmission := &model.Submission{
+	solvedSubmission := &contestcontracts.Submission{
 		UserID:       student.ID,
 		ChallengeID:  challengeItem.ID,
 		IsCorrect:    true,
-		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		ReviewStatus: contestcontracts.SubmissionReviewStatusNotRequired,
 		Score:        challengeItem.Points,
 		SubmittedAt:  now,
 		UpdatedAt:    now,
@@ -211,11 +212,11 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("Upsert official writeup() error = %v", err)
 	}
 
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestcontracts.Submission{
 		UserID:       student.ID,
 		ChallengeID:  challengeItem.ID,
 		IsCorrect:    true,
-		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		ReviewStatus: contestcontracts.SubmissionReviewStatusNotRequired,
 		Score:        challengeItem.Points,
 		SubmittedAt:  now,
 		UpdatedAt:    now,

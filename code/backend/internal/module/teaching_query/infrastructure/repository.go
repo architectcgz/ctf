@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -508,7 +509,7 @@ func (r *Repository) fillClassWriteupAndReviewStats(
 	}, 0)
 	if err := r.db.WithContext(ctx).Table("submissions AS s").
 		Select("s.user_id, COUNT(*) AS count").
-		Where("s.user_id IN ? AND s.review_status = ?", userIDs, model.SubmissionReviewStatusApproved).
+		Where("s.user_id IN ? AND s.review_status = ?", userIDs, contestcontracts.SubmissionReviewStatusApproved).
 		Group("s.user_id").
 		Scan(&rows).Error; err != nil {
 		return fmt.Errorf("count class approved reviews: %w", err)
@@ -699,7 +700,7 @@ func (r *Repository) fillClassDimensionFacts(
 				AND s.review_status = ?
 				AND c.status = ?
 			GROUP BY s.user_id, c.category
-		`, userIDs, model.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
+		`, userIDs, contestcontracts.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
 			return fmt.Errorf("get class review dimension facts: %w", err)
 		}
 		for _, row := range reviewRows {

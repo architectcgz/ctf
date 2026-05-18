@@ -57,7 +57,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 		&model.Challenge{},
 		&model.AWDChallenge{},
 		&assessmententity.SkillProfile{},
-		&model.Submission{},
+		&contestcontracts.Submission{},
 		&model.AWDAttackLog{},
 		&model.Tag{},
 		&model.ChallengeTag{},
@@ -151,7 +151,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 		}
 	}
 
-	submissions := []model.Submission{
+	submissions := []contestcontracts.Submission{
 		{UserID: 7, ChallengeID: 101, IsCorrect: true, SubmittedAt: now},
 		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now.Add(1 * time.Minute)},
 		{UserID: 7, ChallengeID: 202, IsCorrect: false, SubmittedAt: now.Add(2 * time.Minute)},
@@ -231,7 +231,7 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 		t.Fatalf("seed practice challenge: %v", err)
 	}
 	for index := 0; index < 3; index++ {
-		if err := db.Create(&model.Submission{
+		if err := db.Create(&contestcontracts.Submission{
 			UserID:      8,
 			ChallengeID: 801,
 			IsCorrect:   false,
@@ -303,7 +303,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 		t.Fatalf("seed practice sample challenge: %v", err)
 	}
 	for index := 0; index < 2; index++ {
-		if err := db.Create(&model.Submission{
+		if err := db.Create(&contestcontracts.Submission{
 			UserID:      18,
 			ChallengeID: 1801,
 			IsCorrect:   false,
@@ -411,7 +411,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 		t.Fatalf("seed challenge: %v", err)
 	}
 	for index := 0; index < 3; index++ {
-		if err := db.Create(&model.Submission{
+		if err := db.Create(&contestcontracts.Submission{
 			UserID:      10,
 			ChallengeID: 901,
 			IsCorrect:   index < 2,
@@ -472,7 +472,7 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 		}
 	}
 	for _, challenge := range solvedChallenges {
-		if err := db.Create(&model.Submission{
+		if err := db.Create(&contestcontracts.Submission{
 			UserID:      30,
 			ChallengeID: challenge.ID,
 			IsCorrect:   true,

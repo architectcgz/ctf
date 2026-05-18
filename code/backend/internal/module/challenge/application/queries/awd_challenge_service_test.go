@@ -9,6 +9,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -56,7 +57,7 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 		ServiceType:      model.AWDServiceTypeWebHTTP,
 		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
 		Status:           model.AWDChallengeStatusPublished,
-		CheckerType:      model.AWDCheckerTypeHTTPStandard,
+		CheckerType:      contestcontracts.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"put_flag":{"path":"/api/flag"},"get_flag":{"path":"/api/flag"}}`,
 		FlagMode:         "dynamic_team",
 		FlagConfig:       `{"flag_prefix":"awd","rotate_interval_sec":120}`,
@@ -73,7 +74,7 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 		t.Fatalf("GetChallenge() error = %v", err)
 	}
 
-	if item.CheckerType != string(model.AWDCheckerTypeHTTPStandard) {
+	if item.CheckerType != string(contestcontracts.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker_type: %+v", item)
 	}
 	if item.FlagMode != "dynamic_team" || item.DefenseEntryMode != "http" {

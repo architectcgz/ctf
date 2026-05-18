@@ -11,7 +11,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 const skipAuditKey = "skip_audit"

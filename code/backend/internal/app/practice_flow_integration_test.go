@@ -26,7 +26,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
@@ -38,6 +37,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -57,6 +57,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
@@ -701,7 +702,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("expected 2 submit audit logs, got %+v", auditPage.List)
 	}
 
-	var submissions []model.Submission
+	var submissions []contestcontracts.Submission
 	if err := env.db.Order("submitted_at ASC").Find(&submissions).Error; err != nil {
 		t.Fatalf("query submissions: %v", err)
 	}
@@ -838,7 +839,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.UserRole{},
 		&opsentity.AuditLog{},
 		&model.Contest{},
-		&model.ContestRegistration{},
+		&contestcontracts.ContestRegistration{},
 		&model.Team{},
 		&model.TeamMember{},
 		&model.Image{},
@@ -850,7 +851,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&challengeentity.ChallengePackageRevision{},
 		&model.EnvironmentTemplate{},
 		&model.ContestAWDService{},
-		&model.Submission{},
+		&contestcontracts.Submission{},
 		&model.Instance{},
 		&runtimeentity.PortAllocation{},
 		&model.AWDServiceOperation{},

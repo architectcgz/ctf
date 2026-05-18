@@ -28,6 +28,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -137,7 +138,7 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	peerRegistration := findContestRegistration(t, env, registrationContest.ID, env.peerStudent.ID)
-	if peerRegistration.Status != model.ContestRegistrationStatusPending {
+	if peerRegistration.Status != contestcontracts.ContestRegistrationStatusPending {
 		t.Fatalf("expected pending registration, got %s", peerRegistration.Status)
 	}
 
@@ -156,22 +157,22 @@ func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/contests/%d/registrations/%d", registrationContest.ID, peerRegistration.ID), map[string]any{
-		"status": model.ContestRegistrationStatusApproved,
+		"status": contestcontracts.ContestRegistrationStatusApproved,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/contests/%d/register", env.contest.ID), nil, peerHeaders)
 	assertFullRouterStatus(t, resp, http.StatusForbidden)
 
-	createContestRegistration(t, env, registrationContest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, registrationContest.ID, env.otherStudent.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, registrationContest.ID, fillerStudent.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, registrationContest.ID, retryStudent.ID, model.ContestRegistrationStatusRejected, nil)
+	createContestRegistration(t, env, registrationContest.ID, env.student.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, registrationContest.ID, env.otherStudent.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, registrationContest.ID, fillerStudent.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, registrationContest.ID, retryStudent.ID, contestcontracts.ContestRegistrationStatusRejected, nil)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/contests/%d/register", registrationContest.ID), nil, retryHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 	retryRegistration := findContestRegistration(t, env, registrationContest.ID, retryStudent.ID)
-	if retryRegistration.Status != model.ContestRegistrationStatusPending {
+	if retryRegistration.Status != contestcontracts.ContestRegistrationStatusPending {
 		t.Fatalf("expected rejected registration to requeue as pending, got %s", retryRegistration.Status)
 	}
 
@@ -445,7 +446,7 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	if err := env.db.Create(secondChallenge).Error; err != nil {
 		t.Fatalf("create second challenge: %v", err)
 	}
-	secondContestChallenge := &model.ContestChallenge{
+	secondContestChallenge := &contestcontracts.ContestChallenge{
 		ContestID:   env.contest.ID,
 		ChallengeID: secondChallenge.ID,
 		Points:      150,
@@ -568,7 +569,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 		t.Fatalf("create teacher awd review contest: %v", err)
 	}
 
-	if err := env.db.Create(&model.ContestChallenge{
+	if err := env.db.Create(&contestcontracts.ContestChallenge{
 		ContestID:   reviewContest.ID,
 		ChallengeID: env.challenge.ID,
 		Points:      100,
@@ -578,8 +579,8 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 		t.Fatalf("create teacher awd review contest challenge: %v", err)
 	}
 
-	createContestRegistration(t, env, reviewContest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, reviewContest.ID, env.peerStudent.ID, model.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, reviewContest.ID, env.student.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, reviewContest.ID, env.peerStudent.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
 
 	blueTeam := createContestTeam(t, env, reviewContest.ID, env.student.ID, "AWD Review Blue", 4)
 	redTeam := createContestTeam(t, env, reviewContest.ID, env.peerStudent.ID, "AWD Review Red", 4)
@@ -632,7 +633,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 		reviewContest.ID,
 		env.challenge.ID,
 		"review-service",
-		model.AWDCheckerTypeHTTPStandard,
+		contestcontracts.AWDCheckerTypeHTTPStandard,
 		`{"method":"GET","path":"/health"}`,
 		100,
 		60,
@@ -1322,14 +1323,14 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/teacher/manual-review-submissions/%d/review", manualSubmissionID), map[string]any{
-		"review_status":  model.SubmissionReviewStatusApproved,
+		"review_status":  contestcontracts.SubmissionReviewStatusApproved,
 		"review_comment": "证据完整，通过。",
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var reviewedManualSubmission practicecontracts.TeacherManualReviewSubmissionDetailResp
 	decodeFullRouterData(t, resp, &reviewedManualSubmission)
-	if reviewedManualSubmission.ReviewStatus != model.SubmissionReviewStatusApproved || !reviewedManualSubmission.IsCorrect || reviewedManualSubmission.Score != 120 {
+	if reviewedManualSubmission.ReviewStatus != contestcontracts.SubmissionReviewStatusApproved || !reviewedManualSubmission.IsCorrect || reviewedManualSubmission.Score != 120 {
 		t.Fatalf("unexpected reviewed manual submission: %+v", reviewedManualSubmission)
 	}
 
@@ -1587,7 +1588,7 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 		env.awdContest.ID,
 		env.challenge.ID,
 		"traffic-service",
-		model.AWDCheckerTypeHTTPStandard,
+		contestcontracts.AWDCheckerTypeHTTPStandard,
 		`{"method":"GET","path":"/ping"}`,
 		100,
 		60,
@@ -1888,8 +1889,8 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected admin contest challenges: %+v", adminChallenges)
 	}
 
-	createContestRegistration(t, env, editableContest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, editableContest.ID, env.peerStudent.ID, model.ContestRegistrationStatusPending, nil)
+	createContestRegistration(t, env, editableContest.ID, env.student.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, editableContest.ID, env.peerStudent.ID, contestcontracts.ContestRegistrationStatusPending, nil)
 
 	setContestStatus(t, env, editableContest.ID, model.ContestStatusRunning, nil)
 
@@ -1935,15 +1936,15 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/contests/%d/challenges/%d", conflictContest.ID, challengeB.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
-	if err := env.db.Where("contest_id = ? AND challenge_id = ?", conflictContest.ID, challengeB.ID).Delete(&model.Submission{}).Error; err != nil {
+	if err := env.db.Where("contest_id = ? AND challenge_id = ?", conflictContest.ID, challengeB.ID).Delete(&contestcontracts.Submission{}).Error; err != nil {
 		t.Fatalf("delete conflict contest submissions: %v", err)
 	}
 	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/contests/%d/challenges/%d", conflictContest.ID, challengeB.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	scoreboardContest := createFullRouterContest(t, env, "Scoreboard Contest", model.ContestStatusRunning)
-	createContestRegistration(t, env, scoreboardContest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
-	createContestRegistration(t, env, scoreboardContest.ID, env.peerStudent.ID, model.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, scoreboardContest.ID, env.student.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, scoreboardContest.ID, env.peerStudent.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
 	teamAlpha := createContestTeam(t, env, scoreboardContest.ID, env.student.ID, "Alpha", 4)
 	teamBeta := createContestTeam(t, env, scoreboardContest.ID, env.peerStudent.ID, "Beta", 4)
 	seedContestScore(t, env, scoreboardContest.ID, teamAlpha.ID, 100)
@@ -2044,7 +2045,7 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 		t.Fatalf("create contest awd service: %v", err)
 	}
 
-	createContestRegistration(t, env, contest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
+	createContestRegistration(t, env, contest.ID, env.student.ID, contestcontracts.ContestRegistrationStatusApproved, nil)
 
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -2067,7 +2068,7 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 		env.awdContest.ID,
 		env.challenge.ID,
 		"Matrix AWD Service",
-		model.AWDCheckerTypeHTTPStandard,
+		contestcontracts.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/health"}}`,
 		100,
 		18,
@@ -2742,10 +2743,10 @@ func performFullRouterMultipartRequest(
 	return recorder
 }
 
-func createContestRegistration(t *testing.T, env *fullRouterTestEnv, contestID, userID int64, status string, teamID *int64) *model.ContestRegistration {
+func createContestRegistration(t *testing.T, env *fullRouterTestEnv, contestID, userID int64, status string, teamID *int64) *contestcontracts.ContestRegistration {
 	t.Helper()
 
-	registration := &model.ContestRegistration{
+	registration := &contestcontracts.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    teamID,
@@ -2759,10 +2760,10 @@ func createContestRegistration(t *testing.T, env *fullRouterTestEnv, contestID, 
 	return registration
 }
 
-func findContestRegistration(t *testing.T, env *fullRouterTestEnv, contestID, userID int64) *model.ContestRegistration {
+func findContestRegistration(t *testing.T, env *fullRouterTestEnv, contestID, userID int64) *contestcontracts.ContestRegistration {
 	t.Helper()
 
-	var registration model.ContestRegistration
+	var registration contestcontracts.ContestRegistration
 	if err := env.db.Where("contest_id = ? AND user_id = ?", contestID, userID).First(&registration).Error; err != nil {
 		t.Fatalf("find contest registration: %v", err)
 	}
@@ -2783,7 +2784,7 @@ func createContestTeam(t *testing.T, env *fullRouterTestEnv, contestID, captainI
 		t.Fatalf("create contest team: %v", err)
 	}
 	createContestTeamMember(t, env, contestID, team.ID, captainID)
-	if err := env.db.Model(&model.ContestRegistration{}).
+	if err := env.db.Model(&contestcontracts.ContestRegistration{}).
 		Where("contest_id = ? AND user_id = ?", contestID, captainID).
 		Updates(map[string]any{"team_id": team.ID, "updated_at": time.Now()}).Error; err != nil {
 		t.Fatalf("bind captain registration to team: %v", err)
@@ -2802,7 +2803,7 @@ func createContestTeamMember(t *testing.T, env *fullRouterTestEnv, contestID, te
 	}).Error; err != nil {
 		t.Fatalf("create contest team member: %v", err)
 	}
-	if err := env.db.Model(&model.ContestRegistration{}).
+	if err := env.db.Model(&contestcontracts.ContestRegistration{}).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		Updates(map[string]any{"team_id": teamID, "updated_at": time.Now()}).Error; err != nil {
 		t.Fatalf("bind member registration to team: %v", err)
@@ -2812,7 +2813,7 @@ func createContestTeamMember(t *testing.T, env *fullRouterTestEnv, contestID, te
 func createContestSubmission(t *testing.T, env *fullRouterTestEnv, contestID, teamID, userID, challengeID int64, score int) {
 	t.Helper()
 
-	if err := env.db.Create(&model.Submission{
+	if err := env.db.Create(&contestcontracts.Submission{
 		UserID:      userID,
 		ChallengeID: challengeID,
 		ContestID:   &contestID,
@@ -2828,7 +2829,7 @@ func createContestSubmission(t *testing.T, env *fullRouterTestEnv, contestID, te
 func createPracticeSubmission(t *testing.T, env *fullRouterTestEnv, userID, challengeID int64, score int) {
 	t.Helper()
 
-	if err := env.db.Create(&model.Submission{
+	if err := env.db.Create(&contestcontracts.Submission{
 		UserID:      userID,
 		ChallengeID: challengeID,
 		IsCorrect:   true,

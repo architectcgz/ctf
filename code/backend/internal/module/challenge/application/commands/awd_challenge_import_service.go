@@ -20,6 +20,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -236,7 +237,7 @@ func (s *AWDChallengeImportService) CommitImport(
 			DeploymentMode:   model.AWDDeploymentMode(parsed.DeploymentMode),
 			Version:          parsed.Version,
 			Status:           model.AWDChallengeStatusPublished,
-			CheckerType:      model.AWDCheckerType(parsed.CheckerType),
+			CheckerType:      contestcontracts.AWDCheckerType(parsed.CheckerType),
 			CheckerConfig:    checkerConfigWithArtifact,
 			FlagMode:         parsed.FlagMode,
 			FlagConfig:       flagConfigRaw,
@@ -394,7 +395,7 @@ func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string
 		return "{}", nil
 	}
 	config := cloneAWDChallengeConfig(parsed.CheckerConfig)
-	if parsed.CheckerType != string(model.AWDCheckerTypeScript) {
+	if parsed.CheckerType != string(contestcontracts.AWDCheckerTypeScript) {
 		return marshalAWDChallengeConfig(config)
 	}
 	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {

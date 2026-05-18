@@ -1,11 +1,11 @@
 package model
 
-import contestentity "ctf-platform/internal/module/contest/entity"
+import contestcontracts "ctf-platform/internal/module/contest/contracts"
 
 const (
-	ContestRegistrationStatusPending  = contestentity.ContestRegistrationStatusPending
-	ContestRegistrationStatusApproved = contestentity.ContestRegistrationStatusApproved
-	ContestRegistrationStatusRejected = contestentity.ContestRegistrationStatusRejected
+	ContestRegistrationStatusPending  = contestcontracts.ContestRegistrationStatusPending
+	ContestRegistrationStatusApproved = contestcontracts.ContestRegistrationStatusApproved
+	ContestRegistrationStatusRejected = contestcontracts.ContestRegistrationStatusRejected
 )
 
-type ContestRegistration = contestentity.ContestRegistration
+type ContestRegistration = contestcontracts.ContestRegistration

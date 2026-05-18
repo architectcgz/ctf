@@ -15,6 +15,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -239,7 +240,7 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestcontracts.Submission{
 		UserID:      1,
 		ChallengeID: challenge.ID,
 		IsCorrect:   true,
@@ -307,7 +308,7 @@ func TestServiceGetSolvedCountCachedWarmsCacheOnMiss(t *testing.T) {
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestcontracts.Submission{
 		UserID:      1,
 		ChallengeID: challenge.ID,
 		IsCorrect:   true,

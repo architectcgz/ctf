@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -309,7 +310,7 @@ func (r *Repository) fillStudentWriteupAndReviewStats(
 
 	var approvedReviewCount int64
 	if err := r.dbWithContext(ctx).Table("submissions").
-		Where("user_id = ? AND review_status = ?", userID, model.SubmissionReviewStatusApproved).
+		Where("user_id = ? AND review_status = ?", userID, contestcontracts.SubmissionReviewStatusApproved).
 		Count(&approvedReviewCount).Error; err != nil {
 		return fmt.Errorf("count approved manual reviews: %w", err)
 	}
@@ -500,7 +501,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND s.review_status = ?
 				AND c.status = ?
 			GROUP BY c.category
-		`, userID, model.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
+		`, userID, contestcontracts.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
 			return fmt.Errorf("get student review evidence facts: %w", err)
 		}
 		for _, row := range reviewRows {

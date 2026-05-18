@@ -33,7 +33,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Challenge{},
-		&model.Submission{},
+		&contestcontracts.Submission{},
 		&model.AWDAttackLog{},
 		&assessmententity.SkillProfile{},
 	); err != nil {
@@ -91,7 +91,7 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 		}
 	}
 
-	submissions := []model.Submission{
+	submissions := []contestcontracts.Submission{
 		{UserID: student.ID, ChallengeID: 11, IsCorrect: true, SubmittedAt: now},
 		{UserID: student.ID, ChallengeID: 12, IsCorrect: false, SubmittedAt: now},
 		{UserID: student.ID, ChallengeID: 13, IsCorrect: true, SubmittedAt: now},
@@ -159,7 +159,7 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 		}
 	}
 
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestcontracts.Submission{
 		UserID:      student.ID,
 		ChallengeID: 31,
 		IsCorrect:   true,

@@ -26,7 +26,6 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
@@ -34,10 +33,12 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -62,7 +63,7 @@ type fullRouterTestEnv struct {
 	template     *model.EnvironmentTemplate
 	contest      *model.Contest
 	awdContest   *model.Contest
-	registration *model.ContestRegistration
+	registration *contestcontracts.ContestRegistration
 	announcement *contestentity.ContestAnnouncement
 	team         *model.Team
 	awdRound     *model.AWDRound
@@ -93,7 +94,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.EnvironmentTemplate{},
 	&model.ChallengeTopology{},
 	&challengeentity.ChallengePackageRevision{},
-	&model.Submission{},
+	&contestcontracts.Submission{},
 	&model.Instance{},
 	&runtimeentity.PortAllocation{},
 	&practiceentity.UserScore{},
@@ -103,9 +104,9 @@ var fullRouterTestSchemaModels = []any{
 	&assessmententity.SkillProfile{},
 	&model.Contest{},
 	&contestentity.ContestStatusTransition{},
-	&model.ContestChallenge{},
+	&contestcontracts.ContestChallenge{},
 	&model.ContestAWDService{},
-	&model.ContestRegistration{},
+	&contestcontracts.ContestRegistration{},
 	&contestentity.ContestAnnouncement{},
 	&model.Team{},
 	&model.TeamMember{},
@@ -1316,7 +1317,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create awd contest: %v", err)
 	}
 
-	contestChallenge := &model.ContestChallenge{
+	contestChallenge := &contestcontracts.ContestChallenge{
 		ContestID:   env.contest.ID,
 		ChallengeID: env.challenge.ID,
 		Points:      100,
@@ -1326,7 +1327,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err := env.db.Create(contestChallenge).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
 	}
-	awdContestChallenge := &model.ContestChallenge{
+	awdContestChallenge := &contestcontracts.ContestChallenge{
 		ContestID:   env.awdContest.ID,
 		ChallengeID: env.challenge.ID,
 		Points:      100,
@@ -1337,18 +1338,18 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create awd contest challenge: %v", err)
 	}
 
-	env.registration = &model.ContestRegistration{
+	env.registration = &contestcontracts.ContestRegistration{
 		ContestID: env.contest.ID,
 		UserID:    env.student.ID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestcontracts.ContestRegistrationStatusApproved,
 	}
 	if err := env.db.Create(env.registration).Error; err != nil {
 		t.Fatalf("create registration: %v", err)
 	}
-	awdRegistration := &model.ContestRegistration{
+	awdRegistration := &contestcontracts.ContestRegistration{
 		ContestID: env.awdContest.ID,
 		UserID:    env.student.ID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestcontracts.ContestRegistrationStatusApproved,
 	}
 	if err := env.db.Create(awdRegistration).Error; err != nil {
 		t.Fatalf("create awd registration: %v", err)
@@ -1447,7 +1448,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create instance: %v", err)
 	}
 
-	if err := env.db.Create(&model.Submission{
+	if err := env.db.Create(&contestcontracts.Submission{
 		UserID:      env.student.ID,
 		ChallengeID: env.challenge.ID,
 		IsCorrect:   true,

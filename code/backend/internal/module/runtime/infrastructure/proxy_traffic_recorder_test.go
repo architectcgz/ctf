@@ -11,6 +11,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) {
@@ -85,7 +86,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,
-		ValidationState: model.AWDCheckerValidationStatePassed,
+		ValidationState: contestcontracts.AWDCheckerValidationStatePassed,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	})

@@ -11,8 +11,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
-	opsentity "ctf-platform/internal/module/ops/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 type recordingAWDReadinessAuditRecorder struct {
@@ -39,7 +38,7 @@ func TestAWDReadinessAuditRecordsSucceededForcedOverride(t *testing.T) {
 				{
 					AWDChallengeID:  11,
 					Title:           "calc",
-					CheckerType:     model.AWDCheckerType("http_standard"),
+					CheckerType:     contestcontracts.AWDCheckerType("http_standard"),
 					ValidationState: "failed",
 					BlockingReason:  "last_preview_failed",
 				},
@@ -83,7 +82,7 @@ func TestAWDReadinessAuditRecordsFailedForcedOverride(t *testing.T) {
 				{
 					AWDChallengeID:  21,
 					Title:           "pwn",
-					CheckerType:     model.AWDCheckerType("legacy_probe"),
+					CheckerType:     contestcontracts.AWDCheckerType("legacy_probe"),
 					ValidationState: "missing_checker",
 					BlockingReason:  "missing_checker",
 				},

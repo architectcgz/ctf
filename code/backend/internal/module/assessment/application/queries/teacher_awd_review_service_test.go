@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/pkg/errcode"
 )
@@ -383,7 +384,7 @@ func seedTeacherAWDReviewTeamsAndChallenge(t *testing.T, db *gorm.DB, contestID 
 		contestID,
 		challengeID,
 		"teacher-review-service",
-		model.AWDCheckerTypeHTTPStandard,
+		contestcontracts.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/flag"}}`,
 		100,
 		20,

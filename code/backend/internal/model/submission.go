@@ -1,12 +1,12 @@
 package model
 
-import contestentity "ctf-platform/internal/module/contest/entity"
+import contestcontracts "ctf-platform/internal/module/contest/contracts"
 
 const (
-	SubmissionReviewStatusNotRequired = contestentity.SubmissionReviewStatusNotRequired
-	SubmissionReviewStatusPending     = contestentity.SubmissionReviewStatusPending
-	SubmissionReviewStatusApproved    = contestentity.SubmissionReviewStatusApproved
-	SubmissionReviewStatusRejected    = contestentity.SubmissionReviewStatusRejected
+	SubmissionReviewStatusNotRequired = contestcontracts.SubmissionReviewStatusNotRequired
+	SubmissionReviewStatusPending     = contestcontracts.SubmissionReviewStatusPending
+	SubmissionReviewStatusApproved    = contestcontracts.SubmissionReviewStatusApproved
+	SubmissionReviewStatusRejected    = contestcontracts.SubmissionReviewStatusRejected
 )
 
-type Submission = contestentity.Submission
+type Submission = contestcontracts.Submission

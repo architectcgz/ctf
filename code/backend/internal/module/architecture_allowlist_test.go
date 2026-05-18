@@ -49,6 +49,7 @@ var allowedModuleDependencies = map[string]struct{}{
 	"assessment -> contest":        {},
 	"assessment -> practice":       {},
 	"auth -> identity":             {},
+	"challenge -> contest":         {},
 	"contest -> auth":              {},
 	"contest -> challenge":         {},
 	"contest -> runtime":           {},
@@ -63,6 +64,7 @@ var allowedModuleDependencies = map[string]struct{}{
 	"runtime -> contest":           {},
 	"runtime -> instance":          {},
 	"runtime -> ops":               {},
+	"teaching_query -> contest":    {},
 	"teaching_query -> assessment": {},
 }
 

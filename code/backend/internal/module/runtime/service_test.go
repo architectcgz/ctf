@@ -14,12 +14,13 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -1872,7 +1873,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &model.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {

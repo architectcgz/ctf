@@ -1,23 +1,23 @@
 package model
 
-import contestentity "ctf-platform/internal/module/contest/entity"
+import contestcontracts "ctf-platform/internal/module/contest/contracts"
 
-type AWDCheckerType = contestentity.AWDCheckerType
-
-const (
-	AWDCheckerTypeLegacyProbe  = contestentity.AWDCheckerTypeLegacyProbe
-	AWDCheckerTypeHTTPStandard = contestentity.AWDCheckerTypeHTTPStandard
-	AWDCheckerTypeTCPStandard  = contestentity.AWDCheckerTypeTCPStandard
-	AWDCheckerTypeScript       = contestentity.AWDCheckerTypeScript
-)
-
-type AWDCheckerValidationState = contestentity.AWDCheckerValidationState
+type AWDCheckerType = contestcontracts.AWDCheckerType
 
 const (
-	AWDCheckerValidationStatePending = contestentity.AWDCheckerValidationStatePending
-	AWDCheckerValidationStatePassed  = contestentity.AWDCheckerValidationStatePassed
-	AWDCheckerValidationStateFailed  = contestentity.AWDCheckerValidationStateFailed
-	AWDCheckerValidationStateStale   = contestentity.AWDCheckerValidationStateStale
+	AWDCheckerTypeLegacyProbe  = contestcontracts.AWDCheckerTypeLegacyProbe
+	AWDCheckerTypeHTTPStandard = contestcontracts.AWDCheckerTypeHTTPStandard
+	AWDCheckerTypeTCPStandard  = contestcontracts.AWDCheckerTypeTCPStandard
+	AWDCheckerTypeScript       = contestcontracts.AWDCheckerTypeScript
 )
 
-type ContestChallenge = contestentity.ContestChallenge
+type AWDCheckerValidationState = contestcontracts.AWDCheckerValidationState
+
+const (
+	AWDCheckerValidationStatePending = contestcontracts.AWDCheckerValidationStatePending
+	AWDCheckerValidationStatePassed  = contestcontracts.AWDCheckerValidationStatePassed
+	AWDCheckerValidationStateFailed  = contestcontracts.AWDCheckerValidationStateFailed
+	AWDCheckerValidationStateStale   = contestcontracts.AWDCheckerValidationStateStale
+)
+
+type ContestChallenge = contestcontracts.ContestChallenge

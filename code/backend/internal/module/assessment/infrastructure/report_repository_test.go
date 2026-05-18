@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -30,7 +31,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Challenge{},
 		&model.AWDChallenge{},
-		&model.Submission{},
+		&contestcontracts.Submission{},
 		&model.AWDRound{},
 		&model.AWDAttackLog{},
 		&model.AWDTrafficEvent{},
@@ -87,7 +88,7 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 		t.Fatalf("seed challenges: %v", err)
 	}
 
-	submissions := []model.Submission{
+	submissions := []contestcontracts.Submission{
 		{ID: 1, UserID: 1, ChallengeID: 101, IsCorrect: true, SubmittedAt: now.Add(-5 * time.Minute), UpdatedAt: now.Add(-5 * time.Minute)},
 		{ID: 2, UserID: 2, ChallengeID: 102, IsCorrect: true, SubmittedAt: now.Add(-4 * time.Minute), UpdatedAt: now.Add(-4 * time.Minute)},
 	}
@@ -194,7 +195,7 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 		t.Fatalf("seed challenges: %v", err)
 	}
 
-	submission := model.Submission{
+	submission := contestcontracts.Submission{
 		ID:          11,
 		UserID:      user.ID,
 		ChallengeID: 201,
@@ -291,7 +292,7 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 		t.Fatalf("seed challenges: %v", err)
 	}
 
-	submissions := []model.Submission{
+	submissions := []contestcontracts.Submission{
 		{ID: 31, UserID: 1, ChallengeID: 301, IsCorrect: true, SubmittedAt: now.Add(-5 * time.Minute), UpdatedAt: now.Add(-5 * time.Minute)},
 		{ID: 32, UserID: 2, ChallengeID: 301, IsCorrect: true, SubmittedAt: now.Add(-4 * time.Minute), UpdatedAt: now.Add(-4 * time.Minute)},
 		{ID: 33, UserID: 3, ChallengeID: 302, IsCorrect: true, SubmittedAt: now.Add(-3 * time.Minute), UpdatedAt: now.Add(-3 * time.Minute)},
@@ -557,7 +558,7 @@ func TestReportRepositoryListClassDistributions(t *testing.T) {
 		t.Fatalf("seed challenges: %v", err)
 	}
 
-	submissions := []model.Submission{
+	submissions := []contestcontracts.Submission{
 		{ID: 701, UserID: 1, ChallengeID: 701, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},
 		{ID: 702, UserID: 2, ChallengeID: 702, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},
 		{ID: 703, UserID: 2, ChallengeID: 703, IsCorrect: true, SubmittedAt: now, UpdatedAt: now},

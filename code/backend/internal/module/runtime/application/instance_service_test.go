@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -178,7 +179,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		ScoreConfig:     `{"points":300}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
 		ServiceSnapshot: `{"name":"Bank Portal","category":"pwn","difficulty":"hard","flag_config":{"flag_type":"dynamic","flag_prefix":"awd"}}`,
-		ValidationState: model.AWDCheckerValidationStatePassed,
+		ValidationState: contestcontracts.AWDCheckerValidationStatePassed,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
@@ -768,7 +769,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 		ScoreConfig:     `{"points":300}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
 		ServiceSnapshot: `{"name":"Bank Portal","category":"pwn","difficulty":"hard","flag_config":{"flag_type":"dynamic","flag_prefix":"awd"}}`,
-		ValidationState: model.AWDCheckerValidationStatePassed,
+		ValidationState: contestcontracts.AWDCheckerValidationStatePassed,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
@@ -895,7 +896,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &model.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {

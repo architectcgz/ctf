@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -22,7 +23,7 @@ func setupTeachingQueryRepoTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(
 		&model.User{},
-		&model.Submission{},
+		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&model.AWDChallenge{},
 		&model.AWDAttackLog{},

@@ -9,18 +9,18 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 const awdReadinessAuditPayloadKey = "awd_readiness_audit_payload"
 
 type AWDReadinessAuditItem struct {
-	AWDChallengeID  int64                `json:"awd_challenge_id"`
-	Title           string               `json:"title"`
-	CheckerType     model.AWDCheckerType `json:"checker_type,omitempty"`
-	ValidationState string               `json:"validation_state"`
-	BlockingReason  string               `json:"blocking_reason"`
+	AWDChallengeID  int64                           `json:"awd_challenge_id"`
+	Title           string                          `json:"title"`
+	CheckerType     contestcontracts.AWDCheckerType `json:"checker_type,omitempty"`
+	ValidationState string                          `json:"validation_state"`
+	BlockingReason  string                          `json:"blocking_reason"`
 }
 
 type AWDReadinessAuditPayload struct {
@@ -38,7 +38,7 @@ type AWDReadinessAuditPayload struct {
 type AWDReadinessAuditSnapshotItem struct {
 	AWDChallengeID  int64
 	Title           string
-	CheckerType     model.AWDCheckerType
+	CheckerType     contestcontracts.AWDCheckerType
 	ValidationState string
 	BlockingReason  string
 }
