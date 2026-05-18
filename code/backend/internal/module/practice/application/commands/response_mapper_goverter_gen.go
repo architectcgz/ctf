@@ -21,44 +21,13 @@ func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceItemRespPtr(source
 	commandsAdminAWDInstanceItemResp := c.ToAdminAWDInstanceItemResp(source)
 	return &commandsAdminAWDInstanceItemResp
 }
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceResp(source model.ContestAWDService) AdminAWDInstanceServiceResp {
-	var commandsAdminAWDInstanceServiceResp AdminAWDInstanceServiceResp
-	commandsAdminAWDInstanceServiceResp.ServiceID = source.ID
-	commandsAdminAWDInstanceServiceResp.AWDChallengeID = source.AWDChallengeID
-	commandsAdminAWDInstanceServiceResp.DisplayName = source.DisplayName
-	commandsAdminAWDInstanceServiceResp.IsVisible = source.IsVisible
-	return commandsAdminAWDInstanceServiceResp
-}
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceServiceRespPtr(source *model.ContestAWDService) *AdminAWDInstanceServiceResp {
-	var pCommandsAdminAWDInstanceServiceResp *AdminAWDInstanceServiceResp
-	if source != nil {
-		commandsAdminAWDInstanceServiceResp := c.ToAdminAWDInstanceServiceResp((*source))
-		pCommandsAdminAWDInstanceServiceResp = &commandsAdminAWDInstanceServiceResp
-	}
-	return pCommandsAdminAWDInstanceServiceResp
-}
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamResp(source model.Team) AdminAWDInstanceTeamResp {
-	var commandsAdminAWDInstanceTeamResp AdminAWDInstanceTeamResp
-	commandsAdminAWDInstanceTeamResp.TeamID = source.ID
-	commandsAdminAWDInstanceTeamResp.TeamName = source.Name
-	commandsAdminAWDInstanceTeamResp.CaptainID = source.CaptainID
-	return commandsAdminAWDInstanceTeamResp
-}
-func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamRespPtr(source *model.Team) *AdminAWDInstanceTeamResp {
-	var pCommandsAdminAWDInstanceTeamResp *AdminAWDInstanceTeamResp
-	if source != nil {
-		commandsAdminAWDInstanceTeamResp := c.ToAdminAWDInstanceTeamResp((*source))
-		pCommandsAdminAWDInstanceTeamResp = &commandsAdminAWDInstanceTeamResp
-	}
-	return pCommandsAdminAWDInstanceTeamResp
-}
-func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source model.Submission) ChallengeSubmissionRecordResp {
+func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source challengeSubmissionRecordRespSource) ChallengeSubmissionRecordResp {
 	var commandsChallengeSubmissionRecordResp ChallengeSubmissionRecordResp
 	commandsChallengeSubmissionRecordResp.ID = source.ID
 	commandsChallengeSubmissionRecordResp.SubmittedAt = CopyTime(source.SubmittedAt)
 	return commandsChallengeSubmissionRecordResp
 }
-func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *ChallengeSubmissionRecordResp {
+func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBasePtr(source *challengeSubmissionRecordRespSource) *ChallengeSubmissionRecordResp {
 	var pCommandsChallengeSubmissionRecordResp *ChallengeSubmissionRecordResp
 	if source != nil {
 		commandsChallengeSubmissionRecordResp := c.ToChallengeSubmissionRecordRespBase((*source))

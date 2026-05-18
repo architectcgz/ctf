@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
@@ -303,9 +304,9 @@ func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHo
 }
 
 func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.ContestAWDService{})
+	db := newRepositoryTestDB(t, &contestentity.ContestAWDService{})
 
-	service := &model.ContestAWDService{
+	service := &contestentity.ContestAWDService{
 		ID:              41,
 		ContestID:       7,
 		AWDChallengeID:  19,

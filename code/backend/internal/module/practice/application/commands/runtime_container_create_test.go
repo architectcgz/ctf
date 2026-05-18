@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -295,7 +296,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	contestID := int64(7001)
 	teamID := int64(7101)
 	serviceID := int64(8001)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":          501,
@@ -319,8 +320,8 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  501,
@@ -457,7 +458,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 	contestID := int64(7011)
 	teamID := int64(7111)
 	serviceID := int64(8011)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":          511,
@@ -481,8 +482,8 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  511,
@@ -612,7 +613,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	contestID := int64(7012)
 	teamID := int64(7112)
 	serviceID := int64(8012)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         512,
@@ -652,8 +653,8 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	releasedOldPort := false
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  512,
@@ -794,7 +795,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	contestID := int64(7003)
 	teamID := int64(7103)
 	serviceID := int64(8003)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Topology",
 		RuntimeConfig: map[string]any{
 			"image_id":          503,
@@ -818,8 +819,8 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  503,
@@ -946,7 +947,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 	contestID := int64(7013)
 	teamID := int64(7113)
 	serviceID := int64(8013)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Topology",
 		RuntimeConfig: map[string]any{
 			"image_id":          513,
@@ -970,8 +971,8 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  513,
@@ -1141,7 +1142,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	contestID := int64(7601)
 	teamID := int64(7701)
 	serviceID := int64(7801)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "Campus Drive",
 		RuntimeConfig: map[string]any{
 			"image_id":         601,
@@ -1164,11 +1165,11 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	}
 
 	repo := &stubPracticeRepository{
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
 			if gotContestID != contestID || gotServiceID != serviceID {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
 			}
-			return &model.ContestAWDService{
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				DisplayName:     "Campus Drive",

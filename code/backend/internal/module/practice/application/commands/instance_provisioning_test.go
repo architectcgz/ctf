@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -380,7 +381,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	contestID := int64(7002)
 	teamID := int64(7102)
 	serviceID := int64(8002)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         502,
@@ -406,11 +407,11 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	}
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
 				if gotContestID != contestID || gotServiceID != serviceID {
 					t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
 				}
-				return &model.ContestAWDService{
+				return &contestentity.ContestAWDService{
 					ID:              serviceID,
 					ContestID:       contestID,
 					AWDChallengeID:  502,
@@ -499,7 +500,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 	contestID := int64(7003)
 	teamID := int64(7103)
 	serviceID := int64(8003)
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         503,
@@ -550,8 +551,8 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 	}
 	service := NewService(
 		&stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  503,

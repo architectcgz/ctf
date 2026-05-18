@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -42,7 +43,7 @@ func (r *ManualReviewRepository) ListTeacherManualReviewSubmissions(ctx context.
 	return r.source.ListTeacherManualReviewSubmissions(ctx, query)
 }
 
-func (r *ManualReviewRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+func (r *ManualReviewRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
 	submission, err := r.source.FindCorrectSubmission(ctx, userID, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeSolvedSubmissionNotFound
@@ -50,7 +51,7 @@ func (r *ManualReviewRepository) FindCorrectSubmission(ctx context.Context, user
 	return submission, err
 }
 
-func (r *ManualReviewRepository) UpdateSubmission(ctx context.Context, submission *model.Submission) error {
+func (r *ManualReviewRepository) UpdateSubmission(ctx context.Context, submission *contestentity.Submission) error {
 	return r.source.UpdateSubmission(ctx, submission)
 }
 

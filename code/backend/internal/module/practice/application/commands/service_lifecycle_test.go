@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/internal/platform/events"
 	"gorm.io/gorm"
 	"sync/atomic"
@@ -18,10 +19,10 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	var calls atomic.Int32
 	service := NewService(
 		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
-			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 				return nil
 			},
 		},

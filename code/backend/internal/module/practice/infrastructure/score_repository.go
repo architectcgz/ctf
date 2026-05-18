@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
@@ -36,7 +37,7 @@ func (r *Repository) FindChallengesScores(ctx context.Context, challengeIDs []in
 func (r *Repository) ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
 	var challengeIDs []int64
 	err := r.dbWithContext(ctx).
-		Model(&model.Submission{}).
+		Model(&contestentity.Submission{}).
 		Distinct("challenge_id").
 		Where("user_id = ? AND is_correct = ?", userID, true).
 		Pluck("challenge_id", &challengeIDs).Error

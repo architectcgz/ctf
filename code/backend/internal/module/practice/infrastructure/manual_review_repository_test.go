@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -15,8 +16,8 @@ import (
 type manualReviewSourceStub struct {
 	getTeacherManualReviewSubmissionByIDFn func(context.Context, int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
 	listTeacherManualReviewSubmissionsFn   func(context.Context, *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
-	findCorrectSubmissionFn                func(context.Context, int64, int64) (*model.Submission, error)
-	updateSubmissionFn                     func(context.Context, *model.Submission) error
+	findCorrectSubmissionFn                func(context.Context, int64, int64) (*contestentity.Submission, error)
+	updateSubmissionFn                     func(context.Context, *contestentity.Submission) error
 	findUserByIDFn                         func(context.Context, int64) (*model.User, error)
 }
 
@@ -31,11 +32,11 @@ func (s manualReviewSourceStub) ListTeacherManualReviewSubmissions(ctx context.C
 	return s.listTeacherManualReviewSubmissionsFn(ctx, query)
 }
 
-func (s manualReviewSourceStub) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+func (s manualReviewSourceStub) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
 	return s.findCorrectSubmissionFn(ctx, userID, challengeID)
 }
 
-func (s manualReviewSourceStub) UpdateSubmission(ctx context.Context, submission *model.Submission) error {
+func (s manualReviewSourceStub) UpdateSubmission(ctx context.Context, submission *contestentity.Submission) error {
 	if s.updateSubmissionFn == nil {
 		return nil
 	}
@@ -53,7 +54,7 @@ func TestManualReviewRepositoryMapsNotFoundErrors(t *testing.T) {
 		getTeacherManualReviewSubmissionByIDFn: func(context.Context, int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
@@ -80,8 +81,8 @@ func TestManualReviewRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 		getTeacherManualReviewSubmissionByIDFn: func(context.Context, int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			return nil, expectedErr
 		},
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
-			return &model.Submission{ID: 1}, nil
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
+			return &contestentity.Submission{ID: 1}, nil
 		},
 		findUserByIDFn: func(context.Context, int64) (*model.User, error) {
 			return &model.User{ID: 2}, nil

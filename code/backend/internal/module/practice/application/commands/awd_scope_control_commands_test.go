@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -76,7 +77,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 			seedContestInstanceAWDContest(t, db, contestID, 21000, now)
 			seedContestInstanceAWDService(t, db, serviceID, contestID, 21000, now)
 			seedContestInstanceTeam(t, db, contestID, teamID, userID, now)
-			seedContestInstanceRegistration(t, db, contestID, userID, teamID, model.ContestRegistrationStatusApproved, now)
+			seedContestInstanceRegistration(t, db, contestID, userID, teamID, contestentity.ContestRegistrationStatusApproved, now)
 			seedContestInstanceTeamMember(t, db, contestID, teamID, userID, now)
 			if err := ensureContestInstanceServiceIDColumn(db); err != nil {
 				t.Fatalf("ensure instances.service_id column: %v", err)
@@ -132,7 +133,7 @@ func TestServiceStartContestAWDServiceAllowsManualStartWhenDesiredReconcileSuppr
 	seedContestInstanceAWDContest(t, db, contestID, 21010, now)
 	seedContestInstanceAWDService(t, db, serviceID, contestID, 21010, now)
 	seedContestInstanceTeam(t, db, contestID, teamID, userID, now)
-	seedContestInstanceRegistration(t, db, contestID, userID, teamID, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, contestID, userID, teamID, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, contestID, teamID, userID, now)
 	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
 		t.Fatalf("ensure instances.service_id column: %v", err)

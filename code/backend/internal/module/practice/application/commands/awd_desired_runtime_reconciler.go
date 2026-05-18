@@ -35,7 +35,7 @@ func (s *Service) ReconcileDesiredAWDInstances(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *model.Contest, activeAt time.Time) error {
+func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *practiceports.ContestRecord, activeAt time.Time) error {
 	teams, err := s.repo.ListContestTeams(ctx, contest.ID)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *model
 	return nil
 }
 
-func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, contest *model.Contest, team *model.Team, service *model.ContestAWDService) error {
+func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, contest *practiceports.ContestRecord, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord) error {
 	if contest == nil || team == nil || service == nil {
 		return nil
 	}

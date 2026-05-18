@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -22,6 +23,29 @@ var ErrPracticeUserScoreNotFound = errors.New("practice user score not found")
 var ErrPracticeManualReviewSubmissionNotFound = errors.New("practice manual review submission not found")
 var ErrPracticeSolvedSubmissionNotFound = errors.New("practice solved submission not found")
 var ErrPracticeUserNotFound = errors.New("practice user not found")
+
+const (
+	ContestModeAWD = contestentity.ContestModeAWD
+
+	ContestStatusRegistration = contestentity.ContestStatusRegistration
+	ContestStatusRunning      = contestentity.ContestStatusRunning
+	ContestStatusFrozen       = contestentity.ContestStatusFrozen
+	ContestStatusEnded        = contestentity.ContestStatusEnded
+
+	ContestRegistrationStatusPending  = contestentity.ContestRegistrationStatusPending
+	ContestRegistrationStatusApproved = contestentity.ContestRegistrationStatusApproved
+
+	SubmissionReviewStatusNotRequired = contestentity.SubmissionReviewStatusNotRequired
+	SubmissionReviewStatusPending     = contestentity.SubmissionReviewStatusPending
+	SubmissionReviewStatusApproved    = contestentity.SubmissionReviewStatusApproved
+	SubmissionReviewStatusRejected    = contestentity.SubmissionReviewStatusRejected
+)
+
+type ContestRecord = contestentity.Contest
+type ContestChallengeRecord = contestentity.ContestChallenge
+type ContestAWDServiceRecord = contestentity.ContestAWDService
+type ContestTeamRecord = contestentity.Team
+type SubmissionRecord = contestentity.Submission
 
 type InstanceScope struct {
 	ContestID     *int64
@@ -156,20 +180,20 @@ type PracticeAWDServiceOperationTxManager interface {
 }
 
 type PracticeContestLookupRepository interface {
-	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+	FindContestByID(ctx context.Context, contestID int64) (*ContestRecord, error)
 }
 
 type PracticeDesiredAWDContestRepository interface {
-	ListDesiredRuntimeAWDContests(ctx context.Context) ([]*model.Contest, error)
+	ListDesiredRuntimeAWDContests(ctx context.Context) ([]*ContestRecord, error)
 }
 
 type PracticeContestChallengeLookupRepository interface {
-	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*ContestChallengeRecord, error)
 }
 
 type PracticeContestAWDServiceRepository interface {
-	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
-	ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
+	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*ContestAWDServiceRecord, error)
+	ListContestAWDServices(ctx context.Context, contestID int64) ([]*ContestAWDServiceRecord, error)
 }
 
 type ContestAWDServiceRuntimeSubject struct {
@@ -218,8 +242,8 @@ type PracticeAWDDefenseWorkspaceWriteRepository interface {
 }
 
 type PracticeContestTeamRepository interface {
-	FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error)
-	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)
+	FindContestTeam(ctx context.Context, contestID, teamID int64) (*ContestTeamRecord, error)
+	ListContestTeams(ctx context.Context, contestID int64) ([]*ContestTeamRecord, error)
 }
 
 type ContestParticipation struct {
@@ -253,20 +277,20 @@ type PracticeRuntimeSubjectRepository interface {
 }
 
 type PracticeSubmissionWriteRepository interface {
-	CreateSubmission(ctx context.Context, submission *model.Submission) error
-	UpdateSubmission(ctx context.Context, submission *model.Submission) error
+	CreateSubmission(ctx context.Context, submission *SubmissionRecord) error
+	UpdateSubmission(ctx context.Context, submission *SubmissionRecord) error
 }
 
 type PracticeSubmissionUpdateRepository interface {
-	UpdateSubmission(ctx context.Context, submission *model.Submission) error
+	UpdateSubmission(ctx context.Context, submission *SubmissionRecord) error
 }
 
 type PracticeSolvedSubmissionRepository interface {
-	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
+	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*SubmissionRecord, error)
 }
 
 type PracticeSubmissionHistoryRepository interface {
-	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
+	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]SubmissionRecord, error)
 }
 
 type PracticeSubmissionConstraintRepository interface {
@@ -294,7 +318,7 @@ type PracticeManualReviewRepository interface {
 }
 
 type TeacherManualReviewSubmissionRecord struct {
-	Submission      model.Submission
+	Submission      SubmissionRecord
 	StudentUsername string
 	StudentName     string
 	ClassName       string

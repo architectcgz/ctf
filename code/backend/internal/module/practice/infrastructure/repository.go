@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -58,20 +59,20 @@ func (r *Repository) WithinAWDServiceOperationTx(ctx context.Context, fn func(tx
 	})
 }
 
-func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
-	var contest model.Contest
+func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
+	var contest contestentity.Contest
 	if err := r.dbWithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
 		return nil, err
 	}
 	return &contest, nil
 }
 
-func (r *Repository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*model.Contest, error) {
-	var contests []*model.Contest
+func (r *Repository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*contestentity.Contest, error) {
+	var contests []*contestentity.Contest
 	if err := r.dbWithContext(ctx).
 		Where("mode = ? AND status IN ? AND deleted_at IS NULL",
-			model.ContestModeAWD,
-			[]string{model.ContestStatusRunning, model.ContestStatusFrozen},
+			contestentity.ContestModeAWD,
+			[]string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen},
 		).
 		Order("id ASC").
 		Find(&contests).Error; err != nil {
@@ -80,8 +81,8 @@ func (r *Repository) ListDesiredRuntimeAWDContests(ctx context.Context) ([]*mode
 	return contests, nil
 }
 
-func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
-	var contestChallenge model.ContestChallenge
+func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
+	var contestChallenge contestentity.ContestChallenge
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		First(&contestChallenge).Error; err != nil {
@@ -90,8 +91,8 @@ func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challe
 	return &contestChallenge, nil
 }
 
-func (r *Repository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
-	var service model.ContestAWDService
+func (r *Repository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
+	var service contestentity.ContestAWDService
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
 		Where("deleted_at IS NULL").
@@ -109,8 +110,8 @@ func (r *Repository) FindContestAWDServiceRuntimeSubject(ctx context.Context, co
 	return buildContestAWDServiceRuntimeSubject(service)
 }
 
-func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
-	var services []*model.ContestAWDService
+func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*contestentity.ContestAWDService, error) {
+	var services []*contestentity.ContestAWDService
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Where("deleted_at IS NULL").
@@ -137,8 +138,8 @@ func (r *Repository) ListContestAWDInstances(ctx context.Context, contestID int6
 	return instances, nil
 }
 
-func (r *Repository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
-	var team model.Team
+func (r *Repository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*contestentity.Team, error) {
+	var team contestentity.Team
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, teamID).
 		First(&team).Error; err != nil {
@@ -147,8 +148,8 @@ func (r *Repository) FindContestTeam(ctx context.Context, contestID, teamID int6
 	return &team, nil
 }
 
-func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error) {
-	var teams []*model.Team
+func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
+	var teams []*contestentity.Team
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("created_at ASC, id ASC").
@@ -159,7 +160,7 @@ func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*
 }
 
 func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
-	var registration model.ContestRegistration
+	var registration contestentity.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		First(&registration).Error; err != nil {
@@ -242,7 +243,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 	if scope.ServiceID != nil {
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.ServiceID).
-			First(&model.ContestAWDService{}).Error
+			First(&contestentity.ContestAWDService{}).Error
 	}
 	switch scope.ShareScope {
 	case model.InstanceSharingShared:
@@ -253,13 +254,13 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 		if scope.TeamID != nil {
 			return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 				Where("id = ?", *scope.TeamID).
-				First(&model.Team{}).Error
+				First(&contestentity.Team{}).Error
 		}
 	}
 	if scope.TeamID != nil && scope.ShareScope == model.InstanceSharingPerTeam {
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.TeamID).
-			First(&model.Team{}).Error
+			First(&contestentity.Team{}).Error
 	}
 	return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", userID).
@@ -484,13 +485,13 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 }
 
 // CreateSubmission 创建提交记录
-func (r *Repository) CreateSubmission(ctx context.Context, submission *model.Submission) error {
+func (r *Repository) CreateSubmission(ctx context.Context, submission *contestentity.Submission) error {
 	return r.dbWithContext(ctx).Create(submission).Error
 }
 
 // FindCorrectSubmission 查找用户是否已正确提交过该题
-func (r *Repository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
-	var submission model.Submission
+func (r *Repository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+	var submission contestentity.Submission
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
 	return &submission, err
@@ -511,12 +512,12 @@ func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challen
 	return &instance, nil
 }
 
-func (r *Repository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+func (r *Repository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
 	if limit <= 0 {
 		limit = 20
 	}
 
-	var submissions []model.Submission
+	var submissions []contestentity.Submission
 	err := r.dbWithContext(ctx).
 		Where("user_id = ? AND challenge_id = ? AND contest_id IS NULL", userID, challengeID).
 		Order("submitted_at DESC, id DESC").
@@ -525,7 +526,7 @@ func (r *Repository) ListChallengeSubmissions(ctx context.Context, userID, chall
 	return submissions, err
 }
 
-func (r *Repository) UpdateSubmission(ctx context.Context, submission *model.Submission) error {
+func (r *Repository) UpdateSubmission(ctx context.Context, submission *contestentity.Submission) error {
 	return r.dbWithContext(ctx).Save(submission).Error
 }
 
@@ -560,7 +561,7 @@ type teacherManualReviewSubmissionRow struct {
 
 func (r teacherManualReviewSubmissionRow) toRecord() practiceports.TeacherManualReviewSubmissionRecord {
 	return practiceports.TeacherManualReviewSubmissionRecord{
-		Submission: model.Submission{
+		Submission: contestentity.Submission{
 			ID:            r.ID,
 			UserID:        r.UserID,
 			ChallengeID:   r.ChallengeID,
@@ -685,7 +686,7 @@ func (r *Repository) listTeacherManualReviewSubmissions(
 // CountRecentSubmissions 统计时间窗口内的提交次数
 func (r *Repository) CountRecentSubmissions(ctx context.Context, userID, challengeID int64, since time.Time) (int64, error) {
 	var count int64
-	err := r.dbWithContext(ctx).Model(&model.Submission{}).
+	err := r.dbWithContext(ctx).Model(&contestentity.Submission{}).
 		Where("user_id = ? AND challenge_id = ? AND submitted_at >= ?", userID, challengeID, since).
 		Count(&count).Error
 	return count, err

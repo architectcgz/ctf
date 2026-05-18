@@ -42,7 +42,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.manualReviewRepo, reviewerID, reviewerRole, record); err != nil {
 		return nil, err
 	}
-	if record.Submission.ReviewStatus != model.SubmissionReviewStatusPending {
+	if record.Submission.ReviewStatus != practiceports.SubmissionReviewStatusPending {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
 	}
 
@@ -64,7 +64,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	item.ReviewedBy = &reviewerID
 	item.ReviewedAt = &now
 	item.UpdatedAt = now
-	if req.ReviewStatus == model.SubmissionReviewStatusApproved {
+	if req.ReviewStatus == practiceports.SubmissionReviewStatusApproved {
 		if _, err := s.manualReviewRepo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
 			return nil, errcode.ErrAlreadySolved
 		} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
@@ -245,7 +245,7 @@ func ensureManualReviewDecisionStatus(req *practicecontracts.ReviewManualReviewS
 	if len([]rune(strings.TrimSpace(req.ReviewComment))) > 4000 {
 		return errcode.ErrInvalidParams.WithCause(errors.New("review_comment 不能超过 4000 个字符"))
 	}
-	if req.ReviewStatus == model.SubmissionReviewStatusApproved || req.ReviewStatus == model.SubmissionReviewStatusRejected {
+	if req.ReviewStatus == practiceports.SubmissionReviewStatusApproved || req.ReviewStatus == practiceports.SubmissionReviewStatusRejected {
 		return nil
 	}
 	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
@@ -268,9 +268,9 @@ func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmiss
 		return errcode.ErrInvalidParams.WithCause(errors.New("page_size 不能超过 100"))
 	}
 	if query.ReviewStatus == "" ||
-		query.ReviewStatus == model.SubmissionReviewStatusPending ||
-		query.ReviewStatus == model.SubmissionReviewStatusApproved ||
-		query.ReviewStatus == model.SubmissionReviewStatusRejected {
+		query.ReviewStatus == practiceports.SubmissionReviewStatusPending ||
+		query.ReviewStatus == practiceports.SubmissionReviewStatusApproved ||
+		query.ReviewStatus == practiceports.SubmissionReviewStatusRejected {
 		return nil
 	}
 	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 pending、approved 或 rejected"))
@@ -278,7 +278,7 @@ func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmiss
 
 func manualReviewDetailRespFromRecord(
 	record practiceports.TeacherManualReviewSubmissionRecord,
-	submission model.Submission,
+	submission practiceports.SubmissionRecord,
 ) *practicecontracts.TeacherManualReviewSubmissionDetailResp {
 	resp := &practicecontracts.TeacherManualReviewSubmissionDetailResp{
 		ID:              submission.ID,

@@ -5,6 +5,13 @@ var allowedApplicationConcreteImports = map[string]struct{}{}
 var allowedCrossModulePrivateImports = map[string]struct{}{
 	"contest/infrastructure/docker_checker_runner.go -> ctf-platform/internal/module/runtime/domain":                {},
 	"practice/application/commands/awd_defense_workspace_support.go -> ctf-platform/internal/module/contest/domain": {},
+	"practice/infrastructure/contest_awd_runtime_subject_mapper.go -> ctf-platform/internal/module/contest/entity":  {},
+	"practice/infrastructure/contest_scope_repository.go -> ctf-platform/internal/module/contest/entity":            {},
+	"practice/infrastructure/manual_review_repository.go -> ctf-platform/internal/module/contest/entity":            {},
+	"practice/infrastructure/repository.go -> ctf-platform/internal/module/contest/entity":                          {},
+	"practice/infrastructure/score_repository.go -> ctf-platform/internal/module/contest/entity":                    {},
+	"practice/infrastructure/solved_submission_repository.go -> ctf-platform/internal/module/contest/entity":        {},
+	"practice/ports/ports.go -> ctf-platform/internal/module/contest/entity":                                        {},
 }
 
 var allowedDomainInternalImports = map[string]struct{}{

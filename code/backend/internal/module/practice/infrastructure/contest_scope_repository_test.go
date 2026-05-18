@@ -8,30 +8,31 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type contestScopeSourceStub struct {
-	findContestByIDFn                     func(context.Context, int64) (*model.Contest, error)
-	findContestChallengeFn                func(context.Context, int64, int64) (*model.ContestChallenge, error)
-	findContestAWDServiceFn               func(context.Context, int64, int64) (*model.ContestAWDService, error)
+	findContestByIDFn                     func(context.Context, int64) (*contestentity.Contest, error)
+	findContestChallengeFn                func(context.Context, int64, int64) (*contestentity.ContestChallenge, error)
+	findContestAWDServiceFn               func(context.Context, int64, int64) (*contestentity.ContestAWDService, error)
 	findContestAWDServiceRuntimeSubjectFn func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRuntimeSubject, error)
-	listContestAWDServicesFn              func(context.Context, int64) ([]*model.ContestAWDService, error)
+	listContestAWDServicesFn              func(context.Context, int64) ([]*contestentity.ContestAWDService, error)
 	listContestAWDInstancesFn             func(context.Context, int64) ([]*model.Instance, error)
-	findContestTeamFn                     func(context.Context, int64, int64) (*model.Team, error)
-	listContestTeamsFn                    func(context.Context, int64) ([]*model.Team, error)
+	findContestTeamFn                     func(context.Context, int64, int64) (*contestentity.Team, error)
+	listContestTeamsFn                    func(context.Context, int64) ([]*contestentity.Team, error)
 	findContestRegistrationFn             func(context.Context, int64, int64) (*practiceports.ContestParticipation, error)
 }
 
-func (s contestScopeSourceStub) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (s contestScopeSourceStub) FindContestByID(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 	return s.findContestByIDFn(ctx, contestID)
 }
 
-func (s contestScopeSourceStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (s contestScopeSourceStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 	return s.findContestChallengeFn(ctx, contestID, challengeID)
 }
 
-func (s contestScopeSourceStub) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (s contestScopeSourceStub) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	return s.findContestAWDServiceFn(ctx, contestID, serviceID)
 }
 
@@ -50,7 +51,7 @@ func (s contestScopeSourceStub) FindContestAWDServiceRuntimeSubject(ctx context.
 	}, nil
 }
 
-func (s contestScopeSourceStub) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
+func (s contestScopeSourceStub) ListContestAWDServices(ctx context.Context, contestID int64) ([]*contestentity.ContestAWDService, error) {
 	if s.listContestAWDServicesFn == nil {
 		return nil, nil
 	}
@@ -64,11 +65,11 @@ func (s contestScopeSourceStub) ListContestAWDInstances(ctx context.Context, con
 	return s.listContestAWDInstancesFn(ctx, contestID)
 }
 
-func (s contestScopeSourceStub) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
+func (s contestScopeSourceStub) FindContestTeam(ctx context.Context, contestID, teamID int64) (*contestentity.Team, error) {
 	return s.findContestTeamFn(ctx, contestID, teamID)
 }
 
-func (s contestScopeSourceStub) ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error) {
+func (s contestScopeSourceStub) ListContestTeams(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
 	if s.listContestTeamsFn == nil {
 		return nil, nil
 	}
@@ -83,16 +84,16 @@ func TestContestScopeRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewContestScopeRepository(contestScopeSourceStub{
-		findContestByIDFn: func(context.Context, int64) (*model.Contest, error) {
+		findContestByIDFn: func(context.Context, int64) (*contestentity.Contest, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+		findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findContestAWDServiceFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findContestTeamFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findContestTeamFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findContestRegistrationFn: func(context.Context, int64, int64) (*practiceports.ContestParticipation, error) {
@@ -169,17 +170,17 @@ func TestContestScopeRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewContestScopeRepository(contestScopeSourceStub{
-		findContestByIDFn: func(context.Context, int64) (*model.Contest, error) {
+		findContestByIDFn: func(context.Context, int64) (*contestentity.Contest, error) {
 			return nil, expectedErr
 		},
-		findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
-			return &model.ContestChallenge{ContestID: 1, ChallengeID: 2}, nil
+		findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
+			return &contestentity.ContestChallenge{ContestID: 1, ChallengeID: 2}, nil
 		},
-		findContestAWDServiceFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{ID: 2}, nil
+		findContestAWDServiceFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{ID: 2}, nil
 		},
-		findContestTeamFn: func(context.Context, int64, int64) (*model.Team, error) {
-			return &model.Team{ID: 3}, nil
+		findContestTeamFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
+			return &contestentity.Team{ID: 3}, nil
 		},
 		findContestRegistrationFn: func(context.Context, int64, int64) (*practiceports.ContestParticipation, error) {
 			return &practiceports.ContestParticipation{}, nil

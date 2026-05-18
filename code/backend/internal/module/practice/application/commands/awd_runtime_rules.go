@@ -103,7 +103,7 @@ func shouldDisableEntryPortPublishing(instance *model.Instance, accessHost strin
 }
 
 func requiresPublishedHostPort(scope practiceports.InstanceScope, accessHost string) bool {
-	if scope.ContestMode != model.ContestModeAWD {
+	if scope.ContestMode != practiceports.ContestModeAWD {
 		return true
 	}
 	return shouldUsePublishedAWDEntryAccess(accessHost)

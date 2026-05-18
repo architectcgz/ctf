@@ -36,18 +36,21 @@ func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challe
 	return resp, nil
 }
 
-func challengeSubmissionRecordRespFromModel(item model.Submission) *ChallengeSubmissionRecordResp {
+func challengeSubmissionRecordRespFromModel(item practiceports.SubmissionRecord) *ChallengeSubmissionRecordResp {
 	status := SubmissionStatusIncorrect
 	answer := ""
 
-	if item.ReviewStatus == model.SubmissionReviewStatusPending {
+	if item.ReviewStatus == practiceports.SubmissionReviewStatusPending {
 		status = SubmissionStatusPendingReview
 		answer = item.Flag
 	} else if item.IsCorrect {
 		status = SubmissionStatusCorrect
 	}
 
-	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBasePtr(&item)
+	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBasePtr(&challengeSubmissionRecordRespSource{
+		ID:          item.ID,
+		SubmittedAt: item.SubmittedAt,
+	})
 	resp.Status = status
 	resp.Answer = answer
 	return resp

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(t *testing.T) {
@@ -14,7 +15,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 
 	seedContestInstanceAWDContest(t, db, 3901, 0, now)
 	seedContestInstanceTeam(t, db, 3901, 4901, 5901, now)
-	seedContestInstanceRegistration(t, db, 3901, 5901, 4901, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3901, 5901, 4901, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3901, 4901, 5901, now)
 
 	if err := db.Create(&model.Image{
@@ -28,7 +29,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:             7901,
 		ContestID:      3901,
 		AWDChallengeID: 2801,
@@ -37,7 +38,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 		IsVisible:      true,
 		ScoreConfig:    `{"points":180}`,
 		RuntimeConfig:  `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/ready"}}}`,
-		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, model.ContestAWDServiceSnapshot{
+		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, contestentity.ContestAWDServiceSnapshot{
 			Name:       "Bank Portal",
 			Category:   "web",
 			Difficulty: "medium",

@@ -96,7 +96,7 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != practiceports.ContestModeAWD {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
 	}
 

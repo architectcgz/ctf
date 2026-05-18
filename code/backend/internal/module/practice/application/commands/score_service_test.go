@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -46,7 +47,7 @@ func TestScoreServiceUpdateUserScoreHonorsCancellation(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed challenge: %v", err)
 	}
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestentity.Submission{
 		UserID:      7,
 		ChallengeID: 1,
 		IsCorrect:   true,
@@ -127,7 +128,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed challenges: %v", err)
 	}
-	if err := db.Create([]*model.Submission{
+	if err := db.Create([]*contestentity.Submission{
 		{UserID: 9, ChallengeID: 21, IsCorrect: true, SubmittedAt: now},
 		{UserID: 9, ChallengeID: 22, IsCorrect: true, SubmittedAt: now.Add(time.Minute)},
 	}).Error; err != nil {

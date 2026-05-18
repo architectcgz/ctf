@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -108,22 +109,22 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	contestEnd := time.Date(2026, 5, 15, 12, 0, 0, 0, time.UTC)
 	var createdInstance *model.Instance
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 			if contestID != 3104 {
 				t.Fatalf("unexpected contest id: %d", contestID)
 			}
-			return &model.Contest{
+			return &contestentity.Contest{
 				ID:      contestID,
-				Mode:    model.ContestModeAWD,
-				Status:  model.ContestStatusRunning,
+				Mode:    contestentity.ContestModeAWD,
+				Status:  contestentity.ContestStatusRunning,
 				EndTime: contestEnd,
 			}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 			if contestID != 3104 || serviceID != 7104 {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", contestID, serviceID)
 			}
-			return &model.ContestAWDService{
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2104,
@@ -131,7 +132,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil
 		},
-		findContestChallengeFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+		findContestChallengeFn: func(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 			t.Fatalf("unexpected contest challenge lookup for awd start: contest=%d challenge=%d", contestID, challengeID)
 			return nil, nil
 		},
@@ -139,7 +140,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 			if contestID != 3104 || userID != 5104 {
 				t.Fatalf("unexpected registration lookup: contest=%d user=%d", contestID, userID)
 			}
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
 			copied := *instance
@@ -209,16 +210,16 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	contestEnd := time.Date(2026, 5, 15, 13, 0, 0, 0, time.UTC)
 	var createdInstance *model.Instance
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
-			return &model.Contest{
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{
 				ID:      contestID,
-				Mode:    model.ContestModeAWD,
-				Status:  model.ContestStatusRunning,
+				Mode:    contestentity.ContestModeAWD,
+				Status:  contestentity.ContestStatusRunning,
 				EndTime: contestEnd,
 			}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2105,
@@ -227,7 +228,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
 			t.Fatal("AWD service instances must not reserve a host port")
@@ -302,16 +303,16 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 	reserved := false
 	bound := false
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
-			return &model.Contest{
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{
 				ID:      contestID,
-				Mode:    model.ContestModeAWD,
-				Status:  model.ContestStatusRunning,
+				Mode:    contestentity.ContestModeAWD,
+				Status:  contestentity.ContestStatusRunning,
 				EndTime: contestEnd,
 			}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2115,
@@ -320,7 +321,7 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
 			reserved = true
@@ -421,11 +422,11 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 	}
 	refreshCalled := false
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{ID: gotContestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2118,
@@ -434,7 +435,7 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		findScopedExistingInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			if gotUserID != userID || gotChallengeID != 2118 {
@@ -519,14 +520,14 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	var resetStatus string
 	var operation *model.AWDServiceOperation
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{ID: gotContestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
 			if gotContestID != contestID || gotServiceID != serviceID {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", gotContestID, gotServiceID)
 			}
-			return &model.ContestAWDService{
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2106,
@@ -535,7 +536,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			if gotUserID != userID || gotChallengeID != 2106 {
@@ -650,11 +651,11 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 	var resetStatus string
 	var preserveHostPortArg bool
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{ID: gotContestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2116,
@@ -663,7 +664,7 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			return instance, nil
@@ -767,11 +768,11 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 	var bound bool
 	var preserveHostPortArg bool
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{ID: gotContestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2117,
@@ -780,7 +781,7 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			return instance, nil
@@ -890,11 +891,11 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 	var bound bool
 	var preserveHostPortArg bool
 	repo := &stubPracticeRepository{
-		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*model.Contest, error) {
-			return &model.Contest{ID: gotContestID, Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, EndTime: contestEnd}, nil
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*contestentity.Contest, error) {
+			return &contestentity.Contest{ID: gotContestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}, nil
 		},
-		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-			return &model.ContestAWDService{
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+			return &contestentity.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
 				AWDChallengeID:  2118,
@@ -903,7 +904,7 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 			}, nil
 		},
 		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
-			return &practiceports.ContestParticipation{TeamID: &teamID, Status: model.ContestRegistrationStatusApproved}, nil
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 		},
 		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 			return instance, nil
@@ -1010,11 +1011,11 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "AWD Restart",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -1025,17 +1026,17 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	if err := db.Create(&model.User{ID: userID, Username: "restart-student", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create registration: %v", err)
 	}
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "Restart Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         imageID,
@@ -1055,7 +1056,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	if err != nil {
 		t.Fatalf("encode service snapshot: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  challengeID,
@@ -1213,11 +1214,11 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "AWD Restart Missing Workspace",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -1228,17 +1229,17 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	if err := db.Create(&model.User{ID: userID, Username: "restart-student-missing", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create registration: %v", err)
 	}
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "Restart Service Missing Workspace",
 		RuntimeConfig: map[string]any{
 			"image_id":         imageID,
@@ -1258,7 +1259,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	if err != nil {
 		t.Fatalf("encode service snapshot: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
 		AWDChallengeID:  challengeID,

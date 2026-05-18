@@ -7,15 +7,16 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func buildContestAWDServiceRuntimeSubject(service *model.ContestAWDService) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+func buildContestAWDServiceRuntimeSubject(service *contestentity.ContestAWDService) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
 	if service == nil {
 		return nil, nil
 	}
 
-	snapshot, err := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
+	snapshot, err := contestentity.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func buildContestAWDServiceRuntimeSubject(service *model.ContestAWDService) (*pr
 	}, nil
 }
 
-func buildContestAWDServiceRuntimeChallenge(service *model.ContestAWDService, snapshot model.ContestAWDServiceSnapshot) *model.Challenge {
+func buildContestAWDServiceRuntimeChallenge(service *contestentity.ContestAWDService, snapshot contestentity.ContestAWDServiceSnapshot) *model.Challenge {
 	chal := &model.Challenge{
 		ID:              service.AWDChallengeID,
 		Title:           firstNonEmptyRuntimeValue(service.DisplayName, snapshot.Name),
@@ -55,7 +56,7 @@ func buildContestAWDServiceRuntimeChallenge(service *model.ContestAWDService, sn
 	return chal
 }
 
-func buildContestAWDServiceRuntimeTopology(service *model.ContestAWDService, snapshot model.ContestAWDServiceSnapshot) (*model.ChallengeTopology, error) {
+func buildContestAWDServiceRuntimeTopology(service *contestentity.ContestAWDService, snapshot contestentity.ContestAWDServiceSnapshot) (*model.ChallengeTopology, error) {
 	topologyPayload, ok := snapshot.RuntimeConfig["topology"]
 	if !ok {
 		return nil, nil

@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -200,7 +201,7 @@ func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(
 }
 
 func TestContestAWDServiceRuntimeSubjectMapsWorkspaceRootsOutsideWritableSetAsReadonly(t *testing.T) {
-	service := &model.ContestAWDService{
+	service := &contestentity.ContestAWDService{
 		ID:              21,
 		ContestID:       8,
 		AWDChallengeID:  13,
@@ -290,7 +291,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		t.Fatalf("create workspace state: %v", err)
 	}
 
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         601,
@@ -315,8 +316,8 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 	createTopologyCalls := 0
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,
@@ -452,7 +453,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		t.Fatalf("create workspace state: %v", err)
 	}
 
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         602,
@@ -475,8 +476,8 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,
@@ -584,7 +585,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		t.Fatalf("create workspace state: %v", err)
 	}
 
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(model.ContestAWDServiceSnapshot{
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(contestentity.ContestAWDServiceSnapshot{
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         challengeID,
@@ -607,8 +608,8 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 
 	service := &Service{
 		repo: &stubPracticeRepository{
-			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:              gotServiceID,
 					ContestID:       gotContestID,
 					AWDChallengeID:  challengeID,
@@ -665,17 +666,17 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeTopology{},
-		&model.Contest{},
-		&model.ContestAWDService{},
-		&model.ContestRegistration{},
+		&contestentity.Contest{},
+		&contestentity.ContestAWDService{},
+		&contestentity.ContestRegistration{},
 		&model.User{},
-		&model.Team{},
+		&contestentity.Team{},
 		&model.Instance{},
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
-		&model.Submission{},
+		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)
 	}

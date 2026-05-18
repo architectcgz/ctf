@@ -60,12 +60,12 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		}
 	}
 
-	submission := &model.Submission{
+	submission := &practiceports.SubmissionRecord{
 		UserID:       userID,
 		ChallengeID:  challengeID,
 		Flag:         "",
 		IsCorrect:    false,
-		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		ReviewStatus: practiceports.SubmissionReviewStatusNotRequired,
 		SubmittedAt:  time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -74,7 +74,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 
 	if challengeItem.FlagType == model.FlagTypeManualReview {
 		submission.Flag = flag
-		submission.ReviewStatus = model.SubmissionReviewStatusPending
+		submission.ReviewStatus = practiceports.SubmissionReviewStatusPending
 		status = SubmissionStatusPendingReview
 	} else {
 		isCorrect, err := s.validateSubmittedFlag(ctx, userID, challengeItem, flag)

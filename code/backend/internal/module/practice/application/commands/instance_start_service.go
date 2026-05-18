@@ -236,10 +236,10 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	if err != nil {
 		return nil, err
 	}
-	if contest.Status == model.ContestStatusEnded {
+	if contest.Status == practiceports.ContestStatusEnded {
 		return nil, errcode.ErrContestEnded
 	}
-	if contest.Status != model.ContestStatusRegistration {
+	if contest.Status != practiceports.ContestStatusRegistration {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("awd 赛前预热仅支持报名阶段"))
 	}
 
@@ -286,7 +286,7 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	return resp, nil
 }
 
-func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contestID int64, teamID *int64) ([]*model.Team, error) {
+func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contestID int64, teamID *int64) ([]*practiceports.ContestTeamRecord, error) {
 	if teamID != nil {
 		team, err := s.repo.FindContestTeam(ctx, contestID, *teamID)
 		if err != nil {
@@ -295,7 +295,7 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 			}
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
-		return []*model.Team{team}, nil
+		return []*practiceports.ContestTeamRecord{team}, nil
 	}
 
 	teams, err := s.repo.ListContestTeams(ctx, contestID)
@@ -305,7 +305,7 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 	return teams, nil
 }
 
-func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *model.Team, service *model.ContestAWDService, existingInstances []*model.Instance) *AdminAWDInstancePrewarmItemResp {
+func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord, existingInstances []*model.Instance) *AdminAWDInstancePrewarmItemResp {
 	result := &AdminAWDInstancePrewarmItemResp{
 		Outcome: adminAWDPrewarmOutcomeFailed,
 	}
@@ -328,7 +328,7 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 		return result
 	}
 	scope := practiceports.InstanceScope{
-		ContestMode: model.ContestModeAWD,
+		ContestMode: practiceports.ContestModeAWD,
 	}
 	contestIDCopy := contestID
 	teamIDCopy := team.ID
@@ -349,7 +349,7 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 		}
 		result.Outcome = adminAWDPrewarmOutcomeReused
 		result.Instance = instanceRespForScope(instance, practiceports.InstanceScope{
-			ContestMode: model.ContestModeAWD,
+			ContestMode: practiceports.ContestModeAWD,
 		}, s.config.Container.PublicHost, s.config.Container.AccessHost)
 		return result
 	}
@@ -419,7 +419,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return errcode.ErrInternal.WithCause(err)
 		}
 		if existingInstance != nil {
-			if scope.ContestMode == model.ContestModeAWD {
+			if scope.ContestMode == practiceports.ContestModeAWD {
 				if !existingInstance.ExpiresAt.Equal(expiresAt) {
 					if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, expiresAt); err != nil {
 						return errcode.ErrInternal.WithCause(err)
@@ -507,14 +507,14 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 
 func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *instancecontracts.InstanceResp {
 	resp := domain.InstanceRespFromModel(instance, publicHost, accessHost)
-	if scope.ContestMode == model.ContestModeAWD {
+	if scope.ContestMode == practiceports.ContestModeAWD {
 		resp.AccessURL = ""
 	}
 	return resp
 }
 
 func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practiceports.InstanceScope) (time.Time, error) {
-	if scope.ContestMode != model.ContestModeAWD || scope.ContestID == nil || *scope.ContestID <= 0 {
+	if scope.ContestMode != practiceports.ContestModeAWD || scope.ContestID == nil || *scope.ContestID <= 0 {
 		return time.Now().UTC().Add(s.config.Container.DefaultTTL), nil
 	}
 	if s.contestScope == nil {
@@ -534,7 +534,7 @@ func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practicepo
 	return practiceContestEffectiveEndTime(contest), nil
 }
 
-func practiceContestEffectiveEndTime(contest *model.Contest) time.Time {
+func practiceContestEffectiveEndTime(contest *practiceports.ContestRecord) time.Time {
 	if contest == nil {
 		return time.Time{}
 	}

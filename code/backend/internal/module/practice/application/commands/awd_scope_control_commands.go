@@ -167,7 +167,7 @@ func findAWDScopeControlRow(rows []*model.AWDScopeControl, scopeType, controlTyp
 	return nil
 }
 
-func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context, contestID, teamID, serviceID int64) (*model.Contest, error) {
+func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context, contestID, teamID, serviceID int64) (*practiceports.ContestRecord, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context
 	return contest, nil
 }
 
-func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
+func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
 	if s.contestScope == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}

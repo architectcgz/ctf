@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -86,9 +87,9 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	var createdSubmission *model.Submission
+	var createdSubmission *contestentity.Submission
 	repo := &stubPracticeRepository{
-		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			createdSubmission = submission
 			return nil
 		},
@@ -140,7 +141,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	if createdSubmission.Flag != "answer with reasoning" {
 		t.Fatalf("expected raw answer stored for manual review, got %+v", createdSubmission)
 	}
-	if createdSubmission.ReviewStatus != model.SubmissionReviewStatusPending {
+	if createdSubmission.ReviewStatus != contestentity.SubmissionReviewStatusPending {
 		t.Fatalf("expected pending review status, got %+v", createdSubmission)
 	}
 }
@@ -156,7 +157,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	submissionID := int64(71)
 	reviewerID := int64(301)
 	studentID := int64(201)
-	var updatedSubmission *model.Submission
+	var updatedSubmission *contestentity.Submission
 	var scoreUpdateCalls atomic.Int32
 	repo := &stubPracticeRepository{
 		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
@@ -164,12 +165,12 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				t.Fatalf("unexpected submission id: %d", id)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: model.Submission{
+				Submission: contestentity.Submission{
 					ID:           submissionID,
 					UserID:       studentID,
 					ChallengeID:  19,
 					Flag:         "answer text",
-					ReviewStatus: model.SubmissionReviewStatusPending,
+					ReviewStatus: contestentity.SubmissionReviewStatusPending,
 					SubmittedAt:  now,
 				},
 				StudentUsername: "student",
@@ -178,7 +179,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			updatedSubmission = submission
 			return nil
 		},
@@ -239,20 +240,20 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		reviewerID,
 		model.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{
-			ReviewStatus:  model.SubmissionReviewStatusApproved,
+			ReviewStatus:  contestentity.SubmissionReviewStatusApproved,
 			ReviewComment: "答案链路完整",
 		},
 	)
 	if err != nil {
 		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
-	if resp.ReviewStatus != model.SubmissionReviewStatusApproved || !resp.IsCorrect || resp.Score != 120 {
+	if resp.ReviewStatus != contestentity.SubmissionReviewStatusApproved || !resp.IsCorrect || resp.Score != 120 {
 		t.Fatalf("unexpected review response: %+v", resp)
 	}
 	if updatedSubmission == nil {
 		t.Fatal("expected submission to be updated")
 	}
-	if updatedSubmission.ReviewStatus != model.SubmissionReviewStatusApproved || !updatedSubmission.IsCorrect || updatedSubmission.Score != 120 {
+	if updatedSubmission.ReviewStatus != contestentity.SubmissionReviewStatusApproved || !updatedSubmission.IsCorrect || updatedSubmission.Score != 120 {
 		t.Fatalf("unexpected updated submission: %+v", updatedSubmission)
 	}
 	requireEventually(t, time.Second, func() bool {
@@ -269,7 +270,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Submission{}); err != nil {
+	if err := db.AutoMigrate(&contestentity.Submission{}); err != nil {
 		t.Fatalf("migrate submissions: %v", err)
 	}
 
@@ -280,10 +281,10 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	bus := events.NewBus()
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			return db.Create(submission).Error
 		},
 	}
@@ -492,7 +493,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	}
 
 	var count int64
-	if err := db.Model(&model.Submission{}).
+	if err := db.Model(&contestentity.Submission{}).
 		Where("user_id = ? AND challenge_id = ?", 71, 11).
 		Count(&count).Error; err != nil {
 		t.Fatalf("count submissions: %v", err)
@@ -628,20 +629,20 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			&stubPracticeRepository{
-				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
 					if userID != 7 || challengeID != 11 {
 						t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
 					}
 					if limit <= 0 {
 						t.Fatalf("expected positive limit, got %d", limit)
 					}
-					return []model.Submission{
+					return []contestentity.Submission{
 						{
 							ID:           3,
 							UserID:       7,
 							ChallengeID:  11,
 							IsCorrect:    true,
-							ReviewStatus: model.SubmissionReviewStatusNotRequired,
+							ReviewStatus: contestentity.SubmissionReviewStatusNotRequired,
 							SubmittedAt:  now.Add(-time.Minute),
 						},
 						{
@@ -649,7 +650,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 							UserID:       7,
 							ChallengeID:  11,
 							IsCorrect:    false,
-							ReviewStatus: model.SubmissionReviewStatusPending,
+							ReviewStatus: contestentity.SubmissionReviewStatusPending,
 							Flag:         "answer with reasoning",
 							SubmittedAt:  now.Add(-2 * time.Minute),
 						},
@@ -658,7 +659,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 							UserID:       7,
 							ChallengeID:  11,
 							IsCorrect:    false,
-							ReviewStatus: model.SubmissionReviewStatusNotRequired,
+							ReviewStatus: contestentity.SubmissionReviewStatusNotRequired,
 							SubmittedAt:  now.Add(-3 * time.Minute),
 						},
 					}, nil
@@ -761,14 +762,14 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	createSubmissionCalled := false
 	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
 			findCorrectCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-correct ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			createSubmissionCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -888,10 +889,10 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			&stubPracticeRepository{
-				findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
 					return nil, errors.New("raw solved submission repo should not be called")
 				},
-				createSubmissionFn: func(context.Context, *model.Submission) error {
+				createSubmissionFn: func(context.Context, *contestentity.Submission) error {
 					createCalled = true
 					return nil
 				},
@@ -906,7 +907,7 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 			nil,
 		),
 		&stubPracticeRepository{
-			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
 		},
@@ -942,12 +943,12 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 				t.Fatalf("expected get-review-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: model.Submission{
+				Submission: contestentity.Submission{
 					ID:           id,
 					UserID:       88,
 					ChallengeID:  11,
 					Flag:         "answer",
-					ReviewStatus: model.SubmissionReviewStatusPending,
+					ReviewStatus: contestentity.SubmissionReviewStatusPending,
 					SubmittedAt:  now,
 					UpdatedAt:    now,
 				},
@@ -964,7 +965,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			updatedCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -1008,7 +1009,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		91,
 		1001,
 		model.RoleTeacher,
-		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	); err != nil {
 		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
@@ -1273,7 +1274,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 				t.Fatalf("expected get-review ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission:      model.Submission{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: model.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
+				Submission:      contestentity.Submission{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: contestentity.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
 				StudentUsername: "student88",
 				StudentName:     "Student 88",
 				ClassName:       "Class A",
@@ -1343,7 +1344,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			t.Fatal("did not expect submission update for student role")
 			return nil
 		},
@@ -1355,7 +1356,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 		91,
 		1001,
 		model.RoleStudent,
-		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
@@ -1378,7 +1379,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			t.Fatal("did not expect submission update for invalid review status")
 			return nil
 		},
@@ -1390,7 +1391,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 		91,
 		1001,
 		model.RoleTeacher,
-		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusPending},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusPending},
 	)
 	if err == nil {
 		t.Fatal("expected invalid review status to be rejected")
@@ -1413,7 +1414,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			t.Fatal("did not expect requester lookup for oversized review comment")
 			return nil, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			t.Fatal("did not expect submission update for oversized review comment")
 			return nil
 		},
@@ -1426,7 +1427,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 		1001,
 		model.RoleTeacher,
 		&practicecontracts.ReviewManualReviewSubmissionReq{
-			ReviewStatus:  model.SubmissionReviewStatusApproved,
+			ReviewStatus:  contestentity.SubmissionReviewStatusApproved,
 			ReviewComment: strings.Repeat("a", 4001),
 		},
 	)
@@ -1446,12 +1447,12 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	repo := &stubPracticeRepository{
 		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			return &practiceports.TeacherManualReviewSubmissionRecord{
-				Submission: model.Submission{
+				Submission: contestentity.Submission{
 					ID:           id,
 					UserID:       88,
 					ChallengeID:  11,
 					Flag:         "answer",
-					ReviewStatus: model.SubmissionReviewStatusPending,
+					ReviewStatus: contestentity.SubmissionReviewStatusPending,
 					SubmittedAt:  now,
 					UpdatedAt:    now,
 				},
@@ -1464,18 +1465,18 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
-			return &model.Submission{
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*contestentity.Submission, error) {
+			return &contestentity.Submission{
 				ID:           99,
 				UserID:       userID,
 				ChallengeID:  challengeID,
 				IsCorrect:    true,
-				ReviewStatus: model.SubmissionReviewStatusApproved,
+				ReviewStatus: contestentity.SubmissionReviewStatusApproved,
 				SubmittedAt:  now.Add(-time.Minute),
 				UpdatedAt:    now.Add(-time.Minute),
 			}, nil
 		},
-		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *contestentity.Submission) error {
 			t.Fatal("did not expect submission update when challenge already solved")
 			return nil
 		},
@@ -1511,7 +1512,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		91,
 		1001,
 		model.RoleTeacher,
-		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+		&practicecontracts.ReviewManualReviewSubmissionReq{ReviewStatus: contestentity.SubmissionReviewStatusApproved},
 	)
 	if err == nil {
 		t.Fatal("expected already solved approval to be rejected")
@@ -1589,12 +1590,12 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			&stubPracticeRepository{
-				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]contestentity.Submission, error) {
 					listCalled = true
 					if got := ctx.Value(ctxKey); got != expectedCtxValue {
 						t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
 					}
-					return []model.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
+					return []contestentity.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
 				},
 			},
 			challengeRepo,
@@ -1644,10 +1645,10 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		},
 	}
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(context.Context, *model.Submission) error {
+		createSubmissionFn: func(context.Context, *contestentity.Submission) error {
 			return nil
 		},
 	}
@@ -1725,10 +1726,10 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	}
 	flagSalt := "solve-grace-ctx"
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*contestentity.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(context.Context, *model.Submission) error {
+		createSubmissionFn: func(context.Context, *contestentity.Submission) error {
 			return nil
 		},
 	}

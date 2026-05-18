@@ -17,11 +17,12 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -33,8 +34,8 @@ func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
 	seedContestInstanceChallenge(t, db, 1001, 2001, now)
 	seedContestInstanceAWDContest(t, db, 3001, 2001, now)
 	seedContestInstanceTeam(t, db, 3001, 4001, 5001, now)
-	seedContestInstanceRegistration(t, db, 3001, 5001, 4001, model.ContestRegistrationStatusApproved, now)
-	seedContestInstanceRegistration(t, db, 3001, 5002, 4001, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3001, 5001, 4001, contestentity.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3001, 5002, 4001, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5001, now)
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5002, now)
 
@@ -53,8 +54,8 @@ func TestServiceStartContestChallengeAWDDoesNotReuseExistingTeamInstance(t *test
 	seedContestInstanceChallenge(t, db, 1002, 2002, now)
 	seedContestInstanceAWDContest(t, db, 3002, 2002, now)
 	seedContestInstanceTeam(t, db, 3002, 4002, 5003, now)
-	seedContestInstanceRegistration(t, db, 3002, 5003, 4002, model.ContestRegistrationStatusApproved, now)
-	seedContestInstanceRegistration(t, db, 3002, 5004, 4002, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3002, 5003, 4002, contestentity.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3002, 5004, 4002, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3002, 4002, 5003, now)
 	seedContestInstanceTeamMember(t, db, 3002, 4002, 5004, now)
 
@@ -92,8 +93,8 @@ func TestServiceStartContestAWDServiceResolvesServiceIDAndReusesTeamInstance(t *
 	seedContestInstanceAWDContest(t, db, 3003, 2003, now)
 	seedContestInstanceAWDService(t, db, 7003003, 3003, 2003, now)
 	seedContestInstanceTeam(t, db, 3003, 4003, 5005, now)
-	seedContestInstanceRegistration(t, db, 3003, 5005, 4003, model.ContestRegistrationStatusApproved, now)
-	seedContestInstanceRegistration(t, db, 3003, 5006, 4003, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3003, 5005, 4003, contestentity.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3003, 5006, 4003, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3003, 4003, 5005, now)
 	seedContestInstanceTeamMember(t, db, 3003, 4003, 5006, now)
 	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
@@ -126,7 +127,7 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 	seedContestInstanceAWDContest(t, db, 3004, 2004, now)
 	seedContestInstanceAWDService(t, db, 7003004, 3004, 2004, now)
 	seedContestInstanceTeam(t, db, 3004, 4004, 5007, now)
-	seedContestInstanceRegistration(t, db, 3004, 5007, 4004, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3004, 5007, 4004, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3004, 4004, 5007, now)
 
 	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
@@ -194,7 +195,7 @@ func TestServiceStartAdminContestAWDTeamServiceAllowsRegistrationForPrewarmRetry
 	now := time.Now().UTC()
 
 	seedContestInstanceChallenge(t, db, 10055, 20055, now)
-	seedContestInstanceAWDContestWithStatus(t, db, 30055, 20055, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30055, 20055, contestentity.ContestStatusRegistration, now)
 	seedContestInstanceAWDService(t, db, 7003055, 30055, 20055, now)
 	seedContestInstanceTeam(t, db, 30055, 40055, 50055, now)
 	seedContestInstanceTeamMember(t, db, 30055, 40055, 50055, now)
@@ -216,7 +217,7 @@ func TestServicePrewarmAdminContestAWDInstancesStartsVisibleServicesForSelectedT
 	seedContestInstanceChallenge(t, db, 10100, 20100, now)
 	seedContestInstanceChallenge(t, db, 10101, 20101, now)
 	seedContestInstanceChallenge(t, db, 10102, 20102, now)
-	seedContestInstanceAWDContestWithStatus(t, db, 30100, 20100, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30100, 20100, contestentity.ContestStatusRegistration, now)
 	seedContestInstanceAWDService(t, db, 70100, 30100, 20100, now)
 	seedContestInstanceAWDService(t, db, 70101, 30100, 20101, now)
 	seedContestInstanceAWDServiceWithVisibility(t, db, 70102, 30100, 20102, false, now)
@@ -257,12 +258,12 @@ func TestServicePrewarmAdminContestAWDInstancesReturnsReusedAndFailedResults(t *
 	now := time.Now().UTC()
 
 	seedContestInstanceChallenge(t, db, 10110, 20110, now)
-	seedContestInstanceAWDContestWithStatus(t, db, 30110, 20110, model.ContestStatusRegistration, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30110, 20110, contestentity.ContestStatusRegistration, now)
 	seedContestInstanceAWDService(t, db, 70110, 30110, 20110, now)
 	seedContestInstanceTeam(t, db, 30110, 40110, 50110, now)
 	seedContestInstanceTeamMember(t, db, 30110, 40110, 50110, now)
 
-	if err := db.Create(&model.Team{
+	if err := db.Create(&contestentity.Team{
 		ID:         40111,
 		ContestID:  30110,
 		Name:       "Broken Team",
@@ -329,7 +330,7 @@ func TestServicePrewarmAdminContestAWDInstancesRejectsNonRegistrationContest(t *
 	now := time.Now().UTC()
 
 	seedContestInstanceChallenge(t, db, 10120, 20120, now)
-	seedContestInstanceAWDContestWithStatus(t, db, 30120, 20120, model.ContestStatusRunning, now)
+	seedContestInstanceAWDContestWithStatus(t, db, 30120, 20120, contestentity.ContestStatusRunning, now)
 	seedContestInstanceAWDService(t, db, 70120, 30120, 20120, now)
 	seedContestInstanceTeam(t, db, 30120, 40120, 50120, now)
 	seedContestInstanceTeamMember(t, db, 30120, 40120, 50120, now)
@@ -461,8 +462,8 @@ func TestServiceStartContestChallengePerTeamReusesTeamInstance(t *testing.T) {
 	}
 	seedContestInstanceJeopardyContest(t, db, 3102, 2102, now)
 	seedContestInstanceTeam(t, db, 3102, 4102, 5103, now)
-	seedContestInstanceRegistration(t, db, 3102, 5103, 4102, model.ContestRegistrationStatusApproved, now)
-	seedContestInstanceRegistration(t, db, 3102, 5104, 4102, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3102, 5103, 4102, contestentity.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3102, 5104, 4102, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5103, now)
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5104, now)
 
@@ -522,18 +523,18 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeTopology{},
-		&model.Contest{},
-		&model.ContestAWDService{},
-		&model.ContestChallenge{},
-		&model.ContestRegistration{},
-		&model.Team{},
-		&model.TeamMember{},
+		&contestentity.Contest{},
+		&contestentity.ContestAWDService{},
+		&contestentity.ContestChallenge{},
+		&contestentity.ContestRegistration{},
+		&contestentity.Team{},
+		&contestentity.TeamMember{},
 		&model.Instance{},
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
-		&model.Submission{},
+		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)
 	}
@@ -691,15 +692,15 @@ func seedContestInstanceUser(t *testing.T, db *gorm.DB, userID int64, now time.T
 
 func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
-	seedContestInstanceAWDContestWithStatus(t, db, contestID, challengeID, model.ContestStatusRunning, now)
+	seedContestInstanceAWDContestWithStatus(t, db, contestID, challengeID, contestentity.ContestStatusRunning, now)
 }
 
 func seedContestInstanceAWDContestWithStatus(t *testing.T, db *gorm.DB, contestID, challengeID int64, status string, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
-		Mode:      model.ContestModeAWD,
+		Mode:      contestentity.ContestModeAWD,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		Status:    status,
@@ -708,7 +709,7 @@ func seedContestInstanceAWDContestWithStatus(t *testing.T, db *gorm.DB, contestI
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: challengeID,
 		Points:      100,
@@ -731,7 +732,7 @@ func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serv
 	if err := db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load challenge for awd service snapshot: %v", err)
 	}
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:             serviceID,
 		ContestID:      contestID,
 		AWDChallengeID: challengeID,
@@ -740,7 +741,7 @@ func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serv
 		IsVisible:      visible,
 		ScoreConfig:    `{"points":100}`,
 		RuntimeConfig:  `{"checker_type":"http_standard"}`,
-		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, model.ContestAWDServiceSnapshot{
+		ServiceSnapshot: mustEncodeContestInstanceAWDServiceSnapshot(t, contestentity.ContestAWDServiceSnapshot{
 			Name:       "Bank Portal",
 			Category:   challenge.Category,
 			Difficulty: challenge.Difficulty,
@@ -771,10 +772,10 @@ func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serv
 	}
 }
 
-func mustEncodeContestInstanceAWDServiceSnapshot(t *testing.T, snapshot model.ContestAWDServiceSnapshot) string {
+func mustEncodeContestInstanceAWDServiceSnapshot(t *testing.T, snapshot contestentity.ContestAWDServiceSnapshot) string {
 	t.Helper()
 
-	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	raw, err := contestentity.EncodeContestAWDServiceSnapshot(snapshot)
 	if err != nil {
 		t.Fatalf("encode contest awd service snapshot: %v", err)
 	}
@@ -783,19 +784,19 @@ func mustEncodeContestInstanceAWDServiceSnapshot(t *testing.T, snapshot model.Co
 
 func seedContestInstanceJeopardyContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "Jeopardy Contest",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: challengeID,
 		Points:      100,
@@ -809,7 +810,7 @@ func seedContestInstanceJeopardyContest(t *testing.T, db *gorm.DB, contestID, ch
 
 func seedContestInstanceTeam(t *testing.T, db *gorm.DB, contestID, teamID, captainID int64, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.Team{
+	if err := db.Create(&contestentity.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       "Alpha",
@@ -826,7 +827,7 @@ func seedContestInstanceTeam(t *testing.T, db *gorm.DB, contestID, teamID, capta
 func seedContestInstanceRegistration(t *testing.T, db *gorm.DB, contestID, userID, teamID int64, status string, now time.Time) {
 	t.Helper()
 	teamIDCopy := teamID
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    &teamIDCopy,
@@ -840,7 +841,7 @@ func seedContestInstanceRegistration(t *testing.T, db *gorm.DB, contestID, userI
 
 func seedContestInstanceTeamMember(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.TeamMember{
+	if err := db.Create(&contestentity.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    userID,

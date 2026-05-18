@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -30,7 +30,7 @@ func NewContestScopeRepository(source contestScopeLookupSource) *ContestScopeRep
 	return &ContestScopeRepository{source: source}
 }
 
-func (r *ContestScopeRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (r *ContestScopeRepository) FindContestByID(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 	contest, err := r.source.FindContestByID(ctx, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeContestNotFound
@@ -38,7 +38,7 @@ func (r *ContestScopeRepository) FindContestByID(ctx context.Context, contestID 
 	return contest, err
 }
 
-func (r *ContestScopeRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (r *ContestScopeRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 	item, err := r.source.FindContestChallenge(ctx, contestID, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeContestChallengeNotFound
@@ -46,7 +46,7 @@ func (r *ContestScopeRepository) FindContestChallenge(ctx context.Context, conte
 	return item, err
 }
 
-func (r *ContestScopeRepository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (r *ContestScopeRepository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	service, err := r.source.FindContestAWDService(ctx, contestID, serviceID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeContestAWDServiceNotFound
@@ -54,7 +54,7 @@ func (r *ContestScopeRepository) FindContestAWDService(ctx context.Context, cont
 	return service, err
 }
 
-func (r *ContestScopeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
+func (r *ContestScopeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*contestentity.ContestAWDService, error) {
 	return r.source.ListContestAWDServices(ctx, contestID)
 }
 
@@ -66,7 +66,7 @@ func (r *ContestScopeRepository) FindContestAWDServiceRuntimeSubject(ctx context
 	return subject, err
 }
 
-func (r *ContestScopeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
+func (r *ContestScopeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*contestentity.Team, error) {
 	team, err := r.source.FindContestTeam(ctx, contestID, teamID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeContestTeamNotFound
@@ -74,7 +74,7 @@ func (r *ContestScopeRepository) FindContestTeam(ctx context.Context, contestID,
 	return team, err
 }
 
-func (r *ContestScopeRepository) ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error) {
+func (r *ContestScopeRepository) ListContestTeams(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
 	return r.source.ListContestTeams(ctx, contestID)
 }
 

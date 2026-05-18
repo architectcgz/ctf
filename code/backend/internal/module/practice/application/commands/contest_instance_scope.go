@@ -18,7 +18,7 @@ func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, user
 	if err != nil {
 		return practiceports.InstanceScope{}, err
 	}
-	if scope.ContestMode == model.ContestModeAWD {
+	if scope.ContestMode == practiceports.ContestModeAWD {
 		return practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(
 			errors.New("awd 赛事实例启动必须使用 service_id 入口"),
 		)
@@ -68,9 +68,9 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 		return 0, 0, practiceports.InstanceScope{}, err
 	}
 	switch contest.Status {
-	case model.ContestStatusRegistration, model.ContestStatusRunning, model.ContestStatusFrozen:
+	case practiceports.ContestStatusRegistration, practiceports.ContestStatusRunning, practiceports.ContestStatusFrozen:
 	default:
-		if contest.Status == model.ContestStatusEnded {
+		if contest.Status == practiceports.ContestStatusEnded {
 			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestEnded
 		}
 		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotRunning
@@ -78,7 +78,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 	return s.resolveAdminContestAWDServiceInstanceScopeWithContest(ctx, contest, contestID, teamID, serviceID)
 }
 
-func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
 	if s.contestScope == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -89,13 +89,13 @@ func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int6
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != practiceports.ContestModeAWD {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
 	}
 	return contest, nil
 }
 
-func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx context.Context, contest *model.Contest, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
+func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx context.Context, contest *practiceports.ContestRecord, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
 	team, err := s.contestScope.FindContestTeam(ctx, contestID, teamID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
@@ -196,9 +196,9 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch contest.Status {
-	case model.ContestStatusRunning, model.ContestStatusFrozen:
+	case practiceports.ContestStatusRunning, practiceports.ContestStatusFrozen:
 	default:
-		if contest.Status == model.ContestStatusEnded {
+		if contest.Status == practiceports.ContestStatusEnded {
 			return practiceports.InstanceScope{}, errcode.ErrContestEnded
 		}
 		return practiceports.InstanceScope{}, errcode.ErrContestNotRunning
@@ -212,8 +212,8 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch registration.Status {
-	case model.ContestRegistrationStatusApproved:
-	case model.ContestRegistrationStatusPending:
+	case practiceports.ContestRegistrationStatusApproved:
+	case practiceports.ContestRegistrationStatusPending:
 		return practiceports.InstanceScope{}, errcode.ErrContestRegistrationPending
 	default:
 		return practiceports.InstanceScope{}, errcode.ErrRegistrationNotApproved
@@ -240,7 +240,7 @@ func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.In
 	effective.ShareScope = model.InstanceSharingPerUser
 
 	switch {
-	case scope.ContestMode == model.ContestModeAWD:
+	case scope.ContestMode == practiceports.ContestModeAWD:
 		effective.ShareScope = model.InstanceSharingPerTeam
 		if scope.TeamID != nil && *scope.TeamID > 0 {
 			effective.FlagSubjectID = *scope.TeamID
