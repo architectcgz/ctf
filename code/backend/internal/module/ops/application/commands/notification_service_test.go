@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
@@ -19,10 +20,10 @@ import (
 )
 
 type stubNotificationRepository struct {
-	created                   []*model.Notification
-	createdBatch              *model.NotificationBatch
-	createdBatchNotifications []*model.Notification
-	findByIDFn                func(ctx context.Context, notificationID, userID int64) (*model.Notification, error)
+	created                   []*opsentity.Notification
+	createdBatch              *opsentity.NotificationBatch
+	createdBatchNotifications []*opsentity.Notification
+	findByIDFn                func(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error)
 	listAllUserIDsFn          func(ctx context.Context) ([]int64, error)
 	listUserIDsByRolesFn      func(ctx context.Context, roles []string) ([]int64, error)
 	listUserIDsByClassesFn    func(ctx context.Context, classNames []string) ([]int64, error)
@@ -30,17 +31,17 @@ type stubNotificationRepository struct {
 	markAsReadCalls           int
 }
 
-func (r *stubNotificationRepository) Create(_ context.Context, notification *model.Notification) error {
+func (r *stubNotificationRepository) Create(_ context.Context, notification *opsentity.Notification) error {
 	copied := *notification
 	r.created = append(r.created, &copied)
 	return nil
 }
 
-func (r *stubNotificationRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]model.Notification, int64, error) {
+func (r *stubNotificationRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]opsentity.Notification, int64, error) {
 	return nil, 0, nil
 }
 
-func (r *stubNotificationRepository) FindByID(ctx context.Context, notificationID, userID int64) (*model.Notification, error) {
+func (r *stubNotificationRepository) FindByID(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error) {
 	if r.findByIDFn == nil {
 		return nil, errors.New("unexpected FindByID call")
 	}
@@ -52,14 +53,14 @@ func (r *stubNotificationRepository) MarkAsRead(_ context.Context, _ int64, _ in
 	return nil
 }
 
-func (r *stubNotificationRepository) CreateBatch(_ context.Context, batch *model.NotificationBatch, notifications []*model.Notification) error {
+func (r *stubNotificationRepository) CreateBatch(_ context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error {
 	copiedBatch := *batch
 	if copiedBatch.ID == 0 {
 		copiedBatch.ID = 88
 		batch.ID = 88
 	}
 	r.createdBatch = &copiedBatch
-	r.createdBatchNotifications = make([]*model.Notification, 0, len(notifications))
+	r.createdBatchNotifications = make([]*opsentity.Notification, 0, len(notifications))
 	for _, item := range notifications {
 		item.BatchID = &copiedBatch.ID
 		copied := *item
@@ -219,7 +220,7 @@ func TestNotificationServiceRegisterChallengeEventConsumers(t *testing.T) {
 
 func TestNotificationServiceMarkAsReadReturnsNotificationNotFound(t *testing.T) {
 	service := NewNotificationService(&stubNotificationRepository{
-		findByIDFn: func(_ context.Context, _, _ int64) (*model.Notification, error) {
+		findByIDFn: func(_ context.Context, _, _ int64) (*opsentity.Notification, error) {
 			return nil, opsports.ErrNotificationNotFound
 		},
 	}, config.PaginationConfig{
@@ -235,15 +236,15 @@ func TestNotificationServiceMarkAsReadReturnsNotificationNotFound(t *testing.T) 
 
 func TestNotificationServiceMarkAsReadIsIdempotentForReadNotification(t *testing.T) {
 	repo := &stubNotificationRepository{
-		findByIDFn: func(_ context.Context, _, _ int64) (*model.Notification, error) {
+		findByIDFn: func(_ context.Context, _, _ int64) (*opsentity.Notification, error) {
 			readAt := time.Now().UTC()
-			return &model.Notification{
+			return &opsentity.Notification{
 				ID:      11,
 				UserID:  7,
 				Title:   "already read",
 				IsRead:  true,
 				ReadAt:  &readAt,
-				Type:    model.NotificationTypeSystem,
+				Type:    opsentity.NotificationTypeSystem,
 				Content: "done",
 			}, nil
 		},
@@ -275,7 +276,7 @@ func TestNotificationServiceSendNotificationPublishesWebsocketEvent(t *testing.T
 	}, broadcaster, zap.NewNop())
 
 	if err := service.SendNotification(context.Background(), 7, SendNotificationInput{
-		Type:    model.NotificationTypeSystem,
+		Type:    opsentity.NotificationTypeSystem,
 		Title:   "title",
 		Content: "content",
 	}); err != nil {
@@ -321,7 +322,7 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 	link := "/notifications/admin"
 
 	result, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
-		Type:    model.NotificationTypeSystem,
+		Type:    opsentity.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "统一发布测试",
 		Link:    &link,
@@ -390,7 +391,7 @@ func TestNotificationServicePublishAdminNotificationRejectsInvalidAudienceRule(t
 	}, nil, zap.NewNop())
 
 	_, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
-		Type:    model.NotificationTypeSystem,
+		Type:    opsentity.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "invalid payload",
 		AudienceRules: NotificationAudienceRulesInput{
@@ -412,7 +413,7 @@ func TestNotificationServicePublishAdminNotificationRejectsUnknownRoleValue(t *t
 	}, nil, zap.NewNop())
 
 	_, err := service.PublishAdminNotification(context.Background(), 99, PublishAdminNotificationInput{
-		Type:    model.NotificationTypeSystem,
+		Type:    opsentity.NotificationTypeSystem,
 		Title:   "系统通知",
 		Content: "invalid role",
 		AudienceRules: NotificationAudienceRulesInput{

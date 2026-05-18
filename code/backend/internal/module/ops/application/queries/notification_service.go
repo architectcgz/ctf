@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -60,7 +60,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 	return result, total, page, pageSize, nil
 }
 
-func toNotificationInfo(notification *model.Notification) NotificationInfo {
+func toNotificationInfo(notification *opsentity.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
 	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead

@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
@@ -88,7 +89,7 @@ func (s *NotificationService) handleChallengePublishCheckFinished(ctx context.Co
 
 	link := fmt.Sprintf("/admin/challenges/%d", payload.ChallengeID)
 	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
-		Type:    model.NotificationTypeChallenge,
+		Type:    opsentity.NotificationTypeChallenge,
 		Title:   title,
 		Content: content,
 		Link:    &link,
@@ -96,7 +97,7 @@ func (s *NotificationService) handleChallengePublishCheckFinished(ctx context.Co
 }
 
 func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req SendNotificationInput) error {
-	notification := &model.Notification{
+	notification := &opsentity.Notification{
 		UserID:  userID,
 		Type:    req.Type,
 		Title:   req.Title,
@@ -143,7 +144,7 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	batch := &model.NotificationBatch{
+	batch := &opsentity.NotificationBatch{
 		Type:           req.Type,
 		Title:          req.Title,
 		Content:        req.Content,
@@ -154,9 +155,9 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 		CreatedBy:      actorUserID,
 	}
 
-	notifications := make([]*model.Notification, 0, len(recipientIDs))
+	notifications := make([]*opsentity.Notification, 0, len(recipientIDs))
 	for _, userID := range recipientIDs {
-		notifications = append(notifications, &model.Notification{
+		notifications = append(notifications, &opsentity.Notification{
 			UserID:  userID,
 			Type:    req.Type,
 			Title:   req.Title,
@@ -213,7 +214,7 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 	return nil
 }
 
-func toNotificationInfo(notification *model.Notification) NotificationInfo {
+func toNotificationInfo(notification *opsentity.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
 	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead

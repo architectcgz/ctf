@@ -30,6 +30,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -2431,7 +2432,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
-		"type":    model.NotificationTypeSystem,
+		"type":    opsentity.NotificationTypeSystem,
 		"title":   "全员通知",
 		"content": "full-router matrix admin publish",
 		"audience_rules": map[string]any{
@@ -2450,7 +2451,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
-		"type":    model.NotificationTypeSystem,
+		"type":    opsentity.NotificationTypeSystem,
 		"title":   "teacher forbidden",
 		"content": "teacher should not publish",
 		"audience_rules": map[string]any{
@@ -2463,7 +2464,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusForbidden)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
-		"type":    model.NotificationTypeSystem,
+		"type":    opsentity.NotificationTypeSystem,
 		"title":   "invalid audience",
 		"content": "missing roles",
 		"audience_rules": map[string]any{

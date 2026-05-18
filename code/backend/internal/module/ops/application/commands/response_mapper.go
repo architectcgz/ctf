@@ -3,7 +3,7 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 type adminNotificationPublishRespSource struct {
@@ -21,8 +21,8 @@ type adminNotificationPublishRespSource struct {
 type notificationResponseMapper interface {
 	// goverter:ignore Content
 	// goverter:ignore Unread
-	ToNotificationInfo(source model.Notification) NotificationInfo
-	ToNotificationInfoPtr(source *model.Notification) *NotificationInfo
+	ToNotificationInfo(source opsentity.Notification) NotificationInfo
+	ToNotificationInfoPtr(source *opsentity.Notification) *NotificationInfo
 
 	ToAdminNotificationPublishResp(source adminNotificationPublishRespSource) AdminNotificationPublishResp
 	ToAdminNotificationPublishRespPtr(source adminNotificationPublishRespSource) *AdminNotificationPublishResp

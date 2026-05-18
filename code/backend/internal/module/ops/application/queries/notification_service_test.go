@@ -7,25 +7,25 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
 
 type stubNotificationQueryRepository struct{}
 
-func (r *stubNotificationQueryRepository) Create(_ context.Context, _ *model.Notification) error {
+func (r *stubNotificationQueryRepository) Create(_ context.Context, _ *opsentity.Notification) error {
 	return nil
 }
 
-func (r *stubNotificationQueryRepository) CreateBatch(_ context.Context, _ *model.NotificationBatch, _ []*model.Notification) error {
+func (r *stubNotificationQueryRepository) CreateBatch(_ context.Context, _ *opsentity.NotificationBatch, _ []*opsentity.Notification) error {
 	return nil
 }
 
-func (r *stubNotificationQueryRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]model.Notification, int64, error) {
+func (r *stubNotificationQueryRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]opsentity.Notification, int64, error) {
 	return nil, 0, nil
 }
 
-func (r *stubNotificationQueryRepository) FindByID(_ context.Context, _, _ int64) (*model.Notification, error) {
+func (r *stubNotificationQueryRepository) FindByID(_ context.Context, _, _ int64) (*opsentity.Notification, error) {
 	return nil, nil
 }
 

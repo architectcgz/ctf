@@ -3,11 +3,11 @@
 
 package queries
 
-import model "ctf-platform/internal/model"
+import entity "ctf-platform/internal/module/ops/entity"
 
 type notificationResponseMapperImpl struct{}
 
-func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) NotificationInfo {
+func (c *notificationResponseMapperImpl) ToNotificationInfo(source entity.Notification) NotificationInfo {
 	var queriesNotificationInfo NotificationInfo
 	queriesNotificationInfo.ID = source.ID
 	queriesNotificationInfo.Type = source.Type
@@ -20,7 +20,7 @@ func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notific
 	queriesNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
 	return queriesNotificationInfo
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *NotificationInfo {
+func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *entity.Notification) *NotificationInfo {
 	var pQueriesNotificationInfo *NotificationInfo
 	if source != nil {
 		queriesNotificationInfo := c.ToNotificationInfo((*source))

@@ -3,7 +3,7 @@
 
 package commands
 
-import model "ctf-platform/internal/model"
+import entity "ctf-platform/internal/module/ops/entity"
 
 type notificationResponseMapperImpl struct{}
 
@@ -17,7 +17,7 @@ func (c *notificationResponseMapperImpl) ToAdminNotificationPublishRespPtr(sourc
 	commandsAdminNotificationPublishResp := c.ToAdminNotificationPublishResp(source)
 	return &commandsAdminNotificationPublishResp
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notification) NotificationInfo {
+func (c *notificationResponseMapperImpl) ToNotificationInfo(source entity.Notification) NotificationInfo {
 	var commandsNotificationInfo NotificationInfo
 	commandsNotificationInfo.ID = source.ID
 	commandsNotificationInfo.Type = source.Type
@@ -30,7 +30,7 @@ func (c *notificationResponseMapperImpl) ToNotificationInfo(source model.Notific
 	commandsNotificationInfo.ReadAt = CopyTimePtr(source.ReadAt)
 	return commandsNotificationInfo
 }
-func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *model.Notification) *NotificationInfo {
+func (c *notificationResponseMapperImpl) ToNotificationInfoPtr(source *entity.Notification) *NotificationInfo {
 	var pCommandsNotificationInfo *NotificationInfo
 	if source != nil {
 		commandsNotificationInfo := c.ToNotificationInfo((*source))

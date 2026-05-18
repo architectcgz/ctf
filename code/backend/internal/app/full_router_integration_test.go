@@ -31,6 +31,7 @@ import (
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -61,7 +62,7 @@ type fullRouterTestEnv struct {
 	team         *model.Team
 	awdRound     *model.AWDRound
 	instance     *model.Instance
-	notification *model.Notification
+	notification *opsentity.Notification
 	report       *model.Report
 }
 
@@ -92,8 +93,8 @@ var fullRouterTestSchemaModels = []any{
 	&model.PortAllocation{},
 	&model.UserScore{},
 	&model.AuditLog{},
-	&model.NotificationBatch{},
-	&model.Notification{},
+	&opsentity.NotificationBatch{},
+	&opsentity.Notification{},
 	&model.SkillProfile{},
 	&model.Contest{},
 	&model.ContestStatusTransition{},
@@ -1464,9 +1465,9 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create skill profile: %v", err)
 	}
 
-	env.notification = &model.Notification{
+	env.notification = &opsentity.Notification{
 		UserID:    env.student.ID,
-		Type:      model.NotificationTypeSystem,
+		Type:      opsentity.NotificationTypeSystem,
 		Title:     "通知",
 		Content:   "hello",
 		IsRead:    false,

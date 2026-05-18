@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	ctfws "ctf-platform/pkg/websocket"
 )
 
@@ -18,9 +18,9 @@ type NotificationListFilter struct {
 }
 
 type NotificationCommandRepository interface {
-	Create(ctx context.Context, notification *model.Notification) error
-	CreateBatch(ctx context.Context, batch *model.NotificationBatch, notifications []*model.Notification) error
-	FindByID(ctx context.Context, notificationID, userID int64) (*model.Notification, error)
+	Create(ctx context.Context, notification *opsentity.Notification) error
+	CreateBatch(ctx context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error
+	FindByID(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error)
 	MarkAsRead(ctx context.Context, notificationID, userID int64, readAt any) error
 	ListAllUserIDs(ctx context.Context) ([]int64, error)
 	ListUserIDsByRoles(ctx context.Context, roles []string) ([]int64, error)
@@ -29,7 +29,7 @@ type NotificationCommandRepository interface {
 }
 
 type NotificationQueryRepository interface {
-	List(ctx context.Context, filter NotificationListFilter) ([]model.Notification, int64, error)
+	List(ctx context.Context, filter NotificationListFilter) ([]opsentity.Notification, int64, error)
 }
 
 type NotificationBroadcaster interface {

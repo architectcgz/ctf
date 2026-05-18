@@ -33,6 +33,7 @@ import (
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	ctfws "ctf-platform/pkg/websocket"
@@ -123,7 +124,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	}
 
 	if err := env.notificationService.SendNotification(context.Background(), user.ID, opscmd.SendNotificationInput{
-		Type:    model.NotificationTypeSystem,
+		Type:    opsentity.NotificationTypeSystem,
 		Title:   "比赛开始提醒",
 		Content: "Practice 模块将于 10 分钟后维护",
 	}); err != nil {
@@ -210,7 +211,7 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 	}
 
 	publishPayload := map[string]any{
-		"type":    model.NotificationTypeSystem,
+		"type":    opsentity.NotificationTypeSystem,
 		"title":   "系统公告",
 		"content": "admin publish integration test",
 		"audience_rules": map[string]any{
@@ -258,7 +259,7 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 		http.MethodPost,
 		"/api/v1/admin/notifications",
 		map[string]any{
-			"type":    model.NotificationTypeSystem,
+			"type":    opsentity.NotificationTypeSystem,
 			"title":   "系统公告",
 			"content": "invalid",
 			"audience_rules": map[string]any{
@@ -316,7 +317,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &model.NotificationBatch{}, &model.Notification{}); err != nil {
+	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &opsentity.NotificationBatch{}, &opsentity.Notification{}); err != nil {
 		t.Fatalf("auto migrate schema: %v", err)
 	}
 	seedNotificationRoles(t, db)

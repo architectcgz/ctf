@@ -3,7 +3,7 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -16,8 +16,8 @@ import (
 type notificationResponseMapper interface {
 	// goverter:ignore Content
 	// goverter:ignore Unread
-	ToNotificationInfo(source model.Notification) NotificationInfo
-	ToNotificationInfoPtr(source *model.Notification) *NotificationInfo
+	ToNotificationInfo(source opsentity.Notification) NotificationInfo
+	ToNotificationInfoPtr(source *opsentity.Notification) *NotificationInfo
 }
 
 var notificationMapper notificationResponseMapper

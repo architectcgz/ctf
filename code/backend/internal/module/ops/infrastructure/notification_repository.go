@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
 
@@ -18,11 +19,11 @@ func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
-func (r *NotificationRepository) Create(ctx context.Context, notification *model.Notification) error {
+func (r *NotificationRepository) Create(ctx context.Context, notification *opsentity.Notification) error {
 	return r.db.WithContext(ctx).Create(notification).Error
 }
 
-func (r *NotificationRepository) CreateBatch(ctx context.Context, batch *model.NotificationBatch, notifications []*model.Notification) error {
+func (r *NotificationRepository) CreateBatch(ctx context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(batch).Error; err != nil {
 			return err
@@ -37,8 +38,8 @@ func (r *NotificationRepository) CreateBatch(ctx context.Context, batch *model.N
 	})
 }
 
-func (r *NotificationRepository) List(ctx context.Context, filter opsports.NotificationListFilter) ([]model.Notification, int64, error) {
-	query := r.db.WithContext(ctx).Model(&model.Notification{}).Where("user_id = ?", filter.UserID)
+func (r *NotificationRepository) List(ctx context.Context, filter opsports.NotificationListFilter) ([]opsentity.Notification, int64, error) {
+	query := r.db.WithContext(ctx).Model(&opsentity.Notification{}).Where("user_id = ?", filter.UserID)
 	if filter.Type != "" {
 		query = query.Where("type = ?", filter.Type)
 	}
@@ -48,15 +49,15 @@ func (r *NotificationRepository) List(ctx context.Context, filter opsports.Notif
 		return nil, 0, err
 	}
 
-	items := make([]model.Notification, 0)
+	items := make([]opsentity.Notification, 0)
 	if err := query.Order("created_at DESC").Offset(filter.Offset).Limit(filter.Limit).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil
 }
 
-func (r *NotificationRepository) FindByID(ctx context.Context, notificationID, userID int64) (*model.Notification, error) {
-	var notification model.Notification
+func (r *NotificationRepository) FindByID(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error) {
+	var notification opsentity.Notification
 	if err := r.db.WithContext(ctx).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		First(&notification).Error; err != nil {
@@ -101,7 +102,7 @@ func (r *NotificationRepository) ListExistingUserIDs(ctx context.Context, userID
 
 func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID, userID int64, readAt any) error {
 	return r.db.WithContext(ctx).
-		Model(&model.Notification{}).
+		Model(&opsentity.Notification{}).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		Updates(map[string]any{"is_read": true, "read_at": readAt}).Error
 }
