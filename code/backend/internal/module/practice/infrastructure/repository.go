@@ -142,14 +142,17 @@ func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*
 	return teams, nil
 }
 
-func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
 	var registration model.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		First(&registration).Error; err != nil {
 		return nil, err
 	}
-	return &registration, nil
+	return &practiceports.ContestParticipation{
+		Status: registration.Status,
+		TeamID: registration.TeamID,
+	}, nil
 }
 
 func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error) {

@@ -23,7 +23,7 @@ type stubPracticeRepository struct {
 	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*model.Instance, error)
 	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*model.Team, error)
 	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*model.Team, error)
-	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error)
 	listContestAWDScopeControlsFn          func(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error)
 	listScopeAWDScopeControlsFn            func(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error)
 	upsertAWDScopeControlFn                func(ctx context.Context, control *model.AWDScopeControl) error
@@ -131,7 +131,7 @@ func (s *stubPracticeRepository) ListContestTeams(ctx context.Context, contestID
 	return []*model.Team{}, nil
 }
 
-func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
 	if s.findContestRegistrationFn != nil {
 		return s.findContestRegistrationFn(ctx, contestID, userID)
 	}

@@ -19,7 +19,7 @@ type contestScopeSourceStub struct {
 	listContestAWDInstancesFn func(context.Context, int64) ([]*model.Instance, error)
 	findContestTeamFn         func(context.Context, int64, int64) (*model.Team, error)
 	listContestTeamsFn        func(context.Context, int64) ([]*model.Team, error)
-	findContestRegistrationFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findContestRegistrationFn func(context.Context, int64, int64) (*practiceports.ContestParticipation, error)
 }
 
 func (s contestScopeSourceStub) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
@@ -59,7 +59,7 @@ func (s contestScopeSourceStub) ListContestTeams(ctx context.Context, contestID 
 	return s.listContestTeamsFn(ctx, contestID)
 }
 
-func (s contestScopeSourceStub) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s contestScopeSourceStub) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
 	return s.findContestRegistrationFn(ctx, contestID, userID)
 }
 
@@ -79,7 +79,7 @@ func TestContestScopeRepositoryMapsNotFoundErrors(t *testing.T) {
 		findContestTeamFn: func(context.Context, int64, int64) (*model.Team, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findContestRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+		findContestRegistrationFn: func(context.Context, int64, int64) (*practiceports.ContestParticipation, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -157,8 +157,8 @@ func TestContestScopeRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 		findContestTeamFn: func(context.Context, int64, int64) (*model.Team, error) {
 			return &model.Team{ID: 3}, nil
 		},
-		findContestRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
-			return &model.ContestRegistration{ContestID: 1, UserID: 2}, nil
+		findContestRegistrationFn: func(context.Context, int64, int64) (*practiceports.ContestParticipation, error) {
+			return &practiceports.ContestParticipation{}, nil
 		},
 	})
 

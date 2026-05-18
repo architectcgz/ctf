@@ -190,8 +190,13 @@ type PracticeContestTeamRepository interface {
 	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)
 }
 
+type ContestParticipation struct {
+	Status string
+	TeamID *int64
+}
+
 type PracticeContestRegistrationRepository interface {
-	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	FindContestRegistration(ctx context.Context, contestID, userID int64) (*ContestParticipation, error)
 }
 
 type PracticeAWDScopeControlRepository interface {

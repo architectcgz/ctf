@@ -69,7 +69,7 @@ func (r *ContestScopeRepository) ListContestTeams(ctx context.Context, contestID
 	return r.source.ListContestTeams(ctx, contestID)
 }
 
-func (r *ContestScopeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *ContestScopeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error) {
 	registration, err := r.source.FindContestRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeContestRegistrationNotFound
