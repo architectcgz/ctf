@@ -533,7 +533,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&contestentity.TeamMember{},
 		&instanceentity.Instance{},
 		&runtimeentity.AWDServiceOperation{},
-		&model.AWDScopeControl{},
+		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
 		&contestentity.Submission{},

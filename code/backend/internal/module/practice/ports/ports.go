@@ -299,9 +299,9 @@ type PracticeContestRegistrationRepository interface {
 }
 
 type PracticeAWDScopeControlRepository interface {
-	ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error)
-	ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error)
-	UpsertAWDScopeControl(ctx context.Context, control *model.AWDScopeControl) error
+	ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimecontracts.AWDScopeControl, error)
+	ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimecontracts.AWDScopeControl, error)
+	UpsertAWDScopeControl(ctx context.Context, control *runtimecontracts.AWDScopeControl) error
 	DeleteAWDScopeControl(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
 }
 

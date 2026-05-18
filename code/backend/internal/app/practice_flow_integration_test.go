@@ -857,7 +857,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&instancecontracts.Instance{},
 		&runtimeentity.PortAllocation{},
 		&runtimecontracts.AWDServiceOperation{},
-		&model.AWDScopeControl{},
+		&runtimecontracts.AWDScopeControl{},
 		&assessmententity.SkillProfile{},
 		&practiceentity.UserScore{},
 	); err != nil {

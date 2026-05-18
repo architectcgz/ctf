@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -40,26 +41,26 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
 				"attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl"),
-			model.AWDScopeControlScopeTeam,
-			model.AWDScopeControlTypeRetired,
+			runtimecontracts.AWDScopeControlScopeTeam,
+			runtimecontracts.AWDScopeControlTypeRetired,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
 				"attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl"),
-			model.AWDScopeControlScopeTeamService,
-			model.AWDScopeControlTypeServiceDisabled,
+			runtimecontracts.AWDScopeControlScopeTeamService,
+			runtimecontracts.AWDScopeControlTypeServiceDisabled,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
 				"victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl"),
-			model.AWDScopeControlScopeTeam,
-			model.AWDScopeControlTypeRetired,
+			runtimecontracts.AWDScopeControlScopeTeam,
+			runtimecontracts.AWDScopeControlTypeRetired,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
 				"victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl"),
-			model.AWDScopeControlScopeTeamService,
-			model.AWDScopeControlTypeServiceDisabled,
+			runtimecontracts.AWDScopeControlScopeTeamService,
+			runtimecontracts.AWDScopeControlTypeServiceDisabled,
 		)
 	err := query.
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, contestcontracts.ContestModeAWD, []string{contestcontracts.ContestStatusRunning, contestcontracts.ContestStatusFrozen}).

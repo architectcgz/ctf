@@ -166,7 +166,7 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	return resp, nil
 }
 
-func adminAWDScopeControlRecordResp(control *model.AWDScopeControl) *AdminAWDScopeControlResp {
+func adminAWDScopeControlRecordResp(control *runtimecontracts.AWDScopeControl) *AdminAWDScopeControlResp {
 	if control == nil {
 		return nil
 	}
@@ -179,7 +179,7 @@ func adminAWDScopeControlRecordResp(control *model.AWDScopeControl) *AdminAWDSco
 		UpdatedBy:   control.UpdatedBy,
 		UpdatedAt:   &control.UpdatedAt,
 	}
-	if control.ScopeType == model.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
+	if control.ScopeType == runtimecontracts.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
 		serviceID := control.ServiceID
 		resp.ServiceID = &serviceID
 	}

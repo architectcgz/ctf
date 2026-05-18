@@ -15,6 +15,7 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimeportreservation "ctf-platform/internal/module/runtime/contracts/portreservation"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -26,14 +27,14 @@ type Repository struct {
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
 		db:           db,
-		runtimePorts: runtimecontracts.NewPortReservationOwner(db),
+		runtimePorts: runtimeportreservation.NewOwner(db),
 	}
 }
 
 func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{
 		db:           db,
-		runtimePorts: runtimecontracts.NewPortReservationOwner(db),
+		runtimePorts: runtimeportreservation.NewOwner(db),
 	}
 }
 
@@ -180,8 +181,8 @@ func (r *Repository) FindContestRegistration(ctx context.Context, contestID, use
 	}, nil
 }
 
-func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error) {
-	var controls []*model.AWDScopeControl
+func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimecontracts.AWDScopeControl, error) {
+	var controls []*runtimecontracts.AWDScopeControl
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("team_id ASC, scope_type ASC, service_id ASC, control_type ASC, id ASC").
@@ -191,19 +192,19 @@ func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID 
 	return controls, nil
 }
 
-func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*model.AWDScopeControl, error) {
-	var controls []*model.AWDScopeControl
+func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimecontracts.AWDScopeControl, error) {
+	var controls []*runtimecontracts.AWDScopeControl
 	query := r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ?", contestID, teamID)
 	if serviceID > 0 {
 		query = query.Where(
 			"(scope_type = ? AND service_id = 0) OR (scope_type = ? AND service_id = ?)",
-			model.AWDScopeControlScopeTeam,
-			model.AWDScopeControlScopeTeamService,
+			runtimecontracts.AWDScopeControlScopeTeam,
+			runtimecontracts.AWDScopeControlScopeTeamService,
 			serviceID,
 		)
 	} else {
-		query = query.Where("scope_type = ? AND service_id = 0", model.AWDScopeControlScopeTeam)
+		query = query.Where("scope_type = ? AND service_id = 0", runtimecontracts.AWDScopeControlScopeTeam)
 	}
 	if err := query.
 		Order("scope_type ASC, service_id ASC, control_type ASC, id ASC").
@@ -213,7 +214,7 @@ func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, t
 	return controls, nil
 }
 
-func (r *Repository) UpsertAWDScopeControl(ctx context.Context, control *model.AWDScopeControl) error {
+func (r *Repository) UpsertAWDScopeControl(ctx context.Context, control *runtimecontracts.AWDScopeControl) error {
 	if control == nil {
 		return nil
 	}
@@ -244,7 +245,7 @@ func (r *Repository) DeleteAWDScopeControl(ctx context.Context, contestID, teamI
 	return r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ? AND scope_type = ? AND control_type = ? AND service_id = ?",
 			contestID, teamID, scopeType, controlType, serviceID).
-		Delete(&model.AWDScopeControl{}).Error
+		Delete(&runtimecontracts.AWDScopeControl{}).Error
 }
 
 func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {

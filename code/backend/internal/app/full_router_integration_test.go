@@ -117,7 +117,7 @@ var fullRouterTestSchemaModels = []any{
 	&contestcontracts.AWDAttackLog{},
 	&contestcontracts.AWDTrafficEvent{},
 	&runtimecontracts.AWDServiceOperation{},
-	&model.AWDScopeControl{},
+	&runtimecontracts.AWDScopeControl{},
 	&assessmententity.Report{},
 }
 
@@ -307,7 +307,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeRetired || resp.TeamID != awdTeam.ID {
+				if !resp.Enabled || resp.ControlType != runtimecontracts.AWDScopeControlTypeRetired || resp.TeamID != awdTeam.ID {
 					t.Fatalf("unexpected retirement response: %+v", resp)
 				}
 			},
@@ -321,7 +321,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
+				if !resp.Enabled || resp.ControlType != runtimecontracts.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
 					t.Fatalf("unexpected disable response: %+v", resp)
 				}
 			},
@@ -335,7 +335,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != model.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
+				if !resp.Enabled || resp.ControlType != runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != awdService.ID {
 					t.Fatalf("unexpected suppress response: %+v", resp)
 				}
 			},
@@ -366,9 +366,9 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 		seen[control.ControlType] = true
 	}
 	for _, controlType := range []string{
-		model.AWDScopeControlTypeRetired,
-		model.AWDScopeControlTypeServiceDisabled,
-		model.AWDScopeControlTypeDesiredReconcileSuppressed,
+		runtimecontracts.AWDScopeControlTypeRetired,
+		runtimecontracts.AWDScopeControlTypeServiceDisabled,
+		runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
 	} {
 		if !seen[controlType] {
 			t.Fatalf("expected orchestration to include control %q, got %+v", controlType, orchestration.Controls)

@@ -4,59 +4,59 @@ import (
 	"context"
 	"strings"
 
-	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 const awdScopeControlReasonLimit = 256
 
 type awdScopeControlState struct {
-	TeamRetired      *model.AWDScopeControl
-	ServiceDisabled  *model.AWDScopeControl
-	DesiredSuppressed *model.AWDScopeControl
+	TeamRetired       *runtimecontracts.AWDScopeControl
+	ServiceDisabled   *runtimecontracts.AWDScopeControl
+	DesiredSuppressed *runtimecontracts.AWDScopeControl
 }
 
 type awdContestControlIndex struct {
-	teamRetired       map[int64]*model.AWDScopeControl
-	serviceDisabled   map[string]*model.AWDScopeControl
-	desiredSuppressed map[string]*model.AWDScopeControl
+	teamRetired       map[int64]*runtimecontracts.AWDScopeControl
+	serviceDisabled   map[string]*runtimecontracts.AWDScopeControl
+	desiredSuppressed map[string]*runtimecontracts.AWDScopeControl
 }
 
-func buildAWDScopeControlState(rows []*model.AWDScopeControl) awdScopeControlState {
+func buildAWDScopeControlState(rows []*runtimecontracts.AWDScopeControl) awdScopeControlState {
 	state := awdScopeControlState{}
 	for _, row := range rows {
 		if row == nil {
 			continue
 		}
 		switch row.ControlType {
-		case model.AWDScopeControlTypeRetired:
+		case runtimecontracts.AWDScopeControlTypeRetired:
 			state.TeamRetired = row
-		case model.AWDScopeControlTypeServiceDisabled:
+		case runtimecontracts.AWDScopeControlTypeServiceDisabled:
 			state.ServiceDisabled = row
-		case model.AWDScopeControlTypeDesiredReconcileSuppressed:
+		case runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed:
 			state.DesiredSuppressed = row
 		}
 	}
 	return state
 }
 
-func buildAWDContestControlIndex(rows []*model.AWDScopeControl) awdContestControlIndex {
+func buildAWDContestControlIndex(rows []*runtimecontracts.AWDScopeControl) awdContestControlIndex {
 	index := awdContestControlIndex{
-		teamRetired:       make(map[int64]*model.AWDScopeControl),
-		serviceDisabled:   make(map[string]*model.AWDScopeControl),
-		desiredSuppressed: make(map[string]*model.AWDScopeControl),
+		teamRetired:       make(map[int64]*runtimecontracts.AWDScopeControl),
+		serviceDisabled:   make(map[string]*runtimecontracts.AWDScopeControl),
+		desiredSuppressed: make(map[string]*runtimecontracts.AWDScopeControl),
 	}
 	for _, row := range rows {
 		if row == nil {
 			continue
 		}
 		switch row.ControlType {
-		case model.AWDScopeControlTypeRetired:
+		case runtimecontracts.AWDScopeControlTypeRetired:
 			index.teamRetired[row.TeamID] = row
-		case model.AWDScopeControlTypeServiceDisabled:
+		case runtimecontracts.AWDScopeControlTypeServiceDisabled:
 			index.serviceDisabled[awdDesiredRuntimeScopeKey(row.TeamID, row.ServiceID)] = row
-		case model.AWDScopeControlTypeDesiredReconcileSuppressed:
+		case runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed:
 			index.desiredSuppressed[awdDesiredRuntimeScopeKey(row.TeamID, row.ServiceID)] = row
 		}
 	}
@@ -99,7 +99,7 @@ func normalizeAWDScopeControlReason(reason string) string {
 	return trimmed[:awdScopeControlReasonLimit]
 }
 
-func (s *Service) listContestAWDScopeControls(ctx context.Context, contestID int64) ([]*model.AWDScopeControl, error) {
+func (s *Service) listContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimecontracts.AWDScopeControl, error) {
 	if s == nil || s.repo == nil || contestID <= 0 {
 		return nil, nil
 	}

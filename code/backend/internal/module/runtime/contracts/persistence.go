@@ -30,3 +30,14 @@ const (
 	AWDServiceOperationStatusSucceeded    = runtimeentity.AWDServiceOperationStatusSucceeded
 	AWDServiceOperationStatusFailed       = runtimeentity.AWDServiceOperationStatusFailed
 )
+
+type AWDScopeControl = runtimeentity.AWDScopeControl
+
+const (
+	AWDScopeControlScopeTeam        = runtimeentity.AWDScopeControlScopeTeam
+	AWDScopeControlScopeTeamService = runtimeentity.AWDScopeControlScopeTeamService
+
+	AWDScopeControlTypeRetired                    = runtimeentity.AWDScopeControlTypeRetired
+	AWDScopeControlTypeServiceDisabled            = runtimeentity.AWDScopeControlTypeServiceDisabled
+	AWDScopeControlTypeDesiredReconcileSuppressed = runtimeentity.AWDScopeControlTypeDesiredReconcileSuppressed
+)

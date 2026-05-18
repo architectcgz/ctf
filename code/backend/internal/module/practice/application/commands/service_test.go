@@ -674,7 +674,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&contestentity.Team{},
 		&instanceentity.Instance{},
 		&runtimeentity.AWDServiceOperation{},
-		&model.AWDScopeControl{},
+		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
 		&contestentity.Submission{},
