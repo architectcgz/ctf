@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -109,7 +110,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 			}
 
 			var count int64
-			if err := db.Model(&model.Instance{}).Count(&count).Error; err != nil {
+			if err := db.Model(&instancecontracts.Instance{}).Count(&count).Error; err != nil {
 				t.Fatalf("count instances: %v", err)
 			}
 			if count != 0 {
@@ -160,7 +161,7 @@ func TestServiceStartContestAWDServiceAllowsManualStartWhenDesiredReconcileSuppr
 		t.Fatalf("expected manual start to bypass desired reconcile suppress, got %+v", resp)
 	}
 
-	var instance model.Instance
+	var instance instancecontracts.Instance
 	if err := db.First(&instance, resp.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
@@ -208,7 +209,7 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 	for idx, serviceID := range []int64{serviceAID, serviceBID} {
 		instanceID := int64(81020 + idx)
 		challengeID := int64(21020 + idx)
-		if err := db.Create(&model.Instance{
+		if err := db.Create(&instancecontracts.Instance{
 			ID:          instanceID,
 			UserID:      captainID,
 			ContestID:   &contestID,
@@ -216,7 +217,7 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 			ChallengeID: challengeID,
 			ServiceID:   &serviceID,
 			ContainerID: "ctr-active",
-			Status:      model.InstanceStatusRunning,
+			Status:      instancecontracts.InstanceStatusRunning,
 			AccessURL:   "http://127.0.0.1:30001",
 			ExpiresAt:   now.Add(time.Hour),
 			CreatedAt:   now,
@@ -243,7 +244,7 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 		t.Fatalf("expected team retirement control persisted, got %+v", controls)
 	}
 
-	var instances []model.Instance
+	var instances []instancecontracts.Instance
 	if err := db.Where("contest_id = ? AND team_id = ?", contestID, teamID).Order("id ASC").Find(&instances).Error; err != nil {
 		t.Fatalf("list awd instances: %v", err)
 	}
@@ -251,7 +252,7 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 		t.Fatalf("expected 2 team instances, got %+v", instances)
 	}
 	for _, instance := range instances {
-		if instance.Status != model.InstanceStatusStopped {
+		if instance.Status != instancecontracts.InstanceStatusStopped {
 			t.Fatalf("expected team retirement to stop active instance, got %+v", instance)
 		}
 	}
@@ -297,7 +298,7 @@ func TestServiceSetAdminContestAWDTeamServiceDisabledStopsActiveInstanceAndClear
 	}
 
 	instanceID := int64(81030)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      captainID,
 		ContestID:   &contestID,
@@ -305,7 +306,7 @@ func TestServiceSetAdminContestAWDTeamServiceDisabledStopsActiveInstanceAndClear
 		ChallengeID: 21030,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-active-service",
-		Status:      model.InstanceStatusRunning,
+		Status:      instancecontracts.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30002",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -335,11 +336,11 @@ func TestServiceSetAdminContestAWDTeamServiceDisabledStopsActiveInstanceAndClear
 		t.Fatalf("expected team service control scope, got %+v", control)
 	}
 
-	var instance model.Instance
+	var instance instancecontracts.Instance
 	if err := db.First(&instance, instanceID).Error; err != nil {
 		t.Fatalf("load awd instance: %v", err)
 	}
-	if instance.Status != model.InstanceStatusStopped {
+	if instance.Status != instancecontracts.InstanceStatusStopped {
 		t.Fatalf("expected service disable to stop active instance, got %+v", instance)
 	}
 

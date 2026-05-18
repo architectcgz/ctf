@@ -16,7 +16,7 @@ func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contes
 		Table("instances AS inst").
 		Select("inst.*").
 		Where("inst.service_id = ?", serviceID).
-		Where("inst.status = ?", model.InstanceStatusRunning).
+		Where("inst.status = ?", instancecontracts.InstanceStatusRunning).
 		Where(
 			"(inst.contest_id = ? AND inst.team_id = ?) OR ("+
 				"inst.team_id IS NULL AND EXISTS ("+

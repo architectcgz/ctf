@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 	"golang.org/x/crypto/ssh"
@@ -23,7 +24,7 @@ type stubRuntimeHTTPProxyTicketReader struct {
 	scope *runtimeports.AWDDefenseSSHScope
 }
 
-func (s stubRuntimeHTTPProxyTicketReader) FindByID(context.Context, int64) (*model.Instance, error) {
+func (s stubRuntimeHTTPProxyTicketReader) FindByID(context.Context, int64) (*instancecontracts.Instance, error) {
 	return nil, nil
 }
 

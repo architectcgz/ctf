@@ -180,7 +180,7 @@ func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
 			ClassName:       "Class A",
 			ChallengeID:     9,
 			ChallengeTitle:  "web-101",
-			Status:          model.InstanceStatusRunning,
+			Status:          instancecontracts.InstanceStatusRunning,
 			AccessURL:       "https://runtime.example/instances/42",
 			RemainingTime:   1800,
 		}},

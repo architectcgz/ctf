@@ -102,7 +102,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	if err != nil {
 		t.Fatalf("StartChallenge() error = %v", err)
 	}
-	if resp.Status != model.InstanceStatusPending {
+	if resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
 	}
 
@@ -111,11 +111,11 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	go service.RunProvisioningLoop(runCtx)
 
 	requireEventually(t, time.Second, func() bool {
-		var instance model.Instance
+		var instance instanceentity.Instance
 		if err := db.First(&instance, resp.ID).Error; err != nil {
 			return false
 		}
-		return instance.Status == model.InstanceStatusRunning && instance.ContainerID == "container-queued"
+		return instance.Status == instanceentity.InstanceStatusRunning && instance.ContainerID == "container-queued"
 	})
 }
 
@@ -810,11 +810,11 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		t.Fatal("expected one pending instance to start provisioning")
 	}
 
-	var firstInstance model.Instance
+	var firstInstance instanceentity.Instance
 	if err := db.First(&firstInstance, first.ID).Error; err != nil {
 		t.Fatalf("load first instance: %v", err)
 	}
-	var secondInstance model.Instance
+	var secondInstance instanceentity.Instance
 	if err := db.First(&secondInstance, second.ID).Error; err != nil {
 		t.Fatalf("load second instance: %v", err)
 	}
@@ -823,10 +823,10 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 	pendingCount := 0
 	creatingCount := 0
 	for _, status := range statuses {
-		if status == model.InstanceStatusPending {
+		if status == instanceentity.InstanceStatusPending {
 			pendingCount++
 		}
-		if status == model.InstanceStatusCreating {
+		if status == instanceentity.InstanceStatusCreating {
 			creatingCount++
 		}
 	}

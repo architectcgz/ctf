@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -95,7 +94,7 @@ func (c *ContestEndedRuntimeCleaner) CleanupEndedContestAWDInstances(ctx context
 		if err := c.stateStore.FinishActiveAWDServiceOperationForInstance(
 			ctx,
 			item.InstanceID,
-			model.AWDServiceOperationStatusFailed,
+			runtimecontracts.AWDServiceOperationStatusFailed,
 			"contest_ended",
 			time.Now().UTC(),
 		); err != nil {

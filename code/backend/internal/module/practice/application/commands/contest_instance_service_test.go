@@ -63,15 +63,15 @@ func TestServiceStartContestChallengeAWDDoesNotReuseExistingTeamInstance(t *test
 
 	contestID := int64(3002)
 	teamID := int64(4002)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9002,
 		UserID:      5003,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 2002,
-		ShareScope:  model.InstanceSharingPerTeam,
+		ShareScope:  instanceentity.ShareScopePerTeam,
 		ContainerID: "existing-team-instance",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30001",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -142,7 +142,7 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 		t.Fatalf("StartContestAWDService() error = %v", err)
 	}
 
-	var instance model.Instance
+	var instance instanceentity.Instance
 	if err := db.First(&instance, resp.ID).Error; err != nil {
 		t.Fatalf("load persisted instance: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t
 		t.Fatalf("unexpected admin awd instance response: %+v", resp)
 	}
 
-	var instance model.Instance
+	var instance instanceentity.Instance
 	if err := db.First(&instance, resp.Instance.ID).Error; err != nil {
 		t.Fatalf("load admin-started instance: %v", err)
 	}
@@ -187,7 +187,7 @@ func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t
 	if instance.UserID != 5008 {
 		t.Fatalf("expected team captain to own runtime instance, got user_id=%d", instance.UserID)
 	}
-	if instance.ShareScope != model.InstanceSharingPerTeam {
+	if instance.ShareScope != instanceentity.ShareScopePerTeam {
 		t.Fatalf("expected per-team share scope, got %s", instance.ShareScope)
 	}
 }
@@ -285,16 +285,16 @@ func TestServicePrewarmAdminContestAWDInstancesReturnsReusedAndFailedResults(t *
 	contestID := int64(30110)
 	teamID := int64(40110)
 	serviceID := int64(70110)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          90110,
 		UserID:      50110,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 20110,
 		ServiceID:   &serviceID,
-		ShareScope:  model.InstanceSharingPerTeam,
+		ShareScope:  instanceentity.ShareScopePerTeam,
 		ContainerID: "existing-team-instance",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30110",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -417,13 +417,13 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 	}
 
 	originalExpiry := now.Add(5 * time.Minute)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9201,
 		UserID:      5201,
 		ChallengeID: 2201,
-		ShareScope:  model.InstanceSharingShared,
+		ShareScope:  instanceentity.ShareScopeShared,
 		ContainerID: "shared-practice-instance",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30009",
 		ExpiresAt:   originalExpiry,
 		CreatedAt:   now,
@@ -441,7 +441,7 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 		t.Fatalf("expected shared instance reuse, got %+v", resp)
 	}
 
-	var instance model.Instance
+	var instance instanceentity.Instance
 	if err := db.First(&instance, 9201).Error; err != nil {
 		t.Fatalf("load reused instance: %v", err)
 	}
@@ -531,10 +531,10 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&contestentity.ContestRegistration{},
 		&contestentity.Team{},
 		&contestentity.TeamMember{},
-		&model.Instance{},
-		&model.AWDServiceOperation{},
+		&instanceentity.Instance{},
+		&runtimeentity.AWDServiceOperation{},
 		&model.AWDScopeControl{},
-		&model.AWDDefenseWorkspace{},
+		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
 		&contestentity.Submission{},
 	); err != nil {
@@ -544,7 +544,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 }
 
 func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
-	if db.Migrator().HasColumn(&model.Instance{}, "service_id") {
+	if db.Migrator().HasColumn(&instanceentity.Instance{}, "service_id") {
 		return nil
 	}
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error

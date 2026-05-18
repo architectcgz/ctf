@@ -528,12 +528,12 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	}
 
 	originalExpiry := now.Add(2 * time.Hour)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          1001,
 		UserID:      7,
 		ChallengeID: 11,
-		Status:      model.InstanceStatusRunning,
-		ShareScope:  model.InstanceSharingPerUser,
+		Status:      instanceentity.InstanceStatusRunning,
+		ShareScope:  instanceentity.ShareScopePerUser,
 		ExpiresAt:   originalExpiry,
 		MaxExtends:  2,
 		CreatedAt:   now,
@@ -608,7 +608,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		t.Fatalf("unexpected shutdown time: got %v, want around %v", resp.InstanceShutdownAt, beforeSubmit.Add(10*time.Minute))
 	}
 
-	var stored model.Instance
+	var stored instanceentity.Instance
 	if err := db.First(&stored, 1001).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -122,16 +123,16 @@ func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T)
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
 	otherInstanceID := int64(98)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          99,
 		UserID:      3,
 		ChallengeID: 4,
 		HostPort:    30000,
-		Status:      model.InstanceStatusFailed,
-		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      instancecontracts.InstanceStatusFailed,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
@@ -142,15 +143,15 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 	}
 
 	repo := practiceinfra.NewRepository(db)
-	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
 
-	var stored model.Instance
+	var stored instancecontracts.Instance
 	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
-	if stored.HostPort != 0 || stored.Status != model.InstanceStatusPending {
+	if stored.HostPort != 0 || stored.Status != instancecontracts.InstanceStatusPending {
 		t.Fatalf("expected host port cleared and pending status, got host_port=%d status=%s", stored.HostPort, stored.Status)
 	}
 
@@ -164,16 +165,16 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPreserved(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
 	instanceID := int64(100)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      3,
 		ChallengeID: 5,
 		HostPort:    30002,
-		Status:      model.InstanceStatusFailed,
-		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      instancecontracts.InstanceStatusFailed,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
@@ -184,7 +185,7 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 	}
 
 	repo := practiceinfra.NewRepository(db)
-	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
 
@@ -198,16 +199,16 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
 	instanceID := int64(101)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      3,
 		ChallengeID: 6,
 		HostPort:    30001,
-		Status:      model.InstanceStatusRunning,
-		ShareScope:  model.InstanceSharingPerUser,
+		Status:      instancecontracts.InstanceStatusRunning,
+		ShareScope:  instancecontracts.ShareScopePerUser,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
@@ -218,11 +219,11 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 	}
 
 	repo := practiceinfra.NewRepository(db)
-	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
 
-	var stored model.Instance
+	var stored instancecontracts.Instance
 	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
@@ -232,16 +233,16 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPortMissing(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
 	instanceID := int64(102)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      3,
 		ChallengeID: 7,
 		HostPort:    0,
-		Status:      model.InstanceStatusFailed,
-		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      instancecontracts.InstanceStatusFailed,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
@@ -252,11 +253,11 @@ func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPor
 	}
 
 	repo := practiceinfra.NewRepository(db)
-	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
 
-	var stored model.Instance
+	var stored instancecontracts.Instance
 	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
@@ -266,17 +267,17 @@ func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPor
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHostPortConflicts(t *testing.T) {
-	db := newRepositoryTestDB(t, &model.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
 	instanceID := int64(103)
 	otherInstanceID := int64(104)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      3,
 		ChallengeID: 8,
 		HostPort:    30004,
-		Status:      model.InstanceStatusFailed,
-		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      instancecontracts.InstanceStatusFailed,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
@@ -290,11 +291,11 @@ func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHo
 	}
 
 	repo := practiceinfra.NewRepository(db)
-	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, model.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
+	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
 
-	var stored model.Instance
+	var stored instancecontracts.Instance
 	if err := db.First(&stored, "id = ?", instance.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}

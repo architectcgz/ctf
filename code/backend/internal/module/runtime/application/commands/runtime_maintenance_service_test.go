@@ -219,7 +219,7 @@ func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToReposi
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-status ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if id != 41 || status != model.InstanceStatusExpired {
+			if id != 41 || status != instanceentity.InstanceStatusExpired {
 				t.Fatalf("unexpected update args: id=%d status=%s", id, status)
 			}
 			return nil
@@ -272,7 +272,7 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 			{
 				ID:          42,
 				ContainerID: "missing-container",
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				ExpiresAt:   time.Now().Add(time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
@@ -319,7 +319,7 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 				ServiceID:      &serviceID,
 				ContainerID:    "entry",
 				RuntimeDetails: runtimeDetails,
-				Status:         model.InstanceStatusRunning,
+				Status:         instanceentity.InstanceStatusRunning,
 				ExpiresAt:      time.Now().Add(time.Hour),
 				UpdatedAt:      time.Now().Add(-time.Minute),
 			},
@@ -348,10 +348,10 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 		t.Fatalf("expected one system recover operation, got %+v", repo.operations)
 	}
 	operation := repo.operations[0]
-	if operation.OperationType != model.AWDServiceOperationTypeRecover || operation.RequestedBy != model.AWDServiceOperationRequestedBySystem || operation.SLABillable {
+	if operation.OperationType != runtimeentity.AWDServiceOperationTypeRecover || operation.RequestedBy != runtimeentity.AWDServiceOperationRequestedBySystem || operation.SLABillable {
 		t.Fatalf("unexpected recover operation: %+v", operation)
 	}
-	if operation.Status != model.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
+	if operation.Status != runtimeentity.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
 		t.Fatalf("expected recovered operation to be finished, got %+v", operation)
 	}
 }
@@ -370,7 +370,7 @@ func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue
 				TeamID:      &teamID,
 				ServiceID:   &serviceID,
 				ContainerID: "entry",
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				ExpiresAt:   time.Now().Add(time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
@@ -378,7 +378,7 @@ func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue
 		runningWorkspaceByInstanceID: map[int64]*runtimeentity.AWDDefenseWorkspace{
 			48: {
 				InstanceID:  48,
-				Status:      model.AWDDefenseWorkspaceStatusRunning,
+				Status:      runtimeentity.AWDDefenseWorkspaceStatusRunning,
 				ContainerID: "workspace-companion",
 			},
 		},
@@ -414,7 +414,7 @@ func TestRuntimeMaintenanceServiceSkipsFreshCreatingInstanceWithoutContainer(t *
 		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:        44,
-				Status:    model.InstanceStatusCreating,
+				Status:    instanceentity.InstanceStatusCreating,
 				ExpiresAt: time.Now().Add(time.Hour),
 				UpdatedAt: time.Now(),
 			},
@@ -440,7 +440,7 @@ func TestRuntimeMaintenanceServiceSkipsInstanceWhenDockerInspectFails(t *testing
 			{
 				ID:          45,
 				ContainerID: "runtime",
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				ExpiresAt:   time.Now().Add(time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
@@ -468,14 +468,14 @@ func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *te
 			{
 				ID:          46,
 				ContainerID: "inspect-fails",
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				ExpiresAt:   time.Now().Add(time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
 			{
 				ID:          47,
 				ContainerID: "missing-runtime",
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				ExpiresAt:   time.Now().Add(time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},

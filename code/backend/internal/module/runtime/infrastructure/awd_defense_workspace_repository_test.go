@@ -9,7 +9,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -17,13 +16,13 @@ func TestAWDDefenseWorkspaceUniqueScopeConstraint(t *testing.T) {
 	t.Parallel()
 
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
-	first := &model.AWDDefenseWorkspace{
+	first := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         101,
 		TeamID:            201,
 		ServiceID:         301,
 		InstanceID:        401,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr-1",
 		SeedSignature:     "seed:v1",
 	}
@@ -31,13 +30,13 @@ func TestAWDDefenseWorkspaceUniqueScopeConstraint(t *testing.T) {
 		t.Fatalf("create first workspace: %v", err)
 	}
 
-	second := &model.AWDDefenseWorkspace{
+	second := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         101,
 		TeamID:            201,
 		ServiceID:         301,
 		InstanceID:        402,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusProvisioning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
 		SeedSignature:     "seed:v2",
 	}
 	if err := db.Create(second).Error; err == nil {
@@ -55,7 +54,7 @@ func TestRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
 		ServiceID:         302,
 		InstanceID:        402,
 		WorkspaceRevision: 3,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr-2",
 		SeedSignature:     "seed:v3",
 	}
@@ -87,7 +86,7 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 		ServiceID:         303,
 		InstanceID:        403,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusProvisioning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
 		SeedSignature:     "seed:v1",
 	}
 	if err := repo.UpsertAWDDefenseWorkspace(context.Background(), workspace); err != nil {
@@ -100,7 +99,7 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 		ServiceID:         303,
 		InstanceID:        404,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr-3",
 		SeedSignature:     "seed:v1",
 	}
@@ -142,7 +141,7 @@ func TestRepositoryBumpAWDDefenseWorkspaceRevisionResetsProvisioningState(t *tes
 		ServiceID:         304,
 		InstanceID:        405,
 		WorkspaceRevision: 7,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr-old",
 		SeedSignature:     "seed:old",
 	}); err != nil {
@@ -186,7 +185,7 @@ func newAWDDefenseWorkspaceRepositoryTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.AWDDefenseWorkspace{}); err != nil {
+	if err := db.AutoMigrate(&runtimeentity.AWDDefenseWorkspace{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 	return db

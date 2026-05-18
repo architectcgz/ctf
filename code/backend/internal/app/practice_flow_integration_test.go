@@ -44,6 +44,7 @@ import (
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -57,6 +58,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -376,7 +378,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		_, _ = w.Write([]byte("target ok"))
 	}))
 	defer targetServer.Close()
-	if err := env.db.Model(&model.Instance{}).
+	if err := env.db.Model(&instancecontracts.Instance{}).
 		Where("id = ?", instance.ID).
 		Update("access_url", targetServer.URL).Error; err != nil {
 		t.Fatalf("update instance access url: %v", err)
@@ -852,9 +854,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.EnvironmentTemplate{},
 		&contestcontracts.ContestAWDService{},
 		&contestcontracts.Submission{},
-		&model.Instance{},
+		&instancecontracts.Instance{},
 		&runtimeentity.PortAllocation{},
-		&model.AWDServiceOperation{},
+		&runtimecontracts.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&assessmententity.SkillProfile{},
 		&practiceentity.UserScore{},

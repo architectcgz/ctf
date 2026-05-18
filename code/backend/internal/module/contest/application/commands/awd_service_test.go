@@ -31,6 +31,7 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
@@ -447,13 +448,13 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          8221,
 		UserID:      8201,
 		ChallengeID: 2201,
 		ServiceID:   awdServiceIDPtr(22, 2201),
 		ContainerID: "ctr-ops",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -653,13 +654,13 @@ func TestAWDServiceRunRoundChecksRefreshesSelectedRound(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          8321,
 		UserID:      8301,
 		ChallengeID: 2301,
 		ServiceID:   awdServiceIDPtr(23, 2301),
 		ContainerID: "ctr-selected-ops",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -2669,7 +2670,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 	createAWDTeamMemberFixture(t, db, 90, 9101, 9201, now)
 	createAWDTeamMemberFixture(t, db, 90, 9102, 9202, now)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9301,
 		UserID:      9202,
 		ContestID:   int64Ptr(90),
@@ -2677,7 +2678,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ChallengeID: 9001,
 		ServiceID:   awdServiceIDPtr(90, 9001),
 		ContainerID: "ctr-blue-web",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://blue-web.local",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -2685,7 +2686,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create blue instance: %v", err)
 	}
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9302,
 		UserID:      9201,
 		ContestID:   int64Ptr(90),
@@ -2693,7 +2694,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ChallengeID: 9002,
 		ServiceID:   awdServiceIDPtr(90, 9002),
 		ContainerID: "ctr-red-pwn",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://red-pwn.local",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -2747,7 +2748,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 	createAWDTeamMemberFixture(t, db, 91, 9111, 9211, now)
 	createAWDTeamMemberFixture(t, db, 91, 9112, 9212, now)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9311,
 		UserID:      9212,
 		ContestID:   int64Ptr(91),
@@ -2755,7 +2756,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		ChallengeID: 91001,
 		ServiceID:   awdServiceIDPtr(91, 91001),
 		ContainerID: "ctr-beta-web",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://beta-web.local",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,

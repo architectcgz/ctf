@@ -7,6 +7,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"reflect"
 	"testing"
 	"time"
@@ -120,7 +121,7 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 
 	challenge := &model.Challenge{Title: "Test"}
 	db.Create(challenge)
-	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
+	db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: "running"})
 
 	has, err := repo.HasRunningInstances(context.Background(), challenge.ID)
 	if err != nil {

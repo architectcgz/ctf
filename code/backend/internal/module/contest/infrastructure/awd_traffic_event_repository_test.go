@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
 func TestAWDRepositoryRecordRuntimeProxyTrafficEventPrefersServiceChallengeMetadata(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAWDRepositoryRecordRuntimeProxyTrafficEventPrefersServiceChallengeMetad
 	serviceID := testsupport.DefaultAWDContestServiceID(901, 9012)
 	contestID := int64(901)
 	victimTeamID := int64(90111)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          99001,
 		UserID:      5001,
 		ContestID:   &contestID,
@@ -36,7 +36,7 @@ func TestAWDRepositoryRecordRuntimeProxyTrafficEventPrefersServiceChallengeMetad
 		ChallengeID: 9011,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-runtime-proxy",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:39001",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,

@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -123,7 +123,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 		target.Services = append(target.Services, &AWDWorkspaceTargetServiceResult{
 			ServiceID:      instance.ServiceID,
 			AWDChallengeID: instance.AWDChallengeID,
-			Reachable:      instance.Status == model.InstanceStatusRunning && instance.AccessURL != "",
+			Reachable:      instance.Status == instancecontracts.InstanceStatusRunning && instance.AccessURL != "",
 		})
 	}
 	if err := s.populateAWDWorkspaceLatestOperations(ctx, contestID, myTeam.ID, serviceMap); err != nil {

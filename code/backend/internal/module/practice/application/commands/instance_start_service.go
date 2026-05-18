@@ -406,9 +406,9 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		instance *instancecontracts.Instance
 		reused   bool
 	)
-	initialStatus := model.InstanceStatusCreating
+	initialStatus := instancecontracts.InstanceStatusCreating
 	if s.schedulerEnabled() {
-		initialStatus = model.InstanceStatusPending
+		initialStatus = instancecontracts.InstanceStatusPending
 	}
 	if err := s.repo.WithinInstanceStartTx(ctx, func(txRepo practiceports.PracticeInstanceStartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {

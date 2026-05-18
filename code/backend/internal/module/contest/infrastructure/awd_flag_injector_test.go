@@ -12,6 +12,7 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
 type stubAWDContainerFileWriter struct {
@@ -51,27 +52,27 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("encode runtime details: %v", err)
 	}
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:             9001,
 		UserID:         5001,
 		ChallengeID:    1001,
 		ServiceID:      &serviceID,
 		ContainerID:    "ctr-main",
 		RuntimeDetails: runtimeDetails,
-		Status:         model.InstanceStatusRunning,
+		Status:         instanceentity.InstanceStatusRunning,
 		ExpiresAt:      now.Add(time.Hour),
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}).Error; err != nil {
 		t.Fatalf("create first instance: %v", err)
 	}
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9002,
 		UserID:      5002,
 		ChallengeID: 1001,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-second-user",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -112,7 +113,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 	contestID := int64(20)
 	teamID := int64(2011)
 	serviceID := testsupport.DefaultAWDContestServiceID(20, 2001)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9901,
 		UserID:      9001,
 		ContestID:   &contestID,
@@ -120,7 +121,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 		ChallengeID: 2001,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-team-owned",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -157,13 +158,13 @@ func TestDockerAWDFlagInjectorMatchesInstancesByServiceID(t *testing.T) {
 	testsupport.CreateAWDRoundFixture(t, db, 30001, 30, 1, 50, 50, now)
 
 	serviceID := testsupport.DefaultAWDContestServiceID(30, 3001)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9902,
 		UserID:      7001,
 		ChallengeID: 3002,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-service-owned",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,

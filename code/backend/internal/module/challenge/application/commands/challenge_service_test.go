@@ -9,6 +9,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -214,7 +215,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	// 创建靶场和运行中的实例
 	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
 	db.Create(challenge)
-	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
+	db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: "running"})
 
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)

@@ -3,20 +3,20 @@ package testsupport
 import (
 	"testing"
 
-	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestSetupAWDTestDBAutoMigratesAWDDefenseWorkspace(t *testing.T) {
 	t.Parallel()
 
 	db := SetupAWDTestDB(t)
-	workspace := &model.AWDDefenseWorkspace{
+	workspace := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         1001,
 		TeamID:            1002,
 		ServiceID:         1003,
 		InstanceID:        1004,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr-auto",
 		SeedSignature:     "seed:auto",
 	}
@@ -24,7 +24,7 @@ func TestSetupAWDTestDBAutoMigratesAWDDefenseWorkspace(t *testing.T) {
 		t.Fatalf("create defense workspace in awd test db: %v", err)
 	}
 
-	var stored model.AWDDefenseWorkspace
+	var stored runtimeentity.AWDDefenseWorkspace
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", 1001, 1002, 1003).First(&stored).Error; err != nil {
 		t.Fatalf("load defense workspace from awd test db: %v", err)
 	}

@@ -88,7 +88,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	if err != nil {
 		t.Fatalf("StartChallenge() error = %v", err)
 	}
-	if resp.Status != model.InstanceStatusPending {
+	if resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
 	}
 	if createCalls.Load() != 0 {
@@ -99,7 +99,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	if err := db.First(&stored, resp.ID).Error; err != nil {
 		t.Fatalf("load pending instance: %v", err)
 	}
-	if stored.Status != model.InstanceStatusPending {
+	if stored.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected stored pending instance, got %+v", stored)
 	}
 }
@@ -197,7 +197,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	if resp.ChallengeID != 2104 {
 		t.Fatalf("expected awd service challenge id 2104, got %+v", resp)
 	}
-	if resp.Status != model.InstanceStatusPending {
+	if resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending awd service instance, got %+v", resp)
 	}
 	if createdInstance == nil || !createdInstance.ExpiresAt.Equal(contestEnd) {
@@ -599,7 +599,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+	if resp.ID != instance.ID || resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected same pending instance, got %+v", resp)
 	}
 	if cleanupInstanceID != instance.ID {
@@ -716,7 +716,7 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+	if resp.ID != instance.ID || resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected same pending instance, got %+v", resp)
 	}
 	if cleanupInstanceID != instance.ID {
@@ -844,7 +844,7 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+	if resp.ID != instance.ID || resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected same pending instance, got %+v", resp)
 	}
 	if !reserved || !bound {
@@ -977,7 +977,7 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.ID != instance.ID || resp.Status != model.InstanceStatusPending {
+	if resp.ID != instance.ID || resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected same pending instance, got %+v", resp)
 	}
 	if !reusableChecked || !reserved || !bound {
@@ -1160,7 +1160,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.Status != model.InstanceStatusRunning {
+	if resp.Status != instanceentity.InstanceStatusRunning {
 		t.Fatalf("expected restarted instance to be running, got %+v", resp)
 	}
 	if createTopologyCalls.Load() != 1 {
@@ -1392,7 +1392,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	if err != nil {
 		t.Fatalf("RestartContestAWDService() error = %v", err)
 	}
-	if resp.Status != model.InstanceStatusRunning {
+	if resp.Status != instanceentity.InstanceStatusRunning {
 		t.Fatalf("expected restarted instance to be running, got %+v", resp)
 	}
 	if createTopologyCalls.Load() != 2 {
@@ -1498,7 +1498,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	if resp.ID == 9006 {
 		t.Fatalf("expected expired instance to be replaced, got reused instance %+v", resp)
 	}
-	if resp.Status != model.InstanceStatusPending {
+	if resp.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending status for restarted instance, got %+v", resp)
 	}
 

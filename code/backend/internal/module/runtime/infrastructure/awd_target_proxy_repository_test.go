@@ -12,6 +12,8 @@ import (
 
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
@@ -49,7 +51,7 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	})
-	seedAWDTargetProxyRow(t, db, &model.Instance{
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      1002,
 		ContestID:   &contestID,
@@ -61,8 +63,8 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 			"networks":[{"key":"default","name":"ctf-awd-contest-9101","network_id":"net-awd-contest-9101","shared":true}],
 			"containers":[{"container_id":"ctr-blue-web","is_entry_point":true,"network_keys":["default"],"network_aliases":["awd-c9101-t9202-s9301"],"network_ips":{"ctf-awd-contest-9101":"172.30.10.20"}}]
 		}`,
-		ShareScope: model.InstanceSharingPerTeam,
-		Status:     model.InstanceStatusRunning,
+		ShareScope: instancecontracts.ShareScopePerTeam,
+		Status:     instancecontracts.InstanceStatusRunning,
 		AccessURL:  "http://awd-c9101-t9202-s9301:8080",
 		ExpiresAt:  now.Add(time.Hour),
 		CreatedAt:  now,
@@ -101,7 +103,7 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1003, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9602, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Instance{
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 		ID:          9502,
 		UserID:      1003,
 		ContestID:   &contestID,
@@ -109,8 +111,8 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 		ChallengeID: 9402,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-red-web",
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusRunning,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:39002",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -150,7 +152,7 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	})
-	seedAWDTargetProxyRow(t, db, &model.Instance{
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      1004,
 		ContestID:   &contestID,
@@ -158,20 +160,20 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-red-web",
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusRunning,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:39003",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	})
-	seedAWDTargetProxyRow(t, db, &model.AWDDefenseWorkspace{
+	seedAWDTargetProxyRow(t, db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        instanceID,
 		WorkspaceRevision: 7,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-red-web",
 		SeedSignature:     "seed:v1",
 		CreatedAt:         now,
@@ -210,7 +212,7 @@ func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.Instance{
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 		ID:          9504,
 		UserID:      1006,
 		ContestID:   &contestID,
@@ -218,8 +220,8 @@ func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-blue-web",
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusRunning,
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:39004",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -289,7 +291,7 @@ func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
 			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1010, JoinedAt: now, CreatedAt: now})
 			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9610, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
 			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9410, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.Instance{
+			seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 				ID:          9510,
 				UserID:      1011,
 				ContestID:   &contestID,
@@ -297,8 +299,8 @@ func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
 				ChallengeID: 9410,
 				ServiceID:   &serviceID,
 				ContainerID: "ctr-blue-web",
-				ShareScope:  model.InstanceSharingPerTeam,
-				Status:      model.InstanceStatusRunning,
+				ShareScope:  instancecontracts.ShareScopePerTeam,
+				Status:      instancecontracts.InstanceStatusRunning,
 				AccessURL:   "http://127.0.0.1:39110",
 				ExpiresAt:   now.Add(time.Hour),
 				CreatedAt:   now,
@@ -363,7 +365,7 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1012, JoinedAt: now, CreatedAt: now})
 			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9611, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
 			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
-			seedAWDTargetProxyRow(t, db, &model.Instance{
+			seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
 				ID:          instanceID,
 				UserID:      1012,
 				ContestID:   &contestID,
@@ -371,20 +373,20 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 				ChallengeID: challengeID,
 				ServiceID:   &serviceID,
 				ContainerID: "ctr-red-web",
-				ShareScope:  model.InstanceSharingPerTeam,
-				Status:      model.InstanceStatusRunning,
+				ShareScope:  instancecontracts.ShareScopePerTeam,
+				Status:      instancecontracts.InstanceStatusRunning,
 				AccessURL:   "http://127.0.0.1:39111",
 				ExpiresAt:   now.Add(time.Hour),
 				CreatedAt:   now,
 				UpdatedAt:   now,
 			})
-			seedAWDTargetProxyRow(t, db, &model.AWDDefenseWorkspace{
+			seedAWDTargetProxyRow(t, db, &runtimeentity.AWDDefenseWorkspace{
 				ContestID:         contestID,
 				TeamID:            teamID,
 				ServiceID:         serviceID,
 				InstanceID:        instanceID,
 				WorkspaceRevision: 2,
-				Status:            model.AWDDefenseWorkspaceStatusRunning,
+				Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 				ContainerID:       "workspace-red-web",
 				SeedSignature:     "seed:v1",
 				CreatedAt:         now,
@@ -427,8 +429,8 @@ func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.TeamMember{},
 		&contestcontracts.AWDRound{},
 		&contestcontracts.ContestAWDService{},
-		&model.Instance{},
-		&model.AWDDefenseWorkspace{},
+		&instancecontracts.Instance{},
+		&runtimeentity.AWDDefenseWorkspace{},
 		&model.AWDScopeControl{},
 	); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)

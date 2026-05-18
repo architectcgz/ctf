@@ -18,6 +18,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -394,12 +396,12 @@ func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinit
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          154901,
 		UserID:      154101,
 		ChallengeID: 154001,
 		ContainerID: "ctr-legacy-only",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -587,13 +589,13 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9301,
 		UserID:      5301,
 		ChallengeID: 103001,
 		ServiceID:   awdServiceIDPtr(103, 103001),
 		ContainerID: "ctr-up",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -685,13 +687,13 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9401,
 		UserID:      5401,
 		ChallengeID: 104001,
 		ServiceID:   awdServiceIDPtr(104, 104001),
 		ContainerID: "ctr-config",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -772,13 +774,13 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9411,
 		UserID:      6411,
 		ChallengeID: 141001,
 		ServiceID:   awdServiceIDPtr(141, 141001),
 		ContainerID: "ctr-http-up",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -880,13 +882,13 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9441,
 		UserID:      6441,
 		ChallengeID: 144001,
 		ServiceID:   awdServiceIDPtr(144, 144001),
 		ContainerID: "ctr-service-first",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -986,13 +988,13 @@ func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *tes
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:             9421,
 		UserID:         6421,
 		ChallengeID:    142001,
 		ServiceID:      awdServiceIDPtr(142, 142001),
 		ContainerID:    "ctr-http-alias",
-		Status:         model.InstanceStatusRunning,
+		Status:         instanceentity.InstanceStatusRunning,
 		AccessURL:      aliasAccessURL,
 		RuntimeDetails: runtimeDetails,
 		ExpiresAt:      now.Add(time.Hour),
@@ -1059,13 +1061,13 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9421,
 		UserID:      6421,
 		ChallengeID: 142001,
 		ServiceID:   awdServiceIDPtr(142, 142001),
 		ContainerID: "ctr-http-mismatch",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1150,13 +1152,13 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9431,
 		UserID:      6431,
 		ChallengeID: 143001,
 		ServiceID:   awdServiceIDPtr(143, 143001),
 		ContainerID: "ctr-http-havoc",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1218,7 +1220,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 
 	contestID := int64(105)
 	teamID := int64(105011)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9501,
 		UserID:      5501,
 		ContestID:   &contestID,
@@ -1226,7 +1228,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 		ChallengeID: 105001,
 		ServiceID:   awdServiceIDPtr(105, 105001),
 		ContainerID: "ctr-team-scoped",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1290,13 +1292,13 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9801,
 		UserID:      5801,
 		ChallengeID: 108001,
 		ServiceID:   awdServiceIDPtr(108, 108001),
 		ContainerID: "ctr-history",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1377,13 +1379,13 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9901,
 		UserID:      5901,
 		ChallengeID: 109001,
 		ServiceID:   awdServiceIDPtr(109, 109001),
 		ContainerID: "ctr-current",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1450,13 +1452,13 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          10001,
 		UserID:      6001,
 		ChallengeID: 110001,
 		ServiceID:   awdServiceIDPtr(110, 110001),
 		ContainerID: "ctr-stale-pointer",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1517,7 +1519,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 
 	contestID := int64(107)
 	teamID := int64(107011)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9701,
 		UserID:      5701,
 		ContestID:   &contestID,
@@ -1525,7 +1527,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		ChallengeID: 107001,
 		ServiceID:   awdServiceIDPtr(107, 107001),
 		ContainerID: "ctr-partial-ok",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   healthyServer.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1533,7 +1535,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 	}).Error; err != nil {
 		t.Fatalf("create healthy awd instance: %v", err)
 	}
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9702,
 		UserID:      5702,
 		ContestID:   &contestID,
@@ -1541,7 +1543,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		ChallengeID: 107001,
 		ServiceID:   awdServiceIDPtr(107, 107001),
 		ContainerID: "ctr-partial-fail",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   failedServer.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1659,16 +1661,16 @@ func TestAWDRoundUpdaterExemptsSLAWhenSystemRecoveryIsActive(t *testing.T) {
 		t.Fatalf("update service score config: %v", err)
 	}
 	finishedAt := now.Add(time.Hour)
-	if err := db.Create(&model.AWDServiceOperation{
+	if err := db.Create(&runtimeentity.AWDServiceOperation{
 		ContestID:     174,
 		TeamID:        174011,
 		ServiceID:     serviceID,
 		InstanceID:    174900,
-		OperationType: model.AWDServiceOperationTypeRecover,
-		RequestedBy:   model.AWDServiceOperationRequestedBySystem,
+		OperationType: runtimeentity.AWDServiceOperationTypeRecover,
+		RequestedBy:   runtimeentity.AWDServiceOperationRequestedBySystem,
 		Reason:        "container_not_running",
 		SLABillable:   false,
-		Status:        model.AWDServiceOperationStatusRecovering,
+		Status:        runtimeentity.AWDServiceOperationStatusRecovering,
 		StartedAt:     now.Add(-time.Minute),
 		FinishedAt:    &finishedAt,
 		CreatedAt:     now.Add(-time.Minute),
@@ -1722,13 +1724,13 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          9601,
 		UserID:      5601,
 		ChallengeID: 106001,
 		ServiceID:   awdServiceIDPtr(106, 106001),
 		ContainerID: "ctr-fallback",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   server.URL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,

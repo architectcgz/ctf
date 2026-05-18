@@ -35,9 +35,11 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -67,7 +69,7 @@ type fullRouterTestEnv struct {
 	announcement *contestentity.ContestAnnouncement
 	team         *contestcontracts.Team
 	awdRound     *contestcontracts.AWDRound
-	instance     *model.Instance
+	instance     *instancecontracts.Instance
 	notification *opsentity.Notification
 	report       *assessmententity.Report
 }
@@ -95,7 +97,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.ChallengeTopology{},
 	&challengeentity.ChallengePackageRevision{},
 	&contestcontracts.Submission{},
-	&model.Instance{},
+	&instancecontracts.Instance{},
 	&runtimeentity.PortAllocation{},
 	&practiceentity.UserScore{},
 	&opsentity.AuditLog{},
@@ -114,7 +116,7 @@ var fullRouterTestSchemaModels = []any{
 	&contestcontracts.AWDTeamService{},
 	&contestcontracts.AWDAttackLog{},
 	&contestcontracts.AWDTrafficEvent{},
-	&model.AWDServiceOperation{},
+	&runtimecontracts.AWDServiceOperation{},
 	&model.AWDScopeControl{},
 	&assessmententity.Report{},
 }
@@ -1432,13 +1434,13 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err != nil {
 		t.Fatalf("encode runtime details: %v", err)
 	}
-	env.instance = &model.Instance{
+	env.instance = &instancecontracts.Instance{
 		UserID:         env.student.ID,
 		ChallengeID:    env.challenge.ID,
 		ContainerID:    "ctf-instance",
 		NetworkID:      "ctf-network",
 		RuntimeDetails: runtimeDetails,
-		Status:         model.InstanceStatusRunning,
+		Status:         instancecontracts.InstanceStatusRunning,
 		AccessURL:      "http://127.0.0.1:30001",
 		Nonce:          "matrix-nonce",
 		ExpiresAt:      now.Add(2 * time.Hour),

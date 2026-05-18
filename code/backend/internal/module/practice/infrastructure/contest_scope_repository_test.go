@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -17,7 +17,7 @@ type contestScopeSourceStub struct {
 	findContestAWDServiceFn               func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error)
 	findContestAWDServiceRuntimeSubjectFn func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRuntimeSubject, error)
 	listContestAWDServicesFn              func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error)
-	listContestAWDInstancesFn             func(context.Context, int64) ([]*model.Instance, error)
+	listContestAWDInstancesFn             func(context.Context, int64) ([]*instancecontracts.Instance, error)
 	findContestTeamFn                     func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error)
 	listContestTeamsFn                    func(context.Context, int64) ([]*practiceports.ContestTeamRecord, error)
 	findContestRegistrationFn             func(context.Context, int64, int64) (*practiceports.ContestParticipation, error)
@@ -57,7 +57,7 @@ func (s contestScopeSourceStub) ListContestAWDServices(ctx context.Context, cont
 	return s.listContestAWDServicesFn(ctx, contestID)
 }
 
-func (s contestScopeSourceStub) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
+func (s contestScopeSourceStub) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*instancecontracts.Instance, error) {
 	if s.listContestAWDInstancesFn == nil {
 		return nil, nil
 	}

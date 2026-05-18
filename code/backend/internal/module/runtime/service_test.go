@@ -31,14 +31,14 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	if err := repo.db.AutoMigrate(&model.AWDDefenseWorkspace{}); err != nil {
+	if err := repo.db.AutoMigrate(&runtimeentity.AWDDefenseWorkspace{}); err != nil {
 		t.Fatalf("migrate awd defense workspace table: %v", err)
 	}
 	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 101,
 		ContainerID: "running-container",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
 	seedInstance(t, repo.db, &instanceentity.Instance{
@@ -46,21 +46,21 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ChallengeID:    102,
 		ContainerID:    "creating-container",
 		RuntimeDetails: `{"containers":[{"container_id":"sidecar-1"},{"container_id":"creating-container"}]}`,
-		Status:         model.InstanceStatusCreating,
+		Status:         instanceentity.InstanceStatusCreating,
 		ExpiresAt:      time.Now().Add(time.Hour),
 	})
 	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 103,
 		ContainerID: "stopped-container",
-		Status:      model.InstanceStatusStopped,
+		Status:      instanceentity.InstanceStatusStopped,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
 	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 104,
 		ContainerID: "",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
 	contestID := int64(301)
@@ -74,16 +74,16 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ServiceID:   &serviceID,
 		ChallengeID: 105,
 		ContainerID: "runtime-awd",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
-	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+	seedAWDDefenseWorkspace(t, repo.db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        1005,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-running",
 		SeedSignature:     "seed-running",
 	})
@@ -98,16 +98,16 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ServiceID:   &stoppedServiceID,
 		ChallengeID: 106,
 		ContainerID: "runtime-awd-stopped",
-		Status:      model.InstanceStatusStopped,
+		Status:      instanceentity.InstanceStatusStopped,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
-	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+	seedAWDDefenseWorkspace(t, repo.db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         stoppedContestID,
 		TeamID:            stoppedTeamID,
 		ServiceID:         stoppedServiceID,
 		InstanceID:        1006,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-stopped",
 		SeedSignature:     "seed-stopped",
 	})
@@ -122,16 +122,16 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ServiceID:   &failedServiceID,
 		ChallengeID: 107,
 		ContainerID: "runtime-awd-failed",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
-	seedAWDDefenseWorkspace(t, repo.db, &model.AWDDefenseWorkspace{
+	seedAWDDefenseWorkspace(t, repo.db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         failedContestID,
 		TeamID:            failedTeamID,
 		ServiceID:         failedServiceID,
 		InstanceID:        1007,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusFailed,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusFailed,
 		ContainerID:       "workspace-failed",
 		SeedSignature:     "seed-failed",
 	})
@@ -178,7 +178,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		UserID:      1,
 		ChallengeID: 101,
 		HostPort:    30001,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -193,7 +193,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instanceentity.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
@@ -201,7 +201,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if updated.Status != model.InstanceStatusFailed {
+	if updated.Status != instanceentity.InstanceStatusFailed {
 		t.Fatalf("expected failed status, got %+v", updated)
 	}
 
@@ -615,7 +615,7 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 101,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
@@ -627,7 +627,7 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if instance.Status != model.InstanceStatusStopped {
+	if instance.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped status, got %s", instance.Status)
 	}
 }
@@ -655,7 +655,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		TeamID:      &teamID,
 		ChallengeID: 102,
 		ContainerID: "contest-shared-extend",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   initialExpiry,
 	})
 
@@ -705,7 +705,7 @@ func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 		TeamID:      &teamID,
 		ChallengeID: 105,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
@@ -738,7 +738,7 @@ func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 		TeamID:      &teamID,
 		ChallengeID: 106,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
@@ -775,7 +775,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 		ChallengeID: 903,
 		ShareScope:  instancecontracts.ShareScopeShared,
 		ContainerID: "shared-ctr",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
@@ -812,7 +812,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 		ChallengeID: 904,
 		ShareScope:  instancecontracts.ShareScopeShared,
 		ContainerID: "shared-ctr",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
@@ -847,7 +847,7 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 		ID:          1001,
 		UserID:      1,
 		ChallengeID: 101,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30001",
 		ExpiresAt:   now.Add(time.Hour),
 		ExtendCount: 1,
@@ -931,7 +931,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 102,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30002",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -975,7 +975,7 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 		UserID:      1,
 		ChallengeID: 103,
 		ShareScope:  instancecontracts.ShareScopeShared,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30003",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -1332,7 +1332,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		ContainerID:    "web-ctr",
 		NetworkID:      "net-1",
 		RuntimeDetails: `{"containers":[{"container_id":"web-ctr"},{"container_id":"db-ctr"}],"acl_rules":[{"comment":"ctf:acl:test","source_ip":"172.30.0.2","target_ip":"172.30.0.3","action":"allow","protocol":"tcp","ports":[3306]}]}`,
-		Status:         model.InstanceStatusRunning,
+		Status:         instanceentity.InstanceStatusRunning,
 		ExpiresAt:      time.Now().Add(time.Hour),
 	}
 	seedInstance(t, repo.db, instance)
@@ -1357,7 +1357,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if updated.Status != model.InstanceStatusStopped {
+	if updated.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped status, got %+v", updated)
 	}
 
@@ -1382,7 +1382,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		HostPort:    30002,
 		ContainerID: "web-ctr",
 		NetworkID:   "net-2",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(-time.Minute),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -1413,7 +1413,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if updated.Status != model.InstanceStatusRunning {
+	if updated.Status != instanceentity.InstanceStatusRunning {
 		t.Fatalf("expected instance to remain running for retry, got %+v", updated)
 	}
 
@@ -1438,7 +1438,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		HostPort:    30003,
 		ContainerID: "missing-ctr",
 		NetworkID:   "net-3",
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   now.Add(-time.Minute),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -1471,7 +1471,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if updated.Status != model.InstanceStatusExpired {
+	if updated.Status != instanceentity.InstanceStatusExpired {
 		t.Fatalf("expected instance to be marked expired, got %+v", updated)
 	}
 
@@ -1504,7 +1504,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 		NetworkID:      "lost-network",
 		RuntimeDetails: `{"containers":[{"container_id":"lost-container"}]}`,
 		ShareScope:     instanceentity.ShareScopePerTeam,
-		Status:         model.InstanceStatusRunning,
+		Status:         instanceentity.InstanceStatusRunning,
 		AccessURL:      "http://10.10.0.2:8080",
 		Nonce:          "nonce-2201",
 		ExpiresAt:      now.Add(time.Hour),
@@ -1533,7 +1533,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if updated.Status != model.InstanceStatusPending {
+	if updated.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", updated)
 	}
 	if updated.ContainerID != "" || updated.NetworkID != "" || updated.RuntimeDetails != "" || updated.AccessURL != "" {
@@ -1776,9 +1776,9 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: instanceentity.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
@@ -1839,8 +1839,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
@@ -1854,7 +1854,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if instance.Status != model.InstanceStatusStopped {
+	if instance.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped status, got %s", instance.Status)
 	}
 }
@@ -1886,7 +1886,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err := db.AutoMigrate(&model.AWDScopeControl{}); err != nil {
 		t.Fatalf("migrate awd scope control tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.AWDServiceOperation{}); err != nil {
+	if err := db.AutoMigrate(&runtimeentity.AWDServiceOperation{}); err != nil {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
@@ -2119,7 +2119,7 @@ func seedInstance(t *testing.T, db *gorm.DB, instance *instanceentity.Instance) 
 	}
 }
 
-func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *model.AWDDefenseWorkspace) {
+func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *runtimeentity.AWDDefenseWorkspace) {
 	t.Helper()
 
 	if err := db.Create(workspace).Error; err != nil {

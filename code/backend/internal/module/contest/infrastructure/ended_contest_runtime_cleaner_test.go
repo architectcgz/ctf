@@ -80,7 +80,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			HostPort:    32011,
 			ContainerID: "ctr-legacy",
 			NetworkID:   "net-legacy",
-			Status:      model.InstanceStatusRunning,
+			Status:      instanceentity.InstanceStatusRunning,
 			AccessURL:   "http://127.0.0.1:32011",
 			ExpiresAt:   now.Add(time.Hour),
 			CreatedAt:   now,
@@ -93,7 +93,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:         &secondTeamID,
 			ServiceID:      &secondServiceID,
 			ChallengeID:    202,
-			Status:         model.InstanceStatusFailed,
+			Status:         instanceentity.InstanceStatusFailed,
 			RuntimeDetails: runtimeDetails,
 			AccessURL:      "http://awd-c81-t102-s92:8080",
 			ExpiresAt:      now.Add(time.Hour),
@@ -107,7 +107,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:      &teamID,
 			ServiceID:   &serviceID,
 			ChallengeID: 201,
-			Status:      model.InstanceStatusStopped,
+			Status:      instanceentity.InstanceStatusStopped,
 			ExpiresAt:   now.Add(time.Hour),
 			CreatedAt:   now,
 			UpdatedAt:   now,
@@ -120,7 +120,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			ServiceID:   &otherServiceID,
 			ChallengeID: 203,
 			ContainerID: "ctr-other",
-			Status:      model.InstanceStatusRunning,
+			Status:      instanceentity.InstanceStatusRunning,
 			ExpiresAt:   now.Add(time.Hour),
 			CreatedAt:   now,
 			UpdatedAt:   now,
@@ -141,14 +141,14 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, workspace := range []model.AWDDefenseWorkspace{
+	for _, workspace := range []runtimeentity.AWDDefenseWorkspace{
 		{
 			ContestID:         contestID,
 			TeamID:            teamID,
 			ServiceID:         serviceID,
 			InstanceID:        1001,
 			WorkspaceRevision: 7,
-			Status:            model.AWDDefenseWorkspaceStatusRunning,
+			Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 			ContainerID:       "workspace-ctr-team-a",
 			SeedSignature:     "seed:team-a",
 			CreatedAt:         now,
@@ -160,7 +160,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			ServiceID:         otherServiceID,
 			InstanceID:        1004,
 			WorkspaceRevision: 3,
-			Status:            model.AWDDefenseWorkspaceStatusRunning,
+			Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 			ContainerID:       "workspace-ctr-other",
 			SeedSignature:     "seed:other",
 			CreatedAt:         now,
@@ -172,18 +172,18 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, operation := range []model.AWDServiceOperation{
+	for _, operation := range []runtimeentity.AWDServiceOperation{
 		{
 			ID:            2001,
 			ContestID:     contestID,
 			TeamID:        teamID,
 			ServiceID:     serviceID,
 			InstanceID:    1001,
-			OperationType: model.AWDServiceOperationTypeRestart,
-			RequestedBy:   model.AWDServiceOperationRequestedByUser,
+			OperationType: runtimeentity.AWDServiceOperationTypeRestart,
+			RequestedBy:   runtimeentity.AWDServiceOperationRequestedByUser,
 			Reason:        "user_restart",
 			SLABillable:   true,
-			Status:        model.AWDServiceOperationStatusProvisioning,
+			Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
 			StartedAt:     now.Add(-3 * time.Minute),
 			CreatedAt:     now.Add(-3 * time.Minute),
 			UpdatedAt:     now.Add(-2 * time.Minute),
@@ -194,11 +194,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:        secondTeamID,
 			ServiceID:     secondServiceID,
 			InstanceID:    1002,
-			OperationType: model.AWDServiceOperationTypeRecover,
-			RequestedBy:   model.AWDServiceOperationRequestedBySystem,
+			OperationType: runtimeentity.AWDServiceOperationTypeRecover,
+			RequestedBy:   runtimeentity.AWDServiceOperationRequestedBySystem,
 			Reason:        "container_not_running",
 			SLABillable:   false,
-			Status:        model.AWDServiceOperationStatusRecovering,
+			Status:        runtimeentity.AWDServiceOperationStatusRecovering,
 			StartedAt:     now.Add(-4 * time.Minute),
 			CreatedAt:     now.Add(-4 * time.Minute),
 			UpdatedAt:     now.Add(-3 * time.Minute),
@@ -209,11 +209,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:        teamID,
 			ServiceID:     otherServiceID,
 			InstanceID:    1004,
-			OperationType: model.AWDServiceOperationTypeRestart,
-			RequestedBy:   model.AWDServiceOperationRequestedByUser,
+			OperationType: runtimeentity.AWDServiceOperationTypeRestart,
+			RequestedBy:   runtimeentity.AWDServiceOperationRequestedByUser,
 			Reason:        "other_contest",
 			SLABillable:   true,
-			Status:        model.AWDServiceOperationStatusProvisioning,
+			Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
 			StartedAt:     now.Add(-2 * time.Minute),
 			CreatedAt:     now.Add(-2 * time.Minute),
 			UpdatedAt:     now.Add(-time.Minute),
@@ -265,8 +265,8 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			Take(&row).Error; err != nil {
 			t.Fatalf("load expired instance %d: %v", instanceID, err)
 		}
-		if row.Status != model.InstanceStatusExpired {
-			t.Fatalf("instance %d status = %q, want %q", instanceID, row.Status, model.InstanceStatusExpired)
+		if row.Status != instanceentity.InstanceStatusExpired {
+			t.Fatalf("instance %d status = %q, want %q", instanceID, row.Status, instanceentity.InstanceStatusExpired)
 		}
 		if row.HostPort != 0 || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
 			t.Fatalf("expected instance %d runtime fields to be cleared, got %+v", instanceID, row)
@@ -276,23 +276,23 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	var stoppedInstance model.Instance
+	var stoppedInstance instanceentity.Instance
 	if err := db.First(&stoppedInstance, 1003).Error; err != nil {
 		t.Fatalf("load stopped instance: %v", err)
 	}
-	if stoppedInstance.Status != model.InstanceStatusStopped {
+	if stoppedInstance.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped instance to remain stopped, got %+v", stoppedInstance)
 	}
 
-	var otherContestInstance model.Instance
+	var otherContestInstance instanceentity.Instance
 	if err := db.First(&otherContestInstance, 1004).Error; err != nil {
 		t.Fatalf("load other contest instance: %v", err)
 	}
-	if otherContestInstance.Status != model.InstanceStatusRunning || otherContestInstance.ContainerID != "ctr-other" {
+	if otherContestInstance.Status != instanceentity.InstanceStatusRunning || otherContestInstance.ContainerID != "ctr-other" {
 		t.Fatalf("expected other contest instance to stay untouched, got %+v", otherContestInstance)
 	}
 
-	var workspace model.AWDDefenseWorkspace
+	var workspace runtimeentity.AWDDefenseWorkspace
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).First(&workspace).Error; err != nil {
 		t.Fatalf("load ended contest workspace: %v", err)
 	}
@@ -303,21 +303,21 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		t.Fatalf("expected workspace runtime to be cleared into failed state, got %+v", workspace)
 	}
 
-	var otherWorkspace model.AWDDefenseWorkspace
+	var otherWorkspace runtimeentity.AWDDefenseWorkspace
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", otherContestID, teamID, otherServiceID).First(&otherWorkspace).Error; err != nil {
 		t.Fatalf("load other contest workspace: %v", err)
 	}
-	if otherWorkspace.Status != model.AWDDefenseWorkspaceStatusRunning || otherWorkspace.ContainerID != "workspace-ctr-other" {
+	if otherWorkspace.Status != runtimeentity.AWDDefenseWorkspaceStatusRunning || otherWorkspace.ContainerID != "workspace-ctr-other" {
 		t.Fatalf("expected other contest workspace to stay untouched, got %+v", otherWorkspace)
 	}
 
 	for _, operationID := range []int64{2001, 2002} {
-		var operation model.AWDServiceOperation
+		var operation runtimeentity.AWDServiceOperation
 		if err := db.First(&operation, operationID).Error; err != nil {
 			t.Fatalf("load ended contest operation %d: %v", operationID, err)
 		}
-		if operation.Status != model.AWDServiceOperationStatusFailed {
-			t.Fatalf("operation %d status = %q, want %q", operationID, operation.Status, model.AWDServiceOperationStatusFailed)
+		if operation.Status != runtimeentity.AWDServiceOperationStatusFailed {
+			t.Fatalf("operation %d status = %q, want %q", operationID, operation.Status, runtimeentity.AWDServiceOperationStatusFailed)
 		}
 		if operation.ErrorMessage != "contest_ended" {
 			t.Fatalf("operation %d error_message = %q, want contest_ended", operationID, operation.ErrorMessage)
@@ -327,11 +327,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	var otherContestOperation model.AWDServiceOperation
+	var otherContestOperation runtimeentity.AWDServiceOperation
 	if err := db.First(&otherContestOperation, 2003).Error; err != nil {
 		t.Fatalf("load other contest operation: %v", err)
 	}
-	if otherContestOperation.Status != model.AWDServiceOperationStatusProvisioning || otherContestOperation.FinishedAt != nil {
+	if otherContestOperation.Status != runtimeentity.AWDServiceOperationStatusProvisioning || otherContestOperation.FinishedAt != nil {
 		t.Fatalf("expected other contest operation to stay active, got %+v", otherContestOperation)
 	}
 

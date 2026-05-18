@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
@@ -19,7 +19,7 @@ func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Instance{}); err != nil {
+	if err := db.AutoMigrate(&instancecontracts.Instance{}); err != nil {
 		t.Fatalf("auto migrate instances: %v", err)
 	}
 
@@ -30,12 +30,12 @@ func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
 	activeAt := now
 	newExpiresAt := now.Add(40 * time.Minute)
 
-	rows := []model.Instance{
-		{ID: 1, UserID: 1, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 101, Status: model.InstanceStatusPending, ExpiresAt: now.Add(10 * time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 2, UserID: 2, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 102, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 3, UserID: 3, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 103, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 4, UserID: 4, ContestID: &contestID, ChallengeID: 104, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 5, UserID: 5, ContestID: &otherContestID, ServiceID: &serviceID, ChallengeID: 105, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
+	rows := []instancecontracts.Instance{
+		{ID: 1, UserID: 1, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 101, Status: instancecontracts.InstanceStatusPending, ExpiresAt: now.Add(10 * time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 2, UserID: 2, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 102, Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 3, UserID: 3, ContestID: &contestID, ServiceID: &serviceID, ChallengeID: 103, Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 4, UserID: 4, ContestID: &contestID, ChallengeID: 104, Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 5, UserID: 5, ContestID: &otherContestID, ServiceID: &serviceID, ChallengeID: 105, Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now, UpdatedAt: now},
 	}
 	for _, row := range rows {
 		instance := row
@@ -59,7 +59,7 @@ func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
 func assertInstanceExpiry(t *testing.T, db *gorm.DB, instanceID int64, want time.Time) {
 	t.Helper()
 
-	var instance model.Instance
+	var instance instancecontracts.Instance
 	if err := db.Where("id = ?", instanceID).First(&instance).Error; err != nil {
 		t.Fatalf("load instance %d: %v", instanceID, err)
 	}

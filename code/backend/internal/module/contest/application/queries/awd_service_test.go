@@ -13,6 +13,8 @@ import (
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func newAWDQueryServiceForTest(t *testing.T) (*AWDService, *gorm.DB) {
@@ -413,13 +415,13 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	seedAWDWorkspaceInstance(t, db, 1, 9001, 801, 8101, 8011, "http://red-1.internal", now)
 	seedAWDWorkspaceInstance(t, db, 2, 9002, 801, 8102, 8011, "http://blue-1.internal", now)
 	seedAWDWorkspaceInstance(t, db, 3, 9003, 801, 8103, 8012, "http://green-2.internal", now)
-	seedAWDDefenseWorkspace(t, db, &model.AWDDefenseWorkspace{
+	seedAWDDefenseWorkspace(t, db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         801,
 		TeamID:            8101,
 		ServiceID:         contesttestsupport.DefaultAWDContestServiceID(801, 8011),
 		InstanceID:        1,
 		WorkspaceRevision: 7,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-red-bank",
 		SeedSignature:     "seed:bank:v1",
 		CreatedAt:         now,
@@ -516,7 +518,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		t.Fatalf("expected first own service to expose defense connection, got %+v", resp.Services[0])
 	}
 	if resp.Services[0].DefenseConnection.EntryMode != "ssh" ||
-		resp.Services[0].DefenseConnection.WorkspaceStatus != model.AWDDefenseWorkspaceStatusRunning ||
+		resp.Services[0].DefenseConnection.WorkspaceStatus != runtimeentity.AWDDefenseWorkspaceStatusRunning ||
 		resp.Services[0].DefenseConnection.WorkspaceRevision != 7 {
 		t.Fatalf("unexpected defense connection summary: %+v", resp.Services[0].DefenseConnection)
 	}
@@ -571,7 +573,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		t.Fatalf("expected own service to expose defense_connection, got %s", string(raw))
 	}
 	if defenseConnection["entry_mode"] != "ssh" ||
-		defenseConnection["workspace_status"] != model.AWDDefenseWorkspaceStatusRunning ||
+		defenseConnection["workspace_status"] != runtimeentity.AWDDefenseWorkspaceStatusRunning ||
 		defenseConnection["workspace_revision"] != float64(7) {
 		t.Fatalf("unexpected defense_connection payload: %s", string(raw))
 	}
@@ -650,13 +652,13 @@ func TestAWDServiceGetUserWorkspacePrefersDefenseWorkspaceEntryModeOverLegacySna
 	}
 
 	seedAWDWorkspaceInstance(t, db, 10, 9201, 802, 8201, 8021, "http://red-ssh.internal", now)
-	seedAWDDefenseWorkspace(t, db, &model.AWDDefenseWorkspace{
+	seedAWDDefenseWorkspace(t, db, &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         802,
 		TeamID:            8201,
 		ServiceID:         serviceID,
 		InstanceID:        10,
 		WorkspaceRevision: 3,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-red-ssh",
 		SeedSignature:     "seed:red:ssh",
 		CreatedAt:         now,
@@ -688,32 +690,32 @@ func TestAWDServiceGetUserWorkspaceIncludesQueuedOwnServiceWithoutAccessURL(t *t
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(806, 8061)
 	contestID := int64(806)
 	teamID := int64(8601)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          61,
 		UserID:      9601,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 8061,
 		ServiceID:   &serviceID,
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusPending,
+		ShareScope:  instanceentity.ShareScopePerTeam,
+		Status:      instanceentity.InstanceStatusPending,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}).Error; err != nil {
 		t.Fatalf("create pending awd workspace instance: %v", err)
 	}
-	if err := db.Create(&model.AWDServiceOperation{
+	if err := db.Create(&runtimeentity.AWDServiceOperation{
 		ID:            71,
 		ContestID:     contestID,
 		TeamID:        teamID,
 		ServiceID:     serviceID,
 		InstanceID:    61,
-		OperationType: model.AWDServiceOperationTypeRestart,
-		RequestedBy:   model.AWDServiceOperationRequestedByUser,
+		OperationType: runtimeentity.AWDServiceOperationTypeRestart,
+		RequestedBy:   runtimeentity.AWDServiceOperationRequestedByUser,
 		Reason:        "user_restart",
 		SLABillable:   true,
-		Status:        model.AWDServiceOperationStatusProvisioning,
+		Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
 		StartedAt:     now,
 		CreatedAt:     now,
 		UpdatedAt:     now,
@@ -729,10 +731,10 @@ func TestAWDServiceGetUserWorkspaceIncludesQueuedOwnServiceWithoutAccessURL(t *t
 	if item == nil {
 		t.Fatalf("expected pending own service in workspace, got %+v", resp.Services)
 	}
-	if item.InstanceID != 61 || item.InstanceStatus != model.InstanceStatusPending {
+	if item.InstanceID != 61 || item.InstanceStatus != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending instance to remain visible, got %+v", item)
 	}
-	if item.OperationStatus != model.AWDServiceOperationStatusProvisioning || item.OperationType != model.AWDServiceOperationTypeRestart || item.OperationSLABillable == nil || !*item.OperationSLABillable {
+	if item.OperationStatus != runtimeentity.AWDServiceOperationStatusProvisioning || item.OperationType != runtimeentity.AWDServiceOperationTypeRestart || item.OperationSLABillable == nil || !*item.OperationSLABillable {
 		t.Fatalf("expected latest operation in workspace, got %+v", item)
 	}
 }
@@ -1094,7 +1096,7 @@ func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, con
 	t.Helper()
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instanceentity.Instance{
 		ID:          instanceID,
 		UserID:      userID,
 		ContestID:   &contestID,
@@ -1102,8 +1104,8 @@ func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, con
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 		ContainerID: "container",
-		ShareScope:  model.InstanceSharingPerTeam,
-		Status:      model.InstanceStatusRunning,
+		ShareScope:  instanceentity.ShareScopePerTeam,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   accessURL,
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -1114,7 +1116,7 @@ func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, con
 }
 
 func ensureAWDWorkspaceInstanceServiceIDColumn(db *gorm.DB) error {
-	if db.Migrator().HasColumn(&model.Instance{}, "service_id") {
+	if db.Migrator().HasColumn(&instanceentity.Instance{}, "service_id") {
 		return nil
 	}
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
@@ -1136,7 +1138,7 @@ func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *contestentity.
 	}
 }
 
-func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *model.AWDDefenseWorkspace) {
+func seedAWDDefenseWorkspace(t *testing.T, db *gorm.DB, workspace *runtimeentity.AWDDefenseWorkspace) {
 	t.Helper()
 
 	if err := db.Create(workspace).Error; err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
@@ -36,15 +35,15 @@ func (r *AWDRepository) HasSystemRecoveryOperationAt(ctx context.Context, contes
 	err := r.dbWithContext(ctx).
 		Model(&runtimecontracts.AWDServiceOperation{}).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
-		Where("requested_by = ? AND operation_type IN ?", model.AWDServiceOperationRequestedBySystem, []string{
-			model.AWDServiceOperationTypeRecover,
-			model.AWDServiceOperationTypeRecreate,
+		Where("requested_by = ? AND operation_type IN ?", runtimecontracts.AWDServiceOperationRequestedBySystem, []string{
+			runtimecontracts.AWDServiceOperationTypeRecover,
+			runtimecontracts.AWDServiceOperationTypeRecreate,
 		}).
 		Where("sla_billable = ?", false).
 		Where("(status IN ? OR (started_at <= ? AND (finished_at IS NULL OR finished_at >= ?)))", []string{
-			model.AWDServiceOperationStatusRequested,
-			model.AWDServiceOperationStatusProvisioning,
-			model.AWDServiceOperationStatusRecovering,
+			runtimecontracts.AWDServiceOperationStatusRequested,
+			runtimecontracts.AWDServiceOperationStatusProvisioning,
+			runtimecontracts.AWDServiceOperationStatusRecovering,
 		}, checkedAt, checkedAt).
 		Count(&count).Error
 	return count > 0, err

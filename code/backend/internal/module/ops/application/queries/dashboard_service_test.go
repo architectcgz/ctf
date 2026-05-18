@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
@@ -49,7 +49,7 @@ func setupDashboardTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Instance{}); err != nil {
+	if err := db.AutoMigrate(&instancecontracts.Instance{}); err != nil {
 		t.Fatalf("migrate instance: %v", err)
 	}
 	return db
@@ -162,10 +162,10 @@ func TestDashboardServiceGetDashboardStatsNormalizesCachedNilSlices(t *testing.T
 func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T) {
 	db := setupDashboardTestDB(t)
 	now := time.Now()
-	instances := []model.Instance{
-		{ID: 1, UserID: 1, ChallengeID: 11, ContainerID: "cont-1", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
-		{ID: 2, UserID: 2, ChallengeID: 12, ContainerID: "cont-2", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
-		{ID: 3, UserID: 3, ChallengeID: 13, ContainerID: "cont-3", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
+	instances := []instancecontracts.Instance{
+		{ID: 1, UserID: 1, ChallengeID: 11, ContainerID: "cont-1", Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
+		{ID: 2, UserID: 2, ChallengeID: 12, ContainerID: "cont-2", Status: instancecontracts.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
+		{ID: 3, UserID: 3, ChallengeID: 13, ContainerID: "cont-3", Status: instancecontracts.InstanceStatusStopped, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
 	}
 	for _, instance := range instances {
 		if err := db.Create(&instance).Error; err != nil {

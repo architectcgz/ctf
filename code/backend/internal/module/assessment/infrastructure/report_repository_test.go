@@ -14,6 +14,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -38,7 +39,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.AWDTrafficEvent{},
 		&contestcontracts.Team{},
 		&contestcontracts.TeamMember{},
-		&model.Instance{},
+		&instancecontracts.Instance{},
 		&opsentity.AuditLog{},
 	); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)

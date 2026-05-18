@@ -119,7 +119,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 102,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30002",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -210,7 +210,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		TeamID:      &teamID,
 		ChallengeID: 201,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:31201",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -297,7 +297,7 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 221,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:31202",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -404,7 +404,7 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 				TeamID:      &teamID,
 				ChallengeID: 223,
 				ServiceID:   &serviceID,
-				Status:      model.InstanceStatusRunning,
+				Status:      instanceentity.InstanceStatusRunning,
 				AccessURL:   "http://127.0.0.1:31203",
 				ExpiresAt:   now.Add(time.Hour),
 				MaxExtends:  2,
@@ -457,7 +457,7 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 		ID:          1003,
 		UserID:      2,
 		ChallengeID: 103,
-		Status:      model.InstanceStatusPending,
+		Status:      instanceentity.InstanceStatusPending,
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
 		CreatedAt:   now,
@@ -470,7 +470,7 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetUserInstances() error = %v", err)
 	}
-	if len(items) != 1 || items[0].ID != 1003 || items[0].Status != model.InstanceStatusPending {
+	if len(items) != 1 || items[0].ID != 1003 || items[0].Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending instance to be visible, got %+v", items)
 	}
 }
@@ -496,7 +496,7 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 		ID:          1004,
 		UserID:      2,
 		ChallengeID: 104,
-		Status:      model.InstanceStatusFailed,
+		Status:      instanceentity.InstanceStatusFailed,
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
 		CreatedAt:   now,
@@ -509,7 +509,7 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetUserInstances() error = %v", err)
 	}
-	if len(items) != 1 || items[0].ID != 1004 || items[0].Status != model.InstanceStatusFailed {
+	if len(items) != 1 || items[0].ID != 1004 || items[0].Status != instanceentity.InstanceStatusFailed {
 		t.Fatalf("expected failed instance to be visible, got %+v", items)
 	}
 }
@@ -535,7 +535,7 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 		ID:          1005,
 		UserID:      2,
 		ChallengeID: 105,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30005",
 		ExpiresAt:   now.Add(-2 * time.Minute),
 		MaxExtends:  2,
@@ -552,7 +552,7 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 	if len(items) != 1 || items[0].ID != 1005 {
 		t.Fatalf("expected expired instance to remain visible, got %+v", items)
 	}
-	if items[0].Status != model.InstanceStatusExpired {
+	if items[0].Status != instanceentity.InstanceStatusExpired {
 		t.Fatalf("expected expired status, got %+v", items[0])
 	}
 }
@@ -578,7 +578,7 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 		ID:          1006,
 		UserID:      2,
 		ChallengeID: 106,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30006",
 		ExpiresAt:   now.Add(-time.Minute),
 		MaxExtends:  2,
@@ -661,7 +661,7 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 		TeamID:      &teamID,
 		ChallengeID: 225,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:31205",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -698,9 +698,9 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &model.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: instanceentity.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
@@ -782,7 +782,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 		ContestID:   &contestID,
 		ChallengeID: 211,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:31301",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -831,7 +831,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 		UserID:      2,
 		ContestID:   &contestID,
 		ChallengeID: 222,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:31302",
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
@@ -860,8 +860,8 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	service := instancecmd.NewInstanceService(
 		runtimeinfrarepo.NewRepository(db),
@@ -878,11 +878,11 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 
-	var instance model.Instance
+	var instance instancecontracts.Instance
 	if err := db.First(&instance, 201).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
-	if instance.Status != model.InstanceStatusStopped {
+	if instance.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped status, got %s", instance.Status)
 	}
 }
@@ -909,7 +909,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&model.AWDScopeControl{}); err != nil {
 		t.Fatalf("migrate awd scope control tables: %v", err)
 	}
-	if err := db.AutoMigrate(&model.AWDServiceOperation{}); err != nil {
+	if err := db.AutoMigrate(&runtimeentity.AWDServiceOperation{}); err != nil {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return db
@@ -967,7 +967,7 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-id ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &instanceentity.Instance{ID: id, UserID: 2, Status: model.InstanceStatusRunning}, nil
+			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
 		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -985,7 +985,7 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if id != 201 || status != model.InstanceStatusStopped {
+			if id != 201 || status != instanceentity.InstanceStatusStopped {
 				t.Fatalf("unexpected update args: id=%d status=%s", id, status)
 			}
 			return nil
@@ -1010,7 +1010,7 @@ func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *
 			if ctx != nil {
 				t.Fatalf("expected find-by-id ctx to stay nil, got %v", ctx)
 			}
-			return &instanceentity.Instance{ID: id, UserID: 2, Status: model.InstanceStatusRunning}, nil
+			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
 		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
 			if ctx != nil {

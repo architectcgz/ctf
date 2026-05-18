@@ -10,7 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -38,12 +38,12 @@ func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T)
 	repo := NewRepository(db)
 
 	instanceID := int64(6001)
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instancecontracts.Instance{
 		ID:          instanceID,
 		UserID:      7,
 		ChallengeID: 11,
 		HostPort:    32021,
-		Status:      model.InstanceStatusFailed,
+		Status:      instancecontracts.InstanceStatusFailed,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
@@ -76,13 +76,13 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 
 	repo := NewRepository(db)
 	now := time.Date(2026, 4, 23, 10, 0, 0, 0, time.UTC)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          1,
 		UserID:      7,
 		ChallengeID: 11,
 		ContainerID: "inst-running",
 		HostPort:    32001,
-		Status:      model.InstanceStatusRunning,
+		Status:      instancecontracts.InstanceStatusRunning,
 		CreatedAt:   now.Add(-30 * time.Minute),
 		UpdatedAt:   now.Add(-10 * time.Minute),
 		ExpiresAt:   now.Add(30 * time.Minute),
@@ -95,7 +95,7 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	}
 
 	before := time.Now()
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 	after := time.Now()
@@ -107,8 +107,8 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	if err := db.Table("instances").Select("status", "destroyed_at").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
 		t.Fatalf("load updated instance: %v", err)
 	}
-	if row.Status != model.InstanceStatusStopped {
-		t.Fatalf("instance status = %q, want %q", row.Status, model.InstanceStatusStopped)
+	if row.Status != instancecontracts.InstanceStatusStopped {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopped)
 	}
 	if row.DestroyedAt == nil {
 		t.Fatal("expected destroyed_at to be set for stopped instance")
@@ -151,11 +151,11 @@ func TestCountRunningPropagatesContextToGorm(t *testing.T) {
 		_ = db.Callback().Query().Remove(callbackName)
 	})
 
-	if err := db.Create(&model.Instance{
+	if err := db.Create(&instancecontracts.Instance{
 		ID:          101,
 		UserID:      9,
 		ChallengeID: 21,
-		Status:      model.InstanceStatusRunning,
+		Status:      instancecontracts.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	}).Error; err != nil {
 		t.Fatalf("seed running instance: %v", err)
@@ -180,13 +180,13 @@ func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *tes
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
 
 	repo := NewRepository(db)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:          2,
 		UserID:      9,
 		ChallengeID: 15,
 		ContainerID: "inst-creating",
 		HostPort:    32002,
-		Status:      model.InstanceStatusCreating,
+		Status:      instancecontracts.InstanceStatusCreating,
 		CreatedAt:   time.Now().Add(-5 * time.Minute),
 		UpdatedAt:   time.Now().Add(-2 * time.Minute),
 		ExpiresAt:   time.Now().Add(30 * time.Minute),
@@ -195,7 +195,7 @@ func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *tes
 		t.Fatalf("seed instance: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
@@ -206,8 +206,8 @@ func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *tes
 	if err := db.Table("instances").Select("status", "destroyed_at").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
 		t.Fatalf("load updated instance: %v", err)
 	}
-	if row.Status != model.InstanceStatusFailed {
-		t.Fatalf("instance status = %q, want %q", row.Status, model.InstanceStatusFailed)
+	if row.Status != instancecontracts.InstanceStatusFailed {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusFailed)
 	}
 	if row.DestroyedAt != nil {
 		t.Fatalf("expected destroyed_at to stay nil for failed instance, got %v", row.DestroyedAt)
@@ -221,7 +221,7 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 
 	repo := NewRepository(db)
 	now := time.Date(2026, 5, 15, 10, 0, 0, 0, time.UTC)
-	instance := model.Instance{
+	instance := instancecontracts.Instance{
 		ID:             3,
 		UserID:         10,
 		ChallengeID:    16,
@@ -229,7 +229,7 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 		ContainerID:    "inst-runtime",
 		NetworkID:      "net-runtime",
 		RuntimeDetails: `{"containers":[{"container_id":"inst-runtime","host_port":32003}]}`,
-		Status:         model.InstanceStatusRunning,
+		Status:         instancecontracts.InstanceStatusRunning,
 		AccessURL:      "http://127.0.0.1:32003",
 		CreatedAt:      now.Add(-5 * time.Minute),
 		UpdatedAt:      now.Add(-2 * time.Minute),
@@ -263,8 +263,8 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 		Take(&row).Error; err != nil {
 		t.Fatalf("load expired instance: %v", err)
 	}
-	if row.Status != model.InstanceStatusExpired {
-		t.Fatalf("instance status = %q, want %q", row.Status, model.InstanceStatusExpired)
+	if row.Status != instancecontracts.InstanceStatusExpired {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusExpired)
 	}
 	if row.HostPort != 0 || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
 		t.Fatalf("expected runtime fields to be cleared, got %+v", row)
@@ -294,7 +294,7 @@ func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Instance{}, &runtimeentity.PortAllocation{}); err != nil {
+	if err := db.AutoMigrate(&instancecontracts.Instance{}, &runtimeentity.PortAllocation{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 	return db

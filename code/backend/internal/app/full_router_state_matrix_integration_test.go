@@ -1518,9 +1518,9 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	}))
 	defer proxyTarget.Close()
 
-	if err := env.db.Model(&model.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
+	if err := env.db.Model(&instancecontracts.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
 		"access_url": proxyTarget.URL,
-		"status":     model.InstanceStatusRunning,
+		"status":     instancecontracts.InstanceStatusRunning,
 	}).Error; err != nil {
 		t.Fatalf("update instance access url: %v", err)
 	}
@@ -1565,8 +1565,8 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected proxy body: %s", body)
 	}
 
-	if err := env.db.Model(&model.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
-		"status": model.InstanceStatusStopped,
+	if err := env.db.Model(&instancecontracts.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
+		"status": instancecontracts.InstanceStatusStopped,
 	}).Error; err != nil {
 		t.Fatalf("stop instance: %v", err)
 	}
@@ -1601,14 +1601,14 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	}))
 	defer proxyTarget.Close()
 
-	if err := env.db.Model(&model.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
+	if err := env.db.Model(&instancecontracts.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
 		"user_id":      env.student.ID,
 		"contest_id":   env.awdContest.ID,
 		"team_id":      awdTeam.ID,
 		"service_id":   trafficServiceID,
 		"challenge_id": env.challenge.ID,
 		"access_url":   proxyTarget.URL,
-		"status":       model.InstanceStatusRunning,
+		"status":       instancecontracts.InstanceStatusRunning,
 	}).Error; err != nil {
 		t.Fatalf("update awd instance scope: %v", err)
 	}
@@ -2095,7 +2095,7 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 	}
 
 	var awdInstanceCount int64
-	if err := env.db.Model(&model.Instance{}).
+	if err := env.db.Model(&instancecontracts.Instance{}).
 		Where("contest_id = ? AND team_id = ? AND user_id = ?", env.awdContest.ID, awdTeam.ID, env.student.ID).
 		Count(&awdInstanceCount).Error; err != nil {
 		t.Fatalf("count awd instances after challenge-based route request: %v", err)
@@ -2843,8 +2843,8 @@ func createPracticeSubmission(t *testing.T, env *fullRouterTestEnv, userID, chal
 func resetInstanceForAccessMatrix(t *testing.T, env *fullRouterTestEnv, instanceID int64) {
 	t.Helper()
 
-	if err := env.db.Model(&model.Instance{}).Where("id = ?", instanceID).Updates(map[string]any{
-		"status":       model.InstanceStatusRunning,
+	if err := env.db.Model(&instancecontracts.Instance{}).Where("id = ?", instanceID).Updates(map[string]any{
+		"status":       instancecontracts.InstanceStatusRunning,
 		"extend_count": 0,
 		"expires_at":   time.Now().Add(time.Hour),
 	}).Error; err != nil {
@@ -2894,10 +2894,10 @@ func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title stri
 func createRunningInstanceForChallenge(t *testing.T, env *fullRouterTestEnv, challengeID, userID int64) {
 	t.Helper()
 
-	instance := &model.Instance{
+	instance := &instancecontracts.Instance{
 		UserID:      userID,
 		ChallengeID: challengeID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instancecontracts.InstanceStatusRunning,
 		ContainerID: fmt.Sprintf("instance-%d", time.Now().UnixNano()),
 		NetworkID:   "matrix-running-network",
 		AccessURL:   "http://127.0.0.1:30002",
@@ -2913,10 +2913,10 @@ func createRunningInstanceForChallenge(t *testing.T, env *fullRouterTestEnv, cha
 func stopInstancesForChallenge(t *testing.T, env *fullRouterTestEnv, challengeID int64) {
 	t.Helper()
 
-	if err := env.db.Model(&model.Instance{}).
+	if err := env.db.Model(&instancecontracts.Instance{}).
 		Where("challenge_id = ?", challengeID).
 		Updates(map[string]any{
-			"status":     model.InstanceStatusStopped,
+			"status":     instancecontracts.InstanceStatusStopped,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 		t.Fatalf("stop instances for challenge: %v", err)

@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) {
@@ -90,7 +90,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	})
-	seedProxyTrafficRecorderRow(t, db, &model.Instance{
+	seedProxyTrafficRecorderRow(t, db, &instancecontracts.Instance{
 		ID:          99001,
 		UserID:      5001,
 		ContestID:   &contestID,
@@ -98,7 +98,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 		ChallengeID: 9011,
 		ServiceID:   &serviceID,
 		ContainerID: "ctr-runtime-proxy",
-		Status:      model.InstanceStatusRunning,
+		Status:      instancecontracts.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:39001",
 		ExpiresAt:   now.Add(time.Hour),
 		CreatedAt:   now,
@@ -226,7 +226,7 @@ func newProxyTrafficRecorderTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.Team{},
 		&contestcontracts.TeamMember{},
 		&contestcontracts.ContestAWDService{},
-		&model.Instance{},
+		&instancecontracts.Instance{},
 		&contestcontracts.AWDTrafficEvent{},
 	); err != nil {
 		t.Fatalf("migrate proxy traffic recorder tables: %v", err)

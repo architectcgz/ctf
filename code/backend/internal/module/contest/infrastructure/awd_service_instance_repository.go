@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, contestID int64, serviceIDs []int64) ([]contestports.AWDServiceInstance, error) {
@@ -20,10 +20,10 @@ func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, conte
 		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = ? AND cas.id = inst.service_id AND cas.deleted_at IS NULL", contestID).
 		Where("cas.id IN ?", serviceIDs).
 		Where("inst.status IN ?", []string{
-			model.InstanceStatusPending,
-			model.InstanceStatusCreating,
-			model.InstanceStatusRunning,
-			model.InstanceStatusFailed,
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusFailed,
 		}).
 		Where("(inst.contest_id = ? AND inst.team_id IS NOT NULL) OR (inst.team_id IS NULL AND tm.team_id IS NOT NULL)", contestID).
 		Order("COALESCE(inst.team_id, tm.team_id) ASC, cas.\"order\" ASC, cas.id ASC, inst.created_at DESC, inst.id DESC").
