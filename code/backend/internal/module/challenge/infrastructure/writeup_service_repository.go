@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -63,17 +64,17 @@ func (r *WriteupServiceRepository) GetSolvedStatus(ctx context.Context, userID, 
 	return r.raw.GetSolvedStatus(ctx, userID, challengeID)
 }
 
-func (r *WriteupServiceRepository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (r *WriteupServiceRepository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 	item, err := r.raw.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeSubmissionWriteupNotFound)
 }
 
-func (r *WriteupServiceRepository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+func (r *WriteupServiceRepository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 	item, err := r.raw.FindSubmissionWriteupByID(ctx, id)
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeSubmissionWriteupDetailNotFound)
 }
 
-func (r *WriteupServiceRepository) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (r *WriteupServiceRepository) UpsertSubmissionWriteup(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 	return r.raw.UpsertSubmissionWriteup(ctx, writeup)
 }
 

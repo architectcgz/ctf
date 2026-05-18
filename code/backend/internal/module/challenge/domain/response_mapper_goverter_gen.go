@@ -376,7 +376,7 @@ func (c *ChallengeResponseMapperImpl) ToRecommendedChallengeSolutionRespBasePtr(
 	}
 	return pContractsRecommendedChallengeSolutionResp
 }
-func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupResp(source model.SubmissionWriteup) contracts.SubmissionWriteupResp {
+func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupResp(source entity.SubmissionWriteup) contracts.SubmissionWriteupResp {
 	var contractsSubmissionWriteupResp contracts.SubmissionWriteupResp
 	contractsSubmissionWriteupResp.ID = source.ID
 	contractsSubmissionWriteupResp.UserID = source.UserID
@@ -400,7 +400,7 @@ func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupResp(source model.Submi
 	contractsSubmissionWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsSubmissionWriteupResp
 }
-func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *contracts.SubmissionWriteupResp {
+func (c *ChallengeResponseMapperImpl) ToSubmissionWriteupRespPtr(source *entity.SubmissionWriteup) *contracts.SubmissionWriteupResp {
 	var pContractsSubmissionWriteupResp *contracts.SubmissionWriteupResp
 	if source != nil {
 		contractsSubmissionWriteupResp := c.ToSubmissionWriteupResp((*source))

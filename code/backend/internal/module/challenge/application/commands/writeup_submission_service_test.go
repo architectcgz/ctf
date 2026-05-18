@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 )
@@ -76,22 +77,22 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	draft, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "草稿版解题记录",
 		Content:          "先枚举路由，再找注入点",
-		SubmissionStatus: model.SubmissionWriteupStatusDraft,
+		SubmissionStatus: challengeentity.SubmissionWriteupStatusDraft,
 	})
 	if err != nil {
 		t.Fatalf("UpsertSubmission draft error = %v", err)
 	}
-	if draft.SubmissionStatus != model.SubmissionWriteupStatusDraft || draft.PublishedAt != nil {
+	if draft.SubmissionStatus != challengeentity.SubmissionWriteupStatusDraft || draft.PublishedAt != nil {
 		t.Fatalf("unexpected draft submission: %+v", draft)
 	}
-	if draft.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+	if draft.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("unexpected draft visibility status: %+v", draft)
 	}
 
 	if _, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "未解题直接发布",
 		Content:          "这一步应该被拦住",
-		SubmissionStatus: model.SubmissionWriteupStatusPublished,
+		SubmissionStatus: challengeentity.SubmissionWriteupStatusPublished,
 	}); err == nil {
 		t.Fatalf("expected publish before solve to be forbidden")
 	}
@@ -112,15 +113,15 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "正式版解题记录",
 		Content:          "1. 枚举接口\n2. 找到注入点\n3. 读取 flag",
-		SubmissionStatus: model.SubmissionWriteupStatusPublished,
+		SubmissionStatus: challengeentity.SubmissionWriteupStatusPublished,
 	})
 	if err != nil {
 		t.Fatalf("UpsertSubmission published error = %v", err)
 	}
-	if published.SubmissionStatus != model.SubmissionWriteupStatusPublished || published.PublishedAt == nil {
+	if published.SubmissionStatus != challengeentity.SubmissionWriteupStatusPublished || published.PublishedAt == nil {
 		t.Fatalf("unexpected published writeup: %+v", published)
 	}
-	if published.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+	if published.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("unexpected published visibility status: %+v", published)
 	}
 
@@ -128,7 +129,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetMySubmission() error = %v", err)
 	}
-	if mine.PublishedAt == nil || mine.SubmissionStatus != model.SubmissionWriteupStatusPublished {
+	if mine.PublishedAt == nil || mine.SubmissionStatus != challengeentity.SubmissionWriteupStatusPublished {
 		t.Fatalf("unexpected my published submission payload: %+v", mine)
 	}
 
@@ -225,7 +226,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, UpsertSubmissionWriteupInput{
 		Title:            "社区题解",
 		Content:          "community content",
-		SubmissionStatus: model.SubmissionWriteupStatusPublished,
+		SubmissionStatus: challengeentity.SubmissionWriteupStatusPublished,
 	})
 	if err != nil {
 		t.Fatalf("UpsertSubmission published error = %v", err)
@@ -255,7 +256,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	if err != nil {
 		t.Fatalf("HideCommunity() error = %v", err)
 	}
-	if hidden.VisibilityStatus != model.SubmissionWriteupVisibilityHidden {
+	if hidden.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityHidden {
 		t.Fatalf("expected hidden community writeup, got %+v", hidden)
 	}
 
@@ -263,7 +264,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	if err != nil {
 		t.Fatalf("RestoreCommunity() error = %v", err)
 	}
-	if restored.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+	if restored.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("expected restored community writeup, got %+v", restored)
 	}
 

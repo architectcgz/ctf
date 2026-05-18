@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -21,9 +22,9 @@ type writeupServiceRepositoryStub struct {
 	deleteWriteupByChallengeIDFn            func(ctx context.Context, challengeID int64) error
 	findReleasedWriteupByChallengeIDFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	getSolvedStatusFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
-	findSubmissionWriteupByUserChallengeFn  func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByIDFn             func(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
-	upsertSubmissionWriteupFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
+	findSubmissionWriteupByUserChallengeFn  func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
+	findSubmissionWriteupByIDFn             func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error)
+	upsertSubmissionWriteupFn               func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	listTeacherSubmissionWriteupsFn         func(ctx context.Context, query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
 	listRecommendedSolutionsByChallengeIDFn func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
@@ -58,15 +59,15 @@ func (s *writeupServiceRepositoryStub) GetSolvedStatus(ctx context.Context, user
 	return s.getSolvedStatusFn(ctx, userID, challengeID)
 }
 
-func (s *writeupServiceRepositoryStub) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (s *writeupServiceRepositoryStub) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 	return s.findSubmissionWriteupByUserChallengeFn(ctx, userID, challengeID)
 }
 
-func (s *writeupServiceRepositoryStub) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+func (s *writeupServiceRepositoryStub) FindSubmissionWriteupByID(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 	return s.findSubmissionWriteupByIDFn(ctx, id)
 }
 
-func (s *writeupServiceRepositoryStub) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (s *writeupServiceRepositoryStub) UpsertSubmissionWriteup(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 	return s.upsertSubmissionWriteupFn(ctx, writeup)
 }
 
@@ -112,13 +113,13 @@ func TestWriteupRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) {
 		getSolvedStatusFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
 			return false, nil
 		},
-		findSubmissionWriteupByUserChallengeFn: func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByUserChallengeFn: func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findSubmissionWriteupByIDFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByIDFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		upsertSubmissionWriteupFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			return nil
 		},
 		getTeacherSubmissionWriteupByIDFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {

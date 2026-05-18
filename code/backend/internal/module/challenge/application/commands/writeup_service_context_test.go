@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -26,12 +27,12 @@ type writeupCommandContextStub struct {
 	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	getSolvedStatusFn                                  func(userID, challengeID int64) (bool, error)
 	getSolvedStatusWithContextFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
-	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByUserChallengeWithContextFn  func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByIDFn                        func(id int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByIDWithContextFn             func(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
-	upsertSubmissionWriteupFn                          func(writeup *model.SubmissionWriteup) error
-	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
+	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
+	findSubmissionWriteupByUserChallengeWithContextFn  func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
+	findSubmissionWriteupByIDFn                        func(id int64) (*challengeentity.SubmissionWriteup, error)
+	findSubmissionWriteupByIDWithContextFn             func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error)
+	upsertSubmissionWriteupFn                          func(writeup *challengeentity.SubmissionWriteup) error
+	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	getTeacherSubmissionWriteupByIDWithContextFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	listTeacherSubmissionWriteupsFn                    func(query *challengecontracts.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
@@ -91,21 +92,21 @@ func (s *writeupCommandContextStub) GetSolvedStatus(ctx context.Context, userID,
 	return false, nil
 }
 
-func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByUserChallengeWithContextFn != nil {
 		return s.findSubmissionWriteupByUserChallengeWithContextFn(ctx, userID, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+func (s *writeupCommandContextStub) FindSubmissionWriteupByID(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByIDWithContextFn != nil {
 		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (s *writeupCommandContextStub) UpsertSubmissionWriteup(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 	if s.upsertSubmissionWriteupWithContextFn != nil {
 		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
 	}
@@ -245,7 +246,7 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 			}
 			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
-		findSubmissionWriteupByUserChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByUserChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -254,7 +255,7 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 				return nil, nil
 			}
 			findUpdatedCalled = true
-			return &model.SubmissionWriteup{ID: 31, UserID: userID, ChallengeID: challengeID, SubmissionStatus: model.SubmissionWriteupStatusPublished, VisibilityStatus: model.SubmissionWriteupVisibilityVisible}, nil
+			return &challengeentity.SubmissionWriteup{ID: 31, UserID: userID, ChallengeID: challengeID, SubmissionStatus: challengeentity.SubmissionWriteupStatusPublished, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible}, nil
 		},
 		getSolvedStatusWithContextFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
 			getSolvedCalled = true
@@ -263,7 +264,7 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 			}
 			return true, nil
 		},
-		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -274,7 +275,7 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertSubmission(ctx, 11, 7, UpsertSubmissionWriteupInput{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
+	resp, err := service.UpsertSubmission(ctx, 11, 7, UpsertSubmissionWriteupInput{Title: "Published", Content: "Walkthrough", SubmissionStatus: challengeentity.SubmissionWriteupStatusPublished})
 	if err != nil {
 		t.Fatalf("UpsertSubmission() error = %v", err)
 	}
@@ -405,7 +406,7 @@ func TestWriteupServiceRecommendCommunityTreatsRequesterNotFoundSentinelAsUnauth
 	service := NewWriteupService(&writeupCommandContextStub{
 		getTeacherSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 			return &challengeports.TeacherSubmissionWriteupRecord{
-				Submission:      model.SubmissionWriteup{ID: id, ChallengeID: 11, UserID: 88, CreatedAt: now, UpdatedAt: now},
+				Submission:      challengeentity.SubmissionWriteup{ID: id, ChallengeID: 11, UserID: 88, CreatedAt: now, UpdatedAt: now},
 				ClassName:       "Class A",
 				StudentUsername: "student",
 				ChallengeTitle:  "challenge",
@@ -490,7 +491,7 @@ func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testin
 				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &challengeports.TeacherSubmissionWriteupRecord{
-				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible},
+				Submission:      challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible},
 				StudentUsername: "student88",
 				ClassName:       "Class A",
 			}, nil
@@ -502,18 +503,18 @@ func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testin
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findSubmissionCalled = true
-				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible}, nil
+				return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible}, nil
 			}
 			findUpdatedCalled = true
-			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
+			return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
 		},
-		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -553,7 +554,7 @@ func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *test
 				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &challengeports.TeacherSubmissionWriteupRecord{
-				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true},
+				Submission:      challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: true},
 				StudentUsername: "student88",
 				ClassName:       "Class A",
 			}, nil
@@ -565,18 +566,18 @@ func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *test
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findSubmissionCalled = true
-				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
+				return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
 			}
 			findUpdatedCalled = true
-			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: false}, nil
+			return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: false}, nil
 		},
-		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -616,7 +617,7 @@ func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) 
 				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &challengeports.TeacherSubmissionWriteupRecord{
-				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true},
+				Submission:      challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: true},
 				StudentUsername: "student88",
 				ClassName:       "Class A",
 			}, nil
@@ -628,18 +629,18 @@ func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) 
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findSubmissionCalled = true
-				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
+				return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
 			}
 			findUpdatedCalled = true
-			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden, IsRecommended: false}, nil
+			return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityHidden, IsRecommended: false}, nil
 		},
-		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -657,7 +658,7 @@ func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) 
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
 	}
-	if resp == nil || resp.VisibilityStatus != model.SubmissionWriteupVisibilityHidden || resp.IsRecommended {
+	if resp == nil || resp.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityHidden || resp.IsRecommended {
 		t.Fatalf("unexpected hide community resp: %+v", resp)
 	}
 }
@@ -679,7 +680,7 @@ func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.
 				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &challengeports.TeacherSubmissionWriteupRecord{
-				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden},
+				Submission:      challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityHidden},
 				StudentUsername: "student88",
 				ClassName:       "Class A",
 			}, nil
@@ -691,18 +692,18 @@ func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findSubmissionCalled = true
-				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden}, nil
+				return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityHidden}, nil
 			}
 			findUpdatedCalled = true
-			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible}, nil
+			return &challengeentity.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible}, nil
 		},
-		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -720,7 +721,7 @@ func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
 	}
-	if resp == nil || resp.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+	if resp == nil || resp.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("unexpected restore community resp: %+v", resp)
 	}
 }

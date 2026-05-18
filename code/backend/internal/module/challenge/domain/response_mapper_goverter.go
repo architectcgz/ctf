@@ -54,8 +54,8 @@ type ChallengeResponseMapper interface {
 	ToTagRespPtr(source *model.Tag) *challengecontracts.TagResp
 	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) challengecontracts.AdminChallengeWriteupResp
 	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *challengecontracts.AdminChallengeWriteupResp
-	ToSubmissionWriteupResp(source model.SubmissionWriteup) challengecontracts.SubmissionWriteupResp
-	ToSubmissionWriteupRespPtr(source *model.SubmissionWriteup) *challengecontracts.SubmissionWriteupResp
+	ToSubmissionWriteupResp(source challengeentity.SubmissionWriteup) challengecontracts.SubmissionWriteupResp
+	ToSubmissionWriteupRespPtr(source *challengeentity.SubmissionWriteup) *challengecontracts.SubmissionWriteupResp
 
 	// goverter:map Submission.ID ID
 	// goverter:map Submission.UserID UserID

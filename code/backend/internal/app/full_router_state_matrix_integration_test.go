@@ -26,6 +26,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
@@ -1139,13 +1140,13 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
 		"title":             "首版草稿",
 		"content":           "先记录思路，再整理利用链。",
-		"submission_status": model.SubmissionWriteupStatusDraft,
+		"submission_status": challengeentity.SubmissionWriteupStatusDraft,
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var draftSubmission challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &draftSubmission)
-	if draftSubmission.SubmissionStatus != model.SubmissionWriteupStatusDraft || draftSubmission.PublishedAt != nil {
+	if draftSubmission.SubmissionStatus != challengeentity.SubmissionWriteupStatusDraft || draftSubmission.PublishedAt != nil {
 		t.Fatalf("unexpected draft submission response: %+v", draftSubmission)
 	}
 
@@ -1161,13 +1162,13 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
 		"title":             "正式复盘",
 		"content":           "1. 判断输入点\n2. 构造 payload\n3. 读取 flag",
-		"submission_status": model.SubmissionWriteupStatusSubmitted,
+		"submission_status": challengeentity.SubmissionWriteupStatusSubmitted,
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var submittedWriteup challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &submittedWriteup)
-	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusPublished || submittedWriteup.PublishedAt == nil {
+	if submittedWriteup.SubmissionStatus != challengeentity.SubmissionWriteupStatusPublished || submittedWriteup.PublishedAt == nil {
 		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
 	}
 	peerStudentNo := "20240001"
@@ -1714,7 +1715,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
 		"title":             "我的草稿",
 		"content":           "先记入口，再写利用链。",
-		"submission_status": model.SubmissionWriteupStatusDraft,
+		"submission_status": challengeentity.SubmissionWriteupStatusDraft,
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -1766,7 +1767,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 
 	var hiddenCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &hiddenCommunity)
-	if hiddenCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityHidden {
+	if hiddenCommunity.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityHidden {
 		t.Fatalf("expected hidden community writeup, got %+v", hiddenCommunity)
 	}
 
@@ -1786,7 +1787,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 
 	var restoredCommunity challengecontracts.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &restoredCommunity)
-	if restoredCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+	if restoredCommunity.VisibilityStatus != challengeentity.SubmissionWriteupVisibilityVisible {
 		t.Fatalf("expected restored community writeup, got %+v", restoredCommunity)
 	}
 

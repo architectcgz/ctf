@@ -124,9 +124,9 @@ type ChallengeWriteupSolveStatusRepository interface {
 }
 
 type ChallengeSubmissionWriteupRepository interface {
-	FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
-	FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
-	UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error
+	FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
+	FindSubmissionWriteupByID(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error)
+	UpsertSubmissionWriteup(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error
 }
 
 type ChallengeTeacherSubmissionWriteupRepository interface {
@@ -140,7 +140,7 @@ type ChallengeSolutionQueryRepository interface {
 }
 
 type TeacherSubmissionWriteupRecord struct {
-	Submission      model.SubmissionWriteup
+	Submission      challengeentity.SubmissionWriteup
 	StudentUsername string
 	StudentName     string
 	StudentNo       string
@@ -161,7 +161,7 @@ type RecommendedSolutionRecord struct {
 }
 
 type CommunitySolutionRecord struct {
-	Submission     model.SubmissionWriteup
+	Submission     challengeentity.SubmissionWriteup
 	AuthorName     string
 	ChallengeID    int64
 	ChallengeTitle string

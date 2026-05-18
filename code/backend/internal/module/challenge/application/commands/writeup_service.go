@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -98,7 +99,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 	if err != nil && !errors.Is(err, challengeports.ErrChallengeSubmissionWriteupNotFound) {
 		return nil, err
 	}
-	if submissionStatus == model.SubmissionWriteupStatusPublished {
+	if submissionStatus == challengeentity.SubmissionWriteupStatusPublished {
 		isSolved, solveErr := s.repo.GetSolvedStatus(ctx, actorUserID, challengeID)
 		if solveErr != nil {
 			return nil, solveErr
@@ -108,17 +109,17 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 		}
 		publishedAt = &now
 	}
-	if existing != nil && existing.PublishedAt != nil && submissionStatus == model.SubmissionWriteupStatusPublished {
+	if existing != nil && existing.PublishedAt != nil && submissionStatus == challengeentity.SubmissionWriteupStatusPublished {
 		publishedAt = existing.PublishedAt
 	}
 
-	writeup := &model.SubmissionWriteup{
+	writeup := &challengeentity.SubmissionWriteup{
 		UserID:           actorUserID,
 		ChallengeID:      challengeID,
 		Title:            strings.TrimSpace(req.Title),
 		Content:          strings.TrimSpace(req.Content),
 		SubmissionStatus: submissionStatus,
-		VisibilityStatus: model.SubmissionWriteupVisibilityVisible,
+		VisibilityStatus: challengeentity.SubmissionWriteupVisibilityVisible,
 		PublishedAt:      publishedAt,
 		UpdatedAt:        now,
 	}
@@ -132,7 +133,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 	} else {
 		writeup.CreatedAt = now
 	}
-	if submissionStatus == model.SubmissionWriteupStatusDraft {
+	if submissionStatus == challengeentity.SubmissionWriteupStatusDraft {
 		writeup.PublishedAt = nil
 	}
 
@@ -196,7 +197,7 @@ func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, r
 	if err != nil {
 		return nil, err
 	}
-	if record.VisibilityStatus == model.SubmissionWriteupVisibilityHidden {
+	if record.VisibilityStatus == challengeentity.SubmissionWriteupVisibilityHidden {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("隐藏题解不能设为推荐"))
 	}
 
@@ -245,7 +246,7 @@ func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, reques
 		return nil, err
 	}
 
-	record.VisibilityStatus = model.SubmissionWriteupVisibilityHidden
+	record.VisibilityStatus = challengeentity.SubmissionWriteupVisibilityHidden
 	record.IsRecommended = false
 	record.RecommendedAt = nil
 	record.RecommendedBy = nil
@@ -268,7 +269,7 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 		return nil, err
 	}
 
-	record.VisibilityStatus = model.SubmissionWriteupVisibilityVisible
+	record.VisibilityStatus = challengeentity.SubmissionWriteupVisibilityVisible
 	record.UpdatedAt = time.Now()
 
 	if err := s.repo.UpsertSubmissionWriteup(ctx, record); err != nil {
@@ -299,7 +300,7 @@ func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, c
 	return item, nil
 }
 
-func (s *WriteupService) loadCommunityWriteupForModeration(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*model.SubmissionWriteup, error) {
+func (s *WriteupService) loadCommunityWriteupForModeration(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*challengeentity.SubmissionWriteup, error) {
 	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound) {

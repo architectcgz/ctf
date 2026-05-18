@@ -6,6 +6,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -39,15 +40,15 @@ func (ctxOnlyChallengeWriteupRepository) GetSolvedStatus(context.Context, int64,
 	return false, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByUserChallenge(context.Context, int64, int64) (*model.SubmissionWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByUserChallenge(context.Context, int64, int64) (*challengeentity.SubmissionWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByID(context.Context, int64) (*model.SubmissionWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByID(context.Context, int64) (*challengeentity.SubmissionWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) UpsertSubmissionWriteup(context.Context, *model.SubmissionWriteup) error {
+func (ctxOnlyChallengeWriteupRepository) UpsertSubmissionWriteup(context.Context, *challengeentity.SubmissionWriteup) error {
 	return nil
 }
 

@@ -56,8 +56,8 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 	return &user, nil
 }
 
-func (r *Repository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
-	var writeup model.SubmissionWriteup
+func (r *Repository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
+	var writeup challengeentity.SubmissionWriteup
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
@@ -65,8 +65,8 @@ func (r *Repository) FindSubmissionWriteupByUserChallenge(ctx context.Context, u
 	return &writeup, nil
 }
 
-func (r *Repository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
-	var writeup model.SubmissionWriteup
+func (r *Repository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error) {
+	var writeup challengeentity.SubmissionWriteup
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&writeup).Error
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (r *Repository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*
 	return &writeup, nil
 }
 
-func (r *Repository) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (r *Repository) UpsertSubmissionWriteup(ctx context.Context, writeup *challengeentity.SubmissionWriteup) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "user_id"}, {Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -116,7 +116,7 @@ type teacherSubmissionWriteupRow struct {
 
 func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmissionWriteupRecord {
 	return challengeports.TeacherSubmissionWriteupRecord{
-		Submission: model.SubmissionWriteup{
+		Submission: challengeentity.SubmissionWriteup{
 			ID:               r.ID,
 			UserID:           r.UserID,
 			ChallengeID:      r.ChallengeID,
@@ -228,8 +228,8 @@ func (r *Repository) ListRecommendedSolutionsByChallengeID(ctx context.Context, 
 		Joins("JOIN users u ON u.id = sw.user_id").
 		Where("sw.challenge_id = ? AND sw.submission_status = ? AND sw.visibility_status = ? AND sw.is_recommended = ?",
 			challengeID,
-			model.SubmissionWriteupStatusPublished,
-			model.SubmissionWriteupVisibilityVisible,
+			challengeentity.SubmissionWriteupStatusPublished,
+			challengeentity.SubmissionWriteupVisibilityVisible,
 			true,
 		).
 		Order("sw.recommended_at DESC, sw.updated_at DESC").
@@ -278,7 +278,7 @@ type communitySolutionRow struct {
 
 func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord {
 	return challengeports.CommunitySolutionRecord{
-		Submission: model.SubmissionWriteup{
+		Submission: challengeentity.SubmissionWriteup{
 			ID:               r.ID,
 			UserID:           r.UserID,
 			ChallengeID:      r.ChallengeID,
@@ -324,8 +324,8 @@ func (r *Repository) ListCommunitySolutionsByChallengeID(ctx context.Context, ch
 		Joins("JOIN challenges c ON c.id = sw.challenge_id").
 		Where("sw.challenge_id = ? AND sw.submission_status = ? AND sw.visibility_status = ?",
 			challengeID,
-			model.SubmissionWriteupStatusPublished,
-			model.SubmissionWriteupVisibilityVisible,
+			challengeentity.SubmissionWriteupStatusPublished,
+			challengeentity.SubmissionWriteupVisibilityVisible,
 		)
 
 	if query != nil && strings.TrimSpace(query.Q) != "" {
