@@ -23,6 +23,7 @@ import (
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -2265,7 +2266,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var freeImage dto.ImageResp
+	var freeImage challengehttp.ImageResp
 	decodeFullRouterData(t, resp, &freeImage)
 	if freeImage.Name != "matrix/webapp" {
 		t.Fatalf("unexpected created image: %+v", freeImage)
@@ -2290,7 +2291,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var loadedImage dto.ImageResp
+	var loadedImage challengehttp.ImageResp
 	decodeFullRouterData(t, resp, &loadedImage)
 	if loadedImage.Status != model.ImageStatusFailed || loadedImage.Description != "updated image" {
 		t.Fatalf("unexpected loaded image: %+v", loadedImage)
@@ -2534,9 +2535,9 @@ func TestFullRouter_AdminImagesCapsOversizedPageSize(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var payload struct {
-		List []dto.ImageResp `json:"list"`
-		Page int             `json:"page"`
-		Size int             `json:"page_size"`
+		List []challengehttp.ImageResp `json:"list"`
+		Page int                       `json:"page"`
+		Size int                       `json:"page_size"`
 	}
 	decodeFullRouterData(t, resp, &payload)
 
