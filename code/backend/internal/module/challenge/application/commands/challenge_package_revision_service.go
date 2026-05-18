@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -263,7 +264,7 @@ func rewriteChallengeManifestSnapshot(
 	sourceDir string,
 	challenge *model.Challenge,
 	topology *model.ChallengeTopology,
-	hints []model.ChallengeHint,
+	hints []challengeentity.ChallengeHint,
 	revision *model.ChallengePackageRevision,
 ) (string, error) {
 	var manifest domain.ChallengePackageManifest

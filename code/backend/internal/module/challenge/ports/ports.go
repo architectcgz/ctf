@@ -32,10 +32,10 @@ var (
 )
 
 type ChallengeWriteRepository interface {
-	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
+	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	Update(ctx context.Context, challenge *model.Challenge) error
-	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -61,7 +61,7 @@ type ChallengeFlagRepository interface {
 type ChallengeReadRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
-	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
+	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error)
 }
 
 type ChallengePublishedRepository interface {
@@ -215,7 +215,7 @@ type ChallengeImportTxStore interface {
 	CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error
 	UpdateImportedChallenge(ctx context.Context, challenge *model.Challenge, updates map[string]any) error
 	ClearPublishCheckJobs(ctx context.Context, challengeID int64) error
-	ReplaceImportedHints(ctx context.Context, challengeID int64, hints []model.ChallengeHint) error
+	ReplaceImportedHints(ctx context.Context, challengeID int64, hints []challengeentity.ChallengeHint) error
 	ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error
 	NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
 	CreateImportedPackageRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
@@ -241,7 +241,7 @@ type ChallengePackageExportTxStore interface {
 	FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*model.ChallengePackageRevision, error)
 	NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
-	ListChallengeHints(ctx context.Context, challengeID int64) ([]model.ChallengeHint, error)
+	ListChallengeHints(ctx context.Context, challengeID int64) ([]challengeentity.ChallengeHint, error)
 	FindImageRefByID(ctx context.Context, imageID int64) (string, error)
 	CreateExportRevision(ctx context.Context, revision *model.ChallengePackageRevision) error
 	MarkTopologyExported(ctx context.Context, topologyID int64, revisionID int64, baselineSpec string, updatedAt time.Time) error

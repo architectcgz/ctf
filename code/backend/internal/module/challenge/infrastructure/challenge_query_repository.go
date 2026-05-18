@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -41,7 +42,7 @@ func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecon
 	return r.source.List(ctx, query)
 }
 
-func (r *ChallengeQueryRepository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
+func (r *ChallengeQueryRepository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error) {
 	return r.source.ListHintsByChallengeID(ctx, challengeID)
 }
 

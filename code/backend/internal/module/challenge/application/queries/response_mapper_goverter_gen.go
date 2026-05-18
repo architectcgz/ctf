@@ -6,6 +6,7 @@ package queries
 import (
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
+	entity "ctf-platform/internal/module/challenge/entity"
 )
 
 type challengeQueryResponseMapperImpl struct{}
@@ -32,7 +33,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBasePtr(source *
 	}
 	return pContractsChallengeDetailResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source model.ChallengeHint) contracts.ChallengeHintResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source entity.ChallengeHint) contracts.ChallengeHintResp {
 	var contractsChallengeHintResp contracts.ChallengeHintResp
 	contractsChallengeHintResp.ID = source.ID
 	contractsChallengeHintResp.Level = source.Level
@@ -40,7 +41,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source model.Chal
 	contractsChallengeHintResp.Content = source.Content
 	return contractsChallengeHintResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespPtr(source *model.ChallengeHint) *contracts.ChallengeHintResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespPtr(source *entity.ChallengeHint) *contracts.ChallengeHintResp {
 	var pContractsChallengeHintResp *contracts.ChallengeHintResp
 	if source != nil {
 		contractsChallengeHintResp := c.ToChallengeHintResp((*source))
@@ -48,7 +49,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespPtr(source *model.
 	}
 	return pContractsChallengeHintResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*model.ChallengeHint) []*contracts.ChallengeHintResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*entity.ChallengeHint) []*contracts.ChallengeHintResp {
 	var pContractsChallengeHintRespList []*contracts.ChallengeHintResp
 	if source != nil {
 		pContractsChallengeHintRespList = make([]*contracts.ChallengeHintResp, len(source))

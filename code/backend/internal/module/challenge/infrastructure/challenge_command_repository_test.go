@@ -20,7 +20,7 @@ type challengeCommandRepositorySourceStub struct {
 	findLatestPublishCheckJobByIDFn func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error)
 }
 
-func (s challengeCommandRepositorySourceStub) CreateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint) error {
+func (s challengeCommandRepositorySourceStub) CreateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint) error {
 	return nil
 }
 
@@ -32,7 +32,7 @@ func (s challengeCommandRepositorySourceStub) Update(context.Context, *model.Cha
 	return nil
 }
 
-func (s challengeCommandRepositorySourceStub) UpdateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint, bool) error {
+func (s challengeCommandRepositorySourceStub) UpdateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
 	return nil
 }
 

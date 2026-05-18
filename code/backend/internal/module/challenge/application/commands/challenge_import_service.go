@@ -22,6 +22,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
@@ -924,14 +925,14 @@ func buildImportedChallengeHints(
 	challengeID int64,
 	hints []domain.ParsedChallengePackageHint,
 	now time.Time,
-) []model.ChallengeHint {
+) []challengeentity.ChallengeHint {
 	if len(hints) == 0 {
 		return nil
 	}
 
-	records := make([]model.ChallengeHint, 0, len(hints))
+	records := make([]challengeentity.ChallengeHint, 0, len(hints))
 	for _, hint := range hints {
-		records = append(records, model.ChallengeHint{
+		records = append(records, challengeentity.ChallengeHint{
 			ChallengeID: challengeID,
 			Level:       hint.Level,
 			Title:       hint.Title,

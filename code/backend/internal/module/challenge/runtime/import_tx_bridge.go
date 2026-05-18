@@ -174,11 +174,11 @@ func (s *challengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, chal
 func (s *challengeImportTxStore) ReplaceImportedHints(
 	ctx context.Context,
 	challengeID int64,
-	hints []model.ChallengeHint,
+	hints []challengeentity.ChallengeHint,
 ) error {
 	if err := s.tx(ctx).
 		Where("challenge_id = ?", challengeID).
-		Delete(&model.ChallengeHint{}).Error; err != nil {
+		Delete(&challengeentity.ChallengeHint{}).Error; err != nil {
 		return fmt.Errorf("delete hints for challenge %d: %w", challengeID, err)
 	}
 	if len(hints) == 0 {

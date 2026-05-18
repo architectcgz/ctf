@@ -73,7 +73,7 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 					InstanceSharing: model.InstanceSharingPerUser,
 				}, nil
 			},
-			updateWithHintsFn: func(context.Context, *model.Challenge, []*model.ChallengeHint, bool) error {
+			updateWithHintsFn: func(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
 				updated = true
 				return nil
 			},

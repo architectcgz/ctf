@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -42,8 +43,8 @@ type ChallengeResponseMapper interface {
 	ToAWDChallengeRespBase(source model.AWDChallenge) challengecontracts.AWDChallengeResp
 	ToAWDChallengeRespBasePtr(source *model.AWDChallenge) *challengecontracts.AWDChallengeResp
 
-	ToChallengeHintAdminResp(source model.ChallengeHint) challengecontracts.ChallengeHintAdminResp
-	ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *challengecontracts.ChallengeHintAdminResp
+	ToChallengeHintAdminResp(source challengeentity.ChallengeHint) challengecontracts.ChallengeHintAdminResp
+	ToChallengeHintAdminRespPtr(source *challengeentity.ChallengeHint) *challengecontracts.ChallengeHintAdminResp
 
 	// goverter:ignore SizeFormatted
 	ToImageRespBase(source model.Image) challengecontracts.ImageResp

@@ -29,7 +29,7 @@ func NewChallengeCommandRepository(source challengeCommandRepositorySource) *Cha
 	return &ChallengeCommandRepository{source: source}
 }
 
-func (r *ChallengeCommandRepository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+func (r *ChallengeCommandRepository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
 	return r.source.CreateWithHints(ctx, challenge, hints)
 }
 
@@ -45,7 +45,7 @@ func (r *ChallengeCommandRepository) Update(ctx context.Context, challenge *mode
 	return r.source.Update(ctx, challenge)
 }
 
-func (r *ChallengeCommandRepository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+func (r *ChallengeCommandRepository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 	return r.source.UpdateWithHints(ctx, challenge, hints, replaceHints)
 }
 

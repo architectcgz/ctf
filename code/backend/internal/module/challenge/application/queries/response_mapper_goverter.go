@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
@@ -16,9 +17,9 @@ import (
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :queries
 type challengeQueryResponseMapper interface {
-	ToChallengeHintResp(source model.ChallengeHint) challengecontracts.ChallengeHintResp
-	ToChallengeHintRespPtr(source *model.ChallengeHint) *challengecontracts.ChallengeHintResp
-	ToChallengeHintRespsPtr(source []*model.ChallengeHint) []*challengecontracts.ChallengeHintResp
+	ToChallengeHintResp(source challengeentity.ChallengeHint) challengecontracts.ChallengeHintResp
+	ToChallengeHintRespPtr(source *challengeentity.ChallengeHint) *challengecontracts.ChallengeHintResp
+	ToChallengeHintRespsPtr(source []*challengeentity.ChallengeHint) []*challengecontracts.ChallengeHintResp
 
 	// goverter:ignore SolvedCount
 	// goverter:ignore TotalAttempts

@@ -14,10 +14,10 @@ import (
 )
 
 type challengeCommandContextRepoStub struct {
-	createWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
+	createWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
 	findByIDWithContextFn           func(ctx context.Context, id int64) (*model.Challenge, error)
 	updateFn                        func(ctx context.Context, challenge *model.Challenge) error
-	updateWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	updateWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	deleteFn                        func(ctx context.Context, id int64) error
 	hasRunningInstancesFn           func(ctx context.Context, challengeID int64) (bool, error)
 	createPublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
@@ -27,7 +27,7 @@ type challengeCommandContextRepoStub struct {
 	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
-func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
 	if s.createWithHintsFn != nil {
 		return s.createWithHintsFn(ctx, challenge, hints)
 	}
@@ -48,7 +48,7 @@ func (s *challengeCommandContextRepoStub) Update(ctx context.Context, challenge 
 	return nil
 }
 
-func (s *challengeCommandContextRepoStub) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+func (s *challengeCommandContextRepoStub) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 	if s.updateWithHintsFn != nil {
 		return s.updateWithHintsFn(ctx, challenge, hints, replaceHints)
 	}
@@ -186,7 +186,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 	createCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		createWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+		createWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create challenge ctx value %v, got %v", expectedCtxValue, got)
@@ -250,7 +250,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 			}
 			return &model.Challenge{ID: id, Title: "Old", Category: "misc", Difficulty: "easy", Points: 50, FlagType: model.FlagTypeStatic, InstanceSharing: model.InstanceSharingPerUser}, nil
 		},
-		updateWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+		updateWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update challenge ctx value %v, got %v", expectedCtxValue, got)

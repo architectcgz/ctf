@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -89,12 +90,12 @@ func (s *challengePackageExportTxStore) NextPackageRevisionNo(ctx context.Contex
 func (s *challengePackageExportTxStore) ListChallengeHints(
 	ctx context.Context,
 	challengeID int64,
-) ([]model.ChallengeHint, error) {
+) ([]challengeentity.ChallengeHint, error) {
 	items, err := s.rawRepo.ListHintsByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]model.ChallengeHint, 0, len(items))
+	result := make([]challengeentity.ChallengeHint, 0, len(items))
 	for _, item := range items {
 		if item == nil {
 			continue

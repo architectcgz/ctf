@@ -11,7 +11,7 @@ import (
 
 type ctxOnlyChallengeCommandRepository struct{}
 
-func (ctxOnlyChallengeCommandRepository) CreateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint) error {
+func (ctxOnlyChallengeCommandRepository) CreateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint) error {
 	return nil
 }
 
@@ -23,7 +23,7 @@ func (ctxOnlyChallengeCommandRepository) Update(context.Context, *model.Challeng
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) UpdateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint, bool) error {
+func (ctxOnlyChallengeCommandRepository) UpdateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
 	return nil
 }
 

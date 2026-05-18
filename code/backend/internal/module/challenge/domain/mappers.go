@@ -10,16 +10,17 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*model.ChallengeHint, error) {
+func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*challengeentity.ChallengeHint, error) {
 	if reqHints == nil {
 		return nil, nil
 	}
 
-	hints := make([]*model.ChallengeHint, 0, len(reqHints))
+	hints := make([]*challengeentity.ChallengeHint, 0, len(reqHints))
 	seenLevels := make(map[int]struct{}, len(reqHints))
 	for _, reqHint := range reqHints {
 		content := strings.TrimSpace(reqHint.Content)
@@ -30,7 +31,7 @@ func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*mod
 			return nil, errcode.ErrInvalidParams.WithCause(errors.New("提示级别不能重复"))
 		}
 		seenLevels[reqHint.Level] = struct{}{}
-		hints = append(hints, &model.ChallengeHint{
+		hints = append(hints, &challengeentity.ChallengeHint{
 			Level:   reqHint.Level,
 			Title:   strings.TrimSpace(reqHint.Title),
 			Content: content,
@@ -43,7 +44,7 @@ func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*mod
 	return hints, nil
 }
 
-func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.ChallengeHint) *challengecontracts.ChallengeResp {
+func ChallengeRespFromModel(challenge *model.Challenge, hints []*challengeentity.ChallengeHint) *challengecontracts.ChallengeResp {
 	resp := challengeResponseMapperInst.ToChallengeRespBasePtr(challenge)
 	if resp == nil {
 		return nil

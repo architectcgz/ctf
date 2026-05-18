@@ -84,7 +84,7 @@ var fullRouterTestSchemaModels = []any{
 	&challengeentity.ChallengePublishCheckJob{},
 	&model.Tag{},
 	&model.ChallengeTag{},
-	&model.ChallengeHint{},
+	&challengeentity.ChallengeHint{},
 	&model.ChallengeWriteup{},
 	&model.SubmissionWriteup{},
 	&model.EnvironmentTemplate{},
@@ -1241,7 +1241,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	hint := &model.ChallengeHint{
+	hint := &challengeentity.ChallengeHint{
 		ChallengeID: env.challenge.ID,
 		Level:       1,
 		Title:       "入口提示",

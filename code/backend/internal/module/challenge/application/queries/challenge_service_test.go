@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -21,7 +22,7 @@ type challengeQueryRepositoryStub struct {
 	findByIDFn             func(context.Context, int64) (*model.Challenge, error)
 	listFn                 func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
 	listPublishedFn        func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
-	listHintsByChallengeID func(context.Context, int64) ([]*model.ChallengeHint, error)
+	listHintsByChallengeID func(context.Context, int64) ([]*challengeentity.ChallengeHint, error)
 	getSolvedStatusFn      func(context.Context, int64, int64) (bool, error)
 	getSolvedCountFn       func(context.Context, int64) (int64, error)
 	getTotalAttemptsFn     func(context.Context, int64) (int64, error)
@@ -51,7 +52,7 @@ func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query 
 	return nil, 0, nil
 }
 
-func (s *challengeQueryRepositoryStub) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
+func (s *challengeQueryRepositoryStub) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error) {
 	if s.listHintsByChallengeID != nil {
 		return s.listHintsByChallengeID(ctx, challengeID)
 	}
@@ -204,7 +205,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.ChallengeHint{
+	if err := db.Create(&challengeentity.ChallengeHint{
 		ChallengeID: challenge.ID,
 		Level:       1,
 		Title:       "第一条提示",

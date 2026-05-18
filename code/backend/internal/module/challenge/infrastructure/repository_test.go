@@ -345,7 +345,7 @@ func TestRepositorySchemaOmitsHintUnlockArtifacts(t *testing.T) {
 	if db.Migrator().HasTable("challenge_hint_unlocks") {
 		t.Fatal("expected challenge_hint_unlocks table to be removed")
 	}
-	if db.Migrator().HasColumn(&model.ChallengeHint{}, "cost_points") {
+	if db.Migrator().HasColumn(&challengeentity.ChallengeHint{}, "cost_points") {
 		t.Fatal("expected challenge_hints.cost_points column to be removed")
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -18,7 +19,7 @@ func (ctxOnlyChallengeQueryRepository) List(context.Context, *challengecontracts
 	return nil, 0, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListHintsByChallengeID(context.Context, int64) ([]*model.ChallengeHint, error) {
+func (ctxOnlyChallengeQueryRepository) ListHintsByChallengeID(context.Context, int64) ([]*challengeentity.ChallengeHint, error) {
 	return nil, nil
 }
 

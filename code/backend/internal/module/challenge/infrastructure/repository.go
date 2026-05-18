@@ -59,7 +59,7 @@ func (r *Repository) Create(ctx context.Context, challenge *model.Challenge) err
 	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
-func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
 			return err
@@ -84,7 +84,7 @@ func (r *Repository) Update(ctx context.Context, challenge *model.Challenge) err
 	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
-func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(challenge).Error; err != nil {
 			return err
@@ -92,7 +92,7 @@ func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Chall
 		if !replaceHints {
 			return nil
 		}
-		if err := tx.Where("challenge_id = ?", challenge.ID).Delete(&model.ChallengeHint{}).Error; err != nil {
+		if err := tx.Where("challenge_id = ?", challenge.ID).Delete(&challengeentity.ChallengeHint{}).Error; err != nil {
 			return err
 		}
 		if len(hints) == 0 {
@@ -286,8 +286,8 @@ func (r *Repository) CountByImageID(ctx context.Context, imageID int64) (int64, 
 	return count, err
 }
 
-func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
-	var hints []*model.ChallengeHint
+func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error) {
+	var hints []*challengeentity.ChallengeHint
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
 	return hints, err
 }

@@ -839,7 +839,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.Image{},
 		&model.Challenge{},
 		&challengeentity.ChallengePublishCheckJob{},
-		&model.ChallengeHint{},
+		&challengeentity.ChallengeHint{},
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},
 		&model.ChallengePackageRevision{},

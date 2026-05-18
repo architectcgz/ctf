@@ -6,6 +6,7 @@ package domain
 import (
 	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
+	entity "ctf-platform/internal/module/challenge/entity"
 	ports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -73,7 +74,7 @@ func (c *ChallengeResponseMapperImpl) ToAdminChallengeWriteupRespPtr(source *mod
 	}
 	return pContractsAdminChallengeWriteupResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminResp(source model.ChallengeHint) contracts.ChallengeHintAdminResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminResp(source entity.ChallengeHint) contracts.ChallengeHintAdminResp {
 	var contractsChallengeHintAdminResp contracts.ChallengeHintAdminResp
 	contractsChallengeHintAdminResp.ID = source.ID
 	contractsChallengeHintAdminResp.Level = source.Level
@@ -81,7 +82,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminResp(source model.Chal
 	contractsChallengeHintAdminResp.Content = source.Content
 	return contractsChallengeHintAdminResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *model.ChallengeHint) *contracts.ChallengeHintAdminResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeHintAdminRespPtr(source *entity.ChallengeHint) *contracts.ChallengeHintAdminResp {
 	var pContractsChallengeHintAdminResp *contracts.ChallengeHintAdminResp
 	if source != nil {
 		contractsChallengeHintAdminResp := c.ToChallengeHintAdminResp((*source))

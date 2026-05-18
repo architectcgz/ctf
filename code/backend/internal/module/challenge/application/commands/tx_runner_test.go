@@ -149,8 +149,8 @@ func (s *testChallengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, 
 	return s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengePublishCheckJob{}).Error
 }
 
-func (s *testChallengeImportTxStore) ReplaceImportedHints(ctx context.Context, challengeID int64, hints []model.ChallengeHint) error {
-	if err := s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeHint{}).Error; err != nil {
+func (s *testChallengeImportTxStore) ReplaceImportedHints(ctx context.Context, challengeID int64, hints []challengeentity.ChallengeHint) error {
+	if err := s.tx(ctx).Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengeHint{}).Error; err != nil {
 		return err
 	}
 	if len(hints) == 0 {
@@ -416,12 +416,12 @@ func (s *testChallengePackageExportTxStore) NextPackageRevisionNo(ctx context.Co
 	}
 }
 
-func (s *testChallengePackageExportTxStore) ListChallengeHints(ctx context.Context, challengeID int64) ([]model.ChallengeHint, error) {
+func (s *testChallengePackageExportTxStore) ListChallengeHints(ctx context.Context, challengeID int64) ([]challengeentity.ChallengeHint, error) {
 	items, err := s.rawRepo.ListHintsByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]model.ChallengeHint, 0, len(items))
+	result := make([]challengeentity.ChallengeHint, 0, len(items))
 	for _, item := range items {
 		if item == nil {
 			continue
