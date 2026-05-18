@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	"ctf-platform/internal/module/practice/testsupport"
 	"ctf-platform/internal/pkg/cache"
@@ -139,7 +140,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 		t.Fatalf("UpdateUserScore() error = %v", err)
 	}
 
-	var userScore model.UserScore
+	var userScore practiceentity.UserScore
 	if err := db.First(&userScore, "user_id = ?", 9).Error; err != nil {
 		t.Fatalf("load user score: %v", err)
 	}

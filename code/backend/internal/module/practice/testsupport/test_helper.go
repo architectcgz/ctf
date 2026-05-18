@@ -8,6 +8,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
 func SetupPracticeTestDB(t *testing.T) *gorm.DB {
@@ -34,7 +35,7 @@ func SetupScoreServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Challenge{}, &model.Submission{}, &model.User{}, &model.UserScore{}); err != nil {
+	if err := db.AutoMigrate(&model.Challenge{}, &model.Submission{}, &model.User{}, &practiceentity.UserScore{}); err != nil {
 		t.Fatalf("migrate score tables: %v", err)
 	}
 	return db

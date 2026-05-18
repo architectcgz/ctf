@@ -1,8 +1,7 @@
-package model
+package entity
 
 import "time"
 
-// UserScore 用户得分模型
 type UserScore struct {
 	UserID      int64     `gorm:"column:user_id;primaryKey"`
 	TotalScore  int       `gorm:"column:total_score;not null;default:0"`

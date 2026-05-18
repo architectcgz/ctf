@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -346,15 +347,15 @@ type PracticeSolvedChallengeRepository interface {
 }
 
 type PracticeUserScoreWriteRepository interface {
-	UpsertUserScore(ctx context.Context, userScore *model.UserScore) error
+	UpsertUserScore(ctx context.Context, userScore *practiceentity.UserScore) error
 }
 
 type PracticeUserScoreReadRepository interface {
-	FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error)
+	FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error)
 }
 
 type PracticeRankingListRepository interface {
-	ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error)
+	ListTopUserScores(ctx context.Context, limit int) ([]practiceentity.UserScore, error)
 }
 
 type PracticeUserDirectoryRepository interface {

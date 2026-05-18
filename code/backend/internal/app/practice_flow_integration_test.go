@@ -49,6 +49,7 @@ import (
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
@@ -851,7 +852,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.SkillProfile{},
-		&model.UserScore{},
+		&practiceentity.UserScore{},
 	); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)
 	}

@@ -8,9 +8,9 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	"ctf-platform/internal/module/practice/domain"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -98,7 +98,7 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 		totalScore += domain.CalculateChallengeScore(&challenge)
 	}
 
-	err = s.repo.UpsertUserScore(ctx, &model.UserScore{
+	err = s.repo.UpsertUserScore(ctx, &practiceentity.UserScore{
 		UserID:      userID,
 		TotalScore:  totalScore,
 		SolvedCount: len(challengeIDs),

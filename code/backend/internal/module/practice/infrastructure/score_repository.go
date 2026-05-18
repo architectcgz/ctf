@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
 func (r *Repository) FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error) {
@@ -42,15 +43,15 @@ func (r *Repository) ListSolvedChallengeIDs(ctx context.Context, userID int64) (
 	return challengeIDs, err
 }
 
-func (r *Repository) UpsertUserScore(ctx context.Context, userScore *model.UserScore) error {
+func (r *Repository) UpsertUserScore(ctx context.Context, userScore *practiceentity.UserScore) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"total_score", "solved_count", "updated_at"}),
 	}).Create(userScore).Error
 }
 
-func (r *Repository) FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error) {
-	var userScore model.UserScore
+func (r *Repository) FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error) {
+	var userScore practiceentity.UserScore
 	if err := r.dbWithContext(ctx).
 		Where("user_id = ?", userID).
 		First(&userScore).Error; err != nil {
@@ -59,8 +60,8 @@ func (r *Repository) FindUserScore(ctx context.Context, userID int64) (*model.Us
 	return &userScore, nil
 }
 
-func (r *Repository) ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error) {
-	var scores []model.UserScore
+func (r *Repository) ListTopUserScores(ctx context.Context, limit int) ([]practiceentity.UserScore, error) {
+	var scores []practiceentity.UserScore
 	err := r.dbWithContext(ctx).
 		Order("total_score DESC, updated_at ASC").
 		Limit(limit).

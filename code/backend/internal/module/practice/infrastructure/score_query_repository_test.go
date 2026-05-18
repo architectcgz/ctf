@@ -8,22 +8,23 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type scoreQuerySourceStub struct {
-	findUserScoreFn     func(context.Context, int64) (*model.UserScore, error)
-	listTopUserScoresFn func(context.Context, int) ([]model.UserScore, error)
+	findUserScoreFn     func(context.Context, int64) (*practiceentity.UserScore, error)
+	listTopUserScoresFn func(context.Context, int) ([]practiceentity.UserScore, error)
 	findUsersByIDsFn    func(context.Context, []int64) ([]model.User, error)
 }
 
-func (s scoreQuerySourceStub) FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error) {
+func (s scoreQuerySourceStub) FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error) {
 	return s.findUserScoreFn(ctx, userID)
 }
 
-func (s scoreQuerySourceStub) ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error) {
+func (s scoreQuerySourceStub) ListTopUserScores(ctx context.Context, limit int) ([]practiceentity.UserScore, error) {
 	if s.listTopUserScoresFn == nil {
-		return []model.UserScore{}, nil
+		return []practiceentity.UserScore{}, nil
 	}
 	return s.listTopUserScoresFn(ctx, limit)
 }
@@ -39,7 +40,7 @@ func TestScoreQueryRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewScoreQueryRepository(scoreQuerySourceStub{
-		findUserScoreFn: func(context.Context, int64) (*model.UserScore, error) {
+		findUserScoreFn: func(context.Context, int64) (*practiceentity.UserScore, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -54,7 +55,7 @@ func TestScoreQueryRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewScoreQueryRepository(scoreQuerySourceStub{
-		findUserScoreFn: func(context.Context, int64) (*model.UserScore, error) {
+		findUserScoreFn: func(context.Context, int64) (*practiceentity.UserScore, error) {
 			return nil, expectedErr
 		},
 	})

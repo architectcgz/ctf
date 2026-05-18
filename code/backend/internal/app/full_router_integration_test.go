@@ -35,6 +35,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -93,7 +94,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.Submission{},
 	&model.Instance{},
 	&model.PortAllocation{},
-	&model.UserScore{},
+	&practiceentity.UserScore{},
 	&model.AuditLog{},
 	&opsentity.NotificationBatch{},
 	&opsentity.Notification{},
@@ -1452,7 +1453,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}).Error; err != nil {
 		t.Fatalf("create submission: %v", err)
 	}
-	if err := env.db.Create(&model.UserScore{
+	if err := env.db.Create(&practiceentity.UserScore{
 		UserID:     env.student.ID,
 		TotalScore: 100,
 	}).Error; err != nil {

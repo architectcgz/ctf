@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -27,7 +28,7 @@ func NewScoreQueryRepository(source scoreQuerySource) *ScoreQueryRepository {
 	return &ScoreQueryRepository{source: source}
 }
 
-func (r *ScoreQueryRepository) FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error) {
+func (r *ScoreQueryRepository) FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error) {
 	userScore, err := r.source.FindUserScore(ctx, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeUserScoreNotFound
@@ -35,7 +36,7 @@ func (r *ScoreQueryRepository) FindUserScore(ctx context.Context, userID int64) 
 	return userScore, err
 }
 
-func (r *ScoreQueryRepository) ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error) {
+func (r *ScoreQueryRepository) ListTopUserScores(ctx context.Context, limit int) ([]practiceentity.UserScore, error) {
 	return r.source.ListTopUserScores(ctx, limit)
 }
 

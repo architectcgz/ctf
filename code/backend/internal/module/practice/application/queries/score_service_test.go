@@ -13,27 +13,28 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport"
 )
 
 type scoreQueryRepoStub struct {
-	findUserScoreFn     func(context.Context, int64) (*model.UserScore, error)
-	listTopUserScoresFn func(context.Context, int) ([]model.UserScore, error)
+	findUserScoreFn     func(context.Context, int64) (*practiceentity.UserScore, error)
+	listTopUserScoresFn func(context.Context, int) ([]practiceentity.UserScore, error)
 	findUsersByIDsFn    func(context.Context, []int64) ([]model.User, error)
 }
 
-func (s scoreQueryRepoStub) FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error) {
+func (s scoreQueryRepoStub) FindUserScore(ctx context.Context, userID int64) (*practiceentity.UserScore, error) {
 	if s.findUserScoreFn == nil {
 		return nil, nil
 	}
 	return s.findUserScoreFn(ctx, userID)
 }
 
-func (s scoreQueryRepoStub) ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error) {
+func (s scoreQueryRepoStub) ListTopUserScores(ctx context.Context, limit int) ([]practiceentity.UserScore, error) {
 	if s.listTopUserScoresFn == nil {
-		return []model.UserScore{}, nil
+		return []practiceentity.UserScore{}, nil
 	}
 	return s.listTopUserScoresFn(ctx, limit)
 }
@@ -74,7 +75,7 @@ func TestScoreServiceGetUserScoreTreatsPracticeScoreNotFoundAsZeroScore(t *testi
 	t.Parallel()
 
 	service := practiceqry.NewScoreService(scoreQueryRepoStub{
-		findUserScoreFn: func(context.Context, int64) (*model.UserScore, error) {
+		findUserScoreFn: func(context.Context, int64) (*practiceentity.UserScore, error) {
 			return nil, practiceports.ErrPracticeUserScoreNotFound
 		},
 	}, nil, zap.NewNop(), &config.ScoreConfig{MaxRankingLimit: 100})

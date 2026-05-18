@@ -4,20 +4,20 @@
 package queries
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/practice/contracts"
+	entity "ctf-platform/internal/module/practice/entity"
 )
 
 type practiceQueryResponseMapperImpl struct{}
 
-func (c *practiceQueryResponseMapperImpl) ToRankingItemBase(source model.UserScore) contracts.RankingItem {
+func (c *practiceQueryResponseMapperImpl) ToRankingItemBase(source entity.UserScore) contracts.RankingItem {
 	var contractsRankingItem contracts.RankingItem
 	contractsRankingItem.UserID = source.UserID
 	contractsRankingItem.TotalScore = source.TotalScore
 	contractsRankingItem.SolvedCount = source.SolvedCount
 	return contractsRankingItem
 }
-func (c *practiceQueryResponseMapperImpl) ToRankingItemBasePtr(source *model.UserScore) *contracts.RankingItem {
+func (c *practiceQueryResponseMapperImpl) ToRankingItemBasePtr(source *entity.UserScore) *contracts.RankingItem {
 	var pContractsRankingItem *contracts.RankingItem
 	if source != nil {
 		contractsRankingItem := c.ToRankingItemBase((*source))
@@ -25,7 +25,7 @@ func (c *practiceQueryResponseMapperImpl) ToRankingItemBasePtr(source *model.Use
 	}
 	return pContractsRankingItem
 }
-func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBase(source model.UserScore) contracts.UserScoreInfo {
+func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBase(source entity.UserScore) contracts.UserScoreInfo {
 	var contractsUserScoreInfo contracts.UserScoreInfo
 	contractsUserScoreInfo.UserID = source.UserID
 	contractsUserScoreInfo.TotalScore = source.TotalScore
@@ -33,7 +33,7 @@ func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBase(source model.UserS
 	contractsUserScoreInfo.Rank = source.Rank
 	return contractsUserScoreInfo
 }
-func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBasePtr(source *model.UserScore) *contracts.UserScoreInfo {
+func (c *practiceQueryResponseMapperImpl) ToUserScoreInfoBasePtr(source *entity.UserScore) *contracts.UserScoreInfo {
 	var pContractsUserScoreInfo *contracts.UserScoreInfo
 	if source != nil {
 		contractsUserScoreInfo := c.ToUserScoreInfoBase((*source))
