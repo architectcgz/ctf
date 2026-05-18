@@ -33,8 +33,8 @@ type practiceCommandResponseMapper interface {
 
 	// goverter:ignore Status
 	// goverter:ignore Answer
-	ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp
-	ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *dto.ChallengeSubmissionRecordResp
+	ToChallengeSubmissionRecordRespBase(source model.Submission) ChallengeSubmissionRecordResp
+	ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *ChallengeSubmissionRecordResp
 
 	ToAdminAWDInstanceItemResp(source adminAWDInstanceItemRespSource) dto.AdminAWDInstanceItemResp
 	ToAdminAWDInstanceItemRespPtr(source adminAWDInstanceItemRespSource) *dto.AdminAWDInstanceItemResp

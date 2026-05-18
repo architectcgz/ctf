@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -41,7 +40,7 @@ func NewStudentReviewService(
 	}
 }
 
-func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.TeacherProgressResp, error) {
+func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*TeacherProgressResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -67,7 +66,7 @@ func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requ
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TeacherProgressResp{
+	return &TeacherProgressResp{
 		TotalChallenges:  int(totalChallenges),
 		SolvedChallenges: int(solvedChallenges),
 		ByCategory:       toProgressBreakdownMap(categoryRows),
@@ -75,14 +74,14 @@ func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requ
 	}, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*dto.TeacherRecommendationResp, error) {
+func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*TeacherRecommendationResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
 	}
 
 	if s.recommendationService == nil {
-		return &dto.TeacherRecommendationResp{}, nil
+		return &TeacherRecommendationResp{}, nil
 	}
 
 	result, err := s.recommendationService.Recommend(ctx, student.ID, limit)
@@ -90,11 +89,11 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if result == nil {
-		return &dto.TeacherRecommendationResp{}, nil
+		return &TeacherRecommendationResp{}, nil
 	}
 	resp := teachingQueryMapper.ToTeacherRecommendationRespPtr(result)
 	if resp == nil {
-		return &dto.TeacherRecommendationResp{}, nil
+		return &TeacherRecommendationResp{}, nil
 	}
 	resp.WeakDimensions = commonmapper.NonNilSlice(resp.WeakDimensions)
 	resp.Challenges = commonmapper.NonNilSlice(resp.Challenges)
@@ -115,7 +114,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 	return &TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*dto.TeacherEvidenceResp, error) {
+func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*TeacherEvidenceResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -129,11 +128,11 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 	events = filterEvidenceEvents(events, repoQuery)
 	events = paginateEvidenceEvents(events, repoQuery)
 
-	resp := &dto.TeacherEvidenceResp{
-		Events: make([]dto.TeacherEvidenceEvent, 0, len(events)),
+	resp := &TeacherEvidenceResp{
+		Events: make([]TeacherEvidenceEvent, 0, len(events)),
 	}
 	for _, event := range events {
-		resp.Events = append(resp.Events, dto.TeacherEvidenceEvent{
+		resp.Events = append(resp.Events, TeacherEvidenceEvent{
 			Type:        event.Type,
 			ChallengeID: event.ChallengeID,
 			Title:       event.Title,
@@ -162,7 +161,7 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 	return resp, nil
 }
 
-func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherAttackSessionInput) (*dto.TeacherAttackSessionResp, error) {
+func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherAttackSessionInput) (*TeacherAttackSessionResp, error) {
 	student, err := getAccessibleStudent(ctx, s.users, requesterID, requesterRole, studentID)
 	if err != nil {
 		return nil, err
@@ -195,7 +194,7 @@ func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context
 		sessions = filtered
 	}
 
-	resp := &dto.TeacherAttackSessionResp{
+	resp := &TeacherAttackSessionResp{
 		Summary:  summarizeAttackSessions(sessions),
 		Sessions: paginateAttackSessions(sessions, query),
 	}
@@ -300,9 +299,9 @@ func filterAttackSessionEvents(events []queryports.EvidenceEventRecord, query *T
 	return filtered
 }
 
-func buildAttackSessions(studentID int64, events []queryports.EvidenceEventRecord) []dto.TeacherAttackSession {
+func buildAttackSessions(studentID int64, events []queryports.EvidenceEventRecord) []TeacherAttackSession {
 	if len(events) == 0 {
-		return []dto.TeacherAttackSession{}
+		return []TeacherAttackSession{}
 	}
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].Timestamp.Before(events[j].Timestamp)
@@ -318,7 +317,7 @@ func buildAttackSessions(studentID int64, events []queryports.EvidenceEventRecor
 		grouped[key] = append(grouped[key], event)
 	}
 
-	sessions := make([]dto.TeacherAttackSession, 0, len(grouped))
+	sessions := make([]TeacherAttackSession, 0, len(grouped))
 	for _, key := range order {
 		chunk := make([]queryports.EvidenceEventRecord, 0)
 		for _, event := range grouped[key] {
@@ -339,11 +338,11 @@ func buildAttackSessions(studentID int64, events []queryports.EvidenceEventRecor
 	return sessions
 }
 
-func buildAttackSession(studentID int64, sequence int, events []queryports.EvidenceEventRecord) dto.TeacherAttackSession {
+func buildAttackSession(studentID int64, sequence int, events []queryports.EvidenceEventRecord) TeacherAttackSession {
 	first := events[0]
 	last := events[len(events)-1]
 	sessionID := fmt.Sprintf("sess_%d_%d", studentID, sequence)
-	session := dto.TeacherAttackSession{
+	session := TeacherAttackSession{
 		ID:           sessionID,
 		Mode:         attackEventMode(first),
 		StudentID:    studentID,
@@ -358,7 +357,7 @@ func buildAttackSession(studentID int64, sequence int, events []queryports.Evide
 		EndedAt:      last.Timestamp,
 		Result:       deriveAttackSessionResult(events),
 		EventCount:   len(events),
-		Events:       make([]dto.TeacherAttackEvent, 0, len(events)),
+		Events:       make([]TeacherAttackEvent, 0, len(events)),
 	}
 	for index, event := range events {
 		attackEvent := toAttackEvent(studentID, sessionID, index, event)
@@ -370,19 +369,19 @@ func buildAttackSession(studentID int64, sequence int, events []queryports.Evide
 	return session
 }
 
-func toAttackEvent(studentID int64, sessionID string, index int, event queryports.EvidenceEventRecord) dto.TeacherAttackEvent {
-	return dto.TeacherAttackEvent{
+func toAttackEvent(studentID int64, sessionID string, index int, event queryports.EvidenceEventRecord) TeacherAttackEvent {
+	return TeacherAttackEvent{
 		ID:         fmt.Sprintf("%s_evt_%d", sessionID, index+1),
 		SessionID:  sessionID,
 		Type:       event.Type,
 		Stage:      evidenceEventStage(event),
 		Source:     evidenceEventSource(event),
 		OccurredAt: event.Timestamp,
-		Actor: dto.TeacherAttackActor{
+		Actor: TeacherAttackActor{
 			UserID: studentID,
 			TeamID: event.TeamID,
 		},
-		Target: dto.TeacherAttackTarget{
+		Target: TeacherAttackTarget{
 			ChallengeID:  attackEventChallengeID(event),
 			ContestID:    event.ContestID,
 			RoundID:      event.RoundID,
@@ -395,8 +394,8 @@ func toAttackEvent(studentID int64, sessionID string, index int, event queryport
 	}
 }
 
-func summarizeAttackSessions(sessions []dto.TeacherAttackSession) dto.TeacherAttackSessionSummary {
-	summary := dto.TeacherAttackSessionSummary{TotalSessions: len(sessions)}
+func summarizeAttackSessions(sessions []TeacherAttackSession) TeacherAttackSessionSummary {
+	summary := TeacherAttackSessionSummary{TotalSessions: len(sessions)}
 	for _, session := range sessions {
 		summary.EventCount += session.EventCount
 		summary.CaptureAvailableCount += session.CaptureCount
@@ -414,7 +413,7 @@ func summarizeAttackSessions(sessions []dto.TeacherAttackSession) dto.TeacherAtt
 	return summary
 }
 
-func paginateAttackSessions(sessions []dto.TeacherAttackSession, query *TeacherAttackSessionInput) []dto.TeacherAttackSession {
+func paginateAttackSessions(sessions []TeacherAttackSession, query *TeacherAttackSessionInput) []TeacherAttackSession {
 	limit := 20
 	offset := 0
 	if query != nil {
@@ -426,7 +425,7 @@ func paginateAttackSessions(sessions []dto.TeacherAttackSession, query *TeacherA
 		}
 	}
 	if offset >= len(sessions) {
-		return []dto.TeacherAttackSession{}
+		return []TeacherAttackSession{}
 	}
 	end := offset + limit
 	if end > len(sessions) {
@@ -560,14 +559,14 @@ func getAccessibleStudent(
 	return student, nil
 }
 
-func toProgressBreakdownMap(rows []queryports.ProgressRow) map[string]dto.ProgressBreakdown {
+func toProgressBreakdownMap(rows []queryports.ProgressRow) map[string]ProgressBreakdown {
 	if len(rows) == 0 {
-		return map[string]dto.ProgressBreakdown{}
+		return map[string]ProgressBreakdown{}
 	}
 
-	result := make(map[string]dto.ProgressBreakdown, len(rows))
+	result := make(map[string]ProgressBreakdown, len(rows))
 	for _, row := range rows {
-		result[row.Key] = dto.ProgressBreakdown{
+		result[row.Key] = ProgressBreakdown{
 			Total:  row.Total,
 			Solved: row.Solved,
 		}

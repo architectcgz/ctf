@@ -11,28 +11,27 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 )
 
 type stubTeachingQueryService struct{}
 
-func (stubTeachingQueryService) ListClasses(context.Context, int64, string, *teachingqueryqueries.TeacherClassListInput) ([]dto.TeacherClassItem, int64, int, int, error) {
+func (stubTeachingQueryService) ListClasses(context.Context, int64, string, *teachingqueryqueries.TeacherClassListInput) ([]teachingqueryqueries.TeacherClassItem, int64, int, int, error) {
 	return nil, 0, 0, 0, nil
 }
 
-func (stubTeachingQueryService) ListStudents(context.Context, int64, string, *teachingqueryqueries.TeacherStudentDirectoryInput) ([]dto.TeacherStudentItem, int64, int, int, error) {
+func (stubTeachingQueryService) ListStudents(context.Context, int64, string, *teachingqueryqueries.TeacherStudentDirectoryInput) ([]teachingqueryqueries.TeacherStudentItem, int64, int, int, error) {
 	return nil, 0, 0, 0, nil
 }
 
-func (stubTeachingQueryService) ListClassStudents(context.Context, int64, string, string, *teachingqueryqueries.TeacherStudentListInput) ([]dto.TeacherStudentItem, error) {
+func (stubTeachingQueryService) ListClassStudents(context.Context, int64, string, string, *teachingqueryqueries.TeacherStudentListInput) ([]teachingqueryqueries.TeacherStudentItem, error) {
 	return nil, nil
 }
 
 type stubTeachingOverviewService struct{}
 
-func (stubTeachingOverviewService) GetOverview(context.Context, int64, string) (*dto.TeacherOverviewResp, error) {
+func (stubTeachingOverviewService) GetOverview(context.Context, int64, string) (*teachingqueryqueries.TeacherOverviewResp, error) {
 	return nil, nil
 }
 
@@ -97,7 +96,7 @@ func (responseTeachingClassInsightService) GetClassReview(context.Context, int64
 				Students: []teachingqueryqueries.TeacherReviewStudentRef{
 					{ID: 1, Username: "alice", Name: &name},
 				},
-				Recommendation: &dto.TeacherRecommendationItem{
+				Recommendation: &teachingqueryqueries.TeacherRecommendationItem{
 					ChallengeID: 101,
 					Title:       "web-101",
 					Category:    "web",
@@ -114,11 +113,11 @@ type captureTeachingStudentReviewService struct {
 	lastAttackSessionQuery *teachingqueryqueries.TeacherAttackSessionInput
 }
 
-func (s *captureTeachingStudentReviewService) GetStudentProgress(context.Context, int64, string, int64) (*dto.TeacherProgressResp, error) {
+func (s *captureTeachingStudentReviewService) GetStudentProgress(context.Context, int64, string, int64) (*teachingqueryqueries.TeacherProgressResp, error) {
 	return nil, nil
 }
 
-func (s *captureTeachingStudentReviewService) GetStudentRecommendations(context.Context, int64, string, int64, int) (*dto.TeacherRecommendationResp, error) {
+func (s *captureTeachingStudentReviewService) GetStudentRecommendations(context.Context, int64, string, int64, int) (*teachingqueryqueries.TeacherRecommendationResp, error) {
 	return nil, nil
 }
 
@@ -126,14 +125,14 @@ func (s *captureTeachingStudentReviewService) GetStudentTimeline(context.Context
 	return nil, nil
 }
 
-func (s *captureTeachingStudentReviewService) GetStudentEvidence(_ context.Context, _ int64, _ string, _ int64, query *teachingqueryqueries.TeacherEvidenceInput) (*dto.TeacherEvidenceResp, error) {
+func (s *captureTeachingStudentReviewService) GetStudentEvidence(_ context.Context, _ int64, _ string, _ int64, query *teachingqueryqueries.TeacherEvidenceInput) (*teachingqueryqueries.TeacherEvidenceResp, error) {
 	s.lastEvidenceQuery = query
-	return &dto.TeacherEvidenceResp{}, nil
+	return &teachingqueryqueries.TeacherEvidenceResp{}, nil
 }
 
-func (s *captureTeachingStudentReviewService) GetStudentAttackSessions(_ context.Context, _ int64, _ string, _ int64, query *teachingqueryqueries.TeacherAttackSessionInput) (*dto.TeacherAttackSessionResp, error) {
+func (s *captureTeachingStudentReviewService) GetStudentAttackSessions(_ context.Context, _ int64, _ string, _ int64, query *teachingqueryqueries.TeacherAttackSessionInput) (*teachingqueryqueries.TeacherAttackSessionResp, error) {
 	s.lastAttackSessionQuery = query
-	return &dto.TeacherAttackSessionResp{}, nil
+	return &teachingqueryqueries.TeacherAttackSessionResp{}, nil
 }
 
 func TestGetStudentEvidenceBindsQueryIntoTeachingInput(t *testing.T) {

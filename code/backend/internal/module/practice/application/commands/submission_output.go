@@ -1,4 +1,4 @@
-package dto
+package commands
 
 import "time"
 
@@ -8,12 +8,6 @@ const (
 	SubmissionStatusPendingReview = "pending_review"
 )
 
-// SubmitFlagReq Flag 提交请求
-type SubmitFlagReq struct {
-	Flag string `json:"flag" binding:"required"`
-}
-
-// SubmissionResp Flag 提交响应
 type SubmissionResp struct {
 	IsCorrect          bool       `json:"is_correct"`
 	Status             string     `json:"status"`

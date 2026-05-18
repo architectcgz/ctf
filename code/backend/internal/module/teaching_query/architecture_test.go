@@ -63,6 +63,23 @@ func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
+func TestTeacherAggregateQueryDoesNotDependOnGlobalDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("contracts", "class_insight.go"),
+		filepath.Join("application", "queries", "contracts.go"),
+		filepath.Join("application", "queries", "overview_service.go"),
+		filepath.Join("application", "queries", "service.go"),
+		filepath.Join("application", "queries", "student_review_service.go"),
+		filepath.Join("application", "queries", "response_mapper.go"),
+		filepath.Join("application", "queries", "class_insight_response_mapper.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
 	t.Parallel()
 

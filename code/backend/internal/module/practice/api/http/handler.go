@@ -7,10 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/middleware"
+	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
@@ -34,8 +33,8 @@ type practiceService interface {
 	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*dto.AdminAWDScopeControlResp, error)
 	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*dto.AdminAWDScopeControlResp, error)
 	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, req *dto.PrewarmAdminContestAWDInstancesReq) (*dto.AdminAWDInstancePrewarmResp, error)
-	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
-	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
+	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*practicecommands.SubmissionResp, error)
+	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*practicecommands.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
 	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *practicecontracts.ReviewManualReviewSubmissionReq) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
@@ -338,54 +337,6 @@ func (h *Handler) SetAdminContestAWDDesiredReconcileSuppressed(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, resp)
-}
-
-// SubmitFlag 提交 Flag
-// POST /api/v1/challenges/:id/submit
-func (h *Handler) SubmitFlag(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
-		return
-	}
-
-	var req dto.SubmitFlagReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
-		return
-	}
-
-	auditControl := &auditlog.Control{}
-	ctx := auditlog.WithControl(c.Request.Context(), auditControl)
-
-	resp, err := h.service.SubmitFlag(ctx, userID, challengeID, req.Flag)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-	if auditControl.Skip {
-		middleware.SetSkipAudit(c)
-	}
-
-	response.Success(c, resp)
-}
-
-func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
-		return
-	}
-
-	resp, err := h.service.ListMyChallengeSubmissions(c.Request.Context(), userID, challengeID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
 	response.Success(c, resp)
 }
 

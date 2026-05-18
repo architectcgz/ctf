@@ -7,20 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	"ctf-platform/pkg/response"
 )
 
 type reportService interface {
-	CreatePersonalReport(ctx context.Context, userID int64, req assessmentcommands.CreatePersonalReportInput) (*dto.ReportExportData, error)
-	CreateClassReport(ctx context.Context, requesterID int64, req assessmentcommands.CreateClassReportInput) (*dto.ReportExportData, error)
-	CreateContestExport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateContestExportInput) (*dto.ReportExportData, error)
-	CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req assessmentcommands.CreateStudentReviewArchiveInput) (*dto.ReportExportData, error)
+	CreatePersonalReport(ctx context.Context, userID int64, req assessmentcommands.CreatePersonalReportInput) (*assessmentcommands.ReportExportData, error)
+	CreateClassReport(ctx context.Context, requesterID int64, req assessmentcommands.CreateClassReportInput) (*assessmentcommands.ReportExportData, error)
+	CreateContestExport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateContestExportInput) (*assessmentcommands.ReportExportData, error)
+	CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req assessmentcommands.CreateStudentReviewArchiveInput) (*assessmentcommands.ReportExportData, error)
 	GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*assessmentcommands.ReviewArchiveData, error)
 	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error)
-	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error)
+	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*assessmentcommands.ReportExportData, error)
 }
 
 type ReportHandler struct {

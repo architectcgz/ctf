@@ -165,33 +165,6 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
 }
 
-func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
-	if s.runtimeSubject == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
-	}
-	challengeItem, err := s.runtimeSubject.FindByID(ctx, challengeID)
-	if err != nil {
-		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
-	}
-
-	items, err := s.repo.ListChallengeSubmissions(ctx, userID, challengeID, 20)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	resp := make([]*dto.ChallengeSubmissionRecordResp, 0, len(items))
-	for _, item := range items {
-		resp = append(resp, challengeSubmissionRecordRespFromModel(item))
-	}
-	return resp, nil
-}
-
 func ensureTeacherCanAccessManualReviewSubmission(
 	ctx context.Context,
 	repo practiceports.PracticeUserLookupRepository,
@@ -352,21 +325,4 @@ func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReview
 		ReviewedAt:      CopyTimePtr(record.Submission.ReviewedAt),
 		UpdatedAt:       CopyTime(record.Submission.UpdatedAt),
 	}
-}
-
-func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.ChallengeSubmissionRecordResp {
-	status := dto.SubmissionStatusIncorrect
-	answer := ""
-
-	if item.ReviewStatus == model.SubmissionReviewStatusPending {
-		status = dto.SubmissionStatusPendingReview
-		answer = item.Flag
-	} else if item.IsCorrect {
-		status = dto.SubmissionStatusCorrect
-	}
-
-	resp := practiceCommandResponseMapperInst.ToChallengeSubmissionRecordRespBasePtr(&item)
-	resp.Status = status
-	resp.Answer = answer
-	return resp
 }

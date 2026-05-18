@@ -1,4 +1,4 @@
-package dto
+package commands
 
 type ReportExportData struct {
 	ReportID     int64   `json:"report_id"`

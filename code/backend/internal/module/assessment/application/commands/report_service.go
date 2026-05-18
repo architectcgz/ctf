@@ -18,7 +18,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -174,7 +173,7 @@ func (s *ReportService) SetAWDReviewExportBuilder(builder AWDReviewExportBuilder
 	s.awdReviewBuilder = builder
 }
 
-func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req CreatePersonalReportInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req CreatePersonalReportInput) (*ReportExportData, error) {
 	if ctx == nil {
 		return nil, errors.New("create personal report requires context")
 	}
@@ -212,7 +211,7 @@ func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Contex
 	return context.WithTimeout(ctx, s.config.PersonalTimeout)
 }
 
-func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req CreateClassReportInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req CreateClassReportInput) (*ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
@@ -256,7 +255,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*ReportExportData, error) {
 	if _, err := s.contestRepo.FindContestByID(ctx, contestID); err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
 			return nil, errcode.ErrContestNotFound
@@ -286,7 +285,7 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req CreateStudentReviewArchiveInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req CreateStudentReviewArchiveInput) (*ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		return nil, errcode.ErrUnauthorized
@@ -322,7 +321,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*ReportExportData, error) {
 	if _, err := s.findAWDContestForExport(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -356,7 +355,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
-func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
+func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*ReportExportData, error) {
 	contest, err := s.findAWDContestForExport(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -513,7 +512,7 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	}, nil
 }
 
-func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error) {
+func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*ReportExportData, error) {
 	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentReportNotFound) {
@@ -1508,11 +1507,11 @@ func mapReviewStudents(students []classreview.ReviewStudentRef) []teachingqueryc
 	return items
 }
 
-func mapReviewRecommendation(item *classreview.RecommendationItem) *dto.TeacherRecommendationItem {
+func mapReviewRecommendation(item *classreview.RecommendationItem) *teachingquerycontracts.TeacherRecommendationItem {
 	if item == nil {
 		return nil
 	}
-	return &dto.TeacherRecommendationItem{
+	return &teachingquerycontracts.TeacherRecommendationItem{
 		ChallengeID:    item.ChallengeID,
 		Title:          item.Title,
 		Category:       item.Category,
@@ -1588,7 +1587,7 @@ func (s *ReportService) markFailed(ctx context.Context, reportID int64, err erro
 	}
 }
 
-func buildReportExportData(reportID int64, status string, expiresAt time.Time) *dto.ReportExportData {
+func buildReportExportData(reportID int64, status string, expiresAt time.Time) *ReportExportData {
 	report := &model.Report{
 		ID:        reportID,
 		Status:    status,
@@ -1600,7 +1599,7 @@ func buildReportExportData(reportID int64, status string, expiresAt time.Time) *
 	return buildReportExportDataFromModel(report)
 }
 
-func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData {
+func buildReportExportDataFromModel(report *model.Report) *ReportExportData {
 	resp := assessmentCommandResponseMapperInst.ToReportExportDataBasePtr(report)
 	if report.Status == model.ReportStatusReady {
 		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)

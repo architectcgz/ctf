@@ -15,7 +15,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/infrastructure/postgres"
 	infraredis "ctf-platform/internal/infrastructure/redis"
 	"ctf-platform/internal/model"
@@ -229,7 +228,7 @@ type seededStudentResult struct {
 	ScenarioLabel        string
 	PracticeSessionCount int
 	AWDAttackCount       int
-	Recommendations      dto.TeacherRecommendationResp
+	Recommendations      teachingqueries.TeacherRecommendationResp
 	Archive              *assessmentcmd.ReviewArchiveData
 }
 
@@ -443,7 +442,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		if recErr != nil {
 			return nil, fmt.Errorf("load recommendations for %s: %w", student.Username, recErr)
 		}
-		studentRecommendations := dto.TeacherRecommendationResp{}
+		studentRecommendations := teachingqueries.TeacherRecommendationResp{}
 		if recommendations != nil {
 			studentRecommendations = *recommendations
 		}

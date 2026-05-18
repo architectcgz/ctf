@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/dto"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqueries "ctf-platform/internal/module/assessment/application/queries"
 	"ctf-platform/pkg/response"
@@ -15,8 +14,8 @@ import (
 type teacherAWDReviewService interface {
 	ListContests(ctx context.Context, requesterID int64, query assessmentqueries.ListTeacherAWDReviewContestsInput) (*assessmentqueries.TeacherAWDReviewContestPageResp, error)
 	GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqueries.GetTeacherAWDReviewArchiveInput) (*assessmentqueries.TeacherAWDReviewArchiveResp, error)
-	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
-	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error)
+	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*assessmentcommands.ReportExportData, error)
+	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcommands.CreateTeacherAWDReviewExportInput) (*assessmentcommands.ReportExportData, error)
 }
 
 type TeacherAWDReviewHandler struct {

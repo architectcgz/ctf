@@ -7,40 +7,6 @@ import contracts "ctf-platform/internal/module/assessment/contracts"
 
 type assessmentResponseMapperContractImpl struct{}
 
-func (c *assessmentResponseMapperContractImpl) ToSkillDimension(source contracts.SkillDimension) SkillDimension {
-	var httpSkillDimension SkillDimension
-	httpSkillDimension.Dimension = source.Dimension
-	httpSkillDimension.Score = source.Score
-	return httpSkillDimension
-}
-func (c *assessmentResponseMapperContractImpl) ToSkillDimensionPtr(source *contracts.SkillDimension) *SkillDimension {
-	var pHttpSkillDimension *SkillDimension
-	if source != nil {
-		httpSkillDimension := c.ToSkillDimension((*source))
-		pHttpSkillDimension = &httpSkillDimension
-	}
-	return pHttpSkillDimension
-}
-func (c *assessmentResponseMapperContractImpl) ToSkillProfileResp(source contracts.SkillProfile) SkillProfileResp {
-	var httpSkillProfileResp SkillProfileResp
-	httpSkillProfileResp.UserID = source.UserID
-	if source.Dimensions != nil {
-		httpSkillProfileResp.Dimensions = make([]*SkillDimension, len(source.Dimensions))
-		for i := 0; i < len(source.Dimensions); i++ {
-			httpSkillProfileResp.Dimensions[i] = c.ToSkillDimensionPtr(source.Dimensions[i])
-		}
-	}
-	httpSkillProfileResp.UpdatedAt = source.UpdatedAt
-	return httpSkillProfileResp
-}
-func (c *assessmentResponseMapperContractImpl) ToSkillProfileRespPtr(source *contracts.SkillProfile) *SkillProfileResp {
-	var pHttpSkillProfileResp *SkillProfileResp
-	if source != nil {
-		httpSkillProfileResp := c.ToSkillProfileResp((*source))
-		pHttpSkillProfileResp = &httpSkillProfileResp
-	}
-	return pHttpSkillProfileResp
-}
 func (c *assessmentResponseMapperContractImpl) ToChallengeRecommendation(source contracts.ChallengeRecommendation) ChallengeRecommendation {
 	var httpChallengeRecommendation ChallengeRecommendation
 	httpChallengeRecommendation.ID = source.ID
@@ -100,4 +66,38 @@ func (c *assessmentResponseMapperContractImpl) ToRecommendationWeakDimension(sou
 	httpRecommendationWeakDimension.Confidence = source.Confidence
 	httpRecommendationWeakDimension.Evidence = source.Evidence
 	return httpRecommendationWeakDimension
+}
+func (c *assessmentResponseMapperContractImpl) ToSkillDimension(source contracts.SkillDimension) SkillDimension {
+	var httpSkillDimension SkillDimension
+	httpSkillDimension.Dimension = source.Dimension
+	httpSkillDimension.Score = source.Score
+	return httpSkillDimension
+}
+func (c *assessmentResponseMapperContractImpl) ToSkillDimensionPtr(source *contracts.SkillDimension) *SkillDimension {
+	var pHttpSkillDimension *SkillDimension
+	if source != nil {
+		httpSkillDimension := c.ToSkillDimension((*source))
+		pHttpSkillDimension = &httpSkillDimension
+	}
+	return pHttpSkillDimension
+}
+func (c *assessmentResponseMapperContractImpl) ToSkillProfileResp(source contracts.SkillProfile) SkillProfileResp {
+	var httpSkillProfileResp SkillProfileResp
+	httpSkillProfileResp.UserID = source.UserID
+	if source.Dimensions != nil {
+		httpSkillProfileResp.Dimensions = make([]*SkillDimension, len(source.Dimensions))
+		for i := 0; i < len(source.Dimensions); i++ {
+			httpSkillProfileResp.Dimensions[i] = c.ToSkillDimensionPtr(source.Dimensions[i])
+		}
+	}
+	httpSkillProfileResp.UpdatedAt = source.UpdatedAt
+	return httpSkillProfileResp
+}
+func (c *assessmentResponseMapperContractImpl) ToSkillProfileRespPtr(source *contracts.SkillProfile) *SkillProfileResp {
+	var pHttpSkillProfileResp *SkillProfileResp
+	if source != nil {
+		httpSkillProfileResp := c.ToSkillProfileResp((*source))
+		pHttpSkillProfileResp = &httpSkillProfileResp
+	}
+	return pHttpSkillProfileResp
 }

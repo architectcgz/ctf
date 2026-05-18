@@ -4,91 +4,91 @@
 package queries
 
 import (
-	dto "ctf-platform/internal/dto"
-	contracts "ctf-platform/internal/module/assessment/contracts"
+	contracts1 "ctf-platform/internal/module/assessment/contracts"
+	contracts "ctf-platform/internal/module/teaching_query/contracts"
 	ports "ctf-platform/internal/module/teaching_query/ports"
 )
 
 type teachingQueryResponseMapperImpl struct{}
 
-func (c *teachingQueryResponseMapperImpl) ToClassItems(source []ports.ClassItem) []dto.TeacherClassItem {
-	var dtoTeacherClassItemList []dto.TeacherClassItem
+func (c *teachingQueryResponseMapperImpl) ToClassItems(source []ports.ClassItem) []contracts.TeacherClassItem {
+	var contractsTeacherClassItemList []contracts.TeacherClassItem
 	if source != nil {
-		dtoTeacherClassItemList = make([]dto.TeacherClassItem, len(source))
+		contractsTeacherClassItemList = make([]contracts.TeacherClassItem, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherClassItemList[i] = c.portsClassItemToDtoTeacherClassItem(source[i])
+			contractsTeacherClassItemList[i] = c.portsClassItemToContractsTeacherClassItem(source[i])
 		}
 	}
-	return dtoTeacherClassItemList
+	return contractsTeacherClassItemList
 }
-func (c *teachingQueryResponseMapperImpl) ToStudentItems(source []ports.StudentItem) []dto.TeacherStudentItem {
-	var dtoTeacherStudentItemList []dto.TeacherStudentItem
+func (c *teachingQueryResponseMapperImpl) ToStudentItems(source []ports.StudentItem) []contracts.TeacherStudentItem {
+	var contractsTeacherStudentItemList []contracts.TeacherStudentItem
 	if source != nil {
-		dtoTeacherStudentItemList = make([]dto.TeacherStudentItem, len(source))
+		contractsTeacherStudentItemList = make([]contracts.TeacherStudentItem, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherStudentItemList[i] = c.portsStudentItemToDtoTeacherStudentItem(source[i])
+			contractsTeacherStudentItemList[i] = c.portsStudentItemToContractsTeacherStudentItem(source[i])
 		}
 	}
-	return dtoTeacherStudentItemList
+	return contractsTeacherStudentItemList
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source contracts.ChallengeRecommendation) dto.TeacherRecommendationItem {
-	var dtoTeacherRecommendationItem dto.TeacherRecommendationItem
-	dtoTeacherRecommendationItem.ChallengeID = source.ID
-	dtoTeacherRecommendationItem.Title = source.Title
-	dtoTeacherRecommendationItem.Category = source.Category
-	dtoTeacherRecommendationItem.Difficulty = source.Difficulty
-	dtoTeacherRecommendationItem.Dimension = source.Dimension
-	dtoTeacherRecommendationItem.DifficultyBand = source.DifficultyBand
-	dtoTeacherRecommendationItem.Severity = source.Severity
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItem(source contracts1.ChallengeRecommendation) contracts.TeacherRecommendationItem {
+	var contractsTeacherRecommendationItem contracts.TeacherRecommendationItem
+	contractsTeacherRecommendationItem.ChallengeID = source.ID
+	contractsTeacherRecommendationItem.Title = source.Title
+	contractsTeacherRecommendationItem.Category = source.Category
+	contractsTeacherRecommendationItem.Difficulty = source.Difficulty
+	contractsTeacherRecommendationItem.Dimension = source.Dimension
+	contractsTeacherRecommendationItem.DifficultyBand = source.DifficultyBand
+	contractsTeacherRecommendationItem.Severity = source.Severity
 	if source.ReasonCodes != nil {
-		dtoTeacherRecommendationItem.ReasonCodes = make([]string, len(source.ReasonCodes))
+		contractsTeacherRecommendationItem.ReasonCodes = make([]string, len(source.ReasonCodes))
 		for i := 0; i < len(source.ReasonCodes); i++ {
-			dtoTeacherRecommendationItem.ReasonCodes[i] = source.ReasonCodes[i]
+			contractsTeacherRecommendationItem.ReasonCodes[i] = source.ReasonCodes[i]
 		}
 	}
-	dtoTeacherRecommendationItem.Summary = source.Summary
-	dtoTeacherRecommendationItem.Evidence = source.Evidence
-	return dtoTeacherRecommendationItem
+	contractsTeacherRecommendationItem.Summary = source.Summary
+	contractsTeacherRecommendationItem.Evidence = source.Evidence
+	return contractsTeacherRecommendationItem
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source *contracts.ChallengeRecommendation) *dto.TeacherRecommendationItem {
-	var pDtoTeacherRecommendationItem *dto.TeacherRecommendationItem
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationItemPtr(source *contracts1.ChallengeRecommendation) *contracts.TeacherRecommendationItem {
+	var pContractsTeacherRecommendationItem *contracts.TeacherRecommendationItem
 	if source != nil {
-		dtoTeacherRecommendationItem := c.ToTeacherRecommendationItem((*source))
-		pDtoTeacherRecommendationItem = &dtoTeacherRecommendationItem
+		contractsTeacherRecommendationItem := c.ToTeacherRecommendationItem((*source))
+		pContractsTeacherRecommendationItem = &contractsTeacherRecommendationItem
 	}
-	return pDtoTeacherRecommendationItem
+	return pContractsTeacherRecommendationItem
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationResp(source contracts.Recommendation) dto.TeacherRecommendationResp {
-	var dtoTeacherRecommendationResp dto.TeacherRecommendationResp
-	dtoTeacherRecommendationResp.WeakDimensions = c.ToTeacherRecommendationWeakDimensions(source.WeakDimensions)
-	dtoTeacherRecommendationResp.Challenges = MapTeacherRecommendationItems(source.Challenges)
-	return dtoTeacherRecommendationResp
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationResp(source contracts1.Recommendation) contracts.TeacherRecommendationResp {
+	var contractsTeacherRecommendationResp contracts.TeacherRecommendationResp
+	contractsTeacherRecommendationResp.WeakDimensions = c.ToTeacherRecommendationWeakDimensions(source.WeakDimensions)
+	contractsTeacherRecommendationResp.Challenges = MapTeacherRecommendationItems(source.Challenges)
+	return contractsTeacherRecommendationResp
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source *contracts.Recommendation) *dto.TeacherRecommendationResp {
-	var pDtoTeacherRecommendationResp *dto.TeacherRecommendationResp
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationRespPtr(source *contracts1.Recommendation) *contracts.TeacherRecommendationResp {
+	var pContractsTeacherRecommendationResp *contracts.TeacherRecommendationResp
 	if source != nil {
-		dtoTeacherRecommendationResp := c.ToTeacherRecommendationResp((*source))
-		pDtoTeacherRecommendationResp = &dtoTeacherRecommendationResp
+		contractsTeacherRecommendationResp := c.ToTeacherRecommendationResp((*source))
+		pContractsTeacherRecommendationResp = &contractsTeacherRecommendationResp
 	}
-	return pDtoTeacherRecommendationResp
+	return pContractsTeacherRecommendationResp
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(source contracts.RecommendationWeakDimension) dto.TeacherRecommendationWeakDimension {
-	var dtoTeacherRecommendationWeakDimension dto.TeacherRecommendationWeakDimension
-	dtoTeacherRecommendationWeakDimension.Dimension = source.Dimension
-	dtoTeacherRecommendationWeakDimension.Severity = source.Severity
-	dtoTeacherRecommendationWeakDimension.Confidence = source.Confidence
-	dtoTeacherRecommendationWeakDimension.Evidence = source.Evidence
-	return dtoTeacherRecommendationWeakDimension
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimension(source contracts1.RecommendationWeakDimension) contracts.TeacherRecommendationWeakDimension {
+	var contractsTeacherRecommendationWeakDimension contracts.TeacherRecommendationWeakDimension
+	contractsTeacherRecommendationWeakDimension.Dimension = source.Dimension
+	contractsTeacherRecommendationWeakDimension.Severity = source.Severity
+	contractsTeacherRecommendationWeakDimension.Confidence = source.Confidence
+	contractsTeacherRecommendationWeakDimension.Evidence = source.Evidence
+	return contractsTeacherRecommendationWeakDimension
 }
-func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []contracts.RecommendationWeakDimension) []dto.TeacherRecommendationWeakDimension {
-	var dtoTeacherRecommendationWeakDimensionList []dto.TeacherRecommendationWeakDimension
+func (c *teachingQueryResponseMapperImpl) ToTeacherRecommendationWeakDimensions(source []contracts1.RecommendationWeakDimension) []contracts.TeacherRecommendationWeakDimension {
+	var contractsTeacherRecommendationWeakDimensionList []contracts.TeacherRecommendationWeakDimension
 	if source != nil {
-		dtoTeacherRecommendationWeakDimensionList = make([]dto.TeacherRecommendationWeakDimension, len(source))
+		contractsTeacherRecommendationWeakDimensionList = make([]contracts.TeacherRecommendationWeakDimension, len(source))
 		for i := 0; i < len(source); i++ {
-			dtoTeacherRecommendationWeakDimensionList[i] = c.ToTeacherRecommendationWeakDimension(source[i])
+			contractsTeacherRecommendationWeakDimensionList[i] = c.ToTeacherRecommendationWeakDimension(source[i])
 		}
 	}
-	return dtoTeacherRecommendationWeakDimensionList
+	return contractsTeacherRecommendationWeakDimensionList
 }
 func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.TimelineEventRecord) []TimelineEvent {
 	var queriesTimelineEventList []TimelineEvent
@@ -100,36 +100,36 @@ func (c *teachingQueryResponseMapperImpl) ToTimelineEvents(source []ports.Timeli
 	}
 	return queriesTimelineEventList
 }
-func (c *teachingQueryResponseMapperImpl) portsClassItemToDtoTeacherClassItem(source ports.ClassItem) dto.TeacherClassItem {
-	var dtoTeacherClassItem dto.TeacherClassItem
-	dtoTeacherClassItem.Name = source.Name
-	dtoTeacherClassItem.StudentCount = source.StudentCount
-	return dtoTeacherClassItem
+func (c *teachingQueryResponseMapperImpl) portsClassItemToContractsTeacherClassItem(source ports.ClassItem) contracts.TeacherClassItem {
+	var contractsTeacherClassItem contracts.TeacherClassItem
+	contractsTeacherClassItem.Name = source.Name
+	contractsTeacherClassItem.StudentCount = source.StudentCount
+	return contractsTeacherClassItem
 }
-func (c *teachingQueryResponseMapperImpl) portsStudentItemToDtoTeacherStudentItem(source ports.StudentItem) dto.TeacherStudentItem {
-	var dtoTeacherStudentItem dto.TeacherStudentItem
-	dtoTeacherStudentItem.ID = source.ID
-	dtoTeacherStudentItem.Username = source.Username
+func (c *teachingQueryResponseMapperImpl) portsStudentItemToContractsTeacherStudentItem(source ports.StudentItem) contracts.TeacherStudentItem {
+	var contractsTeacherStudentItem contracts.TeacherStudentItem
+	contractsTeacherStudentItem.ID = source.ID
+	contractsTeacherStudentItem.Username = source.Username
 	if source.StudentNo != nil {
 		xstring := *source.StudentNo
-		dtoTeacherStudentItem.StudentNo = &xstring
+		contractsTeacherStudentItem.StudentNo = &xstring
 	}
 	if source.Name != nil {
 		xstring2 := *source.Name
-		dtoTeacherStudentItem.Name = &xstring2
+		contractsTeacherStudentItem.Name = &xstring2
 	}
 	if source.ClassName != nil {
 		xstring3 := *source.ClassName
-		dtoTeacherStudentItem.ClassName = &xstring3
+		contractsTeacherStudentItem.ClassName = &xstring3
 	}
-	dtoTeacherStudentItem.SolvedCount = source.SolvedCount
-	dtoTeacherStudentItem.TotalScore = source.TotalScore
-	dtoTeacherStudentItem.RecentEventCount = source.RecentEventCount
+	contractsTeacherStudentItem.SolvedCount = source.SolvedCount
+	contractsTeacherStudentItem.TotalScore = source.TotalScore
+	contractsTeacherStudentItem.RecentEventCount = source.RecentEventCount
 	if source.WeakDimension != nil {
 		xstring4 := *source.WeakDimension
-		dtoTeacherStudentItem.WeakDimension = &xstring4
+		contractsTeacherStudentItem.WeakDimension = &xstring4
 	}
-	return dtoTeacherStudentItem
+	return contractsTeacherStudentItem
 }
 func (c *teachingQueryResponseMapperImpl) portsTimelineEventRecordToQueriesTimelineEvent(source ports.TimelineEventRecord) TimelineEvent {
 	var queriesTimelineEvent TimelineEvent

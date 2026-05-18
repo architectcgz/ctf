@@ -1,7 +1,5 @@
 package contracts
 
-import "ctf-platform/internal/dto"
-
 type TeacherClassSummary struct {
 	ClassName          string  `json:"class_name"`
 	StudentCount       int64   `json:"student_count"`
@@ -38,7 +36,7 @@ type TeacherClassReviewItem struct {
 	ReasonCodes    []string                       `json:"reason_codes,omitempty"`
 	Dimension      string                         `json:"dimension,omitempty"`
 	Students       []TeacherReviewStudentRef      `json:"students,omitempty"`
-	Recommendation *dto.TeacherRecommendationItem `json:"recommendation,omitempty"`
+	Recommendation *TeacherRecommendationItem     `json:"recommendation,omitempty"`
 }
 
 type TeacherClassReview struct {

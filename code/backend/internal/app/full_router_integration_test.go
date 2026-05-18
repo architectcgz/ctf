@@ -27,6 +27,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -162,7 +163,7 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 			}
 
 			if route.Method == http.MethodPost && route.Path == "/api/v1/reports/class" && resp.Code == http.StatusOK {
-				var report dto.ReportExportData
+				var report assessmentcmd.ReportExportData
 				decodeFullRouterData(t, resp, &report)
 				waitForReportStatus(t, env, report.ReportID, headers, model.ReportStatusReady, 5*time.Second)
 			}

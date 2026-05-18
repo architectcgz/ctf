@@ -3,24 +3,21 @@
 
 package commands
 
-import (
-	dto "ctf-platform/internal/dto"
-	model "ctf-platform/internal/model"
-)
+import model "ctf-platform/internal/model"
 
 type assessmentCommandResponseMapperImpl struct{}
 
-func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBase(source model.Report) dto.ReportExportData {
-	var dtoReportExportData dto.ReportExportData
-	dtoReportExportData.ReportID = source.ID
-	dtoReportExportData.Status = source.Status
-	return dtoReportExportData
+func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBase(source model.Report) ReportExportData {
+	var commandsReportExportData ReportExportData
+	commandsReportExportData.ReportID = source.ID
+	commandsReportExportData.Status = source.Status
+	return commandsReportExportData
 }
-func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBasePtr(source *model.Report) *dto.ReportExportData {
-	var pDtoReportExportData *dto.ReportExportData
+func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBasePtr(source *model.Report) *ReportExportData {
+	var pCommandsReportExportData *ReportExportData
 	if source != nil {
-		dtoReportExportData := c.ToReportExportDataBase((*source))
-		pDtoReportExportData = &dtoReportExportData
+		commandsReportExportData := c.ToReportExportDataBase((*source))
+		pCommandsReportExportData = &commandsReportExportData
 	}
-	return pDtoReportExportData
+	return pCommandsReportExportData
 }

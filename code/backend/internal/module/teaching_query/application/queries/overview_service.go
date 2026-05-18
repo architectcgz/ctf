@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
@@ -37,7 +36,7 @@ func NewOverviewService(
 	}
 }
 
-func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*dto.TeacherOverviewResp, error) {
+func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*TeacherOverviewResp, error) {
 	classItems, err := s.listAccessibleClassItems(ctx, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
@@ -79,7 +78,7 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 	summary := buildOverviewSummary(classItems, students, focusStudents)
 	spotlightStudent := selectOverviewTopStudent(students)
 
-	return &dto.TeacherOverviewResp{
+	return &TeacherOverviewResp{
 		Summary:          summary,
 		Trend:            mapOverviewTrend(trend),
 		FocusClasses:     focusClasses,
@@ -89,13 +88,13 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 	}, nil
 }
 
-func emptyOverviewResponse() *dto.TeacherOverviewResp {
-	return &dto.TeacherOverviewResp{
-		Summary:        dto.TeacherOverviewSummaryResp{},
-		Trend:          dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}},
-		FocusClasses:   []dto.TeacherOverviewClassFocusResp{},
-		FocusStudents:  []dto.TeacherStudentItem{},
-		WeakDimensions: []dto.TeacherOverviewWeakDimensionResp{},
+func emptyOverviewResponse() *TeacherOverviewResp {
+	return &TeacherOverviewResp{
+		Summary:        TeacherOverviewSummaryResp{},
+		Trend:          TeacherOverviewTrendResp{Points: []TeacherOverviewTrendPoint{}},
+		FocusClasses:   []TeacherOverviewClassFocusResp{},
+		FocusStudents:  []TeacherStudentItem{},
+		WeakDimensions: []TeacherOverviewWeakDimensionResp{},
 	}
 }
 
@@ -131,8 +130,8 @@ func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, req
 	}}, nil
 }
 
-func selectOverviewRiskStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherStudentItem {
-	filtered := make([]dto.TeacherStudentItem, 0, len(students))
+func selectOverviewRiskStudents(students []TeacherStudentItem, limit int) []TeacherStudentItem {
+	filtered := make([]TeacherStudentItem, 0, len(students))
 	for _, student := range students {
 		if student.RecentEventCount <= 1 || student.SolvedCount <= 1 {
 			filtered = append(filtered, student)
@@ -152,12 +151,12 @@ func selectOverviewRiskStudents(students []dto.TeacherStudentItem, limit int) []
 	return limitOverviewStudents(filtered, limit)
 }
 
-func selectOverviewTopStudent(students []dto.TeacherStudentItem) *dto.TeacherStudentItem {
+func selectOverviewTopStudent(students []TeacherStudentItem) *TeacherStudentItem {
 	if len(students) == 0 {
 		return nil
 	}
 
-	sorted := append([]dto.TeacherStudentItem(nil), students...)
+	sorted := append([]TeacherStudentItem(nil), students...)
 	sort.Slice(sorted, func(i, j int) bool {
 		if sorted[i].SolvedCount != sorted[j].SolvedCount {
 			return sorted[i].SolvedCount > sorted[j].SolvedCount
@@ -172,9 +171,9 @@ func selectOverviewTopStudent(students []dto.TeacherStudentItem) *dto.TeacherStu
 	return &top
 }
 
-func selectOverviewWeakDimensionStudents(students []dto.TeacherStudentItem) (string, []dto.TeacherStudentItem) {
+func selectOverviewWeakDimensionStudents(students []TeacherStudentItem) (string, []TeacherStudentItem) {
 	counter := make(map[string]int)
-	grouped := make(map[string][]dto.TeacherStudentItem)
+	grouped := make(map[string][]TeacherStudentItem)
 	for _, student := range students {
 		if student.WeakDimension == nil {
 			continue
@@ -212,7 +211,7 @@ func selectOverviewWeakDimensionStudents(students []dto.TeacherStudentItem) (str
 	return bestDimension, studentsInDimension
 }
 
-func limitOverviewStudents(students []dto.TeacherStudentItem, limit int) []dto.TeacherStudentItem {
+func limitOverviewStudents(students []TeacherStudentItem, limit int) []TeacherStudentItem {
 	if limit <= 0 || len(students) <= limit {
 		return students
 	}
@@ -223,8 +222,8 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 	ctx context.Context,
 	classItems []queryports.ClassItem,
 	since time.Time,
-) ([]dto.TeacherOverviewClassFocusResp, error) {
-	focuses := make([]dto.TeacherOverviewClassFocusResp, 0, len(classItems))
+) ([]TeacherOverviewClassFocusResp, error) {
+	focuses := make([]TeacherOverviewClassFocusResp, 0, len(classItems))
 	for _, item := range classItems {
 		if strings.TrimSpace(item.Name) == "" {
 			continue
@@ -242,7 +241,7 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 		dominantWeakDimension, _ := selectOverviewWeakDimensionStudents(students)
 		riskStudents := selectOverviewRiskStudents(students, len(students))
 
-		focuses = append(focuses, dto.TeacherOverviewClassFocusResp{
+		focuses = append(focuses, TeacherOverviewClassFocusResp{
 			ClassName:             item.Name,
 			StudentCount:          summary.StudentCount,
 			ActiveRate:            summary.ActiveRate,
@@ -270,10 +269,10 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 
 func buildOverviewSummary(
 	classItems []queryports.ClassItem,
-	students []dto.TeacherStudentItem,
-	focusStudents []dto.TeacherStudentItem,
-) dto.TeacherOverviewSummaryResp {
-	summary := dto.TeacherOverviewSummaryResp{
+	students []TeacherStudentItem,
+	focusStudents []TeacherStudentItem,
+) TeacherOverviewSummaryResp {
+	summary := TeacherOverviewSummaryResp{
 		ClassCount:       int64(len(classItems)),
 		StudentCount:     int64(len(students)),
 		RiskStudentCount: int64(len(focusStudents)),
@@ -296,24 +295,24 @@ func buildOverviewSummary(
 	return summary
 }
 
-func mapOverviewTrend(source *queryports.OverviewTrend) dto.TeacherOverviewTrendResp {
+func mapOverviewTrend(source *queryports.OverviewTrend) TeacherOverviewTrendResp {
 	if source == nil || len(source.Points) == 0 {
-		return dto.TeacherOverviewTrendResp{Points: []dto.TeacherOverviewTrendPoint{}}
+		return TeacherOverviewTrendResp{Points: []TeacherOverviewTrendPoint{}}
 	}
 
-	points := make([]dto.TeacherOverviewTrendPoint, 0, len(source.Points))
+	points := make([]TeacherOverviewTrendPoint, 0, len(source.Points))
 	for _, point := range source.Points {
-		points = append(points, dto.TeacherOverviewTrendPoint{
+		points = append(points, TeacherOverviewTrendPoint{
 			Date:               point.Date,
 			ActiveStudentCount: point.ActiveStudentCount,
 			EventCount:         point.EventCount,
 			SolveCount:         point.SolveCount,
 		})
 	}
-	return dto.TeacherOverviewTrendResp{Points: points}
+	return TeacherOverviewTrendResp{Points: points}
 }
 
-func buildOverviewWeakDimensions(students []dto.TeacherStudentItem) []dto.TeacherOverviewWeakDimensionResp {
+func buildOverviewWeakDimensions(students []TeacherStudentItem) []TeacherOverviewWeakDimensionResp {
 	counter := make(map[string]int64)
 	for _, student := range students {
 		if student.WeakDimension == nil {
@@ -326,12 +325,12 @@ func buildOverviewWeakDimensions(students []dto.TeacherStudentItem) []dto.Teache
 		counter[key]++
 	}
 	if len(counter) == 0 {
-		return []dto.TeacherOverviewWeakDimensionResp{}
+		return []TeacherOverviewWeakDimensionResp{}
 	}
 
-	items := make([]dto.TeacherOverviewWeakDimensionResp, 0, len(counter))
+	items := make([]TeacherOverviewWeakDimensionResp, 0, len(counter))
 	for dimension, count := range counter {
-		items = append(items, dto.TeacherOverviewWeakDimensionResp{
+		items = append(items, TeacherOverviewWeakDimensionResp{
 			Dimension:    dimension,
 			StudentCount: count,
 		})

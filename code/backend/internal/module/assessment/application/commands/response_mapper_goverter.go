@@ -1,9 +1,6 @@
 package commands
 
-import (
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-)
+import "ctf-platform/internal/model"
 
 //go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
 
@@ -15,8 +12,8 @@ type assessmentCommandResponseMapper interface {
 	// goverter:ignore DownloadURL
 	// goverter:ignore ExpiresAt
 	// goverter:ignore ErrorMessage
-	ToReportExportDataBase(source model.Report) dto.ReportExportData
-	ToReportExportDataBasePtr(source *model.Report) *dto.ReportExportData
+	ToReportExportDataBase(source model.Report) ReportExportData
+	ToReportExportDataBasePtr(source *model.Report) *ReportExportData
 }
 
 var assessmentCommandResponseMapperInst assessmentCommandResponseMapper

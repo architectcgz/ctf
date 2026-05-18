@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -75,7 +74,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SubmitFlag() error = %v", err)
 	}
-	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
+	if !resp.IsCorrect || resp.Status != SubmissionStatusCorrect {
 		t.Fatalf("expected regex submission success, got %+v", resp)
 	}
 }
@@ -132,7 +131,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	if err != nil {
 		t.Fatalf("SubmitFlag() error = %v", err)
 	}
-	if resp.IsCorrect || resp.Status != dto.SubmissionStatusPendingReview {
+	if resp.IsCorrect || resp.Status != SubmissionStatusPendingReview {
 		t.Fatalf("expected pending-review response, got %+v", resp)
 	}
 	if createdSubmission == nil {
@@ -409,7 +408,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	if err != nil {
 		t.Fatalf("SubmitFlag() error = %v", err)
 	}
-	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
+	if !resp.IsCorrect || resp.Status != SubmissionStatusCorrect {
 		t.Fatalf("expected shared static submission success, got %+v", resp)
 	}
 }
@@ -485,7 +484,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	if err != nil {
 		t.Fatalf("SubmitFlag() repeat error = %v", err)
 	}
-	if !repeat.IsCorrect || repeat.Status != dto.SubmissionStatusCorrect {
+	if !repeat.IsCorrect || repeat.Status != SubmissionStatusCorrect {
 		t.Fatalf("expected repeated correct submission to stay correct, got %+v", repeat)
 	}
 	if repeat.Points != 0 {
@@ -684,16 +683,16 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	if len(items) != 3 {
 		t.Fatalf("expected 3 records, got %d", len(items))
 	}
-	if items[0].Status != dto.SubmissionStatusCorrect {
+	if items[0].Status != SubmissionStatusCorrect {
 		t.Fatalf("unexpected correct record: %+v", items[0])
 	}
-	if items[1].Status != dto.SubmissionStatusPendingReview {
+	if items[1].Status != SubmissionStatusPendingReview {
 		t.Fatalf("unexpected pending record: %+v", items[1])
 	}
 	if items[1].Answer != "answer with reasoning" {
 		t.Fatalf("expected manual review answer to be preserved, got %+v", items[1])
 	}
-	if items[2].Status != dto.SubmissionStatusIncorrect {
+	if items[2].Status != SubmissionStatusIncorrect {
 		t.Fatalf("unexpected incorrect record: %+v", items[2])
 	}
 }

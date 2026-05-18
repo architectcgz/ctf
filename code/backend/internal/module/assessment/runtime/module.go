@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
@@ -175,10 +174,10 @@ func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, 
 	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
 }
 
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*assessmentcmd.ReportExportData, error) {
 	return s.reportService.CreateTeacherAWDReviewArchive(ctx, requesterID, contestID, req)
 }
 
-func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*dto.ReportExportData, error) {
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req assessmentcmd.CreateTeacherAWDReviewExportInput) (*assessmentcmd.ReportExportData, error) {
 	return s.reportService.CreateTeacherAWDReviewReport(ctx, requesterID, contestID, req)
 }

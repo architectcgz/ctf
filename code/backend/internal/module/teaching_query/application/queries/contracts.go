@@ -2,12 +2,10 @@ package queries
 
 import (
 	"context"
-
-	"ctf-platform/internal/dto"
 )
 
 type OverviewService interface {
-	GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*dto.TeacherOverviewResp, error)
+	GetOverview(ctx context.Context, requesterID int64, requesterRole string) (*TeacherOverviewResp, error)
 }
 
 type ClassInsightService interface {
@@ -17,15 +15,15 @@ type ClassInsightService interface {
 }
 
 type StudentReviewService interface {
-	GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.TeacherProgressResp, error)
-	GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*dto.TeacherRecommendationResp, error)
+	GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*TeacherProgressResp, error)
+	GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) (*TeacherRecommendationResp, error)
 	GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*TimelineResp, error)
-	GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*dto.TeacherEvidenceResp, error)
-	GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherAttackSessionInput) (*dto.TeacherAttackSessionResp, error)
+	GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*TeacherEvidenceResp, error)
+	GetStudentAttackSessions(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherAttackSessionInput) (*TeacherAttackSessionResp, error)
 }
 
 type Service interface {
-	ListClasses(ctx context.Context, requesterID int64, requesterRole string, query *TeacherClassListInput) ([]dto.TeacherClassItem, int64, int, int, error)
-	ListStudents(ctx context.Context, requesterID int64, requesterRole string, query *TeacherStudentDirectoryInput) ([]dto.TeacherStudentItem, int64, int, int, error)
-	ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]dto.TeacherStudentItem, error)
+	ListClasses(ctx context.Context, requesterID int64, requesterRole string, query *TeacherClassListInput) ([]TeacherClassItem, int64, int, int, error)
+	ListStudents(ctx context.Context, requesterID int64, requesterRole string, query *TeacherStudentDirectoryInput) ([]TeacherStudentItem, int64, int, int, error)
+	ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]TeacherStudentItem, error)
 }

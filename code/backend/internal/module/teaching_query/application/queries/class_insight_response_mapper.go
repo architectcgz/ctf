@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"ctf-platform/internal/dto"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/classreview"
 )
@@ -75,11 +74,11 @@ func toTeacherReviewStudentRefs(source []classreview.ReviewStudentRef) []Teacher
 	return refs
 }
 
-func toTeacherRecommendationItem(source *classreview.RecommendationItem) *dto.TeacherRecommendationItem {
+func toTeacherRecommendationItem(source *classreview.RecommendationItem) *TeacherRecommendationItem {
 	if source == nil {
 		return nil
 	}
-	return &dto.TeacherRecommendationItem{
+	return &TeacherRecommendationItem{
 		ChallengeID:    source.ChallengeID,
 		Title:          source.Title,
 		Category:       source.Category,

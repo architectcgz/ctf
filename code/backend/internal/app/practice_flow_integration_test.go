@@ -502,13 +502,13 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	if len(submissionHistory) != 2 {
 		t.Fatalf("expected 2 submission history records, got %d", len(submissionHistory))
 	}
-	if submissionHistory[0].Status != dto.SubmissionStatusCorrect {
+	if submissionHistory[0].Status != practicecmd.SubmissionStatusCorrect {
 		t.Fatalf("unexpected latest submission record: %+v", submissionHistory[0])
 	}
 	if submissionHistory[0].Message != "" {
 		t.Fatalf("expected latest submission record message to be omitted, got %+v", submissionHistory[0])
 	}
-	if submissionHistory[1].Status != dto.SubmissionStatusIncorrect {
+	if submissionHistory[1].Status != practicecmd.SubmissionStatusIncorrect {
 		t.Fatalf("unexpected previous submission record: %+v", submissionHistory[1])
 	}
 	if submissionHistory[1].Message != "" {

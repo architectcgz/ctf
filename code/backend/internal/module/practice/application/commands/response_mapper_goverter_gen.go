@@ -52,19 +52,19 @@ func (c *practiceCommandResponseMapperImpl) ToAdminAWDInstanceTeamRespPtr(source
 	}
 	return pDtoAdminAWDInstanceTeamResp
 }
-func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source model.Submission) dto.ChallengeSubmissionRecordResp {
-	var dtoChallengeSubmissionRecordResp dto.ChallengeSubmissionRecordResp
-	dtoChallengeSubmissionRecordResp.ID = source.ID
-	dtoChallengeSubmissionRecordResp.SubmittedAt = CopyTime(source.SubmittedAt)
-	return dtoChallengeSubmissionRecordResp
+func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBase(source model.Submission) ChallengeSubmissionRecordResp {
+	var commandsChallengeSubmissionRecordResp ChallengeSubmissionRecordResp
+	commandsChallengeSubmissionRecordResp.ID = source.ID
+	commandsChallengeSubmissionRecordResp.SubmittedAt = CopyTime(source.SubmittedAt)
+	return commandsChallengeSubmissionRecordResp
 }
-func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *dto.ChallengeSubmissionRecordResp {
-	var pDtoChallengeSubmissionRecordResp *dto.ChallengeSubmissionRecordResp
+func (c *practiceCommandResponseMapperImpl) ToChallengeSubmissionRecordRespBasePtr(source *model.Submission) *ChallengeSubmissionRecordResp {
+	var pCommandsChallengeSubmissionRecordResp *ChallengeSubmissionRecordResp
 	if source != nil {
-		dtoChallengeSubmissionRecordResp := c.ToChallengeSubmissionRecordRespBase((*source))
-		pDtoChallengeSubmissionRecordResp = &dtoChallengeSubmissionRecordResp
+		commandsChallengeSubmissionRecordResp := c.ToChallengeSubmissionRecordRespBase((*source))
+		pCommandsChallengeSubmissionRecordResp = &commandsChallengeSubmissionRecordResp
 	}
-	return pDtoChallengeSubmissionRecordResp
+	return pCommandsChallengeSubmissionRecordResp
 }
 func (c *practiceCommandResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
 	var modelInstanceSharing model.InstanceSharing

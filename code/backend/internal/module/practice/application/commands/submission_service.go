@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -19,7 +18,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
+func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*SubmissionResp, error) {
 	if s.runtimeSubject == nil {
 		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
 	}
@@ -70,13 +69,13 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		SubmittedAt:  time.Now(),
 		UpdatedAt:    time.Now(),
 	}
-	status := dto.SubmissionStatusIncorrect
+	status := SubmissionStatusIncorrect
 	submissionPersisted := false
 
 	if challengeItem.FlagType == model.FlagTypeManualReview {
 		submission.Flag = flag
 		submission.ReviewStatus = model.SubmissionReviewStatusPending
-		status = dto.SubmissionStatusPendingReview
+		status = SubmissionStatusPendingReview
 	} else {
 		isCorrect, err := s.validateSubmittedFlag(ctx, userID, challengeItem, flag)
 		if err != nil {
@@ -84,10 +83,10 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		}
 		submission.IsCorrect = isCorrect
 		if isCorrect {
-			status = dto.SubmissionStatusCorrect
+			status = SubmissionStatusCorrect
 			if alreadySolved {
 				auditlog.MarkSkip(ctx)
-				return &dto.SubmissionResp{
+				return &SubmissionResp{
 					IsCorrect:   true,
 					Status:      status,
 					SubmittedAt: submission.SubmittedAt,
@@ -123,7 +122,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		instanceShutdownAt = s.applySolveGracePeriod(ctx, userID, challengeItem, submission.SubmittedAt)
 	}
 
-	resp := &dto.SubmissionResp{
+	resp := &SubmissionResp{
 		IsCorrect:          submission.IsCorrect,
 		Status:             status,
 		SubmittedAt:        submission.SubmittedAt,

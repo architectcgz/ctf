@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
@@ -43,7 +42,7 @@ func (s *QueryService) ListClasses(
 	requesterID int64,
 	requesterRole string,
 	query *TeacherClassListInput,
-) ([]dto.TeacherClassItem, int64, int, int, error) {
+) ([]TeacherClassItem, int64, int, int, error) {
 	page, size := s.normalizeClassPagination(query)
 
 	requester, err := s.users.FindUserByID(ctx, requesterID)
@@ -60,7 +59,7 @@ func (s *QueryService) ListClasses(
 			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
 		if total == 0 {
-			return []dto.TeacherClassItem{}, 0, page, size, nil
+			return []TeacherClassItem{}, 0, page, size, nil
 		}
 
 		items, err := s.repo.ListClasses(ctx, (page-1)*size, size)
@@ -72,7 +71,7 @@ func (s *QueryService) ListClasses(
 
 	className := strings.TrimSpace(requester.ClassName)
 	if className == "" {
-		return []dto.TeacherClassItem{}, 0, page, size, nil
+		return []TeacherClassItem{}, 0, page, size, nil
 	}
 
 	count, err := s.repo.CountStudentsByClass(ctx, className)
@@ -81,10 +80,10 @@ func (s *QueryService) ListClasses(
 	}
 
 	if (page-1)*size >= 1 {
-		return []dto.TeacherClassItem{}, 1, page, size, nil
+		return []TeacherClassItem{}, 1, page, size, nil
 	}
 
-	return []dto.TeacherClassItem{{
+	return []TeacherClassItem{{
 		Name:         className,
 		StudentCount: count,
 	}}, 1, page, size, nil
@@ -118,7 +117,7 @@ func (s *QueryService) ListStudents(
 	requesterID int64,
 	requesterRole string,
 	query *TeacherStudentDirectoryInput,
-) ([]dto.TeacherStudentItem, int64, int, int, error) {
+) ([]TeacherStudentItem, int64, int, int, error) {
 	page, size := s.normalizeStudentPagination(query)
 
 	var requester *model.User
@@ -153,7 +152,7 @@ func (s *QueryService) ListStudents(
 	if requesterRole != model.RoleAdmin {
 		requesterClassName := strings.TrimSpace(requester.ClassName)
 		if requesterClassName == "" {
-			return []dto.TeacherStudentItem{}, 0, page, size, nil
+			return []TeacherStudentItem{}, 0, page, size, nil
 		}
 		if className == "" {
 			className = requesterClassName
@@ -194,7 +193,7 @@ func (s *QueryService) normalizeStudentPagination(query *TeacherStudentDirectory
 	return page, size
 }
 
-func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]dto.TeacherStudentItem, error) {
+func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]TeacherStudentItem, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)

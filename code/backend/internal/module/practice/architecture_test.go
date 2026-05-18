@@ -77,6 +77,19 @@ func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
+func TestSubmissionFlowDoesNotDependOnGlobalSubmissionDTO(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("api", "http", "submission_handler.go"),
+		filepath.Join("application", "commands", "submission_service.go"),
+		filepath.Join("application", "commands", "submission_history_service.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 	t.Parallel()
 

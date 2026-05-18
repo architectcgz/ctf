@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"gorm.io/gorm"
 )
 
@@ -169,22 +169,22 @@ func TestBuildSeedCoverageSummaryReportsPublishedUsedAndRecommendationReach(t *t
 	scenarios := buildStudentScenarios(catalog)
 	results := []seededStudentResult{
 		{
-			Recommendations: dto.TeacherRecommendationResp{
-				Challenges: []dto.TeacherRecommendationItem{
+			Recommendations: teachingqueries.TeacherRecommendationResp{
+				Challenges: []teachingqueries.TeacherRecommendationItem{
 					{ChallengeID: 101, Title: "web-1"},
 				},
 			},
 		},
 		{
-			Recommendations: dto.TeacherRecommendationResp{
-				Challenges: []dto.TeacherRecommendationItem{
+			Recommendations: teachingqueries.TeacherRecommendationResp{
+				Challenges: []teachingqueries.TeacherRecommendationItem{
 					{ChallengeID: 101, Title: "web-1"},
 				},
 			},
 		},
 		{
-			Recommendations: dto.TeacherRecommendationResp{
-				Challenges: []dto.TeacherRecommendationItem{
+			Recommendations: teachingqueries.TeacherRecommendationResp{
+				Challenges: []teachingqueries.TeacherRecommendationItem{
 					{ChallengeID: 202, Title: "pwn-2"},
 				},
 			},
