@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -38,7 +39,7 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 }
 
 // Upsert 插入或更新能力画像
-func (r *Repository) Upsert(ctx context.Context, profile *model.SkillProfile) error {
+func (r *Repository) Upsert(ctx context.Context, profile *assessmententity.SkillProfile) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "dimension"}},
 		DoUpdates: clause.AssignmentColumns([]string{"score", "updated_at"}),
@@ -46,8 +47,8 @@ func (r *Repository) Upsert(ctx context.Context, profile *model.SkillProfile) er
 }
 
 // FindByUserID 查询用户所有维度画像
-func (r *Repository) FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error) {
-	var profiles []*model.SkillProfile
+func (r *Repository) FindByUserID(ctx context.Context, userID int64) ([]*assessmententity.SkillProfile, error) {
+	var profiles []*assessmententity.SkillProfile
 	err := r.dbWithContext(ctx).Where("user_id = ?", userID).Find(&profiles).Error
 	return profiles, err
 }
@@ -102,7 +103,7 @@ func (r *Repository) GetStudentTeachingFactSnapshot(ctx context.Context, userID 
 }
 
 // BatchUpsert 批量插入或更新
-func (r *Repository) BatchUpsert(ctx context.Context, profiles []*model.SkillProfile) error {
+func (r *Repository) BatchUpsert(ctx context.Context, profiles []*assessmententity.SkillProfile) error {
 	if len(profiles) == 0 {
 		return nil
 	}

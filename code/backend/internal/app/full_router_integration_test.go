@@ -99,7 +99,7 @@ var fullRouterTestSchemaModels = []any{
 	&opsentity.AuditLog{},
 	&opsentity.NotificationBatch{},
 	&opsentity.Notification{},
-	&model.SkillProfile{},
+	&assessmententity.SkillProfile{},
 	&model.Contest{},
 	&contestentity.ContestStatusTransition{},
 	&model.ContestChallenge{},
@@ -1460,7 +1460,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}).Error; err != nil {
 		t.Fatalf("create user score: %v", err)
 	}
-	if err := env.db.Create(&model.SkillProfile{
+	if err := env.db.Create(&assessmententity.SkillProfile{
 		UserID:    env.student.ID,
 		Dimension: model.DimensionWeb,
 		Score:     0.3,

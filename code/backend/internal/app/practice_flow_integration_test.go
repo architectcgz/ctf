@@ -26,6 +26,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -853,7 +854,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.PortAllocation{},
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
-		&model.SkillProfile{},
+		&assessmententity.SkillProfile{},
 		&practiceentity.UserScore{},
 	); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)

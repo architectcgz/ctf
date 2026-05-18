@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 )
 
@@ -55,7 +56,7 @@ func TestProfileServiceGetSkillProfileBuildsRFC3339Contract(t *testing.T) {
 	service := assessmentqry.NewProfileService(assessmentinfra.NewRepository(db))
 	now := time.Date(2026, 5, 17, 8, 30, 0, 0, time.UTC)
 
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    7,
 		Dimension: model.DimensionWeb,
 		Score:     0.75,

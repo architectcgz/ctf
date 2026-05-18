@@ -18,6 +18,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -55,7 +56,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Challenge{},
 		&model.AWDChallenge{},
-		&model.SkillProfile{},
+		&assessmententity.SkillProfile{},
 		&model.Submission{},
 		&model.AWDAttackLog{},
 		&model.Tag{},
@@ -139,7 +140,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 		}
 	}
 
-	profiles := []model.SkillProfile{
+	profiles := []assessmententity.SkillProfile{
 		{UserID: 7, Dimension: model.DimensionWeb, Score: 0.2, UpdatedAt: now},
 		{UserID: 7, Dimension: model.DimensionCrypto, Score: 0.8, UpdatedAt: now},
 		{UserID: 7, Dimension: model.DimensionPwn, Score: 0.1, UpdatedAt: now},
@@ -211,7 +212,7 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    8,
 		Dimension: model.DimensionPwn,
 		Score:     0.18,
@@ -283,7 +284,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    18,
 		Dimension: model.DimensionPwn,
 		Score:     0.5,
@@ -356,7 +357,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    9,
 		Dimension: model.DimensionWeb,
 		Score:     0.95,
@@ -391,7 +392,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    10,
 		Dimension: model.DimensionWeb,
 		Score:     0.82,
@@ -446,7 +447,7 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    30,
 		Dimension: model.DimensionWeb,
 		Score:     0.92,
@@ -509,7 +510,7 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    31,
 		Dimension: model.DimensionPwn,
 		Score:     0.12,
@@ -575,7 +576,7 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 func TestRecommendationServiceRecommendChallengesHonorsCancellation(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    11,
 		Dimension: model.DimensionWeb,
 		Score:     0.2,

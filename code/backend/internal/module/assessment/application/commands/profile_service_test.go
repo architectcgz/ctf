@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -34,7 +35,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 		&model.Challenge{},
 		&model.Submission{},
 		&model.AWDAttackLog{},
-		&model.SkillProfile{},
+		&assessmententity.SkillProfile{},
 	); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
@@ -120,7 +121,7 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 		t.Fatalf("unexpected crypto score map: %+v", scoreByDimension)
 	}
 
-	var profiles []model.SkillProfile
+	var profiles []assessmententity.SkillProfile
 	if err := db.Order("dimension ASC").Find(&profiles).Error; err != nil {
 		t.Fatalf("query profiles: %v", err)
 	}
@@ -222,7 +223,7 @@ func TestCalculateSkillProfileReturnsExistingProfileWhenLocked(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	now := time.Now()
 
-	profiles := []model.SkillProfile{
+	profiles := []assessmententity.SkillProfile{
 		{UserID: 2, Dimension: model.DimensionWeb, Score: 0.75, UpdatedAt: now},
 		{UserID: 2, Dimension: model.DimensionCrypto, Score: 0.25, UpdatedAt: now},
 	}
@@ -382,7 +383,7 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 		t.Fatalf("Publish() error = %v", err)
 	}
 
-	var profile model.SkillProfile
+	var profile assessmententity.SkillProfile
 	if err := db.Where("user_id = ? AND dimension = ?", 77, model.DimensionWeb).First(&profile).Error; err != nil {
 		t.Fatalf("query profile after event: %v", err)
 	}

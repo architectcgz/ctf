@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -22,7 +23,7 @@ func setupAssessmentRepoTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Submission{},
-		&model.SkillProfile{},
+		&assessmententity.SkillProfile{},
 		&model.AWDChallenge{},
 		&model.AWDAttackLog{},
 	); err != nil {
@@ -62,7 +63,7 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create(&model.SkillProfile{
+	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    7,
 		Dimension: model.DimensionWeb,
 		Score:     0.2,

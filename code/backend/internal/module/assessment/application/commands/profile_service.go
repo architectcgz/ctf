@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -136,7 +137,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 	}
 
 	// 更新数据库
-	profile := &model.SkillProfile{
+	profile := &assessmententity.SkillProfile{
 		UserID:    userID,
 		Dimension: dimension,
 		Score:     rate,
@@ -176,7 +177,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*a
 	}
 
 	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(scores))
-	profiles := make([]*model.SkillProfile, 0, len(scores))
+	profiles := make([]*assessmententity.SkillProfile, 0, len(scores))
 	now := time.Now()
 
 	for _, score := range scores {
@@ -196,7 +197,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*a
 			Score:     rate,
 		})
 
-		profiles = append(profiles, &model.SkillProfile{
+		profiles = append(profiles, &assessmententity.SkillProfile{
 			UserID:    userID,
 			Dimension: score.Dimension,
 			Score:     rate,

@@ -22,12 +22,12 @@ type AssessmentProfileLookupRepository interface {
 }
 
 type AssessmentProfileReadRepository interface {
-	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	FindByUserID(ctx context.Context, userID int64) ([]*assessmententity.SkillProfile, error)
 }
 
 type AssessmentProfileWriteRepository interface {
-	Upsert(ctx context.Context, profile *model.SkillProfile) error
-	BatchUpsert(ctx context.Context, profiles []*model.SkillProfile) error
+	Upsert(ctx context.Context, profile *assessmententity.SkillProfile) error
+	BatchUpsert(ctx context.Context, profiles []*assessmententity.SkillProfile) error
 }
 
 type AssessmentProfileRebuildRepository interface {
@@ -49,7 +49,7 @@ type AssessmentProfileLockStore interface {
 }
 
 type RecommendationProfileRepository interface {
-	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	FindByUserID(ctx context.Context, userID int64) ([]*assessmententity.SkillProfile, error)
 }
 
 type RecommendationTeachingFactRepository interface {
