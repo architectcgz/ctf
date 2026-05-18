@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -80,15 +81,15 @@ func (imageBuildRepoStub) Delete(context.Context, int64) error {
 	return nil
 }
 
-func (imageBuildRepoStub) CreateImageBuildJob(context.Context, *model.ImageBuildJob) error {
+func (imageBuildRepoStub) CreateImageBuildJob(context.Context, *challengeentity.ImageBuildJob) error {
 	return nil
 }
 
-func (imageBuildRepoStub) FindImageBuildJobByID(context.Context, int64) (*model.ImageBuildJob, error) {
+func (imageBuildRepoStub) FindImageBuildJobByID(context.Context, int64) (*challengeentity.ImageBuildJob, error) {
 	return nil, nil
 }
 
-func (imageBuildRepoStub) ListPendingImageBuildJobs(context.Context, int) ([]*model.ImageBuildJob, error) {
+func (imageBuildRepoStub) ListPendingImageBuildJobs(context.Context, int) ([]*challengeentity.ImageBuildJob, error) {
 	return nil, nil
 }
 
@@ -96,7 +97,7 @@ func (imageBuildRepoStub) TryStartImageBuildJob(context.Context, int64, time.Tim
 	return false, nil
 }
 
-func (imageBuildRepoStub) UpdateImageBuildJob(context.Context, *model.ImageBuildJob) error {
+func (imageBuildRepoStub) UpdateImageBuildJob(context.Context, *challengeentity.ImageBuildJob) error {
 	return nil
 }
 
@@ -104,7 +105,7 @@ type fakeImageBuildTxStore struct {
 	findByNameTagResult *model.Image
 	findByNameTagErr    error
 	createdImage        *model.Image
-	createdJob          *model.ImageBuildJob
+	createdJob          *challengeentity.ImageBuildJob
 	updatedImage        *model.Image
 }
 
@@ -118,7 +119,7 @@ func (s *fakeImageBuildTxStore) CreateImage(ctx context.Context, image *model.Im
 	return nil
 }
 
-func (s *fakeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+func (s *fakeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {
 	s.createdJob = job
 	job.ID = 99
 	return nil
@@ -194,7 +195,7 @@ func TestImageBuildServiceCreatePlatformBuildJobCreatesPendingImageAndJob(t *tes
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
-	if job.Status != model.ImageBuildJobStatusPending ||
+	if job.Status != challengeentity.ImageBuildJobStatusPending ||
 		job.SourceType != model.ImageSourceTypePlatformBuild ||
 		job.TargetRef != result.TargetRef ||
 		job.CreatedBy == nil ||
@@ -273,7 +274,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksImageAvailable(t *testing.T) 
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
-	if job.Status != model.ImageBuildJobStatusAvailable ||
+	if job.Status != challengeentity.ImageBuildJobStatusAvailable ||
 		job.TargetDigest != "sha256:demo" ||
 		job.FinishedAt == nil {
 		t.Fatalf("unexpected available job: %+v", job)
@@ -365,7 +366,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksFailures(t *testing.T) {
 			if err != nil {
 				t.Fatalf("FindImageBuildJobByID() error = %v", err)
 			}
-			if job.Status != model.ImageBuildJobStatusFailed || job.ErrorSummary != tc.errorText {
+			if job.Status != challengeentity.ImageBuildJobStatusFailed || job.ErrorSummary != tc.errorText {
 				t.Fatalf("unexpected failed job: %+v", job)
 			}
 

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -224,7 +225,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
-	if job.Status != model.ImageBuildJobStatusPending ||
+	if job.Status != challengeentity.ImageBuildJobStatusPending ||
 		job.TargetRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
 		t.Fatalf("unexpected build job: %+v", job)
 	}

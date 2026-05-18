@@ -265,11 +265,11 @@ type ImageQueryRepository interface {
 }
 
 type ImageBuildJobRepository interface {
-	CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
-	FindImageBuildJobByID(ctx context.Context, id int64) (*model.ImageBuildJob, error)
-	ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*model.ImageBuildJob, error)
+	CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error
+	FindImageBuildJobByID(ctx context.Context, id int64) (*challengeentity.ImageBuildJob, error)
+	ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*challengeentity.ImageBuildJob, error)
 	TryStartImageBuildJob(ctx context.Context, id int64, startedAt time.Time) (bool, error)
-	UpdateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
+	UpdateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error
 }
 
 type ImageInspectResult struct {

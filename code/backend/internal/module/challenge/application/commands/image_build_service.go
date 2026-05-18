@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -54,7 +55,7 @@ type imageBuildRepository interface {
 type imageBuildTxStore interface {
 	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
 	CreateImage(ctx context.Context, image *model.Image) error
-	CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error
+	CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error
 	UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error
 }
 
@@ -143,7 +144,7 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 	}
 
 	createdBy := req.CreatedBy
-	job := &model.ImageBuildJob{
+	job := &challengeentity.ImageBuildJob{
 		SourceType:     model.ImageSourceTypePlatformBuild,
 		ChallengeMode:  strings.TrimSpace(req.ChallengeMode),
 		PackageSlug:    strings.TrimSpace(req.PackageSlug),
@@ -151,7 +152,7 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 		DockerfilePath: strings.TrimSpace(req.DockerfilePath),
 		ContextPath:    strings.TrimSpace(req.ContextPath),
 		TargetRef:      targetRef,
-		Status:         model.ImageBuildJobStatusPending,
+		Status:         challengeentity.ImageBuildJobStatusPending,
 	}
 	if createdBy > 0 {
 		job.CreatedBy = &createdBy
@@ -208,7 +209,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 	}
 
 	createdBy := req.CreatedBy
-	job := &model.ImageBuildJob{
+	job := &challengeentity.ImageBuildJob{
 		SourceType:     model.ImageSourceTypePlatformBuild,
 		ChallengeMode:  strings.TrimSpace(req.ChallengeMode),
 		PackageSlug:    strings.TrimSpace(req.PackageSlug),
@@ -216,7 +217,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 		DockerfilePath: strings.TrimSpace(req.DockerfilePath),
 		ContextPath:    strings.TrimSpace(req.ContextPath),
 		TargetRef:      targetRef,
-		Status:         model.ImageBuildJobStatusPending,
+		Status:         challengeentity.ImageBuildJobStatusPending,
 	}
 	if createdBy > 0 {
 		job.CreatedBy = &createdBy
@@ -454,7 +455,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 		return s.failImageBuildJob(ctx, job, image, err)
 	}
 	now := time.Now()
-	job.Status = model.ImageBuildJobStatusPushed
+	job.Status = challengeentity.ImageBuildJobStatusPushed
 	job.UpdatedAt = now
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
@@ -463,7 +464,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 		return err
 	}
 
-	job.Status = model.ImageBuildJobStatusVerifying
+	job.Status = challengeentity.ImageBuildJobStatusVerifying
 	job.UpdatedAt = time.Now()
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
@@ -485,7 +486,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	}
 
 	finishedAt := time.Now()
-	job.Status = model.ImageBuildJobStatusAvailable
+	job.Status = challengeentity.ImageBuildJobStatusAvailable
 	job.TargetDigest = digest
 	job.FinishedAt = &finishedAt
 	job.ErrorSummary = ""
@@ -497,10 +498,10 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	return s.updateImageBuildStatus(ctx, image, model.ImageStatusAvailable, digest, "")
 }
 
-func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *model.ImageBuildJob, image *model.Image, cause error) error {
+func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob, image *model.Image, cause error) error {
 	summary := strings.TrimSpace(cause.Error())
 	finishedAt := time.Now()
-	job.Status = model.ImageBuildJobStatusFailed
+	job.Status = challengeentity.ImageBuildJobStatusFailed
 	job.ErrorSummary = summary
 	job.FinishedAt = &finishedAt
 	job.UpdatedAt = finishedAt

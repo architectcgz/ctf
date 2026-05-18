@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"gorm.io/gorm"
 )
@@ -39,7 +40,7 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 	repo := NewImageRepository(db)
 	ctx := context.Background()
 
-	job := &model.ImageBuildJob{
+	job := &challengeentity.ImageBuildJob{
 		SourceType:     model.ImageSourceTypePlatformBuild,
 		ChallengeMode:  "jeopardy",
 		PackageSlug:    "web-demo",
@@ -47,7 +48,7 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 		DockerfilePath: "/tmp/web-demo/docker/Dockerfile",
 		ContextPath:    "/tmp/web-demo/docker",
 		TargetRef:      "127.0.0.1:5000/jeopardy/web-demo:v1",
-		Status:         model.ImageBuildJobStatusPending,
+		Status:         challengeentity.ImageBuildJobStatusPending,
 	}
 	if err := repo.CreateImageBuildJob(ctx, job); err != nil {
 		t.Fatalf("CreateImageBuildJob() error = %v", err)
@@ -60,7 +61,7 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
-	if found.PackageSlug != "web-demo" || found.Status != model.ImageBuildJobStatusPending {
+	if found.PackageSlug != "web-demo" || found.Status != challengeentity.ImageBuildJobStatusPending {
 		t.Fatalf("unexpected found job: %+v", found)
 	}
 
@@ -92,12 +93,12 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID(started) error = %v", err)
 	}
-	if found.Status != model.ImageBuildJobStatusBuilding || found.StartedAt == nil || !found.StartedAt.Equal(startedAt) {
+	if found.Status != challengeentity.ImageBuildJobStatusBuilding || found.StartedAt == nil || !found.StartedAt.Equal(startedAt) {
 		t.Fatalf("unexpected started job: %+v", found)
 	}
 
 	finishedAt := time.Date(2026, 5, 5, 10, 1, 0, 0, time.UTC)
-	found.Status = model.ImageBuildJobStatusFailed
+	found.Status = challengeentity.ImageBuildJobStatusFailed
 	found.ErrorSummary = "docker build failed"
 	found.TargetDigest = "sha256:demo"
 	found.FinishedAt = &finishedAt
@@ -109,7 +110,7 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID(updated) error = %v", err)
 	}
-	if updated.Status != model.ImageBuildJobStatusFailed ||
+	if updated.Status != challengeentity.ImageBuildJobStatusFailed ||
 		updated.ErrorSummary != "docker build failed" ||
 		updated.TargetDigest != "sha256:demo" ||
 		updated.FinishedAt == nil ||

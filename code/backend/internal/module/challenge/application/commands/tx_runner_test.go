@@ -48,7 +48,7 @@ func (s *testImageBuildTxStore) CreateImage(ctx context.Context, image *model.Im
 	return s.tx.WithContext(ctx).Create(image).Error
 }
 
-func (s *testImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+func (s *testImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {
 	return s.tx.WithContext(ctx).Create(job).Error
 }
 

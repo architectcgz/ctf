@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -48,15 +49,15 @@ func (r *ImageBuildRepository) Delete(ctx context.Context, id int64) error {
 	return r.commands.Delete(ctx, id)
 }
 
-func (r *ImageBuildRepository) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+func (r *ImageBuildRepository) CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {
 	return r.source.CreateImageBuildJob(ctx, job)
 }
 
-func (r *ImageBuildRepository) FindImageBuildJobByID(ctx context.Context, id int64) (*model.ImageBuildJob, error) {
+func (r *ImageBuildRepository) FindImageBuildJobByID(ctx context.Context, id int64) (*challengeentity.ImageBuildJob, error) {
 	return r.source.FindImageBuildJobByID(ctx, id)
 }
 
-func (r *ImageBuildRepository) ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*model.ImageBuildJob, error) {
+func (r *ImageBuildRepository) ListPendingImageBuildJobs(ctx context.Context, limit int) ([]*challengeentity.ImageBuildJob, error) {
 	return r.source.ListPendingImageBuildJobs(ctx, limit)
 }
 
@@ -64,7 +65,7 @@ func (r *ImageBuildRepository) TryStartImageBuildJob(ctx context.Context, id int
 	return r.source.TryStartImageBuildJob(ctx, id, startedAt)
 }
 
-func (r *ImageBuildRepository) UpdateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+func (r *ImageBuildRepository) UpdateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {
 	return r.source.UpdateImageBuildJob(ctx, job)
 }
 

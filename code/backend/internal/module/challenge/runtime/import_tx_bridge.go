@@ -46,7 +46,7 @@ func (s *runtimeImageBuildTxStore) CreateImage(ctx context.Context, image *model
 	return s.tx.WithContext(ctx).Create(image).Error
 }
 
-func (s *runtimeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *model.ImageBuildJob) error {
+func (s *runtimeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {
 	if s == nil || s.tx == nil {
 		return fmt.Errorf("image build transaction is not configured")
 	}

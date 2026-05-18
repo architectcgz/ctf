@@ -245,7 +245,7 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
-	if job.Status != model.ImageBuildJobStatusPending ||
+	if job.Status != challengeentity.ImageBuildJobStatusPending ||
 		job.TargetRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
 		t.Fatalf("unexpected build job: %+v", job)
 	}
