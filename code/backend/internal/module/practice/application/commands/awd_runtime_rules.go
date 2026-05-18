@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -16,25 +17,25 @@ const (
 	workspaceVolumeDefaultRootSegment = "root"
 )
 
-func isAWDInstance(instance *model.Instance) bool {
+func isAWDInstance(instance *instancecontracts.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.ServiceID != nil
 }
 
-func buildAWDContestNetworkName(instance *model.Instance) string {
+func buildAWDContestNetworkName(instance *instancecontracts.Instance) string {
 	if instance == nil || instance.ContestID == nil {
 		return ""
 	}
 	return fmt.Sprintf("ctf-awd-contest-%d", *instance.ContestID)
 }
 
-func buildAWDServiceAlias(instance *model.Instance) string {
+func buildAWDServiceAlias(instance *instancecontracts.Instance) string {
 	if instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
 	return fmt.Sprintf("awd-c%d-t%d-s%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
-func buildAWDDefenseWorkspaceAlias(instance *model.Instance, revision int64) string {
+func buildAWDDefenseWorkspaceAlias(instance *instancecontracts.Instance, revision int64) string {
 	if instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
@@ -44,7 +45,7 @@ func buildAWDDefenseWorkspaceAlias(instance *model.Instance, revision int64) str
 	return fmt.Sprintf("awd-ws-c%d-t%d-s%d-r%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision)
 }
 
-func applyAWDStableNetworkToTopologyRequest(instance *model.Instance, chal *model.Challenge, request *practiceports.TopologyCreateRequest) {
+func applyAWDStableNetworkToTopologyRequest(instance *instancecontracts.Instance, chal *model.Challenge, request *practiceports.TopologyCreateRequest) {
 	if !isAWDInstance(instance) || request == nil {
 		return
 	}
@@ -98,7 +99,7 @@ func shouldUsePublishedAWDEntryAccess(accessHost string) bool {
 	return strings.TrimSpace(accessHost) != ""
 }
 
-func shouldDisableEntryPortPublishing(instance *model.Instance, accessHost string) bool {
+func shouldDisableEntryPortPublishing(instance *instancecontracts.Instance, accessHost string) bool {
 	return isAWDInstance(instance) && !shouldUsePublishedAWDEntryAccess(accessHost)
 }
 
@@ -122,7 +123,7 @@ func appendUniqueString(items []string, item string) []string {
 	return append(items, item)
 }
 
-func usesAWDStableNetworkAlias(instance *model.Instance) bool {
+func usesAWDStableNetworkAlias(instance *instancecontracts.Instance) bool {
 	if !isAWDInstance(instance) {
 		return false
 	}
@@ -134,7 +135,7 @@ func usesAWDStableNetworkAlias(instance *model.Instance) bool {
 	return strings.HasPrefix(host, "awd-c")
 }
 
-func buildRuntimeContainerName(chal *model.Challenge, instance *model.Instance) string {
+func buildRuntimeContainerName(chal *model.Challenge, instance *instancecontracts.Instance) string {
 	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
@@ -145,7 +146,7 @@ func buildRuntimeContainerName(chal *model.Challenge, instance *model.Instance) 
 	return fmt.Sprintf("%s%s-c%d-t%d-s%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
-func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *model.Instance, revision int64) string {
+func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *instancecontracts.Instance, revision int64) string {
 	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
@@ -156,7 +157,7 @@ func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *mode
 	return fmt.Sprintf("%s%s-c%d-t%d-s%d-r%d", workspaceContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision)
 }
 
-func buildAWDDefenseWorkspaceVolumeName(instance *model.Instance, revision int64, rootRelative string) string {
+func buildAWDDefenseWorkspaceVolumeName(instance *instancecontracts.Instance, revision int64, rootRelative string) string {
 	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}

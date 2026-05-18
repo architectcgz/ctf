@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type ctxOnlyInstanceRepository struct{}
 
-func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
@@ -18,7 +19,7 @@ func (ctxOnlyInstanceRepository) FindUserByID(context.Context, int64) (*model.Us
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) FindAccessibleByIDForUser(context.Context, int64, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindAccessibleByIDForUser(context.Context, int64, int64) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
@@ -40,7 +41,7 @@ func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int
 
 type ctxOnlyProxyTicketInstanceReader struct{}
 
-func (ctxOnlyProxyTicketInstanceReader) FindByID(context.Context, int64) (*model.Instance, error) {
+func (ctxOnlyProxyTicketInstanceReader) FindByID(context.Context, int64) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 

@@ -3,9 +3,9 @@ package ports
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type CountRunningRepository interface {
@@ -31,11 +31,11 @@ type RuntimeCleaner = instanceports.RuntimeCleaner
 type TeacherInstanceFilter = instanceports.TeacherInstanceFilter
 
 type AWDDefenseWorkspaceLookupRepository interface {
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
 }
 
 type AWDDefenseWorkspaceWriteRepository interface {
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error
 	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
 }
 

@@ -13,9 +13,11 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
@@ -43,8 +45,8 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 		ServiceSnapshot: `{"name":"awd-web","category":"web","difficulty":"medium","runtime_config":{"image_id":101,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 	}
 
-	var createdInstance *model.Instance
-	var operation *model.AWDServiceOperation
+	var createdInstance *instanceentity.Instance
+	var operation *runtimeentity.AWDServiceOperation
 	findTeamCalled := false
 	findServiceCalled := false
 	findExistingCalled := false
@@ -70,7 +72,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 			}
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*instanceentity.Instance, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for instances: %d", gotContestID)
 			}
@@ -90,7 +92,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 			}
 			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
-		findScopedExistingInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+		findScopedExistingInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error) {
 			findExistingCalled = true
 			if userID != team.CaptainID || gotChallengeID != challengeID {
 				t.Fatalf("unexpected scoped existing lookup user=%d challenge=%d", userID, gotChallengeID)
@@ -103,13 +105,13 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 		countScopedRunningInstancesFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
 			return 0, nil
 		},
-		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+		createInstanceFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 			copied := *instance
 			createdInstance = &copied
 			instance.ID = 8201
 			return nil
 		},
-		createAWDServiceOperationFn: func(ctx context.Context, next *model.AWDServiceOperation) error {
+		createAWDServiceOperationFn: func(ctx context.Context, next *runtimeentity.AWDServiceOperation) error {
 			copied := *next
 			operation = &copied
 			return nil
@@ -149,7 +151,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 	if createdInstance.TeamID == nil || *createdInstance.TeamID != teamID || createdInstance.ServiceID == nil || *createdInstance.ServiceID != serviceID {
 		t.Fatalf("expected team/service scope on created instance, got %+v", createdInstance)
 	}
-	if createdInstance.Status != model.InstanceStatusPending {
+	if createdInstance.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending instance status, got %+v", createdInstance)
 	}
 	if !createdInstance.ExpiresAt.Equal(contestEnd) {
@@ -158,10 +160,10 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 	if operation == nil {
 		t.Fatal("expected system awd service operation to be recorded")
 	}
-	if operation.OperationType != model.AWDServiceOperationTypeStart || operation.RequestedBy != model.AWDServiceOperationRequestedBySystem {
+	if operation.OperationType != runtimeentity.AWDServiceOperationTypeStart || operation.RequestedBy != runtimeentity.AWDServiceOperationRequestedBySystem {
 		t.Fatalf("unexpected desired start operation: %+v", operation)
 	}
-	if operation.Status != model.AWDServiceOperationStatusProvisioning || operation.Reason != "desired_runtime_reconcile" || operation.SLABillable {
+	if operation.Status != runtimeentity.AWDServiceOperationStatusProvisioning || operation.Reason != "desired_runtime_reconcile" || operation.SLABillable {
 		t.Fatalf("unexpected desired start operation detail: %+v", operation)
 	}
 }
@@ -189,21 +191,21 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 		ServiceSnapshot: `{"name":"awd-pwn","category":"pwn","difficulty":"hard","runtime_config":{"image_id":102,"instance_sharing":"per_team"},"flag_config":{"flag_type":"dynamic","flag_prefix":"flag"}}`,
 	}
 	failedExpiresAt := contestEnd.Add(-30 * time.Minute)
-	failedInstance := &model.Instance{
+	failedInstance := &instanceentity.Instance{
 		ID:          8301,
 		UserID:      team.CaptainID,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusFailed,
+		Status:      instanceentity.InstanceStatusFailed,
 		Nonce:       "nonce-old",
 		ExpiresAt:   failedExpiresAt,
 	}
 
 	cleanupCalled := false
 	resetCalled := false
-	var operation *model.AWDServiceOperation
+	var operation *runtimeentity.AWDServiceOperation
 	findRestartableCalled := false
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*practiceports.ContestRecord, error) {
@@ -227,7 +229,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 			}
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(ctx context.Context, gotContestID int64) ([]*instanceentity.Instance, error) {
 			if gotContestID != contestID {
 				t.Fatalf("unexpected contest id for instances: %d", gotContestID)
 			}
@@ -245,7 +247,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 			}
 			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
-		findScopedRestartableInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+		findScopedRestartableInstanceFn: func(ctx context.Context, userID, gotChallengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error) {
 			findRestartableCalled = true
 			if userID != team.CaptainID || gotChallengeID != challengeID {
 				t.Fatalf("unexpected restartable lookup user=%d challenge=%d", userID, gotChallengeID)
@@ -260,7 +262,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 			if instanceID != failedInstance.ID {
 				t.Fatalf("unexpected instance id for reset: %d", instanceID)
 			}
-			if status != model.InstanceStatusPending {
+			if status != instanceentity.InstanceStatusPending {
 				t.Fatalf("expected pending status on reset, got %s", status)
 			}
 			if !expiresAt.Equal(contestEnd) {
@@ -271,7 +273,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 			}
 			return nil
 		},
-		createAWDServiceOperationFn: func(ctx context.Context, next *model.AWDServiceOperation) error {
+		createAWDServiceOperationFn: func(ctx context.Context, next *runtimeentity.AWDServiceOperation) error {
 			copied := *next
 			operation = &copied
 			return nil
@@ -284,7 +286,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				cleanupCalled = true
 				if instance.ID != failedInstance.ID {
 					t.Fatalf("unexpected cleanup instance: %+v", instance)
@@ -319,10 +321,10 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 	if operation == nil {
 		t.Fatal("expected recreate operation to be recorded")
 	}
-	if operation.InstanceID != failedInstance.ID || operation.OperationType != model.AWDServiceOperationTypeRecreate {
+	if operation.InstanceID != failedInstance.ID || operation.OperationType != runtimeentity.AWDServiceOperationTypeRecreate {
 		t.Fatalf("unexpected desired recreate operation: %+v", operation)
 	}
-	if operation.RequestedBy != model.AWDServiceOperationRequestedBySystem || operation.Status != model.AWDServiceOperationStatusProvisioning {
+	if operation.RequestedBy != runtimeentity.AWDServiceOperationRequestedBySystem || operation.Status != runtimeentity.AWDServiceOperationStatusProvisioning {
 		t.Fatalf("unexpected desired recreate operation detail: %+v", operation)
 	}
 	if operation.Reason != "desired_runtime_reconcile" || operation.SLABillable {
@@ -363,7 +365,7 @@ func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T)
 		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
@@ -449,7 +451,7 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 		ServiceSnapshot: `{"name":"awd-web","runtime_config":{"image_id":103,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 	}
 
-	var createdInstance *model.Instance
+	var createdInstance *instanceentity.Instance
 	var operationCalls int32
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(context.Context, int64) (*practiceports.ContestRecord, error) {
@@ -464,7 +466,7 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
@@ -473,20 +475,20 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 		findContestAWDServiceFn: func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
-		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		countScopedRunningInstancesFn: func(context.Context, int64, practiceports.InstanceScope) (int, error) {
 			return 0, nil
 		},
-		createInstanceFn: func(_ context.Context, instance *model.Instance) error {
+		createInstanceFn: func(_ context.Context, instance *instanceentity.Instance) error {
 			copied := *instance
 			copied.ID = 8501
 			createdInstance = &copied
 			instance.ID = copied.ID
 			return nil
 		},
-		createAWDServiceOperationFn: func(context.Context, *model.AWDServiceOperation) error {
+		createAWDServiceOperationFn: func(context.Context, *runtimeentity.AWDServiceOperation) error {
 			atomic.AddInt32(&operationCalls, 1)
 			return nil
 		},
@@ -573,7 +575,7 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 		t.Fatalf("seed corrupted desired reconcile state: %v", err)
 	}
 
-	var createdInstance *model.Instance
+	var createdInstance *instanceentity.Instance
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(context.Context, int64) (*practiceports.ContestRecord, error) {
 			return practiceContestRecordFromEntity(contest), nil
@@ -587,7 +589,7 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		findContestTeamFn: func(context.Context, int64, int64) (*practiceports.ContestTeamRecord, error) {
@@ -596,13 +598,13 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 		findContestAWDServiceFn: func(context.Context, int64, int64) (*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordFromEntity(serviceDef), nil
 		},
-		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+		findScopedExistingInstanceFn: func(context.Context, int64, int64, practiceports.InstanceScope) (*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		countScopedRunningInstancesFn: func(context.Context, int64, practiceports.InstanceScope) (int, error) {
 			return 0, nil
 		},
-		createInstanceFn: func(_ context.Context, instance *model.Instance) error {
+		createInstanceFn: func(_ context.Context, instance *instanceentity.Instance) error {
 			copied := *instance
 			createdInstance = &copied
 			instance.ID = 8551
@@ -654,14 +656,14 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 	contest := &contestentity.Contest{ID: contestID, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, EndTime: contestEnd}
 	team := &contestentity.Team{ID: teamID, ContestID: contestID, CaptainID: 7601, Name: "team-e"}
 	serviceDef := &contestentity.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 6601, IsVisible: true}
-	activeInstance := &model.Instance{
+	activeInstance := &instanceentity.Instance{
 		ID:          8601,
 		UserID:      team.CaptainID,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 6601,
 		ServiceID:   &serviceID,
-		Status:      model.InstanceStatusRunning,
+		Status:      instanceentity.InstanceStatusRunning,
 		ExpiresAt:   contestEnd,
 	}
 
@@ -686,8 +688,8 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
-			return []*model.Instance{activeInstance}, nil
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
+			return []*instanceentity.Instance{activeInstance}, nil
 		},
 	}
 
@@ -750,7 +752,7 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 		listContestAWDServicesFn: func(context.Context, int64) ([]*practiceports.ContestAWDServiceRecord, error) {
 			return practiceContestAWDServiceRecordsFromEntities(serviceDef), nil
 		},
-		listContestAWDInstancesFn: func(context.Context, int64) ([]*model.Instance, error) {
+		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
 		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*model.AWDScopeControl, error) {
@@ -762,7 +764,7 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 				ControlType: model.AWDScopeControlTypeDesiredReconcileSuppressed,
 			}}, nil
 		},
-		createInstanceFn: func(context.Context, *model.Instance) error {
+		createInstanceFn: func(context.Context, *instanceentity.Instance) error {
 			createCalled = true
 			return nil
 		},
@@ -949,20 +951,20 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 
 	deadline := time.Now().Add(time.Second)
 	for time.Now().Before(deadline) {
-		var instances []model.Instance
+		var instances []instanceentity.Instance
 		if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).Find(&instances).Error; err == nil {
-			if len(instances) == 1 && instances[0].Status == model.InstanceStatusRunning && instances[0].ContainerID == "container-loop" {
+			if len(instances) == 1 && instances[0].Status == instanceentity.InstanceStatusRunning && instances[0].ContainerID == "container-loop" {
 				return
 			}
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	var instances []model.Instance
+	var instances []instanceentity.Instance
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).Find(&instances).Error; err != nil {
 		t.Fatalf("load desired reconcile instances: %v", err)
 	}
-	var operations []model.AWDServiceOperation
+	var operations []runtimeentity.AWDServiceOperation
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).Order("id ASC").Find(&operations).Error; err != nil {
 		t.Fatalf("load desired reconcile operations: %v", err)
 	}

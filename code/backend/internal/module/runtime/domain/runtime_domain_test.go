@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
 func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 	t.Parallel()
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 		RuntimeDetails: `{
@@ -46,7 +47,7 @@ func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
 	t.Parallel()
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 		RuntimeDetails: `{
@@ -72,7 +73,7 @@ func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
 func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.T) {
 	t.Parallel()
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ContainerID: "legacy-web",
 		NetworkID:   "net-awd-contest-8",
 		RuntimeDetails: `{
@@ -94,7 +95,7 @@ func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.
 func TestExtractManagedResourcesFallsBackToLegacyFields(t *testing.T) {
 	t.Parallel()
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 	}

@@ -15,6 +15,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -25,22 +26,22 @@ type Repository struct {
 }
 
 type userVisibleInstanceRow struct {
-	ID              int64            `gorm:"column:id"`
-	ContestMode     string           `gorm:"column:contest_mode"`
-	ChallengeID     int64            `gorm:"column:challenge_id"`
-	ChallengeTitle  string           `gorm:"column:challenge_title"`
-	Category        string           `gorm:"column:category"`
-	Difficulty      string           `gorm:"column:difficulty"`
-	FlagType        string           `gorm:"column:flag_type"`
-	ServiceName     string           `gorm:"column:service_name"`
-	ServiceSnapshot string           `gorm:"column:service_snapshot"`
-	Status          string           `gorm:"column:status"`
-	ShareScope      model.ShareScope `gorm:"column:share_scope"`
-	AccessURL       string           `gorm:"column:access_url"`
-	ExpiresAt       time.Time        `gorm:"column:expires_at"`
-	ExtendCount     int              `gorm:"column:extend_count"`
-	MaxExtends      int              `gorm:"column:max_extends"`
-	CreatedAt       time.Time        `gorm:"column:created_at"`
+	ID              int64                        `gorm:"column:id"`
+	ContestMode     string                       `gorm:"column:contest_mode"`
+	ChallengeID     int64                        `gorm:"column:challenge_id"`
+	ChallengeTitle  string                       `gorm:"column:challenge_title"`
+	Category        string                       `gorm:"column:category"`
+	Difficulty      string                       `gorm:"column:difficulty"`
+	FlagType        string                       `gorm:"column:flag_type"`
+	ServiceName     string                       `gorm:"column:service_name"`
+	ServiceSnapshot string                       `gorm:"column:service_snapshot"`
+	Status          string                       `gorm:"column:status"`
+	ShareScope      instancecontracts.ShareScope `gorm:"column:share_scope"`
+	AccessURL       string                       `gorm:"column:access_url"`
+	ExpiresAt       time.Time                    `gorm:"column:expires_at"`
+	ExtendCount     int                          `gorm:"column:extend_count"`
+	MaxExtends      int                          `gorm:"column:max_extends"`
+	CreatedAt       time.Time                    `gorm:"column:created_at"`
 }
 
 type teacherInstanceRow struct {
@@ -75,8 +76,8 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
-	var instance model.Instance
+func (r *Repository) FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -106,10 +107,10 @@ func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (
 	return &challenge, nil
 }
 
-func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
-	var instance model.Instance
+func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
-		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -120,19 +121,19 @@ func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challen
 	return &instance, nil
 }
 
-func (r *Repository) FindByContestUserID(ctx context.Context, contestID, userID int64) ([]*model.Instance, error) {
-	var instances []*model.Instance
+func (r *Repository) FindByContestUserID(ctx context.Context, contestID, userID int64) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND status IN ?", contestID, userID,
-		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) FindByContestUserAndChallenge(ctx context.Context, contestID, userID, challengeID int64) (*model.Instance, error) {
-	var instance model.Instance
+func (r *Repository) FindByContestUserAndChallenge(ctx context.Context, contestID, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND challenge_id = ? AND status IN ?",
-		contestID, userID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		contestID, userID, challengeID, []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -143,19 +144,19 @@ func (r *Repository) FindByContestUserAndChallenge(ctx context.Context, contestI
 	return &instance, nil
 }
 
-func (r *Repository) FindByContestTeamID(ctx context.Context, contestID, teamID int64) ([]*model.Instance, error) {
-	var instances []*model.Instance
+func (r *Repository) FindByContestTeamID(ctx context.Context, contestID, teamID int64) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("contest_id = ? AND team_id = ? AND status IN ?", contestID, teamID,
-		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) FindByContestTeamAndChallenge(ctx context.Context, contestID, teamID, challengeID int64) (*model.Instance, error) {
-	var instance model.Instance
+func (r *Repository) FindByContestTeamAndChallenge(ctx context.Context, contestID, teamID, challengeID int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("contest_id = ? AND team_id = ? AND challenge_id = ? AND status IN ?",
-		contestID, teamID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		contestID, teamID, challengeID, []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -167,7 +168,7 @@ func (r *Repository) FindByContestTeamAndChallenge(ctx context.Context, contestI
 }
 
 func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
-	return r.dbWithContext(ctx).Model(&model.Instance{}).
+	return r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,
@@ -181,7 +182,7 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 	}
 
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var instance model.Instance
+		var instance instancecontracts.Instance
 		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
 			return err
 		}
@@ -190,10 +191,10 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 			"status":     status,
 			"updated_at": time.Now(),
 		}
-		if status == model.InstanceStatusStopped || status == model.InstanceStatusExpired {
+		if status == instancecontracts.InstanceStatusStopped || status == instancecontracts.InstanceStatusExpired {
 			updates["destroyed_at"] = time.Now()
 		}
-		if err := tx.Model(&model.Instance{}).
+		if err := tx.Model(&instancecontracts.Instance{}).
 			Where("id = ?", id).
 			Updates(updates).Error; err != nil {
 			return err
@@ -216,16 +217,16 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 	}
 
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var instance model.Instance
+		var instance instancecontracts.Instance
 		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
 			return err
 		}
 
 		now := time.Now()
-		if err := tx.Model(&model.Instance{}).
+		if err := tx.Model(&instancecontracts.Instance{}).
 			Where("id = ?", id).
 			Updates(map[string]any{
-				"status":          model.InstanceStatusExpired,
+				"status":          instancecontracts.InstanceStatusExpired,
 				"host_port":       0,
 				"container_id":    "",
 				"network_id":      "",
@@ -245,8 +246,8 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 	})
 }
 
-func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
-	return r.dbWithContext(ctx).Model(&model.Instance{}).
+func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	return r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ?", instance.ID).
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
@@ -261,8 +262,8 @@ func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance
 		}).Error
 }
 
-func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error) {
-	var workspace model.AWDDefenseWorkspace
+func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
+	var workspace runtimeentity.AWDDefenseWorkspace
 	err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
 		First(&workspace).Error
@@ -275,7 +276,7 @@ func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, tea
 	return &workspace, nil
 }
 
-func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error {
+func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error {
 	if workspace == nil {
 		return nil
 	}
@@ -284,7 +285,7 @@ func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *m
 		workspace.WorkspaceRevision = 1
 	}
 	if strings.TrimSpace(workspace.Status) == "" {
-		workspace.Status = model.AWDDefenseWorkspaceStatusPending
+		workspace.Status = runtimeentity.AWDDefenseWorkspaceStatusPending
 	}
 
 	now := time.Now()
@@ -319,7 +320,7 @@ func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *m
 func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error {
 	now := time.Now()
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var workspace model.AWDDefenseWorkspace
+		var workspace runtimeentity.AWDDefenseWorkspace
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
 			First(&workspace).Error
@@ -327,25 +328,25 @@ func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contes
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			}
-			return tx.Create(&model.AWDDefenseWorkspace{
+			return tx.Create(&runtimeentity.AWDDefenseWorkspace{
 				ContestID:         contestID,
 				TeamID:            teamID,
 				ServiceID:         serviceID,
 				InstanceID:        instanceID,
 				WorkspaceRevision: 1,
-				Status:            model.AWDDefenseWorkspaceStatusProvisioning,
+				Status:            runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
 				SeedSignature:     seedSignature,
 				CreatedAt:         now,
 				UpdatedAt:         now,
 			}).Error
 		}
 
-		return tx.Model(&model.AWDDefenseWorkspace{}).
+		return tx.Model(&runtimeentity.AWDDefenseWorkspace{}).
 			Where("id = ?", workspace.ID).
 			Updates(map[string]any{
 				"instance_id":        instanceID,
 				"workspace_revision": workspace.WorkspaceRevision + 1,
-				"status":             model.AWDDefenseWorkspaceStatusProvisioning,
+				"status":             runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
 				"container_id":       "",
 				"seed_signature":     seedSignature,
 				"updated_at":         now,
@@ -353,8 +354,8 @@ func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contes
 	})
 }
 
-func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error) {
-	var instance model.Instance
+func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
 	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select("inst.*").
@@ -379,8 +380,8 @@ func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, 
 	return &instance, nil
 }
 
-func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*model.Instance, error) {
-	var instances []*model.Instance
+func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
 	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select("DISTINCT inst.*").
@@ -388,7 +389,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl").
-		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
+		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning, instancecontracts.InstanceStatusFailed, instancecontracts.InstanceStatusExpired}).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
@@ -429,7 +430,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl").
-		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
+		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning, instancecontracts.InstanceStatusFailed, instancecontracts.InstanceStatusExpired}).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
@@ -466,33 +467,33 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 	return items, nil
 }
 
-func (r *Repository) FindExpired(ctx context.Context) ([]*model.Instance, error) {
-	var instances []*model.Instance
+func (r *Repository) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("status = ? AND expires_at < ?",
-		model.InstanceStatusRunning, time.Now()).
+		instancecontracts.InstanceStatusRunning, time.Now()).
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error) {
-	var instances []*model.Instance
+func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).
-		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		Where("expires_at > ?", time.Now()).
 		Order("updated_at ASC, id ASC").
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error) {
+func (r *Repository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
 	if instanceID <= 0 {
 		return nil, nil
 	}
 
-	var workspace model.AWDDefenseWorkspace
+	var workspace runtimeentity.AWDDefenseWorkspace
 	err := r.dbWithContext(ctx).
 		Where("instance_id = ?", instanceID).
-		Where("status = ?", model.AWDDefenseWorkspaceStatusRunning).
+		Where("status = ?", runtimeentity.AWDDefenseWorkspaceStatusRunning).
 		Where("container_id <> ''").
 		First(&workspace).Error
 	if err != nil {
@@ -513,11 +514,11 @@ func (r *Repository) RefreshActiveAWDInstanceExpiryByContest(ctx context.Context
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&model.Instance{}).
+		Model(&instancecontracts.Instance{}).
 		Where("contest_id = ? AND service_id IS NOT NULL AND status IN ?", contestID, []string{
-			model.InstanceStatusPending,
-			model.InstanceStatusCreating,
-			model.InstanceStatusRunning,
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
 		}).
 		Where("expires_at > ?", activeAt.UTC()).
 		Updates(map[string]any{
@@ -531,14 +532,14 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		return false, nil
 	}
 
-	result := r.dbWithContext(ctx).Model(&model.Instance{}).
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ? AND status IN ? AND expires_at > ?",
 			id,
-			[]string{model.InstanceStatusCreating, model.InstanceStatusRunning},
+			[]string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning},
 			time.Now(),
 		).
 		Updates(map[string]any{
-			"status":          model.InstanceStatusPending,
+			"status":          instancecontracts.InstanceStatusPending,
 			"container_id":    "",
 			"network_id":      "",
 			"runtime_details": "",
@@ -551,7 +552,7 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 	return result.RowsAffected > 0, nil
 }
 
-func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
+func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *runtimeentity.AWDServiceOperation) error {
 	return r.dbWithContext(ctx).Create(operation).Error
 }
 
@@ -560,11 +561,11 @@ func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Cont
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&model.AWDServiceOperation{}).
+		Model(&runtimeentity.AWDServiceOperation{}).
 		Where("instance_id = ? AND status IN ?", instanceID, []string{
-			model.AWDServiceOperationStatusRequested,
-			model.AWDServiceOperationStatusProvisioning,
-			model.AWDServiceOperationStatusRecovering,
+			runtimeentity.AWDServiceOperationStatusRequested,
+			runtimeentity.AWDServiceOperationStatusProvisioning,
+			runtimeentity.AWDServiceOperationStatusRecovering,
 		}).
 		Updates(map[string]any{
 			"status":        status,
@@ -579,7 +580,7 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&model.AWDServiceOperation{}).
+		Model(&runtimeentity.AWDServiceOperation{}).
 		Where("id = ?", operationID).
 		Updates(map[string]any{
 			"status":        status,
@@ -617,7 +618,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Joins("LEFT JOIN contests co ON co.id = i.contest_id").
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = i.service_id AND cas.deleted_at IS NULL").
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
-		Where("i.status <> ?", model.InstanceStatusStopped).
+		Where("i.status <> ?", instancecontracts.InstanceStatusStopped).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
 
@@ -707,7 +708,7 @@ func buildRuntimeInstanceMetadata(contestMode, serviceSnapshot, serviceName, cha
 }
 
 func (r *Repository) UpdateExtend(ctx context.Context, id int64, expiresAt time.Time, extendCount int) error {
-	return r.dbWithContext(ctx).Model(&model.Instance{}).
+	return r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"expires_at":   expiresAt,
@@ -716,9 +717,9 @@ func (r *Repository) UpdateExtend(ctx context.Context, id int64, expiresAt time.
 }
 
 func (r *Repository) AtomicExtend(ctx context.Context, id int64, userID int64, maxExtends int, duration time.Duration) error {
-	result := r.dbWithContext(ctx).Model(&model.Instance{}).
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ? AND user_id = ? AND status = ? AND extend_count < ?",
-			id, userID, model.InstanceStatusRunning, maxExtends).
+			id, userID, instancecontracts.InstanceStatusRunning, maxExtends).
 		Updates(map[string]interface{}{
 			"expires_at":   gorm.Expr("expires_at + ?", duration),
 			"extend_count": gorm.Expr("extend_count + 1"),
@@ -733,9 +734,9 @@ func (r *Repository) AtomicExtend(ctx context.Context, id int64, userID int64, m
 }
 
 func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
-	result := r.db.WithContext(ctx).Model(&model.Instance{}).
+	result := r.db.WithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ? AND status = ? AND extend_count < ?",
-			id, model.InstanceStatusRunning, maxExtends).
+			id, instancecontracts.InstanceStatusRunning, maxExtends).
 		Updates(map[string]interface{}{
 			"expires_at":   gorm.Expr("expires_at + ?", duration),
 			"extend_count": gorm.Expr("extend_count + 1"),
@@ -751,20 +752,20 @@ func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends 
 
 func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Instance{}).
-		Where("status = ?", model.InstanceStatusRunning).
+	err := r.db.WithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("status = ?", instancecontracts.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
 }
 
-func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
+func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
 	if limit <= 0 {
-		return []*model.Instance{}, nil
+		return []*instancecontracts.Instance{}, nil
 	}
 
-	instances := make([]*model.Instance, 0, limit)
+	instances := make([]*instancecontracts.Instance, 0, limit)
 	err := r.db.WithContext(ctx).
-		Where("status = ?", model.InstanceStatusPending).
+		Where("status = ?", instancecontracts.InstanceStatusPending).
 		Order("created_at ASC, id ASC").
 		Limit(limit).
 		Find(&instances).Error
@@ -775,7 +776,7 @@ func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*mo
 }
 
 func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
-	result := r.db.WithContext(ctx).Model(&model.Instance{}).
+	result := r.db.WithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ? AND status = ?", id, fromStatus).
 		Updates(map[string]any{
 			"status":     toStatus,
@@ -793,7 +794,7 @@ func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []stri
 	}
 
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Instance{}).
+	err := r.db.WithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("status IN ?", statuses).
 		Count(&count).Error
 	return count, err
@@ -959,8 +960,8 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 		ContainerID    string
 		RuntimeDetails string
 	}
-	if err := r.dbWithContext(ctx).Model(&model.Instance{}).
-		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+	if err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		Select("container_id, runtime_details").
 		Scan(&items).Error; err != nil {
 		return nil, err
@@ -993,8 +994,8 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 	if err := r.dbWithContext(ctx).
 		Table("awd_defense_workspaces AS ws").
 		Joins("JOIN instances AS inst ON inst.id = ws.instance_id").
-		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
-		Where("ws.status = ? AND ws.container_id <> ''", model.AWDDefenseWorkspaceStatusRunning).
+		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
+		Where("ws.status = ? AND ws.container_id <> ''", runtimeentity.AWDDefenseWorkspaceStatusRunning).
 		Select("ws.container_id").
 		Scan(&workspaceItems).Error; err != nil {
 		lowerErr := strings.ToLower(err.Error())
@@ -1026,8 +1027,8 @@ func (r *Repository) ListAllocatedPorts(ctx context.Context) ([]int, error) {
 	}
 
 	var accessURLs []string
-	if err := r.dbWithContext(ctx).Model(&model.Instance{}).
-		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+	if err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
 		Where("access_url <> ''").
 		Pluck("access_url", &accessURLs).Error; err != nil {
 		return nil, err

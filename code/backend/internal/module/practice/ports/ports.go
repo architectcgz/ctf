@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -94,7 +96,7 @@ type InstanceScope struct {
 	TeamID        *int64
 	ServiceID     *int64
 	FlagSubjectID int64
-	ShareScope    model.ShareScope
+	ShareScope    instancecontracts.ShareScope
 }
 
 type TopologyCreateNode struct {
@@ -142,11 +144,11 @@ type PracticeInstanceScopeLockRepository interface {
 }
 
 type PracticeScopedExistingInstanceRepository interface {
-	FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
+	FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*instancecontracts.Instance, error)
 }
 
 type PracticeScopedRestartableInstanceRepository interface {
-	FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
+	FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*instancecontracts.Instance, error)
 }
 
 type PracticeScopedRunningCountRepository interface {
@@ -166,11 +168,11 @@ type PracticeInstanceRestartHostPortRepository interface {
 }
 
 type PracticeInstanceCreateRepository interface {
-	CreateInstance(ctx context.Context, instance *model.Instance) error
+	CreateInstance(ctx context.Context, instance *instancecontracts.Instance) error
 }
 
 type PracticeAWDServiceOperationCreateRepository interface {
-	CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error
+	CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error
 }
 
 type PracticeAWDServiceOperationFinishRepository interface {
@@ -270,15 +272,15 @@ type PracticeContestAWDServiceRuntimeSubjectRepository interface {
 }
 
 type PracticeContestAWDInstanceRepository interface {
-	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error)
+	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*instancecontracts.Instance, error)
 }
 
 type PracticeAWDDefenseWorkspaceLookupRepository interface {
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
 }
 
 type PracticeAWDDefenseWorkspaceWriteRepository interface {
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
 	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
 }
 
@@ -500,12 +502,12 @@ type PracticeInstanceReadinessProbe interface {
 }
 
 type PracticeInstanceLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Instance, error)
-	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
+	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error)
 }
 
 type PracticeInstanceRuntimeWriteRepository interface {
-	UpdateRuntime(ctx context.Context, instance *model.Instance) error
+	UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 }
 
@@ -519,7 +521,7 @@ type PracticeInstanceStatusRepository interface {
 }
 
 type PracticePendingInstanceRepository interface {
-	ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error)
+	ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error)
 }
 
 type PracticeInstanceStatsRepository interface {
@@ -527,7 +529,7 @@ type PracticeInstanceStatsRepository interface {
 }
 
 type RuntimeInstanceService interface {
-	CleanupRuntime(ctx context.Context, instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 	InspectManagedContainer(ctx context.Context, containerID string) (*ManagedContainerState, error)

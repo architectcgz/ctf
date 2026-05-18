@@ -10,19 +10,21 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
-	recoverableActiveInstances              []*model.Instance
-	runningWorkspaceByInstanceID            map[int64]*model.AWDDefenseWorkspace
+	recoverableActiveInstances              []*instanceentity.Instance
+	runningWorkspaceByInstanceID            map[int64]*runtimeentity.AWDDefenseWorkspace
 	requeuedIDs                             []int64
-	operations                              []*model.AWDServiceOperation
+	operations                              []*runtimeentity.AWDServiceOperation
 	finishedOperations                      []int64
-	findExpiredFn                           func(ctx context.Context) ([]*model.Instance, error)
-	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*model.Instance, error)
-	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error)
+	findExpiredFn                           func(ctx context.Context) ([]*instanceentity.Instance, error)
+	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*instanceentity.Instance, error)
+	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
@@ -36,7 +38,7 @@ func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(ctx context.Conte
 	return nil
 }
 
-func (r *maintenanceTestRepository) FindExpired(ctx context.Context) ([]*model.Instance, error) {
+func (r *maintenanceTestRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
 	if r.findExpiredFn != nil {
 		return r.findExpiredFn(ctx)
 	}
@@ -50,14 +52,14 @@ func (r *maintenanceTestRepository) ListActiveContainerIDs(ctx context.Context) 
 	return append([]string(nil), r.activeContainerIDs...), nil
 }
 
-func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error) {
+func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error) {
 	if r.listRecoverableActiveInstancesFn != nil {
 		return r.listRecoverableActiveInstancesFn(ctx)
 	}
-	return append([]*model.Instance(nil), r.recoverableActiveInstances...), nil
+	return append([]*instanceentity.Instance(nil), r.recoverableActiveInstances...), nil
 }
 
-func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*model.AWDDefenseWorkspace, error) {
+func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
 	if r.findRunningWorkspaceByInstanceIDFn != nil {
 		return r.findRunningWorkspaceByInstanceIDFn(ctx, instanceID)
 	}
@@ -67,7 +69,7 @@ func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(c
 	return r.runningWorkspaceByInstanceID[instanceID], nil
 }
 
-func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *model.AWDServiceOperation) error {
+func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *runtimeentity.AWDServiceOperation) error {
 	operation.ID = int64(len(r.operations) + 1)
 	r.operations = append(r.operations, operation)
 	return nil
@@ -134,7 +136,7 @@ type maintenanceTestCleaner struct {
 	removedContainerIDs []string
 }
 
-func (c *maintenanceTestCleaner) CleanupRuntime(context.Context, *model.Instance) error {
+func (c *maintenanceTestCleaner) CleanupRuntime(context.Context, *instanceentity.Instance) error {
 	return nil
 }
 
@@ -206,11 +208,11 @@ func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToReposi
 	expectedCtxValue := "ctx-runtime-maintenance"
 	updateCalled := false
 	repo := &maintenanceTestRepository{
-		findExpiredFn: func(ctx context.Context) ([]*model.Instance, error) {
+		findExpiredFn: func(ctx context.Context) ([]*instanceentity.Instance, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-expired ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return []*model.Instance{{ID: 41, HostPort: 30041}}, nil
+			return []*instanceentity.Instance{{ID: 41, HostPort: 30041}}, nil
 		},
 		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
 			updateCalled = true
@@ -266,7 +268,7 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 	t.Parallel()
 
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:          42,
 				ContainerID: "missing-container",
@@ -309,7 +311,7 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 		t.Fatalf("encode runtime details: %v", err)
 	}
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:             43,
 				ContestID:      &contestID,
@@ -361,7 +363,7 @@ func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue
 	teamID := int64(9401)
 	serviceID := int64(9501)
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:          48,
 				ContestID:   &contestID,
@@ -373,7 +375,7 @@ func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
 		},
-		runningWorkspaceByInstanceID: map[int64]*model.AWDDefenseWorkspace{
+		runningWorkspaceByInstanceID: map[int64]*runtimeentity.AWDDefenseWorkspace{
 			48: {
 				InstanceID:  48,
 				Status:      model.AWDDefenseWorkspaceStatusRunning,
@@ -409,7 +411,7 @@ func TestRuntimeMaintenanceServiceSkipsFreshCreatingInstanceWithoutContainer(t *
 	t.Parallel()
 
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:        44,
 				Status:    model.InstanceStatusCreating,
@@ -434,7 +436,7 @@ func TestRuntimeMaintenanceServiceSkipsInstanceWhenDockerInspectFails(t *testing
 	t.Parallel()
 
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:          45,
 				ContainerID: "runtime",
@@ -462,7 +464,7 @@ func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *te
 	t.Parallel()
 
 	repo := &maintenanceTestRepository{
-		recoverableActiveInstances: []*model.Instance{
+		recoverableActiveInstances: []*instanceentity.Instance{
 			{
 				ID:          46,
 				ContainerID: "inspect-fails",

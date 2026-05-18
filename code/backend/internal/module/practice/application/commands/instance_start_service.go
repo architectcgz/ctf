@@ -13,6 +13,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -46,7 +47,7 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	if err != nil {
 		return nil, err
 	}
-	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, model.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), model.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
+	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, runtimecontracts.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), runtimecontracts.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
 	return resp, nil
 }
 
@@ -64,9 +65,9 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		ChallengeID: challengeID,
 		Scope:       scope,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   model.AWDServiceOperationTypeRestart,
-			RestartOperationType: model.AWDServiceOperationTypeRestart,
-			RequestedBy:          model.AWDServiceOperationRequestedByUser,
+			StartOperationType:   runtimecontracts.AWDServiceOperationTypeRestart,
+			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRestart,
+			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedByUser,
 			RequestedByID:        &userID,
 			Reason:               "user_restart",
 			SLABillable:          true,
@@ -95,7 +96,7 @@ type awdScopedRuntimeRequest struct {
 func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*instancecontracts.InstanceResp, error) {
 	scope := resolveEffectiveInstanceScope(&model.Challenge{}, req.Scope)
 
-	var instance *model.Instance
+	var instance *instancecontracts.Instance
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
 		if err := txRepo.LockInstanceScope(ctx, req.OwnerUserID, req.ChallengeID, scope); err != nil {
 			return err
@@ -124,15 +125,15 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 
-	if instance.Status != model.InstanceStatusPending && instance.Status != model.InstanceStatusCreating {
+	if instance.Status != instancecontracts.InstanceStatusPending && instance.Status != instancecontracts.InstanceStatusCreating {
 		if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
 			return nil, errcode.ErrServiceUnavailable.WithCause(err)
 		}
 	}
 
-	nextStatus := model.InstanceStatusCreating
+	nextStatus := instancecontracts.InstanceStatusCreating
 	if s.schedulerEnabled() {
-		nextStatus = model.InstanceStatusPending
+		nextStatus = instancecontracts.InstanceStatusPending
 	}
 	nextExpiresAt, err := s.resolveInstanceExpiresAt(ctx, scope)
 	if err != nil {
@@ -167,9 +168,9 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, preserveHostPort); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
-		operationStatus := model.AWDServiceOperationStatusRequested
-		if nextStatus == model.InstanceStatusPending {
-			operationStatus = model.AWDServiceOperationStatusProvisioning
+		operationStatus := runtimecontracts.AWDServiceOperationStatusRequested
+		if nextStatus == instancecontracts.InstanceStatusPending {
+			operationStatus = runtimecontracts.AWDServiceOperationStatusProvisioning
 		}
 		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, req.ContestID, scope, req.Audit.RestartOperationType, operationStatus, req.Audit.RequestedBy, req.Audit.RequestedByID, req.Audit.Reason, req.Audit.SLABillable); err != nil {
 			return errcode.ErrInternal.WithCause(err)
@@ -305,7 +306,7 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 	return teams, nil
 }
 
-func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord, existingInstances []*model.Instance) *AdminAWDInstancePrewarmItemResp {
+func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord, existingInstances []*instancecontracts.Instance) *AdminAWDInstancePrewarmItemResp {
 	result := &AdminAWDInstancePrewarmItemResp{
 		Outcome: adminAWDPrewarmOutcomeFailed,
 	}
@@ -373,7 +374,7 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	return s.startChallengeWithScope(ctx, userID, challengeID, practiceports.InstanceScope{
 		FlagSubjectID: userID,
-		ShareScope:    model.InstanceSharingPerUser,
+		ShareScope:    instancecontracts.ShareScopePerUser,
 	})
 }
 
@@ -402,7 +403,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	}
 
 	var (
-		instance *model.Instance
+		instance *instancecontracts.Instance
 		reused   bool
 	)
 	initialStatus := model.InstanceStatusCreating
@@ -426,7 +427,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 					}
 					existingInstance.ExpiresAt = expiresAt
 				}
-			} else if scope.ShareScope == model.InstanceSharingShared {
+			} else if scope.ShareScope == instancecontracts.ShareScopeShared {
 				refreshedExpiry := existingInstance.ExpiresAt
 				if expiresAt.After(refreshedExpiry) {
 					refreshedExpiry = expiresAt
@@ -463,7 +464,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			}
 		}
 
-		instance = &model.Instance{
+		instance = &instancecontracts.Instance{
 			UserID:      userID,
 			ContestID:   scope.ContestID,
 			TeamID:      scope.TeamID,
@@ -505,7 +506,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
-func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *instancecontracts.InstanceResp {
+func instanceRespForScope(instance *instancecontracts.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *instancecontracts.InstanceResp {
 	resp := domain.InstanceRespFromModel(instance, publicHost, accessHost)
 	if scope.ContestMode == practiceports.ContestModeAWD {
 		resp.AccessURL = ""

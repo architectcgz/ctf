@@ -5,9 +5,11 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 	"fmt"
@@ -150,11 +152,11 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	}
 
 	hostPort := reserveClosedLoopbackPort(t)
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		UserID:      44,
 		ChallengeID: challenge.ID,
 		HostPort:    hostPort,
-		Status:      model.InstanceStatusCreating,
+		Status:      instanceentity.InstanceStatusCreating,
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
 		CreatedAt:   now,
@@ -171,7 +173,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(context.Context, *model.Instance) error {
+			cleanupRuntimeFn: func(context.Context, *instanceentity.Instance) error {
 				cleanupCalls.Add(1)
 				return nil
 			},
@@ -198,11 +200,11 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		t.Fatalf("expected container start failed error, got %v", err)
 	}
 
-	var stored model.Instance
+	var stored instanceentity.Instance
 	if err := db.First(&stored, instance.ID).Error; err != nil {
 		t.Fatalf("load failed instance: %v", err)
 	}
-	if stored.Status != model.InstanceStatusFailed {
+	if stored.Status != instanceentity.InstanceStatusFailed {
 		t.Fatalf("expected failed instance status, got %+v", stored)
 	}
 	if stored.AccessURL != "" {
@@ -219,11 +221,11 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	ctxKey := practiceServiceContextKey("update-runtime")
 	expectedCtxValue := "ctx-update-runtime"
 	instanceStore := &stubPracticeInstanceStore{
-		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update runtime ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if instance.Status != model.InstanceStatusRunning {
+			if instance.Status != instanceentity.InstanceStatusRunning {
 				t.Fatalf("expected running status before persistence, got %+v", instance)
 			}
 			return nil
@@ -260,7 +262,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	}))
 	defer server.Close()
 	host, port := parseHTTPServerEndpoint(t, server.URL)
-	instance := &model.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: model.InstanceStatusCreating}
+	instance := &instanceentity.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: instanceentity.InstanceStatusCreating}
 	challenge := &model.Challenge{ID: 2051, ImageID: 301, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}"}
 	service.config.Container.PublicHost = host
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
@@ -290,8 +292,8 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 	}()
 
 	instanceStore := &stubPracticeInstanceStore{
-		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
-			if instance.Status != model.InstanceStatusRunning {
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+			if instance.Status != instanceentity.InstanceStatusRunning {
 				t.Fatalf("expected running status, got %+v", instance)
 			}
 			if !strings.HasPrefix(instance.AccessURL, "tcp://") {
@@ -342,7 +344,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		nil).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
-	instance := &model.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: model.InstanceStatusCreating}
+	instance := &instanceentity.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: instanceentity.InstanceStatusCreating}
 	challenge := &model.Challenge{
 		ID:             2052,
 		ImageID:        301,
@@ -449,13 +451,13 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 		},
 		logger: zap.NewNop(),
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9002,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ServiceID:   &serviceID,
 		ChallengeID: 502,
-		Status:      model.InstanceStatusCreating,
+		Status:      instanceentity.InstanceStatusCreating,
 	}
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -469,11 +471,11 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{demo}"); err != nil {
 		t.Fatalf("provisionInstance() should not host-probe AWD alias URL: %v", err)
 	}
-	var stored model.Instance
+	var stored instanceentity.Instance
 	if err := db.First(&stored, instance.ID).Error; err != nil {
 		t.Fatalf("load stored instance: %v", err)
 	}
-	if stored.Status != model.InstanceStatusRunning {
+	if stored.Status != instanceentity.InstanceStatusRunning {
 		t.Fatalf("expected running status, got %+v", stored)
 	}
 	if stored.AccessURL != "http://awd-c7002-t7102-s8002:8080" {
@@ -521,7 +523,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		t.Fatalf("encode service snapshot: %v", err)
 	}
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9003,
 		UserID:      45,
 		ContestID:   &contestID,
@@ -529,7 +531,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		ServiceID:   &serviceID,
 		ChallengeID: 503,
 		HostPort:    30031,
-		Status:      model.InstanceStatusCreating,
+		Status:      instanceentity.InstanceStatusCreating,
 		ExpiresAt:   now.Add(time.Hour),
 		MaxExtends:  2,
 		CreatedAt:   now,
@@ -539,11 +541,11 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		t.Fatalf("create instance: %v", err)
 	}
 
-	var cleanupPayload *model.Instance
+	var cleanupPayload *instanceentity.Instance
 	instanceRepo := &interceptAWDDefenseWorkspaceRepository{
 		Repository: runtimeinfrarepo.NewRepository(db),
-		upsertFn: func(ctx context.Context, workspace *model.AWDDefenseWorkspace) error {
-			if workspace != nil && workspace.Status == model.AWDDefenseWorkspaceStatusRunning {
+		upsertFn: func(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error {
+			if workspace != nil && workspace.Status == runtimeentity.AWDDefenseWorkspaceStatusRunning {
 				return fmt.Errorf("persist running workspace state failed")
 			}
 			return nil
@@ -565,7 +567,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		challengeinfra.NewImageRepository(db),
 		instanceRepo,
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, got *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, got *instanceentity.Instance) error {
 				copied := *got
 				cleanupPayload = &copied
 				return nil
@@ -672,8 +674,8 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 				if id != 611 {
 					t.Fatalf("expected failed instance id 611, got %d", id)
 				}
-				if status != model.InstanceStatusFailed {
-					t.Fatalf("expected failed instance status %s, got %s", model.InstanceStatusFailed, status)
+				if status != instanceentity.InstanceStatusFailed {
+					t.Fatalf("expected failed instance status %s, got %s", instanceentity.InstanceStatusFailed, status)
 				}
 				return nil
 			},
@@ -700,7 +702,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 		nil).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
-	instance := &model.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: model.InstanceStatusCreating}
+	instance := &instanceentity.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: instanceentity.InstanceStatusCreating}
 	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 

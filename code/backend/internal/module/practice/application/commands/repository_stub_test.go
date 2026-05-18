@@ -10,9 +10,11 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type stubPracticeRepository struct {
@@ -25,7 +27,7 @@ type stubPracticeRepository struct {
 	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRecord, error)
 	findContestAWDServiceRuntimeSubjectFn  func(ctx context.Context, contestID, serviceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error)
 	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*practiceports.ContestAWDServiceRecord, error)
-	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*model.Instance, error)
+	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*instanceentity.Instance, error)
 	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error)
 	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*practiceports.ContestTeamRecord, error)
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error)
@@ -34,15 +36,15 @@ type stubPracticeRepository struct {
 	upsertAWDScopeControlFn                func(ctx context.Context, control *model.AWDScopeControl) error
 	deleteAWDScopeControlFn                func(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
 	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
-	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
-	findScopedRestartableInstanceFn        func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
+	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error)
+	findScopedRestartableInstanceFn        func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error)
 	countScopedRunningInstancesFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
 	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	resetInstanceRuntimeForRestartFn       func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error
 	isHostPortReusableForRestartFn         func(ctx context.Context, instanceID int64, hostPort int) (bool, error)
-	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
-	createAWDServiceOperationFn            func(ctx context.Context, operation *model.AWDServiceOperation) error
+	createInstanceFn                       func(ctx context.Context, instance *instanceentity.Instance) error
+	createAWDServiceOperationFn            func(ctx context.Context, operation *runtimeentity.AWDServiceOperation) error
 	finishAWDServiceOperationFn            func(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
 	reserveAvailablePortExcludingFn        func(ctx context.Context, start, end, excludedPort int) (int, error)
@@ -256,11 +258,11 @@ func (s *stubPracticeRepository) ListContestAWDServices(ctx context.Context, con
 	return []*practiceports.ContestAWDServiceRecord{}, nil
 }
 
-func (s *stubPracticeRepository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
+func (s *stubPracticeRepository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*instanceentity.Instance, error) {
 	if s.listContestAWDInstancesFn != nil {
 		return s.listContestAWDInstancesFn(ctx, contestID)
 	}
-	return []*model.Instance{}, nil
+	return []*instanceentity.Instance{}, nil
 }
 
 func (s *stubPracticeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
@@ -319,14 +321,14 @@ func (s *stubPracticeRepository) LockInstanceScope(ctx context.Context, userID, 
 	return nil
 }
 
-func (s *stubPracticeRepository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+func (s *stubPracticeRepository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error) {
 	if s.findScopedExistingInstanceFn != nil {
 		return s.findScopedExistingInstanceFn(ctx, userID, challengeID, scope)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+func (s *stubPracticeRepository) FindScopedRestartableInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error) {
 	if s.findScopedRestartableInstanceFn != nil {
 		return s.findScopedRestartableInstanceFn(ctx, userID, challengeID, scope)
 	}
@@ -361,7 +363,7 @@ func (s *stubPracticeRepository) IsHostPortReusableForRestart(ctx context.Contex
 	return true, nil
 }
 
-func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *model.Instance) error {
+func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *instanceentity.Instance) error {
 	if s.createInstanceFn != nil {
 		return s.createInstanceFn(ctx, instance)
 	}
@@ -612,7 +614,7 @@ func buildStubContestAWDServiceSeedSignature(raw string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *stubPracticeRepository) CreateAWDServiceOperation(ctx context.Context, operation *model.AWDServiceOperation) error {
+func (s *stubPracticeRepository) CreateAWDServiceOperation(ctx context.Context, operation *runtimeentity.AWDServiceOperation) error {
 	if s.createAWDServiceOperationFn != nil {
 		return s.createAWDServiceOperationFn(ctx, operation)
 	}

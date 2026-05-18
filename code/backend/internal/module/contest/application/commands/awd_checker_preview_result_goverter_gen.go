@@ -5,14 +5,14 @@ package commands
 
 import (
 	domain "ctf-platform/internal/module/contest/domain"
-	contestentity "ctf-platform/internal/module/contest/entity"
+	entity "ctf-platform/internal/module/contest/entity"
 )
 
 type awdCheckerPreviewResultMapperImpl struct{}
 
 func (c *awdCheckerPreviewResultMapperImpl) ToDTO(source domain.AWDCheckerPreviewResult) AWDCheckerPreviewResp {
 	var commandsAWDCheckerPreviewResp AWDCheckerPreviewResp
-	commandsAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	commandsAWDCheckerPreviewResp.CheckerType = c.entityAWDCheckerTypeToEntityAWDCheckerType(source.CheckerType)
 	commandsAWDCheckerPreviewResp.ServiceStatus = source.ServiceStatus
 	commandsAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
 	commandsAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp(source.PreviewContext)
@@ -29,7 +29,7 @@ func (c *awdCheckerPreviewResultMapperImpl) ToDTOPtr(source *domain.AWDCheckerPr
 }
 func (c *awdCheckerPreviewResultMapperImpl) ToDomain(source AWDCheckerPreviewResp) domain.AWDCheckerPreviewResult {
 	var domainAWDCheckerPreviewResult domain.AWDCheckerPreviewResult
-	domainAWDCheckerPreviewResult.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	domainAWDCheckerPreviewResult.CheckerType = c.entityAWDCheckerTypeToEntityAWDCheckerType(source.CheckerType)
 	domainAWDCheckerPreviewResult.ServiceStatus = source.ServiceStatus
 	domainAWDCheckerPreviewResult.CheckResult = c.ToStringAnyMap(source.CheckResult)
 	domainAWDCheckerPreviewResult.PreviewContext = c.commandsAWDCheckerPreviewContextRespToDomainAWDCheckerPreviewContext(source.PreviewContext)
@@ -74,18 +74,18 @@ func (c *awdCheckerPreviewResultMapperImpl) domainAWDCheckerPreviewContextToComm
 	commandsAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
 	return commandsAWDCheckerPreviewContextResp
 }
-func (c *awdCheckerPreviewResultMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source contestentity.AWDCheckerType) contestentity.AWDCheckerType {
-	var modelAWDCheckerType contestentity.AWDCheckerType
+func (c *awdCheckerPreviewResultMapperImpl) entityAWDCheckerTypeToEntityAWDCheckerType(source entity.AWDCheckerType) entity.AWDCheckerType {
+	var entityAWDCheckerType entity.AWDCheckerType
 	switch source {
-	case contestentity.AWDCheckerTypeHTTPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeHTTPStandard
-	case contestentity.AWDCheckerTypeLegacyProbe:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeLegacyProbe
-	case contestentity.AWDCheckerTypeScript:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeScript
-	case contestentity.AWDCheckerTypeTCPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeTCPStandard
+	case entity.AWDCheckerTypeHTTPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeHTTPStandard
+	case entity.AWDCheckerTypeLegacyProbe:
+		entityAWDCheckerType = entity.AWDCheckerTypeLegacyProbe
+	case entity.AWDCheckerTypeScript:
+		entityAWDCheckerType = entity.AWDCheckerTypeScript
+	case entity.AWDCheckerTypeTCPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeTCPStandard
 	default: // ignored
 	}
-	return modelAWDCheckerType
+	return entityAWDCheckerType
 }

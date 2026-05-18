@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -39,7 +40,7 @@ func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, 
 	}
 	if retired {
 		s.clearDesiredAWDReconcileFailuresForTeam(ctx, contest.ID, teamID)
-		if err := s.stopContestAWDActiveInstances(ctx, contest.ID, func(instance *model.Instance) bool {
+		if err := s.stopContestAWDActiveInstances(ctx, contest.ID, func(instance *instancecontracts.Instance) bool {
 			return instance != nil && instance.TeamID != nil && *instance.TeamID == teamID
 		}); err != nil {
 			return nil, err
@@ -67,7 +68,7 @@ func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, con
 	}
 	if disabled {
 		s.clearDesiredAWDReconcileFailure(ctx, contest.ID, teamID, serviceID)
-		if err := s.stopContestAWDActiveInstances(ctx, contest.ID, func(instance *model.Instance) bool {
+		if err := s.stopContestAWDActiveInstances(ctx, contest.ID, func(instance *instancecontracts.Instance) bool {
 			return instance != nil &&
 				instance.TeamID != nil && *instance.TeamID == teamID &&
 				instance.ServiceID != nil && *instance.ServiceID == serviceID
@@ -192,7 +193,7 @@ func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID
 	return team, nil
 }
 
-func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID int64, match func(instance *model.Instance) bool) error {
+func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID int64, match func(instance *instancecontracts.Instance) bool) error {
 	if s == nil || s.repo == nil || s.instanceRepo == nil {
 		return nil
 	}
@@ -209,7 +210,7 @@ func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID i
 				return errcode.ErrServiceUnavailable.WithCause(err)
 			}
 		}
-		if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
+		if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}

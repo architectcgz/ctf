@@ -8,8 +8,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const desiredAWDReconcileLastErrorLimit = 256
@@ -118,9 +119,9 @@ func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, c
 		Scope:        scope,
 		NoopIfActive: true,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   model.AWDServiceOperationTypeStart,
-			RestartOperationType: model.AWDServiceOperationTypeRecreate,
-			RequestedBy:          model.AWDServiceOperationRequestedBySystem,
+			StartOperationType:   runtimecontracts.AWDServiceOperationTypeStart,
+			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRecreate,
+			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedBySystem,
 			Reason:               "desired_runtime_reconcile",
 			SLABillable:          false,
 		},
@@ -128,7 +129,7 @@ func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, c
 	return err
 }
 
-func isDesiredAWDInstanceActive(instance *model.Instance, activeAt time.Time) bool {
+func isDesiredAWDInstanceActive(instance *instancecontracts.Instance, activeAt time.Time) bool {
 	if instance == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return false
 	}
@@ -139,7 +140,7 @@ func isDesiredAWDInstanceActive(instance *model.Instance, activeAt time.Time) bo
 		return false
 	}
 	switch instance.Status {
-	case model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning:
+	case instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning:
 		return true
 	default:
 		return false

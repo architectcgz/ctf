@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
-func (r *AWDRepository) ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]model.AWDServiceOperation, error) {
-	var operations []model.AWDServiceOperation
+func (r *AWDRepository) ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]runtimecontracts.AWDServiceOperation, error) {
+	var operations []runtimecontracts.AWDServiceOperation
 	if contestID <= 0 {
 		return operations, nil
 	}
@@ -33,7 +34,7 @@ func (r *AWDRepository) HasSystemRecoveryOperationAt(ctx context.Context, contes
 	}
 	var count int64
 	err := r.dbWithContext(ctx).
-		Model(&model.AWDServiceOperation{}).
+		Model(&runtimecontracts.AWDServiceOperation{}).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
 		Where("requested_by = ? AND operation_type IN ?", model.AWDServiceOperationRequestedBySystem, []string{
 			model.AWDServiceOperationTypeRecover,

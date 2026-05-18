@@ -7,7 +7,7 @@ import (
 	commands "ctf-platform/internal/module/contest/application/commands"
 	queries "ctf-platform/internal/module/contest/application/queries"
 	domain "ctf-platform/internal/module/contest/domain"
-	contestentity "ctf-platform/internal/module/contest/entity"
+	entity "ctf-platform/internal/module/contest/entity"
 )
 
 type ContestResponseMapperImpl struct{}
@@ -26,7 +26,7 @@ func (c *ContestResponseMapperImpl) ToAWDCheckerPreviewCommandRespPtr(source *do
 	var pCommandsAWDCheckerPreviewResp *commands.AWDCheckerPreviewResp
 	if source != nil {
 		var commandsAWDCheckerPreviewResp commands.AWDCheckerPreviewResp
-		commandsAWDCheckerPreviewResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType((*source).CheckerType)
+		commandsAWDCheckerPreviewResp.CheckerType = c.entityAWDCheckerTypeToEntityAWDCheckerType((*source).CheckerType)
 		commandsAWDCheckerPreviewResp.ServiceStatus = (*source).ServiceStatus
 		commandsAWDCheckerPreviewResp.CheckResult = c.ToStringAnyMap((*source).CheckResult)
 		commandsAWDCheckerPreviewResp.PreviewContext = c.domainAWDCheckerPreviewContextToCommandsAWDCheckerPreviewContextResp((*source).PreviewContext)
@@ -241,7 +241,7 @@ func (c *ContestResponseMapperImpl) ToContestAWDServiceCommandResp(source querie
 	commandsContestAWDServiceResp.IsVisible = source.IsVisible
 	commandsContestAWDServiceResp.ScoreConfig = c.ToStringAnyMap(source.ScoreConfig)
 	commandsContestAWDServiceResp.RuntimeConfig = c.ToStringAnyMap(source.RuntimeConfig)
-	commandsContestAWDServiceResp.ValidationState = contestentity.AWDCheckerValidationState(source.ValidationState)
+	commandsContestAWDServiceResp.ValidationState = entity.AWDCheckerValidationState(source.ValidationState)
 	commandsContestAWDServiceResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
 	commandsContestAWDServiceResp.CreatedAt = CopyTime(source.CreatedAt)
 	commandsContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
@@ -429,20 +429,20 @@ func (c *ContestResponseMapperImpl) domainAWDCheckerPreviewContextToCommandsAWDC
 	commandsAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
 	return commandsAWDCheckerPreviewContextResp
 }
-func (c *ContestResponseMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source contestentity.AWDCheckerType) contestentity.AWDCheckerType {
-	var modelAWDCheckerType contestentity.AWDCheckerType
+func (c *ContestResponseMapperImpl) entityAWDCheckerTypeToEntityAWDCheckerType(source entity.AWDCheckerType) entity.AWDCheckerType {
+	var entityAWDCheckerType entity.AWDCheckerType
 	switch source {
-	case contestentity.AWDCheckerTypeHTTPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeHTTPStandard
-	case contestentity.AWDCheckerTypeLegacyProbe:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeLegacyProbe
-	case contestentity.AWDCheckerTypeScript:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeScript
-	case contestentity.AWDCheckerTypeTCPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeTCPStandard
+	case entity.AWDCheckerTypeHTTPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeHTTPStandard
+	case entity.AWDCheckerTypeLegacyProbe:
+		entityAWDCheckerType = entity.AWDCheckerTypeLegacyProbe
+	case entity.AWDCheckerTypeScript:
+		entityAWDCheckerType = entity.AWDCheckerTypeScript
+	case entity.AWDCheckerTypeTCPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeTCPStandard
 	default: // ignored
 	}
-	return modelAWDCheckerType
+	return entityAWDCheckerType
 }
 func (c *ContestResponseMapperImpl) pQueriesAWDDefenseConnectionResultToPHttpAWDDefenseConnectionResp(source *queries.AWDDefenseConnectionResult) *AWDDefenseConnectionResp {
 	var pHttpAWDDefenseConnectionResp *AWDDefenseConnectionResp
@@ -598,7 +598,7 @@ func (c *ContestResponseMapperImpl) pQueriesAWDWorkspaceServiceResultToPHttpCont
 			xbool := *(*source).OperationSLABillable
 			httpContestAWDWorkspaceServiceResp.OperationSLABillable = &xbool
 		}
-		httpContestAWDWorkspaceServiceResp.CheckerType = contestentity.AWDCheckerType((*source).CheckerType)
+		httpContestAWDWorkspaceServiceResp.CheckerType = entity.AWDCheckerType((*source).CheckerType)
 		httpContestAWDWorkspaceServiceResp.AttackReceived = (*source).AttackReceived
 		httpContestAWDWorkspaceServiceResp.SLAScore = (*source).SLAScore
 		httpContestAWDWorkspaceServiceResp.DefenseScore = (*source).DefenseScore
@@ -814,7 +814,7 @@ func (c *ContestResponseMapperImpl) queriesAWDReadinessItemToPHttpAWDReadinessIt
 	httpAWDReadinessItemResp.ServiceID = source.ServiceID
 	httpAWDReadinessItemResp.AWDChallengeID = source.AWDChallengeID
 	httpAWDReadinessItemResp.Title = source.Title
-	httpAWDReadinessItemResp.CheckerType = contestentity.AWDCheckerType(source.CheckerType)
+	httpAWDReadinessItemResp.CheckerType = entity.AWDCheckerType(source.CheckerType)
 	httpAWDReadinessItemResp.ValidationState = source.ValidationState
 	httpAWDReadinessItemResp.LastPreviewAt = CopyTimePtr(source.LastPreviewAt)
 	if source.LastAccessURL != nil {
@@ -850,7 +850,7 @@ func (c *ContestResponseMapperImpl) queriesAWDTeamServiceResultToPHttpAWDTeamSer
 	httpAWDTeamServiceResp.AWDChallengeTitle = source.AWDChallengeTitle
 	httpAWDTeamServiceResp.ServiceStatus = source.ServiceStatus
 	httpAWDTeamServiceResp.CheckResult = c.ToStringAnyMap(source.CheckResult)
-	httpAWDTeamServiceResp.CheckerType = contestentity.AWDCheckerType(source.CheckerType)
+	httpAWDTeamServiceResp.CheckerType = entity.AWDCheckerType(source.CheckerType)
 	httpAWDTeamServiceResp.AttackReceived = source.AttackReceived
 	httpAWDTeamServiceResp.SLAScore = source.SLAScore
 	httpAWDTeamServiceResp.DefenseScore = source.DefenseScore

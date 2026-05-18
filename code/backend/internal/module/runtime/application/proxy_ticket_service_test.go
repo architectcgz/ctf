@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -33,12 +34,12 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 }
 
 type stubProxyTicketInstanceReader struct {
-	findByIDWithContextFn            func(ctx context.Context, id int64) (*model.Instance, error)
+	findByIDWithContextFn            func(ctx context.Context, id int64) (*instanceentity.Instance, error)
 	findAWDTargetProxyScopeWithCtxFn func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error)
 	findAWDDefenseSSHScopeWithCtxFn  func(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error)
 }
 
-func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
+func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -64,13 +65,13 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 
 	store := &stubProxyTicketStore{}
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*instanceentity.Instance, error) {
 			contestID := int64(3001)
-			return &model.Instance{
+			return &instanceentity.Instance{
 				ID:          id,
 				ContestID:   &contestID,
 				ChallengeID: 2001,
-				ShareScope:  model.InstanceSharingShared,
+				ShareScope:  instanceentity.ShareScopeShared,
 			}, nil
 		},
 	}, 15*time.Minute)
@@ -98,7 +99,7 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	if store.savedClaims.ContestID == nil || *store.savedClaims.ContestID != 3001 {
 		t.Fatalf("unexpected saved contest scope: %+v", store.savedClaims)
 	}
-	if store.savedClaims.ShareScope != model.InstanceSharingShared {
+	if store.savedClaims.ShareScope != instanceentity.ShareScopeShared {
 		t.Fatalf("unexpected saved share scope: %+v", store.savedClaims)
 	}
 	if store.savedTTL != 15*time.Minute {
@@ -125,7 +126,7 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 				VictimTeamID:   victimTeamID,
 				ServiceID:      serviceID,
 				AWDChallengeID: 6001,
-				ShareScope:     model.InstanceSharingPerTeam,
+				ShareScope:     instanceentity.ShareScopePerTeam,
 				AccessURL:      "http://127.0.0.1:39001",
 			}, nil
 		},
@@ -176,7 +177,7 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 				AWDChallengeID:    6001,
 				WorkspaceRevision: 7,
 				ContainerID:       "workspace-red-web",
-				ShareScope:        model.InstanceSharingPerTeam,
+				ShareScope:        instanceentity.ShareScopePerTeam,
 			}, nil
 		},
 	}, 15*time.Minute)
@@ -224,7 +225,7 @@ func TestProxyTicketServiceResolveTicketAllowsClaimsWithoutChallengeID(t *testin
 			Username:   "alice",
 			Role:       model.RoleStudent,
 			InstanceID: 2001,
-			ShareScope: model.InstanceSharingPerTeam,
+			ShareScope: instanceentity.ShareScopePerTeam,
 		},
 	}
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
@@ -269,7 +270,7 @@ func TestProxyTicketServiceResolveTicketRejectsDefenseClaimsWithoutWorkspaceRevi
 			Role:              model.RoleStudent,
 			InstanceID:        2001,
 			ContestID:         &contestID,
-			ShareScope:        model.InstanceSharingPerTeam,
+			ShareScope:        instanceentity.ShareScopePerTeam,
 			Purpose:           runtimeports.ProxyTicketPurposeAWDDefenseSSH,
 			AWDAttackerTeamID: &teamID,
 			AWDServiceID:      &serviceID,
@@ -294,12 +295,12 @@ func TestProxyTicketServiceIssueTicketPropagatesContextToInstanceReader(t *testi
 	store := &stubProxyTicketStore{}
 	readerCalled := false
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*instanceentity.Instance, error) {
 			readerCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected instance reader ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Instance{ID: id, ShareScope: model.InstanceSharingPerUser}, nil
+			return &instanceentity.Instance{ID: id, ShareScope: instanceentity.ShareScopePerUser}, nil
 		},
 	}, 15*time.Minute)
 

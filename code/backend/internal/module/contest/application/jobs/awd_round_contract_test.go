@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type awdRoundUpdaterRepoStub struct {
@@ -80,7 +80,7 @@ func (s awdRoundUpdaterRepoStub) ListServiceInstancesByContest(context.Context, 
 	return nil, nil
 }
 
-func (s awdRoundUpdaterRepoStub) ListLatestServiceOperationsByContest(context.Context, int64) ([]model.AWDServiceOperation, error) {
+func (s awdRoundUpdaterRepoStub) ListLatestServiceOperationsByContest(context.Context, int64) ([]runtimeentity.AWDServiceOperation, error) {
 	return nil, nil
 }
 

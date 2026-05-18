@@ -3,13 +3,11 @@
 
 package commands
 
-import (
-	contestentity "ctf-platform/internal/module/contest/entity"
-)
+import entity "ctf-platform/internal/module/contest/entity"
 
 type contestResponseMapperImpl struct{}
 
-func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source contestentity.AWDAttackLog) AWDAttackLogResp {
+func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source entity.AWDAttackLog) AWDAttackLogResp {
 	var commandsAWDAttackLogResp AWDAttackLogResp
 	commandsAWDAttackLogResp.ID = source.ID
 	commandsAWDAttackLogResp.RoundID = source.RoundID
@@ -24,7 +22,7 @@ func (c *contestResponseMapperImpl) ToAWDAttackLogRespBase(source contestentity.
 	commandsAWDAttackLogResp.CreatedAt = CopyTime(source.CreatedAt)
 	return commandsAWDAttackLogResp
 }
-func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *contestentity.AWDAttackLog) *AWDAttackLogResp {
+func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *entity.AWDAttackLog) *AWDAttackLogResp {
 	var pCommandsAWDAttackLogResp *AWDAttackLogResp
 	if source != nil {
 		commandsAWDAttackLogResp := c.ToAWDAttackLogRespBase((*source))
@@ -32,7 +30,7 @@ func (c *contestResponseMapperImpl) ToAWDAttackLogRespBasePtr(source *contestent
 	}
 	return pCommandsAWDAttackLogResp
 }
-func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source contestentity.AWDRound) AWDRoundResp {
+func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source entity.AWDRound) AWDRoundResp {
 	var commandsAWDRoundResp AWDRoundResp
 	commandsAWDRoundResp.ID = source.ID
 	commandsAWDRoundResp.ContestID = source.ContestID
@@ -46,7 +44,7 @@ func (c *contestResponseMapperImpl) ToAWDRoundRespBase(source contestentity.AWDR
 	commandsAWDRoundResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return commandsAWDRoundResp
 }
-func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *contestentity.AWDRound) *AWDRoundResp {
+func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *entity.AWDRound) *AWDRoundResp {
 	var pCommandsAWDRoundResp *AWDRoundResp
 	if source != nil {
 		commandsAWDRoundResp := c.ToAWDRoundRespBase((*source))
@@ -54,7 +52,7 @@ func (c *contestResponseMapperImpl) ToAWDRoundRespBasePtr(source *contestentity.
 	}
 	return pCommandsAWDRoundResp
 }
-func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source contestentity.AWDTeamService) AWDTeamServiceResp {
+func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source entity.AWDTeamService) AWDTeamServiceResp {
 	var commandsAWDTeamServiceResp AWDTeamServiceResp
 	commandsAWDTeamServiceResp.ID = source.ID
 	commandsAWDTeamServiceResp.RoundID = source.RoundID
@@ -62,7 +60,7 @@ func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source contestentit
 	commandsAWDTeamServiceResp.ServiceID = source.ServiceID
 	commandsAWDTeamServiceResp.AWDChallengeID = source.AWDChallengeID
 	commandsAWDTeamServiceResp.ServiceStatus = source.ServiceStatus
-	commandsAWDTeamServiceResp.CheckerType = c.modelAWDCheckerTypeToModelAWDCheckerType(source.CheckerType)
+	commandsAWDTeamServiceResp.CheckerType = c.entityAWDCheckerTypeToEntityAWDCheckerType(source.CheckerType)
 	commandsAWDTeamServiceResp.AttackReceived = source.AttackReceived
 	commandsAWDTeamServiceResp.SLAScore = source.SLAScore
 	commandsAWDTeamServiceResp.DefenseScore = source.DefenseScore
@@ -70,7 +68,7 @@ func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBase(source contestentit
 	commandsAWDTeamServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return commandsAWDTeamServiceResp
 }
-func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *contestentity.AWDTeamService) *AWDTeamServiceResp {
+func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *entity.AWDTeamService) *AWDTeamServiceResp {
 	var pCommandsAWDTeamServiceResp *AWDTeamServiceResp
 	if source != nil {
 		commandsAWDTeamServiceResp := c.ToAWDTeamServiceRespBase((*source))
@@ -78,7 +76,7 @@ func (c *contestResponseMapperImpl) ToAWDTeamServiceRespBasePtr(source *conteste
 	}
 	return pCommandsAWDTeamServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source contestentity.ContestAWDService) ContestAWDServiceResp {
+func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source entity.ContestAWDService) ContestAWDServiceResp {
 	var commandsContestAWDServiceResp ContestAWDServiceResp
 	commandsContestAWDServiceResp.ID = source.ID
 	commandsContestAWDServiceResp.ContestID = source.ContestID
@@ -91,7 +89,7 @@ func (c *contestResponseMapperImpl) ToContestAWDServiceRespBase(source contesten
 	commandsContestAWDServiceResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return commandsContestAWDServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *contestentity.ContestAWDService) *ContestAWDServiceResp {
+func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *entity.ContestAWDService) *ContestAWDServiceResp {
 	var pCommandsContestAWDServiceResp *ContestAWDServiceResp
 	if source != nil {
 		commandsContestAWDServiceResp := c.ToContestAWDServiceRespBase((*source))
@@ -99,7 +97,7 @@ func (c *contestResponseMapperImpl) ToContestAWDServiceRespBasePtr(source *conte
 	}
 	return pCommandsContestAWDServiceResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source contestentity.ContestAnnouncement) ContestAnnouncementResp {
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source entity.ContestAnnouncement) ContestAnnouncementResp {
 	var commandsContestAnnouncementResp ContestAnnouncementResp
 	commandsContestAnnouncementResp.ID = source.ID
 	commandsContestAnnouncementResp.Title = source.Title
@@ -107,7 +105,7 @@ func (c *contestResponseMapperImpl) ToContestAnnouncementRespBase(source contest
 	commandsContestAnnouncementResp.CreatedAt = CopyTime(source.CreatedAt)
 	return commandsContestAnnouncementResp
 }
-func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *contestentity.ContestAnnouncement) *ContestAnnouncementResp {
+func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *entity.ContestAnnouncement) *ContestAnnouncementResp {
 	var pCommandsContestAnnouncementResp *ContestAnnouncementResp
 	if source != nil {
 		commandsContestAnnouncementResp := c.ToContestAnnouncementRespBase((*source))
@@ -115,7 +113,7 @@ func (c *contestResponseMapperImpl) ToContestAnnouncementRespBasePtr(source *con
 	}
 	return pCommandsContestAnnouncementResp
 }
-func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source contestentity.ContestChallenge) ContestChallengeResp {
+func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source entity.ContestChallenge) ContestChallengeResp {
 	var commandsContestChallengeResp ContestChallengeResp
 	commandsContestChallengeResp.ID = source.ID
 	commandsContestChallengeResp.ContestID = source.ContestID
@@ -126,7 +124,7 @@ func (c *contestResponseMapperImpl) ToContestChallengeRespBase(source contestent
 	commandsContestChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	return commandsContestChallengeResp
 }
-func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *contestentity.ContestChallenge) *ContestChallengeResp {
+func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *entity.ContestChallenge) *ContestChallengeResp {
 	var pCommandsContestChallengeResp *ContestChallengeResp
 	if source != nil {
 		commandsContestChallengeResp := c.ToContestChallengeRespBase((*source))
@@ -134,7 +132,7 @@ func (c *contestResponseMapperImpl) ToContestChallengeRespBasePtr(source *contes
 	}
 	return pCommandsContestChallengeResp
 }
-func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source contestentity.ContestRegistration) ContestRegistrationResp {
+func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source entity.ContestRegistration) ContestRegistrationResp {
 	var commandsContestRegistrationResp ContestRegistrationResp
 	commandsContestRegistrationResp.ID = source.ID
 	commandsContestRegistrationResp.ContestID = source.ContestID
@@ -153,7 +151,7 @@ func (c *contestResponseMapperImpl) ToContestRegistrationRespBase(source contest
 	commandsContestRegistrationResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return commandsContestRegistrationResp
 }
-func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *contestentity.ContestRegistration) *ContestRegistrationResp {
+func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *entity.ContestRegistration) *ContestRegistrationResp {
 	var pCommandsContestRegistrationResp *ContestRegistrationResp
 	if source != nil {
 		commandsContestRegistrationResp := c.ToContestRegistrationRespBase((*source))
@@ -161,7 +159,7 @@ func (c *contestResponseMapperImpl) ToContestRegistrationRespBasePtr(source *con
 	}
 	return pCommandsContestRegistrationResp
 }
-func (c *contestResponseMapperImpl) ToContestRespBase(source contestentity.Contest) ContestResp {
+func (c *contestResponseMapperImpl) ToContestRespBase(source entity.Contest) ContestResp {
 	var commandsContestResp ContestResp
 	commandsContestResp.ID = source.ID
 	commandsContestResp.Title = source.Title
@@ -175,7 +173,7 @@ func (c *contestResponseMapperImpl) ToContestRespBase(source contestentity.Conte
 	commandsContestResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return commandsContestResp
 }
-func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *contestentity.Contest) *ContestResp {
+func (c *contestResponseMapperImpl) ToContestRespBasePtr(source *entity.Contest) *ContestResp {
 	var pCommandsContestResp *ContestResp
 	if source != nil {
 		commandsContestResp := c.ToContestRespBase((*source))
@@ -195,7 +193,7 @@ func (c *contestResponseMapperImpl) ToSubmissionRespPtr(source submissionRespSou
 	commandsSubmissionResp := c.ToSubmissionResp(source)
 	return &commandsSubmissionResp
 }
-func (c *contestResponseMapperImpl) ToTeamRespBase(source contestentity.Team) TeamResp {
+func (c *contestResponseMapperImpl) ToTeamRespBase(source entity.Team) TeamResp {
 	var commandsTeamResp TeamResp
 	commandsTeamResp.ID = source.ID
 	commandsTeamResp.ContestID = source.ContestID
@@ -206,7 +204,7 @@ func (c *contestResponseMapperImpl) ToTeamRespBase(source contestentity.Team) Te
 	commandsTeamResp.CreatedAt = CopyTime(source.CreatedAt)
 	return commandsTeamResp
 }
-func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *contestentity.Team) *TeamResp {
+func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *entity.Team) *TeamResp {
 	var pCommandsTeamResp *TeamResp
 	if source != nil {
 		commandsTeamResp := c.ToTeamRespBase((*source))
@@ -214,18 +212,18 @@ func (c *contestResponseMapperImpl) ToTeamRespBasePtr(source *contestentity.Team
 	}
 	return pCommandsTeamResp
 }
-func (c *contestResponseMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source contestentity.AWDCheckerType) contestentity.AWDCheckerType {
-	var modelAWDCheckerType contestentity.AWDCheckerType
+func (c *contestResponseMapperImpl) entityAWDCheckerTypeToEntityAWDCheckerType(source entity.AWDCheckerType) entity.AWDCheckerType {
+	var entityAWDCheckerType entity.AWDCheckerType
 	switch source {
-	case contestentity.AWDCheckerTypeHTTPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeHTTPStandard
-	case contestentity.AWDCheckerTypeLegacyProbe:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeLegacyProbe
-	case contestentity.AWDCheckerTypeScript:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeScript
-	case contestentity.AWDCheckerTypeTCPStandard:
-		modelAWDCheckerType = contestentity.AWDCheckerTypeTCPStandard
+	case entity.AWDCheckerTypeHTTPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeHTTPStandard
+	case entity.AWDCheckerTypeLegacyProbe:
+		entityAWDCheckerType = entity.AWDCheckerTypeLegacyProbe
+	case entity.AWDCheckerTypeScript:
+		entityAWDCheckerType = entity.AWDCheckerTypeScript
+	case entity.AWDCheckerTypeTCPStandard:
+		entityAWDCheckerType = entity.AWDCheckerTypeTCPStandard
 	default: // ignored
 	}
-	return modelAWDCheckerType
+	return entityAWDCheckerType
 }

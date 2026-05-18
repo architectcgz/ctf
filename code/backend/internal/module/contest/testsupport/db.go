@@ -10,6 +10,8 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func SetupContestTestDB(t *testing.T) *gorm.DB {
@@ -60,14 +62,14 @@ func SetupAWDTestDB(t *testing.T) *gorm.DB {
 
 	db := SetupContestTestDB(t)
 	if err := db.AutoMigrate(
-		&model.Instance{},
+		&instanceentity.Instance{},
 		&contestentity.AWDRound{},
 		&contestentity.AWDTeamService{},
 		&contestentity.AWDAttackLog{},
 		&contestentity.AWDTrafficEvent{},
-		&model.AWDServiceOperation{},
+		&runtimeentity.AWDServiceOperation{},
 		&model.AWDScopeControl{},
-		&model.AWDDefenseWorkspace{},
+		&runtimeentity.AWDDefenseWorkspace{},
 	); err != nil {
 		t.Fatalf("auto migrate awd tables: %v", err)
 	}

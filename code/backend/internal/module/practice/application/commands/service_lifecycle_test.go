@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/platform/events"
 	"gorm.io/gorm"
@@ -82,7 +82,7 @@ func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
 			},
 		},
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				if ctx != nil {
 					t.Fatalf("expected cleanup ctx to stay nil, got %v", ctx)
 				}
@@ -94,7 +94,7 @@ func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
 		nil,
 		nil)
 
-	service.markInstanceFailed(nil, &model.Instance{ID: 42})
+	service.markInstanceFailed(nil, &instanceentity.Instance{ID: 42})
 }
 
 func TestMarkInstanceFailedDetachesCanceledContext(t *testing.T) {
@@ -133,7 +133,7 @@ func TestMarkInstanceFailedDetachesCanceledContext(t *testing.T) {
 			},
 		},
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				assertDetachedCtx(t, ctx)
 				return nil
 			},
@@ -143,7 +143,7 @@ func TestMarkInstanceFailedDetachesCanceledContext(t *testing.T) {
 		nil,
 		nil)
 
-	service.markInstanceFailed(canceledCtx, &model.Instance{ID: 43})
+	service.markInstanceFailed(canceledCtx, &instanceentity.Instance{ID: 43})
 }
 
 func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {

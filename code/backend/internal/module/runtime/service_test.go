@@ -18,6 +18,7 @@ import (
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -33,14 +34,14 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	if err := repo.db.AutoMigrate(&model.AWDDefenseWorkspace{}); err != nil {
 		t.Fatalf("migrate awd defense workspace table: %v", err)
 	}
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 101,
 		ContainerID: "running-container",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:         1,
 		ChallengeID:    102,
 		ContainerID:    "creating-container",
@@ -48,14 +49,14 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		Status:         model.InstanceStatusCreating,
 		ExpiresAt:      time.Now().Add(time.Hour),
 	})
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 103,
 		ContainerID: "stopped-container",
 		Status:      model.InstanceStatusStopped,
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		UserID:      1,
 		ChallengeID: 104,
 		ContainerID: "",
@@ -65,7 +66,7 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	contestID := int64(301)
 	teamID := int64(401)
 	serviceID := int64(501)
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1005,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -89,7 +90,7 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	stoppedContestID := int64(302)
 	stoppedTeamID := int64(402)
 	stoppedServiceID := int64(502)
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1006,
 		UserID:      1,
 		ContestID:   &stoppedContestID,
@@ -113,7 +114,7 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	failedContestID := int64(303)
 	failedTeamID := int64(403)
 	failedServiceID := int64(503)
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1007,
 		UserID:      1,
 		ContestID:   &failedContestID,
@@ -172,7 +173,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 
 	repo := newTestRepository(t)
 	now := time.Now()
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          2001,
 		UserID:      1,
 		ChallengeID: 101,
@@ -320,7 +321,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &model.Instance{RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: runtimeDetails}); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -362,7 +363,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &model.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -405,7 +406,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &model.Instance{ID: ownerInstanceID, RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: ownerInstanceID, RuntimeDetails: runtimeDetails}); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -531,7 +532,7 @@ func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
 	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, nil)
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          3002,
 		ContainerID: "ctr-missing-engine",
 		NetworkID:   "net-missing-engine",
@@ -560,7 +561,7 @@ func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          3001,
 		ContainerID: "ctr-3001",
 	}
@@ -580,7 +581,7 @@ func TestServiceCleanupRuntimeIgnoresMissingNetwork(t *testing.T) {
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:        3004,
 		NetworkID: "net-missing",
 	}
@@ -608,7 +609,7 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          901,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -647,7 +648,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		t.Fatalf("create team member: %v", err)
 	}
 	initialExpiry := now.Add(time.Hour)
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          902,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -697,7 +698,7 @@ func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          905,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -730,7 +731,7 @@ func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	if err := repo.db.Create(&contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
 		t.Fatalf("create team member: %v", err)
 	}
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          906,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -768,11 +769,11 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          903,
 		UserID:      1,
 		ChallengeID: 903,
-		ShareScope:  model.InstanceSharingShared,
+		ShareScope:  instancecontracts.ShareScopeShared,
 		ContainerID: "shared-ctr",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
@@ -805,11 +806,11 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          904,
 		UserID:      1,
 		ChallengeID: 904,
-		ShareScope:  model.InstanceSharingShared,
+		ShareScope:  instancecontracts.ShareScopeShared,
 		ContainerID: "shared-ctr",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
@@ -842,7 +843,7 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1001,
 		UserID:      1,
 		ChallengeID: 101,
@@ -924,7 +925,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 		t.Fatalf("create team member: %v", err)
 	}
 
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1002,
 		UserID:      1,
 		ContestID:   &contestID,
@@ -969,11 +970,11 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	seedInstance(t, repo.db, &model.Instance{
+	seedInstance(t, repo.db, &instanceentity.Instance{
 		ID:          1003,
 		UserID:      1,
 		ChallengeID: 103,
-		ShareScope:  model.InstanceSharingShared,
+		ShareScope:  instancecontracts.ShareScopeShared,
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30003",
 		ExpiresAt:   now.Add(time.Hour),
@@ -989,7 +990,7 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 	if len(items) != 1 || items[0].ID != 1003 {
 		t.Fatalf("expected global shared instance visible to another user, got %+v", items)
 	}
-	if items[0].ShareScope != model.InstanceSharingShared {
+	if items[0].ShareScope != instancecontracts.ShareScopeShared {
 		t.Fatalf("expected share scope to be returned, got %+v", items[0])
 	}
 }
@@ -1323,7 +1324,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 	engine := &fakeRuntimeEngine{}
 	service := newTestRuntimeModule(repo, engine)
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:             1,
 		UserID:         1,
 		ChallengeID:    1,
@@ -1374,7 +1375,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 
 	repo := newTestRepository(t)
 	now := time.Now()
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          2101,
 		UserID:      1,
 		ChallengeID: 1,
@@ -1430,7 +1431,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 
 	repo := newTestRepository(t)
 	now := time.Now()
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          2102,
 		UserID:      1,
 		ChallengeID: 1,
@@ -1491,7 +1492,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	contestID := int64(3101)
 	teamID := int64(4101)
 	serviceID := int64(7101)
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:             2201,
 		UserID:         5101,
 		ContestID:      &contestID,
@@ -1502,7 +1503,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 		ContainerID:    "lost-container",
 		NetworkID:      "lost-network",
 		RuntimeDetails: `{"containers":[{"container_id":"lost-container"}]}`,
-		ShareScope:     model.InstanceSharingPerTeam,
+		ShareScope:     instanceentity.ShareScopePerTeam,
 		Status:         model.InstanceStatusRunning,
 		AccessURL:      "http://10.10.0.2:8080",
 		Nonce:          "nonce-2201",
@@ -1538,7 +1539,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	if updated.ContainerID != "" || updated.NetworkID != "" || updated.RuntimeDetails != "" || updated.AccessURL != "" {
 		t.Fatalf("expected runtime fields cleared, got %+v", updated)
 	}
-	if updated.UserID != instance.UserID || updated.ChallengeID != instance.ChallengeID || updated.ShareScope != model.InstanceSharingPerTeam || updated.Nonce != instance.Nonce || updated.HostPort != instance.HostPort {
+	if updated.UserID != instance.UserID || updated.ChallengeID != instance.ChallengeID || updated.ShareScope != instanceentity.ShareScopePerTeam || updated.Nonce != instance.Nonce || updated.HostPort != instance.HostPort {
 		t.Fatalf("expected instance scope preserved, got %+v", updated)
 	}
 	if updated.ContestID == nil || *updated.ContestID != contestID || updated.TeamID == nil || *updated.TeamID != teamID || updated.ServiceID == nil || *updated.ServiceID != serviceID {
@@ -1775,9 +1776,9 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
@@ -1838,8 +1839,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
@@ -1873,7 +1874,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
@@ -2110,7 +2111,7 @@ func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, container
 	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
-func seedInstance(t *testing.T, db *gorm.DB, instance *model.Instance) {
+func seedInstance(t *testing.T, db *gorm.DB, instance *instanceentity.Instance) {
 	t.Helper()
 
 	if err := db.Create(instance).Error; err != nil {

@@ -9,13 +9,15 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
+func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
 	if topology == nil {
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}
@@ -25,7 +27,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 	if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
 			return errcode.ErrContainerCreateFailed.WithCause(err)
 		}
 	}
@@ -70,7 +72,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 				return errcode.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
-		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
 			if awdWorkspacePlan.createWorkspace {
 				if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
 					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)
@@ -84,7 +86,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	return nil
 }
 
-func (s *Service) createSingleContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+func (s *Service) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, flag string) error {
 	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -105,7 +107,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 			return errcode.ErrContainerCreateFailed.WithCause(err)
 		}
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
 				return errcode.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
@@ -171,7 +173,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 					return errcode.ErrContainerCreateFailed.WithCause(err)
 				}
 			}
-			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, model.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
 				if awdWorkspacePlan.createWorkspace {
 					if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
 						s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)
@@ -217,7 +219,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	})
 }
 
-func applyTopologyCreateResultToInstance(instance *model.Instance, result *practiceports.TopologyCreateResult) error {
+func applyTopologyCreateResultToInstance(instance *instancecontracts.Instance, result *practiceports.TopologyCreateResult) error {
 	if instance == nil || result == nil {
 		return fmt.Errorf("topology create result is nil")
 	}
@@ -238,7 +240,7 @@ func applyTopologyCreateResultToInstance(instance *model.Instance, result *pract
 	return nil
 }
 
-func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance *model.Instance, create func() error) error {
+func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance *instancecontracts.Instance, create func() error) error {
 	err := create()
 	if err == nil || !shouldRebindProvisioningHostPort(instance, err) {
 		return err
@@ -260,7 +262,7 @@ func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance 
 	return nil
 }
 
-func (s *Service) reserveReboundProvisioningHostPort(ctx context.Context, instance *model.Instance, excludedPort int) error {
+func (s *Service) reserveReboundProvisioningHostPort(ctx context.Context, instance *instancecontracts.Instance, excludedPort int) error {
 	if s == nil || s.repo == nil {
 		return fmt.Errorf("practice repository is nil")
 	}
@@ -279,7 +281,7 @@ func (s *Service) reserveReboundProvisioningHostPort(ctx context.Context, instan
 	return nil
 }
 
-func shouldRebindProvisioningHostPort(instance *model.Instance, err error) bool {
+func shouldRebindProvisioningHostPort(instance *instancecontracts.Instance, err error) bool {
 	return instance != nil && instance.HostPort > 0 && errors.Is(err, runtimeports.ErrPublishedHostPortConflict)
 }
 

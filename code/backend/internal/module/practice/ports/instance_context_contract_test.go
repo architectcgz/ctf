@@ -4,17 +4,18 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type ctxOnlyInstanceRepository struct{}
 
-func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *model.Instance) error {
+func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *instanceentity.Instance) error {
 	return nil
 }
 
@@ -30,11 +31,11 @@ func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int
 	return nil
 }
 
-func (ctxOnlyInstanceRepository) FindByUserAndChallenge(context.Context, int64, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindByUserAndChallenge(context.Context, int64, int64) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) ListPendingInstances(context.Context, int) ([]*model.Instance, error) {
+func (ctxOnlyInstanceRepository) ListPendingInstances(context.Context, int) ([]*instanceentity.Instance, error) {
 	return nil, nil
 }
 
@@ -59,11 +60,11 @@ func (ctxOnlyPracticeCommandTxRepository) LockInstanceScope(context.Context, int
 	return nil
 }
 
-func (ctxOnlyPracticeCommandTxRepository) FindScopedExistingInstance(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+func (ctxOnlyPracticeCommandTxRepository) FindScopedExistingInstance(context.Context, int64, int64, practiceports.InstanceScope) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
-func (ctxOnlyPracticeCommandTxRepository) FindScopedRestartableInstance(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+func (ctxOnlyPracticeCommandTxRepository) FindScopedRestartableInstance(context.Context, int64, int64, practiceports.InstanceScope) (*instanceentity.Instance, error) {
 	return nil, nil
 }
 
@@ -83,11 +84,11 @@ func (ctxOnlyPracticeCommandTxRepository) IsHostPortReusableForRestart(context.C
 	return true, nil
 }
 
-func (ctxOnlyPracticeCommandTxRepository) CreateInstance(context.Context, *model.Instance) error {
+func (ctxOnlyPracticeCommandTxRepository) CreateInstance(context.Context, *instanceentity.Instance) error {
 	return nil
 }
 
-func (ctxOnlyPracticeCommandTxRepository) CreateAWDServiceOperation(context.Context, *model.AWDServiceOperation) error {
+func (ctxOnlyPracticeCommandTxRepository) CreateAWDServiceOperation(context.Context, *runtimeentity.AWDServiceOperation) error {
 	return nil
 }
 

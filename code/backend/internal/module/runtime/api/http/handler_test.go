@@ -345,7 +345,7 @@ func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
 				InstanceID:        42,
 				ContestID:         &contestID,
 				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
-				ShareScope:        model.InstanceSharingPerTeam,
+				ShareScope:        instancecontracts.ShareScopePerTeam,
 				AWDAttackerTeamID: &attackerTeamID,
 				AWDVictimTeamID:   &victimTeamID,
 				AWDServiceID:      &serviceID,

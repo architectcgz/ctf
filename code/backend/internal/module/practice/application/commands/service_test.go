@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
@@ -75,13 +76,13 @@ func wirePracticeSubmissionAdapters(
 }
 
 type stubPracticeRuntimeService struct {
-	cleanupRuntimeFn          func(ctx context.Context, instance *model.Instance) error
+	cleanupRuntimeFn          func(ctx context.Context, instance *instanceentity.Instance) error
 	createTopologyFn          func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	createContainerFn         func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 	inspectManagedContainerFn func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error)
 }
 
-func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
+func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instance *instanceentity.Instance) error {
 	if s.cleanupRuntimeFn == nil {
 		return nil
 	}
@@ -182,7 +183,7 @@ func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(
 		},
 	}
 
-	_, err := service.createAWDDefenseWorkspaceCompanion(context.Background(), &model.Instance{
+	_, err := service.createAWDDefenseWorkspaceCompanion(context.Background(), &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -276,13 +277,13 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 	teamID := int64(802)
 	serviceID := int64(803)
 	challengeID := int64(804)
-	if err := db.Create(&model.AWDDefenseWorkspace{
+	if err := db.Create(&runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        9001,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-stale-ctr",
 		SeedSignature:     "seed-signature",
 		CreatedAt:         now,
@@ -329,7 +330,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		imageRepo:    challengeinfra.NewImageRepository(db),
 		instanceRepo: runtimeinfrarepo.NewRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				cleanupCalls++
 				details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 				if err != nil {
@@ -395,7 +396,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		config: &config.Config{},
 	}
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9001,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -438,13 +439,13 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 	teamID := int64(812)
 	serviceID := int64(813)
 	challengeID := int64(814)
-	if err := db.Create(&model.AWDDefenseWorkspace{
+	if err := db.Create(&runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        9011,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-stale-ctr",
 		SeedSignature:     "seed-signature",
 		CreatedAt:         now,
@@ -489,7 +490,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		imageRepo:    challengeinfra.NewImageRepository(db),
 		instanceRepo: runtimeinfrarepo.NewRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				return fmt.Errorf("cleanup stale workspace failed")
 			},
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -530,7 +531,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		config: &config.Config{},
 	}
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9011,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -554,7 +555,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 	if workspace == nil {
 		t.Fatal("expected workspace row to exist")
 	}
-	if workspace.Status != model.AWDDefenseWorkspaceStatusFailed {
+	if workspace.Status != runtimeentity.AWDDefenseWorkspaceStatusFailed {
 		t.Fatalf("expected failed workspace state, got %+v", workspace)
 	}
 	if workspace.ContainerID != "workspace-stale-ctr" {
@@ -570,13 +571,13 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 	teamID := int64(822)
 	serviceID := int64(823)
 	challengeID := int64(824)
-	if err := db.Create(&model.AWDDefenseWorkspace{
+	if err := db.Create(&runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        9021,
 		WorkspaceRevision: 2,
-		Status:            model.AWDDefenseWorkspaceStatusFailed,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusFailed,
 		ContainerID:       "workspace-stale-ctr",
 		SeedSignature:     "seed-signature",
 		CreatedAt:         now,
@@ -628,7 +629,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		config: &config.Config{},
 	}
 
-	plan, err := service.prepareAWDDefenseWorkspacePlan(context.Background(), &model.Instance{
+	plan, err := service.prepareAWDDefenseWorkspacePlan(context.Background(), &instanceentity.Instance{
 		ID:          9021,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -671,10 +672,10 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&contestentity.ContestRegistration{},
 		&model.User{},
 		&contestentity.Team{},
-		&model.Instance{},
-		&model.AWDServiceOperation{},
+		&instanceentity.Instance{},
+		&runtimeentity.AWDServiceOperation{},
 		&model.AWDScopeControl{},
-		&model.AWDDefenseWorkspace{},
+		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
 		&contestentity.Submission{},
 	); err != nil {
@@ -774,22 +775,22 @@ func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*model
 }
 
 type stubPracticeInstanceStore struct {
-	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
-	updateRuntimeWithContextFn              func(ctx context.Context, instance *model.Instance) error
+	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
+	updateRuntimeWithContextFn              func(ctx context.Context, instance *instanceentity.Instance) error
 	finishActiveAWDServiceOperationFn       func(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
-	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
+	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error)
 }
 
-func (s *stubPracticeInstanceStore) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
+func (s *stubPracticeInstanceStore) FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
+func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance *instanceentity.Instance) error {
 	if s.updateRuntimeWithContextFn != nil {
 		return s.updateRuntimeWithContextFn(ctx, instance)
 	}
@@ -817,15 +818,15 @@ func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(ctx context.Conte
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {
 	if s.findByUserAndChallengeWithContextFn != nil {
 		return s.findByUserAndChallengeWithContextFn(ctx, userID, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
-	return []*model.Instance{}, nil
+func (s *stubPracticeInstanceStore) ListPendingInstances(ctx context.Context, limit int) ([]*instanceentity.Instance, error) {
+	return []*instanceentity.Instance{}, nil
 }
 
 func (s *stubPracticeInstanceStore) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
@@ -838,10 +839,10 @@ func (s *stubPracticeInstanceStore) CountInstancesByStatus(ctx context.Context, 
 
 type interceptAWDDefenseWorkspaceRepository struct {
 	*runtimeinfrarepo.Repository
-	upsertFn func(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	upsertFn func(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error
 }
 
-func (r *interceptAWDDefenseWorkspaceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error {
+func (r *interceptAWDDefenseWorkspaceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error {
 	if r.upsertFn != nil {
 		if err := r.upsertFn(ctx, workspace); err != nil {
 			return err

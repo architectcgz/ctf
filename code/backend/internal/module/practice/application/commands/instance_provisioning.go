@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -20,7 +22,7 @@ func bestEffortFailureContext(ctx context.Context) context.Context {
 	return context.WithoutCancel(ctx)
 }
 
-func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instance) {
+func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecontracts.Instance) {
 	if instance == nil {
 		return
 	}
@@ -29,10 +31,10 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
-	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
-	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, runtimecontracts.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
 		s.logger.Warn("更新失败实例 AWD 操作状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
@@ -40,7 +42,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	}
 }
 
-func (s *Service) provisionInstance(ctx context.Context, instance *model.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
+func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
@@ -61,7 +63,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 			zap.String("access_url", instance.AccessURL))
 	}
 
-	instance.Status = model.InstanceStatusRunning
+	instance.Status = instancecontracts.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateRuntime(ctx, instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
@@ -70,7 +72,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
 		s.clearDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 	}
-	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, model.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, runtimecontracts.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
 		s.logger.Warn("更新实例 AWD 操作完成状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 
@@ -120,7 +122,7 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 	return lastErr
 }
 
-func (s *Service) buildProvisioningFlag(instance *model.Instance, chal *model.Challenge) (string, error) {
+func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, chal *model.Challenge) (string, error) {
 	if instance == nil || chal == nil {
 		return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
 	}

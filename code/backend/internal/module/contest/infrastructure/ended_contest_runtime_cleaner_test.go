@@ -9,16 +9,17 @@ import (
 	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type endedContestRuntimeCleanupStub struct {
-	cleaned []*model.Instance
+	cleaned []*instanceentity.Instance
 	err     error
 }
 
-func (s *endedContestRuntimeCleanupStub) CleanupRuntime(_ context.Context, instance *model.Instance) error {
+func (s *endedContestRuntimeCleanupStub) CleanupRuntime(_ context.Context, instance *instanceentity.Instance) error {
 	copied := *instance
 	s.cleaned = append(s.cleaned, &copied)
 	return s.err
@@ -68,7 +69,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, instance := range []model.Instance{
+	for _, instance := range []instanceentity.Instance{
 		{
 			ID:          1001,
 			UserID:      1,
@@ -298,7 +299,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	if workspace.InstanceID != 1001 || workspace.WorkspaceRevision != 7 {
 		t.Fatalf("expected workspace identity to stay scoped, got %+v", workspace)
 	}
-	if workspace.Status != model.AWDDefenseWorkspaceStatusFailed || workspace.ContainerID != "" {
+	if workspace.Status != runtimeentity.AWDDefenseWorkspaceStatusFailed || workspace.ContainerID != "" {
 		t.Fatalf("expected workspace runtime to be cleared into failed state, got %+v", workspace)
 	}
 
@@ -355,7 +356,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 }
 
-func collectCleanedContainerIDs(t *testing.T, instances []*model.Instance) map[string]struct{} {
+func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instance) map[string]struct{} {
 	t.Helper()
 
 	result := make(map[string]struct{})

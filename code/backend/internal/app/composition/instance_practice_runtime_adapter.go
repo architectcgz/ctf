@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -34,7 +35,7 @@ func newPracticeRuntimeServiceAdapter(
 	}
 }
 
-func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
+func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}

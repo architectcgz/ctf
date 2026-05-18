@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
 type InstanceLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error)
 }
 
 type InstanceUserLookupRepository interface {
@@ -16,7 +17,7 @@ type InstanceUserLookupRepository interface {
 }
 
 type InstanceAccessRepository interface {
-	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
+	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error)
 }
 
 type UserVisibleInstanceRepository interface {
@@ -36,7 +37,7 @@ type InstanceStatusRepository interface {
 }
 
 type RuntimeCleaner interface {
-	CleanupRuntime(ctx context.Context, instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *instanceentity.Instance) error
 }
 
 type TeacherInstanceFilter struct {
@@ -54,7 +55,7 @@ type UserVisibleInstanceRow struct {
 	Difficulty     string
 	FlagType       string
 	Status         string
-	ShareScope     model.ShareScope
+	ShareScope     instanceentity.ShareScope
 	AccessURL      string
 	ExpiresAt      time.Time
 	ExtendCount    int
@@ -80,19 +81,19 @@ type TeacherInstanceRow struct {
 }
 
 type ProxyTicketClaims struct {
-	UserID               int64            `json:"user_id"`
-	Username             string           `json:"username"`
-	Role                 string           `json:"role"`
-	InstanceID           int64            `json:"instance_id"`
-	ContestID            *int64           `json:"contest_id,omitempty"`
-	ShareScope           model.ShareScope `json:"share_scope"`
-	Purpose              string           `json:"purpose,omitempty"`
-	AWDAttackerTeamID    *int64           `json:"awd_attacker_team_id,omitempty"`
-	AWDVictimTeamID      *int64           `json:"awd_victim_team_id,omitempty"`
-	AWDServiceID         *int64           `json:"awd_service_id,omitempty"`
-	AWDChallengeID       *int64           `json:"awd_challenge_id,omitempty"`
-	AWDWorkspaceRevision *int64           `json:"awd_workspace_revision,omitempty"`
-	IssuedAt             time.Time        `json:"issued_at"`
+	UserID               int64                     `json:"user_id"`
+	Username             string                    `json:"username"`
+	Role                 string                    `json:"role"`
+	InstanceID           int64                     `json:"instance_id"`
+	ContestID            *int64                    `json:"contest_id,omitempty"`
+	ShareScope           instanceentity.ShareScope `json:"share_scope"`
+	Purpose              string                    `json:"purpose,omitempty"`
+	AWDAttackerTeamID    *int64                    `json:"awd_attacker_team_id,omitempty"`
+	AWDVictimTeamID      *int64                    `json:"awd_victim_team_id,omitempty"`
+	AWDServiceID         *int64                    `json:"awd_service_id,omitempty"`
+	AWDChallengeID       *int64                    `json:"awd_challenge_id,omitempty"`
+	AWDWorkspaceRevision *int64                    `json:"awd_workspace_revision,omitempty"`
+	IssuedAt             time.Time                 `json:"issued_at"`
 }
 
 const (
@@ -108,7 +109,7 @@ type AWDTargetProxyScope struct {
 	VictimTeamID   int64
 	ServiceID      int64
 	AWDChallengeID int64
-	ShareScope     model.ShareScope
+	ShareScope     instanceentity.ShareScope
 	Status         string
 	AccessURL      string
 	RuntimeDetails string
@@ -122,7 +123,7 @@ type AWDDefenseSSHScope struct {
 	AWDChallengeID    int64
 	WorkspaceRevision int64
 	ContainerID       string
-	ShareScope        model.ShareScope
+	ShareScope        instanceentity.ShareScope
 	EditablePaths     []string `gorm:"-"`
 	ProtectedPaths    []string `gorm:"-"`
 }
@@ -151,7 +152,7 @@ type ProxyTicketStore interface {
 }
 
 type ProxyTicketInstanceReader interface {
-	FindByID(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error)
 	FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*AWDTargetProxyScope, error)
 	FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*AWDDefenseSSHScope, error)
 }

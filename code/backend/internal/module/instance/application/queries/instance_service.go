@@ -43,7 +43,7 @@ func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID i
 	if instance == nil {
 		return "", errcode.ErrForbidden
 	}
-	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
+	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != instancecontracts.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
 		return "", errcode.ErrInstanceExpired
 	}
 
@@ -156,8 +156,8 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time,
 }
 
 func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
-	if status == model.InstanceStatusRunning && !expiresAt.After(now) {
-		return model.InstanceStatusExpired
+	if status == instancecontracts.InstanceStatusRunning && !expiresAt.After(now) {
+		return instancecontracts.InstanceStatusExpired
 	}
 	return status
 }

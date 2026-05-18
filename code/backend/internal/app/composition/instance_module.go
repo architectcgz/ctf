@@ -7,11 +7,11 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
@@ -23,13 +23,13 @@ type InstanceModule struct {
 	Handler *runtimehttp.Handler
 
 	PracticeInstanceRepository interface {
-		FindByID(ctx context.Context, id int64) (*model.Instance, error)
-		UpdateRuntime(ctx context.Context, instance *model.Instance) error
+		FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
+		UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 		FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 		RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 		UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
-		FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
-		ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error)
+		FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error)
+		ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error)
 		TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
 		CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 	}

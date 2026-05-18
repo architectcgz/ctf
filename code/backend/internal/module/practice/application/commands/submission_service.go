@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -153,7 +154,7 @@ func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, chall
 		s.logger.Warn("查询解题后实例失败", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeItem.ID), zap.Error(err))
 		return nil
 	}
-	if instance == nil || instance.ShareScope != model.InstanceSharingPerUser {
+	if instance == nil || instance.ShareScope != instancecontracts.ShareScopePerUser {
 		return nil
 	}
 

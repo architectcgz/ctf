@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
@@ -143,7 +144,7 @@ func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Conte
 	if err != nil {
 		return err
 	}
-	instance := &model.Instance{
+	instance := &instancecontracts.Instance{
 		RuntimeDetails: rawDetails,
 	}
 	return a.cleaner.CleanupRuntime(ctx, instance)

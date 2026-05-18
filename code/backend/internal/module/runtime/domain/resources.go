@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 // ManagedResources 表示实例占用的运行时资源集合。
@@ -15,7 +16,7 @@ type ManagedResources struct {
 }
 
 // ExtractManagedResources 提取实例持有的容器、网络和 ACL 资源标识。
-func ExtractManagedResources(instance *model.Instance) ManagedResources {
+func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResources {
 	if instance == nil {
 		return ManagedResources{}
 	}

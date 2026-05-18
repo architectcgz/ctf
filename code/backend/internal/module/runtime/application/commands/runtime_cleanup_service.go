@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -48,7 +49,7 @@ func (s *RuntimeCleanupService) RemoveContainer(ctx context.Context, containerID
 }
 
 // CleanupRuntime 清理实例对应的容器、网络和 ACL 规则。
-func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
+func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
 	ctx = normalizeContext(ctx)
 	if instance == nil {
 		return nil

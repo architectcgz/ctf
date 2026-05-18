@@ -6,8 +6,10 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -81,7 +83,7 @@ func TestBuildRuntimeContainerNameUsesChallengeSlugAndContestIdentity(t *testing
 	serviceID := int64(21)
 	packageSlug := "Bank Portal"
 
-	got := buildRuntimeContainerName(&model.Challenge{PackageSlug: &packageSlug}, &model.Instance{
+	got := buildRuntimeContainerName(&model.Challenge{PackageSlug: &packageSlug}, &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -99,7 +101,7 @@ func TestBuildRuntimeContainerNameIncludesServiceIDWhenChallengeSlugMissing(t *t
 	teamID := int64(16)
 	serviceID := int64(22)
 
-	got := buildRuntimeContainerName(&model.Challenge{}, &model.Instance{
+	got := buildRuntimeContainerName(&model.Challenge{}, &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -134,7 +136,7 @@ func TestApplyAWDStableNetworkToTopologyRequestSkipsContainerNameForMultiNodeTop
 		},
 	}
 
-	applyAWDStableNetworkToTopologyRequest(&model.Instance{
+	applyAWDStableNetworkToTopologyRequest(&instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -241,7 +243,7 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 			},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9101,
 		ChallengeID: 410,
 		HostPort:    30021,
@@ -411,7 +413,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 			Container: config.ContainerConfig{FlagGlobalSecret: checkerSecret},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9001,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -559,7 +561,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 			},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9011,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -633,13 +635,13 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	if err != nil {
 		t.Fatalf("encode service snapshot: %v", err)
 	}
-	if err := db.Create(&model.AWDDefenseWorkspace{
+	if err := db.Create(&runtimeentity.AWDDefenseWorkspace{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        9012,
 		WorkspaceRevision: 1,
-		Status:            model.AWDDefenseWorkspaceStatusRunning,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-ctr",
 		SeedSignature:     "seed:v1",
 		CreatedAt:         now,
@@ -734,7 +736,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 			},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9012,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -891,7 +893,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 			Container: config.ContainerConfig{FlagGlobalSecret: checkerSecret},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9003,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -1032,7 +1034,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 			},
 		},
 	}
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9013,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -1107,7 +1109,7 @@ func TestReserveReboundProvisioningHostPortReleasesUnboundReservationWhenBindFai
 		},
 	}
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:       9301,
 		HostPort: 30031,
 	}
@@ -1251,7 +1253,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		config: &config.Config{},
 	}
 
-	instance := &model.Instance{
+	instance := &instanceentity.Instance{
 		ID:          9001,
 		ContestID:   &contestID,
 		TeamID:      &teamID,
@@ -1282,7 +1284,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	if workspace == nil {
 		t.Fatal("expected workspace row to be created")
 	}
-	if workspace.WorkspaceRevision != 1 || workspace.Status != model.AWDDefenseWorkspaceStatusRunning || workspace.ContainerID != "workspace-ctr" {
+	if workspace.WorkspaceRevision != 1 || workspace.Status != runtimeentity.AWDDefenseWorkspaceStatusRunning || workspace.ContainerID != "workspace-ctr" {
 		t.Fatalf("unexpected workspace state: %+v", workspace)
 	}
 }

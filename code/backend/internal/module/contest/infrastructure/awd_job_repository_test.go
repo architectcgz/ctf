@@ -8,9 +8,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type awdJobRepositorySourceStub struct {
@@ -80,7 +80,7 @@ func (s awdJobRepositorySourceStub) ListServiceInstancesByContest(context.Contex
 	return nil, nil
 }
 
-func (s awdJobRepositorySourceStub) ListLatestServiceOperationsByContest(context.Context, int64) ([]model.AWDServiceOperation, error) {
+func (s awdJobRepositorySourceStub) ListLatestServiceOperationsByContest(context.Context, int64) ([]runtimeentity.AWDServiceOperation, error) {
 	return nil, nil
 }
 

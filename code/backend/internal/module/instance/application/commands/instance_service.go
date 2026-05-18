@@ -55,7 +55,7 @@ func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userI
 	if instance == nil {
 		return errcode.ErrForbidden
 	}
-	if instance.ShareScope == model.InstanceSharingShared {
+	if instance.ShareScope == instancecontracts.ShareScopeShared {
 		return errcode.ErrForbidden
 	}
 	if isAWDTeamServiceInstance(instance) {
@@ -77,13 +77,13 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 	if instance == nil {
 		return nil, errcode.ErrForbidden
 	}
-	if instance.ShareScope == model.InstanceSharingShared {
+	if instance.ShareScope == instancecontracts.ShareScopeShared {
 		return nil, errcode.ErrForbidden
 	}
 	if isAWDTeamServiceInstance(instance) {
 		return nil, errcode.ErrForbidden
 	}
-	if instance.Status != model.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
+	if instance.Status != instancecontracts.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
 		return nil, errcode.ErrInstanceExpired
 	}
 
@@ -141,23 +141,23 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 	return s.destroyManagedInstance(ctx, instance)
 }
 
-func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *model.Instance) error {
+func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *instancecontracts.Instance) error {
 	if s.cleaner != nil {
 		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
-	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
 }
 
-func isAWDTeamServiceInstance(instance *model.Instance) bool {
+func isAWDTeamServiceInstance(instance *instancecontracts.Instance) bool {
 	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
 }
 
-func (s *InstanceService) toInstanceResp(inst *model.Instance) *instancecontracts.InstanceResp {
+func (s *InstanceService) toInstanceResp(inst *instancecontracts.Instance) *instancecontracts.InstanceResp {
 	if inst == nil {
 		return nil
 	}

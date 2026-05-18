@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 func (s *Service) RunProvisioningLoop(ctx context.Context) {
@@ -60,7 +60,7 @@ func (s *Service) dispatchPendingInstances(ctx context.Context) error {
 		if instance == nil {
 			continue
 		}
-		claimed, err := s.instanceRepo.TryTransitionStatus(ctx, instance.ID, model.InstanceStatusPending, model.InstanceStatusCreating)
+		claimed, err := s.instanceRepo.TryTransitionStatus(ctx, instance.ID, instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	creatingCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{model.InstanceStatusCreating})
+	creatingCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{instancecontracts.InstanceStatusCreating})
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +93,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 
 	maxActive := s.schedulerMaxActiveInstances()
 	if maxActive > 0 {
-		activeCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
+		activeCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning})
 		if err != nil {
 			return 0, err
 		}
@@ -119,7 +119,7 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 		s.logger.Error("读取待启动实例失败", zap.Int64("instance_id", instanceID), zap.Error(err))
 		return
 	}
-	if instance == nil || instance.Status != model.InstanceStatusCreating {
+	if instance == nil || instance.Status != instancecontracts.InstanceStatusCreating {
 		return
 	}
 

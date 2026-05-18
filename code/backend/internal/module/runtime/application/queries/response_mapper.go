@@ -7,13 +7,6 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-//go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
-
-// goverter:converter
-// goverter:enum:unknown @ignore
-// goverter:extend CopyTime
-// goverter:output:file ./response_mapper_gen.go
-// goverter:output:package :queries
 type instanceResponseMapper interface {
 	// goverter:ignore Status
 	// goverter:ignore AccessURL

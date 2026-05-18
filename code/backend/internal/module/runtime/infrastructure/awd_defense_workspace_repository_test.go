@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestAWDDefenseWorkspaceUniqueScopeConstraint(t *testing.T) {
@@ -48,7 +49,7 @@ func TestRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
 	t.Parallel()
 
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
-	workspace := &model.AWDDefenseWorkspace{
+	workspace := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         102,
 		TeamID:            202,
 		ServiceID:         302,
@@ -80,7 +81,7 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
 	repo := NewRepository(db)
 
-	workspace := &model.AWDDefenseWorkspace{
+	workspace := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         103,
 		TeamID:            203,
 		ServiceID:         303,
@@ -93,7 +94,7 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 		t.Fatalf("UpsertAWDDefenseWorkspace() create error = %v", err)
 	}
 
-	updated := &model.AWDDefenseWorkspace{
+	updated := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         103,
 		TeamID:            203,
 		ServiceID:         303,
@@ -119,7 +120,7 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 	}
 
 	var count int64
-	if err := db.Model(&model.AWDDefenseWorkspace{}).
+	if err := db.Model(&runtimeentity.AWDDefenseWorkspace{}).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", 103, 203, 303).
 		Count(&count).Error; err != nil {
 		t.Fatalf("count workspace rows: %v", err)
@@ -135,7 +136,7 @@ func TestRepositoryBumpAWDDefenseWorkspaceRevisionResetsProvisioningState(t *tes
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
 	repo := NewRepository(db)
 
-	if err := repo.UpsertAWDDefenseWorkspace(context.Background(), &model.AWDDefenseWorkspace{
+	if err := repo.UpsertAWDDefenseWorkspace(context.Background(), &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         104,
 		TeamID:            204,
 		ServiceID:         304,
@@ -165,8 +166,8 @@ func TestRepositoryBumpAWDDefenseWorkspaceRevisionResetsProvisioningState(t *tes
 	if stored.InstanceID != 406 {
 		t.Fatalf("instance id = %d, want 406", stored.InstanceID)
 	}
-	if stored.Status != model.AWDDefenseWorkspaceStatusProvisioning {
-		t.Fatalf("status = %q, want %q", stored.Status, model.AWDDefenseWorkspaceStatusProvisioning)
+	if stored.Status != runtimeentity.AWDDefenseWorkspaceStatusProvisioning {
+		t.Fatalf("status = %q, want %q", stored.Status, runtimeentity.AWDDefenseWorkspaceStatusProvisioning)
 	}
 	if stored.ContainerID != "" {
 		t.Fatalf("container id = %q, want empty after reseed bump", stored.ContainerID)

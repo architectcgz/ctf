@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -1641,12 +1642,12 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 	defer redisClient.Close()
 	instanceLookupCalled := false
 	instanceStore := &stubPracticeInstanceStore{
-		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {
 			instanceLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected dynamic flag instance lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Instance{ID: 301, UserID: userID, ChallengeID: challengeID, Nonce: "nonce-301"}, nil
+			return &instanceentity.Instance{ID: 301, UserID: userID, ChallengeID: challengeID, Nonce: "nonce-301"}, nil
 		},
 	}
 	repo := &stubPracticeRepository{
@@ -1711,12 +1712,12 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	lookupCalled := false
 	refreshCalled := false
 	instanceStore := &stubPracticeInstanceStore{
-		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {
 			lookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected solve grace lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Instance{ID: 401, UserID: userID, ChallengeID: challengeID, ShareScope: model.InstanceSharingPerUser, ExpiresAt: time.Now().Add(2 * time.Hour)}, nil
+			return &instanceentity.Instance{ID: 401, UserID: userID, ChallengeID: challengeID, ShareScope: instanceentity.ShareScopePerUser, ExpiresAt: time.Now().Add(2 * time.Hour)}, nil
 		},
 		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 			refreshCalled = true

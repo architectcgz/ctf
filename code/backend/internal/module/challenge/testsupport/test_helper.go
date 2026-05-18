@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -25,7 +26,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&challengeentity.ChallengePublishCheckJob{},
 		&model.Image{},
 		&challengeentity.ImageBuildJob{},
-		&model.Instance{},
+		&instancecontracts.Instance{},
 		&contestcontracts.Submission{},
 		&challengeentity.ChallengeHint{},
 		&model.ChallengeWriteup{},

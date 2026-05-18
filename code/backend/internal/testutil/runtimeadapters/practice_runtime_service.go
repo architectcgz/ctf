@@ -5,12 +5,13 @@ import (
 	"reflect"
 
 	"ctf-platform/internal/model"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type practiceRuntimeCleaner interface {
-	CleanupRuntime(instance *model.Instance) error
+	CleanupRuntime(instance *instanceentity.Instance) error
 }
 
 type practiceRuntimeProvisioner interface {
@@ -35,7 +36,7 @@ func NewPracticeRuntimeService(cleaner practiceRuntimeCleaner, provisioner pract
 	}
 }
 
-func (a *PracticeRuntimeService) CleanupRuntime(instance *model.Instance) error {
+func (a *PracticeRuntimeService) CleanupRuntime(instance *instanceentity.Instance) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -130,7 +131,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx cont
 		TeamID:        &teamIDCopy,
 		ServiceID:     &serviceIDCopy,
 		FlagSubjectID: teamID,
-		ShareScope:    model.InstanceSharingPerTeam,
+		ShareScope:    instancecontracts.ShareScopePerTeam,
 	}
 	return subject.ChallengeID, team.CaptainID, scope, nil
 }
@@ -157,7 +158,7 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 	return chal, topology, nil
 }
 
-func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *model.Instance) (*model.Challenge, *model.ChallengeTopology, error) {
+func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *instancecontracts.Instance) (*model.Challenge, *model.ChallengeTopology, error) {
 	if instance != nil && instance.ServiceID != nil && instance.ContestID != nil {
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *instance.ContestID, *instance.ServiceID)
 	}
@@ -224,7 +225,7 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		ContestID:     &contestIDCopy,
 		ContestMode:   contest.Mode,
 		FlagSubjectID: userID,
-		ShareScope:    model.InstanceSharingPerUser,
+		ShareScope:    instancecontracts.ShareScopePerUser,
 	}
 	if registration.TeamID != nil && *registration.TeamID > 0 {
 		teamID := *registration.TeamID
@@ -237,26 +238,26 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.InstanceScope) practiceports.InstanceScope {
 	effective := scope
 	effective.FlagSubjectID = scope.FlagSubjectID
-	effective.ShareScope = model.InstanceSharingPerUser
+	effective.ShareScope = instancecontracts.ShareScopePerUser
 
 	switch {
 	case scope.ContestMode == practiceports.ContestModeAWD:
-		effective.ShareScope = model.InstanceSharingPerTeam
+		effective.ShareScope = instancecontracts.ShareScopePerTeam
 		if scope.TeamID != nil && *scope.TeamID > 0 {
 			effective.FlagSubjectID = *scope.TeamID
 		}
 	case chal.InstanceSharing == model.InstanceSharingShared:
-		effective.ShareScope = model.InstanceSharingShared
+		effective.ShareScope = instancecontracts.ShareScopeShared
 		effective.TeamID = nil
 	case chal.InstanceSharing == model.InstanceSharingPerTeam && scope.TeamID != nil && *scope.TeamID > 0:
-		effective.ShareScope = model.InstanceSharingPerTeam
+		effective.ShareScope = instancecontracts.ShareScopePerTeam
 		effective.FlagSubjectID = *scope.TeamID
 	default:
-		effective.ShareScope = model.InstanceSharingPerUser
+		effective.ShareScope = instancecontracts.ShareScopePerUser
 		effective.TeamID = nil
 	}
 
-	if effective.ShareScope != model.InstanceSharingPerTeam {
+	if effective.ShareScope != instancecontracts.ShareScopePerTeam {
 		effective.TeamID = nil
 	}
 	return effective

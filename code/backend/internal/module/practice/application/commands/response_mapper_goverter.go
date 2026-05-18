@@ -17,14 +17,6 @@ type challengeSubmissionRecordRespSource struct {
 	SubmittedAt time.Time
 }
 
-//go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.2 gen .
-
-// goverter:converter
-// goverter:enum:unknown @ignore
-// goverter:extend CopyTime
-// goverter:extend CopyTimePtr
-// goverter:output:file ./response_mapper_goverter_gen.go
-// goverter:output:package :commands
 type practiceCommandResponseMapper interface {
 	// goverter:ignore Status
 	// goverter:ignore Answer

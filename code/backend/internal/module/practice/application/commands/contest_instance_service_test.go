@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -551,7 +552,7 @@ func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
 
 type contestInstanceTestRuntimeService struct{}
 
-func (contestInstanceTestRuntimeService) CleanupRuntime(context.Context, *model.Instance) error {
+func (contestInstanceTestRuntimeService) CleanupRuntime(context.Context, *instanceentity.Instance) error {
 	return nil
 }
 

@@ -5,7 +5,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
-func InstanceRespFromModel(inst *model.Instance, publicHost, accessHost string) *instancecontracts.InstanceResp {
+func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessHost string) *instancecontracts.InstanceResp {
 	resp := practiceResponseMapperInst.ToInstanceRespBasePtr(inst)
 	if resp == nil {
 		return nil
@@ -16,7 +16,7 @@ func InstanceRespFromModel(inst *model.Instance, publicHost, accessHost string) 
 	return resp
 }
 
-func RemainingExtends(inst *model.Instance) int {
+func RemainingExtends(inst *instancecontracts.Instance) int {
 	remaining := inst.MaxExtends - inst.ExtendCount
 	if remaining < 0 {
 		return 0

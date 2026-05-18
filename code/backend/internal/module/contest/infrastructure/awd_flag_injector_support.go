@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 )
 
 func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, serviceID, _ int64) ([]string, error) {
-	var instances []model.Instance
+	var instances []instancecontracts.Instance
 	if serviceID <= 0 {
 		return nil, nil
 	}
@@ -42,7 +43,7 @@ func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contes
 	return containerIDs, nil
 }
 
-func collectInstanceContainerIDs(instance *model.Instance) []string {
+func collectInstanceContainerIDs(instance *instancecontracts.Instance) []string {
 	if instance == nil {
 		return nil
 	}

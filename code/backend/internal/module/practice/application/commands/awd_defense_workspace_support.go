@@ -8,7 +8,9 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (
@@ -42,8 +44,8 @@ var awdDefenseWorkspaceShellEnv = map[string]string{
 }
 
 type awdDefenseWorkspaceRepository interface {
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
 }
 
 type awdDefenseWorkspacePlan struct {
@@ -136,7 +138,7 @@ func shellQuoteForPOSIXSh(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", `'"'"'`) + "'"
 }
 
-func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *model.Instance, chal *model.Challenge) (*awdDefenseWorkspacePlan, error) {
+func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge) (*awdDefenseWorkspacePlan, error) {
 	if !isAWDInstance(instance) || instance.TeamID == nil {
 		return nil, nil
 	}
@@ -234,12 +236,12 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	}
 	if current != nil {
 		plan.workspaceContainerID = strings.TrimSpace(current.ContainerID)
-		if current.Status != model.AWDDefenseWorkspaceStatusRunning && plan.workspaceContainerID != "" {
+		if current.Status != runtimecontracts.AWDDefenseWorkspaceStatusRunning && plan.workspaceContainerID != "" {
 			plan.staleWorkspaceContainerID = plan.workspaceContainerID
 			plan.workspaceContainerID = ""
 		}
 	}
-	plan.createWorkspace = current == nil || current.Status != model.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
+	plan.createWorkspace = current == nil || current.Status != runtimecontracts.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
 	if !plan.createWorkspace {
 		state, err := s.runtimeService.InspectManagedContainer(ctx, plan.workspaceContainerID)
 		if err != nil {
@@ -316,7 +318,7 @@ func (s *Service) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awd
 	if workspaceRepo == nil {
 		return fmt.Errorf("awd defense workspace repository is not configured")
 	}
-	return workspaceRepo.UpsertAWDDefenseWorkspace(ctx, &model.AWDDefenseWorkspace{
+	return workspaceRepo.UpsertAWDDefenseWorkspace(ctx, &runtimecontracts.AWDDefenseWorkspace{
 		ContestID:         plan.contestID,
 		TeamID:            plan.teamID,
 		ServiceID:         plan.serviceID,
@@ -328,7 +330,7 @@ func (s *Service) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awd
 	})
 }
 
-func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instance *model.Instance, plan *awdDefenseWorkspacePlan) (string, error) {
+func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instance *instancecontracts.Instance, plan *awdDefenseWorkspacePlan) (string, error) {
 	if s == nil || s.runtimeService == nil || plan == nil {
 		return "", fmt.Errorf("awd defense workspace runtime is not configured")
 	}
@@ -376,7 +378,7 @@ func (s *Service) cleanupAWDDefenseWorkspaceCompanion(ctx context.Context, conta
 	if err != nil {
 		return err
 	}
-	return s.runtimeService.CleanupRuntime(ctx, &model.Instance{RuntimeDetails: runtimeDetails})
+	return s.runtimeService.CleanupRuntime(ctx, &instancecontracts.Instance{RuntimeDetails: runtimeDetails})
 }
 
 func resolveAWDDefenseWorkspaceFailureContainerID(plan *awdDefenseWorkspacePlan, containerID string) string {
@@ -397,7 +399,7 @@ func (s *Service) persistAWDDefenseWorkspaceFailure(ctx context.Context, plan *a
 		ctx,
 		plan,
 		instanceID,
-		model.AWDDefenseWorkspaceStatusFailed,
+		runtimecontracts.AWDDefenseWorkspaceStatusFailed,
 		resolveAWDDefenseWorkspaceFailureContainerID(plan, containerID),
 	)
 }

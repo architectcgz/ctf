@@ -6,6 +6,8 @@ import (
 
 	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -67,10 +69,10 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 		Where("victim_team_retired_ctl.id IS NULL").
 		Where("victim_service_disabled_ctl.id IS NULL").
 		Where("inst.status IN ?", []string{
-			model.InstanceStatusPending,
-			model.InstanceStatusCreating,
-			model.InstanceStatusRunning,
-			model.InstanceStatusFailed,
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusFailed,
 		}).
 		Order("inst.created_at DESC, inst.id DESC").
 		Limit(1).
@@ -91,14 +93,14 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 	}
 
 	var row struct {
-		InstanceID        int64            `gorm:"column:instance_id"`
-		ContainerID       string           `gorm:"column:container_id"`
-		WorkspaceRevision int64            `gorm:"column:workspace_revision"`
-		ShareScope        model.ShareScope `gorm:"column:share_scope"`
-		ContestID         int64            `gorm:"column:contest_id"`
-		TeamID            int64            `gorm:"column:team_id"`
-		ServiceID         int64            `gorm:"column:service_id"`
-		AWDChallengeID    int64            `gorm:"column:awd_challenge_id"`
+		InstanceID        int64                        `gorm:"column:instance_id"`
+		ContainerID       string                       `gorm:"column:container_id"`
+		WorkspaceRevision int64                        `gorm:"column:workspace_revision"`
+		ShareScope        instancecontracts.ShareScope `gorm:"column:share_scope"`
+		ContestID         int64                        `gorm:"column:contest_id"`
+		TeamID            int64                        `gorm:"column:team_id"`
+		ServiceID         int64                        `gorm:"column:service_id"`
+		AWDChallengeID    int64                        `gorm:"column:awd_challenge_id"`
 	}
 	query := r.dbWithContext(ctx).
 		Table("contests AS co").
@@ -122,8 +124,8 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, contestcontracts.ContestModeAWD, []string{contestcontracts.ContestStatusRunning, contestcontracts.ContestStatusFrozen}).
 		Where("defense_team_retired_ctl.id IS NULL").
 		Where("defense_service_disabled_ctl.id IS NULL").
-		Where("inst.status = ?", model.InstanceStatusRunning).
-		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", model.AWDDefenseWorkspaceStatusRunning).
+		Where("inst.status = ?", instancecontracts.InstanceStatusRunning).
+		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", runtimeentity.AWDDefenseWorkspaceStatusRunning).
 		Order("inst.created_at DESC, inst.id DESC").
 		Limit(1).
 		Scan(&row).Error

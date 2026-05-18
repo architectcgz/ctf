@@ -8,6 +8,8 @@ import (
 	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type contestEndedRuntimeServiceStore interface {
@@ -15,13 +17,13 @@ type contestEndedRuntimeServiceStore interface {
 }
 
 type contestEndedRuntimeCleanupService interface {
-	CleanupRuntime(ctx context.Context, instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 }
 
 type contestEndedRuntimeStateStore interface {
 	ExpireInstanceRuntime(ctx context.Context, id int64) error
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*model.AWDDefenseWorkspace, error)
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *model.AWDDefenseWorkspace) error
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
 	FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 }
 
@@ -103,14 +105,14 @@ func (c *ContestEndedRuntimeCleaner) CleanupEndedContestAWDInstances(ctx context
 	return nil
 }
 
-func (c *ContestEndedRuntimeCleaner) loadDefenseWorkspace(ctx context.Context, contestID int64, item contestports.AWDServiceInstance) (*model.AWDDefenseWorkspace, error) {
+func (c *ContestEndedRuntimeCleaner) loadDefenseWorkspace(ctx context.Context, contestID int64, item contestports.AWDServiceInstance) (*runtimecontracts.AWDDefenseWorkspace, error) {
 	if c == nil || c.stateStore == nil || contestID <= 0 || item.TeamID <= 0 || item.ServiceID <= 0 {
 		return nil, nil
 	}
 	return c.stateStore.FindAWDDefenseWorkspace(ctx, contestID, item.TeamID, item.ServiceID)
 }
 
-func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.Context, instanceID int64, workspace *model.AWDDefenseWorkspace) error {
+func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.Context, instanceID int64, workspace *runtimecontracts.AWDDefenseWorkspace) error {
 	if c == nil || c.runtime == nil || workspace == nil {
 		return nil
 	}
@@ -121,21 +123,21 @@ func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.
 	return c.runtime.CleanupRuntime(ctx, endedContestDefenseWorkspaceRuntimeView(instanceID, containerID))
 }
 
-func (c *ContestEndedRuntimeCleaner) clearDefenseWorkspaceRuntimeState(ctx context.Context, instanceID int64, workspace *model.AWDDefenseWorkspace) error {
+func (c *ContestEndedRuntimeCleaner) clearDefenseWorkspaceRuntimeState(ctx context.Context, instanceID int64, workspace *runtimecontracts.AWDDefenseWorkspace) error {
 	if c == nil || c.stateStore == nil || workspace == nil {
 		return nil
 	}
 	updated := *workspace
 	updated.InstanceID = instanceID
-	updated.Status = model.AWDDefenseWorkspaceStatusFailed
+	updated.Status = runtimecontracts.AWDDefenseWorkspaceStatusFailed
 	updated.ContainerID = ""
 	return c.stateStore.UpsertAWDDefenseWorkspace(ctx, &updated)
 }
 
-func endedContestRuntimeView(item contestports.AWDServiceInstance) *model.Instance {
+func endedContestRuntimeView(item contestports.AWDServiceInstance) *instancecontracts.Instance {
 	serviceID := item.ServiceID
 	teamID := item.TeamID
-	return &model.Instance{
+	return &instancecontracts.Instance{
 		ID:             item.InstanceID,
 		TeamID:         &teamID,
 		ServiceID:      &serviceID,
@@ -148,8 +150,8 @@ func endedContestRuntimeView(item contestports.AWDServiceInstance) *model.Instan
 	}
 }
 
-func endedContestDefenseWorkspaceRuntimeView(instanceID int64, containerID string) *model.Instance {
-	return &model.Instance{
+func endedContestDefenseWorkspaceRuntimeView(instanceID int64, containerID string) *instancecontracts.Instance {
+	return &instancecontracts.Instance{
 		ID:          instanceID,
 		ContainerID: strings.TrimSpace(containerID),
 	}

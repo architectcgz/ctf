@@ -9,8 +9,10 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,7 +37,7 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 	if isFinishedAWDServiceOperationStatus(status) {
 		finishedAt = &now
 	}
-	return repo.CreateAWDServiceOperation(ctx, &model.AWDServiceOperation{
+	return repo.CreateAWDServiceOperation(ctx, &runtimecontracts.AWDServiceOperation{
 		ContestID:     contestID,
 		TeamID:        *scope.TeamID,
 		ServiceID:     *scope.ServiceID,
@@ -54,19 +56,19 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 }
 
 func awdOperationStatusForInstanceStatus(instanceStatus string) string {
-	if instanceStatus == model.InstanceStatusRunning {
-		return model.AWDServiceOperationStatusSucceeded
+	if instanceStatus == instancecontracts.InstanceStatusRunning {
+		return runtimecontracts.AWDServiceOperationStatusSucceeded
 	}
-	return model.AWDServiceOperationStatusProvisioning
+	return runtimecontracts.AWDServiceOperationStatusProvisioning
 }
 
 func isFinishedAWDServiceOperationStatus(status string) bool {
-	return status == model.AWDServiceOperationStatusSucceeded ||
-		status == model.AWDServiceOperationStatusRecovered ||
-		status == model.AWDServiceOperationStatusFailed
+	return status == runtimecontracts.AWDServiceOperationStatusSucceeded ||
+		status == runtimecontracts.AWDServiceOperationStatusRecovered ||
+		status == runtimecontracts.AWDServiceOperationStatusFailed
 }
 
-func restartCleanupRuntimeView(instance *model.Instance) *model.Instance {
+func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instancecontracts.Instance {
 	if instance == nil {
 		return nil
 	}
