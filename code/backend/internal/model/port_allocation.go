@@ -1,11 +1,6 @@
 package model
 
-import "time"
+import runtimeentity "ctf-platform/internal/module/runtime/entity"
 
-// PortAllocation 记录实例运行时占用的宿主机端口。
-type PortAllocation struct {
-	Port       int    `gorm:"primaryKey"`
-	InstanceID *int64 `gorm:"column:instance_id;index"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
+// PortAllocation 保留为兼容别名，owner 已迁到 runtime/entity。
+type PortAllocation = runtimeentity.PortAllocation

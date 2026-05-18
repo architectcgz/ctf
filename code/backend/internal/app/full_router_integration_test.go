@@ -26,6 +26,7 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
@@ -94,7 +95,7 @@ var fullRouterTestSchemaModels = []any{
 	&challengeentity.ChallengePackageRevision{},
 	&model.Submission{},
 	&model.Instance{},
-	&model.PortAllocation{},
+	&runtimeentity.PortAllocation{},
 	&practiceentity.UserScore{},
 	&opsentity.AuditLog{},
 	&opsentity.NotificationBatch{},

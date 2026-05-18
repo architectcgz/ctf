@@ -14,6 +14,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -201,7 +202,7 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 		if instance.HostPort > 0 {
 			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
 		}
-		if err := deleteQuery.Delete(&model.PortAllocation{}).Error; err != nil {
+		if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
 			return err
 		}
 		return nil
@@ -239,7 +240,7 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 		if instance.HostPort > 0 {
 			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
 		}
-		return deleteQuery.Delete(&model.PortAllocation{}).Error
+		return deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error
 	})
 }
 
@@ -806,7 +807,7 @@ func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, e
 		if excludedPort > 0 && port == excludedPort {
 			continue
 		}
-		if err := r.dbWithContext(ctx).Create(&model.PortAllocation{Port: port}).Error; err != nil {
+		if err := r.dbWithContext(ctx).Create(&runtimeentity.PortAllocation{Port: port}).Error; err != nil {
 			if isPortAllocationConflict(err) {
 				continue
 			}
@@ -818,7 +819,7 @@ func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, e
 }
 
 func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
-	return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
+	return r.dbWithContext(ctx).Model(&runtimeentity.PortAllocation{}).
 		Where("port = ?", port).
 		Updates(map[string]any{
 			"instance_id": instanceID,
@@ -832,7 +833,7 @@ func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {
 	}
 	return r.dbWithContext(ctx).
 		Where("port = ? AND instance_id IS NULL", port).
-		Delete(&model.PortAllocation{}).Error
+		Delete(&runtimeentity.PortAllocation{}).Error
 }
 
 func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
@@ -841,7 +842,7 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 	}
 	return r.dbWithContext(ctx).
 		Where("port = ? AND instance_id = ?", port, instanceID).
-		Delete(&model.PortAllocation{}).Error
+		Delete(&runtimeentity.PortAllocation{}).Error
 }
 
 func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
@@ -849,7 +850,7 @@ func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceI
 		return false, nil
 	}
 
-	var allocation model.PortAllocation
+	var allocation runtimeentity.PortAllocation
 	if err := r.dbWithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("port = ?", hostPort).
@@ -894,7 +895,7 @@ func (r *Repository) findLatestBoundPortForInstance(ctx context.Context, instanc
 		return 0, nil
 	}
 
-	var allocation model.PortAllocation
+	var allocation runtimeentity.PortAllocation
 	err := r.dbWithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("instance_id = ?", instanceID).
@@ -914,7 +915,7 @@ func (r *Repository) ensurePortBoundToInstance(ctx context.Context, port int, in
 		return nil
 	}
 
-	allocation := &model.PortAllocation{
+	allocation := &runtimeentity.PortAllocation{
 		Port:       port,
 		InstanceID: &instanceID,
 	}
@@ -922,7 +923,7 @@ func (r *Repository) ensurePortBoundToInstance(ctx context.Context, port int, in
 		return err
 	}
 
-	var stored model.PortAllocation
+	var stored runtimeentity.PortAllocation
 	if err := r.dbWithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("port = ?", port).
@@ -933,7 +934,7 @@ func (r *Repository) ensurePortBoundToInstance(ctx context.Context, port int, in
 		return fmt.Errorf("host port %d is allocated to instance %d", port, *stored.InstanceID)
 	}
 	if stored.InstanceID == nil {
-		return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
+		return r.dbWithContext(ctx).Model(&runtimeentity.PortAllocation{}).
 			Where("port = ?", port).
 			Updates(map[string]any{
 				"instance_id": instanceID,
@@ -949,7 +950,7 @@ func (r *Repository) releaseAllPortsForInstance(ctx context.Context, instanceID 
 	}
 	return r.dbWithContext(ctx).
 		Where("instance_id = ?", instanceID).
-		Delete(&model.PortAllocation{}).Error
+		Delete(&runtimeentity.PortAllocation{}).Error
 }
 
 func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
@@ -1017,7 +1018,7 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 
 func (r *Repository) ListAllocatedPorts(ctx context.Context) ([]int, error) {
 	var ports []int
-	if err := r.dbWithContext(ctx).Model(&model.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
+	if err := r.dbWithContext(ctx).Model(&runtimeentity.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
 		return ports, nil
 	} else if !strings.Contains(strings.ToLower(err.Error()), "no such table") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 		return nil, err

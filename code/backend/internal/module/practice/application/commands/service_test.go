@@ -8,6 +8,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
 	"errors"
@@ -673,7 +674,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},
-		&model.PortAllocation{},
+		&runtimeentity.PortAllocation{},
 		&model.Submission{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)

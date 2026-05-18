@@ -26,6 +26,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
@@ -851,7 +852,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.ContestAWDService{},
 		&model.Submission{},
 		&model.Instance{},
-		&model.PortAllocation{},
+		&runtimeentity.PortAllocation{},
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&assessmententity.SkillProfile{},

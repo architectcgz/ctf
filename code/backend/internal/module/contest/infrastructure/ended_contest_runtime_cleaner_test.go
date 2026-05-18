@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
@@ -26,7 +27,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	t.Parallel()
 
 	db := contesttestsupport.SetupAWDTestDB(t)
-	if err := db.AutoMigrate(&model.PortAllocation{}); err != nil {
+	if err := db.AutoMigrate(&runtimeentity.PortAllocation{}); err != nil {
 		t.Fatalf("auto migrate port allocations: %v", err)
 	}
 	now := time.Now().UTC()
@@ -128,7 +129,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, allocation := range []model.PortAllocation{
+	for _, allocation := range []runtimeentity.PortAllocation{
 		{Port: 32011, InstanceID: int64Ptr(1001), CreatedAt: now, UpdatedAt: now},
 		{Port: 32012, InstanceID: int64Ptr(1002), CreatedAt: now, UpdatedAt: now},
 		{Port: 32013, InstanceID: int64Ptr(1004), CreatedAt: now, UpdatedAt: now},
@@ -333,7 +334,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 
 	var remainingEndedContestAllocations int64
-	if err := db.Model(&model.PortAllocation{}).
+	if err := db.Model(&runtimeentity.PortAllocation{}).
 		Where("instance_id IN ?", []int64{1001, 1002}).
 		Count(&remainingEndedContestAllocations).Error; err != nil {
 		t.Fatalf("count ended contest port allocations: %v", err)
@@ -343,7 +344,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 
 	var otherContestAllocations int64
-	if err := db.Model(&model.PortAllocation{}).
+	if err := db.Model(&runtimeentity.PortAllocation{}).
 		Where("instance_id = ?", 1004).
 		Count(&otherContestAllocations).Error; err != nil {
 		t.Fatalf("count other contest port allocations: %v", err)

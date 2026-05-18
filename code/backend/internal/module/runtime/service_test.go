@@ -18,6 +18,7 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -181,7 +182,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30001,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -203,7 +204,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -283,7 +284,7 @@ func TestServiceCreateContainerReservesAllocatedHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
 		t.Fatalf("count reserved port allocation: %v", err)
 	}
 	if count != 1 {
@@ -298,7 +299,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	engine := &fakeRuntimeEngine{}
 	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	now := time.Now()
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:      30001,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -323,7 +324,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -339,7 +340,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	now := time.Now()
 	instanceID := int64(3201)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30011,
 		InstanceID: &instanceID,
 		CreatedAt:  now,
@@ -365,7 +366,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30011).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30011).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -382,7 +383,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 	now := time.Now()
 	ownerInstanceID := int64(3202)
 	otherInstanceID := int64(3203)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30012,
 		InstanceID: &otherInstanceID,
 		CreatedAt:  now,
@@ -408,7 +409,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30012).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30012).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 1 {
@@ -465,7 +466,7 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 		t.Fatalf("expected network cleanup, got %s", engine.removedNetworkID)
 	}
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30000).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30000).Count(&count).Error; err != nil {
 		t.Fatalf("count released reserved port allocation: %v", err)
 	}
 	if count != 0 {
@@ -1084,7 +1085,7 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -1333,7 +1334,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		ExpiresAt:      time.Now().Add(time.Hour),
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&model.PortAllocation{Port: 30001, InstanceID: &instance.ID}).Error; err != nil {
+	if err := repo.db.Create(&runtimeentity.PortAllocation{Port: 30001, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
@@ -1359,7 +1360,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -1385,7 +1386,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30002,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -1415,7 +1416,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 1 {
@@ -1441,7 +1442,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30003,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -1473,7 +1474,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30003).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30003).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -1509,7 +1510,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 		UpdatedAt:      now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&model.PortAllocation{
+	if err := repo.db.Create(&runtimeentity.PortAllocation{
 		Port:       30004,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -1544,7 +1545,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30004).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30004).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocation: %v", err)
 	}
 	if count != 1 {
@@ -1871,7 +1872,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &model.PortAllocation{}, &model.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &runtimeentity.PortAllocation{}, &model.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {

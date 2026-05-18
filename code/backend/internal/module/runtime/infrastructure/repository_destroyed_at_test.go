@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type runtimeRepositoryCountRunningContextKey string
@@ -47,7 +48,7 @@ func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T)
 	}).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&model.PortAllocation{Port: 32021}).Error; err != nil {
+	if err := db.Create(&runtimeentity.PortAllocation{Port: 32021}).Error; err != nil {
 		t.Fatalf("seed unbound port allocation: %v", err)
 	}
 
@@ -59,7 +60,7 @@ func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T)
 		t.Fatalf("expected preserved host port 32021, got %d", hostPort)
 	}
 
-	var allocation model.PortAllocation
+	var allocation runtimeentity.PortAllocation
 	if err := db.Where("port = ?", 32021).First(&allocation).Error; err != nil {
 		t.Fatalf("load port allocation: %v", err)
 	}
@@ -89,7 +90,7 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&model.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
+	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("seed port allocation: %v", err)
 	}
 
@@ -117,7 +118,7 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	}
 
 	var remaining int64
-	if err := db.Model(&model.PortAllocation{}).Where("instance_id = ? OR port = ?", instance.ID, instance.HostPort).Count(&remaining).Error; err != nil {
+	if err := db.Model(&runtimeentity.PortAllocation{}).Where("instance_id = ? OR port = ?", instance.ID, instance.HostPort).Count(&remaining).Error; err != nil {
 		t.Fatalf("count remaining port allocations: %v", err)
 	}
 	if remaining != 0 {
@@ -237,7 +238,7 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&model.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
+	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("seed port allocation: %v", err)
 	}
 
@@ -276,7 +277,7 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	}
 
 	var remaining int64
-	if err := db.Model(&model.PortAllocation{}).Where("instance_id = ? OR port = ?", instance.ID, instance.HostPort).Count(&remaining).Error; err != nil {
+	if err := db.Model(&runtimeentity.PortAllocation{}).Where("instance_id = ? OR port = ?", instance.ID, instance.HostPort).Count(&remaining).Error; err != nil {
 		t.Fatalf("count remaining port allocations: %v", err)
 	}
 	if remaining != 0 {
@@ -293,7 +294,7 @@ func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Instance{}, &model.PortAllocation{}); err != nil {
+	if err := db.AutoMigrate(&model.Instance{}, &runtimeentity.PortAllocation{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 	return db

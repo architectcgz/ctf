@@ -17,6 +17,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -531,7 +532,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},
-		&model.PortAllocation{},
+		&runtimeentity.PortAllocation{},
 		&model.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)
