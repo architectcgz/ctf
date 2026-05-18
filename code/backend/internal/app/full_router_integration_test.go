@@ -25,11 +25,11 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
+	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -386,18 +386,18 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 
 	adminCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", createPayload("admin-owned"), adminHeaders)
 	assertFullRouterStatus(t, adminCreateResp, http.StatusOK)
-	var adminChallenge dto.ChallengeResp
+	var adminChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, adminCreateResp, &adminChallenge)
 
 	teacherCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", createPayload("teacher-owned"), teacherHeaders)
 	assertFullRouterStatus(t, teacherCreateResp, http.StatusOK)
-	var teacherChallenge dto.ChallengeResp
+	var teacherChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, teacherCreateResp, &teacherChallenge)
 
 	listResp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/challenges?page=1&page_size=50", nil, teacherHeaders)
 	assertFullRouterStatus(t, listResp, http.StatusOK)
 	var listResult struct {
-		List []dto.ChallengeResp `json:"list"`
+		List []challengehttp.ChallengeResp `json:"list"`
 	}
 	decodeFullRouterData(t, listResp, &listResult)
 
@@ -474,7 +474,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests", adminChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusAccepted)
 
-	var publishJob dto.ChallengePublishCheckJobResp
+	var publishJob challengehttp.ChallengePublishCheckJobResp
 	decodeFullRouterData(t, resp, &publishJob)
 	if publishJob.ChallengeID != adminChallenge.ID {
 		t.Fatalf("unexpected publish request payload: %+v", publishJob)
@@ -493,7 +493,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID),
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				assertFullRouterStatus(t, resp, http.StatusOK)
-				var detail dto.ChallengeResp
+				var detail challengehttp.ChallengeResp
 				decodeFullRouterData(t, resp, &detail)
 				if detail.ID != adminChallenge.ID || detail.Status != string(model.ChallengeStatusArchived) {
 					t.Fatalf("unexpected archived challenge detail: %+v", detail)
@@ -519,7 +519,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID),
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				assertFullRouterStatus(t, resp, http.StatusOK)
-				var flagResp dto.FlagResp
+				var flagResp challengehttp.FlagResp
 				decodeFullRouterData(t, resp, &flagResp)
 				if !flagResp.Configured || flagResp.FlagType != model.FlagTypeStatic {
 					t.Fatalf("unexpected flag config: %+v", flagResp)
@@ -532,7 +532,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", adminChallenge.ID),
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				assertFullRouterStatus(t, resp, http.StatusOK)
-				var topology dto.ChallengeTopologyResp
+				var topology challengehttp.ChallengeTopologyResp
 				decodeFullRouterData(t, resp, &topology)
 				if topology.TemplateID == nil || *topology.TemplateID != env.template.ID {
 					t.Fatalf("unexpected topology template binding: %+v", topology)
@@ -545,7 +545,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			path:   fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests/latest", adminChallenge.ID),
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				assertFullRouterStatus(t, resp, http.StatusOK)
-				var latest dto.ChallengePublishCheckJobResp
+				var latest challengehttp.ChallengePublishCheckJobResp
 				decodeFullRouterData(t, resp, &latest)
 				if latest.ChallengeID != adminChallenge.ID || latest.Status != "queued" {
 					t.Fatalf("unexpected latest publish request: %+v", latest)
@@ -607,7 +607,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 	ownDetailResp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", teacherChallenge.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, ownDetailResp, http.StatusOK)
 
-	var ownDetail dto.ChallengeResp
+	var ownDetail challengehttp.ChallengeResp
 	decodeFullRouterData(t, ownDetailResp, &ownDetail)
 	if ownDetail.Status != string(model.ChallengeStatusDraft) {
 		t.Fatalf("expected own draft challenge to stay readable, got %+v", ownDetail)
@@ -662,7 +662,7 @@ func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
 	)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var result dto.ChallengeSelfCheckResp
+	var result challengehttp.ChallengeSelfCheckResp
 	decodeFullRouterData(t, resp, &result)
 	if result.ChallengeID != env.challenge.ID {
 		t.Fatalf("expected challenge_id=%d, got %d", env.challenge.ID, result.ChallengeID)

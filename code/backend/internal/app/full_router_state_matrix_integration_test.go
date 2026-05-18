@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/app/composition"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
@@ -977,7 +976,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var createdChallenge dto.ChallengeResp
+	var createdChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, resp, &createdChallenge)
 	if createdChallenge.Status != string(model.ChallengeStatusDraft) || len(createdChallenge.Hints) != 2 {
 		t.Fatalf("unexpected created challenge: %+v", createdChallenge)
@@ -1015,7 +1014,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var updatedChallenge dto.ChallengeResp
+	var updatedChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, resp, &updatedChallenge)
 	if updatedChallenge.Title != "Lifecycle Challenge Updated" || updatedChallenge.Points != 150 || len(updatedChallenge.Hints) != 1 {
 		t.Fatalf("unexpected updated challenge: %+v", updatedChallenge)
@@ -1038,7 +1037,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var staticFlag dto.FlagResp
+	var staticFlag challengehttp.FlagResp
 	decodeFullRouterData(t, resp, &staticFlag)
 	if !staticFlag.Configured || staticFlag.FlagType != model.FlagTypeStatic {
 		t.Fatalf("unexpected static flag config: %+v", staticFlag)
@@ -1053,7 +1052,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var dynamicFlag dto.FlagResp
+	var dynamicFlag challengehttp.FlagResp
 	decodeFullRouterData(t, resp, &dynamicFlag)
 	if !dynamicFlag.Configured || dynamicFlag.FlagType != model.FlagTypeDynamic || dynamicFlag.FlagPrefix != "ctf" {
 		t.Fatalf("unexpected dynamic flag config: %+v", dynamicFlag)
@@ -1085,7 +1084,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var publishedDetail dto.ChallengeDetailResp
+	var publishedDetail challengehttp.ChallengeDetailResp
 	decodeFullRouterData(t, resp, &publishedDetail)
 	if publishedDetail.ID != createdChallenge.ID {
 		t.Fatalf("unexpected published detail: %+v", publishedDetail)
@@ -1239,7 +1238,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var manualChallenge dto.ChallengeResp
+	var manualChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, resp, &manualChallenge)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", manualChallenge.ID), map[string]any{
@@ -1350,7 +1349,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var template dto.EnvironmentTemplateResp
+	var template challengehttp.EnvironmentTemplateResp
 	decodeFullRouterData(t, resp, &template)
 	if template.EntryNodeKey != "web" {
 		t.Fatalf("unexpected template: %+v", template)
@@ -1359,7 +1358,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/environment-templates?keyword=Lifecycle", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var templates []dto.EnvironmentTemplateResp
+	var templates []challengehttp.EnvironmentTemplateResp
 	decodeFullRouterData(t, resp, &templates)
 	if len(templates) == 0 {
 		t.Fatalf("expected template list to include created template")
@@ -1370,7 +1369,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var topology dto.ChallengeTopologyResp
+	var topology challengehttp.ChallengeTopologyResp
 	decodeFullRouterData(t, resp, &topology)
 	if topology.TemplateID == nil || *topology.TemplateID != template.ID {
 		t.Fatalf("unexpected topology template binding: %+v", topology)
@@ -1382,7 +1381,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/environment-templates/%d", template.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var loadedTemplate dto.EnvironmentTemplateResp
+	var loadedTemplate challengehttp.EnvironmentTemplateResp
 	decodeFullRouterData(t, resp, &loadedTemplate)
 	if loadedTemplate.UsageCount < 1 {
 		t.Fatalf("expected template usage count increment, got %+v", loadedTemplate)
@@ -1458,7 +1457,7 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d", env.challenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var detail dto.ChallengeDetailResp
+	var detail challengehttp.ChallengeDetailResp
 	decodeFullRouterData(t, resp, &detail)
 	if len(detail.Hints) == 0 || detail.Hints[0].Content == "" {
 		t.Fatalf("expected hint content in challenge detail, got %+v", detail.Hints)
@@ -1684,7 +1683,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var createdChallenge dto.ChallengeResp
+	var createdChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, resp, &createdChallenge)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
@@ -2130,7 +2129,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, invalidCategoryResp, http.StatusBadRequest)
 
-	var createdChallenge dto.AWDChallengeResp
+	var createdChallenge challengehttp.AWDChallengeResp
 	decodeFullRouterData(t, resp, &createdChallenge)
 	if createdChallenge.ID == 0 || createdChallenge.Slug != "bank-portal-awd" {
 		t.Fatalf("unexpected created awd challenge: %+v", createdChallenge)
@@ -2139,7 +2138,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-challenges?page=1&page_size=10", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var page dto.AWDChallengePageResp
+	var page challengehttp.AWDChallengePageResp
 	decodeFullRouterData(t, resp, &page)
 	if page.Total < 1 || len(page.Items) == 0 {
 		t.Fatalf("expected awd challenge page items, got %+v", page)
@@ -2154,7 +2153,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var updatedChallenge dto.AWDChallengeResp
+	var updatedChallenge challengehttp.AWDChallengeResp
 	decodeFullRouterData(t, resp, &updatedChallenge)
 	if updatedChallenge.Name != "Bank Portal AWD v2" || updatedChallenge.Status != "published" {
 		t.Fatalf("unexpected updated awd challenge: %+v", updatedChallenge)
