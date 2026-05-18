@@ -11,7 +11,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 const skipAuditKey = "skip_audit"
@@ -33,7 +33,7 @@ func TestAuditSkipsWhenContextMarked(t *testing.T) {
 	recorder := &recordingAuditRecorder{}
 	engine := gin.New()
 	engine.Use(Audit(recorder, AuditOptions{
-		Action:          model.AuditActionSubmit,
+		Action:          auditlog.ActionSubmit,
 		ResourceType:    "challenge_submission",
 		ResourceIDParam: "id",
 	}, zap.NewNop()))

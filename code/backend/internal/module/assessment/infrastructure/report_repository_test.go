@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -36,7 +37,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 		&model.Team{},
 		&model.TeamMember{},
 		&model.Instance{},
-		&model.AuditLog{},
+		&opsentity.AuditLog{},
 	); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}

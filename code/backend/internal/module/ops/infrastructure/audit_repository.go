@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
 
@@ -17,7 +17,7 @@ func NewAuditRepository(db *gorm.DB) *AuditRepository {
 	return &AuditRepository{db: db}
 }
 
-func (r *AuditRepository) Create(ctx context.Context, log *model.AuditLog) error {
+func (r *AuditRepository) Create(ctx context.Context, log *opsentity.AuditLog) error {
 	return r.db.WithContext(ctx).Create(log).Error
 }
 

@@ -1,17 +1,6 @@
-package model
+package entity
 
 import "time"
-
-const (
-	AuditActionLogin   = "login"
-	AuditActionLogout  = "logout"
-	AuditActionRead    = "read"
-	AuditActionCreate  = "create"
-	AuditActionUpdate  = "update"
-	AuditActionDelete  = "delete"
-	AuditActionSubmit  = "submit"
-	AuditActionAdminOp = "admin_op"
-)
 
 type AuditLog struct {
 	ID           int64     `gorm:"column:id;primaryKey"`

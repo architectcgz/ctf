@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 type recordingAWDReadinessAuditRecorder struct {
@@ -129,7 +130,7 @@ func runAWDReadinessAuditRequest(t *testing.T, method, path string, handler gin.
 
 func assertAWDReadinessAuditEntry(t *testing.T, entry auditlog.Entry, contestID int64) {
 	t.Helper()
-	if entry.Action != model.AuditActionAdminOp || entry.ResourceType != "contest" {
+	if entry.Action != auditlog.ActionAdminOp || entry.ResourceType != "contest" {
 		t.Fatalf("unexpected audit envelope: %+v", entry)
 	}
 	if entry.ResourceID == nil || *entry.ResourceID != contestID {

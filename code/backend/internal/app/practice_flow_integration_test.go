@@ -22,6 +22,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
@@ -44,6 +45,7 @@ import (
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
@@ -832,7 +834,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.Role{},
 		&model.User{},
 		&model.UserRole{},
-		&model.AuditLog{},
+		&opsentity.AuditLog{},
 		&model.Contest{},
 		&model.ContestRegistration{},
 		&model.Team{},
@@ -996,7 +998,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
 	protected.GET("/challenges/:id",
 		middleware.Audit(auditCommandService, middleware.AuditOptions{
-			Action:          model.AuditActionRead,
+			Action:          auditlog.ActionRead,
 			ResourceType:    "challenge_detail",
 			ResourceIDParam: "id",
 		}, logger),
@@ -1004,7 +1006,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	protected.POST("/challenges/:id/submit",
 		middleware.Audit(auditCommandService, middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
+			Action:          auditlog.ActionSubmit,
 			ResourceType:    "challenge_submission",
 			ResourceIDParam: "id",
 		}, logger),

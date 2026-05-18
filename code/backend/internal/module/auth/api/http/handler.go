@@ -11,7 +11,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
@@ -117,7 +116,7 @@ func (h *Handler) Login(c *gin.Context) {
 	resp, session, err := h.commands.Login(c.Request.Context(), authRequestMapper.ToLoginInput(*req))
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
-			Action:       model.AuditActionLogin,
+			Action:       auditlog.ActionLogin,
 			ResourceType: "auth",
 			Detail: map[string]any{
 				"username":   req.Username,
@@ -136,7 +135,7 @@ func (h *Handler) Login(c *gin.Context) {
 	userID := resp.User.ID
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &userID,
-		Action:       model.AuditActionLogin,
+		Action:       auditlog.ActionLogin,
 		ResourceType: "auth",
 		Detail: map[string]any{
 			"username":   resp.User.Username,
@@ -162,7 +161,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	h.log.Info("auth_logout_succeeded", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &authUser.UserID,
-		Action:       model.AuditActionLogout,
+		Action:       auditlog.ActionLogout,
 		ResourceType: "auth",
 		Detail: map[string]any{
 			"username":   authUser.Username,
@@ -205,7 +204,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, authRequestMapper.ToChangePasswordInput(*req)); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
-			Action:       model.AuditActionUpdate,
+			Action:       auditlog.ActionUpdate,
 			ResourceType: "auth_password",
 			Detail: map[string]any{
 				"username":   authUser.Username,
@@ -222,7 +221,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &authUser.UserID,
-		Action:       model.AuditActionUpdate,
+		Action:       auditlog.ActionUpdate,
 		ResourceType: "auth_password",
 		Detail: map[string]any{
 			"username":   authUser.Username,
@@ -272,7 +271,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 	resp, session, err := h.casCommands.Authenticate(c.Request.Context(), ticket)
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
-			Action:       model.AuditActionLogin,
+			Action:       auditlog.ActionLogin,
 			ResourceType: "auth_cas",
 			Detail: map[string]any{
 				"provider":   casProviderName,
@@ -291,7 +290,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 	userID := resp.User.ID
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &userID,
-		Action:       model.AuditActionLogin,
+		Action:       auditlog.ActionLogin,
 		ResourceType: "auth_cas",
 		Detail: map[string]any{
 			"provider":   casProviderName,

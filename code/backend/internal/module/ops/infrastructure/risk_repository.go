@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	"ctf-platform/internal/auditlog"
 	opsports "ctf-platform/internal/module/ops/ports"
 )
 
@@ -24,7 +24,7 @@ func (r *RiskRepository) ListRecentSubmitEvents(ctx context.Context, since time.
 		Table("audit_logs").
 		Select("audit_logs.user_id, users.username, audit_logs.ip_address, audit_logs.created_at").
 		Joins("LEFT JOIN users ON users.id = audit_logs.user_id").
-		Where("audit_logs.action = ? AND audit_logs.created_at >= ?", model.AuditActionSubmit, since).
+		Where("audit_logs.action = ? AND audit_logs.created_at >= ?", auditlog.ActionSubmit, since).
 		Order("audit_logs.created_at DESC").
 		Limit(limit).
 		Scan(&events).Error
@@ -37,7 +37,7 @@ func (r *RiskRepository) ListRecentLoginEvents(ctx context.Context, since time.T
 		Table("audit_logs").
 		Select("audit_logs.user_id, users.username, audit_logs.ip_address, audit_logs.created_at").
 		Joins("LEFT JOIN users ON users.id = audit_logs.user_id").
-		Where("audit_logs.action = ? AND audit_logs.created_at >= ?", model.AuditActionLogin, since).
+		Where("audit_logs.action = ? AND audit_logs.created_at >= ?", auditlog.ActionLogin, since).
 		Order("audit_logs.created_at DESC").
 		Limit(limit).
 		Scan(&events).Error

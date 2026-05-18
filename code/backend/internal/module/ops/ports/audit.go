@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 )
 
 type AuditLogListFilter struct {
@@ -32,7 +32,7 @@ type AuditLogRecord struct {
 }
 
 type AuditCommandRepository interface {
-	Create(ctx context.Context, log *model.AuditLog) error
+	Create(ctx context.Context, log *opsentity.AuditLog) error
 }
 
 type AuditQueryRepository interface {

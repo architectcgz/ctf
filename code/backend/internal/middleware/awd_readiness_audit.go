@@ -141,7 +141,7 @@ func AWDReadinessAudit(recorder auditlog.Recorder, log *zap.Logger) gin.HandlerF
 		resourceID := awdReadinessAuditResourceID(c)
 		if err := recorder.Record(c.Request.Context(), auditlog.Entry{
 			UserID:       userID,
-			Action:       model.AuditActionAdminOp,
+			Action:       auditlog.ActionAdminOp,
 			ResourceType: "contest",
 			ResourceID:   resourceID,
 			Detail:       detail,

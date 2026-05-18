@@ -96,7 +96,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.Instance{},
 	&model.PortAllocation{},
 	&practiceentity.UserScore{},
-	&model.AuditLog{},
+	&opsentity.AuditLog{},
 	&opsentity.NotificationBatch{},
 	&opsentity.Notification{},
 	&model.SkillProfile{},

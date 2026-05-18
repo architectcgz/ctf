@@ -9,9 +9,11 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -23,7 +25,7 @@ func setupAuditQueryTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("migrate audit tables: %v", err)
 	}
 	return db
@@ -53,11 +55,11 @@ func TestAuditServiceListAuditLogsNormalizesPaginationAndDetails(t *testing.T) {
 
 	actorID := int64(1)
 	targetID := int64(11)
-	entries := []model.AuditLog{
+	entries := []opsentity.AuditLog{
 		{
 			ID:           1,
 			UserID:       &actorID,
-			Action:       model.AuditActionLogin,
+			Action:       auditlog.ActionLogin,
 			ResourceType: "auth",
 			Detail:       `{"username":"admin","result":"success"}`,
 			IPAddress:    "10.0.0.1",
@@ -65,7 +67,7 @@ func TestAuditServiceListAuditLogsNormalizesPaginationAndDetails(t *testing.T) {
 		},
 		{
 			ID:           2,
-			Action:       model.AuditActionSubmit,
+			Action:       auditlog.ActionSubmit,
 			ResourceType: "challenge",
 			ResourceID:   &targetID,
 			Detail:       `{"username":"ghost","result":"accepted"}`,

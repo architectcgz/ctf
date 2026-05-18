@@ -148,7 +148,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 	if h.auditRecorder != nil {
 		_ = h.auditRecorder.Record(c.Request.Context(), auditlog.Entry{
 			UserID:       &currentUser.UserID,
-			Action:       model.AuditActionRead,
+			Action:       auditlog.ActionRead,
 			ResourceType: "instance_access",
 			ResourceID:   &instanceID,
 			Detail: map[string]any{
@@ -657,13 +657,13 @@ func (h *Handler) recordProxyAudit(
 func proxyAuditAction(method string) string {
 	switch strings.ToUpper(strings.TrimSpace(method)) {
 	case stdhttp.MethodPost:
-		return model.AuditActionSubmit
+		return auditlog.ActionSubmit
 	case stdhttp.MethodPut, stdhttp.MethodPatch:
-		return model.AuditActionUpdate
+		return auditlog.ActionUpdate
 	case stdhttp.MethodDelete:
-		return model.AuditActionDelete
+		return auditlog.ActionDelete
 	default:
-		return model.AuditActionRead
+		return auditlog.ActionRead
 	}
 }
 

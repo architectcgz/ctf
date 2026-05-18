@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 )
 
@@ -21,7 +22,7 @@ func setupAuditCommandTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("migrate audit tables: %v", err)
 	}
 	return db
@@ -36,7 +37,7 @@ func TestAuditServiceRecordPersistsEntry(t *testing.T) {
 	userAgent := "unit-test"
 	err := service.Record(context.Background(), auditlog.Entry{
 		UserID:       &userID,
-		Action:       model.AuditActionSubmit,
+		Action:       auditlog.ActionSubmit,
 		ResourceType: "challenge",
 		ResourceID:   &resourceID,
 		Detail: map[string]any{
@@ -50,11 +51,11 @@ func TestAuditServiceRecordPersistsEntry(t *testing.T) {
 		t.Fatalf("Record() error = %v", err)
 	}
 
-	var saved model.AuditLog
+	var saved opsentity.AuditLog
 	if err := db.First(&saved).Error; err != nil {
 		t.Fatalf("query saved audit log: %v", err)
 	}
-	if saved.Action != model.AuditActionSubmit || saved.ResourceType != "challenge" {
+	if saved.Action != auditlog.ActionSubmit || saved.ResourceType != "challenge" {
 		t.Fatalf("unexpected saved log: %+v", saved)
 	}
 	if saved.UserID == nil || *saved.UserID != userID {

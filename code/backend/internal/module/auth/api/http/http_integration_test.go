@@ -21,6 +21,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
@@ -35,6 +36,7 @@ import (
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -394,7 +396,7 @@ func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 	}
 	found := false
 	for _, item := range auditData.List {
-		if item.Action == model.AuditActionLogout && item.ActorUserID != nil && *item.ActorUserID == registerData.User.ID {
+		if item.Action == auditlog.ActionLogout && item.ActorUserID != nil && *item.ActorUserID == registerData.User.ID {
 			found = true
 			break
 		}
@@ -461,7 +463,7 @@ func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 
 	found := false
 	for _, item := range auditData.List {
-		if item.Action != model.AuditActionLogin || item.ResourceType != "auth" {
+		if item.Action != auditlog.ActionLogin || item.ResourceType != "auth" {
 			continue
 		}
 		if item.Detail["username"] == "ghost_user" && item.Detail["result"] == "failed" {
@@ -665,7 +667,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &model.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &opsentity.AuditLog{}); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)
 	}
 	seedRoles(t, db)

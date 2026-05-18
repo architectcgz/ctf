@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	"ctf-platform/internal/auditlog"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -159,13 +159,13 @@ func (r *Repository) listUserAuditTimelineEvents(ctx context.Context, userID int
 		WHERE a.user_id = ? AND a.action = ? AND a.resource_type = ?
 	`,
 		userID,
-		model.AuditActionRead,
+		auditlog.ActionRead,
 		"challenge_detail",
 		userID,
-		model.AuditActionUpdate,
+		auditlog.ActionUpdate,
 		"instance",
 		userID,
-		model.AuditActionRead,
+		auditlog.ActionRead,
 		"instance_access",
 	).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list audit timeline events: %w", err)

@@ -9,6 +9,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
@@ -1345,13 +1346,13 @@ func (r *Repository) listStudentAuditTimelineRows(ctx context.Context, userID in
 		WHERE a.user_id = ? AND a.action = ? AND a.resource_type = ?
 	`,
 		userID,
-		model.AuditActionRead,
+		auditlog.ActionRead,
 		"challenge_detail",
 		userID,
-		model.AuditActionUpdate,
+		auditlog.ActionUpdate,
 		"instance",
 		userID,
-		model.AuditActionRead,
+		auditlog.ActionRead,
 		"instance_access",
 	).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list student audit timeline rows: %w", err)

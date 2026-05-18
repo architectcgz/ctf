@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
@@ -2387,9 +2388,9 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 
 	submitDetail, _ := json.Marshal(map[string]any{"username": env.student.Username, "source": "matrix"})
 	for i := 0; i < 5; i++ {
-		if err := env.db.Create(&model.AuditLog{
+		if err := env.db.Create(&opsentity.AuditLog{
 			UserID:       &env.student.ID,
-			Action:       model.AuditActionSubmit,
+			Action:       auditlog.ActionSubmit,
 			ResourceType: "challenge_submission",
 			Detail:       string(submitDetail),
 			IPAddress:    "10.0.0.1",
@@ -2399,9 +2400,9 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 		}
 	}
 	for _, user := range []*model.User{env.student, env.peerStudent} {
-		if err := env.db.Create(&model.AuditLog{
+		if err := env.db.Create(&opsentity.AuditLog{
 			UserID:       &user.ID,
-			Action:       model.AuditActionLogin,
+			Action:       auditlog.ActionLogin,
 			ResourceType: "auth_login",
 			Detail:       `{"username":"` + user.Username + `"}`,
 			IPAddress:    "10.0.0.99",

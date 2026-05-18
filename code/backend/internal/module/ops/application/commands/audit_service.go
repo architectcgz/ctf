@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -38,7 +38,7 @@ func (s *AuditService) Record(ctx context.Context, entry auditlog.Entry) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	logEntry := &model.AuditLog{
+	logEntry := &opsentity.AuditLog{
 		UserID:       entry.UserID,
 		Action:       entry.Action,
 		ResourceType: entry.ResourceType,

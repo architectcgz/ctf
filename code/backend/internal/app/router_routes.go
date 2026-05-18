@@ -92,7 +92,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 
 	adminAuthoring.POST("/challenge-imports",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "challenge_import",
 		}),
 		deps.challenge.Handler.PreviewChallengeImport,
@@ -101,7 +101,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/challenge-imports/:id", deps.challenge.Handler.GetChallengeImport)
 	adminAuthoring.POST("/challenge-imports/:id/commit",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "challenge_import_commit",
 			ResourceIDParam: "id",
 		}),
@@ -110,7 +110,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 
 	adminAuthoring.POST("/images",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "image",
 		}),
 		deps.challenge.ImageHandler.CreateImage,
@@ -119,7 +119,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/images/:id", deps.challenge.ImageHandler.GetImage)
 	adminAuthoring.PUT("/images/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "image",
 			ResourceIDParam: "id",
 		}),
@@ -127,7 +127,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 	adminAuthoring.DELETE("/images/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "image",
 			ResourceIDParam: "id",
 		}),
@@ -136,7 +136,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 
 	adminAuthoring.POST("/challenges",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "challenge",
 		}),
 		deps.challenge.Handler.CreateChallenge,
@@ -146,7 +146,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.PUT("/challenges/:id",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge",
 			ResourceIDParam: "id",
 		}),
@@ -155,7 +155,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.DELETE("/challenges/:id",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "challenge",
 			ResourceIDParam: "id",
 		}),
@@ -164,7 +164,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.POST("/challenges/:id/publish-requests",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "challenge_publish_request",
 			ResourceIDParam: "id",
 		}),
@@ -174,7 +174,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.POST("/challenges/:id/self-check",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "challenge_self_check",
 			ResourceIDParam: "id",
 		}),
@@ -184,7 +184,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.PUT("/challenges/:id/writeup",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge_writeup",
 			ResourceIDParam: "id",
 		}),
@@ -193,7 +193,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.POST("/challenges/:id/writeup/recommend",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge_writeup_recommendation",
 			ResourceIDParam: "id",
 		}),
@@ -202,7 +202,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.DELETE("/challenges/:id/writeup/recommend",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge_writeup_recommendation",
 			ResourceIDParam: "id",
 		}),
@@ -211,7 +211,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.DELETE("/challenges/:id/writeup",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "challenge_writeup",
 			ResourceIDParam: "id",
 		}),
@@ -221,7 +221,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.PUT("/challenges/:id/topology",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge_topology",
 			ResourceIDParam: "id",
 		}),
@@ -230,7 +230,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.POST("/challenges/:id/package-export",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "challenge_package_export",
 			ResourceIDParam: "id",
 		}),
@@ -240,7 +240,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.DELETE("/challenges/:id/topology",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "challenge_topology",
 			ResourceIDParam: "id",
 		}),
@@ -249,7 +249,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/environment-templates", deps.challenge.TopologyHandler.ListTemplates)
 	adminAuthoring.POST("/environment-templates",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "environment_template",
 		}),
 		deps.challenge.TopologyHandler.CreateTemplate,
@@ -257,7 +257,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/environment-templates/:id", deps.challenge.TopologyHandler.GetTemplate)
 	adminAuthoring.PUT("/environment-templates/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "environment_template",
 			ResourceIDParam: "id",
 		}),
@@ -265,7 +265,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 	adminAuthoring.DELETE("/environment-templates/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "environment_template",
 			ResourceIDParam: "id",
 		}),
@@ -275,7 +275,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/awd-challenges", deps.challenge.AWDChallengeHandler.ListChallenges)
 	adminAuthoring.POST("/awd-challenge-imports",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "awd_challenge_import",
 		}),
 		deps.challenge.AWDChallengeHandler.PreviewImport,
@@ -284,7 +284,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/awd-challenge-imports/:id", deps.challenge.AWDChallengeHandler.GetImport)
 	adminAuthoring.POST("/awd-challenge-imports/:id/commit",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "awd_challenge_import_commit",
 			ResourceIDParam: "id",
 		}),
@@ -292,7 +292,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 	adminAuthoring.POST("/awd-challenges",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "awd_challenge",
 		}),
 		deps.challenge.AWDChallengeHandler.CreateChallenge,
@@ -300,7 +300,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.GET("/awd-challenges/:id", deps.challenge.AWDChallengeHandler.GetChallenge)
 	adminAuthoring.PUT("/awd-challenges/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "awd_challenge",
 			ResourceIDParam: "id",
 		}),
@@ -308,7 +308,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 	adminAuthoring.DELETE("/awd-challenges/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "awd_challenge",
 			ResourceIDParam: "id",
 		}),
@@ -318,7 +318,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	adminAuthoring.PUT("/challenges/:id/flag",
 		ownerGuard,
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "challenge_flag",
 			ResourceIDParam: "id",
 		}),
@@ -340,7 +340,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/cheat-detection", deps.ops.RiskHandler.GetCheatDetection)
 	adminOnly.POST("/notifications",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionAdminOp,
+			Action:       auditlog.ActionAdminOp,
 			ResourceType: "notification_batch",
 		}),
 		deps.ops.NotificationHandler.PublishAdminNotification,
@@ -348,7 +348,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "user",
 		}),
 		deps.identityHandler.CreateUser,
@@ -356,7 +356,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.PUT("/users/:id",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "user",
 			ResourceIDParam: "id",
 		}),
@@ -365,7 +365,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.DELETE("/users/:id",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "user",
 			ResourceIDParam: "id",
 		}),
@@ -373,7 +373,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.POST("/users/import",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "user_import",
 		}),
 		deps.identityHandler.ImportUsers,
@@ -381,7 +381,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 
 	adminOnly.POST("/contests",
 		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
+			Action:       auditlog.ActionCreate,
 			ResourceType: "contest",
 		}),
 		deps.contest.Handler.CreateContest,
@@ -393,7 +393,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.PUT("/contests/:id",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "contest",
 			ResourceIDParam: "id",
 		}),
@@ -403,7 +403,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/contests", deps.contest.Handler.ListContests)
 	adminOnly.POST("/contests/:id/freeze",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "contest",
 			ResourceIDParam: "id",
 			DetailBuilder:   middleware.DetailFromParams("id"),
@@ -412,7 +412,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.POST("/contests/:id/unfreeze",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "contest",
 			ResourceIDParam: "id",
 			DetailBuilder:   middleware.DetailFromParams("id"),
@@ -421,7 +421,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.POST("/contests/:id/export",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "contest_export",
 			ResourceIDParam: "id",
 			DetailBuilder:   middleware.DetailFromParams("id"),
@@ -431,7 +431,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/contests/:id/challenges", deps.contest.ChallengeHandler.ListAdminChallenges)
 	adminOnly.POST("/contests/:id/challenges",
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_challenge",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -439,7 +439,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.PUT("/contests/:id/challenges/:cid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "contest_challenge",
 			ResourceIDParam: "cid",
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
@@ -448,7 +448,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.DELETE("/contests/:id/challenges/:cid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "contest_challenge",
 			ResourceIDParam: "cid",
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
@@ -458,7 +458,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/contests/:id/registrations", deps.contest.ParticipationHandler.ListRegistrations)
 	adminOnly.PUT("/contests/:id/registrations/:rid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "contest_registration",
 			ResourceIDParam: "rid",
 			DetailBuilder:   middleware.DetailFromParams("id", "rid"),
@@ -468,7 +468,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/contests/:id/announcements", deps.contest.ParticipationHandler.ListAnnouncements)
 	adminOnly.POST("/contests/:id/announcements",
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_announcement",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -476,7 +476,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	)
 	adminOnly.DELETE("/contests/:id/announcements/:aid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "contest_announcement",
 			ResourceIDParam: "aid",
 			DetailBuilder:   middleware.DetailFromParams("id", "aid"),
@@ -502,7 +502,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/instances",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_awd_instance",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -511,7 +511,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/instances/prewarm",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_awd_instance_prewarm",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -521,7 +521,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("team_id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "contest_awd_team_retirement",
 			DetailBuilder: middleware.DetailFromParams("id", "team_id"),
 		}),
@@ -532,7 +532,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("team_id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "contest_awd_service_disable",
 			DetailBuilder: middleware.DetailFromParams("id", "team_id", "sid"),
 		}),
@@ -543,7 +543,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("team_id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "contest_awd_desired_reconcile_suppression",
 			DetailBuilder: middleware.DetailFromParams("id", "team_id", "sid"),
 		}),
@@ -552,7 +552,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_awd_service",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -562,7 +562,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "contest_awd_service",
 			ResourceIDParam: "sid",
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
@@ -573,7 +573,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "contest_awd_service",
 			ResourceIDParam: "sid",
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
@@ -584,7 +584,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/rounds",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "awd_round",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -594,7 +594,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/current-round/check",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "awd_checker_run",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -604,7 +604,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.POST("/contests/:id/awd/checker-preview",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "awd_checker_preview",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -614,7 +614,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("rid"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "awd_checker_run",
 			DetailBuilder: middleware.DetailFromParams("id", "rid"),
 		}),
@@ -629,7 +629,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("rid"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
+			Action:        auditlog.ActionUpdate,
 			ResourceType:  "awd_service_check",
 			DetailBuilder: middleware.DetailFromParams("id", "rid"),
 		}),
@@ -654,7 +654,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("rid"),
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "awd_attack_log",
 			DetailBuilder: middleware.DetailFromParams("id", "rid"),
 		}),
@@ -680,7 +680,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 
 	protected.POST("/contests/:id/register",
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "contest_registration",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -694,7 +694,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.POST("/contests/:id/challenges/:cid/submissions",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
+			Action:          auditlog.ActionSubmit,
 			ResourceType:    "contest_submission",
 			ResourceIDParam: "cid",
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
@@ -705,7 +705,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
+			Action:          auditlog.ActionSubmit,
 			ResourceType:    "awd_attack_submission",
 			ResourceIDParam: "sid",
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
@@ -739,7 +739,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)
 	protected.POST("/contests/:id/teams",
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "team",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -747,7 +747,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.POST("/contests/:id/teams/:tid/join",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "team_membership",
 			ResourceIDParam: "tid",
 			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
@@ -756,7 +756,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.DELETE("/contests/:id/teams/:tid/leave",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "team_membership",
 			ResourceIDParam: "tid",
 			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
@@ -765,7 +765,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.DELETE("/contests/:id/teams/:tid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "team",
 			ResourceIDParam: "tid",
 			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
@@ -774,7 +774,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.DELETE("/contests/:id/teams/:tid/members/:uid",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "team_membership",
 			ResourceIDParam: "uid",
 			DetailBuilder:   middleware.DetailFromParams("id", "tid", "uid"),
@@ -785,7 +785,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.GET("/challenges", deps.challenge.Handler.ListPublishedChallenges)
 	protected.GET("/challenges/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionRead,
+			Action:          auditlog.ActionRead,
 			ResourceType:    "challenge_detail",
 			ResourceIDParam: "id",
 		}),
@@ -797,7 +797,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.GET("/challenges/:id/solutions/community", deps.challenge.WriteupHandler.ListCommunitySolutions)
 	protected.POST("/challenges/:id/writeup-submissions",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "submission_writeup",
 			ResourceIDParam: "id",
 		}),
@@ -806,7 +806,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.GET("/challenges/:id/writeup-submissions/me", deps.challenge.WriteupHandler.GetMySubmission)
 	protected.POST("/challenges/:id/instances",
 		audit(middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
+			Action:        auditlog.ActionCreate,
 			ResourceType:  "instance",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
@@ -816,7 +816,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("cid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "contest_instance",
 			ResourceIDParam: "cid",
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
@@ -827,7 +827,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
+			Action:          auditlog.ActionCreate,
 			ResourceType:    "contest_awd_instance",
 			ResourceIDParam: "sid",
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
@@ -838,7 +838,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "contest_awd_instance",
 			ResourceIDParam: "sid",
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
@@ -847,7 +847,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.POST("/challenges/:id/submit",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
+			Action:          auditlog.ActionSubmit,
 			ResourceType:    "challenge_submission",
 			ResourceIDParam: "id",
 		}),
@@ -858,7 +858,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	protected.GET("/instances", deps.instance.Handler.ListInstances)
 	protected.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
@@ -866,7 +866,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.POST("/instances/:id/extend",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
@@ -893,7 +893,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/instances", deps.instance.Handler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
+			Action:          auditlog.ActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
@@ -908,7 +908,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/review-archive", deps.assessment.ReportHandler.GetStudentReviewArchive)
 	teacherOrAbove.POST("/students/:id/review-archive/export",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
+			Action:          auditlog.ActionAdminOp,
 			ResourceType:    "review_archive_export",
 			ResourceIDParam: "id",
 			DetailBuilder:   middleware.DetailFromParams("id"),
@@ -932,7 +932,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/manual-review-submissions/:id", deps.practice.Handler.GetTeacherManualReviewSubmission)
 	teacherOrAbove.PUT("/manual-review-submissions/:id/review",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "manual_review_submission",
 			ResourceIDParam: "id",
 		}),
@@ -940,7 +940,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	teacherOrAbove.POST("/community-writeups/:id/recommend",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "community_writeup_recommendation",
 			ResourceIDParam: "id",
 		}),
@@ -948,7 +948,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	teacherOrAbove.DELETE("/community-writeups/:id/recommend",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "community_writeup_recommendation",
 			ResourceIDParam: "id",
 		}),
@@ -956,7 +956,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	teacherOrAbove.POST("/community-writeups/:id/hide",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "community_writeup_visibility",
 			ResourceIDParam: "id",
 		}),
@@ -964,7 +964,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	teacherOrAbove.POST("/community-writeups/:id/restore",
 		audit(middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
+			Action:          auditlog.ActionUpdate,
 			ResourceType:    "community_writeup_visibility",
 			ResourceIDParam: "id",
 		}),
