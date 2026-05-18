@@ -5,12 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/dto"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type riskQueryService interface {
-	GetCheatDetection(ctx context.Context) (*dto.CheatDetectionResp, error)
+	GetCheatDetection(ctx context.Context) (*opsqry.CheatDetectionResp, error)
 }
 
 type RiskHandler struct {

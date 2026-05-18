@@ -1,4 +1,4 @@
-package dto
+package queries
 
 type CheatDetectionSummary struct {
 	SubmitBurstUsers int `json:"submit_burst_users"`

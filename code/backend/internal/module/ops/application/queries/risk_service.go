@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/dto"
 	opsports "ctf-platform/internal/module/ops/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -40,7 +39,7 @@ func NewRiskService(repo riskRepository, log *zap.Logger) *RiskService {
 	return &RiskService{repo: repo, log: log}
 }
 
-func (s *RiskService) GetCheatDetection(ctx context.Context) (*dto.CheatDetectionResp, error) {
+func (s *RiskService) GetCheatDetection(ctx context.Context) (*CheatDetectionResp, error) {
 	submitEvents, err := s.repo.ListRecentSubmitEvents(ctx, time.Now().Add(-submitBurstWindow), submitBurstLimit)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -61,9 +60,9 @@ func (s *RiskService) GetCheatDetection(ctx context.Context) (*dto.CheatDetectio
 		affectedUsers[userID] = struct{}{}
 	}
 
-	return &dto.CheatDetectionResp{
+	return &CheatDetectionResp{
 		GeneratedAt: time.Now().Format(time.RFC3339),
-		Summary: dto.CheatDetectionSummary{
+		Summary: CheatDetectionSummary{
 			SubmitBurstUsers: len(suspects),
 			SharedIPGroups:   len(sharedIPs),
 			AffectedUsers:    len(affectedUsers),
@@ -73,7 +72,7 @@ func (s *RiskService) GetCheatDetection(ctx context.Context) (*dto.CheatDetectio
 	}, nil
 }
 
-func aggregateSubmitBursts(events []opsports.RiskAuditEvent) ([]dto.CheatDetectionUser, map[int64]struct{}) {
+func aggregateSubmitBursts(events []opsports.RiskAuditEvent) ([]CheatDetectionUser, map[int64]struct{}) {
 	type item struct {
 		username string
 		count    int
@@ -97,13 +96,13 @@ func aggregateSubmitBursts(events []opsports.RiskAuditEvent) ([]dto.CheatDetecti
 	}
 
 	userIDs := make(map[int64]struct{})
-	rows := make([]dto.CheatDetectionUser, 0)
+	rows := make([]CheatDetectionUser, 0)
 	for userID, entry := range index {
 		if entry.count < submitBurstMinCount {
 			continue
 		}
 		userIDs[userID] = struct{}{}
-		rows = append(rows, dto.CheatDetectionUser{
+		rows = append(rows, CheatDetectionUser{
 			UserID:      userID,
 			Username:    entry.username,
 			SubmitCount: entry.count,
@@ -124,7 +123,7 @@ func aggregateSubmitBursts(events []opsports.RiskAuditEvent) ([]dto.CheatDetecti
 	return rows, userIDs
 }
 
-func aggregateSharedIPs(events []opsports.RiskAuditEvent) ([]dto.CheatDetectionIPGroup, map[int64]struct{}) {
+func aggregateSharedIPs(events []opsports.RiskAuditEvent) ([]CheatDetectionIPGroup, map[int64]struct{}) {
 	type item struct {
 		usernames map[string]struct{}
 		userIDs   map[int64]struct{}
@@ -151,7 +150,7 @@ func aggregateSharedIPs(events []opsports.RiskAuditEvent) ([]dto.CheatDetectionI
 	}
 
 	affectedUsers := make(map[int64]struct{})
-	rows := make([]dto.CheatDetectionIPGroup, 0)
+	rows := make([]CheatDetectionIPGroup, 0)
 	for ip, entry := range index {
 		if len(entry.userIDs) < sharedIPMinUsers {
 			continue
@@ -164,7 +163,7 @@ func aggregateSharedIPs(events []opsports.RiskAuditEvent) ([]dto.CheatDetectionI
 			usernames = append(usernames, username)
 		}
 		sort.Strings(usernames)
-		rows = append(rows, dto.CheatDetectionIPGroup{
+		rows = append(rows, CheatDetectionIPGroup{
 			IP:        ip,
 			UserCount: len(entry.userIDs),
 			Usernames: usernames,

@@ -29,6 +29,7 @@ import (
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -2423,7 +2424,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/cheat-detection", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var cheat dto.CheatDetectionResp
+	var cheat opsqry.CheatDetectionResp
 	decodeFullRouterData(t, resp, &cheat)
 	if cheat.Summary.SubmitBurstUsers < 1 || cheat.Summary.SharedIPGroups < 1 {
 		t.Fatalf("unexpected cheat detection response: %+v", cheat)
